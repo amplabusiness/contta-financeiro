@@ -227,10 +227,9 @@ const Expenses = () => {
                 <Label>Ano</Label>
                 <Select value={filterYear} onValueChange={setFilterYear}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Todos os anos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
@@ -243,10 +242,9 @@ const Expenses = () => {
                 <Label>Mês</Label>
                 <Select value={filterMonth} onValueChange={setFilterMonth}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
+                    <SelectValue placeholder="Todos os meses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {months.map((month) => (
                       <SelectItem key={month.value} value={month.value}>
                         {month.label}
@@ -255,6 +253,19 @@ const Expenses = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {(filterYear || filterMonth) && (
+                <div className="flex items-end">
+                  <Button 
+                    onClick={() => {
+                      setFilterYear("");
+                      setFilterMonth("");
+                    }} 
+                    variant="outline"
+                  >
+                    Limpar Filtros
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -293,10 +293,9 @@ const Invoices = () => {
                 <Label>Ano</Label>
                 <Select value={filterYear} onValueChange={setFilterYear}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Todos os anos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
@@ -309,10 +308,9 @@ const Invoices = () => {
                 <Label>Mês</Label>
                 <Select value={filterMonth} onValueChange={setFilterMonth}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
+                    <SelectValue placeholder="Todos os meses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {months.map((month) => (
                       <SelectItem key={month.value} value={month.value}>
                         {month.label}
@@ -322,6 +320,17 @@ const Invoices = () => {
                 </Select>
               </div>
               <div className="flex items-end gap-2">
+                {(filterYear || filterMonth) && (
+                  <Button 
+                    onClick={() => {
+                      setFilterYear("");
+                      setFilterMonth("");
+                    }} 
+                    variant="outline"
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
                 <Button onClick={generateMonthlyInvoices} disabled={loading || !filterYear || !filterMonth} variant="outline">
                   <Zap className="w-4 h-4 mr-2" />
                   Gerar Honorários do Mês

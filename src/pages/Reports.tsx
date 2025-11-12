@@ -159,10 +159,9 @@ const Reports = () => {
                 <Label>Ano</Label>
                 <Select value={filterYear} onValueChange={setFilterYear}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
+                    <SelectValue placeholder="Todos os anos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
@@ -175,10 +174,9 @@ const Reports = () => {
                 <Label>Mês</Label>
                 <Select value={filterMonth} onValueChange={setFilterMonth}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
+                    <SelectValue placeholder="Todos os meses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
                     {months.map((month) => (
                       <SelectItem key={month.value} value={month.value}>
                         {month.label}
@@ -187,7 +185,18 @@ const Reports = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
+                {(filterYear || filterMonth) && (
+                  <Button 
+                    onClick={() => {
+                      setFilterYear("");
+                      setFilterMonth("");
+                    }} 
+                    variant="outline"
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
                 <Button onClick={loadDebtReport} variant="outline">
                   Atualizar
                 </Button>
