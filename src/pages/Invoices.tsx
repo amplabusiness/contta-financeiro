@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, CalendarDays, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -20,6 +20,8 @@ const Invoices = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterMonth, setFilterMonth] = useState<string>("");
   const [formData, setFormData] = useState({
     client_id: "",
     amount: "",
@@ -30,14 +32,41 @@ const Invoices = () => {
     competence: "",
   });
 
+  const months = [
+    { value: "01", label: "Janeiro" },
+    { value: "02", label: "Fevereiro" },
+    { value: "03", label: "Março" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Maio" },
+    { value: "06", label: "Junho" },
+    { value: "07", label: "Julho" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+  ];
+
+  const years = ["2024", "2025", "2026"];
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filterYear, filterMonth]);
 
   const loadData = async () => {
     try {
+      let query = supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false });
+
+      // Filtrar por competência se ano ou mês estiverem selecionados
+      if (filterYear && filterMonth) {
+        const competence = `${filterMonth}/${filterYear}`;
+        query = query.eq("competence", competence);
+      } else if (filterYear) {
+        query = query.like("competence", `%/${filterYear}`);
+      }
+
       const [invoicesRes, clientsRes] = await Promise.all([
-        supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false }),
+        query,
         supabase.from("clients").select("*").eq("status", "active").order("name"),
       ]);
 
@@ -45,6 +74,81 @@ const Invoices = () => {
       setClients(clientsRes.data || []);
     } catch (error: any) {
       toast.error("Erro ao carregar dados");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateMonthlyInvoices = async () => {
+    if (!filterYear || !filterMonth) {
+      toast.error("Selecione ano e mês para gerar os honorários");
+      return;
+    }
+
+    if (!confirm(`Gerar honorários mensais para ${months.find(m => m.value === filterMonth)?.label}/${filterYear}?`)) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data: activeClients } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("status", "active")
+        .gt("monthly_fee", 0);
+
+      if (!activeClients || activeClients.length === 0) {
+        toast.warning("Nenhum cliente ativo com honorário mensal definido");
+        setLoading(false);
+        return;
+      }
+
+      const competence = `${filterMonth}/${filterYear}`;
+      const dueDate = `${filterYear}-${filterMonth}-${activeClients[0].payment_day || "10"}`;
+
+      let created = 0;
+      let skipped = 0;
+
+      for (const client of activeClients) {
+        // Verificar se já existe fatura para esse cliente nessa competência
+        const { data: existing } = await supabase
+          .from("invoices")
+          .select("id")
+          .eq("client_id", client.id)
+          .eq("competence", competence)
+          .single();
+
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        const paymentDay = client.payment_day || 10;
+        const clientDueDate = `${filterYear}-${filterMonth}-${paymentDay.toString().padStart(2, "0")}`;
+
+        const { error } = await supabase.from("invoices").insert({
+          client_id: client.id,
+          amount: client.monthly_fee,
+          due_date: clientDueDate,
+          status: "pending",
+          competence: competence,
+          description: `Honorário mensal - ${competence}`,
+          created_by: user.id,
+        });
+
+        if (!error) {
+          created++;
+        }
+      }
+
+      toast.success(`${created} honorários gerados! ${skipped > 0 ? `${skipped} já existiam.` : ""}`);
+      loadData();
+    } catch (error: any) {
+      toast.error("Erro ao gerar honorários: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -173,24 +277,75 @@ const Invoices = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Honorários</h1>
+          <p className="text-muted-foreground">Controle de recebimentos</p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+            <CardDescription>Filtrar honorários por período</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4">
+              <div className="space-y-2 w-40">
+                <Label>Ano</Label>
+                <Select value={filterYear} onValueChange={setFilterYear}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 w-40">
+                <Label>Mês</Label>
+                <Select value={filterMonth} onValueChange={setFilterMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end gap-2">
+                <Button onClick={generateMonthlyInvoices} disabled={loading || !filterYear || !filterMonth} variant="outline">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Gerar Honorários do Mês
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Honorários</h1>
-            <p className="text-muted-foreground">Controle de recebimentos</p>
-          </div>
-          <Dialog open={open} onOpenChange={(value) => {
-            setOpen(value);
-            if (!value) {
-              setEditingInvoice(null);
-              resetForm();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Honorário
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={open} onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) {
+                setEditingInvoice(null);
+                resetForm();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Honorário
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>{editingInvoice ? "Editar Honorário" : "Novo Honorário"}</DialogTitle>
@@ -292,7 +447,8 @@ const Invoices = () => {
                 </DialogFooter>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

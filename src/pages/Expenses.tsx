@@ -19,6 +19,8 @@ const Expenses = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterMonth, setFilterMonth] = useState<string>("");
   const [formData, setFormData] = useState({
     category: "",
     description: "",
@@ -40,16 +42,40 @@ const Expenses = () => {
     "Outros",
   ];
 
+  const months = [
+    { value: "01", label: "Janeiro" },
+    { value: "02", label: "Fevereiro" },
+    { value: "03", label: "Março" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Maio" },
+    { value: "06", label: "Junho" },
+    { value: "07", label: "Julho" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+  ];
+
+  const years = ["2024", "2025", "2026"];
+
   useEffect(() => {
     loadExpenses();
-  }, []);
+  }, [filterYear, filterMonth]);
 
   const loadExpenses = async () => {
     try {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .order("due_date", { ascending: false });
+      let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
+
+      // Filtrar por competência se ano ou mês estiverem selecionados
+      if (filterYear && filterMonth) {
+        const competence = `${filterMonth}/${filterYear}`;
+        query = query.eq("competence", competence);
+      } else if (filterYear) {
+        query = query.like("competence", `%/${filterYear}`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setExpenses(data || []);
@@ -185,11 +211,56 @@ const Expenses = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Despesas</h1>
+          <p className="text-muted-foreground">Controle de contas a pagar</p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+            <CardDescription>Filtrar despesas por período</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4">
+              <div className="space-y-2 w-40">
+                <Label>Ano</Label>
+                <Select value={filterYear} onValueChange={setFilterYear}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 w-40">
+                <Label>Mês</Label>
+                <Select value={filterMonth} onValueChange={setFilterMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Despesas</h1>
-            <p className="text-muted-foreground">Controle de contas a pagar</p>
-          </div>
+          <div />
           <Dialog open={open} onOpenChange={(value) => {
             setOpen(value);
             if (!value) {
