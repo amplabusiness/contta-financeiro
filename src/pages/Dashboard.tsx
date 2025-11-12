@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3 } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -110,16 +113,18 @@ const Dashboard = () => {
               isPositive: false,
             }}
           />
-          <MetricCard
-            title="Inadimplência"
-            value={formatCurrency(stats.totalOverdue)}
-            icon={AlertCircle}
-            variant="destructive"
-            trend={{
-              value: `${stats.overdueInvoices} vencidas`,
-              isPositive: false,
-            }}
-          />
+          <div onClick={() => navigate("/reports")} className="cursor-pointer">
+            <MetricCard
+              title="Inadimplência"
+              value={formatCurrency(stats.totalOverdue)}
+              icon={AlertCircle}
+              variant="destructive"
+              trend={{
+                value: `${stats.overdueInvoices} vencidas`,
+                isPositive: false,
+              }}
+            />
+          </div>
           <MetricCard
             title="Despesas Pendentes"
             value={formatCurrency(stats.totalExpenses)}
@@ -131,6 +136,25 @@ const Dashboard = () => {
             }}
           />
         </div>
+
+        {stats.overdueInvoices > 0 && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-destructive">⚠️ Atenção: Inadimplência Detectada</CardTitle>
+                  <CardDescription>
+                    Existem {stats.overdueInvoices} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
+                  </CardDescription>
+                </div>
+                <Button onClick={() => navigate("/reports")} variant="destructive">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Ver Relatório Completo
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
