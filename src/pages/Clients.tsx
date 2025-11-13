@@ -62,6 +62,34 @@ const Clients = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // Validar CNPJ duplicado antes de inserir
+      if (formData.cnpj && formData.cnpj.trim()) {
+        const cnpjNormalized = formData.cnpj.replace(/[^\d]/g, '');
+        
+        const { data: existingClients, error: checkError } = await supabase
+          .from("clients")
+          .select("id, name, cnpj")
+          .not("id", "eq", editingClient?.id || "00000000-0000-0000-0000-000000000000");
+
+        if (checkError) throw checkError;
+
+        // Verificar se já existe um cliente com o mesmo CNPJ (normalizado)
+        const duplicateCNPJ = existingClients?.find(client => {
+          if (!client.cnpj) return false;
+          const existingCNPJ = client.cnpj.replace(/[^\d]/g, '');
+          return existingCNPJ === cnpjNormalized;
+        });
+
+        if (duplicateCNPJ) {
+          toast.error(`CNPJ já cadastrado para o cliente: ${duplicateCNPJ.name}`, {
+            description: "Não é possível cadastrar o mesmo CNPJ duas vezes.",
+            duration: 5000,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const clientData = {
         ...formData,
         monthly_fee: parseFloat(formData.monthly_fee) || 0,
@@ -75,12 +103,34 @@ const Clients = () => {
           .update(clientData)
           .eq("id", editingClient.id);
 
-        if (error) throw error;
+        if (error) {
+          // Verificar se o erro é de CNPJ duplicado
+          if (error.message.includes('clients_cnpj_normalized_unique')) {
+            toast.error("CNPJ já cadastrado para outro cliente", {
+              description: "Não é possível ter dois clientes com o mesmo CNPJ.",
+              duration: 5000,
+            });
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         toast.success("Cliente atualizado com sucesso!");
       } else {
         const { error } = await supabase.from("clients").insert(clientData);
 
-        if (error) throw error;
+        if (error) {
+          // Verificar se o erro é de CNPJ duplicado
+          if (error.message.includes('clients_cnpj_normalized_unique')) {
+            toast.error("CNPJ já cadastrado para outro cliente", {
+              description: "Não é possível ter dois clientes com o mesmo CNPJ.",
+              duration: 5000,
+            });
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         toast.success("Cliente cadastrado com sucesso!");
       }
 
