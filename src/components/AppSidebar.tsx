@@ -21,6 +21,8 @@ import {
   BookText,
   Bot,
   Target,
+  Activity,
+  FileInput,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -80,6 +82,7 @@ export function AppSidebar() {
             { title: "Despesas", url: "/expenses", icon: Wallet },
             { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
+            { title: "Dashboard Conciliação", url: "/reconciliation-dashboard", icon: Activity },
             { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
             { title: "Balancete", url: "/trial-balance", icon: BookText },
@@ -97,6 +100,7 @@ export function AppSidebar() {
             { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
             { title: "Importar Clientes", url: "/import", icon: Upload },
             { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
+            { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
           ],
         },
       ];

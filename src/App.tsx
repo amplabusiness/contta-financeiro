@@ -27,6 +27,8 @@ import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
 import ImportCompanies from "./pages/ImportCompanies";
+import ReconciliationDashboard from "./pages/ReconciliationDashboard";
+import ImportInvoices from "./pages/ImportInvoices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
             <Route path="/import-companies" element={<ImportCompanies />} />
+            <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
+            <Route path="/import-invoices" element={<ImportInvoices />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
