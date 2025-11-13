@@ -56,16 +56,37 @@ const ClientEnrichment = () => {
     try {
       const { data, error } = await supabase
         .from('clients')
-        .select(`
-          *,
-          enrichment:client_enrichment(*),
-          payers:client_payers(*)
-        `)
+        .select('*')
         .eq('status', 'active')
-        .order('name');
+        .order('name') as any;
 
       if (error) throw error;
-      setClients(data || []);
+      
+      // Buscar dados de enrichment e payers separadamente
+      if (data && data.length > 0) {
+        const clientIds = data.map((c: any) => c.id);
+        
+        const { data: enrichmentData } = await supabase
+          .from('client_enrichment' as any)
+          .select('*')
+          .in('client_id', clientIds) as any;
+        
+        const { data: payersData } = await supabase
+          .from('client_payers' as any)
+          .select('*')
+          .in('client_id', clientIds) as any;
+        
+        // Combinar dados
+        const enrichedClients = data.map((client: any) => ({
+          ...client,
+          enrichment: enrichmentData?.find((e: any) => e.client_id === client.id),
+          payers: payersData?.filter((p: any) => p.client_id === client.id) || []
+        }));
+        
+        setClients(enrichedClients);
+      } else {
+        setClients([]);
+      }
     } catch (error: any) {
       toast.error('Erro ao carregar clientes: ' + error.message);
     } finally {
@@ -104,16 +125,16 @@ const ClientEnrichment = () => {
     setSelectedClient(client);
     
     const { data: enrichment } = await supabase
-      .from('client_enrichment')
+      .from('client_enrichment' as any)
       .select('*')
       .eq('client_id', client.id)
-      .single();
+      .single() as any;
 
     const { data: payersData } = await supabase
-      .from('client_payers')
+      .from('client_payers' as any)
       .select('*')
       .eq('client_id', client.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     setEnrichmentData(enrichment);
     setPayers(payersData || []);
@@ -129,7 +150,7 @@ const ClientEnrichment = () => {
       const { data: userData } = await supabase.auth.getUser();
 
       const { error } = await supabase
-        .from('client_payers')
+        .from('client_payers' as any)
         .insert({
           client_id: selectedClient.id,
           payer_name: newPayer.name,
@@ -137,7 +158,7 @@ const ClientEnrichment = () => {
           relationship: newPayer.relationship,
           notes: newPayer.notes || null,
           created_by: userData.user?.id
-        });
+        }) as any;
 
       if (error) throw error;
 
@@ -153,9 +174,9 @@ const ClientEnrichment = () => {
   const removePayer = async (payerId: string) => {
     try {
       const { error } = await supabase
-        .from('client_payers')
+        .from('client_payers' as any)
         .delete()
-        .eq('id', payerId);
+        .eq('id', payerId) as any;
 
       if (error) throw error;
 
