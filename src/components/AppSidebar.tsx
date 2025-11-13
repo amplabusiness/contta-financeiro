@@ -19,6 +19,7 @@ import {
   Calendar,
   PieChart,
   BookText,
+  Bot,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -87,6 +88,7 @@ export function AppSidebar() {
         {
           label: "Configurações",
           items: [
+            { title: "🤖 Agentes de IA", url: "/ai-agents", icon: Bot },
             { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
             { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
             { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
