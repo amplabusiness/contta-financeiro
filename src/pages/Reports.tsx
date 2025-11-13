@@ -4,15 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, TrendingDown, Calendar, DollarSign, Eye } from "lucide-react";
+import { AlertTriangle, TrendingDown, Calendar, DollarSign, Eye, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultEvolutionChart } from "@/components/DefaultEvolutionChart";
-import { format } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface ClientDebt {
   client_id: string;
@@ -33,6 +34,7 @@ const Reports = () => {
   const [totalClients, setTotalClients] = useState(0);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientDebt | null>(null);
+  const [evolutionData, setEvolutionData] = useState<any[]>([]);
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -136,9 +138,66 @@ const Reports = () => {
     }
   };
 
-  const handleClientClick = (debt: ClientDebt) => {
+  const handleClientClick = async (debt: ClientDebt) => {
     setSelectedClient(debt);
     setDetailDialogOpen(true);
+    
+    // Carregar histórico de evolução da inadimplência
+    await loadClientEvolution(debt.client_id);
+  };
+
+  const loadClientEvolution = async (clientId: string) => {
+    try {
+      // Buscar todas as faturas do cliente (incluindo pagas)
+      const { data: allInvoices, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("due_date", { ascending: true });
+
+      if (error) throw error;
+
+      // Gerar dados mensais dos últimos 12 meses
+      const monthsData = [];
+      const today = new Date();
+
+      for (let i = 11; i >= 0; i--) {
+        const monthDate = subMonths(today, i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+        const monthLabel = format(monthDate, "MMM/yy", { locale: ptBR });
+
+        // Calcular quanto estava devendo naquele mês
+        // (faturas vencidas até aquele mês que ainda não estavam pagas)
+        let overdueAmount = 0;
+        let overdueCount = 0;
+
+        allInvoices?.forEach((invoice) => {
+          const dueDate = new Date(invoice.due_date);
+          const paidDate = invoice.payment_date ? new Date(invoice.payment_date) : null;
+
+          // Se venceu antes do fim do mês E (não foi paga OU foi paga depois)
+          if (dueDate <= monthEnd) {
+            if (!paidDate || paidDate > monthEnd) {
+              // Estava devendo naquele mês
+              overdueAmount += Number(invoice.amount);
+              overdueCount += 1;
+            }
+          }
+        });
+
+        monthsData.push({
+          month: monthLabel,
+          valor: overdueAmount,
+          faturas: overdueCount,
+        });
+      }
+
+      setEvolutionData(monthsData);
+    } catch (error) {
+      console.error("Erro ao carregar evolução:", error);
+      setEvolutionData([]);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -400,6 +459,64 @@ const Reports = () => {
                   </p>
                 </div>
               </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <TrendingUp className="h-5 w-5" />
+                    Evolução da Inadimplência (Últimos 12 Meses)
+                  </CardTitle>
+                  <CardDescription>
+                    Histórico mensal do valor devido por este cliente
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {evolutionData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={evolutionData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis 
+                          dataKey="month" 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '6px',
+                          }}
+                          formatter={(value: any, name: string) => {
+                            if (name === "Valor Devido") {
+                              return [formatCurrency(value), "Valor Devido"];
+                            }
+                            return [value, "Faturas Atrasadas"];
+                          }}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="valor" 
+                          stroke="hsl(var(--destructive))" 
+                          strokeWidth={3}
+                          name="Valor Devido"
+                          dot={{ fill: 'hsl(var(--destructive))', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Carregando histórico...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               <div>
                 <h3 className="font-semibold mb-3">Faturas Pendentes</h3>
