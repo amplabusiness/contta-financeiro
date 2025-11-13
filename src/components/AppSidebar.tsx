@@ -94,6 +94,7 @@ export function AppSidebar() {
             { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
             { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
             { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+            { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
             { title: "Importar Clientes", url: "/import", icon: Upload },
             { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
           ],
