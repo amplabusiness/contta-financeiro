@@ -26,6 +26,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
+import ImportCompanies from "./pages/ImportCompanies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
+            <Route path="/import-companies" element={<ImportCompanies />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
