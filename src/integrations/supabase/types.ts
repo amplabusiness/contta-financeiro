@@ -162,6 +162,8 @@ export type Database = {
       invoices: {
         Row: {
           amount: number
+          calculated_amount: number | null
+          calculation_base: number | null
           client_id: string
           competence: string | null
           created_at: string
@@ -170,11 +172,14 @@ export type Database = {
           due_date: string
           id: string
           payment_date: string | null
+          revenue_type_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
           amount: number
+          calculated_amount?: number | null
+          calculation_base?: number | null
           client_id: string
           competence?: string | null
           created_at?: string
@@ -183,11 +188,14 @@ export type Database = {
           due_date: string
           id?: string
           payment_date?: string | null
+          revenue_type_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           amount?: number
+          calculated_amount?: number | null
+          calculation_base?: number | null
           client_id?: string
           competence?: string | null
           created_at?: string
@@ -196,6 +204,7 @@ export type Database = {
           due_date?: string
           id?: string
           payment_date?: string | null
+          revenue_type_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -205,6 +214,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_revenue_type_id_fkey"
+            columns: ["revenue_type_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_types"
             referencedColumns: ["id"]
           },
         ]
@@ -230,6 +246,48 @@ export type Database = {
           full_name?: string
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      revenue_types: {
+        Row: {
+          calculation_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          multiplier: number | null
+          name: string
+          percentage: number | null
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          calculation_type: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          multiplier?: number | null
+          name: string
+          percentage?: number | null
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          calculation_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          multiplier?: number | null
+          name?: string
+          percentage?: number | null
+          updated_at?: string
+          value?: number | null
         }
         Relationships: []
       }

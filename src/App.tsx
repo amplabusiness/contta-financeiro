@@ -12,6 +12,7 @@ import Import from "./pages/Import";
 import Reports from "./pages/Reports";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
 import DRE from "./pages/DRE";
+import RevenueTypes from "./pages/RevenueTypes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/reports" element={<Reports />} />
           <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
           <Route path="/dre" element={<DRE />} />
+          <Route path="/revenue-types" element={<RevenueTypes />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -9,6 +9,7 @@ import {
   FolderTree,
   Upload,
   Building2,
+  DollarSign,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const menuGroups = [
   {
     label: "Configurações",
     items: [
+      { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
       { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
       { title: "Importar", url: "/import", icon: Upload },
     ],
