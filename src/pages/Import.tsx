@@ -57,76 +57,98 @@ const Import = () => {
         row["Razão social"].trim() !== ""
       );
 
+      setCurrentItem(`Preparando ${validRows.length} clientes para importação...`);
+      setProgress(10);
+
+      // Buscar todos os CNPJs existentes de uma vez
+      const cnpjs = validRows
+        .map((row: any) => row["CNPJ"]?.toString().trim())
+        .filter((cnpj: string) => cnpj);
+      
+      const { data: existingClients } = await supabase
+        .from("clients")
+        .select("cnpj")
+        .in("cnpj", cnpjs);
+      
+      const existingCnpjSet = new Set(existingClients?.map(c => c.cnpj) || []);
+      setProgress(30);
+
+      // Preparar dados para inserção em lote
+      const clientsToInsert: any[] = [];
+      
       for (let i = 0; i < validRows.length; i++) {
         const row: any = validRows[i];
-        const lineNumber = i + 2; // +2 porque linha 1 é cabeçalho
-        const clientName = row["Razão social"] || "Sem nome";
+        const lineNumber = i + 2;
+        const clientName = row["Razão social"]?.toString().trim() || "Sem nome";
         
-        setCurrentItem(`Processando: ${clientName}`);
-        setProgress(Math.round(((i + 1) / validRows.length) * 100));
+        const clientData = {
+          name: clientName,
+          cnpj: row["CNPJ"]?.toString().trim() || "",
+          phone: row["Fone"]?.toString().trim() || "",
+          email: row["Email"]?.toString().trim() || "",
+          notes: row["Regime"]?.toString().trim() || "",
+          monthly_fee: parseFloat(row["Honorário"]) || 0,
+          payment_day: parseInt(row["Dia Pagamento"]) || null,
+          status: "active" as const,
+          created_by: user.id,
+        };
 
-        try {
-          const clientData = {
-            name: row["Razão social"]?.toString().trim() || "",
-            cnpj: row["CNPJ"]?.toString().trim() || "",
-            phone: row["Fone"]?.toString().trim() || "",
-            email: row["Email"]?.toString().trim() || "",
-            notes: row["Regime"]?.toString().trim() || "",
-            monthly_fee: parseFloat(row["Honorário"]) || 0,
-            payment_day: parseInt(row["Dia Pagamento"]) || null,
-            status: "active",
-            created_by: user.id,
-          };
-
-          // Validações
-          if (!clientData.name) {
-            skipped.push({
-              line: lineNumber,
-              client: "Sem nome",
-              reason: "Nome do cliente não informado"
-            });
-            continue;
-          }
-
-          // Verificar se já existe pelo CNPJ
-          if (clientData.cnpj) {
-            const { data: existing, error: checkError } = await supabase
-              .from("clients")
-              .select("id")
-              .eq("cnpj", clientData.cnpj)
-              .maybeSingle();
-
-            if (checkError) {
-              console.error("Erro ao verificar CNPJ:", checkError);
-            }
-
-            if (existing) {
-              skipped.push({
-                line: lineNumber,
-                client: clientData.name,
-                reason: `Cliente já existe com CNPJ ${clientData.cnpj}`
-              });
-              continue;
-            }
-          }
-
-          const { error } = await supabase.from("clients").insert(clientData);
-
-          if (error) {
-            errors.push({
-              line: lineNumber,
-              client: clientData.name,
-              reason: error.message
-            });
-          } else {
-            successCount++;
-          }
-        } catch (err: any) {
-          errors.push({
+        // Validações
+        if (!clientData.name || clientData.name === "Sem nome") {
+          skipped.push({
             line: lineNumber,
-            client: clientName,
-            reason: err.message || "Erro desconhecido"
+            client: "Sem nome",
+            reason: "Nome do cliente não informado"
           });
+          continue;
+        }
+
+        // Verificar se já existe
+        if (clientData.cnpj && existingCnpjSet.has(clientData.cnpj)) {
+          skipped.push({
+            line: lineNumber,
+            client: clientData.name,
+            reason: `Cliente já existe com CNPJ ${clientData.cnpj}`
+          });
+          continue;
+        }
+
+        clientsToInsert.push(clientData);
+      }
+
+      setProgress(50);
+      setCurrentItem(`Importando ${clientsToInsert.length} clientes...`);
+
+      // Inserir todos os clientes de uma vez (batch insert)
+      if (clientsToInsert.length > 0) {
+        const { data: inserted, error: batchError } = await supabase
+          .from("clients")
+          .insert(clientsToInsert)
+          .select("id");
+
+        if (batchError) {
+          // Se houver erro no batch, tentar um por um para identificar problemas
+          setCurrentItem("Processando individualmente...");
+          for (let i = 0; i < clientsToInsert.length; i++) {
+            const client = clientsToInsert[i];
+            setProgress(50 + Math.round((i / clientsToInsert.length) * 50));
+            setCurrentItem(`${i + 1}/${clientsToInsert.length}: ${client.name}`);
+            
+            const { error } = await supabase.from("clients").insert(client);
+            
+            if (error) {
+              errors.push({
+                line: i + 2,
+                client: client.name,
+                reason: error.message
+              });
+            } else {
+              successCount++;
+            }
+          }
+        } else {
+          successCount = inserted?.length || 0;
+          setProgress(100);
         }
       }
 
@@ -160,15 +182,18 @@ const Import = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Upload de Arquivo Excel</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Importação em Lote de Clientes
+            </CardTitle>
             <CardDescription>
-              Selecione um arquivo Excel (.xlsx, .xls) com as colunas: Razão social, CNPJ, Fone, Regime
+              Selecione um arquivo Excel e todos os clientes serão importados automaticamente de uma vez
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="file">Arquivo Excel</Label>
-              <div className="flex gap-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="file">Selecione a Planilha Excel</Label>
                 <Input
                   id="file"
                   type="file"
@@ -176,25 +201,60 @@ const Import = () => {
                   onChange={handleFileChange}
                   disabled={loading}
                 />
-                <Button onClick={processExcelFile} disabled={loading || !file}>
-                  {loading ? (
-                    <>Processando...</>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Importar
-                    </>
-                  )}
-                </Button>
               </div>
-            </div>
 
-            {file && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileSpreadsheet className="w-4 h-4" />
-                Arquivo selecionado: {file.name}
-              </div>
-            )}
+              {file && !loading && (
+                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
+                  <FileSpreadsheet className="w-4 h-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Pronto para importar todos os clientes automaticamente
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {loading && (
+                <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">Importando automaticamente...</span>
+                    <span className="text-muted-foreground">{progress}%</span>
+                  </div>
+                  <Progress value={progress} className="w-full h-2" />
+                  <p className="text-xs text-muted-foreground">{currentItem}</p>
+                </div>
+              )}
+
+              <Button 
+                onClick={processExcelFile} 
+                disabled={!file || loading}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <span className="mr-2">⏳</span>
+                    Importando todos automaticamente...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-5 w-5" />
+                    Importar TODOS os Clientes Automaticamente
+                  </>
+                )}
+              </Button>
+              
+              {file && !loading && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    <strong>Atenção:</strong> Clique uma única vez e aguarde. 
+                    Todos os clientes da planilha serão processados automaticamente.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
 
             {results && (
               <div className="space-y-3 mt-6">
