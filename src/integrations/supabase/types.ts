@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      chart_of_accounts: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           cnpj: string | null
@@ -61,6 +105,7 @@ export type Database = {
       }
       expenses: {
         Row: {
+          account_id: string | null
           amount: number
           category: string
           competence: string | null
@@ -75,6 +120,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           category: string
           competence?: string | null
@@ -89,6 +135,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           category?: string
           competence?: string | null
@@ -102,7 +149,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoices: {
         Row: {

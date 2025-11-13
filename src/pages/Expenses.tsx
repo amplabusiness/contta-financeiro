@@ -16,6 +16,7 @@ import { formatCurrency } from "@/data/expensesData";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
@@ -30,6 +31,7 @@ const Expenses = () => {
     status: "pending",
     competence: "",
     notes: "",
+    account_id: "",
   });
 
   const categories = [
@@ -61,7 +63,24 @@ const Expenses = () => {
 
   useEffect(() => {
     loadExpenses();
+    loadAccounts();
   }, [filterYear, filterMonth]);
+
+  const loadAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chart_of_accounts")
+        .select("*")
+        .eq("type", "despesa")
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+      setAccounts(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar contas:", error);
+    }
+  };
 
   const loadExpenses = async () => {
     try {
@@ -98,6 +117,7 @@ const Expenses = () => {
         ...formData,
         amount: parseFloat(formData.amount),
         payment_date: formData.payment_date || null,
+        account_id: formData.account_id || null,
         created_by: user.id,
       };
 
@@ -166,6 +186,7 @@ const Expenses = () => {
       status: "pending",
       competence: "",
       notes: "",
+      account_id: "",
     });
   };
 
@@ -180,6 +201,7 @@ const Expenses = () => {
       status: expense.status,
       competence: expense.competence || "",
       notes: expense.notes || "",
+      account_id: expense.account_id || "",
     });
     setOpen(true);
   };
@@ -294,6 +316,24 @@ const Expenses = () => {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="account_id">Plano de Contas</Label>
+                    <Select
+                      value={formData.account_id}
+                      onValueChange={(value) => setFormData({ ...formData, account_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a conta" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.code} - {account.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Categoria *</Label>
                     <Select
