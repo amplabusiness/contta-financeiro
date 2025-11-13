@@ -242,31 +242,7 @@ const Invoices = () => {
 
       if (error) throw error;
 
-      // Criar lançamento contábil de recebimento automaticamente
-      try {
-        const { error: accountingError } = await supabase.functions.invoke('create-accounting-entry', {
-          body: {
-            type: 'invoice',
-            operation: 'payment',
-            referenceId: invoice.id,
-            amount: parseFloat(invoice.amount),
-            date: paymentDate,
-            description: invoice.description || `Honorário - ${invoice.clients?.name || 'Cliente'}`,
-            clientId: invoice.client_id,
-          },
-        });
-
-        if (accountingError) {
-          console.error('Erro ao criar lançamento contábil:', accountingError);
-          toast.warning("Honorário marcado como pago, mas erro ao criar lançamento contábil");
-        } else {
-          toast.success("Honorário marcado como pago e lançamento contábil criado!");
-        }
-      } catch (accountingError) {
-        console.error('Erro ao criar lançamento contábil:', accountingError);
-        toast.warning("Honorário marcado como pago, mas erro ao criar lançamento contábil");
-      }
-
+      toast.success("Honorário marcado como pago!");
       loadData();
     } catch (error: any) {
       toast.error("Erro ao atualizar honorário");

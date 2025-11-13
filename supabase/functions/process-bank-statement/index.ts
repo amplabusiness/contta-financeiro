@@ -120,6 +120,13 @@ Deno.serve(async (req) => {
 
       // Se for pagamento de cliente, atualizar razão e honorário
       if (aiMatch.matched && aiMatch.invoiceId && aiMatch.clientId) {
+        // Buscar dados da invoice
+        const { data: invoice } = await supabase
+          .from('invoices')
+          .select('amount, description, client_id')
+          .eq('id', aiMatch.invoiceId)
+          .single();
+
         // Atualizar honorário para pago
         await supabase
           .from('invoices')
@@ -128,6 +135,21 @@ Deno.serve(async (req) => {
             payment_date: transaction.date,
           })
           .eq('id', aiMatch.invoiceId);
+
+        // Criar lançamento contábil de baixa (recebimento)
+        if (invoice) {
+          await supabase.functions.invoke('create-accounting-entry', {
+            body: {
+              type: 'invoice',
+              operation: 'payment',
+              referenceId: aiMatch.invoiceId,
+              amount: invoice.amount,
+              date: transaction.date,
+              description: invoice.description || 'Recebimento de honorários',
+              clientId: invoice.client_id,
+            },
+          });
+        }
 
         // Lançar no razão do cliente
         const { data: lastBalance } = await supabase
@@ -159,6 +181,14 @@ Deno.serve(async (req) => {
 
       // Se for despesa, atualizar para paga
       if (aiMatch.matched && aiMatch.expenseId) {
+        // Buscar dados da despesa
+        const { data: expense } = await supabase
+          .from('expenses')
+          .select('amount, description')
+          .eq('id', aiMatch.expenseId)
+          .single();
+
+        // Atualizar despesa para paga
         await supabase
           .from('expenses')
           .update({
@@ -166,6 +196,20 @@ Deno.serve(async (req) => {
             payment_date: transaction.date,
           })
           .eq('id', aiMatch.expenseId);
+
+        // Criar lançamento contábil de baixa (pagamento)
+        if (expense) {
+          await supabase.functions.invoke('create-accounting-entry', {
+            body: {
+              type: 'expense',
+              operation: 'payment',
+              referenceId: aiMatch.expenseId,
+              amount: expense.amount,
+              date: transaction.date,
+              description: expense.description || 'Pagamento de despesa',
+            },
+          });
+        }
       }
 
       results.push({
