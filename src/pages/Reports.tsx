@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DefaultEvolutionChart } from "@/components/DefaultEvolutionChart";
 
 interface ClientDebt {
   client_id: string;
@@ -204,6 +205,8 @@ const Reports = () => {
             </div>
           </CardContent>
         </Card>
+
+        <DefaultEvolutionChart />
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
