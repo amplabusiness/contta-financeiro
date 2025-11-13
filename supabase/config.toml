@@ -7,4 +7,16 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.regularize-accounting]
-verify_jwt = true
+verify_jwt = false
+
+[functions.ai-reconciliation-agent]
+verify_jwt = false
+
+[functions.ai-financial-analyst]
+verify_jwt = false
+
+[functions.ai-expense-classifier]
+verify_jwt = false
+
+[functions.automation-scheduler]
+verify_jwt = false
