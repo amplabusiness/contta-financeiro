@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Building2, LogOut, LayoutDashboard, Users, FileText, Wallet, Upload, BarChart3, FolderTree } from "lucide-react";
+import { Building2, LogOut, LayoutDashboard, Users, FileText, Wallet, Upload, BarChart3, FolderTree, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 
@@ -61,6 +61,7 @@ export function Layout({ children }: LayoutProps) {
     { path: "/invoices", label: "Honorários", icon: FileText },
     { path: "/expenses", label: "Despesas", icon: Wallet },
     { path: "/chart-of-accounts", label: "Plano de Contas", icon: FolderTree },
+    { path: "/dre", label: "DRE", icon: TrendingUp },
     { path: "/reports", label: "Inadimplência", icon: BarChart3 },
     { path: "/import", label: "Importar", icon: Upload },
   ];
