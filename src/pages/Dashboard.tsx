@@ -9,9 +9,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useClient } from "@/contexts/ClientContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { clearSelectedClient } = useClient();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -25,6 +27,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Limpar seleção de cliente ao acessar o Dashboard Geral
+    clearSelectedClient();
     loadDashboardData();
   }, []);
 

@@ -66,7 +66,7 @@ const CostCenterAnalysis = () => {
       let total = 0;
 
       expenses?.forEach((expense) => {
-        const costCenter = expense.cost_center || "Não Classificado";
+        const costCenter = (expense as any).cost_center || "Não Classificado";
         const amount = Number(expense.amount);
         costCenterMap.set(costCenter, (costCenterMap.get(costCenter) || 0) + amount);
         total += amount;
@@ -111,7 +111,7 @@ const CostCenterAnalysis = () => {
         const month = expense.competence?.split("/")[0];
         if (!month) return;
 
-        const costCenter = expense.cost_center || "Não Classificado";
+        const costCenter = (expense as any).cost_center || "Não Classificado";
         const amount = Number(expense.amount);
 
         if (!monthlyMap.has(month)) {
