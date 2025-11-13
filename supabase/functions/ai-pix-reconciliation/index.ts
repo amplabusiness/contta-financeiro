@@ -33,10 +33,14 @@ serve(async (req) => {
 
     console.log(`Found ${pixTransactions?.length || 0} unmatched PIX transactions`);
 
-    // Buscar todos os clientes
+    // Buscar todos os clientes com dados enriquecidos e pagadores
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
-      .select('*')
+      .select(`
+        *,
+        enrichment:client_enrichment(*),
+        payers:client_payers(*)
+      `)
       .eq('status', 'active');
 
     if (clientsError) throw clientsError;
@@ -67,7 +71,23 @@ serve(async (req) => {
           c.cnpj && cnpjCpf && c.cnpj.replace(/\D/g, '') === cnpjCpf.replace(/\D/g, '')
         );
 
-        // Se não encontrou por CNPJ, usar IA para buscar por nome similar
+        // Se não encontrou por CNPJ, buscar por pagador conhecido (sócio, representante)
+        if (!matchedClient && payerName) {
+          matchedClient = clients?.find(c => 
+            c.payers?.some((p: any) => 
+              p.is_active && 
+              (p.payer_name.toLowerCase().includes(payerName.toLowerCase()) ||
+               payerName.toLowerCase().includes(p.payer_name.toLowerCase()) ||
+               (p.payer_document && cnpjCpf && p.payer_document.replace(/\D/g, '') === cnpjCpf.replace(/\D/g, '')))
+            )
+          );
+
+          if (matchedClient) {
+            console.log(`Cliente encontrado via pagador conhecido: ${matchedClient.name}`);
+          }
+        }
+
+        // Se ainda não encontrou, usar IA para buscar por nome similar
         if (!matchedClient && payerName) {
           const prompt = `Analise o nome do pagador PIX "${payerName}" e encontre o cliente correspondente na lista abaixo.
           

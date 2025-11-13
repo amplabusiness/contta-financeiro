@@ -32,6 +32,7 @@ import ImportInvoices from "./pages/ImportInvoices";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
 import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
+import ClientEnrichment from "./pages/ClientEnrichment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/merge-clients" element={<MergeClients />} />
             <Route path="/unmatched-pix-report" element={<UnmatchedPixReport />} />
+            <Route path="/client-enrichment" element={<ClientEnrichment />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
