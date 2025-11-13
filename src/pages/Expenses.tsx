@@ -185,30 +185,7 @@ const Expenses = () => {
 
       if (error) throw error;
 
-      // Criar lançamento contábil de pagamento automaticamente
-      try {
-        const { error: accountingError } = await supabase.functions.invoke('create-accounting-entry', {
-          body: {
-            type: 'expense',
-            operation: 'payment',
-            referenceId: expense.id,
-            amount: parseFloat(expense.amount),
-            date: paymentDate,
-            description: expense.description || 'Despesa',
-          },
-        });
-
-        if (accountingError) {
-          console.error('Erro ao criar lançamento de pagamento:', accountingError);
-          toast.warning("Despesa marcada como paga, mas erro ao criar lançamento de pagamento");
-        } else {
-          toast.success("Despesa marcada como paga e lançamento de pagamento criado!");
-        }
-      } catch (accountingError) {
-        console.error('Erro ao criar lançamento de pagamento:', accountingError);
-        toast.warning("Despesa marcada como paga, mas erro ao criar lançamento de pagamento");
-      }
-
+      toast.success("Despesa marcada como paga!");
       loadExpenses();
     } catch (error: any) {
       toast.error("Erro ao atualizar despesa");

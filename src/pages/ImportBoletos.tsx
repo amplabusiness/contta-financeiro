@@ -293,6 +293,19 @@ const ImportBoletos = () => {
     }
 
     if (status === "paid" && paymentDate) {
+      // Criar lançamento contábil de baixa (recebimento)
+      await supabase.functions.invoke('create-accounting-entry', {
+        body: {
+          type: 'invoice',
+          operation: 'payment',
+          referenceId: insertedInvoice.id,
+          amount: liquidationAmount > 0 ? liquidationAmount : amount,
+          date: paymentDate,
+          description: `Honorários ${competence}`,
+          clientId: clientId,
+        },
+      });
+
       await supabase.from("client_ledger").insert({
         client_id: clientId,
         transaction_date: paymentDate,
