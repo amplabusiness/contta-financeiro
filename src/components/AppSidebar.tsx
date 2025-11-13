@@ -25,6 +25,7 @@ import {
   FileInput,
   FileWarning,
   AlertTriangle,
+  Database,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -74,6 +75,7 @@ export function AppSidebar() {
             { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
             { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
             { title: "Clientes", url: "/clients", icon: Users },
+            { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
             { title: "Honorários", url: "/invoices", icon: FileText },
             { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
           ],
