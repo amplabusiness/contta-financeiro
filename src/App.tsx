@@ -29,6 +29,7 @@ import CostCenterAnalysis from "./pages/CostCenterAnalysis";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ImportInvoices from "./pages/ImportInvoices";
+import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
             <Route path="/import-companies" element={<ImportCompanies />} />
             <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
+            <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
             <Route path="/import-invoices" element={<ImportInvoices />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

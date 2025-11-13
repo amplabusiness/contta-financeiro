@@ -1,0 +1,585 @@
+import { useState, useEffect } from "react";
+import { Layout } from "@/components/Layout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { formatCurrency } from "@/data/expensesData";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { 
+  AlertCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  Search, 
+  Download,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Lightbulb
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import * as XLSX from "xlsx";
+
+interface Discrepancy {
+  transaction: any;
+  analysisResult: {
+    possibleCauses: string[];
+    suggestions: string[];
+    severity: "low" | "medium" | "high";
+    category: string;
+  };
+}
+
+const ReconciliationDiscrepancies = () => {
+  const [loading, setLoading] = useState(true);
+  const [discrepancies, setDiscrepancies] = useState<Discrepancy[]>([]);
+  const [filteredDiscrepancies, setFilteredDiscrepancies] = useState<Discrepancy[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterSeverity, setFilterSeverity] = useState<string>("all");
+  const [selectedDiscrepancy, setSelectedDiscrepancy] = useState<Discrepancy | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    loadDiscrepancies();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [discrepancies, searchTerm, filterType, filterSeverity]);
+
+  const analyzeTransaction = (tx: any): Discrepancy["analysisResult"] => {
+    const possibleCauses: string[] = [];
+    const suggestions: string[] = [];
+    let severity: "low" | "medium" | "high" = "low";
+    let category = "Geral";
+
+    const amount = Math.abs(tx.amount);
+    const description = tx.description?.toLowerCase() || "";
+    const isCredit = tx.transaction_type === "credit";
+    const daysSinceTransaction = Math.floor(
+      (new Date().getTime() - new Date(tx.transaction_date).getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Análise de transações de entrada (recebimentos)
+    if (isCredit) {
+      category = "Recebimento não identificado";
+
+      // PIX sem identificação clara
+      if (description.includes("pix")) {
+        possibleCauses.push("Recebimento PIX sem identificação clara do pagador");
+        possibleCauses.push("CNPJ ou razão social não encontrados na descrição");
+        suggestions.push("Verificar o nome do pagador na descrição do PIX");
+        suggestions.push("Buscar o CNPJ/CPF na descrição e cruzar com base de clientes");
+        suggestions.push("Entrar em contato com o cliente para confirmar pagamento");
+      }
+
+      // Transferência sem identificação
+      if (description.includes("transf") || description.includes("ted") || description.includes("doc")) {
+        possibleCauses.push("Transferência bancária sem informações suficientes");
+        suggestions.push("Verificar histórico de faturas pendentes com valores próximos");
+        suggestions.push("Conferir extrato da conta de origem se disponível");
+      }
+
+      // Valor muito baixo ou muito alto
+      if (amount < 100) {
+        possibleCauses.push("Valor muito baixo - pode ser um pagamento parcial ou taxa");
+        suggestions.push("Verificar se é parte de um pagamento maior");
+        suggestions.push("Conferir se não é uma devolução ou estorno");
+        severity = "low";
+      } else if (amount > 50000) {
+        possibleCauses.push("Valor alto - requer atenção especial");
+        suggestions.push("Priorizar a identificação desta transação");
+        suggestions.push("Verificar se corresponde a múltiplas faturas");
+        severity = "high";
+      }
+
+      // Transação antiga não conciliada
+      if (daysSinceTransaction > 30) {
+        possibleCauses.push(`Transação com ${daysSinceTransaction} dias sem conciliação`);
+        suggestions.push("Priorizar a resolução - pode afetar o fluxo de caixa");
+        severity = severity === "high" ? "high" : "medium";
+      }
+    } 
+    // Análise de transações de saída (pagamentos)
+    else {
+      category = "Pagamento não identificado";
+
+      // Pagamento de despesa sem categoria
+      if (!tx.category) {
+        possibleCauses.push("Pagamento sem categoria definida");
+        suggestions.push("Criar uma despesa correspondente com categoria adequada");
+        suggestions.push("Verificar se é uma despesa recorrente");
+      }
+
+      // Débito automático
+      if (description.includes("débito") || description.includes("debito") || description.includes("automatico")) {
+        possibleCauses.push("Débito automático não cadastrado como despesa");
+        suggestions.push("Cadastrar como despesa recorrente para conciliação automática futura");
+        suggestions.push("Criar regra de conciliação para este tipo de débito");
+      }
+
+      // Boleto ou fatura
+      if (description.includes("boleto") || description.includes("fatura") || description.includes("titulo")) {
+        possibleCauses.push("Boleto pago mas não cadastrado no sistema");
+        suggestions.push("Cadastrar a despesa correspondente");
+        suggestions.push("Anexar comprovante de pagamento");
+      }
+
+      // Taxa bancária
+      if (description.includes("taxa") || description.includes("tarifa") || description.includes("iof")) {
+        category = "Taxa bancária";
+        possibleCauses.push("Taxa bancária não registrada");
+        suggestions.push("Criar despesa na categoria 'Taxas Bancárias'");
+        severity = "low";
+      }
+
+      // Valor alto
+      if (amount > 10000) {
+        possibleCauses.push("Pagamento de valor alto não identificado");
+        suggestions.push("Verificar com urgência - pode ser pagamento importante");
+        severity = "high";
+      }
+    }
+
+    // Análise de descrição vazia ou genérica
+    if (!description || description.length < 10) {
+      possibleCauses.push("Descrição muito curta ou vazia");
+      suggestions.push("Entrar em contato com o banco para obter mais detalhes");
+      severity = severity === "high" ? "high" : "medium";
+    }
+
+    // Se não encontrou nenhuma causa específica
+    if (possibleCauses.length === 0) {
+      possibleCauses.push("Transação não correspondeu a nenhum padrão conhecido");
+      suggestions.push("Revisar manualmente todas as faturas e despesas pendentes");
+      suggestions.push("Verificar se há erros de digitação nos valores cadastrados");
+    }
+
+    // Sugestão geral sempre presente
+    suggestions.push("Usar a funcionalidade de conciliação manual no sistema");
+
+    return {
+      possibleCauses,
+      suggestions,
+      severity,
+      category,
+    };
+  };
+
+  const loadDiscrepancies = async () => {
+    setLoading(true);
+    try {
+      const { data: transactions, error } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .eq("matched", false)
+        .order("transaction_date", { ascending: false });
+
+      if (error) throw error;
+
+      const analyzed = (transactions || []).map((tx) => ({
+        transaction: tx,
+        analysisResult: analyzeTransaction(tx),
+      }));
+
+      setDiscrepancies(analyzed);
+      toast.success(`${analyzed.length} divergências encontradas e analisadas`);
+    } catch (error: any) {
+      console.error("Erro ao carregar divergências:", error);
+      toast.error("Erro ao carregar divergências: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...discrepancies];
+
+    // Filtro de busca
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (d) =>
+          d.transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          d.analysisResult.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtro por tipo
+    if (filterType !== "all") {
+      filtered = filtered.filter((d) => d.transaction.transaction_type === filterType);
+    }
+
+    // Filtro por severidade
+    if (filterSeverity !== "all") {
+      filtered = filtered.filter((d) => d.analysisResult.severity === filterSeverity);
+    }
+
+    setFilteredDiscrepancies(filtered);
+  };
+
+  const getSeverityBadge = (severity: string) => {
+    const variants = {
+      low: { variant: "default" as const, label: "Baixa", className: "bg-blue-500" },
+      medium: { variant: "secondary" as const, label: "Média", className: "bg-yellow-500" },
+      high: { variant: "destructive" as const, label: "Alta", className: "bg-red-500" },
+    };
+    const config = variants[severity as keyof typeof variants] || variants.low;
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const exportToExcel = () => {
+    const exportData = filteredDiscrepancies.map((d) => ({
+      Data: format(new Date(d.transaction.transaction_date), "dd/MM/yyyy", { locale: ptBR }),
+      Tipo: d.transaction.transaction_type === "credit" ? "Entrada" : "Saída",
+      Descrição: d.transaction.description,
+      Valor: Math.abs(d.transaction.amount),
+      Categoria: d.analysisResult.category,
+      Severidade: d.analysisResult.severity === "high" ? "Alta" : d.analysisResult.severity === "medium" ? "Média" : "Baixa",
+      "Possíveis Causas": d.analysisResult.possibleCauses.join("; "),
+      Sugestões: d.analysisResult.suggestions.join("; "),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Divergências");
+    XLSX.writeFile(wb, `divergencias_conciliacao_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast.success("Relatório exportado com sucesso!");
+  };
+
+  const handleViewDetails = (discrepancy: Discrepancy) => {
+    setSelectedDiscrepancy(discrepancy);
+    setDetailDialogOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Relatório de Divergências de Conciliação</h1>
+            <p className="text-muted-foreground">
+              Análise detalhada de transações não conciliadas com causas e sugestões
+            </p>
+          </div>
+          <Button onClick={exportToExcel} disabled={filteredDiscrepancies.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Excel
+          </Button>
+        </div>
+
+        {/* Resumo */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Divergências</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{discrepancies.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Severidade Alta</CardTitle>
+              <XCircle className="h-4 w-4 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-destructive">
+                {discrepancies.filter((d) => d.analysisResult.severity === "high").length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recebimentos</CardTitle>
+              <TrendingUp className="h-4 w-4 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-success">
+                {discrepancies.filter((d) => d.transaction.transaction_type === "credit").length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pagamentos</CardTitle>
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-destructive">
+                {discrepancies.filter((d) => d.transaction.transaction_type === "debit").length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtros */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Descrição ou categoria..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tipo de Transação</Label>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="credit">Entradas</SelectItem>
+                    <SelectItem value="debit">Saídas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Severidade</Label>
+                <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="low">Baixa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabela de Divergências */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Divergências Detectadas</CardTitle>
+            <CardDescription>
+              {filteredDiscrepancies.length} de {discrepancies.length} divergências
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {filteredDiscrepancies.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma divergência encontrada</h3>
+                <p className="text-muted-foreground">
+                  Todas as transações estão conciliadas ou não há dados com os filtros aplicados
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Severidade</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDiscrepancies.map((discrepancy, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          {format(new Date(discrepancy.transaction.transaction_date), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          {discrepancy.transaction.transaction_type === "credit" ? (
+                            <Badge variant="default" className="bg-success">
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              Entrada
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">
+                              <TrendingDown className="w-3 h-3 mr-1" />
+                              Saída
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {discrepancy.transaction.description}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(Math.abs(discrepancy.transaction.amount))}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{discrepancy.analysisResult.category}</Badge>
+                        </TableCell>
+                        <TableCell>{getSeverityBadge(discrepancy.analysisResult.severity)}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(discrepancy)}
+                          >
+                            <HelpCircle className="w-4 h-4 mr-1" />
+                            Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Dialog de Detalhes */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Análise Detalhada da Divergência</DialogTitle>
+            <DialogDescription>
+              Causas possíveis e sugestões de resolução
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDiscrepancy && (
+            <div className="space-y-6">
+              {/* Informações da Transação */}
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-3">Informações da Transação</h3>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Data:</span>
+                    <span className="font-medium">
+                      {format(new Date(selectedDiscrepancy.transaction.transaction_date), "dd/MM/yyyy", {
+                        locale: ptBR,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tipo:</span>
+                    <span className="font-medium">
+                      {selectedDiscrepancy.transaction.transaction_type === "credit" ? "Entrada" : "Saída"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Valor:</span>
+                    <span className="font-medium">
+                      {formatCurrency(Math.abs(selectedDiscrepancy.transaction.amount))}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground">Descrição:</span>
+                    <span className="font-medium">{selectedDiscrepancy.transaction.description}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Possíveis Causas */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                  <h3 className="font-semibold">Possíveis Causas</h3>
+                </div>
+                <ul className="space-y-2">
+                  {selectedDiscrepancy.analysisResult.possibleCauses.map((cause, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <span className="text-destructive mt-0.5">•</span>
+                      <span>{cause}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Sugestões de Resolução */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-5 w-5 text-warning" />
+                  <h3 className="font-semibold">Sugestões de Resolução</h3>
+                </div>
+                <ul className="space-y-2">
+                  {selectedDiscrepancy.analysisResult.suggestions.map((suggestion, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <span className="text-warning mt-0.5">→</span>
+                      <span>{suggestion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Classificação */}
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div>
+                  <p className="text-sm font-medium">Categoria:</p>
+                  <Badge variant="outline" className="mt-1">
+                    {selectedDiscrepancy.analysisResult.category}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Severidade:</p>
+                  <div className="mt-1">{getSeverityBadge(selectedDiscrepancy.analysisResult.severity)}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+              Fechar
+            </Button>
+            <Button onClick={() => {
+              setDetailDialogOpen(false);
+              // Navegar para página de conciliação bancária
+              window.location.href = "/bank-reconciliation";
+            }}>
+              Ir para Conciliação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Layout>
+  );
+};
+
+export default ReconciliationDiscrepancies;
