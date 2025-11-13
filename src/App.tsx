@@ -12,6 +12,7 @@ import Invoices from "./pages/Invoices";
 import Expenses from "./pages/Expenses";
 import Import from "./pages/Import";
 import ImportBoletos from "./pages/ImportBoletos";
+import AuditLogs from "./pages/AuditLogs";
 import Reports from "./pages/Reports";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
 import DRE from "./pages/DRE";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/import" element={<Import />} />
             <Route path="/import-boletos" element={<ImportBoletos />} />
+            <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
             <Route path="/dre" element={<DRE />} />
