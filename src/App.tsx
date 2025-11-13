@@ -23,6 +23,7 @@ import BoletoGapsAnalysis from "./pages/BoletoGapsAnalysis";
 import ClientLedger from "./pages/ClientLedger";
 import TrialBalance from "./pages/TrialBalance";
 import ClientDashboard from "./pages/ClientDashboard";
+import RegularizeAccounting from "./pages/RegularizeAccounting";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
             <Route path="/trial-balance" element={<TrialBalance />} />
             <Route path="/client-ledger" element={<ClientLedger />} />
+            <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
