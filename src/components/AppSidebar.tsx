@@ -11,6 +11,7 @@ import {
   Building2,
   FileSpreadsheet,
   DollarSign,
+  ShieldAlert,
   RefreshCw,
   BookOpen,
   UserSquare2,
@@ -80,6 +81,7 @@ export function AppSidebar() {
         {
           label: "Configurações",
           items: [
+            { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
             { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
             { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
             { title: "Importar Clientes", url: "/import", icon: Upload },

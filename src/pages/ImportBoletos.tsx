@@ -153,11 +153,37 @@ const ImportBoletos = () => {
             calculated_amount: liquidationAmount > 0 ? liquidationAmount : null,
           };
 
-          const { error: insertError } = await supabase
+          const { data: insertedInvoice, error: insertError } = await supabase
             .from("invoices")
-            .insert(invoiceData);
+            .insert(invoiceData)
+            .select()
+            .single();
 
           if (insertError) throw insertError;
+
+          // Criar log de auditoria para boletos baixados manualmente
+          if (status === "cancelled" && row["Situação do Boleto"].toUpperCase().includes("BAIXADO")) {
+            const auditData = {
+              audit_type: "boleto_baixado",
+              severity: "warning",
+              entity_type: "invoice",
+              entity_id: insertedInvoice.id,
+              title: `Boleto Baixado Manualmente - ${row["Pagador"]}`,
+              description: `Boleto ${row["Nº Doc"]} (${row["Nosso Nº"]}) foi baixado manualmente. Status: ${row["Situação do Boleto"]}. Vencimento: ${row["Data Vencimento"]}. Valor: R$ ${amount.toFixed(2)}. AÇÃO NECESSÁRIA: Verificar motivo do cancelamento e confirmar se não houve pagamento por outro meio (PIX, transferência).`,
+              metadata: {
+                boleto_numero: row["Nº Doc"],
+                nosso_numero: row["Nosso Nº"],
+                cliente: row["Pagador"],
+                valor: amount,
+                vencimento: row["Data Vencimento"],
+                situacao_original: row["Situação do Boleto"],
+                competencia: competence,
+              },
+              created_by: user.id,
+            };
+
+            await supabase.from("audit_logs").insert(auditData);
+          }
 
           // Se o boleto foi pago, criar entrada no client_ledger
           if (status === "paid" && paymentDate) {
