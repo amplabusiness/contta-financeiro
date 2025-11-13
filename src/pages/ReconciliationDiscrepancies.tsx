@@ -21,7 +21,13 @@ import {
   CheckCircle2,
   XCircle,
   HelpCircle,
-  Lightbulb
+  Lightbulb,
+  Link,
+  FileText,
+  CreditCard,
+  Check,
+  Plus,
+  Loader2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,14 +53,65 @@ const ReconciliationDiscrepancies = () => {
   const [selectedDiscrepancy, setSelectedDiscrepancy] = useState<Discrepancy | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [reconcileDialogOpen, setReconcileDialogOpen] = useState(false);
+  const [reconcileMode, setReconcileMode] = useState<"invoice" | "expense" | "new_invoice" | "new_expense" | "manual">("invoice");
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
+  const [selectedExpenseId, setSelectedExpenseId] = useState("");
+  const [manualNotes, setManualNotes] = useState("");
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [newInvoiceData, setNewInvoiceData] = useState({
+    client_id: "",
+    amount: 0,
+    competence: "",
+    description: ""
+  });
+  const [newExpenseData, setNewExpenseData] = useState({
+    description: "",
+    amount: 0,
+    category: "",
+    due_date: ""
+  });
+  const [reconciling, setReconciling] = useState(false);
 
   useEffect(() => {
     loadDiscrepancies();
+    loadInvoices();
+    loadExpenses();
+    loadClients();
   }, []);
 
   useEffect(() => {
     applyFilters();
   }, [discrepancies, searchTerm, filterType, filterSeverity]);
+
+  const loadInvoices = async () => {
+    const { data } = await supabase
+      .from("invoices")
+      .select("*, clients(name)")
+      .eq("status", "pending")
+      .order("due_date", { ascending: false });
+    setInvoices(data || []);
+  };
+
+  const loadExpenses = async () => {
+    const { data } = await supabase
+      .from("expenses")
+      .select("*")
+      .eq("status", "pending")
+      .order("due_date", { ascending: false });
+    setExpenses(data || []);
+  };
+
+  const loadClients = async () => {
+    const { data } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("status", "active")
+      .order("name");
+    setClients(data || []);
+  };
 
   const analyzeTransaction = (tx: any): Discrepancy["analysisResult"] => {
     const possibleCauses: string[] = [];
@@ -264,6 +321,178 @@ const ReconciliationDiscrepancies = () => {
     setDetailDialogOpen(true);
   };
 
+  const handleOpenReconcile = (discrepancy: Discrepancy) => {
+    setSelectedDiscrepancy(discrepancy);
+    setNewInvoiceData({
+      client_id: "",
+      amount: Math.abs(discrepancy.transaction.amount),
+      competence: "",
+      description: discrepancy.transaction.description
+    });
+    setNewExpenseData({
+      description: discrepancy.transaction.description,
+      amount: Math.abs(discrepancy.transaction.amount),
+      category: "",
+      due_date: discrepancy.transaction.transaction_date
+    });
+    setReconcileDialogOpen(true);
+  };
+
+  const handleReconcile = async () => {
+    if (!selectedDiscrepancy) return;
+    
+    setReconciling(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const transaction = selectedDiscrepancy.transaction;
+      let matchedInvoiceId = null;
+      let matchedExpenseId = null;
+
+      if (reconcileMode === "invoice" && selectedInvoiceId) {
+        // Vincular a fatura existente
+        matchedInvoiceId = selectedInvoiceId;
+        
+        // Atualizar fatura como paga
+        await supabase
+          .from("invoices")
+          .update({ 
+            status: "paid",
+            payment_date: transaction.transaction_date
+          })
+          .eq("id", selectedInvoiceId);
+
+        // Adicionar entrada no razão do cliente
+        const { data: invoice } = await supabase
+          .from("invoices")
+          .select("client_id, amount")
+          .eq("id", selectedInvoiceId)
+          .single();
+
+        if (invoice) {
+          await supabase.from("client_ledger").insert({
+            client_id: invoice.client_id,
+            transaction_date: transaction.transaction_date,
+            description: `Pagamento recebido - ${transaction.description}`,
+            credit: invoice.amount,
+            debit: 0,
+            balance: 0,
+            reference_type: "invoice",
+            reference_id: selectedInvoiceId,
+            invoice_id: selectedInvoiceId,
+            created_by: user.id
+          });
+        }
+
+      } else if (reconcileMode === "expense" && selectedExpenseId) {
+        // Vincular a despesa existente
+        matchedExpenseId = selectedExpenseId;
+        
+        // Atualizar despesa como paga
+        await supabase
+          .from("expenses")
+          .update({ 
+            status: "paid",
+            payment_date: transaction.transaction_date
+          })
+          .eq("id", selectedExpenseId);
+
+      } else if (reconcileMode === "new_invoice") {
+        // Criar nova fatura
+        const { data: newInvoice, error: invoiceError } = await supabase
+          .from("invoices")
+          .insert({
+            client_id: newInvoiceData.client_id,
+            amount: newInvoiceData.amount,
+            due_date: transaction.transaction_date,
+            payment_date: transaction.transaction_date,
+            status: "paid",
+            competence: newInvoiceData.competence,
+            description: newInvoiceData.description,
+            created_by: user.id
+          })
+          .select()
+          .single();
+
+        if (invoiceError) throw invoiceError;
+        matchedInvoiceId = newInvoice.id;
+
+        // Adicionar entrada no razão do cliente
+        await supabase.from("client_ledger").insert({
+          client_id: newInvoiceData.client_id,
+          transaction_date: transaction.transaction_date,
+          description: `Pagamento recebido - ${newInvoiceData.description}`,
+          credit: newInvoiceData.amount,
+          debit: 0,
+          balance: 0,
+          reference_type: "invoice",
+          reference_id: newInvoice.id,
+          invoice_id: newInvoice.id,
+          created_by: user.id
+        });
+
+      } else if (reconcileMode === "new_expense") {
+        // Criar nova despesa
+        const { data: newExpense, error: expenseError } = await supabase
+          .from("expenses")
+          .insert({
+            description: newExpenseData.description,
+            amount: newExpenseData.amount,
+            category: newExpenseData.category,
+            due_date: newExpenseData.due_date,
+            payment_date: transaction.transaction_date,
+            status: "paid",
+            created_by: user.id
+          })
+          .select()
+          .single();
+
+        if (expenseError) throw expenseError;
+        matchedExpenseId = newExpense.id;
+
+      } else if (reconcileMode === "manual") {
+        // Marcar como resolvida manualmente
+        await supabase
+          .from("bank_transactions")
+          .update({ 
+            matched: true,
+            notes: manualNotes
+          })
+          .eq("id", transaction.id);
+
+        toast.success("Transação marcada como resolvida");
+        setReconcileDialogOpen(false);
+        loadDiscrepancies();
+        return;
+      }
+
+      // Atualizar transação bancária
+      await supabase
+        .from("bank_transactions")
+        .update({ 
+          matched: true,
+          matched_invoice_id: matchedInvoiceId,
+          matched_expense_id: matchedExpenseId,
+          ai_confidence: 100
+        })
+        .eq("id", transaction.id);
+
+      toast.success("Conciliação realizada com sucesso!");
+      setReconcileDialogOpen(false);
+      setSelectedInvoiceId("");
+      setSelectedExpenseId("");
+      setManualNotes("");
+      loadDiscrepancies();
+
+    } catch (error: any) {
+      console.error("Erro ao conciliar:", error);
+      toast.error("Erro ao realizar conciliação: " + error.message);
+    } finally {
+      setReconciling(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -454,14 +683,24 @@ const ReconciliationDiscrepancies = () => {
                         </TableCell>
                         <TableCell>{getSeverityBadge(discrepancy.analysisResult.severity)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDetails(discrepancy)}
-                          >
-                            <HelpCircle className="w-4 h-4 mr-1" />
-                            Detalhes
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(discrepancy)}
+                            >
+                              <HelpCircle className="w-4 h-4 mr-1" />
+                              Detalhes
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleOpenReconcile(discrepancy)}
+                            >
+                              <Link className="w-4 h-4 mr-1" />
+                              Resolver
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -574,6 +813,293 @@ const ReconciliationDiscrepancies = () => {
               window.location.href = "/bank-reconciliation";
             }}>
               Ir para Conciliação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Conciliação Manual */}
+      <Dialog open={reconcileDialogOpen} onOpenChange={setReconcileDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resolver Divergência</DialogTitle>
+            <DialogDescription>
+              Escolha como deseja resolver esta transação não conciliada
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDiscrepancy && (
+            <div className="space-y-6">
+              {/* Informações da Transação */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Transação Bancária</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Data</Label>
+                      <p className="font-medium">
+                        {format(new Date(selectedDiscrepancy.transaction.transaction_date), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Valor</Label>
+                      <p className="font-medium">
+                        {formatCurrency(Math.abs(selectedDiscrepancy.transaction.amount))}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Descrição</Label>
+                    <p className="font-medium">{selectedDiscrepancy.transaction.description}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Tipo</Label>
+                    <p>
+                      {selectedDiscrepancy.transaction.transaction_type === "credit"
+                        ? "Entrada (Recebimento)"
+                        : "Saída (Pagamento)"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Modo de Conciliação */}
+              <div className="space-y-4">
+                <Label>Como deseja resolver?</Label>
+                <Select value={reconcileMode} onValueChange={(value: any) => setReconcileMode(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedDiscrepancy.transaction.transaction_type === "credit" && (
+                      <>
+                        <SelectItem value="invoice">
+                          <div className="flex items-center">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Vincular a Fatura Existente
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="new_invoice">
+                          <div className="flex items-center">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Criar Nova Fatura
+                          </div>
+                        </SelectItem>
+                      </>
+                    )}
+                    {selectedDiscrepancy.transaction.transaction_type === "debit" && (
+                      <>
+                        <SelectItem value="expense">
+                          <div className="flex items-center">
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            Vincular a Despesa Existente
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="new_expense">
+                          <div className="flex items-center">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Criar Nova Despesa
+                          </div>
+                        </SelectItem>
+                      </>
+                    )}
+                    <SelectItem value="manual">
+                      <div className="flex items-center">
+                        <Check className="w-4 h-4 mr-2" />
+                        Marcar como Resolvida (Sem Vínculo)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Vincular a Fatura Existente */}
+              {reconcileMode === "invoice" && (
+                <div className="space-y-2">
+                  <Label>Selecione a Fatura</Label>
+                  <Select value={selectedInvoiceId} onValueChange={setSelectedInvoiceId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha uma fatura..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {invoices.map((inv) => (
+                        <SelectItem key={inv.id} value={inv.id}>
+                          {inv.clients?.name} - {formatCurrency(inv.amount)} - Venc:{" "}
+                          {format(new Date(inv.due_date), "dd/MM/yyyy")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Vincular a Despesa Existente */}
+              {reconcileMode === "expense" && (
+                <div className="space-y-2">
+                  <Label>Selecione a Despesa</Label>
+                  <Select value={selectedExpenseId} onValueChange={setSelectedExpenseId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha uma despesa..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {expenses.map((exp) => (
+                        <SelectItem key={exp.id} value={exp.id}>
+                          {exp.description} - {formatCurrency(exp.amount)} - Venc:{" "}
+                          {format(new Date(exp.due_date), "dd/MM/yyyy")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Criar Nova Fatura */}
+              {reconcileMode === "new_invoice" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Cliente</Label>
+                    <Select
+                      value={newInvoiceData.client_id}
+                      onValueChange={(value) =>
+                        setNewInvoiceData({ ...newInvoiceData, client_id: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o cliente..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor</Label>
+                    <Input
+                      type="number"
+                      value={newInvoiceData.amount}
+                      onChange={(e) =>
+                        setNewInvoiceData({ ...newInvoiceData, amount: parseFloat(e.target.value) })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Competência (YYYY-MM)</Label>
+                    <Input
+                      type="text"
+                      placeholder="2025-01"
+                      value={newInvoiceData.competence}
+                      onChange={(e) =>
+                        setNewInvoiceData({ ...newInvoiceData, competence: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Descrição</Label>
+                    <Input
+                      value={newInvoiceData.description}
+                      onChange={(e) =>
+                        setNewInvoiceData({ ...newInvoiceData, description: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Criar Nova Despesa */}
+              {reconcileMode === "new_expense" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Descrição</Label>
+                    <Input
+                      value={newExpenseData.description}
+                      onChange={(e) =>
+                        setNewExpenseData({ ...newExpenseData, description: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor</Label>
+                    <Input
+                      type="number"
+                      value={newExpenseData.amount}
+                      onChange={(e) =>
+                        setNewExpenseData({ ...newExpenseData, amount: parseFloat(e.target.value) })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select
+                      value={newExpenseData.category}
+                      onValueChange={(value) =>
+                        setNewExpenseData({ ...newExpenseData, category: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Aluguel">Aluguel</SelectItem>
+                        <SelectItem value="Salários">Salários</SelectItem>
+                        <SelectItem value="Fornecedores">Fornecedores</SelectItem>
+                        <SelectItem value="Impostos">Impostos</SelectItem>
+                        <SelectItem value="Serviços">Serviços</SelectItem>
+                        <SelectItem value="Outros">Outros</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de Vencimento</Label>
+                    <Input
+                      type="date"
+                      value={newExpenseData.due_date}
+                      onChange={(e) =>
+                        setNewExpenseData({ ...newExpenseData, due_date: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Marcar como Resolvida Manualmente */}
+              {reconcileMode === "manual" && (
+                <div className="space-y-2">
+                  <Label>Justificativa</Label>
+                  <Textarea
+                    placeholder="Explique por que esta transação está sendo marcada como resolvida sem vínculo..."
+                    value={manualNotes}
+                    onChange={(e) => setManualNotes(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReconcileDialogOpen(false)} disabled={reconciling}>
+              Cancelar
+            </Button>
+            <Button onClick={handleReconcile} disabled={reconciling}>
+              {reconciling ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Confirmar Resolução
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
