@@ -86,6 +86,56 @@ const ImportBoletos = () => {
     return "pending";
   };
 
+  const normalizeClientName = (name: string): string => {
+    // Remove sufixos comuns
+    return name
+      .toUpperCase()
+      .replace(/\s+(ME|LTDA|EIRELI|EPP|S\/A|SA|CIA|COMERCIO|SERVICOS)\b/g, "")
+      .replace(/[.-]/g, "")
+      .trim();
+  };
+
+  const normalizeCNPJ = (cnpj: string): string => {
+    if (!cnpj) return "";
+    // Remove caracteres não numéricos
+    return cnpj.replace(/\D/g, "");
+  };
+
+  const findClientMatch = (
+    pagadorName: string, 
+    cnpjFromBoleto: string | undefined,
+    clients: any[]
+  ): any => {
+    // 1. Tentar match por CNPJ (prioritário)
+    if (cnpjFromBoleto) {
+      const normalizedCNPJ = normalizeCNPJ(cnpjFromBoleto);
+      if (normalizedCNPJ.length >= 11) { // CPF tem 11, CNPJ tem 14
+        const matchByCNPJ = clients.find(c => 
+          c.cnpj && normalizeCNPJ(c.cnpj) === normalizedCNPJ
+        );
+        if (matchByCNPJ) return matchByCNPJ;
+      }
+    }
+
+    // 2. Match por nome normalizado
+    const normalizedPagador = normalizeClientName(pagadorName);
+    
+    // Tentar match exato
+    const exactMatch = clients.find(c => 
+      normalizeClientName(c.name) === normalizedPagador
+    );
+    if (exactMatch) return exactMatch;
+
+    // Tentar match parcial (contém)
+    const partialMatch = clients.find(c => {
+      const normalizedClientName = normalizeClientName(c.name);
+      return normalizedClientName.includes(normalizedPagador) || 
+             normalizedPagador.includes(normalizedClientName);
+    });
+
+    return partialMatch;
+  };
+
   const processExcelFile = async () => {
     if (!file) {
       toast.error("Selecione um arquivo Excel");
@@ -102,7 +152,7 @@ const ImportBoletos = () => {
 
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
-        .select("id, name")
+        .select("id, name, cnpj")
         .eq("status", "active");
 
       if (clientsError) throw clientsError;
@@ -125,12 +175,10 @@ const ImportBoletos = () => {
         }
 
         const pagadorName = row["Pagador"].toString().trim();
-        const pagadorUpper = pagadorName.toUpperCase();
+        const cnpjFromBoleto = row["CNPJ"] || row["Cnpj"] || row["cnpj"];
         
-        const client = clients?.find(c => 
-          c.name.toUpperCase().includes(pagadorUpper) || 
-          pagadorUpper.includes(c.name.toUpperCase())
-        );
+        // Usar função melhorada de matching
+        const client = findClientMatch(pagadorName, cnpjFromBoleto, clients || []);
 
         if (!client) {
           if (!missing.has(pagadorName)) {
