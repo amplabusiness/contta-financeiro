@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, TrendingDown, Calendar, DollarSign } from "lucide-react";
+import { AlertTriangle, TrendingDown, Calendar, DollarSign, Eye } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultEvolutionChart } from "@/components/DefaultEvolutionChart";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ClientDebt {
   client_id: string;
@@ -28,6 +31,8 @@ const Reports = () => {
   const [filterMonth, setFilterMonth] = useState<string>("");
   const [totalOverdue, setTotalOverdue] = useState(0);
   const [totalClients, setTotalClients] = useState(0);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<ClientDebt | null>(null);
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -129,6 +134,18 @@ const Reports = () => {
     } else {
       return <Badge variant="destructive">Alto Risco</Badge>;
     }
+  };
+
+  const handleClientClick = (debt: ClientDebt) => {
+    setSelectedClient(debt);
+    setDetailDialogOpen(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === "overdue") {
+      return <Badge variant="destructive">Vencida</Badge>;
+    }
+    return <Badge variant="secondary">Pendente</Badge>;
   };
 
   if (loading) {
@@ -271,9 +288,18 @@ const Reports = () => {
                 </TableHeader>
                 <TableBody>
                   {debtReport.map((debt, index) => (
-                    <TableRow key={debt.client_id}>
+                    <TableRow 
+                      key={debt.client_id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleClientClick(debt)}
+                    >
                       <TableCell className="font-bold text-muted-foreground">{index + 1}º</TableCell>
-                      <TableCell className="font-medium">{debt.client_name}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {debt.client_name}
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Badge variant="secondary">{debt.count_overdue}</Badge>
                       </TableCell>
@@ -339,6 +365,103 @@ const Reports = () => {
           </Card>
         )}
       </div>
+
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-destructive" />
+              Composição da Inadimplência
+            </DialogTitle>
+            <DialogDescription>
+              Detalhamento das faturas em atraso de {selectedClient?.client_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedClient && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Devido</p>
+                  <p className="text-2xl font-bold text-destructive">
+                    {formatCurrency(selectedClient.total_overdue)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Faturas</p>
+                  <p className="text-2xl font-bold">
+                    {selectedClient.count_overdue}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Dias em Atraso</p>
+                  <p className="text-2xl font-bold">
+                    {selectedClient.days_overdue}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Faturas Pendentes</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Competência</TableHead>
+                      <TableHead>Vencimento</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-right">Dias Atraso</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedClient.invoices
+                      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                      .map((invoice) => {
+                        const daysLate = Math.floor(
+                          (new Date().getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)
+                        );
+                        return (
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">
+                              {invoice.competence || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(invoice.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {formatCurrency(Number(invoice.amount))}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {getStatusBadge(invoice.status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className={daysLate > 60 ? "text-destructive font-bold" : daysLate > 30 ? "text-warning font-semibold" : ""}>
+                                {daysLate > 0 ? `${daysLate} dias` : "-"}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-destructive mb-1">Atenção</p>
+                    <p className="text-muted-foreground">
+                      Este cliente possui {selectedClient.count_overdue} fatura(s) em atraso há {selectedClient.days_overdue} dias.
+                      O nível de risco é classificado como: {getRiskBadge(selectedClient.days_overdue)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
