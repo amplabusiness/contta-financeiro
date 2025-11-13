@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ClientProvider } from "@/contexts/ClientContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import Clients from "./pages/Clients";
 import Invoices from "./pages/Invoices";
 import Expenses from "./pages/Expenses";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/invoices" element={<Invoices />} />

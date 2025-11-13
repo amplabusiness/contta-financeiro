@@ -13,6 +13,7 @@ import {
   RefreshCw,
   BookOpen,
   UserSquare2,
+  PieChart,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -40,6 +41,7 @@ export function AppSidebar() {
           label: "Gestão",
           items: [
             { title: "Dashboard Geral", url: "/dashboard", icon: LayoutDashboard },
+            { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
             { title: selectedClientName || "Cliente", url: "/client-dashboard", icon: UserSquare2 },
             { title: "Clientes", url: "/clients", icon: Users },
           ],
@@ -59,6 +61,7 @@ export function AppSidebar() {
           label: "Gestão",
           items: [
             { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+            { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
             { title: "Clientes", url: "/clients", icon: Users },
             { title: "Honorários", url: "/invoices", icon: FileText },
             { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
