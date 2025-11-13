@@ -95,10 +95,33 @@ const PixReconciliation = () => {
     }
   };
 
+  const extractCNPJFromDescription = (description: string): string | null => {
+    // Extrair CNPJ da descrição (14 dígitos seguidos)
+    const cnpjMatch = description.match(/(\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
+    if (cnpjMatch) {
+      return cnpjMatch[1].replace(/[^\d]/g, '');
+    }
+    return null;
+  };
+
   const calculateMatchScore = (transaction: any, invoice: any): any => {
     let confidence = 0;
     const differences: string[] = [];
     let matchType: "exact" | "close" | "suspicious" = "suspicious";
+
+    // PRIORIDADE: Verificar se o CNPJ está na descrição do PIX
+    const cnpjFromDescription = extractCNPJFromDescription(transaction.description || "");
+    const invoiceClientCNPJ = invoice.clients?.cnpj?.replace(/[^\d]/g, '');
+    
+    if (cnpjFromDescription && invoiceClientCNPJ) {
+      if (cnpjFromDescription === invoiceClientCNPJ) {
+        // CNPJ bate! Aumentar confiança significativamente
+        confidence += 50;
+      } else {
+        // CNPJ diferente - não fazer match
+        return { confidence: 0, matchType: "suspicious", differences: ["CNPJ diferente"] };
+      }
+    }
 
     // Comparar valores (peso 60%) - MAIS RIGOROSO
     const txAmount = Math.abs(transaction.amount);

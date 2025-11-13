@@ -254,7 +254,11 @@ const CostCenterAnalysis = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={120}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
+                    label={({ name, value }) => {
+                      const total = costCenterData.reduce((sum, entry) => sum + entry.value, 0);
+                      const percentage = ((value / total) * 100).toFixed(1);
+                      return `${name}: ${percentage}%`;
+                    }}
                   >
                     {costCenterData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
