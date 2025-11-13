@@ -20,6 +20,7 @@ import {
   PieChart,
   BookText,
   Bot,
+  Target,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -77,6 +78,7 @@ export function AppSidebar() {
           label: "Financeiro",
           items: [
             { title: "Despesas", url: "/expenses", icon: Wallet },
+            { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
             { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },

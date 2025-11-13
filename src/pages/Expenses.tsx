@@ -32,6 +32,7 @@ const Expenses = () => {
     competence: "",
     notes: "",
     account_id: "",
+    cost_center: "",
   });
 
   const categories = [
@@ -42,6 +43,16 @@ const Expenses = () => {
     "Material de Consumo",
     "Contas Variáveis",
     "Outros",
+  ];
+
+  const costCenters = [
+    "Administrativo",
+    "Financeiro",
+    "Tecnologia",
+    "Comercial",
+    "Recursos Humanos",
+    "Operacional",
+    "Marketing",
   ];
 
   const months = [
@@ -217,6 +228,7 @@ const Expenses = () => {
       competence: "",
       notes: "",
       account_id: "",
+      cost_center: "",
     });
   };
 
@@ -232,6 +244,7 @@ const Expenses = () => {
       competence: expense.competence || "",
       notes: expense.notes || "",
       account_id: expense.account_id || "",
+      cost_center: expense.cost_center || "",
     });
     setOpen(true);
   };
@@ -378,6 +391,24 @@ const Expenses = () => {
                         {categories.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cost_center">Centro de Custo</Label>
+                    <Select
+                      value={formData.cost_center}
+                      onValueChange={(value) => setFormData({ ...formData, cost_center: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um departamento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {costCenters.map((center) => (
+                          <SelectItem key={center} value={center}>
+                            {center}
                           </SelectItem>
                         ))}
                       </SelectContent>
