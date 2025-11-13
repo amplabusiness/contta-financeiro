@@ -163,7 +163,7 @@ serve(async (req) => {
           // Atualizar client_payers automaticamente
           // Adicionar novos sócios
           for (const socioName of addedSocios) {
-            const socioData = newSocios.find(s => s.nome === socioName);
+            const socioData = newSocios.find((s: any) => s.nome === socioName);
             await supabase
               .from('client_payers')
               .insert({
