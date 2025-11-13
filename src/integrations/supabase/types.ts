@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_transactions: {
+        Row: {
+          ai_confidence: number | null
+          ai_suggestion: string | null
+          amount: number
+          bank_reference: string | null
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          imported_from: string | null
+          matched: boolean
+          matched_expense_id: string | null
+          matched_invoice_id: string | null
+          notes: string | null
+          transaction_date: string
+          transaction_type: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_suggestion?: string | null
+          amount: number
+          bank_reference?: string | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          imported_from?: string | null
+          matched?: boolean
+          matched_expense_id?: string | null
+          matched_invoice_id?: string | null
+          notes?: string | null
+          transaction_date: string
+          transaction_type: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_suggestion?: string | null
+          amount?: number
+          bank_reference?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          imported_from?: string | null
+          matched?: boolean
+          matched_expense_id?: string | null
+          matched_invoice_id?: string | null
+          notes?: string | null
+          transaction_date?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_matched_expense_id_fkey"
+            columns: ["matched_expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_matched_invoice_id_fkey"
+            columns: ["matched_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chart_of_accounts: {
         Row: {
           code: string
@@ -54,6 +126,69 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_ledger: {
+        Row: {
+          balance: number
+          client_id: string
+          created_at: string
+          created_by: string
+          credit: number | null
+          debit: number | null
+          description: string
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          transaction_date: string
+        }
+        Insert: {
+          balance: number
+          client_id: string
+          created_at?: string
+          created_by: string
+          credit?: number | null
+          debit?: number | null
+          description: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date: string
+        }
+        Update: {
+          balance?: number
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          credit?: number | null
+          debit?: number | null
+          description?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_ledger_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_ledger_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -248,6 +383,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reconciliation_rules: {
+        Row: {
+          auto_match: boolean
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          pattern: string
+          priority: number | null
+          rule_name: string
+          rule_type: string
+          target_account_id: string | null
+          target_category: string | null
+        }
+        Insert: {
+          auto_match?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          pattern: string
+          priority?: number | null
+          rule_name: string
+          rule_type: string
+          target_account_id?: string | null
+          target_category?: string | null
+        }
+        Update: {
+          auto_match?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          pattern?: string
+          priority?: number | null
+          rule_name?: string
+          rule_type?: string
+          target_account_id?: string | null
+          target_category?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_rules_target_account_id_fkey"
+            columns: ["target_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       revenue_types: {
         Row: {

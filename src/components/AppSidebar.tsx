@@ -10,6 +10,8 @@ import {
   Upload,
   Building2,
   DollarSign,
+  RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,12 +32,14 @@ const menuGroups = [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
       { title: "Clientes", url: "/clients", icon: Users },
       { title: "Honorários", url: "/invoices", icon: FileText },
+      { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
     ],
   },
   {
     label: "Financeiro",
     items: [
       { title: "Despesas", url: "/expenses", icon: Wallet },
+      { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
       { title: "DRE", url: "/dre", icon: TrendingUp },
       { title: "Inadimplência", url: "/reports", icon: BarChart3 },
     ],
