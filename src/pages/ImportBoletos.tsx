@@ -182,7 +182,7 @@ const ImportBoletos = () => {
               created_by: user.id,
             };
 
-            await supabase.from("audit_logs").insert(auditData);
+            await supabase.from("audit_logs" as any).insert(auditData);
           }
 
           // Se o boleto foi pago, criar entrada no client_ledger

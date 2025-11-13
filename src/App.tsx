@@ -18,6 +18,7 @@ import ChartOfAccounts from "./pages/ChartOfAccounts";
 import DRE from "./pages/DRE";
 import RevenueTypes from "./pages/RevenueTypes";
 import BankReconciliation from "./pages/BankReconciliation";
+import PixReconciliation from "./pages/PixReconciliation";
 import ClientLedger from "./pages/ClientLedger";
 import ClientDashboard from "./pages/ClientDashboard";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/dre" element={<DRE />} />
             <Route path="/revenue-types" element={<RevenueTypes />} />
             <Route path="/bank-reconciliation" element={<BankReconciliation />} />
+            <Route path="/pix-reconciliation" element={<PixReconciliation />} />
             <Route path="/client-ledger" element={<ClientLedger />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

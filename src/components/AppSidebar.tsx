@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   RefreshCw,
   BookOpen,
+  Zap,
   UserSquare2,
   PieChart,
 } from "lucide-react";
@@ -74,6 +75,7 @@ export function AppSidebar() {
           items: [
             { title: "Despesas", url: "/expenses", icon: Wallet },
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
+            { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "DRE", url: "/dre", icon: TrendingUp },
             { title: "Inadimplência", url: "/reports", icon: BarChart3 },
           ],

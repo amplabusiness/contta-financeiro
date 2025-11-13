@@ -55,7 +55,7 @@ const AuditLogs = () => {
   const loadLogs = async () => {
     try {
       const query = supabase
-        .from("audit_logs")
+        .from("audit_logs" as any)
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -66,7 +66,7 @@ const AuditLogs = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setLogs(data || []);
+      setLogs((data as any) || []);
     } catch (error: any) {
       toast.error("Erro ao carregar logs: " + error.message);
     } finally {
@@ -85,7 +85,7 @@ const AuditLogs = () => {
       if (!user) throw new Error("Usuário não autenticado");
 
       const { error } = await supabase
-        .from("audit_logs")
+        .from("audit_logs" as any)
         .update({
           resolved: true,
           resolved_at: new Date().toISOString(),
