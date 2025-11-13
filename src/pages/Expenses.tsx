@@ -130,10 +130,90 @@ const Expenses = () => {
         if (error) throw error;
         toast.success("Despesa atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("expenses").insert(expenseData);
+        // Inserir a despesa
+        const { data: newExpense, error: expenseError } = await supabase
+          .from("expenses")
+          .insert(expenseData)
+          .select()
+          .single();
 
-        if (error) throw error;
-        toast.success("Despesa cadastrada com sucesso!");
+        if (expenseError) throw expenseError;
+
+        // Criar lançamento contábil automático (provisionamento)
+        if (formData.account_id) {
+          try {
+            // Buscar a conta de despesa
+            const { data: expenseAccount, error: accountError } = await supabase
+              .from("chart_of_accounts")
+              .select("code, name")
+              .eq("id", formData.account_id)
+              .single();
+
+            if (accountError) throw accountError;
+
+            // Mapear conta de despesa (4.x) para conta de passivo (2.x)
+            const liabilityCode = expenseAccount.code.replace(/^4/, "2");
+            
+            // Buscar a conta de passivo correspondente
+            const { data: liabilityAccount, error: liabilityError } = await supabase
+              .from("chart_of_accounts")
+              .select("id, name")
+              .eq("code", liabilityCode)
+              .eq("type", "passivo")
+              .single();
+
+            if (!liabilityError && liabilityAccount) {
+              // Criar o cabeçalho do lançamento contábil
+              const { data: entry, error: entryError } = await supabase
+                .from("accounting_entries" as any)
+                .insert({
+                  entry_date: formData.due_date,
+                  entry_type: "provisionamento",
+                  description: `Provisionamento: ${formData.description}`,
+                  reference_type: "expense",
+                  reference_id: newExpense.id,
+                  document_number: null,
+                  notes: `Competência: ${formData.competence}`,
+                  created_by: user.id,
+                } as any)
+                .select()
+                .single();
+
+              if (entryError) throw entryError;
+
+              // Criar as linhas do lançamento (débito e crédito)
+              const { error: linesError } = await supabase
+                .from("accounting_entry_lines" as any)
+                .insert([
+                  {
+                    entry_id: (entry as any)?.id,
+                    account_id: formData.account_id,
+                    description: `Despesa: ${formData.description}`,
+                    debit: parseFloat(formData.amount),
+                    credit: 0,
+                  },
+                  {
+                    entry_id: (entry as any)?.id,
+                    account_id: liabilityAccount.id,
+                    description: `A pagar: ${formData.description}`,
+                    debit: 0,
+                    credit: parseFloat(formData.amount),
+                  },
+                ] as any);
+
+              if (linesError) throw linesError;
+
+              toast.success("Despesa cadastrada e provisionamento contábil criado!");
+            } else {
+              toast.success("Despesa cadastrada! (Conta de passivo não encontrada para provisionamento)");
+            }
+          } catch (provisionError: any) {
+            console.error("Erro no provisionamento:", provisionError);
+            toast.warning("Despesa cadastrada, mas erro ao criar provisionamento contábil");
+          }
+        } else {
+          toast.success("Despesa cadastrada com sucesso!");
+        }
       }
 
       setOpen(false);
