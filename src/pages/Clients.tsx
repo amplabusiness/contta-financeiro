@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 
 const Clients = () => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -140,7 +142,12 @@ const Clients = () => {
             <h1 className="text-3xl font-bold">Clientes</h1>
             <p className="text-muted-foreground">Gerencie o cadastro de clientes</p>
           </div>
-          <Dialog open={open} onOpenChange={(value) => {
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/import")}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar Planilha
+            </Button>
+            <Dialog open={open} onOpenChange={(value) => {
             setOpen(value);
             if (!value) {
               setEditingClient(null);
@@ -236,6 +243,7 @@ const Clients = () => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <Card>
