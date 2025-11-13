@@ -18,6 +18,7 @@ import {
   UserSquare2,
   Calendar,
   PieChart,
+  BookText,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -78,6 +79,7 @@ export function AppSidebar() {
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
             { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
+            { title: "Balancete", url: "/trial-balance", icon: BookText },
             { title: "DRE", url: "/dre", icon: TrendingUp },
             { title: "Inadimplência", url: "/reports", icon: BarChart3 },
           ],
