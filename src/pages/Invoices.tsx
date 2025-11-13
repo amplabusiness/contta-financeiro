@@ -130,7 +130,7 @@ const Invoices = () => {
         const paymentDay = client.payment_day || 10;
         const clientDueDate = `${filterYear}-${filterMonth}-${paymentDay.toString().padStart(2, "0")}`;
 
-        const { error } = await supabase.from("invoices").insert({
+        const { data: newInvoice, error } = await supabase.from("invoices").insert({
           client_id: client.id,
           amount: client.monthly_fee,
           due_date: clientDueDate,
@@ -138,10 +138,27 @@ const Invoices = () => {
           competence: competence,
           description: `Honorário mensal - ${competence}`,
           created_by: user.id,
-        });
+        }).select().single();
 
-        if (!error) {
+        if (!error && newInvoice) {
           created++;
+          
+          // Criar provisionamento contábil automaticamente
+          try {
+            await supabase.functions.invoke('create-accounting-entry', {
+              body: {
+                type: 'invoice',
+                operation: 'provision',
+                referenceId: newInvoice.id,
+                amount: Number(client.monthly_fee),
+                date: clientDueDate,
+                description: `Honorário mensal - ${competence} - ${client.name}`,
+                clientId: client.id,
+              },
+            });
+          } catch (provisionError) {
+            console.error('Erro ao provisionar:', provisionError);
+          }
         }
       }
 
@@ -178,10 +195,28 @@ const Invoices = () => {
         if (error) throw error;
         toast.success("Honorário atualizado com sucesso!");
       } else {
-        const { error } = await supabase.from("invoices").insert(invoiceData);
+        const { data: newInvoice, error } = await supabase.from("invoices").insert(invoiceData).select().single();
 
         if (error) throw error;
-        toast.success("Honorário cadastrado com sucesso!");
+        
+        // Criar provisionamento contábil automaticamente
+        try {
+          await supabase.functions.invoke('create-accounting-entry', {
+            body: {
+              type: 'invoice',
+              operation: 'provision',
+              referenceId: newInvoice.id,
+              amount: parseFloat(formData.amount),
+              date: formData.due_date,
+              description: formData.description || 'Honorário',
+              clientId: formData.client_id,
+            },
+          });
+          toast.success("Honorário cadastrado e provisionamento criado!");
+        } catch (provisionError) {
+          console.error('Erro ao provisionar:', provisionError);
+          toast.warning("Honorário cadastrado, mas erro ao criar provisionamento");
+        }
       }
 
       setOpen(false);
@@ -207,11 +242,12 @@ const Invoices = () => {
 
       if (error) throw error;
 
-      // Criar lançamento contábil automaticamente
+      // Criar lançamento contábil de recebimento automaticamente
       try {
         const { error: accountingError } = await supabase.functions.invoke('create-accounting-entry', {
           body: {
             type: 'invoice',
+            operation: 'payment',
             referenceId: invoice.id,
             amount: parseFloat(invoice.amount),
             date: paymentDate,
