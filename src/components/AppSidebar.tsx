@@ -9,6 +9,7 @@ import {
   FolderTree,
   Upload,
   Building2,
+  FileSpreadsheet,
   DollarSign,
   RefreshCw,
   BookOpen,
@@ -81,7 +82,8 @@ export function AppSidebar() {
           items: [
             { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
             { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
-            { title: "Importar", url: "/import", icon: Upload },
+            { title: "Importar Clientes", url: "/import", icon: Upload },
+            { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
           ],
         },
       ];
