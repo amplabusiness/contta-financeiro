@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Calculator } from "lucide-react";
+import { Plus, Pencil, Trash2, Calculator, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -31,6 +32,8 @@ const RevenueTypes = () => {
   const [types, setTypes] = useState<RevenueType[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [editingType, setEditingType] = useState<RevenueType | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -105,17 +108,37 @@ const RevenueTypes = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este tipo de receita?")) return;
+  const handleDelete = async () => {
+    if (!selectedTypeId) return;
 
     try {
-      const { error } = await supabase.from("revenue_types").delete().eq("id", id);
+      const { error } = await supabase.from("revenue_types").delete().eq("id", selectedTypeId);
 
       if (error) throw error;
       toast.success("Tipo de receita excluído com sucesso!");
+      setDeleteDialogOpen(false);
+      setSelectedTypeId(null);
       loadTypes();
     } catch (error: any) {
-      toast.error("Erro ao excluir tipo de receita");
+      toast.error("Erro ao excluir tipo de receita: " + error.message);
+    }
+  };
+
+  const handleToggleStatus = async (type: RevenueType) => {
+    const newStatus = !type.is_active;
+    const action = newStatus ? "ativado" : "desativado";
+
+    try {
+      const { error } = await supabase
+        .from("revenue_types")
+        .update({ is_active: newStatus })
+        .eq("id", type.id);
+
+      if (error) throw error;
+      toast.success(`Tipo de receita ${action} com sucesso!`);
+      loadTypes();
+    } catch (error: any) {
+      toast.error("Erro ao atualizar status: " + error.message);
     }
   };
 
@@ -330,20 +353,39 @@ const RevenueTypes = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(type)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(type.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(type)}
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleStatus(type)}
+                            title={type.is_active ? "Desativar" : "Ativar"}
+                          >
+                            {type.is_active ? (
+                              <Ban className="w-4 h-4 text-warning" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 text-success" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedTypeId(type.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -352,6 +394,23 @@ const RevenueTypes = () => {
             )}
           </CardContent>
         </Card>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este tipo de receita? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

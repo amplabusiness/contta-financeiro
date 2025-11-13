@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,6 +26,8 @@ const ChartOfAccounts = () => {
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<ChartAccount | null>(null);
   const [formData, setFormData] = useState({
     code: "",
@@ -95,17 +98,37 @@ const ChartOfAccounts = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta conta?")) return;
+  const handleDelete = async () => {
+    if (!selectedAccountId) return;
 
     try {
-      const { error } = await supabase.from("chart_of_accounts").delete().eq("id", id);
+      const { error } = await supabase.from("chart_of_accounts").delete().eq("id", selectedAccountId);
 
       if (error) throw error;
       toast.success("Conta excluída com sucesso!");
+      setDeleteDialogOpen(false);
+      setSelectedAccountId(null);
       loadAccounts();
     } catch (error: any) {
-      toast.error("Erro ao excluir conta");
+      toast.error("Erro ao excluir conta: " + error.message);
+    }
+  };
+
+  const handleToggleStatus = async (account: ChartAccount) => {
+    const newStatus = !account.is_active;
+    const action = newStatus ? "ativada" : "desativada";
+
+    try {
+      const { error } = await supabase
+        .from("chart_of_accounts")
+        .update({ is_active: newStatus })
+        .eq("id", account.id);
+
+      if (error) throw error;
+      toast.success(`Conta ${action} com sucesso!`);
+      loadAccounts();
+    } catch (error: any) {
+      toast.error("Erro ao atualizar status: " + error.message);
     }
   };
 
@@ -261,20 +284,39 @@ const ChartOfAccounts = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(account)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(account.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(account)}
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleStatus(account)}
+                            title={account.is_active ? "Desativar" : "Ativar"}
+                          >
+                            {account.is_active ? (
+                              <Ban className="w-4 h-4 text-warning" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 text-success" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedAccountId(account.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -283,6 +325,23 @@ const ChartOfAccounts = () => {
             )}
           </CardContent>
         </Card>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
