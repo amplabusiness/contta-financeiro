@@ -229,13 +229,39 @@ const Expenses = () => {
 
   const handleMarkAsPaid = async (expense: any) => {
     try {
+      const paymentDate = new Date().toISOString().split("T")[0];
+      
+      // Atualizar status da despesa
       const { error } = await supabase
         .from("expenses")
-        .update({ status: "paid", payment_date: new Date().toISOString().split("T")[0] })
+        .update({ status: "paid", payment_date: paymentDate })
         .eq("id", expense.id);
 
       if (error) throw error;
-      toast.success("Despesa marcada como paga!");
+
+      // Criar lançamento contábil de pagamento automaticamente
+      try {
+        const { error: accountingError } = await supabase.functions.invoke('create-accounting-entry', {
+          body: {
+            type: 'expense',
+            referenceId: expense.id,
+            amount: parseFloat(expense.amount),
+            date: paymentDate,
+            description: expense.description || 'Despesa',
+          },
+        });
+
+        if (accountingError) {
+          console.error('Erro ao criar lançamento de pagamento:', accountingError);
+          toast.warning("Despesa marcada como paga, mas erro ao criar lançamento de pagamento");
+        } else {
+          toast.success("Despesa marcada como paga e lançamento de pagamento criado!");
+        }
+      } catch (accountingError) {
+        console.error('Erro ao criar lançamento de pagamento:', accountingError);
+        toast.warning("Despesa marcada como paga, mas erro ao criar lançamento de pagamento");
+      }
+
       loadExpenses();
     } catch (error: any) {
       toast.error("Erro ao atualizar despesa");

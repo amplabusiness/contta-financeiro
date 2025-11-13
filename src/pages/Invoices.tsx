@@ -197,13 +197,40 @@ const Invoices = () => {
 
   const handleMarkAsPaid = async (invoice: any) => {
     try {
+      const paymentDate = new Date().toISOString().split("T")[0];
+      
+      // Atualizar status da invoice
       const { error } = await supabase
         .from("invoices")
-        .update({ status: "paid", payment_date: new Date().toISOString().split("T")[0] })
+        .update({ status: "paid", payment_date: paymentDate })
         .eq("id", invoice.id);
 
       if (error) throw error;
-      toast.success("Honorário marcado como pago!");
+
+      // Criar lançamento contábil automaticamente
+      try {
+        const { error: accountingError } = await supabase.functions.invoke('create-accounting-entry', {
+          body: {
+            type: 'invoice',
+            referenceId: invoice.id,
+            amount: parseFloat(invoice.amount),
+            date: paymentDate,
+            description: invoice.description || `Honorário - ${invoice.clients?.name || 'Cliente'}`,
+            clientId: invoice.client_id,
+          },
+        });
+
+        if (accountingError) {
+          console.error('Erro ao criar lançamento contábil:', accountingError);
+          toast.warning("Honorário marcado como pago, mas erro ao criar lançamento contábil");
+        } else {
+          toast.success("Honorário marcado como pago e lançamento contábil criado!");
+        }
+      } catch (accountingError) {
+        console.error('Erro ao criar lançamento contábil:', accountingError);
+        toast.warning("Honorário marcado como pago, mas erro ao criar lançamento contábil");
+      }
+
       loadData();
     } catch (error: any) {
       toast.error("Erro ao atualizar honorário");
