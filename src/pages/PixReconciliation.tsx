@@ -63,7 +63,7 @@ const PixReconciliation = () => {
         for (const invoice of invoices || []) {
           const score = calculateMatchScore(tx, invoice);
           
-          if (score.confidence > 70 && score.confidence > bestScore) {
+          if (score.confidence > 75 && score.confidence > bestScore) {
             bestScore = score.confidence;
             bestMatch = {
               transaction: tx,
@@ -100,25 +100,34 @@ const PixReconciliation = () => {
     const differences: string[] = [];
     let matchType: "exact" | "close" | "suspicious" = "suspicious";
 
-    // Comparar valores (peso 50%)
+    // Comparar valores (peso 60%) - MAIS RIGOROSO
     const txAmount = Math.abs(transaction.amount);
     const invAmount = invoice.amount;
     const amountDiff = Math.abs(txAmount - invAmount);
     const amountDiffPercent = (amountDiff / invAmount) * 100;
 
+    // Se diferença for > 1%, reduzir confiança drasticamente
     if (amountDiff === 0) {
-      confidence += 50;
+      confidence += 60;
       matchType = "exact";
-    } else if (amountDiffPercent <= 2) {
-      confidence += 45;
+    } else if (amountDiffPercent <= 0.5) {
+      confidence += 55;
       differences.push(`Diferença de valor: R$ ${amountDiff.toFixed(2)} (${amountDiffPercent.toFixed(2)}%)`);
       matchType = "close";
-    } else if (amountDiffPercent <= 5) {
-      confidence += 35;
+    } else if (amountDiffPercent <= 1) {
+      confidence += 45;
       differences.push(`Diferença de valor: R$ ${amountDiff.toFixed(2)} (${amountDiffPercent.toFixed(2)}%)`);
-    } else if (amountDiffPercent <= 10) {
-      confidence += 20;
+      matchType = "suspicious";
+    } else if (amountDiffPercent <= 2) {
+      // Diferença entre 1-2% é suspeito
+      confidence += Math.max(0, 30 - (amountDiffPercent * 3));
+      differences.push(`Diferença de valor: R$ ${amountDiff.toFixed(2)} (${amountDiffPercent.toFixed(2)}%)`);
+      matchType = "suspicious";
+    } else {
+      // Diferença > 2% é muito suspeito - praticamente desqualifica
+      confidence += Math.max(0, 10 - (amountDiffPercent * 2));
       differences.push(`Diferença significativa de valor: R$ ${amountDiff.toFixed(2)} (${amountDiffPercent.toFixed(2)}%)`);
+      matchType = "suspicious";
     }
 
     // Comparar datas (peso 30%)
@@ -143,7 +152,7 @@ const PixReconciliation = () => {
       differences.push(`Pagamento ${minDaysDiff.toFixed(0)} dias ${txDate > dueDate ? 'após' : 'antes'} do vencimento`);
     }
 
-    // Comparar cliente pelo nome na descrição (peso 20%)
+    // Comparar cliente pelo nome na descrição (peso 20%) - MAIS RIGOROSO
     const clientName = invoice.clients?.name?.toUpperCase() || "";
     const txDescription = transaction.description?.toUpperCase() || "";
     
@@ -151,11 +160,19 @@ const PixReconciliation = () => {
       const nameWords = clientName.split(" ").filter(w => w.length > 3);
       const matchedWords = nameWords.filter(word => txDescription.includes(word));
       
-      if (matchedWords.length === nameWords.length) {
+      // Precisa ter pelo menos 50% das palavras para ser considerado match
+      const matchRatio = nameWords.length > 0 ? matchedWords.length / nameWords.length : 0;
+      
+      if (matchRatio >= 0.8) {
         confidence += 20;
-      } else if (matchedWords.length > 0) {
-        confidence += 10 * (matchedWords.length / nameWords.length);
-        differences.push(`Nome parcialmente encontrado: ${matchedWords.join(" ")}`);
+      } else if (matchRatio >= 0.5) {
+        confidence += 15;
+        differences.push(`Nome parcialmente encontrado: ${matchedWords.join(" ")} (${(matchRatio * 100).toFixed(0)}% das palavras)`);
+      } else if (matchRatio > 0) {
+        confidence += 5;
+        differences.push(`Poucas palavras encontradas: ${matchedWords.join(" ")} (${(matchRatio * 100).toFixed(0)}% das palavras)`);
+      } else {
+        differences.push(`Nome do cliente não encontrado na descrição`);
       }
     }
 

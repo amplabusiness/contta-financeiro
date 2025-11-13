@@ -12,17 +12,21 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ImportedTransactionsSummary } from "@/components/ImportedTransactionsSummary";
+import { ReconciliationKPIs } from "@/components/ReconciliationKPIs";
 
 const BankReconciliation = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [fileType, setFileType] = useState<string>("ofx");
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [importedTransactions, setImportedTransactions] = useState<any[]>([]);
   const [results, setResults] = useState<any>(null);
   const [splitDialogOpen, setSplitDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [clients, setClients] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [kpiData, setKpiData] = useState<any>(null);
   const [splitEntries, setSplitEntries] = useState<any[]>([
     { client_id: "", invoice_id: "", amount: "", description: "" }
   ]);
@@ -31,6 +35,7 @@ const BankReconciliation = () => {
     loadTransactions();
     loadClients();
     loadInvoices();
+    calculateKPIs();
   }, []);
 
   const loadClients = async () => {
@@ -56,7 +61,7 @@ const BankReconciliation = () => {
           matched_invoice_id:invoices(id, clients(name))
         `)
         .order("transaction_date", { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
       
@@ -75,44 +80,98 @@ const BankReconciliation = () => {
       );
       
       setTransactions(transactionsWithMatches);
+      calculateKPIs(transactionsWithMatches);
     } catch (error: any) {
       console.error("Erro ao carregar transações:", error);
     }
   };
 
+  const calculateKPIs = async (txData?: any[]) => {
+    const data = txData || transactions;
+    
+    const matched = data.filter((t: any) => t.matched);
+    const unmatched = data.filter((t: any) => !t.matched);
+    
+    const credits = data.filter((t: any) => t.transaction_type === "credit");
+    const debits = data.filter((t: any) => t.transaction_type === "debit");
+    
+    const totalCredit = credits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+    const totalDebit = debits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+    
+    const matchedCredit = matched
+      .filter((t: any) => t.transaction_type === "credit")
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+    
+    const matchedDebit = matched
+      .filter((t: any) => t.transaction_type === "debit")
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+    
+    const avgConfidence = matched.length > 0
+      ? matched.reduce((sum: number, t: any) => sum + (t.ai_confidence || 0), 0) / matched.length
+      : 0;
+    
+    const lastImport = data.length > 0 ? data[0].created_at : null;
+
+    setKpiData({
+      totalTransactions: data.length,
+      matchedTransactions: matched.length,
+      unmatchedTransactions: unmatched.length,
+      totalCredit,
+      totalDebit,
+      matchedCredit,
+      matchedDebit,
+      averageConfidence: avgConfidence,
+      lastImportDate: lastImport,
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles(selectedFiles);
       setResults(null);
+      setImportedTransactions([]);
     }
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      toast.error("Selecione um arquivo");
+    if (files.length === 0) {
+      toast.error("Selecione pelo menos um arquivo");
       return;
     }
 
     setLoading(true);
     setResults(null);
+    const allImportedTx: any[] = [];
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("fileType", fileType);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("fileType", fileType);
 
-      const { data, error } = await supabase.functions.invoke("process-bank-statement", {
-        body: formData,
+        const { data, error } = await supabase.functions.invoke("process-bank-statement", {
+          body: formData,
+        });
+
+        if (error) throw error;
+
+        allImportedTx.push(...(data.transactions || []));
+        toast.success(`${file.name}: ${data.processed} transações processadas`);
+      }
+
+      setImportedTransactions(allImportedTx);
+      setResults({
+        success: true,
+        total: allImportedTx.length,
+        matched: allImportedTx.filter((t: any) => t.matched).length,
       });
 
-      if (error) throw error;
-
-      setResults(data);
-      toast.success(`${data.matched} de ${data.total} transações conciliadas automaticamente!`);
-      loadTransactions();
+      await loadTransactions();
+      toast.success(`Total: ${allImportedTx.length} transações importadas de ${files.length} arquivo(s)`);
     } catch (error: any) {
-      console.error("Erro:", error);
-      toast.error("Erro ao processar arquivo: " + error.message);
+      console.error("Erro ao processar:", error);
+      toast.error("Erro ao processar extrato: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -313,6 +372,7 @@ const BankReconciliation = () => {
                 <Input
                   id="file"
                   type="file"
+                  multiple
                   accept=".ofx,.csv,.txt"
                   onChange={handleFileChange}
                   disabled={loading}
@@ -320,20 +380,24 @@ const BankReconciliation = () => {
               </div>
             </div>
 
-            {file && (
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm font-medium">{file.name}</span>
-                </div>
-                <Button onClick={handleUpload} disabled={loading}>
+            {files.length > 0 && (
+              <div className="space-y-2">
+                {files.map((f, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm font-medium">{f.name}</span>
+                    </div>
+                  </div>
+                ))}
+                <Button onClick={handleUpload} disabled={loading} className="w-full">
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processando...
+                      Processando {files.length} arquivo(s)...
                     </>
                   ) : (
-                    "Processar com IA"
+                    `Processar ${files.length} arquivo(s) com IA`
                   )}
                 </Button>
               </div>
@@ -365,6 +429,15 @@ const BankReconciliation = () => {
             )}
           </CardContent>
         </Card>
+
+        {kpiData && <ReconciliationKPIs {...kpiData} />}
+
+        {importedTransactions.length > 0 && (
+          <ImportedTransactionsSummary 
+            transactions={importedTransactions} 
+            fileName={files.map(f => f.name).join(", ")} 
+          />
+        )}
 
         <Card>
           <CardHeader>

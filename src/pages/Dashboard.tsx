@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
+import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +28,19 @@ const Dashboard = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [detailDialog, setDetailDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    data: any[];
+    type: "invoices" | "expenses" | "clients";
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    data: [],
+    type: "invoices",
+  });
 
   useEffect(() => {
     // Limpar seleção de cliente ao acessar o Dashboard Geral
@@ -106,6 +120,64 @@ const Dashboard = () => {
     navigate("/client-dashboard");
   };
 
+  const showDetail = async (type: "pending" | "overdue" | "expenses" | "clients") => {
+    try {
+      if (type === "clients") {
+        setDetailDialog({
+          open: true,
+          title: "Clientes Ativos",
+          description: `Total de ${clients.length} clientes ativos no sistema`,
+          data: clients,
+          type: "clients",
+        });
+      } else if (type === "pending") {
+        const { data } = await supabase
+          .from("invoices")
+          .select("*, clients(name)")
+          .eq("status", "pending")
+          .order("due_date", { ascending: true });
+        
+        setDetailDialog({
+          open: true,
+          title: "Honorários Pendentes",
+          description: `${data?.length || 0} faturas aguardando pagamento`,
+          data: data || [],
+          type: "invoices",
+        });
+      } else if (type === "overdue") {
+        const { data } = await supabase
+          .from("invoices")
+          .select("*, clients(name)")
+          .eq("status", "overdue")
+          .order("due_date", { ascending: true });
+        
+        setDetailDialog({
+          open: true,
+          title: "Inadimplência",
+          description: `${data?.length || 0} faturas vencidas`,
+          data: data || [],
+          type: "invoices",
+        });
+      } else if (type === "expenses") {
+        const { data } = await supabase
+          .from("expenses")
+          .select("*")
+          .eq("status", "pending")
+          .order("due_date", { ascending: true });
+        
+        setDetailDialog({
+          open: true,
+          title: "Despesas Pendentes",
+          description: `${data?.length || 0} despesas aguardando pagamento`,
+          data: data || [],
+          type: "expenses",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar detalhes:", error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       paid: "default",
@@ -141,23 +213,27 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Clientes Ativos"
-            value={stats.totalClients.toString()}
-            icon={Users}
-            variant="default"
-          />
-          <MetricCard
-            title="Honorários Pendentes"
-            value={formatCurrency(stats.totalPending)}
-            icon={TrendingUp}
-            variant="warning"
-            trend={{
-              value: `${stats.pendingInvoices} faturas`,
-              isPositive: false,
-            }}
-          />
-          <div onClick={() => navigate("/reports")} className="cursor-pointer">
+          <div onClick={() => showDetail("clients")} className="cursor-pointer">
+            <MetricCard
+              title="Clientes Ativos"
+              value={stats.totalClients.toString()}
+              icon={Users}
+              variant="default"
+            />
+          </div>
+          <div onClick={() => showDetail("pending")} className="cursor-pointer">
+            <MetricCard
+              title="Honorários Pendentes"
+              value={formatCurrency(stats.totalPending)}
+              icon={TrendingUp}
+              variant="warning"
+              trend={{
+                value: `${stats.pendingInvoices} faturas`,
+                isPositive: false,
+              }}
+            />
+          </div>
+          <div onClick={() => showDetail("overdue")} className="cursor-pointer">
             <MetricCard
               title="Inadimplência"
               value={formatCurrency(stats.totalOverdue)}
@@ -169,16 +245,18 @@ const Dashboard = () => {
               }}
             />
           </div>
-          <MetricCard
-            title="Despesas Pendentes"
-            value={formatCurrency(stats.totalExpenses)}
-            icon={TrendingDown}
-            variant="warning"
-            trend={{
-              value: `${stats.pendingExpenses} contas`,
-              isPositive: false,
-            }}
-          />
+          <div onClick={() => showDetail("expenses")} className="cursor-pointer">
+            <MetricCard
+              title="Despesas Pendentes"
+              value={formatCurrency(stats.totalExpenses)}
+              icon={TrendingDown}
+              variant="warning"
+              trend={{
+                value: `${stats.pendingExpenses} contas`,
+                isPositive: false,
+              }}
+            />
+          </div>
         </div>
 
         {stats.overdueInvoices > 0 && (
@@ -354,6 +432,15 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <MetricDetailDialog
+        open={detailDialog.open}
+        onOpenChange={(open) => setDetailDialog({ ...detailDialog, open })}
+        title={detailDialog.title}
+        description={detailDialog.description}
+        data={detailDialog.data}
+        type={detailDialog.type}
+      />
     </Layout>
   );
 };
