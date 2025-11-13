@@ -61,12 +61,21 @@ const AIAgents = () => {
 
   const agents = [
     {
+      id: 'pix-reconciliation',
+      name: 'Reconciliação PIX Inteligente',
+      description: 'Identifica clientes por CNPJ/CPF e concilia PIX com faturas automaticamente',
+      icon: Bot,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      function: 'ai-pix-reconciliation'
+    },
+    {
       id: 'reconciliation',
       name: 'Conciliação Automática',
       description: 'Concilia transações bancárias com boletos e despesas usando IA',
       icon: Bot,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
       function: 'ai-reconciliation-agent'
     },
     {
