@@ -30,6 +30,7 @@ import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ImportInvoices from "./pages/ImportInvoices";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
+import MergeClients from "./pages/MergeClients";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
             <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
             <Route path="/import-invoices" element={<ImportInvoices />} />
+            <Route path="/merge-clients" element={<MergeClients />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
