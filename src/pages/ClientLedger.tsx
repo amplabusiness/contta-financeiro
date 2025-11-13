@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
 import { toast } from "sonner";
+import { useClient } from "@/contexts/ClientContext";
 
 const ClientLedger = () => {
+  const { selectedClientId } = useClient();
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [ledger, setLedger] = useState<any[]>([]);
@@ -18,6 +20,12 @@ const ClientLedger = () => {
   useEffect(() => {
     loadClients();
   }, []);
+
+  useEffect(() => {
+    if (selectedClientId) {
+      setSelectedClient(selectedClientId);
+    }
+  }, [selectedClientId]);
 
   useEffect(() => {
     if (selectedClient) {

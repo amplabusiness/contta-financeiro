@@ -2,11 +2,13 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useClient } from "@/contexts/ClientContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,6 +18,8 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clients, setClients] = useState<any[]>([]);
+  const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -23,6 +27,8 @@ export function Layout({ children }: LayoutProps) {
       setLoading(false);
       if (!session) {
         navigate("/auth");
+      } else {
+        loadClients();
       }
     });
 
@@ -32,11 +38,35 @@ export function Layout({ children }: LayoutProps) {
       setSession(session);
       if (!session) {
         navigate("/auth");
+      } else {
+        loadClients();
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const loadClients = async () => {
+    const { data } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("status", "active")
+      .order("name");
+    setClients(data || []);
+  };
+
+  const handleClientChange = (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    if (client) {
+      setSelectedClient(client.id, client.name);
+      navigate("/client-dashboard");
+    }
+  };
+
+  const handleClearClient = () => {
+    clearSelectedClient();
+    navigate("/dashboard");
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -62,8 +92,42 @@ export function Layout({ children }: LayoutProps) {
         <AppSidebar />
         
         <div className="flex-1 flex flex-col w-full">
-          <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10">
+          <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10 gap-4">
             <SidebarTrigger />
+            
+            <div className="flex items-center gap-4 flex-1 max-w-md">
+              {selectedClientId ? (
+                <div className="flex items-center gap-2 flex-1 bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium flex-1">{selectedClientName}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearClient}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <Select value={selectedClientId || ""} onValueChange={handleClientChange}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione um cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sair

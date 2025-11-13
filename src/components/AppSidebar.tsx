@@ -12,7 +12,9 @@ import {
   DollarSign,
   RefreshCw,
   BookOpen,
+  UserSquare2,
 } from "lucide-react";
+import { useClient } from "@/contexts/ClientContext";
 import {
   Sidebar,
   SidebarContent,
@@ -25,40 +27,61 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const menuGroups = [
-  {
-    label: "Gestão",
-    items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Clientes", url: "/clients", icon: Users },
-      { title: "Honorários", url: "/invoices", icon: FileText },
-      { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
-    ],
-  },
-  {
-    label: "Financeiro",
-    items: [
-      { title: "Despesas", url: "/expenses", icon: Wallet },
-      { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
-      { title: "DRE", url: "/dre", icon: TrendingUp },
-      { title: "Inadimplência", url: "/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Configurações",
-    items: [
-      { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
-      { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
-      { title: "Importar", url: "/import", icon: Upload },
-    ],
-  },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const { selectedClientId, selectedClientName } = useClient();
+
+  const menuGroups = selectedClientId
+    ? [
+        {
+          label: "Gestão",
+          items: [
+            { title: "Dashboard Geral", url: "/dashboard", icon: LayoutDashboard },
+            { title: selectedClientName || "Cliente", url: "/client-dashboard", icon: UserSquare2 },
+            { title: "Clientes", url: "/clients", icon: Users },
+          ],
+        },
+        {
+          label: "Financeiro",
+          items: [
+            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
+            { title: "Honorários", url: "/invoices", icon: FileText },
+            { title: "Despesas", url: "/expenses", icon: Wallet },
+            { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
+          ],
+        },
+      ]
+    : [
+        {
+          label: "Gestão",
+          items: [
+            { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+            { title: "Clientes", url: "/clients", icon: Users },
+            { title: "Honorários", url: "/invoices", icon: FileText },
+            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
+          ],
+        },
+        {
+          label: "Financeiro",
+          items: [
+            { title: "Despesas", url: "/expenses", icon: Wallet },
+            { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
+            { title: "DRE", url: "/dre", icon: TrendingUp },
+            { title: "Inadimplência", url: "/reports", icon: BarChart3 },
+          ],
+        },
+        {
+          label: "Configurações",
+          items: [
+            { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
+            { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+            { title: "Importar", url: "/import", icon: Upload },
+          ],
+        },
+      ];
 
   const isActive = (path: string) => location.pathname === path;
 
