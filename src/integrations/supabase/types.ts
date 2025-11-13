@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_transaction_matches: {
+        Row: {
+          amount: number
+          bank_transaction_id: string
+          client_id: string | null
+          confidence: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_id: string | null
+          id: string
+          invoice_id: string | null
+        }
+        Insert: {
+          amount: number
+          bank_transaction_id: string
+          client_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_id?: string | null
+          id?: string
+          invoice_id?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_transaction_id?: string
+          client_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_id?: string | null
+          id?: string
+          invoice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transaction_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transaction_matches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transaction_matches_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transaction_matches_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transactions: {
         Row: {
           ai_confidence: number | null
@@ -24,6 +92,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          has_multiple_matches: boolean
           id: string
           imported_from: string | null
           matched: boolean
@@ -42,6 +111,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description: string
+          has_multiple_matches?: boolean
           id?: string
           imported_from?: string | null
           matched?: boolean
@@ -60,6 +130,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string
+          has_multiple_matches?: boolean
           id?: string
           imported_from?: string | null
           matched?: boolean

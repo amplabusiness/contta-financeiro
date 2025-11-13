@@ -52,6 +52,8 @@ Deno.serve(async (req) => {
       transactions = parseOFX(content);
     } else if (fileType === 'csv') {
       transactions = parseCSV(content);
+    } else if (fileType === 'zebrinha') {
+      transactions = parseZebrinha(content);
     } else {
       throw new Error('Formato de arquivo não suportado');
     }
@@ -253,6 +255,56 @@ function parseCSV(content: string): Transaction[] {
   }
 
   return transactions;
+}
+
+function parseZebrinha(content: string): Transaction[] {
+  // Zebrinha geralmente é um arquivo TXT/CSV com detalhes de pagamentos
+  // Formato típico: Data|CNPJ/CPF|Nome|Valor|Nosso Número|Seu Número
+  const transactions: Transaction[] = [];
+  const lines = content.split('\n');
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith('#')) continue;
+
+    // Tentar diferentes delimitadores
+    const delimiter = line.includes('|') ? '|' : line.includes(';') ? ';' : ',';
+    const parts = line.split(delimiter).map(p => p.trim());
+    
+    if (parts.length >= 4) {
+      const dateStr = parts[0];
+      const payerDoc = parts[1]; // CNPJ/CPF
+      const payerName = parts[2];
+      const amountStr = parts[3].replace(/[^\d.,-]/g, '').replace(',', '.');
+      const amount = parseFloat(amountStr);
+      
+      if (!isNaN(amount) && amount > 0) {
+        transactions.push({
+          date: formatZebrinhaDate(dateStr),
+          description: `${payerName} - ${payerDoc}`,
+          amount: Math.abs(amount),
+          type: 'credit',
+          reference: parts[4] || parts[5] || undefined, // Nosso número ou Seu número
+        });
+      }
+    }
+  }
+
+  return transactions;
+}
+
+function formatZebrinhaDate(dateStr: string): string {
+  // Zebrinha pode vir em vários formatos: DD/MM/YYYY, DDMMYYYY, etc
+  const cleaned = dateStr.replace(/[^\d]/g, '');
+  
+  if (cleaned.length === 8) {
+    const day = cleaned.substring(0, 2);
+    const month = cleaned.substring(2, 4);
+    const year = cleaned.substring(4, 8);
+    return `${year}-${month}-${day}`;
+  }
+  
+  return dateStr;
 }
 
 function formatOFXDate(ofxDate: string): string {

@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, CheckCircle2, XCircle, AlertCircle, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { Upload, CheckCircle2, XCircle, AlertCircle, Loader2, TrendingUp, TrendingDown, Split, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const BankReconciliation = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -18,10 +19,32 @@ const BankReconciliation = () => {
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [results, setResults] = useState<any>(null);
+  const [splitDialogOpen, setSplitDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [clients, setClients] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [splitEntries, setSplitEntries] = useState<any[]>([
+    { client_id: "", invoice_id: "", amount: "", description: "" }
+  ]);
 
   useEffect(() => {
     loadTransactions();
+    loadClients();
+    loadInvoices();
   }, []);
+
+  const loadClients = async () => {
+    const { data } = await supabase.from("clients").select("*").eq("status", "active");
+    setClients(data || []);
+  };
+
+  const loadInvoices = async () => {
+    const { data } = await supabase
+      .from("invoices")
+      .select("*, clients(name)")
+      .eq("status", "pending");
+    setInvoices(data || []);
+  };
 
   const loadTransactions = async () => {
     try {
@@ -36,7 +59,22 @@ const BankReconciliation = () => {
         .limit(50);
 
       if (error) throw error;
-      setTransactions(data || []);
+      
+      // Carregar matches múltiplos para cada transação
+      const transactionsWithMatches = await Promise.all(
+        (data || []).map(async (tx) => {
+          if (tx.has_multiple_matches) {
+            const { data: matches } = await supabase
+              .from("bank_transaction_matches")
+              .select("*, clients(name), invoices(id)")
+              .eq("bank_transaction_id", tx.id);
+            return { ...tx, matches: matches || [] };
+          }
+          return tx;
+        })
+      );
+      
+      setTransactions(transactionsWithMatches);
     } catch (error: any) {
       console.error("Erro ao carregar transações:", error);
     }
@@ -80,7 +118,136 @@ const BankReconciliation = () => {
     }
   };
 
+  const openSplitDialog = (tx: any) => {
+    setSelectedTransaction(tx);
+    setSplitEntries([{ client_id: "", invoice_id: "", amount: "", description: "" }]);
+    setSplitDialogOpen(true);
+  };
+
+  const addSplitEntry = () => {
+    setSplitEntries([...splitEntries, { client_id: "", invoice_id: "", amount: "", description: "" }]);
+  };
+
+  const removeSplitEntry = (index: number) => {
+    setSplitEntries(splitEntries.filter((_, i) => i !== index));
+  };
+
+  const updateSplitEntry = (index: number, field: string, value: any) => {
+    const updated = [...splitEntries];
+    updated[index][field] = value;
+    
+    // Se selecionou um honorário, preencher automaticamente
+    if (field === "invoice_id" && value) {
+      const invoice = invoices.find(inv => inv.id === value);
+      if (invoice) {
+        updated[index].client_id = invoice.client_id;
+        updated[index].amount = invoice.amount.toString();
+        updated[index].description = `Pagamento honorário - ${invoice.clients?.name}`;
+      }
+    }
+    
+    setSplitEntries(updated);
+  };
+
+  const saveSplitMatches = async () => {
+    if (!selectedTransaction) return;
+
+    try {
+      setLoading(true);
+
+      // Validar que a soma bate
+      const total = splitEntries.reduce((sum, entry) => sum + parseFloat(entry.amount || 0), 0);
+      if (Math.abs(total - selectedTransaction.amount) > 0.01) {
+        toast.error(`A soma dos lançamentos (${formatCurrency(total)}) não bate com o valor da transação (${formatCurrency(selectedTransaction.amount)})`);
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      // Inserir os matches
+      const matchesData = splitEntries.map(entry => ({
+        bank_transaction_id: selectedTransaction.id,
+        client_id: entry.client_id || null,
+        invoice_id: entry.invoice_id || null,
+        amount: parseFloat(entry.amount),
+        description: entry.description,
+        confidence: 1.0,
+        created_by: user.id,
+      }));
+
+      const { error: matchError } = await supabase
+        .from("bank_transaction_matches")
+        .insert(matchesData);
+
+      if (matchError) throw matchError;
+
+      // Atualizar transação para indicar múltiplos matches
+      await supabase
+        .from("bank_transactions")
+        .update({ has_multiple_matches: true, matched: true })
+        .eq("id", selectedTransaction.id);
+
+      // Atualizar honorários e razão
+      for (const entry of splitEntries) {
+        if (entry.invoice_id) {
+          // Marcar honorário como pago
+          await supabase
+            .from("invoices")
+            .update({ status: "paid", payment_date: selectedTransaction.transaction_date })
+            .eq("id", entry.invoice_id);
+
+          // Lançar no razão do cliente
+          const { data: lastBalance } = await supabase
+            .from("client_ledger")
+            .select("balance")
+            .eq("client_id", entry.client_id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          const previousBalance = lastBalance?.balance || 0;
+          const newBalance = previousBalance + parseFloat(entry.amount);
+
+          await supabase
+            .from("client_ledger")
+            .insert({
+              client_id: entry.client_id,
+              transaction_date: selectedTransaction.transaction_date,
+              description: entry.description,
+              credit: parseFloat(entry.amount),
+              debit: 0,
+              balance: newBalance,
+              invoice_id: entry.invoice_id,
+              reference_type: "bank_transaction",
+              reference_id: selectedTransaction.id,
+              created_by: user.id,
+            });
+        }
+      }
+
+      toast.success("Lançamentos múltiplos salvos com sucesso!");
+      setSplitDialogOpen(false);
+      loadTransactions();
+      loadInvoices();
+    } catch (error: any) {
+      console.error("Erro ao salvar lançamentos:", error);
+      toast.error("Erro ao salvar lançamentos: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getMatchBadge = (tx: any) => {
+    if (tx.has_multiple_matches) {
+      return (
+        <Badge className="gap-1 bg-primary">
+          <Split className="w-3 h-3" />
+          Múltiplos ({tx.matches?.length || 0})
+        </Badge>
+      );
+    }
+
     if (!tx.matched) {
       return (
         <Badge variant="outline" className="gap-1">
@@ -122,7 +289,7 @@ const BankReconciliation = () => {
           <CardHeader>
             <CardTitle>Importar Extrato Bancário</CardTitle>
             <CardDescription>
-              Formatos suportados: OFX (Extrato Bancário), CSV, "Zebrinha" do banco
+              Formatos suportados: OFX (Extrato Bancário), CSV, "Zebrinha" (detalhamento de pagamentos)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -136,6 +303,7 @@ const BankReconciliation = () => {
                   <SelectContent>
                     <SelectItem value="ofx">OFX (Extrato Bancário)</SelectItem>
                     <SelectItem value="csv">CSV (Planilha)</SelectItem>
+                    <SelectItem value="zebrinha">Zebrinha (Detalhamento)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -219,6 +387,7 @@ const BankReconciliation = () => {
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Sugestão da IA</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -251,7 +420,29 @@ const BankReconciliation = () => {
                       </TableCell>
                       <TableCell>{getMatchBadge(tx)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-xs">
-                        {tx.ai_suggestion || "—"}
+                        {tx.has_multiple_matches ? (
+                          <div className="space-y-1">
+                            {tx.matches?.map((match: any, i: number) => (
+                              <div key={i} className="text-xs">
+                                {match.clients?.name}: {formatCurrency(match.amount)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          tx.ai_suggestion || "—"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {!tx.matched && tx.transaction_type === "credit" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openSplitDialog(tx)}
+                          >
+                            <Split className="w-4 h-4 mr-1" />
+                            Destrinchar
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -261,6 +452,135 @@ const BankReconciliation = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={splitDialogOpen} onOpenChange={setSplitDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Destrinchar Transação em Múltiplos Lançamentos</DialogTitle>
+            <DialogDescription>
+              Transação: {selectedTransaction?.description} - {formatCurrency(selectedTransaction?.amount || 0)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {splitEntries.map((entry, index) => (
+              <Card key={index}>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-5 gap-4">
+                    <div className="col-span-2">
+                      <Label>Honorário Pendente</Label>
+                      <Select
+                        value={entry.invoice_id}
+                        onValueChange={(value) => updateSplitEntry(index, "invoice_id", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o honorário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {invoices.map((inv) => (
+                            <SelectItem key={inv.id} value={inv.id}>
+                              {inv.clients?.name} - {formatCurrency(inv.amount)} - {inv.competence}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Cliente (manual)</Label>
+                      <Select
+                        value={entry.client_id}
+                        onValueChange={(value) => updateSplitEntry(index, "client_id", value)}
+                        disabled={!!entry.invoice_id}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Valor</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={entry.amount}
+                        onChange={(e) => updateSplitEntry(index, "amount", e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      {splitEntries.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeSplitEntry(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <Label>Descrição</Label>
+                    <Input
+                      value={entry.description}
+                      onChange={(e) => updateSplitEntry(index, "description", e.target.value)}
+                      placeholder="Descrição do lançamento"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            <Button type="button" variant="outline" onClick={addSplitEntry} className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Mais um Lançamento
+            </Button>
+
+            <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
+              <div>
+                <div className="text-sm text-muted-foreground">Total Lançado:</div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(splitEntries.reduce((sum, entry) => sum + parseFloat(entry.amount || 0), 0))}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Valor da Transação:</div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(selectedTransaction?.amount || 0)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSplitDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveSplitMatches} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Lançamentos"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
