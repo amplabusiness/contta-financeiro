@@ -46,7 +46,7 @@ const PixReconciliation = () => {
       // Buscar boletos pendentes ou pagos recentemente
       const { data: invoices, error: invError } = await supabase
         .from("invoices")
-        .select("*, clients(id, name)")
+        .select("*, clients(id, name, cnpj)")
         .in("status", ["pending", "paid"])
         .order("due_date", { ascending: false });
 
@@ -109,18 +109,26 @@ const PixReconciliation = () => {
     const differences: string[] = [];
     let matchType: "exact" | "close" | "suspicious" = "suspicious";
 
-    // PRIORIDADE: Verificar se o CNPJ está na descrição do PIX
+    // PRIORIDADE 1: Verificar se o CNPJ está na descrição do PIX
     const cnpjFromDescription = extractCNPJFromDescription(transaction.description || "");
     const invoiceClientCNPJ = invoice.clients?.cnpj?.replace(/[^\d]/g, '');
     
+    // Se encontrou CNPJ na descrição E o cliente da fatura tem CNPJ
     if (cnpjFromDescription && invoiceClientCNPJ) {
       if (cnpjFromDescription === invoiceClientCNPJ) {
         // CNPJ bate! Aumentar confiança significativamente
         confidence += 50;
       } else {
-        // CNPJ diferente - não fazer match
-        return { confidence: 0, matchType: "suspicious", differences: ["CNPJ diferente"] };
+        // CNPJ diferente - NÃO fazer match de jeito nenhum
+        console.log(`CNPJ mismatch: Descrição tem ${cnpjFromDescription}, fatura é de ${invoiceClientCNPJ}`);
+        return { confidence: 0, matchType: "suspicious", differences: ["CNPJ não corresponde"] };
       }
+    } else if (cnpjFromDescription && !invoiceClientCNPJ) {
+      // Tem CNPJ na descrição mas a fatura não tem cliente com CNPJ cadastrado
+      // Penalizar bastante
+      console.log(`Cliente ${invoice.clients?.name} não tem CNPJ cadastrado`);
+      confidence -= 30;
+      differences.push("Cliente sem CNPJ cadastrado");
     }
 
     // Comparar valores (peso 60%) - MAIS RIGOROSO
