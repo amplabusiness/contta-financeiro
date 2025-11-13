@@ -13,7 +13,7 @@ import { useClient } from "@/contexts/ClientContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { clearSelectedClient } = useClient();
+  const { clearSelectedClient, setSelectedClient } = useClient();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -24,6 +24,7 @@ const Dashboard = () => {
     totalExpenses: 0,
   });
   const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       const [clientsRes, invoicesRes, expensesRes] = await Promise.all([
-        supabase.from("clients").select("*", { count: "exact" }),
+        supabase.from("clients").select("*", { count: "exact" }).eq("status", "active").order("name"),
         supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false }).limit(10),
         supabase.from("expenses").select("*"),
       ]);
@@ -43,6 +44,7 @@ const Dashboard = () => {
       const totalClients = clientsRes.count || 0;
       const invoices = invoicesRes.data || [];
       const expenses = expensesRes.data || [];
+      const clientsList = clientsRes.data || [];
 
       const pendingInvoices = invoices.filter((i) => i.status === "pending");
       const overdueInvoices = invoices.filter((i) => i.status === "overdue");
@@ -59,11 +61,17 @@ const Dashboard = () => {
       });
 
       setRecentInvoices(invoices);
+      setClients(clientsList);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewClient = (clientId: string, clientName: string) => {
+    setSelectedClient(clientId, clientName);
+    navigate("/client-dashboard");
   };
 
   const getStatusBadge = (status: string) => {
@@ -159,6 +167,59 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Clientes Ativos</CardTitle>
+            <CardDescription>Acesso rápido aos dashboards individuais dos clientes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {clients.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum cliente ativo cadastrado
+              </p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {clients.map((client) => (
+                  <Card key={client.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">{client.name}</CardTitle>
+                      <CardDescription>
+                        {client.email || "Sem email"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">CNPJ:</span>
+                          <span className="font-medium">{client.cnpj || "-"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Mensalidade:</span>
+                          <span className="font-medium">{formatCurrency(Number(client.monthly_fee))}</span>
+                        </div>
+                        {client.payment_day && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Vencimento:</span>
+                            <span className="font-medium">Dia {client.payment_day}</span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => handleViewClient(client.id, client.name)}
+                        className="w-full mt-4"
+                        variant="outline"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Ver Empresa
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
