@@ -5,32 +5,57 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, UserPlus, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface ImportResult {
   success: number;
   errors: string[];
   warnings: string[];
+  clientsCreated: number;
+}
+
+interface MissingClient {
+  name: string;
+  boletos: any[];
 }
 
 const ImportBoletos = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ImportResult | null>(null);
+  const [missingClients, setMissingClients] = useState<MissingClient[]>([]);
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [currentClientIndex, setCurrentClientIndex] = useState(0);
+  const [clientFormData, setClientFormData] = useState({
+    name: "",
+    cnpj: "",
+    email: "",
+    phone: "",
+    monthly_fee: "",
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setResults(null);
+      setMissingClients([]);
     }
   };
 
   const parseDate = (dateStr: string): string | null => {
     if (!dateStr || dateStr.trim() === "") return null;
     
-    // Formato: DD/MM/YYYY
     const parts = dateStr.trim().split("/");
     if (parts.length === 3) {
       const [day, month, year] = parts;
@@ -41,12 +66,10 @@ const ImportBoletos = () => {
 
   const parseAmount = (amountStr: string): number => {
     if (!amountStr) return 0;
-    // Remover "R$" se existir e converter vírgula para ponto
     return parseFloat(amountStr.toString().replace("R$", "").replace(/\./g, "").replace(",", "."));
   };
 
   const calculateCompetence = (dueDate: string): string => {
-    // Boleto que vence em 10/10/2025 tem competência 09/2025
     const date = new Date(dueDate);
     date.setMonth(date.getMonth() - 1);
     
@@ -71,12 +94,12 @@ const ImportBoletos = () => {
 
     setLoading(true);
     setResults(null);
+    setMissingClients([]);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Carregar todos os clientes ativos para fazer o match
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
         .select("id, name")
@@ -92,137 +115,244 @@ const ImportBoletos = () => {
       let successCount = 0;
       const errors: string[] = [];
       const warnings: string[] = [];
+      const missing: Map<string, any[]> = new Map();
 
       for (let i = 0; i < jsonData.length; i++) {
         const row: any = jsonData[i];
         
-        // Verificar se tem os campos necessários
         if (!row["Pagador"] || !row["Data Vencimento"] || !row["Valor (R$)"]) {
           continue;
         }
 
+        const pagadorName = row["Pagador"].toString().trim();
+        const pagadorUpper = pagadorName.toUpperCase();
+        
+        const client = clients?.find(c => 
+          c.name.toUpperCase().includes(pagadorUpper) || 
+          pagadorUpper.includes(c.name.toUpperCase())
+        );
+
+        if (!client) {
+          if (!missing.has(pagadorName)) {
+            missing.set(pagadorName, []);
+          }
+          missing.get(pagadorName)?.push(row);
+          continue;
+        }
+
         try {
-          const pagadorName = row["Pagador"].toString().trim().toUpperCase();
-          
-          // Encontrar o cliente pelo nome (case insensitive)
-          const client = clients?.find(c => 
-            c.name.toUpperCase().includes(pagadorName) || 
-            pagadorName.includes(c.name.toUpperCase())
-          );
-
-          if (!client) {
-            warnings.push(`Cliente não encontrado: ${row["Pagador"]}`);
-            continue;
-          }
-
-          const dueDate = parseDate(row["Data Vencimento"]);
-          if (!dueDate) {
-            errors.push(`Data de vencimento inválida na linha ${i + 2}`);
-            continue;
-          }
-
-          const amount = parseAmount(row["Valor (R$)"]);
-          const liquidationAmount = parseAmount(row["Liquidação (R$)"] || "0");
-          const paymentDate = parseDate(row["Data Liquidação"] || "");
-          const competence = calculateCompetence(dueDate);
-          const status = mapStatus(row["Situação do Boleto"] || "");
-
-          // Verificar se já existe um boleto com mesmo cliente, vencimento e valor
-          const { data: existing } = await supabase
-            .from("invoices")
-            .select("id")
-            .eq("client_id", client.id)
-            .eq("due_date", dueDate)
-            .eq("amount", amount)
-            .single();
-
-          if (existing) {
-            warnings.push(`Boleto já existe para ${row["Pagador"]} com vencimento ${row["Data Vencimento"]}`);
-            continue;
-          }
-
-          const invoiceData = {
-            client_id: client.id,
-            amount: amount,
-            due_date: dueDate,
-            payment_date: paymentDate,
-            status: status,
-            competence: competence,
-            description: `Honorários ${competence} - Boleto ${row["Nº Doc"]} (${row["Nosso Nº"]})`,
-            created_by: user.id,
-            calculated_amount: liquidationAmount > 0 ? liquidationAmount : null,
-          };
-
-          const { data: insertedInvoice, error: insertError } = await supabase
-            .from("invoices")
-            .insert(invoiceData)
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-
-          // Criar log de auditoria para boletos baixados manualmente
-          if (status === "cancelled" && row["Situação do Boleto"].toUpperCase().includes("BAIXADO")) {
-            const auditData = {
-              audit_type: "boleto_baixado",
-              severity: "warning",
-              entity_type: "invoice",
-              entity_id: insertedInvoice.id,
-              title: `Boleto Baixado Manualmente - ${row["Pagador"]}`,
-              description: `Boleto ${row["Nº Doc"]} (${row["Nosso Nº"]}) foi baixado manualmente. Status: ${row["Situação do Boleto"]}. Vencimento: ${row["Data Vencimento"]}. Valor: R$ ${amount.toFixed(2)}. AÇÃO NECESSÁRIA: Verificar motivo do cancelamento e confirmar se não houve pagamento por outro meio (PIX, transferência).`,
-              metadata: {
-                boleto_numero: row["Nº Doc"],
-                nosso_numero: row["Nosso Nº"],
-                cliente: row["Pagador"],
-                valor: amount,
-                vencimento: row["Data Vencimento"],
-                situacao_original: row["Situação do Boleto"],
-                competencia: competence,
-              },
-              created_by: user.id,
-            };
-
-            await supabase.from("audit_logs" as any).insert(auditData);
-          }
-
-          // Se o boleto foi pago, criar entrada no client_ledger
-          if (status === "paid" && paymentDate) {
-            const ledgerData = {
-              client_id: client.id,
-              transaction_date: paymentDate,
-              description: `Pagamento honorários ${competence}`,
-              debit: 0,
-              credit: liquidationAmount > 0 ? liquidationAmount : amount,
-              balance: 0, // Será calculado por trigger
-              reference_type: "invoice",
-              notes: `Boleto ${row["Nº Doc"]} - ${row["Situação do Boleto"]}`,
-              created_by: user.id,
-            };
-
-            await supabase.from("client_ledger").insert(ledgerData);
-          }
-
+          await processBoleto(row, client.id, user.id);
           successCount++;
         } catch (err: any) {
           errors.push(`Erro na linha ${i + 2}: ${err.message}`);
         }
       }
 
-      setResults({ success: successCount, errors, warnings });
+      if (missing.size > 0) {
+        const missingList: MissingClient[] = [];
+        missing.forEach((boletos, name) => {
+          missingList.push({ name, boletos });
+        });
+        setMissingClients(missingList);
+        setShowClientDialog(true);
+        setCurrentClientIndex(0);
+        setClientFormData({
+          name: missingList[0].name,
+          cnpj: "",
+          email: "",
+          phone: "",
+          monthly_fee: "",
+        });
+      }
+
+      setResults({ 
+        success: successCount, 
+        errors, 
+        warnings,
+        clientsCreated: 0,
+      });
       
       if (successCount > 0) {
-        toast.success(`${successCount} boletos importados com sucesso!`);
+        toast.success(`${successCount} boletos importados!`);
       }
-      if (warnings.length > 0) {
-        toast.warning(`${warnings.length} avisos durante importação`);
-      }
-      if (errors.length > 0) {
-        toast.error(`${errors.length} erros durante importação`);
+      if (missing.size > 0) {
+        toast.info(`${missing.size} clientes não encontrados`);
       }
     } catch (error: any) {
-      toast.error("Erro ao processar arquivo: " + error.message);
+      toast.error("Erro: " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const processBoleto = async (row: any, clientId: string, userId: string) => {
+    const dueDate = parseDate(row["Data Vencimento"]);
+    if (!dueDate) throw new Error("Data inválida");
+
+    const amount = parseAmount(row["Valor (R$)"]);
+    const liquidationAmount = parseAmount(row["Liquidação (R$)"] || "0");
+    const paymentDate = parseDate(row["Data Liquidação"] || "");
+    const competence = calculateCompetence(dueDate);
+    const status = mapStatus(row["Situação do Boleto"] || "");
+
+    const { data: existing } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("due_date", dueDate)
+      .eq("amount", amount)
+      .maybeSingle();
+
+    if (existing) throw new Error("Boleto duplicado");
+
+    const { data: insertedInvoice, error: insertError } = await supabase
+      .from("invoices")
+      .insert({
+        client_id: clientId,
+        amount,
+        due_date: dueDate,
+        payment_date: paymentDate,
+        status,
+        competence,
+        description: `Honorários ${competence} - Boleto ${row["Nº Doc"]} (${row["Nosso Nº"]})`,
+        created_by: userId,
+        calculated_amount: liquidationAmount > 0 ? liquidationAmount : null,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    if (status === "cancelled" && row["Situação do Boleto"].toUpperCase().includes("BAIXADO")) {
+      await supabase.from("audit_logs" as any).insert({
+        audit_type: "boleto_baixado",
+        severity: "warning",
+        entity_type: "invoice",
+        entity_id: insertedInvoice.id,
+        title: `Boleto Baixado - ${row["Pagador"]}`,
+        description: `Boleto ${row["Nº Doc"]} baixado. Verificar pagamento via PIX/transferência.`,
+        metadata: {
+          boleto_numero: row["Nº Doc"],
+          nosso_numero: row["Nosso Nº"],
+          cliente: row["Pagador"],
+          valor: amount,
+          vencimento: row["Data Vencimento"],
+          situacao_original: row["Situação do Boleto"],
+          competencia: competence,
+        },
+        created_by: userId,
+      });
+    }
+
+    if (status === "paid" && paymentDate) {
+      await supabase.from("client_ledger").insert({
+        client_id: clientId,
+        transaction_date: paymentDate,
+        description: `Pagamento honorários ${competence}`,
+        debit: 0,
+        credit: liquidationAmount > 0 ? liquidationAmount : amount,
+        balance: 0,
+        reference_type: "invoice",
+        notes: `Boleto ${row["Nº Doc"]}`,
+        created_by: userId,
+      });
+    }
+  };
+
+  const handleCreateClient = async () => {
+    if (!clientFormData.name.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { data: newClient, error: clientError } = await supabase
+        .from("clients")
+        .insert({
+          name: clientFormData.name.trim(),
+          cnpj: clientFormData.cnpj.trim() || null,
+          email: clientFormData.email.trim() || null,
+          phone: clientFormData.phone.trim() || null,
+          monthly_fee: clientFormData.monthly_fee ? parseFloat(clientFormData.monthly_fee) : 0,
+          status: "active",
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (clientError) throw clientError;
+
+      await supabase.from("audit_logs" as any).insert({
+        audit_type: "client_created_from_boleto",
+        severity: "warning",
+        entity_type: "client",
+        entity_id: newClient.id,
+        title: `Cliente via Boletos - ${clientFormData.name}`,
+        description: `Cliente "${clientFormData.name}" cadastrado via importação. ${missingClients[currentClientIndex].boletos.length} boleto(s). ATENÇÃO: Verificar com operacional se serviço está sendo executado.`,
+        metadata: {
+          cliente: clientFormData.name,
+          total_boletos: missingClients[currentClientIndex].boletos.length,
+          origem: "importacao_boletos",
+        },
+        created_by: user.id,
+      });
+
+      let processedCount = 0;
+      for (const boleto of missingClients[currentClientIndex].boletos) {
+        try {
+          await processBoleto(boleto, newClient.id, user.id);
+          processedCount++;
+        } catch (err) {
+          console.error("Erro boleto:", err);
+        }
+      }
+
+      toast.success(`Cliente cadastrado! ${processedCount} boletos processados`);
+
+      if (results) {
+        setResults({
+          ...results,
+          success: results.success + processedCount,
+          clientsCreated: results.clientsCreated + 1,
+        });
+      }
+
+      if (currentClientIndex < missingClients.length - 1) {
+        const nextIndex = currentClientIndex + 1;
+        setCurrentClientIndex(nextIndex);
+        setClientFormData({
+          name: missingClients[nextIndex].name,
+          cnpj: "",
+          email: "",
+          phone: "",
+          monthly_fee: "",
+        });
+      } else {
+        setShowClientDialog(false);
+        toast.success("Importação concluída!");
+      }
+    } catch (error: any) {
+      toast.error("Erro: " + error.message);
+    }
+  };
+
+  const handleSkipClient = () => {
+    if (currentClientIndex < missingClients.length - 1) {
+      const nextIndex = currentClientIndex + 1;
+      setCurrentClientIndex(nextIndex);
+      setClientFormData({
+        name: missingClients[nextIndex].name,
+        cnpj: "",
+        email: "",
+        phone: "",
+        monthly_fee: "",
+      });
+    } else {
+      setShowClientDialog(false);
+      toast.info("Importação finalizada");
     }
   };
 
@@ -232,16 +362,14 @@ const ImportBoletos = () => {
         <div>
           <h1 className="text-3xl font-bold">Importar Boletos Bancários</h1>
           <p className="text-muted-foreground">
-            Importe boletos do Sicredi com cálculo automático de competência
+            Importe boletos com cálculo automático de competência e cadastro de clientes
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Upload de Arquivo Excel</CardTitle>
-            <CardDescription>
-              Selecione o relatório de boletos do Sicredi (.xls, .xlsx)
-            </CardDescription>
+            <CardTitle>Upload Excel</CardTitle>
+            <CardDescription>Relatório de boletos do Sicredi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -261,53 +389,36 @@ const ImportBoletos = () => {
               )}
             </div>
 
-            <Button
-              onClick={processExcelFile}
-              disabled={!file || loading}
-              className="w-full"
-            >
+            <Button onClick={processExcelFile} disabled={!file || loading} className="w-full">
               <Upload className="mr-2 h-4 w-4" />
-              {loading ? "Importando..." : "Importar Boletos"}
+              {loading ? "Importando..." : "Importar"}
             </Button>
 
             {results && (
               <div className="space-y-4 mt-6">
                 {results.success > 0 && (
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <div className="flex items-center gap-2 text-green-600">
                     <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">
-                      {results.success} boletos importados com sucesso
-                    </span>
+                    <span>{results.success} boletos importados</span>
                   </div>
                 )}
 
-                {results.warnings.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-                      <AlertCircle className="h-5 w-5" />
-                      <span className="font-medium">Avisos ({results.warnings.length})</span>
-                    </div>
-                    <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-md space-y-1 max-h-48 overflow-y-auto">
-                      {results.warnings.map((warning, idx) => (
-                        <p key={idx} className="text-sm text-yellow-800 dark:text-yellow-200">
-                          • {warning}
-                        </p>
-                      ))}
-                    </div>
+                {results.clientsCreated > 0 && (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <UserPlus className="h-5 w-5" />
+                    <span>{results.clientsCreated} clientes cadastrados</span>
                   </div>
                 )}
 
                 {results.errors.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="h-5 w-5" />
-                      <span className="font-medium">Erros ({results.errors.length})</span>
+                      <span>Erros ({results.errors.length})</span>
                     </div>
-                    <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-md space-y-1 max-h-48 overflow-y-auto">
-                      {results.errors.map((error, idx) => (
-                        <p key={idx} className="text-sm text-red-800 dark:text-red-200">
-                          • {error}
-                        </p>
+                    <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-md max-h-48 overflow-y-auto">
+                      {results.errors.map((e, i) => (
+                        <p key={i} className="text-sm">• {e}</p>
                       ))}
                     </div>
                   </div>
@@ -323,46 +434,103 @@ const ImportBoletos = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h3 className="font-semibold">Formato do Arquivo</h3>
-              <p className="text-sm text-muted-foreground">
-                O arquivo Excel deve conter as seguintes colunas:
-              </p>
-              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                <li><strong>Cart:</strong> Tipo da carteira (ex: SIMPLES)</li>
-                <li><strong>Nº Doc:</strong> Número do boleto no sistema CNAB 400</li>
-                <li><strong>Nosso Nº:</strong> Número gerado pelo banco</li>
-                <li><strong>Pagador:</strong> Nome do cliente (deve estar cadastrado)</li>
-                <li><strong>Data Vencimento:</strong> Data de vencimento do boleto</li>
-                <li><strong>Data Liquidação:</strong> Data do pagamento (se pago)</li>
-                <li><strong>Valor (R$):</strong> Valor original do boleto</li>
-                <li><strong>Liquidação (R$):</strong> Valor efetivamente pago</li>
-                <li><strong>Situação do Boleto:</strong> Status (LIQUIDADO, BAIXADO, VENCIDO)</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-semibold">Regras de Importação</h3>
-              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                <li>A competência é calculada automaticamente (vencimento - 1 mês)</li>
-                <li>Boleto vencendo em 10/10/2025 tem competência 09/2025</li>
-                <li>O cliente deve estar cadastrado no sistema</li>
-                <li>Boletos duplicados (mesmo cliente, vencimento e valor) são ignorados</li>
-                <li>Boletos liquidados geram entrada no razão do cliente</li>
-                <li>Boletos baixados são marcados como cancelados</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-semibold">Status dos Boletos</h3>
-              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
-                <li><strong>LIQUIDADO:</strong> Boleto pago pelo cliente</li>
-                <li><strong>BAIXADO POR SOLICITAÇÃO:</strong> Cancelado manualmente (fazer auditoria)</li>
-                <li><strong>VENCIDO:</strong> Boleto não pago na data (monitorar)</li>
-              </ul>
+              <h3 className="font-semibold">Cadastro Automático</h3>
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md">
+                <p className="text-sm">
+                  <strong>💡 Novo:</strong> Clientes não encontrados podem ser cadastrados durante a importação. 
+                  Ajuda a identificar divergências entre financeiro (boletos) e operacional (serviços).
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showClientDialog} onOpenChange={setShowClientDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Cadastrar Cliente
+            </DialogTitle>
+            <DialogDescription>
+              Cliente {currentClientIndex + 1} de {missingClients.length} com{" "}
+              {missingClients[currentClientIndex]?.boletos.length} boleto(s)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-md">
+              <p className="text-sm">
+                ⚠️ Cliente com boletos mas não cadastrado. Alerta de auditoria será criado.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label>Nome *</Label>
+                <Input
+                  value={clientFormData.name}
+                  onChange={(e) => setClientFormData({ ...clientFormData, name: e.target.value })}
+                  maxLength={200}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>CNPJ</Label>
+                  <Input
+                    value={clientFormData.cnpj}
+                    onChange={(e) => setClientFormData({ ...clientFormData, cnpj: e.target.value })}
+                    maxLength={18}
+                  />
+                </div>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input
+                    value={clientFormData.phone}
+                    onChange={(e) => setClientFormData({ ...clientFormData, phone: e.target.value })}
+                    maxLength={20}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={clientFormData.email}
+                    onChange={(e) => setClientFormData({ ...clientFormData, email: e.target.value })}
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <Label>Honorário Mensal</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={clientFormData.monthly_fee}
+                    onChange={(e) => setClientFormData({ ...clientFormData, monthly_fee: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Badge variant="outline" className="mr-auto">
+              {currentClientIndex + 1}/{missingClients.length}
+            </Badge>
+            <Button variant="outline" onClick={handleSkipClient}>Pular</Button>
+            <Button onClick={handleCreateClient}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Cadastrar
+              {currentClientIndex < missingClients.length - 1 && <ArrowRight className="h-4 w-4 ml-2" />}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
