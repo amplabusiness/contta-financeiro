@@ -23,6 +23,7 @@ import {
   Target,
   Activity,
   FileInput,
+  FileWarning,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -83,6 +84,7 @@ export function AppSidebar() {
             { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
             { title: "Dashboard Conciliação", url: "/reconciliation-dashboard", icon: Activity },
+            { title: "Relatório Divergências", url: "/reconciliation-discrepancies", icon: FileWarning },
             { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
             { title: "Balancete", url: "/trial-balance", icon: BookText },
