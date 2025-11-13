@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.enrich-client-data]
 verify_jwt = true
+
+[functions.sync-client-enrichment]
+verify_jwt = false
