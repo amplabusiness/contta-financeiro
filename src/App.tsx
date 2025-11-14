@@ -36,6 +36,9 @@ import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
 import ClientEnrichment from "./pages/ClientEnrichment";
 import BatchEnrichment from "./pages/BatchEnrichment";
+import LivroDiario from "./pages/LivroDiario";
+import LivroRazao from "./pages/LivroRazao";
+import Balancete from "./pages/Balancete";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +84,9 @@ const App = () => (
             <Route path="/unmatched-pix-report" element={<UnmatchedPixReport />} />
             <Route path="/client-enrichment" element={<ClientEnrichment />} />
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
+            <Route path="/livro-diario" element={<LivroDiario />} />
+            <Route path="/livro-razao" element={<LivroRazao />} />
+            <Route path="/balancete" element={<Balancete />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
