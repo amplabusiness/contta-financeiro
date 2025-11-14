@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   Database,
   Scale,
+  Wrench,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -106,6 +107,7 @@ export function AppSidebar() {
             { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
             { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
             { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+            { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
             { title: "Mesclar Clientes", url: "/merge-clients", icon: Users },
             { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
             { title: "Importar Clientes", url: "/import", icon: Upload },
