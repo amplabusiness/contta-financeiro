@@ -82,6 +82,7 @@ export function AppSidebar() {
         { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
         { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
         { title: "Inadimplência", url: "/reports", icon: AlertTriangle },
+        { title: "Cartas de Cobrança", url: "/collection-letters", icon: FileText },
       ],
     },
     {
