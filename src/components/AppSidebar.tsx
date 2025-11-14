@@ -34,6 +34,7 @@ import {
   Settings,
   CreditCard,
   GitMerge,
+  Clipboard,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -84,7 +85,9 @@ export function AppSidebar() {
     {
       label: "Receitas",
       items: [
+        { title: "🎯 Análise de Honorários", url: "/fees-analysis", icon: TrendingUp },
         { title: "Honorários a Receber", url: "/invoices", icon: CreditCard },
+        { title: "Ordens de Serviço", url: "/collection-work-orders", icon: Clipboard },
         { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
         { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
         { title: "Inadimplência", url: "/reports", icon: AlertTriangle },

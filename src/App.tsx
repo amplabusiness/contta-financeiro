@@ -43,6 +43,8 @@ import Settings from "./pages/Settings";
 import CollectionDashboard from "./pages/CollectionDashboard";
 import CollectionLetters from "./pages/CollectionLetters";
 import Contracts from "./pages/Contracts";
+import FeesAnalysis from "./pages/FeesAnalysis";
+import CollectionWorkOrders from "./pages/CollectionWorkOrders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +97,8 @@ const App = () => (
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />
             <Route path="/collection-letters" element={<CollectionLetters />} />
             <Route path="/contracts" element={<Contracts />} />
+            <Route path="/fees-analysis" element={<FeesAnalysis />} />
+            <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
