@@ -14,6 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_entries: {
+        Row: {
+          balanced: boolean
+          created_at: string
+          created_by: string
+          description: string
+          document_number: string | null
+          entry_date: string
+          entry_type: string
+          id: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          total_credit: number
+          total_debit: number
+        }
+        Insert: {
+          balanced?: boolean
+          created_at?: string
+          created_by: string
+          description: string
+          document_number?: string | null
+          entry_date: string
+          entry_type: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          total_credit?: number
+          total_debit?: number
+        }
+        Update: {
+          balanced?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string
+          document_number?: string | null
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          total_credit?: number
+          total_debit?: number
+        }
+        Relationships: []
+      }
+      accounting_entry_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          credit: number
+          debit: number
+          description: string | null
+          entry_id: string
+          id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          entry_id: string
+          id?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          entry_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_entry_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          audit_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          resolution_notes: string | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          audit_type: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          audit_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      automation_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          execution_date: string
+          id: string
+          tasks_executed: number | null
+          tasks_failed: number | null
+          tasks_succeeded: number | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          execution_date?: string
+          id?: string
+          tasks_executed?: number | null
+          tasks_failed?: number | null
+          tasks_succeeded?: number | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          execution_date?: string
+          id?: string
+          tasks_executed?: number | null
+          tasks_failed?: number | null
+          tasks_succeeded?: number | null
+        }
+        Relationships: []
+      }
       bank_transaction_matches: {
         Row: {
           amount: number
@@ -164,6 +338,7 @@ export type Database = {
           created_by: string
           id: string
           is_active: boolean
+          is_synthetic: boolean
           name: string
           parent_id: string | null
           type: string
@@ -175,6 +350,7 @@ export type Database = {
           created_by: string
           id?: string
           is_active?: boolean
+          is_synthetic?: boolean
           name: string
           parent_id?: string | null
           type: string
@@ -186,6 +362,7 @@ export type Database = {
           created_by?: string
           id?: string
           is_active?: boolean
+          is_synthetic?: boolean
           name?: string
           parent_id?: string | null
           type?: string
@@ -197,6 +374,101 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_enrichment: {
+        Row: {
+          atividade_principal: Json | null
+          atividades_secundarias: Json | null
+          bairro: string | null
+          capital_social: number | null
+          cep: string | null
+          client_id: string
+          cnpj: string
+          complemento: string | null
+          created_at: string
+          data_abertura: string | null
+          data_source: string
+          email: string | null
+          id: string
+          last_updated: string
+          logradouro: string | null
+          municipio: string | null
+          natureza_juridica: string | null
+          nome_fantasia: string | null
+          numero: string | null
+          porte: string | null
+          qsa: Json | null
+          razao_social: string | null
+          situacao: string | null
+          socios: Json | null
+          telefone: string | null
+          uf: string | null
+        }
+        Insert: {
+          atividade_principal?: Json | null
+          atividades_secundarias?: Json | null
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          client_id: string
+          cnpj: string
+          complemento?: string | null
+          created_at?: string
+          data_abertura?: string | null
+          data_source?: string
+          email?: string | null
+          id?: string
+          last_updated?: string
+          logradouro?: string | null
+          municipio?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          porte?: string | null
+          qsa?: Json | null
+          razao_social?: string | null
+          situacao?: string | null
+          socios?: Json | null
+          telefone?: string | null
+          uf?: string | null
+        }
+        Update: {
+          atividade_principal?: Json | null
+          atividades_secundarias?: Json | null
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          client_id?: string
+          cnpj?: string
+          complemento?: string | null
+          created_at?: string
+          data_abertura?: string | null
+          data_source?: string
+          email?: string | null
+          id?: string
+          last_updated?: string
+          logradouro?: string | null
+          municipio?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          porte?: string | null
+          qsa?: Json | null
+          razao_social?: string | null
+          situacao?: string | null
+          socios?: Json | null
+          telefone?: string | null
+          uf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_enrichment_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -264,50 +536,213 @@ export type Database = {
           },
         ]
       }
-      clients: {
+      client_payers: {
         Row: {
-          cnpj: string | null
+          client_id: string
           created_at: string
           created_by: string
-          email: string | null
           id: string
-          monthly_fee: number
-          name: string
+          is_active: boolean
           notes: string | null
-          payment_day: number | null
-          phone: string | null
-          status: string
+          payer_document: string | null
+          payer_name: string
+          relationship: string | null
           updated_at: string
         }
         Insert: {
-          cnpj?: string | null
+          client_id: string
           created_at?: string
           created_by: string
-          email?: string | null
           id?: string
-          monthly_fee?: number
-          name: string
+          is_active?: boolean
           notes?: string | null
-          payment_day?: number | null
-          phone?: string | null
-          status?: string
+          payer_document?: string | null
+          payer_name: string
+          relationship?: string | null
           updated_at?: string
         }
         Update: {
-          cnpj?: string | null
+          client_id?: string
           created_at?: string
           created_by?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          payer_document?: string | null
+          payer_name?: string
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_payers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          atividade_principal: Json | null
+          atividades_secundarias: Json | null
+          bairro: string | null
+          capital_social: number | null
+          cep: string | null
+          cnpj: string | null
+          complemento: string | null
+          created_at: string
+          created_by: string
+          data_abertura: string | null
+          email: string | null
+          id: string
+          is_pro_bono: boolean
+          logradouro: string | null
+          monthly_fee: number
+          municipio: string | null
+          name: string
+          natureza_juridica: string | null
+          nome_fantasia: string | null
+          notes: string | null
+          numero: string | null
+          payment_day: number | null
+          phone: string | null
+          porte: string | null
+          pro_bono_end_date: string | null
+          pro_bono_reason: string | null
+          pro_bono_start_date: string | null
+          qsa: Json | null
+          razao_social: string | null
+          situacao_cadastral: string | null
+          status: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          atividade_principal?: Json | null
+          atividades_secundarias?: Json | null
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          cnpj?: string | null
+          complemento?: string | null
+          created_at?: string
+          created_by: string
+          data_abertura?: string | null
           email?: string | null
           id?: string
+          is_pro_bono?: boolean
+          logradouro?: string | null
           monthly_fee?: number
-          name?: string
+          municipio?: string | null
+          name: string
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
           notes?: string | null
+          numero?: string | null
           payment_day?: number | null
           phone?: string | null
+          porte?: string | null
+          pro_bono_end_date?: string | null
+          pro_bono_reason?: string | null
+          pro_bono_start_date?: string | null
+          qsa?: Json | null
+          razao_social?: string | null
+          situacao_cadastral?: string | null
           status?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atividade_principal?: Json | null
+          atividades_secundarias?: Json | null
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          cnpj?: string | null
+          complemento?: string | null
+          created_at?: string
+          created_by?: string
+          data_abertura?: string | null
+          email?: string | null
+          id?: string
+          is_pro_bono?: boolean
+          logradouro?: string | null
+          monthly_fee?: number
+          municipio?: string | null
+          name?: string
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          notes?: string | null
+          numero?: string | null
+          payment_day?: number | null
+          phone?: string | null
+          porte?: string | null
+          pro_bono_end_date?: string | null
+          pro_bono_reason?: string | null
+          pro_bono_start_date?: string | null
+          qsa?: Json | null
+          razao_social?: string | null
+          situacao_cadastral?: string | null
+          status?: string
+          uf?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      enrichment_logs: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          cnpj: string | null
+          created_at: string
+          created_by: string | null
+          data_fetched: Json | null
+          error_message: string | null
+          error_type: string | null
+          execution_time_ms: number | null
+          id: string
+          socios_count: number | null
+          status: string
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fetched?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          socios_count?: number | null
+          status: string
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fetched?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          socios_count?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrichment_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -315,6 +750,7 @@ export type Database = {
           amount: number
           category: string
           competence: string | null
+          cost_center: string | null
           created_at: string
           created_by: string
           description: string
@@ -330,6 +766,7 @@ export type Database = {
           amount: number
           category: string
           competence?: string | null
+          cost_center?: string | null
           created_at?: string
           created_by: string
           description: string
@@ -345,6 +782,7 @@ export type Database = {
           amount?: number
           category?: string
           competence?: string | null
+          cost_center?: string | null
           created_at?: string
           created_by?: string
           description?: string
@@ -364,6 +802,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_analysis: {
+        Row: {
+          alerts: Json | null
+          analysis_date: string
+          created_at: string
+          health_score: number | null
+          id: string
+          insights: Json | null
+          metrics: Json | null
+          predictions: Json | null
+          recommendations: Json | null
+          trend: string | null
+        }
+        Insert: {
+          alerts?: Json | null
+          analysis_date?: string
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          insights?: Json | null
+          metrics?: Json | null
+          predictions?: Json | null
+          recommendations?: Json | null
+          trend?: string | null
+        }
+        Update: {
+          alerts?: Json | null
+          analysis_date?: string
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          insights?: Json | null
+          metrics?: Json | null
+          predictions?: Json | null
+          recommendations?: Json | null
+          trend?: string | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
