@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     let provisionsCreated = 0;
     let paymentsCreated = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     for (const invoice of invoicesWithoutEntries) {
       try {

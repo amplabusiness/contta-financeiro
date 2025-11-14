@@ -32,7 +32,7 @@ export function parseCNAB240Return(content: string): CNABReturnData {
 
   let bankCode = ''
   let companyName = ''
-  let processingDate = ''
+  const processingDate = ''
 
   for (const line of lines) {
     const recordType = line.substring(7, 8) // Tipo de registro
