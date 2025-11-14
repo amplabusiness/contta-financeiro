@@ -89,15 +89,71 @@ Forneça sua análise em JSON com:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Você é um CFO virtual expert em análise financeira e previsões. Sempre responda com JSON válido.' },
+          { role: 'system', content: 'Você é um CFO virtual expert em análise financeira e previsões.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.4,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "provide_financial_analysis",
+              description: "Fornece análise financeira completa com métricas, insights e recomendações",
+              parameters: {
+                type: "object",
+                properties: {
+                  health_score: {
+                    type: "number",
+                    description: "Score de saúde financeira de 0 a 100",
+                    minimum: 0,
+                    maximum: 100
+                  },
+                  trend: {
+                    type: "string",
+                    enum: ["improving", "stable", "declining"],
+                    description: "Tendência geral do negócio"
+                  },
+                  key_insights: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "3-5 insights principais sobre a situação financeira"
+                  },
+                  predictions_next_month: {
+                    type: "object",
+                    properties: {
+                      revenue: { type: "number", description: "Receita estimada" },
+                      expenses: { type: "number", description: "Despesas estimadas" },
+                      profit: { type: "number", description: "Lucro estimado" }
+                    },
+                    required: ["revenue", "expenses", "profit"]
+                  },
+                  recommendations: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "3-5 recomendações acionáveis"
+                  },
+                  alerts: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Alertas sobre problemas críticos (se houver)"
+                  }
+                },
+                required: ["health_score", "trend", "key_insights", "predictions_next_month", "recommendations"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "provide_financial_analysis" } }
       }),
     });
 
     const aiData = await aiResponse.json();
-    const analysis = JSON.parse(aiData.choices[0].message.content);
+    
+    if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
+      throw new Error('AI não retornou análise válida');
+    }
+    
+    const analysis = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
 
     console.log('📈 AI Analysis:', analysis);
 

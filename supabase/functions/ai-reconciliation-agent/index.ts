@@ -25,7 +25,7 @@ serve(async (req) => {
       .select('*')
       .is('matched_invoice_id', null)
       .is('matched_expense_id', null)
-      .order('date', { ascending: false })
+      .order('transaction_date', { ascending: false })
       .limit(50);
 
     if (txError) throw txError;
@@ -61,14 +61,14 @@ serve(async (req) => {
 TRANSAÇÃO BANCÁRIA:
 - Descrição: ${transaction.description}
 - Valor: R$ ${transaction.amount}
-- Data: ${transaction.date}
-- Tipo: ${transaction.type}
+- Data: ${transaction.transaction_date}
+- Tipo: ${transaction.transaction_type}
 
 BOLETOS PENDENTES:
 ${pendingInvoices?.map((inv, i) => `${i + 1}. Cliente: ${inv.clients?.name}, Valor: R$ ${inv.amount}, Vencimento: ${inv.due_date}`).join('\n')}
 
 DESPESAS PENDENTES:
-${pendingExpenses?.map((exp, i) => `${i + 1}. Descrição: ${exp.description}, Valor: R$ ${exp.amount}, Data: ${exp.date}`).join('\n')}
+${pendingExpenses?.map((exp, i) => `${i + 1}. Descrição: ${exp.description}, Valor: R$ ${exp.amount}, Data: ${exp.due_date}`).join('\n')}
 
 Responda APENAS com um JSON no formato:
 {
@@ -87,15 +87,55 @@ Responda APENAS com um JSON no formato:
           body: JSON.stringify({
             model: 'google/gemini-2.5-flash',
             messages: [
-              { role: 'system', content: 'Você é um especialista em conciliação bancária. Sempre responda com JSON válido.' },
+              { role: 'system', content: 'Você é um especialista em conciliação bancária.' },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.3,
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "reconcile_transaction",
+                  description: "Encontra correspondência para uma transação bancária",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      match_type: {
+                        type: "string",
+                        enum: ["invoice", "expense", "none"],
+                        description: "Tipo de correspondência encontrada"
+                      },
+                      match_index: {
+                        type: ["number", "null"],
+                        description: "Índice do item correspondente (1-based) ou null"
+                      },
+                      confidence: {
+                        type: "number",
+                        description: "Nível de confiança de 0 a 1",
+                        minimum: 0,
+                        maximum: 1
+                      },
+                      reasoning: {
+                        type: "string",
+                        description: "Breve explicação da correspondência"
+                      }
+                    },
+                    required: ["match_type", "confidence", "reasoning"],
+                    additionalProperties: false
+                  }
+                }
+              }
+            ],
+            tool_choice: { type: "function", function: { name: "reconcile_transaction" } }
           }),
         });
 
         const aiData = await aiResponse.json();
-        const aiResult = JSON.parse(aiData.choices[0].message.content);
+        
+        if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
+          throw new Error('AI não retornou resultado de conciliação válido');
+        }
+        
+        const aiResult = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
 
         console.log(`🎯 AI Match for transaction ${transaction.id}:`, aiResult);
 
