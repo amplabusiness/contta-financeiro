@@ -128,7 +128,9 @@ const ClientEnrichment = () => {
     }
   };
 
-  const enrichClient = async (client: any) => {
+  const enrichClient = async (client: any, retryCount = 0) => {
+    const maxRetries = 3;
+    
     if (!client.cnpj) {
       toast.error('Cliente não possui CNPJ cadastrado');
       return false;
@@ -143,7 +145,16 @@ const ClientEnrichment = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Se for erro de rate limit e ainda temos tentativas
+        if (error.message?.includes('429') && retryCount < maxRetries) {
+          const delay = 2000 * Math.pow(2, retryCount);
+          toast.info(`Rate limit detectado. Aguardando ${delay / 1000}s antes de tentar novamente...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return enrichClient(client, retryCount + 1);
+        }
+        throw error;
+      }
 
       toast.success(`Dados de ${client.name} enriquecidos com sucesso!`);
       await loadClients();
@@ -176,8 +187,9 @@ const ClientEnrichment = () => {
     let success = 0;
     let failed = 0;
 
-    for (let i = 0; i < pendingClients.length; i++) {
-      const client = pendingClients[i];
+    // Função auxiliar para processar um cliente com retry
+    const processClientWithRetry = async (client: any, retryCount = 0): Promise<boolean> => {
+      const maxRetries = 3;
       
       try {
         const { data, error } = await supabase.functions.invoke('enrich-client-data', {
@@ -187,10 +199,32 @@ const ClientEnrichment = () => {
           }
         });
 
-        if (error) throw error;
-        success++;
+        if (error) {
+          // Se for erro de rate limit e ainda temos tentativas
+          if (error.message?.includes('429') && retryCount < maxRetries) {
+            const delay = 3000 * Math.pow(2, retryCount);
+            console.log(`Rate limit no batch. Aguardando ${delay}ms antes de tentar novamente ${client.name}...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return processClientWithRetry(client, retryCount + 1);
+          }
+          throw error;
+        }
+
+        return true;
       } catch (error) {
         console.error(`Erro ao enriquecer ${client.name}:`, error);
+        return false;
+      }
+    };
+
+    for (let i = 0; i < pendingClients.length; i++) {
+      const client = pendingClients[i];
+      
+      const result = await processClientWithRetry(client);
+      
+      if (result) {
+        success++;
+      } else {
         failed++;
       }
 
@@ -201,8 +235,10 @@ const ClientEnrichment = () => {
         failed
       });
 
-      // Pequeno delay para não sobrecarregar a API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Delay pequeno entre requisições para evitar rate limit
+      if (i < pendingClients.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     setBatchProcessing(false);
