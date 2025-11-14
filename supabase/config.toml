@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.automation-scheduler]
 verify_jwt = false
 
+[functions.process-billing-data]
+verify_jwt = false
+
 [functions.enrich-client-data]
 verify_jwt = true
 

@@ -76,6 +76,7 @@ export function AppSidebar() {
             { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
             { title: "Clientes", url: "/clients", icon: Users },
             { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
+            { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
             { title: "Honorários", url: "/invoices", icon: FileText },
             { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
           ],
