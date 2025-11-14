@@ -22,6 +22,7 @@ import PixReconciliation from "./pages/PixReconciliation";
 import BoletoGapsAnalysis from "./pages/BoletoGapsAnalysis";
 import ClientLedger from "./pages/ClientLedger";
 import TrialBalance from "./pages/TrialBalance";
+import BalanceSheet from "./pages/BalanceSheet";
 import ClientDashboard from "./pages/ClientDashboard";
 import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/pix-reconciliation" element={<PixReconciliation />} />
             <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
             <Route path="/trial-balance" element={<TrialBalance />} />
+            <Route path="/balance-sheet" element={<BalanceSheet />} />
             <Route path="/client-ledger" element={<ClientLedger />} />
             <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
             <Route path="/ai-agents" element={<AIAgents />} />

@@ -26,6 +26,7 @@ import {
   FileWarning,
   AlertTriangle,
   Database,
+  Scale,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -93,6 +94,7 @@ export function AppSidebar() {
             { title: "PIX sem Cliente", url: "/unmatched-pix-report", icon: AlertTriangle },
             { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
             { title: "Balancete", url: "/trial-balance", icon: BookText },
+            { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
             { title: "DRE", url: "/dre", icon: TrendingUp },
             { title: "Inadimplência", url: "/reports", icon: BarChart3 },
           ],
