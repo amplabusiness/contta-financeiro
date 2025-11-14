@@ -3,10 +3,14 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Bot, Brain, Tags, Calendar, Loader2, Play, TrendingUp } from "lucide-react";
+import { Bot, Brain, Tags, Calendar, Loader2, Play, TrendingUp, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { AIAgentStats } from "@/components/AIAgentStats";
+import { AIAgentDetails } from "@/components/AIAgentDetails";
+import { AIExecutionHistory } from "@/components/AIExecutionHistory";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AIAgents = () => {
   const [loading, setLoading] = useState<string | null>(null);
@@ -108,183 +112,202 @@ const AIAgents = () => {
           </p>
         </div>
 
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-primary" />
-              Automação Completa
-            </CardTitle>
-            <CardDescription>
-              Execute todos os agentes de uma vez para processamento automático completo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={runAllAgents}
-              disabled={loading !== null}
-              size="lg"
-              className="w-full"
-            >
-              {loading === 'all' ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Executando todos os agentes...
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-5 w-5" />
-                  Executar Todos os Agentes
-                </>
-              )}
-            </Button>
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="agents" className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              Agentes
+            </TabsTrigger>
+          </TabsList>
 
-            {results.automation && (
-              <div className="mt-4 p-4 bg-background rounded-lg border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Última Execução</span>
-                  <Badge variant="outline">{results.automation.timestamp}</Badge>
-                </div>
-                <div className="space-y-2">
-                  {results.automation.results?.tasks?.map((task: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span>{task.name}</span>
-                      <Badge variant={task.status === 'success' ? 'default' : 'destructive'}>
-                        {task.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+          <TabsContent value="dashboard" className="space-y-6 mt-6">
+            {/* Estatísticas Gerais */}
+            <AIAgentStats />
+
+            {/* Grid com detalhes por agente e histórico */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Estatísticas por Agente</h3>
+                <AIAgentDetails />
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {agents.map((agent) => {
-            const Icon = agent.icon;
-            const result = results[agent.id];
-
-            return (
-              <Card key={agent.id}>
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-lg ${agent.bgColor} flex items-center justify-center mb-4`}>
-                    <Icon className={`h-6 w-6 ${agent.color}`} />
-                  </div>
-                  <CardTitle className="text-lg">{agent.name}</CardTitle>
-                  <CardDescription>{agent.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button
-                    onClick={() => runAgent(agent.id, agent.function)}
-                    disabled={loading !== null}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    {loading === agent.id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="mr-2 h-4 w-4" />
-                        Executar Agora
-                      </>
-                    )}
-                  </Button>
-
-                  {result && (
-                    <div className="p-3 bg-muted rounded-lg space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Última execução:</span>
-                        <span className="font-medium">{result.timestamp}</span>
-                      </div>
-                      
-                      {result.processed !== undefined && (
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span>Processados:</span>
-                            <Badge variant="secondary">{result.processed}</Badge>
-                          </div>
-                          {result.reconciled !== undefined && (
-                            <div className="flex justify-between text-sm">
-                              <span>Conciliados:</span>
-                              <Badge variant="default">{result.reconciled}</Badge>
-                            </div>
-                          )}
-                          {result.classified !== undefined && (
-                            <div className="flex justify-between text-sm">
-                              <span>Classificados:</span>
-                              <Badge variant="default">{result.classified}</Badge>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {result.analysis && (
-                        <div className="space-y-2 pt-2 border-t">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Score de Saúde:</span>
-                            <Badge variant={
-                              result.analysis.health_score > 70 ? 'default' : 
-                              result.analysis.health_score > 40 ? 'secondary' : 'destructive'
-                            }>
-                              {result.analysis.health_score}/100
-                            </Badge>
-                          </div>
-                          <Progress value={result.analysis.health_score} className="h-2" />
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Tendência:</span>
-                            <Badge variant="outline">{result.analysis.trend}</Badge>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Agendamento Automático
-            </CardTitle>
-            <CardDescription>
-              Configure quando os agentes devem executar automaticamente
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-medium">Execução Diária</p>
-                  <p className="text-sm text-muted-foreground">Todos os dias às 03:00</p>
-                </div>
-                <Badge variant="secondary">Ativo</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-medium">Conciliação a cada 6 horas</p>
-                  <p className="text-sm text-muted-foreground">Verifica novas transações</p>
-                </div>
-                <Badge variant="secondary">Ativo</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-medium">Análise Semanal</p>
-                  <p className="text-sm text-muted-foreground">Segundas-feiras às 08:00</p>
-                </div>
-                <Badge variant="secondary">Ativo</Badge>
+              <div>
+                <AIExecutionHistory />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          <TabsContent value="agents" className="space-y-6 mt-6">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-6 w-6 text-primary" />
+                  Automação Completa
+                </CardTitle>
+                <CardDescription>
+                  Execute todos os agentes de uma vez para processamento automático completo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={runAllAgents}
+                  disabled={loading !== null}
+                  size="lg"
+                  className="w-full"
+                >
+                  {loading === 'all' ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Executando todos os agentes...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-5 w-5" />
+                      Executar Todos os Agentes
+                    </>
+                  )}
+                </Button>
+                {results.automation && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <p className="text-sm font-medium mb-2">Resultado:</p>
+                    <div className="space-y-1 text-sm">
+                      <p>✅ Executado em: {results.automation.timestamp}</p>
+                      {results.automation.tasks_executed && (
+                        <p>📊 Tarefas: {results.automation.tasks_executed} executadas</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {agents.map((agent) => {
+                const Icon = agent.icon;
+                const agentResult = results[agent.id];
+                
+                return (
+                  <Card key={agent.id} className="relative overflow-hidden">
+                    <div className={`absolute top-0 left-0 w-1 h-full ${agent.bgColor}`} />
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Icon className={`h-5 w-5 ${agent.color}`} />
+                        {agent.name}
+                      </CardTitle>
+                      <CardDescription>{agent.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        onClick={() => runAgent(agent.id, agent.function)}
+                        disabled={loading !== null}
+                        className="w-full"
+                      >
+                        {loading === agent.id ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Executando...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="mr-2 h-4 w-4" />
+                            Executar Agente
+                          </>
+                        )}
+                      </Button>
+                      
+                      {agentResult && (
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Última execução:</span>
+                            <Badge variant="secondary">{agentResult.timestamp}</Badge>
+                          </div>
+                          
+                          {agentResult.classified !== undefined && (
+                            <div className="p-3 bg-muted rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">Classificadas:</span>
+                                <Badge>{agentResult.classified}</Badge>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {agentResult.reconciled !== undefined && (
+                            <div className="p-3 bg-muted rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">Conciliadas:</span>
+                                <Badge>{agentResult.reconciled}</Badge>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {agentResult.health_score !== undefined && (
+                            <div className="p-3 bg-muted rounded-lg space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">Score de Saúde:</span>
+                                <Badge variant={agentResult.health_score >= 70 ? "default" : "destructive"}>
+                                  {agentResult.health_score}/100
+                                </Badge>
+                              </div>
+                              <Progress value={agentResult.health_score} />
+                            </div>
+                          )}
+                          
+                          {agentResult.success !== undefined && (
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-sm">{agentResult.message || 'Executado com sucesso'}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Agendamento Automático
+                </CardTitle>
+                <CardDescription>
+                  Configure quando os agentes devem executar automaticamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Execução Diária</p>
+                      <p className="text-sm text-muted-foreground">Todos os dias às 03:00</p>
+                    </div>
+                    <Badge variant="secondary">Ativo</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Conciliação a cada 6 horas</p>
+                      <p className="text-sm text-muted-foreground">Verifica novas transações</p>
+                    </div>
+                    <Badge variant="secondary">Ativo</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Análise Semanal</p>
+                      <p className="text-sm text-muted-foreground">Segundas-feiras às 08:00</p>
+                    </div>
+                    <Badge variant="secondary">Ativo</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
