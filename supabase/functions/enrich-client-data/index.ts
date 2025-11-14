@@ -50,7 +50,38 @@ serve(async (req) => {
       data_entrada: socio.data_entrada_sociedade
     })) || [];
 
-    // Salvar dados enriquecidos
+    // Atualizar dados do cliente principal
+    const { error: clientUpdateError } = await supabase
+      .from('clients')
+      .update({
+        razao_social: data.razao_social,
+        nome_fantasia: data.nome_fantasia,
+        porte: data.porte,
+        natureza_juridica: data.natureza_juridica,
+        situacao_cadastral: data.descricao_situacao_cadastral,
+        data_abertura: data.data_inicio_atividade,
+        capital_social: parseFloat(data.capital_social || 0),
+        logradouro: data.logradouro,
+        numero: data.numero,
+        complemento: data.complemento,
+        bairro: data.bairro,
+        municipio: data.municipio,
+        uf: data.uf,
+        cep: data.cep,
+        email: data.email || null,
+        phone: data.ddd_telefone_1 || null,
+        atividade_principal: data.cnae_fiscal_descricao ? {
+          codigo: data.cnae_fiscal,
+          descricao: data.cnae_fiscal_descricao
+        } : null,
+        atividades_secundarias: data.cnaes_secundarios || [],
+        qsa: socios
+      })
+      .eq('id', clientId);
+
+    if (clientUpdateError) throw clientUpdateError;
+
+    // Salvar dados enriquecidos na tabela de histórico
     const enrichmentData = {
       client_id: clientId,
       cnpj: cleanCnpj,
