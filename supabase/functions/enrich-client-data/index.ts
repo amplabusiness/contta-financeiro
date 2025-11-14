@@ -30,6 +30,11 @@ serve(async (req) => {
     // Limpar CNPJ (remover pontuação)
     const cleanCnpj = cnpj.replace(/\D/g, '');
 
+    // Validar CNPJ
+    if (cleanCnpj.length !== 14) {
+      throw new Error(`CNPJ inválido: deve ter 14 dígitos, recebido ${cleanCnpj.length} (${cleanCnpj})`);
+    }
+
     // Buscar dados na BrasilAPI
     const brasilApiUrl = `https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`;
     console.log(`Buscando dados em: ${brasilApiUrl}`);
@@ -37,7 +42,18 @@ serve(async (req) => {
     const response = await fetch(brasilApiUrl);
     
     if (!response.ok) {
-      throw new Error(`BrasilAPI retornou erro ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Erro da BrasilAPI (${response.status}):`, errorText);
+      
+      if (response.status === 400) {
+        throw new Error(`CNPJ inválido ou não encontrado na Receita Federal: ${cnpj}`);
+      } else if (response.status === 404) {
+        throw new Error(`CNPJ não encontrado: ${cnpj}`);
+      } else if (response.status === 429) {
+        throw new Error(`Limite de requisições atingido. Tente novamente em alguns minutos.`);
+      } else {
+        throw new Error(`BrasilAPI retornou erro ${response.status}: ${errorText}`);
+      }
     }
 
     const data = await response.json();
