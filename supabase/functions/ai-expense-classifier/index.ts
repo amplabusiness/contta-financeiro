@@ -19,11 +19,11 @@ serve(async (req) => {
 
     console.log('🏷️ AI Expense Classifier started');
 
-    // Buscar despesas sem classificação ou com classificação genérica
+    // Buscar despesas sem classificação ou com conta não definida
     const { data: unclassifiedExpenses, error: expError } = await supabase
       .from('expenses')
       .select('*')
-      .or('account_code.is.null,account_code.eq.4.9')
+      .is('account_id', null)
       .limit(100);
 
     if (expError) throw expError;
@@ -77,34 +77,85 @@ Responda APENAS com JSON:
           body: JSON.stringify({
             model: 'google/gemini-2.5-flash',
             messages: [
-              { role: 'system', content: 'Você é um contador expert. Sempre responda com JSON válido.' },
+              { role: 'system', content: 'Você é um contador expert em classificação de despesas.' },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.2,
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "classify_expense",
+                  description: "Classifica uma despesa no plano de contas adequado",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      account_code: {
+                        type: "string",
+                        description: "Código da conta contábil (ex: 4.1.1)"
+                      },
+                      category: {
+                        type: "string",
+                        description: "Nome da categoria"
+                      },
+                      confidence: {
+                        type: "number",
+                        description: "Nível de confiança de 0 a 1",
+                        minimum: 0,
+                        maximum: 1
+                      },
+                      reasoning: {
+                        type: "string",
+                        description: "Breve justificativa da classificação"
+                      }
+                    },
+                    required: ["account_code", "category", "confidence", "reasoning"],
+                    additionalProperties: false
+                  }
+                }
+              }
+            ],
+            tool_choice: { type: "function", function: { name: "classify_expense" } }
           }),
         });
 
         const aiData = await aiResponse.json();
-        const classification = JSON.parse(aiData.choices[0].message.content);
+        
+        if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
+          throw new Error('AI não retornou classificação válida');
+        }
+        
+        const classification = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
 
         console.log(`🎯 AI Classification for expense ${expense.id}:`, classification);
 
         if (classification.confidence > 0.6) {
-          // Atualizar despesa com classificação
-          const { error: updateError } = await supabase
-            .from('expenses')
-            .update({ 
-              account_code: classification.account_code,
-              category: classification.category
-            })
-            .eq('id', expense.id);
+          // Buscar conta pelo código
+          const { data: account } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', classification.account_code)
+            .single();
 
-          if (updateError) {
-            console.error('Error updating expense:', updateError);
-            errors.push(`Expense ${expense.id}: ${updateError.message}`);
+          if (account) {
+            // Atualizar despesa com classificação
+            const { error: updateError } = await supabase
+              .from('expenses')
+              .update({ 
+                account_id: account.id,
+                category: classification.category
+              })
+              .eq('id', expense.id);
+
+            if (updateError) {
+              console.error('Error updating expense:', updateError);
+              errors.push(`Expense ${expense.id}: ${updateError.message}`);
+            } else {
+              classified++;
+              console.log(`✅ Classified expense ${expense.id} as ${classification.account_code}`);
+            }
           } else {
-            classified++;
-            console.log(`✅ Classified expense ${expense.id} as ${classification.account_code}`);
+            console.error(`Account ${classification.account_code} not found`);
+            errors.push(`Expense ${expense.id}: Account not found`);
           }
         }
 
