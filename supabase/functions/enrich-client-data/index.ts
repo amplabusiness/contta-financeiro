@@ -6,6 +6,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Função auxiliar para delay com backoff exponencial
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Função para fazer requisição com retry e backoff exponencial
+async function fetchWithRetry(url: string, maxRetries = 3, initialDelay = 1000): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`Tentativa ${attempt + 1}/${maxRetries}: ${url}`);
+      const response = await fetch(url);
+      
+      // Se não for erro 429 (rate limit), retorna imediatamente
+      if (response.status !== 429) {
+        return response;
+      }
+      
+      // Se for 429 e ainda temos tentativas, aguarda com backoff exponencial
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        console.log(`Rate limit atingido. Aguardando ${delay}ms antes de tentar novamente...`);
+        await sleep(delay);
+        continue;
+      }
+      
+      // Última tentativa com 429, retorna o response
+      return response;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Erro na tentativa ${attempt + 1}:`, error);
+      
+      // Se ainda temos tentativas, aguarda com backoff exponencial
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        console.log(`Aguardando ${delay}ms antes de tentar novamente...`);
+        await sleep(delay);
+      }
+    }
+  }
+  
+  // Se chegou aqui, todas as tentativas falharam
+  throw lastError || new Error('Todas as tentativas falharam');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,11 +79,11 @@ serve(async (req) => {
       throw new Error(`CNPJ inválido: deve ter 14 dígitos, recebido ${cleanCnpj.length} (${cleanCnpj})`);
     }
 
-    // Buscar dados na BrasilAPI
+    // Buscar dados na BrasilAPI com retry automático
     const brasilApiUrl = `https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`;
     console.log(`Buscando dados em: ${brasilApiUrl}`);
     
-    const response = await fetch(brasilApiUrl);
+    const response = await fetchWithRetry(brasilApiUrl, 3, 2000);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -50,7 +94,7 @@ serve(async (req) => {
       } else if (response.status === 404) {
         throw new Error(`CNPJ não encontrado: ${cnpj}`);
       } else if (response.status === 429) {
-        throw new Error(`Limite de requisições atingido. Tente novamente em alguns minutos.`);
+        throw new Error(`Limite de requisições atingido após múltiplas tentativas. Aguarde alguns minutos e tente novamente.`);
       } else {
         throw new Error(`BrasilAPI retornou erro ${response.status}: ${errorText}`);
       }
