@@ -68,16 +68,17 @@ const DRE = () => {
       const revenue = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
       setTotalRevenue(revenue);
 
-      // Carregar despesas com plano de contas
+      // Carregar despesas com plano de contas - FILTRAR APENAS CONTAS QUE COMEÇAM COM 4 (DESPESAS)
       let expensesQuery = supabase
         .from("expenses")
         .select(`
           amount,
           account_id,
-          chart_of_accounts (
+          chart_of_accounts!inner (
             code,
             name,
-            parent_id
+            parent_id,
+            type
           )
         `)
         .eq("status", "paid");
@@ -92,23 +93,27 @@ const DRE = () => {
       const { data: expenses, error: expensesError } = await expensesQuery;
       if (expensesError) throw expensesError;
 
-      // Organizar despesas por conta
+      // Organizar despesas por conta - Filtrar apenas contas que começam com 3 ou 4
       const balanceMap = new Map<string, AccountBalance>();
       
       expenses?.forEach((expense: any) => {
         if (expense.chart_of_accounts) {
-          const key = expense.chart_of_accounts.code;
-          const existing = balanceMap.get(key);
-          
-          if (existing) {
-            existing.total += Number(expense.amount);
-          } else {
-            balanceMap.set(key, {
-              account_code: expense.chart_of_accounts.code,
-              account_name: expense.chart_of_accounts.name,
-              total: Number(expense.amount),
-              parent_id: expense.chart_of_accounts.parent_id,
-            });
+          const code = expense.chart_of_accounts.code;
+          // Filtrar apenas contas que começam com 3 (receita) ou 4 (despesa)
+          if (code.startsWith('3') || code.startsWith('4')) {
+            const key = code;
+            const existing = balanceMap.get(key);
+            
+            if (existing) {
+              existing.total += Number(expense.amount);
+            } else {
+              balanceMap.set(key, {
+                account_code: code,
+                account_name: expense.chart_of_accounts.name,
+                total: Number(expense.amount),
+                parent_id: expense.chart_of_accounts.parent_id,
+              });
+            }
           }
         }
       });

@@ -202,6 +202,7 @@ const TrialBalance = () => {
                   <tr className="border-b">
                     <th className="text-left p-2">Código</th>
                     <th className="text-left p-2">Conta</th>
+                    <th className="text-left p-2">Tipo</th>
                     <th className="text-right p-2">Débito</th>
                     <th className="text-right p-2">Crédito</th>
                     <th className="text-right p-2">Saldo</th>
@@ -212,6 +213,16 @@ const TrialBalance = () => {
                     <tr key={account.code} className={`border-b ${getRowStyle(account)}`}>
                       <td className="p-2">{account.code}</td>
                       <td className="p-2">{account.name}</td>
+                      <td className="p-2">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
+                          account.type === 'passivo' ? 'bg-purple-100 text-purple-800' :
+                          account.type === 'receita' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {getTypeLabel(account.type)}
+                        </span>
+                      </td>
                       <td className="p-2 text-right">
                         {account.debit > 0 ? formatCurrency(account.debit) : "-"}
                       </td>
@@ -226,7 +237,7 @@ const TrialBalance = () => {
                     </tr>
                   ))}
                   <tr className="border-t-2 border-t-primary font-bold bg-muted">
-                    <td colSpan={2} className="p-2">TOTAIS</td>
+                    <td colSpan={3} className="p-2">TOTAIS</td>
                     <td className="p-2 text-right">{formatCurrency(totals.debit)}</td>
                     <td className="p-2 text-right">{formatCurrency(totals.credit)}</td>
                     <td className="p-2 text-right">-</td>
