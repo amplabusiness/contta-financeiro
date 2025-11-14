@@ -28,7 +28,7 @@ export interface NFe {
   itens: NFeItem[]
 }
 
-export interface NFe Item {
+export interface NFeItem {
   codigo: string
   descricao: string
   quantidade: number
