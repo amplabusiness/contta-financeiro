@@ -3,10 +3,11 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, MapPin, Phone, Mail, Loader2, CheckCircle, AlertCircle, Plus, Trash2, TrendingUp, Database, UserCheck } from "lucide-react";
+import { Building2, Users, MapPin, Phone, Mail, Loader2, CheckCircle, AlertCircle, Plus, Trash2, TrendingUp, Database, UserCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -41,6 +42,13 @@ const ClientEnrichment = () => {
   const [payers, setPayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [enriching, setEnriching] = useState<string | null>(null);
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({
+    total: 0,
+    processed: 0,
+    success: 0,
+    failed: 0
+  });
   const [kpis, setKpis] = useState({
     totalClients: 0,
     enrichedClients: 0,
@@ -123,7 +131,7 @@ const ClientEnrichment = () => {
   const enrichClient = async (client: any) => {
     if (!client.cnpj) {
       toast.error('Cliente não possui CNPJ cadastrado');
-      return;
+      return false;
     }
 
     setEnriching(client.id);
@@ -139,12 +147,71 @@ const ClientEnrichment = () => {
 
       toast.success(`Dados de ${client.name} enriquecidos com sucesso!`);
       await loadClients();
+      return true;
     } catch (error: any) {
       console.error('Erro ao enriquecer:', error);
       toast.error('Erro ao enriquecer dados: ' + error.message);
+      return false;
     } finally {
       setEnriching(null);
     }
+  };
+
+  const enrichAllPending = async () => {
+    const pendingClients = clients.filter(c => !c.enrichment && c.cnpj);
+    
+    if (pendingClients.length === 0) {
+      toast.info('Não há clientes pendentes para enriquecer');
+      return;
+    }
+
+    setBatchProcessing(true);
+    setBatchProgress({
+      total: pendingClients.length,
+      processed: 0,
+      success: 0,
+      failed: 0
+    });
+
+    let success = 0;
+    let failed = 0;
+
+    for (let i = 0; i < pendingClients.length; i++) {
+      const client = pendingClients[i];
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('enrich-client-data', {
+          body: {
+            clientId: client.id,
+            cnpj: client.cnpj
+          }
+        });
+
+        if (error) throw error;
+        success++;
+      } catch (error) {
+        console.error(`Erro ao enriquecer ${client.name}:`, error);
+        failed++;
+      }
+
+      setBatchProgress({
+        total: pendingClients.length,
+        processed: i + 1,
+        success,
+        failed
+      });
+
+      // Pequeno delay para não sobrecarregar a API
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setBatchProcessing(false);
+    await loadClients();
+    
+    toast.success(
+      `Processamento concluído! ${success} enriquecidos, ${failed} falharam`,
+      { duration: 5000 }
+    );
   };
 
   const viewClientDetails = async (client: any) => {
@@ -217,12 +284,74 @@ const ClientEnrichment = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">📊 Enriquecimento de Clientes</h1>
-          <p className="text-muted-foreground mt-2">
-            Conecte-se à Receita Federal e conheça melhor seus clientes
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">📊 Enriquecimento de Clientes</h1>
+            <p className="text-muted-foreground mt-2">
+              Conecte-se à Receita Federal e conheça melhor seus clientes
+            </p>
+          </div>
+          <Button
+            onClick={enrichAllPending}
+            disabled={batchProcessing || kpis.totalClients === kpis.enrichedClients}
+            size="lg"
+            className="gap-2"
+          >
+            {batchProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4" />
+                Enriquecer Todos ({kpis.totalClients - kpis.enrichedClients})
+              </>
+            )}
+          </Button>
         </div>
+
+        {/* Barra de Progresso */}
+        {batchProcessing && (
+          <Card className="border-primary">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">Processamento em Lote</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enriquecendo clientes automaticamente...
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">
+                      {batchProgress.processed}/{batchProgress.total}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {Math.round((batchProgress.processed / batchProgress.total) * 100)}%
+                    </p>
+                  </div>
+                </div>
+                
+                <Progress 
+                  value={(batchProgress.processed / batchProgress.total) * 100} 
+                  className="h-2"
+                />
+                
+                <div className="flex gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>{batchProgress.success} sucesso</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <span>{batchProgress.failed} falhas</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
