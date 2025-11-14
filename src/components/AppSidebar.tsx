@@ -18,7 +18,6 @@ import {
   UserSquare2,
   Calendar,
   PieChart,
-  BookText,
   Bot,
   Target,
   Activity,
@@ -31,6 +30,10 @@ import {
   Book,
   Receipt,
   FileCheck,
+  FileContract,
+  Settings,
+  CreditCard,
+  GitMerge,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -52,81 +55,89 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { selectedClientId, selectedClientName } = useClient();
 
-  const menuGroups = selectedClientId
-    ? [
-        {
-          label: "Gestão",
-          items: [
-            { title: "Dashboard Geral", url: "/dashboard", icon: LayoutDashboard },
-            { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
-            { title: selectedClientName || "Cliente", url: "/client-dashboard", icon: UserSquare2 },
-            { title: "Clientes", url: "/clients", icon: Users },
-          ],
-        },
-        {
-          label: "Financeiro",
-          items: [
-            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
-            { title: "Honorários", url: "/invoices", icon: FileText },
-            { title: "Despesas", url: "/expenses", icon: Wallet },
-            { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
-          ],
-        },
-      ]
-    : [
-        {
-          label: "Gestão",
-          items: [
-            { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-            { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
-            { title: "Clientes", url: "/clients", icon: Users },
-            { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
-            { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
-            { title: "Honorários", url: "/invoices", icon: FileText },
-            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
-          ],
-        },
-        {
-          label: "Financeiro",
-          items: [
-            { title: "Despesas", url: "/expenses", icon: Wallet },
-            { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
-            { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
-            { title: "Dashboard Conciliação", url: "/reconciliation-dashboard", icon: Activity },
-            { title: "Relatório Divergências", url: "/reconciliation-discrepancies", icon: FileWarning },
-            { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
-            { title: "PIX sem Cliente", url: "/unmatched-pix-report", icon: AlertTriangle },
-            { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
-            { title: "Inadimplência", url: "/reports", icon: BarChart3 },
-          ],
-        },
-        {
-          label: "Contabilidade",
-          items: [
-            { title: "Livro Diário", url: "/livro-diario", icon: Book },
-            { title: "Livro Razão", url: "/livro-razao", icon: Receipt },
-            { title: "Balancete", url: "/balancete", icon: FileCheck },
-            { title: "Balancete (Legacy)", url: "/trial-balance", icon: BookText },
-            { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
-            { title: "DRE", url: "/dre", icon: TrendingUp },
-          ],
-        },
-        {
-          label: "Configurações",
-          items: [
-            { title: "🤖 Agentes de IA", url: "/ai-agents", icon: Bot },
-            { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
-            { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
-            { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
-            { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
-            { title: "Mesclar Clientes", url: "/merge-clients", icon: Users },
-            { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
-            { title: "Importar Clientes", url: "/import", icon: Upload },
-            { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
-            { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
-          ],
-        },
-      ];
+  // Unified menu structure - more organized and no redundancy
+  const menuGroups = [
+    {
+      label: "Dashboard",
+      items: [
+        { title: "Dashboard Principal", url: "/dashboard", icon: LayoutDashboard },
+        { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
+        { title: "Dashboard de Cobrança", url: "/collection-dashboard", icon: AlertTriangle },
+        ...(selectedClientId ? [{ title: selectedClientName || "Cliente Selecionado", url: "/client-dashboard", icon: UserSquare2 }] : []),
+      ],
+    },
+    {
+      label: "Clientes",
+      items: [
+        { title: "Lista de Clientes", url: "/clients", icon: Users },
+        { title: "Enriquecimento de Dados", url: "/client-enrichment", icon: Database },
+        { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
+        { title: "Mesclar Clientes", url: "/merge-clients", icon: GitMerge },
+      ],
+    },
+    {
+      label: "Receitas",
+      items: [
+        { title: "Honorários a Receber", url: "/invoices", icon: CreditCard },
+        { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
+        { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
+        { title: "Inadimplência", url: "/reports", icon: AlertTriangle },
+      ],
+    },
+    {
+      label: "Conciliação",
+      items: [
+        { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
+        { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
+        { title: "Dashboard de Conciliação", url: "/reconciliation-dashboard", icon: Activity },
+        { title: "Relatório de Divergências", url: "/reconciliation-discrepancies", icon: FileWarning },
+        { title: "PIX sem Cliente", url: "/unmatched-pix-report", icon: ShieldAlert },
+      ],
+    },
+    {
+      label: "Contabilidade",
+      items: [
+        { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+        { title: "Livro Diário", url: "/livro-diario", icon: Book },
+        { title: "Livro Razão", url: "/livro-razao", icon: Receipt },
+        { title: "Balancete", url: "/balancete", icon: FileCheck },
+        { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
+        { title: "DRE", url: "/dre", icon: TrendingUp },
+      ],
+    },
+    {
+      label: "Despesas",
+      items: [
+        { title: "Despesas", url: "/expenses", icon: Wallet },
+        { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
+      ],
+    },
+    {
+      label: "Importações",
+      items: [
+        { title: "Importar Clientes", url: "/import", icon: Upload },
+        { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
+        { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
+        { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
+      ],
+    },
+    {
+      label: "Ferramentas",
+      items: [
+        { title: "Agentes de IA", url: "/ai-agents", icon: Bot },
+        { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
+        { title: "Regularizar Contabilidade", url: "/regularize-accounting", icon: FileCheck },
+        { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
+      ],
+    },
+    {
+      label: "Configurações",
+      items: [
+        { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
+        { title: "Configurações do Sistema", url: "/settings", icon: Settings },
+      ],
+    },
+  ];
 
   const isActive = (path: string) => location.pathname === path;
 

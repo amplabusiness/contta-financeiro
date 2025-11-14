@@ -39,6 +39,8 @@ import BatchEnrichment from "./pages/BatchEnrichment";
 import LivroDiario from "./pages/LivroDiario";
 import LivroRazao from "./pages/LivroRazao";
 import Balancete from "./pages/Balancete";
+import Settings from "./pages/Settings";
+import CollectionDashboard from "./pages/CollectionDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +89,8 @@ const App = () => (
             <Route path="/livro-diario" element={<LivroDiario />} />
             <Route path="/livro-razao" element={<LivroRazao />} />
             <Route path="/balancete" element={<Balancete />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/collection-dashboard" element={<CollectionDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
