@@ -76,6 +76,12 @@ export function AppSidebar() {
       ],
     },
     {
+      label: "Contratos",
+      items: [
+        { title: "Contratos de Serviço", url: "/contracts", icon: FileContract },
+      ],
+    },
+    {
       label: "Receitas",
       items: [
         { title: "Honorários a Receber", url: "/invoices", icon: CreditCard },
