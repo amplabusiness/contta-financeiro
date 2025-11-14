@@ -79,7 +79,7 @@ serve(async (req) => {
       .gte('amount', transaction.amount * 0.9)
       .lte('amount', transaction.amount * 1.1)
 
-    indicators.multiple_same_day = count && count > 3
+    indicators.multiple_same_day = !!(count && count > 3)
 
     // If client provided, check against expected patterns
     let clientPatterns = null
@@ -215,7 +215,7 @@ Safe indicators:
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

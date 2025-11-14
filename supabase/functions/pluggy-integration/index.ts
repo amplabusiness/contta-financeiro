@@ -48,7 +48,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -174,6 +174,7 @@ async function syncTransactions(itemId: string, accountId?: string) {
       onConflict: 'bank_reference',
       ignoreDuplicates: true
     })
+    .select()
 
   if (error) throw error
 
@@ -224,7 +225,7 @@ async function syncAllAccounts() {
       results.push({
         account_id: account.id,
         status: 'failed',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       })
     }
 
