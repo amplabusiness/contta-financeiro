@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,11 +53,7 @@ const Reports = () => {
 
   const years = ["2024", "2025", "2026"];
 
-  useEffect(() => {
-    loadDebtReport();
-  }, [filterYear, filterMonth]);
-
-  const loadDebtReport = async () => {
+  const loadDebtReport = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -126,7 +122,11 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterYear, filterMonth]);
+
+  useEffect(() => {
+    loadDebtReport();
+  }, [loadDebtReport]);
 
   const getRiskBadge = (daysOverdue: number) => {
     if (daysOverdue <= 30) {

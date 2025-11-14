@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,10 +32,6 @@ const UnmatchedPixReport = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<UnmatchedPix | null>(null);
   const [newClientName, setNewClientName] = useState("");
 
-  useEffect(() => {
-    loadUnmatchedTransactions();
-  }, []);
-
   const extractCNPJFromDescription = (description: string): string | null => {
     const cnpjMatch = description.match(/(\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
     if (cnpjMatch) {
@@ -59,7 +55,7 @@ const UnmatchedPixReport = () => {
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   };
 
-  const loadUnmatchedTransactions = async () => {
+  const loadUnmatchedTransactions = useCallback(async () => {
     setLoading(true);
     try {
       // Buscar transações PIX não conciliadas
@@ -128,7 +124,11 @@ const UnmatchedPixReport = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUnmatchedTransactions();
+  }, [loadUnmatchedTransactions]);
 
   const handleCreateClient = (transaction: UnmatchedPix) => {
     setSelectedTransaction(transaction);
