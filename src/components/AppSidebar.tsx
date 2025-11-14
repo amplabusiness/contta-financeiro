@@ -35,6 +35,7 @@ import {
   CreditCard,
   GitMerge,
   Clipboard,
+  LineChart,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -120,6 +121,13 @@ export function AppSidebar() {
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
         { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
+      ],
+    },
+    {
+      label: "Análises Estratégicas",
+      items: [
+        { title: "Rentabilidade e Lucro", url: "/profitability-analysis", icon: LineChart },
+        { title: "Grupos Econômicos", url: "/economic-group-analysis", icon: Users },
       ],
     },
     {

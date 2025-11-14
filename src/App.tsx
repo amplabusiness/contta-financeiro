@@ -45,6 +45,8 @@ import CollectionLetters from "./pages/CollectionLetters";
 import Contracts from "./pages/Contracts";
 import FeesAnalysis from "./pages/FeesAnalysis";
 import CollectionWorkOrders from "./pages/CollectionWorkOrders";
+import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
+import EconomicGroupAnalysis from "./pages/EconomicGroupAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +101,8 @@ const App = () => (
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/fees-analysis" element={<FeesAnalysis />} />
             <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
+            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
+            <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
