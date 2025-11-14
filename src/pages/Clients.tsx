@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ const Clients = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<any>(null);
+  const [enriching, setEnriching] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -179,6 +180,37 @@ const Clients = () => {
     }
   };
 
+  const enrichByCNPJ = async (cnpj: string) => {
+    if (!cnpj || cnpj.length < 14) return;
+    
+    setEnriching(true);
+    try {
+      const cleanCnpj = cnpj.replace(/\D/g, '');
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      
+      if (!response.ok) {
+        toast.error('CNPJ não encontrado na Receita Federal');
+        return;
+      }
+
+      const data = await response.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        name: data.razao_social || prev.name,
+        email: data.email || prev.email,
+        phone: data.ddd_telefone_1 || prev.phone,
+      }));
+      
+      toast.success('Dados carregados da Receita Federal!');
+    } catch (error) {
+      console.error('Erro ao buscar CNPJ:', error);
+      toast.error('Erro ao buscar dados do CNPJ');
+    } finally {
+      setEnriching(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -253,11 +285,29 @@ const Clients = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cnpj">CNPJ</Label>
-                    <Input
-                      id="cnpj"
-                      value={formData.cnpj}
-                      onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="cnpj"
+                        value={formData.cnpj}
+                        onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                        placeholder="Digite o CNPJ"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => enrichByCNPJ(formData.cnpj)}
+                        disabled={enriching || !formData.cnpj || formData.cnpj.length < 14}
+                      >
+                        {enriching ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Buscar'
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Digite o CNPJ e clique em Buscar para preencher automaticamente
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>

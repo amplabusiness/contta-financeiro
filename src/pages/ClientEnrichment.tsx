@@ -3,9 +3,10 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, MapPin, Phone, Mail, Loader2, CheckCircle, AlertCircle, Plus, Trash2 } from "lucide-react";
+import { Building2, Users, MapPin, Phone, Mail, Loader2, CheckCircle, AlertCircle, Plus, Trash2, TrendingUp, Database, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/data/expensesData";
 import {
   Table,
   TableBody,
@@ -40,6 +41,12 @@ const ClientEnrichment = () => {
   const [payers, setPayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [enriching, setEnriching] = useState<string | null>(null);
+  const [kpis, setKpis] = useState({
+    totalClients: 0,
+    enrichedClients: 0,
+    totalPayers: 0,
+    enrichmentRate: 0
+  });
   const [newPayer, setNewPayer] = useState({
     name: '',
     document: '',
@@ -84,8 +91,27 @@ const ClientEnrichment = () => {
         }));
         
         setClients(enrichedClients);
+        
+        // Calcular KPIs
+        const totalClientsCount = enrichedClients.length;
+        const enrichedClientsCount = enrichedClients.filter((c: any) => c.enrichment).length;
+        const totalPayers = enrichedClients.reduce((acc: number, c: any) => acc + (c.payers?.length || 0), 0);
+        const enrichmentRate = totalClientsCount > 0 ? (enrichedClientsCount / totalClientsCount) * 100 : 0;
+        
+        setKpis({
+          totalClients: totalClientsCount,
+          enrichedClients: enrichedClientsCount,
+          totalPayers,
+          enrichmentRate
+        });
       } else {
         setClients([]);
+        setKpis({
+          totalClients: 0,
+          enrichedClients: 0,
+          totalPayers: 0,
+          enrichmentRate: 0
+        });
       }
     } catch (error: any) {
       toast.error('Erro ao carregar clientes: ' + error.message);
@@ -196,6 +222,59 @@ const ClientEnrichment = () => {
           <p className="text-muted-foreground mt-2">
             Conecte-se à Receita Federal e conheça melhor seus clientes
           </p>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
+              <Database className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.totalClients}</div>
+              <p className="text-xs text-muted-foreground">Clientes cadastrados</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Clientes Enriquecidos</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.enrichedClients}</div>
+              <p className="text-xs text-muted-foreground">
+                Com dados da Receita Federal
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Enriquecimento</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.enrichmentRate.toFixed(1)}%</div>
+              <p className="text-xs text-muted-foreground">
+                {kpis.totalClients - kpis.enrichedClients} pendentes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pagadores Cadastrados</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.totalPayers}</div>
+              <p className="text-xs text-muted-foreground">
+                Sócios e representantes
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {loading ? (
