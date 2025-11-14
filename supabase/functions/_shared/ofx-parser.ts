@@ -54,7 +54,7 @@ export function parseOFX(content: string): OFXTransaction[] {
     return transactions
   } catch (error) {
     console.error('Error parsing OFX:', error)
-    throw new Error(`Failed to parse OFX: ${error.message}`)
+    throw new Error(`Failed to parse OFX: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 

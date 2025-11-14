@@ -113,10 +113,10 @@ serve(async (req) => {
           subject,
           message,
           status: 'failed',
-          error_message: error.message
+          error_message: error instanceof Error ? error.message : 'Unknown error'
         })
 
-        results.push({ channel, status: 'failed', error: error.message })
+        results.push({ channel, status: 'failed', error: error instanceof Error ? error.message : 'Unknown error' })
       }
     }
 
@@ -132,7 +132,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

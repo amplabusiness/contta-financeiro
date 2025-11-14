@@ -78,11 +78,11 @@ export function parseNFeXML(xmlContent: string): NFe {
       emitente: {
         cnpj: emitCNPJ || '',
         razaoSocial: emitRazao || '',
-        nomeFantasia: emitFantasia
+        nomeFantasia: emitFantasia || undefined
       },
       destinatario: {
-        cnpj: destCNPJ,
-        cpf: destCPF,
+        cnpj: destCNPJ || undefined,
+        cpf: destCPF || undefined,
         razaoSocial: destRazao || ''
       },
       valorTotal,
@@ -96,7 +96,7 @@ export function parseNFeXML(xmlContent: string): NFe {
     }
   } catch (error) {
     console.error('Error parsing NFe XML:', error)
-    throw new Error(`Failed to parse NFe XML: ${error.message}`)
+    throw new Error(`Failed to parse NFe XML: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -114,8 +114,8 @@ function parseNFeItems(xml: string): NFeItem[] {
       quantidade: parseFloat(extractXMLTag(detContent, 'qCom') || '0'),
       valorUnitario: parseFloat(extractXMLTag(detContent, 'vUnCom') || '0'),
       valorTotal: parseFloat(extractXMLTag(detContent, 'vProd') || '0'),
-      ncm: extractXMLTag(detContent, 'NCM'),
-      cfop: extractXMLTag(detContent, 'CFOP')
+      ncm: extractXMLTag(detContent, 'NCM') || undefined,
+      cfop: extractXMLTag(detContent, 'CFOP') || undefined
     })
   }
 
