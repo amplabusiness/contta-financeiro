@@ -10,18 +10,91 @@ import { Progress } from "@/components/ui/progress";
 import { AIAgentStats } from "@/components/AIAgentStats";
 import { AIAgentDetails } from "@/components/AIAgentDetails";
 import { AIExecutionHistory } from "@/components/AIExecutionHistory";
+import { AIErrorFallback } from "@/components/AIErrorFallback";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface AgentError {
+  type: '402' | '429' | 'other';
+  message: string;
+  timestamp: number;
+}
 
 const AIAgents = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [results, setResults] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, AgentError>>({});
+  const [retryCount, setRetryCount] = useState<Record<string, number>>({});
+  const [retryTimer, setRetryTimer] = useState<Record<string, number>>({});
 
-  const runAgent = async (agentName: string, functionName: string) => {
-    setLoading(agentName);
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const getErrorType = (error: any): '402' | '429' | 'other' => {
+    const errorStr = error?.message?.toLowerCase() || '';
+    if (errorStr.includes('payment') || errorStr.includes('402')) return '402';
+    if (errorStr.includes('rate limit') || errorStr.includes('429')) return '429';
+    return 'other';
+  };
+
+  const runAgentWithRetry = async (agentName: string, functionName: string, attemptNum = 0): Promise<void> => {
+    const maxRetries = 3;
+    const baseDelay = 2000; // 2 segundos
+
     try {
       const { data, error } = await supabase.functions.invoke(functionName);
       
-      if (error) throw error;
+      if (error) {
+        const errorType = getErrorType(error);
+        
+        // Se for erro 429 e ainda temos tentativas, fazer retry
+        if (errorType === '429' && attemptNum < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attemptNum);
+          
+          setErrors(prev => ({
+            ...prev,
+            [agentName]: {
+              type: errorType,
+              message: error.message,
+              timestamp: Date.now()
+            }
+          }));
+          
+          setRetryCount(prev => ({ ...prev, [agentName]: attemptNum + 1 }));
+          setRetryTimer(prev => ({ ...prev, [agentName]: delay }));
+
+          // Countdown visual
+          for (let i = delay; i > 0; i -= 1000) {
+            setRetryTimer(prev => ({ ...prev, [agentName]: i }));
+            await sleep(1000);
+          }
+
+          console.log(`🔄 Tentando novamente ${agentName} (tentativa ${attemptNum + 2}/${maxRetries + 1})...`);
+          return runAgentWithRetry(agentName, functionName, attemptNum + 1);
+        }
+        
+        // Mostrar erro se não for retry ou acabaram as tentativas
+        setErrors(prev => ({
+          ...prev,
+          [agentName]: {
+            type: errorType,
+            message: error.message,
+            timestamp: Date.now()
+          }
+        }));
+        
+        throw error;
+      }
+      
+      // Sucesso - limpar erros
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[agentName];
+        return newErrors;
+      });
+      setRetryCount(prev => {
+        const newCounts = { ...prev };
+        delete newCounts[agentName];
+        return newCounts;
+      });
       
       setResults((prev: any) => ({
         ...prev,
@@ -34,10 +107,46 @@ const AIAgents = () => {
       toast.success(`Agente ${agentName} executado com sucesso!`);
     } catch (error: any) {
       console.error(`Error running ${agentName}:`, error);
-      toast.error(`Erro ao executar ${agentName}: ${error.message}`);
+      const errorType = getErrorType(error);
+      
+      if (errorType === '402') {
+        toast.error('Créditos insuficientes', {
+          description: 'Adicione créditos para continuar usando os agentes de IA.'
+        });
+      } else if (errorType === '429') {
+        toast.error('Limite de requisições atingido', {
+          description: `Aguarde alguns segundos. Tentativa ${attemptNum + 1}/${maxRetries + 1}`
+        });
+      } else {
+        toast.error(`Erro ao executar ${agentName}`, {
+          description: error.message
+        });
+      }
+    }
+  };
+
+  const runAgent = async (agentName: string, functionName: string) => {
+    setLoading(agentName);
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[agentName];
+      return newErrors;
+    });
+    
+    try {
+      await runAgentWithRetry(agentName, functionName);
     } finally {
       setLoading(null);
+      setRetryTimer(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[agentName];
+        return newTimers;
+      });
     }
+  };
+
+  const handleRetry = (agentName: string, functionName: string) => {
+    runAgent(agentName, functionName);
   };
 
   const runAllAgents = async () => {
@@ -218,7 +327,21 @@ const AIAgents = () => {
                         )}
                       </Button>
                       
-                      {agentResult && (
+                      {/* Mostrar erro se existir */}
+                      {errors[agent.id] && (
+                        <div className="mt-4">
+                          <AIErrorFallback
+                            errorType={errors[agent.id].type}
+                            errorMessage={errors[agent.id].message}
+                            onRetry={() => handleRetry(agent.id, agent.function)}
+                            retrying={loading === agent.id}
+                            retryCount={retryCount[agent.id] || 0}
+                            nextRetryIn={retryTimer[agent.id]}
+                          />
+                        </div>
+                      )}
+                      
+                      {agentResult && !errors[agent.id] && (
                         <div className="mt-4 space-y-2">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Última execução:</span>
