@@ -31,12 +31,12 @@ serve(async (req) => {
     const { data: expenses } = await supabase
       .from('expenses')
       .select('*')
-      .gte('date', sixMonthsAgo.toISOString());
+      .gte('due_date', sixMonthsAgo.toISOString());
 
     const { data: transactions } = await supabase
       .from('bank_transactions')
       .select('*')
-      .gte('date', sixMonthsAgo.toISOString());
+      .gte('transaction_date', sixMonthsAgo.toISOString());
 
     // Calcular métricas
     const totalRevenue = invoices?.reduce((sum, inv) => sum + parseFloat(inv.amount), 0) || 0;
@@ -149,11 +149,26 @@ Forneça sua análise em JSON com:
 
     const aiData = await aiResponse.json();
     
-    if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
-      throw new Error('AI não retornou análise válida');
+    let analysis: any;
+    try {
+      const toolArgs = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+      if (toolArgs) {
+        const cleaned = String(toolArgs).trim()
+          .replace(/^```(?:json)?/i, '')
+          .replace(/```$/i, '');
+        analysis = JSON.parse(cleaned);
+      } else {
+        const content = aiData.choices?.[0]?.message?.content ?? '';
+        const cleanedContent = String(content)
+          .replace(/```(?:json)?/gi, '')
+          .replace(/```/g, '')
+          .trim();
+        analysis = JSON.parse(cleanedContent);
+      }
+    } catch (e) {
+      console.error('Failed to parse AI response:', e, aiData?.choices?.[0]?.message);
+      throw new Error('Formato de resposta da IA inválido');
     }
-    
-    const analysis = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
 
     console.log('📈 AI Analysis:', analysis);
 
