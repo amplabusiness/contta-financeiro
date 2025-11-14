@@ -128,7 +128,7 @@ function extractXMLTag(xml: string, tag: string): string | null {
   let content = xml
 
   for (const part of parts) {
-    const regex = new RegExp(`<${part}[^>]*>([^<]*)<\/${part}>`)
+    const regex = new RegExp(`<${part}[^>]*>([^<]*)</${part}>`)
     const match = content.match(regex)
     if (!match) return null
     content = match[1]
@@ -138,7 +138,7 @@ function extractXMLTag(xml: string, tag: string): string | null {
 }
 
 function extractBetween(xml: string, section: string, startTag: string, endTag: string): string | null {
-  const sectionRegex = new RegExp(`${section}([\\s\\S]*?)<\/${section.replace('<', '').replace('>', '')}`)
+  const sectionRegex = new RegExp(`${section}([\\s\\S]*?)</${section.replace('<', '').replace('>', '')}`)
   const sectionMatch = xml.match(sectionRegex)
   if (!sectionMatch) return null
 

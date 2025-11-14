@@ -170,9 +170,10 @@ const RevenueTypes = () => {
     switch (type.calculation_type) {
       case "fixed":
         return `Fixo: ${formatCurrency(type.value || 0)}`;
-      case "minimum_wage":
+      case "minimum_wage": {
         const amount = MINIMUM_WAGE * (type.multiplier || 1);
         return `Salário Mínimo x ${type.multiplier} = ${formatCurrency(amount)}`;
+      }
       case "percentage":
         return `${type.percentage}% sobre faturamento`;
       case "custom":

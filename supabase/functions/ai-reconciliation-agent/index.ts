@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log(`📊 Found: ${pendingTransactions?.length || 0} transactions, ${pendingInvoices?.length || 0} invoices, ${pendingExpenses?.length || 0} expenses`);
 
     let reconciled = 0;
-    let errors = [];
+    const errors = [];
 
     // Processar cada transação com IA
     for (const transaction of pendingTransactions || []) {
