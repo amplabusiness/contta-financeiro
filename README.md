@@ -1,73 +1,467 @@
-# Welcome to your Lovable project
+# 🚀 Sistema de Honorários Contábeis - Super Ferramenta
 
-## Project info
+[![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
+[![AI Powered](https://img.shields.io/badge/AI-Gemini%202.5-orange)](https://ai.google.dev/)
 
-**URL**: https://lovable.dev/projects/c921aac3-92be-47a4-81e5-f630cdc1a40c
+Sistema completo e profissional de gestão de honorários contábeis com integrações bancárias, Open Finance, inteligência artificial e automações avançadas.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 📋 Índice
 
-**Use Lovable**
+- [Visão Geral](#-visão-geral)
+- [Funcionalidades](#-funcionalidades)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Instalação](#-instalação)
+- [Integrações](#-integrações)
+- [AI Agents](#-ai-agents)
+- [Componentes](#-componentes)
+- [Edge Functions](#-edge-functions)
+- [Banco de Dados](#-banco-de-dados)
+- [Deploy](#-deploy)
+- [Documentação](#-documentação)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c921aac3-92be-47a4-81e5-f630cdc1a40c) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🎯 Visão Geral
 
-**Use your preferred IDE**
+Sistema SaaS profissional para escritórios de contabilidade gerenciarem honorários de múltiplos clientes com tecnologia de ponta:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- 💳 **Integração Bancária Completa** (Banco Cora)
+- 🏦 **Open Finance** (Pluggy) com importação automática
+- 🤖 **4 AI Agents Avançados** (Google Gemini 2.5 Flash)
+- 📧 **Notificações Multi-Canal** (Email, WhatsApp, SMS)
+- 📊 **Analytics e BI** em tempo real
+- 🔄 **Workflows Automatizados**
+- 🔐 **Multi-tenant** com RBAC completo
+- 📄 **Parsers de Arquivos** (OFX, CNAB, NFe)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## ✨ Funcionalidades
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 💰 Gestão de Honorários
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Geração automática de faturas mensais
+- Cálculo flexível (fixo, percentual, multiplicador)
+- Controle completo de vencimentos e pagamentos
+- Régua de cobrança automática configurável
+- Portal do cliente para autoatendimento
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 🏦 Integrações Bancárias
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+#### 🟢 Banco Cora
+- OAuth 2.0 authentication
+- Geração de boletos bancários
+- PIX dinâmico com QR Code
+- Webhook para confirmação automática de pagamentos
+- Consulta de saldo e extrato em tempo real
+
+#### 🔵 Open Finance (Pluggy)
+- Conexão segura de contas bancárias
+- Importação automática de transações (últimos 90 dias)
+- Sincronização agendada
+- Suporte a múltiplos bancos brasileiros
+- Dashboard de contas conectadas
+
+### 📄 Importação de Arquivos
+
+| Formato | Descrição | Status |
+|---------|-----------|--------|
+| **OFX** | Extratos bancários | ✅ Implementado |
+| **CNAB 240/400** | Retorno de boletos | ✅ Implementado |
+| **XML NFe/NFSe** | Notas fiscais eletrônicas | ✅ Implementado |
+| **CSV** | Importação genérica | 🚧 Em desenvolvimento |
+
+### 🤖 Inteligência Artificial
+
+4 AI Agents powered by **Google Gemini 2.5 Flash**:
+
+1. **💬 Chatbot Inteligente**
+   - Responde dúvidas sobre faturas e pagamentos
+   - Contexto completo do cliente
+   - Histórico de conversas
+
+2. **📉 Preditor de Churn**
+   - Score de risco (0-100)
+   - Análise de padrões de pagamento
+   - Recomendações de retenção
+   - Previsão de data de cancelamento
+
+3. **💵 Otimizador de Preços**
+   - Sugere honorário ideal baseado em complexidade
+   - Comparação com mercado
+   - Identifica oportunidades de upsell
+   - Análise de CNPJ enriquecido
+
+4. **🛡️ Detector de Fraudes**
+   - Score de fraude (0-100)
+   - Detecção de padrões anômalos
+   - Recomendações (aprovar/revisar/bloquear)
+   - Red flags automáticos
+
+### 📢 Notificações
+
+- **Email** via SendGrid
+- **WhatsApp** via Evolution API
+- **SMS** via Twilio
+- Templates customizáveis com variáveis
+- Régua de cobrança (antes/no dia/após vencimento)
+- Log completo de envios e entregas
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### Frontend
+- React 18.3.1 + TypeScript 5.8.3
+- Vite 5.4.19 (build ultra-rápido)
+- TailwindCSS 3.4.17 + shadcn/ui
+- React Query 5.83.0 (state management)
+- React Hook Form + Zod (forms)
+- Recharts (gráficos)
+- Zustand (global state)
+
+### Backend
+- Supabase (BaaS)
+- PostgreSQL (20+ tabelas)
+- Deno Runtime (Edge Functions)
+- JWT Authentication
+- Row Level Security (RLS)
+
+### Integrações
+- **Banco Cora** - Banking API
+- **Pluggy** - Open Finance
+- **Lovable AI** - Google Gemini 2.5 Flash
+- **SendGrid** - Email
+- **Evolution API** - WhatsApp
+- **Twilio** - SMS
+- **Google Vision** - OCR (planejado)
+
+---
+
+## 🚀 Instalação
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/your-repo/data-bling-sheets.git
+cd data-bling-sheets
+```
+
+### 2. Instale as dependências
+
+```bash
+npm install
+```
+
+### 3. Configure as variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Edite `.env` com suas credenciais:
+
+```env
+# Supabase
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-key
+
+# AI
+LOVABLE_API_KEY=your-lovable-key
+
+# Banco Cora
+CORA_CLIENT_ID=your-client-id
+CORA_CLIENT_SECRET=your-client-secret
+
+# Pluggy
+PLUGGY_CLIENT_ID=your-client-id
+PLUGGY_CLIENT_SECRET=your-client-secret
+
+# Notificações
+SENDGRID_API_KEY=your-sendgrid-key
+EVOLUTION_API_URL=https://your-evolution-instance.com
+EVOLUTION_API_KEY=your-evolution-key
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+```
+
+### 4. Execute as migrations
+
+```bash
+# Conecte ao Supabase e execute:
+supabase/migrations/20250114000000_comprehensive_system_upgrade.sql
+```
+
+### 5. Deploy das Edge Functions
+
+```bash
+supabase functions deploy parse-ofx-statement
+supabase functions deploy parse-cnab-file
+supabase functions deploy cora-banking-service
+supabase functions deploy pluggy-integration
+supabase functions deploy notification-dispatcher
+supabase functions deploy ai-chatbot
+supabase functions deploy ai-churn-predictor
+supabase functions deploy ai-pricing-optimizer
+supabase functions deploy ai-fraud-detector
+```
+
+### 6. Inicie o servidor de desenvolvimento
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Acesse `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 🔌 Integrações
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Banco Cora - Criar Cobrança
 
-## What technologies are used for this project?
+```typescript
+const { data } = await supabase.functions.invoke('cora-banking-service', {
+  body: {
+    action: 'create_charge',
+    data: { invoice_id: 'uuid' }
+  }
+})
 
-This project is built with:
+// Retorna: boleto_url, pix_qrcode, pix_copy_paste, payment_link
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Pluggy - Conectar Banco
 
-## How can I deploy this project?
+```typescript
+// 1. Obter token de conexão
+const { data } = await supabase.functions.invoke('pluggy-integration', {
+  body: { action: 'create_connect_token' }
+})
 
-Simply open [Lovable](https://lovable.dev/projects/c921aac3-92be-47a4-81e5-f630cdc1a40c) and click on Share -> Publish.
+// 2. Abrir Pluggy Widget com o token
+// 3. Sincronizar transações
+const { data } = await supabase.functions.invoke('pluggy-integration', {
+  body: {
+    action: 'sync_transactions',
+    data: { item_id, account_id }
+  }
+})
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Enviar Notificações
 
-Yes, you can!
+```typescript
+await supabase.functions.invoke('notification-dispatcher', {
+  body: {
+    event: 'invoice_overdue',
+    client_id: 'uuid',
+    invoice_id: 'uuid',
+    channels: ['email', 'whatsapp']
+  }
+})
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🤖 AI Agents
+
+### Chatbot
+
+```typescript
+const { data } = await supabase.functions.invoke('ai-chatbot', {
+  body: {
+    client_id: 'uuid',
+    message: 'Quando vence minha fatura?',
+    conversation_history: []
+  }
+})
+```
+
+### Churn Predictor
+
+```typescript
+const { data } = await supabase.functions.invoke('ai-churn-predictor', {
+  body: { client_id: 'uuid' }
+})
+
+// Retorna: churn_risk_score, risk_level, main_reasons, recommendations
+```
+
+### Pricing Optimizer
+
+```typescript
+const { data } = await supabase.functions.invoke('ai-pricing-optimizer', {
+  body: { client_id: 'uuid' }
+})
+
+// Retorna: suggested_fee, min_fee, max_fee, upsell_opportunities
+```
+
+### Fraud Detector
+
+```typescript
+const { data } = await supabase.functions.invoke('ai-fraud-detector', {
+  body: {
+    transaction_id: 'uuid',
+    client_id: 'uuid'
+  }
+})
+
+// Retorna: fraud_score, recommendation, red_flags
+```
+
+---
+
+## ⚛️ Componentes
+
+### FileImporter
+
+Importação de OFX, CNAB, NFe com drag & drop.
+
+```tsx
+import { FileImporter } from '@/components/FileImporter'
+
+<FileImporter />
+```
+
+### CoraChargeManager
+
+Gerar boletos e PIX via Banco Cora.
+
+```tsx
+import { CoraChargeManager } from '@/components/CoraChargeManager'
+
+<CoraChargeManager invoice={invoice} />
+```
+
+### AIAgentPanel
+
+Interface completa para AI Agents.
+
+```tsx
+import { AIAgentPanel } from '@/components/AIAgentPanel'
+
+<AIAgentPanel clientId={id} transactionId={txId} />
+```
+
+### PluggyConnect
+
+Conectar contas bancárias via Open Finance.
+
+```tsx
+import { PluggyConnect } from '@/components/PluggyConnect'
+
+<PluggyConnect clientId={id} onConnected={() => {}} />
+```
+
+---
+
+## 📦 Edge Functions
+
+| Function | Input | Output |
+|----------|-------|--------|
+| `parse-ofx-statement` | `ofx_content` | Transactions imported |
+| `parse-cnab-file` | `cnab_content` | Invoices updated |
+| `cora-banking-service` | `action, data` | Charge/Balance/Statement |
+| `pluggy-integration` | `action, data` | Connect/Sync results |
+| `notification-dispatcher` | `event, channels` | Sent notifications |
+| `ai-chatbot` | `message, client_id` | Bot response |
+| `ai-churn-predictor` | `client_id` | Churn analysis |
+| `ai-pricing-optimizer` | `client_id` | Pricing recommendations |
+| `ai-fraud-detector` | `transaction_id` | Fraud analysis |
+
+---
+
+## 🗄️ Banco de Dados
+
+### 20+ Tabelas PostgreSQL
+
+#### Core
+- `clients` - Clientes com enrichment
+- `invoices` - Faturas/Honorários
+- `expenses` - Despesas
+- `bank_transactions` - Transações bancárias
+- `chart_of_accounts` - Plano de contas
+
+#### Banking & Integrations
+- `banking_credentials` (encrypted)
+- `bank_accounts` - Contas Pluggy
+- `documents` - Gestão de documentos
+
+#### Notifications
+- `message_templates`
+- `notifications_log`
+- `collection_rules`
+
+#### AI & Automation
+- `ai_agents`
+- `ai_executions`
+- `workflows`
+- `workflow_executions`
+
+#### Multi-tenant
+- `organizations`
+- `organization_users`
+- `roles`
+- `audit_logs`
+
+---
+
+## 🚀 Deploy
+
+### Frontend
+
+```bash
+npm run build
+vercel deploy
+```
+
+### Edge Functions
+
+```bash
+supabase functions deploy
+```
+
+### Database
+
+```bash
+supabase db push
+```
+
+---
+
+## 📚 Documentação
+
+- [AI Implementation Guide](./AI_IMPLEMENTATION_GUIDE.md) - Guia completo
+- [Supabase Docs](https://supabase.com/docs)
+- [Banco Cora API](https://developers.cora.com.br/)
+- [Pluggy Docs](https://docs.pluggy.ai/)
+
+---
+
+## 📈 Roadmap
+
+### ✅ Implementado
+- [x] Banco Cora (boleto + PIX)
+- [x] Open Finance (Pluggy)
+- [x] Parsers (OFX, CNAB, NFe)
+- [x] Notificações multi-canal
+- [x] 4 AI Agents
+- [x] Componentes React
+
+### 🚧 Em Desenvolvimento
+- [ ] Portal do Cliente
+- [ ] OCR de documentos
+- [ ] Workflow Builder UI
+- [ ] Fluxo de caixa
+- [ ] Mobile app
+
+---
+
+**Desenvolvido com ❤️ usando as melhores tecnologias**
