@@ -8,8 +8,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,10 @@ const Clients = () => {
     payment_day: "",
     notes: "",
     status: "active",
+    is_pro_bono: false,
+    pro_bono_start_date: "",
+    pro_bono_end_date: "",
+    pro_bono_reason: "",
   });
 
   useEffect(() => {
@@ -95,6 +100,10 @@ const Clients = () => {
         ...formData,
         monthly_fee: parseFloat(formData.monthly_fee) || 0,
         payment_day: formData.payment_day ? parseInt(formData.payment_day) : null,
+        is_pro_bono: formData.is_pro_bono,
+        pro_bono_start_date: formData.pro_bono_start_date || null,
+        pro_bono_end_date: formData.pro_bono_end_date || null,
+        pro_bono_reason: formData.pro_bono_reason || null,
         created_by: user.id,
       };
 
@@ -221,6 +230,10 @@ const Clients = () => {
       payment_day: "",
       notes: "",
       status: "active",
+      is_pro_bono: false,
+      pro_bono_start_date: "",
+      pro_bono_end_date: "",
+      pro_bono_reason: "",
     });
   };
 
@@ -235,6 +248,10 @@ const Clients = () => {
       payment_day: client.payment_day?.toString() || "",
       notes: client.notes || "",
       status: client.status,
+      is_pro_bono: client.is_pro_bono || false,
+      pro_bono_start_date: client.pro_bono_start_date || "",
+      pro_bono_end_date: client.pro_bono_end_date || "",
+      pro_bono_reason: client.pro_bono_reason || "",
     });
     setOpen(true);
   };
@@ -334,7 +351,8 @@ const Clients = () => {
                       step="0.01"
                       value={formData.monthly_fee}
                       onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
-                      required
+                      required={!formData.is_pro_bono}
+                      disabled={formData.is_pro_bono}
                     />
                   </div>
                   <div className="space-y-2">
@@ -346,8 +364,71 @@ const Clients = () => {
                       max="31"
                       value={formData.payment_day}
                       onChange={(e) => setFormData({ ...formData, payment_day: e.target.value })}
+                      disabled={formData.is_pro_bono}
                     />
                   </div>
+                  
+                  {/* Seção Pro-Bono */}
+                  <div className="space-y-4 col-span-2 border-t pt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_pro_bono"
+                        checked={formData.is_pro_bono}
+                        onCheckedChange={(checked) => {
+                          const isProBono = checked === true;
+                          setFormData({ 
+                            ...formData, 
+                            is_pro_bono: isProBono,
+                            monthly_fee: isProBono ? "0" : formData.monthly_fee,
+                            payment_day: isProBono ? "" : formData.payment_day
+                          });
+                        }}
+                      />
+                      <Label htmlFor="is_pro_bono" className="font-semibold text-base cursor-pointer">
+                        Cliente Pro-Bono (Gratuito)
+                      </Label>
+                    </div>
+                    
+                    {formData.is_pro_bono && (
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                        <div className="space-y-2">
+                          <Label htmlFor="pro_bono_start_date">Data Início *</Label>
+                          <Input
+                            id="pro_bono_start_date"
+                            type="date"
+                            value={formData.pro_bono_start_date}
+                            onChange={(e) => setFormData({ ...formData, pro_bono_start_date: e.target.value })}
+                            required={formData.is_pro_bono}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="pro_bono_end_date">Data Fim</Label>
+                          <Input
+                            id="pro_bono_end_date"
+                            type="date"
+                            value={formData.pro_bono_end_date}
+                            onChange={(e) => setFormData({ ...formData, pro_bono_end_date: e.target.value })}
+                            min={formData.pro_bono_start_date}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Deixe em branco para período indefinido
+                          </p>
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label htmlFor="pro_bono_reason">Justificativa/Motivo *</Label>
+                          <Textarea
+                            id="pro_bono_reason"
+                            value={formData.pro_bono_reason}
+                            onChange={(e) => setFormData({ ...formData, pro_bono_reason: e.target.value })}
+                            placeholder="Ex: ONG sem fins lucrativos, projeto social, parceria institucional..."
+                            rows={2}
+                            required={formData.is_pro_bono}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="notes">Observações</Label>
                     <Textarea
@@ -392,17 +473,50 @@ const Clients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">{client.name}</TableCell>
-                      <TableCell>{client.cnpj || "-"}</TableCell>
-                      <TableCell>{client.email || "-"}</TableCell>
-                      <TableCell>{formatCurrency(Number(client.monthly_fee))}</TableCell>
-                      <TableCell>
-                        <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                          {client.status === "active" ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
+                  {clients.map((client) => {
+                    const today = new Date();
+                    const isProBonoActive = client.is_pro_bono && 
+                      (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
+                    
+                    return (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {client.name}
+                            {client.is_pro_bono && (
+                              <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
+                                <Heart className="h-3 w-3 fill-current" />
+                                Pro-Bono
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{client.cnpj || "-"}</TableCell>
+                        <TableCell>{client.email || "-"}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className={client.is_pro_bono ? "line-through text-muted-foreground" : ""}>
+                              {formatCurrency(Number(client.monthly_fee))}
+                            </span>
+                            {isProBonoActive && (
+                              <span className="text-xs text-pink-600 font-medium">
+                                Gratuito {client.pro_bono_end_date 
+                                  ? `até ${new Date(client.pro_bono_end_date).toLocaleDateString('pt-BR')}`
+                                  : '(indefinido)'}
+                              </span>
+                            )}
+                            {client.is_pro_bono && !isProBonoActive && (
+                              <span className="text-xs text-muted-foreground">
+                                Pro-bono expirado
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={client.status === "active" ? "default" : "secondary"}>
+                            {client.status === "active" ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
@@ -435,16 +549,17 @@ const Clients = () => {
                             title="Excluir"
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
