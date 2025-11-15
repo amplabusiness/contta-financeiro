@@ -39,6 +39,7 @@ import BatchEnrichment from "./pages/BatchEnrichment";
 import LivroDiario from "./pages/LivroDiario";
 import LivroRazao from "./pages/LivroRazao";
 import Balancete from "./pages/Balancete";
+import GeneralLedgerAll from "./pages/GeneralLedgerAll";
 import Settings from "./pages/Settings";
 import CollectionDashboard from "./pages/CollectionDashboard";
 import CollectionLetters from "./pages/CollectionLetters";
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
             <Route path="/livro-diario" element={<LivroDiario />} />
             <Route path="/livro-razao" element={<LivroRazao />} />
+            <Route path="/razao-geral" element={<GeneralLedgerAll />} />
             <Route path="/balancete" element={<Balancete />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useSearchParams } from 'react-router-dom'
 
 interface ChartAccount {
   id: string
@@ -33,6 +34,7 @@ const LivroRazao = () => {
   const [loading, setLoading] = useState(true)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [searchParams] = useSearchParams()
 
   useEffect(() => {
     loadAccounts()
@@ -49,16 +51,26 @@ const LivroRazao = () => {
 
   const loadAccounts = async () => {
     try {
+      setLoading(true)
       const { data, error } = await supabase
         .from('chart_of_accounts')
-        .select('id, code, name, type')
-        .eq('is_synthetic', false)
+        .select('*')
         .eq('is_active', true)
+        .eq('is_synthetic', false)
         .order('code')
 
       if (error) throw error
+      
       setAccounts(data || [])
-      if (data && data.length > 0) setSelectedAccount(data[0].id)
+      
+      // Se há um parâmetro de conta na URL, selecionar automaticamente
+      const accountParam = searchParams.get('account')
+      if (accountParam && data) {
+        const account = data.find(a => a.id === accountParam)
+        if (account) {
+          setSelectedAccount(accountParam)
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar contas:', error)
     } finally {
