@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     const { data: invoices } = await supabase
       .from('invoices')
-      .select('id, client_id, amount, due_date, clients(name)')
+      .select('id, client_id, amount, due_date, competence, status, payment_date, clients(name)')
       .eq('status', 'pending');
 
     const { data: clients } = await supabase
