@@ -387,7 +387,7 @@ async function matchTransactionWithAI(
               expenseId: matchedExpense.id,
               confidence: 0.95,
               suggestion: `Matched automaticamente via regra: ${rule.rule_name}`,
-              category: rule.target_category,
+              category: rule.target_category || undefined,
             };
           }
         } else if (rule.rule_type === 'revenue' && rule.auto_match) {
