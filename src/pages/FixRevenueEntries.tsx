@@ -12,10 +12,9 @@ interface ProcessingResult {
   message: string;
   stats?: {
     total: number;
-    processed: number;
-    skipped: number;
-    errors: number;
-    remaining?: number;
+    processed?: number;
+    skipped?: number;
+    errors?: number;
   };
   errors?: string[];
 }
@@ -43,11 +42,11 @@ const FixRevenueEntries = () => {
       setResult(data);
 
       if (data.success) {
-        const message = data.stats.remaining && data.stats.remaining > 0
-          ? `${data.stats.processed} lançamentos criados, ${data.stats.skipped} já existiam. ${data.stats.remaining} faturas restantes - execute novamente.`
-          : `${data.stats.processed} lançamentos criados, ${data.stats.skipped} já existiam.`;
+        const message = data.stats?.processed 
+          ? `${data.stats.processed} lançamentos criados, ${data.stats.skipped || 0} já existiam.`
+          : data.message;
         
-        toast.success(data.stats.remaining && data.stats.remaining > 0 ? "Lote processado!" : "Correção concluída!", {
+        toast.success("Processamento concluído!", {
           description: message,
           duration: 5000,
         });
@@ -135,39 +134,23 @@ const FixRevenueEntries = () => {
               <p className="text-sm">{result.message}</p>
 
               {result.stats && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-muted p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="text-2xl font-bold">{result.stats.total}</p>
-                    </div>
-                    <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Criados</p>
-                      <p className="text-2xl font-bold text-green-600">{result.stats.processed}</p>
-                    </div>
-                    <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Já Existiam</p>
-                      <p className="text-2xl font-bold text-blue-600">{result.stats.skipped}</p>
-                    </div>
-                    <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Erros</p>
-                      <p className="text-2xl font-bold text-red-600">{result.stats.errors}</p>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-2xl font-bold">{result.stats.total}</p>
                   </div>
-                  
-                  {result.stats.remaining && result.stats.remaining > 0 && (
-                    <Alert className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                      <AlertTitle className="text-yellow-800 dark:text-yellow-200">
-                        Mais faturas para processar
-                      </AlertTitle>
-                      <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                        Ainda restam <strong>{result.stats.remaining} faturas</strong> para processar.
-                        <br />
-                        Clique em "Corrigir Lançamentos" novamente para continuar.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">Criados</p>
+                    <p className="text-2xl font-bold text-green-600">{result.stats.processed || 0}</p>
+                  </div>
+                  <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">Já Existiam</p>
+                    <p className="text-2xl font-bold text-blue-600">{result.stats.skipped || 0}</p>
+                  </div>
+                  <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">Erros</p>
+                    <p className="text-2xl font-bold text-red-600">{result.stats.errors || 0}</p>
+                  </div>
                 </div>
               )}
 
