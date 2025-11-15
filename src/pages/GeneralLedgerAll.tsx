@@ -187,18 +187,16 @@ const GeneralLedgerAll = () => {
     
     if (isSynthetic) {
       return level === 1 
-        ? 'font-bold text-base bg-primary/5' 
-        : 'font-semibold bg-muted/50'
+        ? 'font-bold text-base bg-primary/5 hover:bg-primary/10 cursor-pointer' 
+        : 'font-semibold bg-muted/50 hover:bg-muted cursor-pointer'
     }
     
     return 'hover:bg-muted/50 cursor-pointer'
   }
 
   const handleAccountClick = (account: AccountSummary) => {
-    if (!account.is_synthetic && account.movimentacoes > 0) {
-      // Redirecionar para o Livro Razão individual com esta conta selecionada
-      navigate(`/livro-razao?account=${account.id}`)
-    }
+    // Permitir click em TODAS as contas (sintéticas e analíticas)
+    navigate(`/livro-razao?account=${account.id}`)
   }
 
   return (

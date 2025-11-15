@@ -16,6 +16,7 @@ interface ChartAccount {
   code: string
   name: string
   type: string
+  is_synthetic: boolean
 }
 
 interface RazaoEntry {
@@ -56,7 +57,6 @@ const LivroRazao = () => {
         .from('chart_of_accounts')
         .select('*')
         .eq('is_active', true)
-        .eq('is_synthetic', false)
         .order('code')
 
       if (error) throw error
@@ -82,32 +82,58 @@ const LivroRazao = () => {
     try {
       setLoading(true)
 
+      const account = accounts.find(a => a.id === accountId)
+      if (!account) {
+        setEntries([])
+        return
+      }
+
+      // Determinar quais contas buscar
+      let accountIds: string[] = []
+      if (account.is_synthetic) {
+        // Para contas sintéticas, buscar todas as contas filhas analíticas
+        const childAccounts = accounts.filter(a => 
+          a.code.startsWith(account.code + '.') && !a.is_synthetic
+        )
+        accountIds = childAccounts.map(a => a.id)
+        
+        // Se não houver contas filhas, usar a própria conta
+        if (accountIds.length === 0) {
+          accountIds = [accountId]
+        }
+      } else {
+        // Para contas analíticas, usar apenas ela
+        accountIds = [accountId]
+      }
+
+      // Calcular saldo inicial
       let saldoInicial = 0
-      if (start) {
+      if (start && accountIds.length > 0) {
         const { data: saldoData } = await supabase
           .from('accounting_entry_lines')
           .select('debit, credit, entry_id!inner(entry_date)')
-          .eq('account_id', accountId)
+          .in('account_id', accountIds)
           .lt('entry_id.entry_date', start)
 
         if (saldoData) {
           const totalDebito = saldoData.reduce((sum, line) => sum + (line.debit || 0), 0)
           const totalCredito = saldoData.reduce((sum, line) => sum + (line.credit || 0), 0)
-          const account = accounts.find(a => a.id === accountId)
-          const isDevedora = account && ['ATIVO', 'DESPESA'].includes(account.type)
+          const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type.toUpperCase())
           saldoInicial = isDevedora ? totalDebito - totalCredito : totalCredito - totalDebito
         }
       }
 
+      // Buscar lançamentos do período
       let query = supabase
         .from('accounting_entry_lines')
         .select(`
           debit,
           credit,
           description,
+          account_id,
           entry_id!inner(id, entry_date, description)
         `)
-        .eq('account_id', accountId)
+        .in('account_id', accountIds)
         .order('entry_id.entry_date', { ascending: true })
 
       if (start) query = query.gte('entry_id.entry_date', start)
@@ -116,8 +142,7 @@ const LivroRazao = () => {
       const { data, error } = await query
       if (error) throw error
 
-      const account = accounts.find(a => a.id === accountId)
-      const isDevedora = account && ['ATIVO', 'DESPESA'].includes(account.type)
+      const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type.toUpperCase())
       
       let saldoAcumulado = saldoInicial
       const razaoEntries: RazaoEntry[] = []
@@ -138,10 +163,19 @@ const LivroRazao = () => {
         const credito = line.credit || 0
         saldoAcumulado += isDevedora ? debito - credito : credito - debito
 
+        // Se for conta sintética, incluir o código da conta filha na descrição
+        let descricao = line.description || line.entry_id.description
+        if (account.is_synthetic) {
+          const childAccount = accounts.find(a => a.id === line.account_id)
+          if (childAccount) {
+            descricao = `[${childAccount.code}] ${descricao}`
+          }
+        }
+
         razaoEntries.push({
           data_lancamento: line.entry_id.entry_date,
           numero_lancamento: line.entry_id.id.substring(0, 8),
-          descricao: line.description || line.entry_id.description,
+          descricao,
           debito,
           credito,
           saldo: saldoAcumulado
@@ -198,6 +232,7 @@ const LivroRazao = () => {
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.code} - {account.name}
+                        {account.is_synthetic && ' (Sintética)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -220,7 +255,16 @@ const LivroRazao = () => {
 
         {selectedAccountData && (
           <Card>
-            <CardHeader><CardTitle>Conta Selecionada</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Conta Selecionada
+                {selectedAccountData.is_synthetic && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    (Consolidado de contas filhas)
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
