@@ -24,7 +24,6 @@ import {
   TrendingDown,
   Building2,
   Network,
-  DollarSign,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -48,12 +47,10 @@ interface EconomicGroup {
 }
 
 const EconomicGroupAnalysis = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [economicGroups, setEconomicGroups] = useState<EconomicGroup[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     fetchData();

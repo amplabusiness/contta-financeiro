@@ -40,7 +40,6 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Calendar,
   User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,14 +89,11 @@ interface Invoice {
 }
 
 const CollectionWorkOrders = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showNewOrder, setShowNewOrder] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [showLogDialog, setShowLogDialog] = useState(false);
 
   // Form states
@@ -247,10 +243,6 @@ const CollectionWorkOrders = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR");
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("pt-BR");
   };
 
   return (
