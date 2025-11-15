@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     // Buscar despesas e honorários pendentes para matching
     const { data: expenses } = await supabase
       .from('expenses')
-      .select('id, description, amount, due_date, category')
+      .select('id, description, amount, due_date, category, status')
       .eq('status', 'pending');
 
     const { data: invoices } = await supabase
@@ -93,14 +93,14 @@ Deno.serve(async (req) => {
           description: transaction.description,
           amount: Math.abs(transaction.amount),
           transaction_type: transaction.type,
-          bank_reference: transaction.reference,
+          bank_reference: transaction.reference || null,
           imported_from: file.name,
-          matched: aiMatch.matched,
-          matched_expense_id: aiMatch.expenseId,
-          matched_invoice_id: aiMatch.invoiceId,
-          ai_confidence: aiMatch.confidence,
-          ai_suggestion: aiMatch.suggestion,
-          category: aiMatch.category,
+          matched: aiMatch?.matched || false,
+          matched_expense_id: aiMatch?.expenseId || null,
+          matched_invoice_id: aiMatch?.invoiceId || null,
+          ai_confidence: aiMatch?.confidence || null,
+          ai_suggestion: aiMatch?.suggestion || null,
+          category: aiMatch?.category || null,
           created_by: user.id,
         })
         .select()
@@ -112,12 +112,12 @@ Deno.serve(async (req) => {
       }
 
       // Se for pagamento de cliente, atualizar razão e honorário
-      if (aiMatch.matched && aiMatch.invoiceId && aiMatch.clientId) {
+      if (aiMatch?.matched && aiMatch?.invoiceId && aiMatch?.clientId) {
         // Buscar dados da invoice
         const { data: invoice } = await supabase
           .from('invoices')
           .select('amount, description, client_id')
-          .eq('id', aiMatch.invoiceId)
+          .eq('id', aiMatch?.invoiceId || '')
           .single();
 
         // Atualizar honorário para pago
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
             credit: Math.abs(transaction.amount),
             debit: 0,
             balance: newBalance,
-            invoice_id: aiMatch.invoiceId,
+            invoice_id: aiMatch?.invoiceId || null,
             reference_type: 'bank_transaction',
             reference_id: bankTx.id,
             created_by: user.id,
@@ -362,8 +362,13 @@ async function matchTransactionWithAI(
   matched: boolean
   type?: string
   matchedId?: string
+  expenseId?: string | null
+  invoiceId?: string | null
+  clientId?: string | null
   confidence?: number
-} | null> {
+  suggestion?: string
+  category?: string
+}> {
   try {
     // Primeiro, aplicar regras automáticas
     for (const rule of rules) {
