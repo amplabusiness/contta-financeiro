@@ -33,7 +33,7 @@ serve(async (req) => {
         result: reconciliationResult
       });
       console.log('✅ Reconciliation completed:', reconciliationResult);
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.tasks.push({
         name: 'AI Reconciliation',
         status: 'error',
@@ -52,7 +52,7 @@ serve(async (req) => {
         result: classificationResult
       });
       console.log('✅ Classification completed:', classificationResult);
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.tasks.push({
         name: 'Expense Classification',
         status: 'error',
@@ -77,7 +77,7 @@ serve(async (req) => {
         console.log('⚠️ CRITICAL ALERTS:', analysisResult.analysis.alerts);
         // TODO: Implementar sistema de notificações (email/SMS)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.tasks.push({
         name: 'Financial Analysis',
         status: 'error',
@@ -104,7 +104,7 @@ serve(async (req) => {
         result: { updated: overdueInvoices?.length || 0 }
       });
       console.log(`✅ Updated ${overdueInvoices?.length || 0} overdue invoices`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.tasks.push({
         name: 'Update Overdue Invoices',
         status: 'error',
@@ -137,7 +137,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in automation scheduler:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

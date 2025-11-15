@@ -110,7 +110,7 @@ async function processInvoices(
         console.log(`✅ ${stats.processed}/${invoices.length} faturas processadas`);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       errors.push(`Fatura ${invoice.id}: ${error.message}`);
       stats.errors++;
     }
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Erro fatal:', error);
     return new Response(
       JSON.stringify({

@@ -1,25 +1,18 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-
-interface ReconciliationMatch {
-  transactionId: string
-  invoiceId: string
-  clientId: string
-  clientName: string
-  matchMethod: 'AUTO_EXACT' | 'AUTO_FUZZY' | 'MANUAL'
-  confidenceScore: number
-  matchCriteria: any
-}
-
-interface ReconciliationResult {
-  processed: number
-  matched: number
-  unmatched: number
-  entriesCreated: number
-  matches: ReconciliationMatch[]
-  unmatchedTransactions: any[]
-}
+import type {
+  EdgeSupabaseClient,
+  BankTransaction,
+  Invoice,
+  ChartOfAccount,
+  ReconciliationMatch,
+  ReconciliationResult,
+  BestMatch,
+  MatchCriteria,
+  ReconciliationConfig,
+  ChartOfAccounts
+} from '../_shared/types.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -81,7 +74,7 @@ serve(async (req) => {
   }
 })
 
-async function reconcileBankStatement(supabase: any, config: any) {
+async function reconcileBankStatement(supabase: EdgeSupabaseClient, config: ReconciliationConfig) {
   const { startDate, endDate, accountId } = config
 
   // Buscar transações bancárias não conciliadas (apenas entradas de dinheiro)
@@ -172,12 +165,12 @@ async function reconcileBankStatement(supabase: any, config: any) {
   return result
 }
 
-async function findBestMatch(transaction: any, invoices: any[]) {
+async function findBestMatch(transaction: BankTransaction, invoices: Invoice[]): Promise<BestMatch | null> {
   const transactionAmount = Math.abs(transaction.amount)
   const transactionDescription = (transaction.description || '').toLowerCase()
   const transactionDate = new Date(transaction.transaction_date)
 
-  let bestMatch: any = null
+  let bestMatch: BestMatch | null = null
   let highestScore = 0
 
   for (const invoice of invoices) {
@@ -187,7 +180,7 @@ async function findBestMatch(transaction: any, invoices: any[]) {
     const dueDate = new Date(invoice.due_date)
 
     let score = 0
-    const criteria: any = {}
+    const criteria: MatchCriteria = {}
 
     // 1. MATCH EXATO DE VALOR (peso 40)
     if (Math.abs(transactionAmount - invoiceAmount) < 0.01) {
@@ -254,7 +247,7 @@ async function findBestMatch(transaction: any, invoices: any[]) {
   return bestMatch
 }
 
-async function reconcileTransaction(supabase: any, transactionId: string) {
+async function reconcileTransaction(supabase: EdgeSupabaseClient, transactionId: string) {
   // Buscar a transação
   const { data: transaction, error: txError } = await supabase
     .from('bank_transactions')
@@ -302,7 +295,7 @@ async function reconcileTransaction(supabase: any, transactionId: string) {
 }
 
 async function manualReconciliation(
-  supabase: any,
+  supabase: EdgeSupabaseClient,
   transactionId: string,
   invoiceId: string
 ) {
@@ -333,12 +326,12 @@ async function manualReconciliation(
 }
 
 async function processReconciliation(
-  supabase: any,
-  transaction: any,
-  invoice: any,
+  supabase: EdgeSupabaseClient,
+  transaction: BankTransaction,
+  invoice: Invoice,
   method: string,
   confidenceScore: number,
-  matchCriteria: any
+  matchCriteria: MatchCriteria
 ) {
   // 1. Buscar contas contábeis
   const accounts = await getChartOfAccounts(supabase)
@@ -421,7 +414,7 @@ async function processReconciliation(
   return { success: true, entryId: entry.id }
 }
 
-async function getChartOfAccounts(supabase: any) {
+async function getChartOfAccounts(supabase: EdgeSupabaseClient): Promise<ChartOfAccounts> {
   const { data, error } = await supabase
     .from('chart_of_accounts')
     .select('*')
@@ -429,11 +422,13 @@ async function getChartOfAccounts(supabase: any) {
 
   if (error) throw error
 
+  const accounts = data as ChartOfAccount[]
+
   return {
-    honorariosAReceber: data.find((a: any) => a.code === '1.1.02.001'),
-    bancosContaMovimento: data.find((a: any) => a.code === '1.1.01.002'),
-    caixa: data.find((a: any) => a.code === '1.1.01.001'),
-    receitaHonorarios: data.find((a: any) => a.code === '3.1.01.001')
+    honorariosAReceber: accounts.find((a) => a.code === '1.1.02.001')!,
+    bancosContaMovimento: accounts.find((a) => a.code === '1.1.01.002')!,
+    caixa: accounts.find((a) => a.code === '1.1.01.001')!,
+    receitaHonorarios: accounts.find((a) => a.code === '3.1.01.001')!
   }
 }
 
