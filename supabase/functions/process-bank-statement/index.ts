@@ -56,12 +56,12 @@ Deno.serve(async (req) => {
     // Buscar despesas e honorários pendentes para matching
     const { data: expenses } = await supabase
       .from('expenses')
-      .select('id, description, amount, due_date, category')
+      .select('id, description, amount, due_date, category, status, payment_date')
       .eq('status', 'pending');
 
     const { data: invoices } = await supabase
       .from('invoices')
-      .select('id, client_id, amount, due_date, clients(name)')
+      .select('id, client_id, amount, due_date, competence, description, status, payment_date, clients(id, name, cnpj)')
       .eq('status', 'pending');
 
     const { data: clients } = await supabase

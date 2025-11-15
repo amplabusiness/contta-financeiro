@@ -23,6 +23,10 @@ export interface OFXTransaction {
 export interface ReconciliationRule {
   pattern: string
   rule_type: string
+  rule_name: string
+  target_category?: string
+  target_account_id?: string
+  priority?: number
   auto_match?: boolean
 }
 
@@ -32,6 +36,8 @@ export interface Expense {
   amount: number
   due_date: string
   status: string
+  category: string
+  payment_date?: string | null
 }
 
 // Brasil API types
@@ -55,6 +61,7 @@ export interface BrasilAPIResponse {
   porte?: string
   natureza_juridica?: string
   situacao_cadastral?: string
+  descricao_situacao_cadastral?: string
   data_situacao_cadastral?: string
   motivo_situacao_cadastral?: string
   data_inicio_atividade?: string
@@ -73,9 +80,11 @@ export interface BrasilAPIResponse {
   email?: string
   capital_social?: string
   opcao_pelo_simples?: boolean
+  data_opcao_pelo_simples?: string
   data_opcao_simples?: string
   opcao_pelo_mei?: boolean
   qsa?: BrasilAPISocio[]
+  cnaes_secundarios?: Array<{ codigo: string; descricao: string }>
 }
 
 // Boleto types
@@ -107,7 +116,8 @@ export interface BankTransaction {
 export interface Invoice {
   id: string
   client_id: string
-  competence: string
+  competence: string | null
+  description?: string | null
   amount: number
   due_date: string
   status: 'pending' | 'paid' | 'overdue' | 'cancelled'
