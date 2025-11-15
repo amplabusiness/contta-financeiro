@@ -122,6 +122,7 @@ export function AppSidebar() {
       label: "Despesas",
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
+        { title: "Contas a Pagar", url: "/accounts-payable", icon: CreditCard },
         { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
       ],
     },
