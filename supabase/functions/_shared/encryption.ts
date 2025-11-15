@@ -2,7 +2,13 @@
  * Encryption utilities for sensitive data
  */
 
-const ENCRYPTION_KEY = Deno.env.get('ENCRYPTION_KEY') || 'default-key-change-me-in-production'
+const ENCRYPTION_KEY = Deno.env.get('ENCRYPTION_KEY')
+
+if (!ENCRYPTION_KEY) {
+  throw new Error('ENCRYPTION_KEY environment variable is required')
+}
+
+const encryptionKey = ENCRYPTION_KEY
 
 export async function encrypt(text: string): Promise<string> {
   const encoder = new TextEncoder()
@@ -10,7 +16,7 @@ export async function encrypt(text: string): Promise<string> {
 
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(ENCRYPTION_KEY.slice(0, 32).padEnd(32, '0')),
+    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt']
@@ -41,7 +47,7 @@ export async function decrypt(encryptedText: string): Promise<string> {
 
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(ENCRYPTION_KEY.slice(0, 32).padEnd(32, '0')),
+    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
     { name: 'AES-GCM', length: 256 },
     false,
     ['decrypt']
