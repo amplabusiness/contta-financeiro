@@ -72,47 +72,91 @@ export function AppSidebar() {
       ]
     : [
         {
-          label: "Gestão",
+          label: "Dashboards",
           items: [
-            { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+            { title: "Dashboard Principal", url: "/dashboard", icon: LayoutDashboard },
             { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
-            { title: "Clientes", url: "/clients", icon: Users },
-            { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
-            { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
-            { title: "Honorários", url: "/invoices", icon: FileText },
-            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
+            { title: "Dashboard de Cobrança", url: "/collection-dashboard", icon: DollarSign },
           ],
         },
         {
-          label: "Financeiro",
+          label: "Clientes",
           items: [
-            { title: "Despesas", url: "/expenses", icon: Wallet },
-            { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
+            { title: "Lista de Clientes", url: "/clients", icon: Users },
+            { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
+            { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
+            { title: "Mesclar Clientes", url: "/merge-clients", icon: Users },
+          ],
+        },
+        {
+          label: "💰 Receitas",
+          items: [
+            { title: "🎯 Análise de Honorários", url: "/fees-analysis", icon: Target },
+            { title: "Honorários a Receber", url: "/invoices", icon: FileText },
+            { title: "Ordens de Serviço", url: "/service-orders", icon: FileInput },
+            { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
+            { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
+            { title: "Inadimplência", url: "/reports", icon: BarChart3 },
+            { title: "Cartas de Cobrança", url: "/collection-letters", icon: FileText },
+          ],
+        },
+        {
+          label: "🔄 Conciliação",
+          items: [
             { title: "Conciliação Bancária", url: "/bank-reconciliation", icon: RefreshCw },
-            { title: "Dashboard Conciliação", url: "/reconciliation-dashboard", icon: Activity },
-            { title: "Relatório Divergências", url: "/reconciliation-discrepancies", icon: FileWarning },
             { title: "Reconciliação PIX", url: "/pix-reconciliation", icon: Zap },
             { title: "PIX sem Cliente", url: "/unmatched-pix-report", icon: AlertTriangle },
-            { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
+            { title: "Dashboard Conciliação", url: "/reconciliation-dashboard", icon: Activity },
+            { title: "Relatório Divergências", url: "/reconciliation-discrepancies", icon: FileWarning },
+          ],
+        },
+        {
+          label: "📚 Contabilidade",
+          items: [
+            { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+            { title: "Livro Diário", url: "/journal", icon: BookText },
+            { title: "Livro Razão", url: "/general-ledger", icon: BookOpen },
             { title: "Balancete", url: "/trial-balance", icon: BookText },
             { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
             { title: "DRE", url: "/dre", icon: TrendingUp },
-            { title: "Inadimplência", url: "/reports", icon: BarChart3 },
           ],
         },
         {
-          label: "Configurações",
+          label: "💳 Despesas",
           items: [
-            { title: "🤖 Agentes de IA", url: "/ai-agents", icon: Bot },
-            { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
-            { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
-            { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
-            { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
-            { title: "Mesclar Clientes", url: "/merge-clients", icon: Users },
-            { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
+            { title: "Despesas", url: "/expenses", icon: Wallet },
+            { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
+          ],
+        },
+        {
+          label: "📊 Análises Estratégicas",
+          items: [
+            { title: "Rentabilidade e Lucro", url: "/profitability-analysis", icon: TrendingUp },
+            { title: "Grupos Econômicos", url: "/economic-groups", icon: Users },
+          ],
+        },
+        {
+          label: "📥 Importações",
+          items: [
             { title: "Importar Clientes", url: "/import", icon: Upload },
+            { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
             { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
             { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
+          ],
+        },
+        {
+          label: "🔧 Ferramentas",
+          items: [
+            { title: "🤖 Agentes de IA", url: "/ai-agents", icon: Bot },
+            { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
+            { title: "Regularizar Contabilidade", url: "/regularize-accounting", icon: RefreshCw },
+            { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
+          ],
+        },
+        {
+          label: "⚙️ Configurações",
+          items: [
+            { title: "Tipos de Receita", url: "/revenue-types", icon: DollarSign },
           ],
         },
       ];
