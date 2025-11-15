@@ -113,9 +113,10 @@ const GeneralLedgerAll = () => {
           }
         }
 
-        // Determinar natureza baseada no tipo da conta
-        const tipo = account.type.toUpperCase()
-        const isDevedora = ['ATIVO', 'DESPESA'].includes(tipo)
+        // Determinar natureza baseada no CÓDIGO da conta (não no tipo)
+        // 1 = Ativo (devedora), 2 = Passivo (credora), 3 = Receita (credora), 4 = Despesa (devedora)
+        const primeiroDigito = account.code.charAt(0)
+        const isDevedora = ['1', '4'].includes(primeiroDigito)
         const saldo = isDevedora
           ? totalDebito - totalCredito
           : totalCredito - totalDebito
