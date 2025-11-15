@@ -36,14 +36,17 @@ import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
 import ClientEnrichment from "./pages/ClientEnrichment";
 import BatchEnrichment from "./pages/BatchEnrichment";
-import FeesAnalysis from "./pages/FeesAnalysis";
-import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
-import EconomicGroups from "./pages/EconomicGroups";
+import LivroDiario from "./pages/LivroDiario";
+import LivroRazao from "./pages/LivroRazao";
+import Balancete from "./pages/Balancete";
+import Settings from "./pages/Settings";
 import CollectionDashboard from "./pages/CollectionDashboard";
-import ServiceOrders from "./pages/ServiceOrders";
 import CollectionLetters from "./pages/CollectionLetters";
-import GeneralLedger from "./pages/GeneralLedger";
-import Journal from "./pages/Journal";
+import Contracts from "./pages/Contracts";
+import FeesAnalysis from "./pages/FeesAnalysis";
+import CollectionWorkOrders from "./pages/CollectionWorkOrders";
+import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
+import EconomicGroupAnalysis from "./pages/EconomicGroupAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -89,14 +92,17 @@ const App = () => (
             <Route path="/unmatched-pix-report" element={<UnmatchedPixReport />} />
             <Route path="/client-enrichment" element={<ClientEnrichment />} />
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
-            <Route path="/fees-analysis" element={<FeesAnalysis />} />
-            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
-            <Route path="/economic-groups" element={<EconomicGroups />} />
+            <Route path="/livro-diario" element={<LivroDiario />} />
+            <Route path="/livro-razao" element={<LivroRazao />} />
+            <Route path="/balancete" element={<Balancete />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />
-            <Route path="/service-orders" element={<ServiceOrders />} />
             <Route path="/collection-letters" element={<CollectionLetters />} />
-            <Route path="/general-ledger" element={<GeneralLedger />} />
-            <Route path="/journal" element={<Journal />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/fees-analysis" element={<FeesAnalysis />} />
+            <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
+            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
+            <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

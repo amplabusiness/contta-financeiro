@@ -130,6 +130,15 @@ serve(async (req) => {
         cep: data.cep,
         email: data.email || null,
         phone: data.ddd_telefone_1 || null,
+        // ✅ NOVOS CAMPOS ADICIONADOS DA API BRASIL
+        telefone_secundario: data.ddd_telefone_2 || null,
+        fax: data.ddd_fax || null,
+        opcao_pelo_simples: data.opcao_pelo_simples || false,
+        data_opcao_simples: data.data_opcao_pelo_simples || null,
+        opcao_pelo_mei: data.opcao_pelo_mei || false,
+        motivo_situacao_cadastral: data.motivo_situacao_cadastral || null,
+        data_situacao_cadastral: data.data_situacao_cadastral || null,
+        // FIM NOVOS CAMPOS
         atividade_principal: data.cnae_fiscal_descricao ? {
           codigo: data.cnae_fiscal,
           descricao: data.cnae_fiscal_descricao

@@ -50,21 +50,22 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [clientsRes, invoicesRes, expensesRes, allInvoicesRes] = await Promise.all([
+      const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes] = await Promise.all([
         supabase.from("clients").select("*", { count: "exact" }).eq("status", "active").order("name"),
-        supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false }).limit(10),
+        supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10),
         supabase.from("expenses").select("*"),
         supabase.from("invoices").select("*"),
       ]);
 
       const totalClients = clientsRes.count || 0;
-      const invoices = invoicesRes.data || [];
+      const recentInvoices = recentInvoicesRes.data || [];
       const expenses = expensesRes.data || [];
       const clientsList = clientsRes.data || [];
       const allInvoices = allInvoicesRes.data || [];
 
-      const pendingInvoices = invoices.filter((i) => i.status === "pending");
-      const overdueInvoices = invoices.filter((i) => i.status === "overdue");
+      // CORRIGIDO: Calcular KPIs com TODAS as invoices, não apenas as 10 recentes
+      const pendingInvoices = allInvoices.filter((i) => i.status === "pending");
+      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
       const pendingExpenses = expenses.filter((e) => e.status === "pending");
 
       setStats({
@@ -106,7 +107,7 @@ const Dashboard = () => {
       });
 
       setClientsHealth(healthData);
-      setRecentInvoices(invoices);
+      setRecentInvoices(recentInvoices);
       setClients(clientsList);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
