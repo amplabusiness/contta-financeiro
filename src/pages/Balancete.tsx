@@ -45,11 +45,6 @@ const Balancete = () => {
 
       // Buscar dados da view vw_balancete
       // Como a view não tem filtro de data, vamos buscar os lançamentos no período
-      let query = supabase.rpc('get_balancete', {
-        data_inicio: start || null,
-        data_fim: end || null
-      })
-
       // Se a função RPC não existir, usar a view diretamente
       const { data, error } = await supabase
         .from('vw_balancete')

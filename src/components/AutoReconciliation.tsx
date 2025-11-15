@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { RefreshCw, CheckCircle2, AlertCircle, Loader2, Eye, Link as LinkIcon } from 'lucide-react'
+import { RefreshCw, CheckCircle2, Loader2, Eye, Link as LinkIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
@@ -36,7 +36,6 @@ export function AutoReconciliation() {
   const [unmatchedTransactions, setUnmatchedTransactions] = useState<UnmatchedTransaction[]>([])
   const [suggestions, setSuggestions] = useState<ReconciliationSuggestion[]>([])
   const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false)
-  const [selectedTransaction, setSelectedTransaction] = useState<UnmatchedTransaction | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
