@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -32,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  FileContract,
   Plus,
   Eye,
   Download,
@@ -418,7 +416,7 @@ CPF:
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FileContract className="w-6 h-6 text-purple-600" />
+                    <FileText className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold">
@@ -447,7 +445,7 @@ CPF:
               <CardContent>
                 {contracts.length === 0 ? (
                   <div className="text-center py-12">
-                    <FileContract className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">
                       Nenhum contrato cadastrado
                     </h3>

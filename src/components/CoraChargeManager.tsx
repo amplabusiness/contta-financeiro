@@ -238,7 +238,7 @@ export function CoraChargeManager({ invoice }: CoraChargeManagerProps) {
 
             <Button
               className="w-full"
-              onClick={() => copyToClipboard(displayCharge?.pix_copy_paste!)}
+              onClick={() => copyToClipboard(displayCharge?.pix_copy_paste || '')}
             >
               <Copy className="mr-2 h-4 w-4" />
               Copy Code
