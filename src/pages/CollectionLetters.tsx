@@ -61,6 +61,7 @@ const CollectionLetters = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showNewTemplate, setShowNewTemplate] = useState(false);
 
@@ -252,10 +253,14 @@ Ampla Contabilidade 📊`,
 
   const createDefaultTemplates = useCallback(async () => {
     try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error('Usuário não autenticado');
+
       for (const template of defaultTemplates) {
         await supabase.from("message_templates").insert({
           ...template,
           is_active: true,
+          created_by: user.id,
         });
       }
       await fetchTemplates();

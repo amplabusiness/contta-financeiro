@@ -56,18 +56,19 @@ interface Contract {
 interface Client {
   id: string;
   name: string;
-  cnpj: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
+  cnpj: string | null;
+  email: string | null;
+  phone: string | null;
+  logradouro: string | null;
+  municipio: string | null;
+  uf: string | null;
 }
 
 const Contracts = () => {
   const { toast } = useToast();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [showNewContract, setShowNewContract] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [contractPreview, setContractPreview] = useState("");
@@ -193,11 +194,11 @@ Pelo presente instrumento particular de prestação de serviços, de um lado:
 
 CONTRATANTE:
 Razão Social: ${client.name}
-CNPJ: ${client.cnpj}
-Endereço: ${client.address || "Não informado"}
-Cidade/UF: ${client.city || ""} - ${client.state || ""}
-E-mail: ${client.email || ""}
-Telefone: ${client.phone || ""}
+CNPJ: ${client.cnpj || 'Não informado'}
+Endereço: ${client.logradouro || 'Não informado'}
+Cidade/UF: ${client.municipio || ''} - ${client.uf || ''}
+E-mail: ${client.email || ''}
+Telefone: ${client.phone || ''}
 
 Doravante denominada simplesmente CONTRATANTE,
 

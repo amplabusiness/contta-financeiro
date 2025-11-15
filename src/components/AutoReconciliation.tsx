@@ -23,11 +23,26 @@ interface UnmatchedTransaction {
   bank_reference?: string
 }
 
+interface Invoice {
+  id: string
+  client_id: string
+  amount: number
+  due_date: string
+  competence: string
+  clients?: { id: string; name: string }
+}
+
+interface MatchCriteria {
+  exactAmount: boolean
+  nameInDescription: boolean
+  dateProximity: boolean
+}
+
 interface ReconciliationSuggestion {
   transaction: UnmatchedTransaction
-  invoice: unknown
+  invoice: Invoice
   confidenceScore: number
-  matchCriteria: unknown
+  matchCriteria: MatchCriteria
 }
 
 export function AutoReconciliation() {
@@ -36,6 +51,7 @@ export function AutoReconciliation() {
   const [unmatchedTransactions, setUnmatchedTransactions] = useState<UnmatchedTransaction[]>([])
   const [suggestions, setSuggestions] = useState<ReconciliationSuggestion[]>([])
   const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState<UnmatchedTransaction | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
