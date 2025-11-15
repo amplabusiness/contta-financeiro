@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.ai-fraud-analyzer]
 verify_jwt = true
+
+[functions.ai-cash-flow-analyst]
+verify_jwt = true
