@@ -84,12 +84,12 @@ export function BoletoReportImporter() {
         throw new Error(data.error || 'Erro ao processar relatório')
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao importar relatório:', error)
 
       toast({
         title: 'Erro ao importar relatório',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       })
 
@@ -233,12 +233,12 @@ export function BoletoReportImporter() {
     if (!competenceStr) return getCurrentCompetence()
 
     // Formatos aceitos: MM/YYYY, YYYY-MM, MM-YYYY
-    const match = competenceStr.match(/(\d{2})[\/-](\d{4})/)
+    const match = competenceStr.match(/(\d{2})[/-](\d{4})/)
     if (match) {
       return `${match[1]}/${match[2]}`
     }
 
-    const match2 = competenceStr.match(/(\d{4})[\/-](\d{2})/)
+    const match2 = competenceStr.match(/(\d{4})[/-](\d{2})/)
     if (match2) {
       return `${match2[2]}/${match2[1]}`
     }

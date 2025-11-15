@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -77,52 +77,7 @@ const ProfitabilityAnalysis = () => {
   const [clientRevenues, setClientRevenues] = useState<ClientRevenue[]>([]);
   const [top80PercentClients, setTop80PercentClients] = useState<number>(0);
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedYear]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      // Fetch invoices for the year
-      const { data: invoicesData, error: invoicesError } = await supabase
-        .from("invoices")
-        .select(`
-          *,
-          clients (
-            id,
-            name
-          )
-        `)
-        .like("competence", `%/${selectedYear}`);
-
-      if (invoicesError) throw invoicesError;
-
-      // Fetch expenses for the year
-      const { data: expensesData, error: expensesError } = await supabase
-        .from("expenses")
-        .select("amount")
-        .gte("due_date", `${selectedYear}-01-01`)
-        .lte("due_date", `${selectedYear}-12-31`);
-
-      if (expensesError) throw expensesError;
-
-      // Calculate statistics
-      calculateProfitability(invoicesData || [], expensesData || []);
-      calculateClientRepresentation(invoicesData || []);
-    } catch (error: any) {
-      console.error("Error fetching data:", error);
-      toast({
-        title: "Erro ao carregar dados",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const calculateProfitability = (invoices: any[], expenses: any[]) => {
+  const calculateProfitability = useCallback((invoices: Array<{ amount: number; status: string }>, expenses: Array<{ amount: number }>) => {
     const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
     const totalReceived = invoices
       .filter((inv) => inv.status === "paid")
@@ -147,9 +102,9 @@ const ProfitabilityAnalysis = () => {
       marginRealized,
       marginTotal,
     });
-  };
+  }, []);
 
-  const calculateClientRepresentation = (invoices: any[]) => {
+  const calculateClientRepresentation = useCallback((invoices: Array<{ client_id: string; clients?: { name: string }; amount: number; status: string }>) => {
     // Group by client
     const clientMap = new Map<string, { name: string; billed: number; received: number }>();
 
@@ -204,7 +159,52 @@ const ProfitabilityAnalysis = () => {
 
     setClientRevenues(clientRevenuesArray);
     setTop80PercentClients(count80Percent);
-  };
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch invoices for the year
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          clients (
+            id,
+            name
+          )
+        `)
+        .like("competence", `%/${selectedYear}`);
+
+      if (invoicesError) throw invoicesError;
+
+      // Fetch expenses for the year
+      const { data: expensesData, error: expensesError } = await supabase
+        .from("expenses")
+        .select("amount")
+        .gte("due_date", `${selectedYear}-01-01`)
+        .lte("due_date", `${selectedYear}-12-31`);
+
+      if (expensesError) throw expensesError;
+
+      // Calculate statistics
+      calculateProfitability(invoicesData || [], expensesData || []);
+      calculateClientRepresentation(invoicesData || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedYear, calculateProfitability, calculateClientRepresentation, toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

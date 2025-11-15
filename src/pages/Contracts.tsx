@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -126,30 +126,7 @@ const Contracts = () => {
     ],
   };
 
-  useEffect(() => {
-    fetchContracts();
-    fetchClients();
-  }, []);
-
-  const fetchContracts = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Create contracts table and query
-      // For now, using mock data
-      setContracts([]);
-    } catch (error: any) {
-      console.error("Error fetching contracts:", error);
-      toast({
-        title: "Erro ao carregar contratos",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("clients")
@@ -159,10 +136,33 @@ const Contracts = () => {
 
       if (error) throw error;
       setClients(data || []);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching clients:", error);
     }
-  };
+  }, []);
+
+  const fetchContracts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // TODO: Create contracts table and query
+      // For now, using mock data
+      setContracts([]);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      toast({
+        title: "Erro ao carregar contratos",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchContracts();
+    fetchClients();
+  }, [fetchContracts, fetchClients]);
 
   const getContractTemplate = (type: string): string => {
     const firmData = {

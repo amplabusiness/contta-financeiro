@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -76,11 +76,7 @@ const CollectionDashboard = () => {
     avgDaysOverdue: 0,
   });
 
-  useEffect(() => {
-    fetchCollectionData();
-  }, []);
-
-  const fetchCollectionData = async () => {
+  const fetchCollectionData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch overdue invoices with client information
@@ -174,17 +170,21 @@ const CollectionDashboard = () => {
         criticalAlerts,
         avgDaysOverdue: Math.round(avgDaysOverdue),
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching collection data:", error);
       toast({
         title: "Erro ao carregar dados",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchCollectionData();
+  }, [fetchCollectionData]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -107,11 +107,7 @@ const FeesAnalysis = () => {
   const [missingBillings, setMissingBillings] = useState<Client[]>([]);
   const [proBonoClients, setProBonoClients] = useState<Client[]>([]);
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedMonth, selectedYear, selectedClient, viewMode]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch all clients
@@ -167,17 +163,21 @@ const FeesAnalysis = () => {
 
       // Check for missing billings
       checkMissingBillings(clientsData || [], invoicesData || []);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching data:", error);
       toast({
         title: "Erro ao carregar dados",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
-    } finally {
+    } finally{
       setIsLoading(false);
     }
-  };
+  }, [selectedMonth, selectedYear, selectedClient, viewMode, toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const calculateStatistics = (invoicesData: Invoice[], clientsData: Client[]) => {
     const totalBilled = invoicesData.reduce((sum, inv) => sum + Number(inv.amount), 0);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
@@ -27,48 +27,7 @@ const Balancete = () => {
   const [endDate, setEndDate] = useState('')
   const [showOnlyWithMovement, setShowOnlyWithMovement] = useState(true)
 
-  useEffect(() => {
-    // Definir datas padrão (mês atual)
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
-
-    loadBalancete(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
-  }, [])
-
-  const loadBalancete = async (start?: string, end?: string) => {
-    try {
-      setLoading(true)
-
-      // Buscar dados da view vw_balancete
-      // Como a view não tem filtro de data, vamos buscar os lançamentos no período
-      // Se a função RPC não existir, usar a view diretamente
-      const { data, error } = await supabase
-        .from('vw_balancete')
-        .select('*')
-        .order('codigo_conta')
-
-      if (error) {
-        console.warn('Usando fallback para carregar balancete')
-        // Fallback: calcular manualmente
-        await loadBalanceteManual(start, end)
-        return
-      }
-
-      setEntries(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar balancete:', error)
-      // Fallback
-      await loadBalanceteManual(start, end)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadBalanceteManual = async (start?: string, end?: string) => {
+  const loadBalanceteManual = useCallback(async (start?: string, end?: string) => {
     try {
       // Buscar todas as contas analíticas
       const { data: accounts } = await supabase
@@ -127,7 +86,48 @@ const Balancete = () => {
     } catch (error) {
       console.error('Erro no fallback do balancete:', error)
     }
-  }
+  }, [])
+
+  const loadBalancete = useCallback(async (start?: string, end?: string) => {
+    try {
+      setLoading(true)
+
+      // Buscar dados da view vw_balancete
+      // Como a view não tem filtro de data, vamos buscar os lançamentos no período
+      // Se a função RPC não existir, usar a view diretamente
+      const { data, error } = await supabase
+        .from('vw_balancete')
+        .select('*')
+        .order('codigo_conta')
+
+      if (error) {
+        console.warn('Usando fallback para carregar balancete')
+        // Fallback: calcular manualmente
+        await loadBalanceteManual(start, end)
+        return
+      }
+
+      setEntries(data || [])
+    } catch (error) {
+      console.error('Erro ao carregar balancete:', error)
+      // Fallback
+      await loadBalanceteManual(start, end)
+    } finally {
+      setLoading(false)
+    }
+  }, [loadBalanceteManual])
+
+  useEffect(() => {
+    // Definir datas padrão (mês atual)
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+
+    loadBalancete(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
+  }, [loadBalancete])
 
   const handleFilter = () => {
     loadBalancete(startDate, endDate)

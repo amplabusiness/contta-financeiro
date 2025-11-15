@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -250,11 +250,25 @@ Ampla Contabilidade 📊`,
     },
   ];
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
+  const createDefaultTemplates = useCallback(async () => {
+    try {
+      for (const template of defaultTemplates) {
+        await supabase.from("message_templates").insert({
+          ...template,
+          is_active: true,
+        });
+      }
+      await fetchTemplates();
+      toast({
+        title: "Templates criados",
+        description: "Templates padrão de cobrança foram criados com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error creating default templates:", error);
+    }
+  }, [toast]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -276,35 +290,21 @@ Ampla Contabilidade 📊`,
       if (!data || data.length === 0) {
         await createDefaultTemplates();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching templates:", error);
       toast({
         title: "Erro ao carregar templates",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [createDefaultTemplates, toast]);
 
-  const createDefaultTemplates = async () => {
-    try {
-      for (const template of defaultTemplates) {
-        await supabase.from("message_templates").insert({
-          ...template,
-          is_active: true,
-        });
-      }
-      await fetchTemplates();
-      toast({
-        title: "Templates criados",
-        description: "Templates padrão de cobrança foram criados com sucesso.",
-      });
-    } catch (error: any) {
-      console.error("Error creating default templates:", error);
-    }
-  };
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const handleSaveTemplate = async () => {
     if (!formData.name || !formData.body) {
@@ -365,11 +365,11 @@ Ampla Contabilidade 📊`,
         body: "",
       });
       await fetchTemplates();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving template:", error);
       toast({
         title: "Erro ao salvar template",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
@@ -384,7 +384,7 @@ Ampla Contabilidade 📊`,
     return [...new Set(matches.map((m) => m.slice(1, -1)))];
   };
 
-  const replaceVariables = (template: string, data: any): string => {
+  const replaceVariables = (template: string, data: Record<string, string>): string => {
     let result = template;
     Object.keys(data).forEach((key) => {
       result = result.replace(new RegExp(`\\{${key}\\}`, "g"), data[key]);
@@ -426,11 +426,11 @@ Ampla Contabilidade 📊`,
       });
 
       await fetchTemplates();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting template:", error);
       toast({
         title: "Erro ao excluir template",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     }
