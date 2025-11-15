@@ -121,7 +121,8 @@ Deno.serve(async (req) => {
 
       } catch (error: unknown) {
         console.error(`Erro ao processar invoice ${invoice.id}:`, error);
-        errors.push(`Invoice ${invoice.id}: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        errors.push(`Invoice ${invoice.id}: ${errorMessage}`);
       }
     }
 
@@ -142,8 +143,9 @@ Deno.serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Erro na regularização:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao regularizar lançamentos contábeis';
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao regularizar lançamentos contábeis' }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

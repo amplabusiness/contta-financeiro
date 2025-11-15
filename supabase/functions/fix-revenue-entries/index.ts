@@ -111,7 +111,8 @@ async function processInvoices(
       }
 
     } catch (error: unknown) {
-      errors.push(`Fatura ${invoice.id}: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      errors.push(`Fatura ${invoice.id}: ${errorMessage}`);
       stats.errors++;
     }
   }
@@ -234,10 +235,11 @@ Deno.serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('❌ Erro fatal:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

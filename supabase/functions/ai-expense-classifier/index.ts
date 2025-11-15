@@ -161,7 +161,8 @@ Responda APENAS com JSON:
 
       } catch (error: unknown) {
         console.error(`Error classifying expense ${expense.id}:`, error);
-        errors.push(`Expense ${expense.id}: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        errors.push(`Expense ${expense.id}: ${errorMessage}`);
       }
     }
 
@@ -178,8 +179,9 @@ Responda APENAS com JSON:
 
   } catch (error: unknown) {
     console.error('Error in AI expense classifier:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

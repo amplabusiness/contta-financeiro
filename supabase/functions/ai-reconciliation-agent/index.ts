@@ -214,7 +214,8 @@ Responda APENAS com um JSON no formato:
 
       } catch (error: unknown) {
         console.error(`Error processing transaction ${transaction.id}:`, error);
-        errors.push(`Transaction ${transaction.id}: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        errors.push(`Transaction ${transaction.id}: ${errorMessage}`);
       }
     }
 
@@ -231,8 +232,9 @@ Responda APENAS com um JSON no formato:
 
   } catch (error: unknown) {
     console.error('Error in AI reconciliation agent:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

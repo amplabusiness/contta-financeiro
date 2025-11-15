@@ -63,10 +63,23 @@ Deno.serve(async (req) => {
       .from('invoices')
       .select('id, client_id, amount, due_date, competence, description, status, payment_date, clients(id, name, cnpj)')
       .eq('status', 'pending');
+    
+    // Transform invoices to match the expected type
+    const transformedInvoices: Invoice[] = (invoices || []).map((inv: any) => ({
+      id: inv.id,
+      client_id: inv.client_id,
+      amount: inv.amount,
+      due_date: inv.due_date,
+      competence: inv.competence,
+      description: inv.description,
+      status: inv.status,
+      payment_date: inv.payment_date,
+      clients: Array.isArray(inv.clients) && inv.clients.length > 0 ? inv.clients[0] : undefined
+    }));
 
     const { data: clients } = await supabase
       .from('clients')
-      .select('id, name, cnpj');
+      .select('id, name, cnpj, email, phone, status');
 
     const { data: rules } = await supabase
       .from('reconciliation_rules')
@@ -80,7 +93,7 @@ Deno.serve(async (req) => {
       const aiMatch = await matchTransactionWithAI(
         transaction,
         expenses || [],
-        invoices || [],
+        transformedInvoices,
         clients || [],
         rules || []
       );
@@ -96,11 +109,11 @@ Deno.serve(async (req) => {
           bank_reference: transaction.reference,
           imported_from: file.name,
           matched: aiMatch.matched,
-          matched_expense_id: aiMatch.expenseId,
-          matched_invoice_id: aiMatch.invoiceId,
-          ai_confidence: aiMatch.confidence,
-          ai_suggestion: aiMatch.suggestion,
-          category: aiMatch.category,
+          matched_expense_id: aiMatch.expenseId || null,
+          matched_invoice_id: aiMatch.invoiceId || null,
+          ai_confidence: aiMatch.confidence || 0,
+          ai_suggestion: aiMatch.suggestion || null,
+          category: aiMatch.category || null,
           created_by: user.id,
         })
         .select()
@@ -361,9 +374,13 @@ async function matchTransactionWithAI(
 ): Promise<{
   matched: boolean
   type?: string
-  matchedId?: string
+  expenseId?: string | null
+  invoiceId?: string | null
+  clientId?: string | null
   confidence?: number
-} | null> {
+  suggestion?: string
+  category?: string
+}> {
   try {
     // Primeiro, aplicar regras automáticas
     for (const rule of rules) {
@@ -435,7 +452,12 @@ Clientes: ${JSON.stringify(clients.slice(0, 20))}`,
     }
 
     const aiResult = await aiResponse.json();
-    const aiContent = JSON.parse(aiResult.choices[0].message.content);
+    let content = aiResult.choices[0].message.content;
+    
+    // Remove markdown code blocks se presentes
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    const aiContent = JSON.parse(content);
 
     return {
       matched: aiContent.matched,
