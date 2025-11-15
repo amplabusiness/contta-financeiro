@@ -135,7 +135,7 @@ serve(async (req) => {
         telefone_secundario: data.ddd_telefone_2 || null,
         fax: data.ddd_fax || null,
         opcao_pelo_simples: data.opcao_pelo_simples || false,
-        data_opcao_simples: data.data_opcao_pelo_simples || null,
+        data_opcao_simples: data.data_opcao_pelo_simples || data.data_opcao_simples || null,
         opcao_pelo_mei: data.opcao_pelo_mei || false,
         motivo_situacao_cadastral: data.motivo_situacao_cadastral || null,
         data_situacao_cadastral: data.data_situacao_cadastral || null,
@@ -144,7 +144,7 @@ serve(async (req) => {
           codigo: data.cnae_fiscal,
           descricao: data.cnae_fiscal_descricao
         } : null,
-        atividades_secundarias: data.cnaes_secundarios || [],
+        atividades_secundarias: data.cnaes_secundarios ? JSON.stringify(data.cnaes_secundarios) : null,
         qsa: socios
       })
       .eq('id', clientId);
@@ -175,7 +175,7 @@ serve(async (req) => {
         codigo: data.cnae_fiscal,
         descricao: data.cnae_fiscal_descricao
       } : null,
-      atividades_secundarias: data.cnaes_secundarios || [],
+      atividades_secundarias: data.cnaes_secundarios ? JSON.stringify(data.cnaes_secundarios) : null,
       socios: socios,
       qsa: data.qsa,
       last_updated: new Date().toISOString(),

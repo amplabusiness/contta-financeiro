@@ -158,7 +158,7 @@ async function reconcileBankStatement(supabase: EdgeSupabaseClient, config: Reco
     } catch (error) {
       console.error(`Erro ao processar transação ${transaction.id}:`, error)
       result.unmatched++
-      result.unmatchedTransactions.push({ transaction, error: error.message })
+      result.unmatchedTransactions.push({ transaction, error: getErrorMessage(error) })
     }
   }
 
@@ -432,7 +432,8 @@ async function getChartOfAccounts(supabase: EdgeSupabaseClient): Promise<ChartOf
   }
 }
 
-function getPaymentMethod(description: string): string {
+function getPaymentMethod(description: string | null): string {
+  if (!description) return 'OUTROS'
   const desc = description.toLowerCase()
 
   if (desc.includes('pix')) return 'PIX'

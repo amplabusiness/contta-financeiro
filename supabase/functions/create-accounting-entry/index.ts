@@ -367,8 +367,9 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Error:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao criar lançamento contábil'
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao criar lançamento contábil' }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
