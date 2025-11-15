@@ -316,33 +316,11 @@ const CashFlow = () => {
   };
 
   const getTotalPayables = () => {
-    const today = new Date();
-    const endDate = addDays(today, selectedPeriod);
-    return accountsPayable
-      .filter((pay) => {
-        try {
-          const d = parseISO(pay.due_date);
-          return d >= today && d <= endDate;
-        } catch {
-          return false;
-        }
-      })
-      .reduce((sum, pay) => sum + Number(pay.amount), 0);
+    return accountsPayable.reduce((sum, pay) => sum + Number(pay.amount), 0);
   };
 
   const getTotalReceivables = () => {
-    const today = new Date();
-    const endDate = addDays(today, selectedPeriod);
-    return invoices
-      .filter((inv) => {
-        try {
-          const d = parseISO(inv.due_date);
-          return d >= today && d <= endDate;
-        } catch {
-          return false;
-        }
-      })
-      .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    return invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
   };
 
   const getProjectedBalance = () => {
