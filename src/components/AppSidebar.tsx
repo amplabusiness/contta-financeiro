@@ -35,6 +35,7 @@ import {
   GitMerge,
   Clipboard,
   LineChart,
+  Heart,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -71,6 +72,7 @@ export function AppSidebar() {
       label: "Clientes",
       items: [
         { title: "Lista de Clientes", url: "/clients", icon: Users },
+        { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Enriquecimento de Dados", url: "/client-enrichment", icon: Database },
         { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
         { title: "Mesclar Clientes", url: "/merge-clients", icon: GitMerge },

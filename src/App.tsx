@@ -48,6 +48,7 @@ import FeesAnalysis from "./pages/FeesAnalysis";
 import CollectionWorkOrders from "./pages/CollectionWorkOrders";
 import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
 import EconomicGroupAnalysis from "./pages/EconomicGroupAnalysis";
+import ProBonoClients from "./pages/ProBonoClients";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
             <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
+            <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
