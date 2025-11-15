@@ -107,6 +107,84 @@ export type Database = {
           },
         ]
       }
+      accounts_payable: {
+        Row: {
+          ai_analysis: Json | null
+          ai_fraud_reasons: string[] | null
+          ai_fraud_score: number | null
+          ai_recommendations: string[] | null
+          amount: number
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          bank_account: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          document_number: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          status: string
+          supplier_document: string | null
+          supplier_name: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          ai_fraud_reasons?: string[] | null
+          ai_fraud_score?: number | null
+          ai_recommendations?: string[] | null
+          amount: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_account?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          description: string
+          document_number?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          supplier_document?: string | null
+          supplier_name: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          ai_fraud_reasons?: string[] | null
+          ai_fraud_score?: number | null
+          ai_recommendations?: string[] | null
+          amount?: number
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_account?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          document_number?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          supplier_document?: string | null
+          supplier_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           audit_type: string
