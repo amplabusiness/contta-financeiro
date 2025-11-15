@@ -72,6 +72,7 @@ const Contracts = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [contractPreview, setContractPreview] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({

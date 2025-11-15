@@ -95,6 +95,8 @@ const CollectionWorkOrders = () => {
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([]);
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [showLogDialog, setShowLogDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
 
   // Form states
   const [formData, setFormData] = useState({
