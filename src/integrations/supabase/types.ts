@@ -908,6 +908,48 @@ export type Database = {
           },
         ]
       }
+      message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string | null
+          created_by: string
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          type: string
+          updated_at: string | null
+          variables: string[] | null
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          type: string
+          updated_at?: string | null
+          variables?: string[] | null
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          type?: string
+          updated_at?: string | null
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

@@ -93,6 +93,8 @@ const CollectionWorkOrders = () => {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [showLogDialog, setShowLogDialog] = useState(false);
 

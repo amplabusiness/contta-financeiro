@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
 import { formatCurrency } from '@/data/expensesData'
-import { Scale, CheckCircle2, XCircle, Calendar } from 'lucide-react'
+import { Scale, CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +14,6 @@ interface BalanceteEntry {
   codigo_conta: string
   nome_conta: string
   tipo_conta: string
-  natureza: string
   total_debito: number
   total_credito: number
   saldo: number
@@ -27,55 +26,61 @@ const Balancete = () => {
   const [endDate, setEndDate] = useState('')
   const [showOnlyWithMovement, setShowOnlyWithMovement] = useState(true)
 
-  const loadBalanceteManual = useCallback(async (start?: string, end?: string) => {
+  const loadBalancete = useCallback(async (start?: string, end?: string) => {
     try {
-      // Buscar todas as contas analíticas
-      const { data: accounts } = await supabase
+      setLoading(true)
+
+      // Buscar todas as contas analíticas (não sintéticas)
+      const { data: accounts, error: accountsError } = await supabase
         .from('chart_of_accounts')
-        .select('*')
-        .eq('is_analytical', true)
+        .select('id, code, name, type, is_synthetic')
         .eq('is_active', true)
+        .eq('is_synthetic', false)
         .order('code')
 
-      if (!accounts) return
+      if (accountsError) throw accountsError
+      if (!accounts) {
+        setEntries([])
+        return
+      }
 
-      // Para cada conta, calcular débitos e créditos no período
       const balanceteData: BalanceteEntry[] = []
 
+      // Para cada conta, buscar lançamentos no período
       for (const account of accounts) {
-        const query = supabase
-          .from('accounting_entry_items')
-          .select('debit, credit, entry_id!inner(entry_date, is_draft)')
+        let query = supabase
+          .from('accounting_entry_lines')
+          .select('debit, credit, entry_id!inner(entry_date)')
           .eq('account_id', account.id)
-          .eq('entry_id.is_draft', false)
 
-        const { data: items } = await query
-
-        if (!items || items.length === 0) {
-          balanceteData.push({
-            codigo_conta: account.code,
-            nome_conta: account.name,
-            tipo_conta: account.account_type,
-            natureza: account.nature,
-            total_debito: 0,
-            total_credito: 0,
-            saldo: 0
-          })
-          continue
+        // Aplicar filtro de data se fornecido
+        if (start) {
+          query = query.gte('entry_id.entry_date', start)
+        }
+        if (end) {
+          query = query.lte('entry_id.entry_date', end)
         }
 
-        const totalDebito = items.reduce((sum, item) => sum + (item.debit || 0), 0)
-        const totalCredito = items.reduce((sum, item) => sum + (item.credit || 0), 0)
+        const { data: lines } = await query
 
-        const saldo = account.nature === 'DEVEDORA'
+        const totalDebito = lines?.reduce((sum, line) => sum + (line.debit || 0), 0) || 0
+        const totalCredito = lines?.reduce((sum, line) => sum + (line.credit || 0), 0) || 0
+
+        // Determinar natureza baseada no tipo da conta
+        const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type)
+        const saldo = isDevedora
           ? totalDebito - totalCredito
           : totalCredito - totalDebito
+
+        // Se mostrar apenas com movimento, pular contas sem movimento
+        if (showOnlyWithMovement && totalDebito === 0 && totalCredito === 0) {
+          continue
+        }
 
         balanceteData.push({
           codigo_conta: account.code,
           nome_conta: account.name,
-          tipo_conta: account.account_type,
-          natureza: account.nature,
+          tipo_conta: account.type,
           total_debito: totalDebito,
           total_credito: totalCredito,
           saldo: saldo
@@ -84,68 +89,41 @@ const Balancete = () => {
 
       setEntries(balanceteData)
     } catch (error) {
-      console.error('Erro no fallback do balancete:', error)
-    }
-  }, [])
-
-  const loadBalancete = useCallback(async (start?: string, end?: string) => {
-    try {
-      setLoading(true)
-
-      // Buscar dados da view vw_balancete
-      // Como a view não tem filtro de data, vamos buscar os lançamentos no período
-      // Se a função RPC não existir, usar a view diretamente
-      const { data, error } = await supabase
-        .from('vw_balancete')
-        .select('*')
-        .order('codigo_conta')
-
-      if (error) {
-        console.warn('Usando fallback para carregar balancete')
-        // Fallback: calcular manualmente
-        await loadBalanceteManual(start, end)
-        return
-      }
-
-      setEntries(data || [])
-    } catch (error) {
       console.error('Erro ao carregar balancete:', error)
-      // Fallback
-      await loadBalanceteManual(start, end)
+      setEntries([])
     } finally {
       setLoading(false)
     }
-  }, [loadBalanceteManual])
+  }, [showOnlyWithMovement])
 
   useEffect(() => {
-    // Definir datas padrão (mês atual)
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    // Definir datas padrão
+    const hoje = new Date()
+    const inicioAno = new Date(hoje.getFullYear(), 0, 1)
+    
+    setStartDate(inicioAno.toISOString().split('T')[0])
+    setEndDate(hoje.toISOString().split('T')[0])
+  }, [])
 
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
+  useEffect(() => {
+    if (startDate && endDate) {
+      loadBalancete(startDate, endDate)
+    }
+  }, [startDate, endDate, loadBalancete])
 
-    loadBalancete(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
-  }, [loadBalancete])
-
-  const handleFilter = () => {
+  const handleRefresh = () => {
     loadBalancete(startDate, endDate)
   }
 
-  // Filtrar contas sem movimento se necessário
-  const filteredEntries = showOnlyWithMovement
-    ? entries.filter(e => e.total_debito > 0 || e.total_credito > 0)
-    : entries
-
   // Calcular totais
-  const totalDebito = filteredEntries.reduce((sum, e) => sum + e.total_debito, 0)
-  const totalCredito = filteredEntries.reduce((sum, e) => sum + e.total_credito, 0)
-  const diferenca = Math.abs(totalDebito - totalCredito)
-  const isBalanced = diferenca < 0.01 // Tolerância de 1 centavo
+  const totalDebito = entries.reduce((sum, entry) => sum + entry.total_debito, 0)
+  const totalCredito = entries.reduce((sum, entry) => sum + entry.total_credito, 0)
+  const totalSaldoDevedor = entries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
+  const totalSaldoCredor = entries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
+  const isBalanced = Math.abs(totalDebito - totalCredito) < 0.01
 
   // Agrupar por tipo de conta
-  const groupedByType = filteredEntries.reduce((acc, entry) => {
+  const groupedByType = entries.reduce((acc, entry) => {
     if (!acc[entry.tipo_conta]) {
       acc[entry.tipo_conta] = []
     }
@@ -153,28 +131,22 @@ const Balancete = () => {
     return acc
   }, {} as Record<string, BalanceteEntry[]>)
 
-  // Calcular saldos por grupo
-  const groupTotals = Object.entries(groupedByType).map(([type, items]) => ({
-    type,
-    totalDebito: items.reduce((sum, item) => sum + item.total_debito, 0),
-    totalCredito: items.reduce((sum, item) => sum + item.total_credito, 0),
-    saldoDevedor: items.reduce((sum, item) => sum + (item.saldo > 0 ? item.saldo : 0), 0),
-    saldoCredor: items.reduce((sum, item) => sum + (item.saldo < 0 ? Math.abs(item.saldo) : 0), 0)
-  }))
-
-  const typeLabels: Record<string, string> = {
-    ATIVO: 'ATIVO',
-    PASSIVO: 'PASSIVO',
-    PATRIMONIO_LIQUIDO: 'PATRIMÔNIO LÍQUIDO',
-    RECEITA: 'RECEITAS',
-    DESPESA: 'DESPESAS'
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'ATIVO': 'Ativo',
+      'PASSIVO': 'Passivo',
+      'PATRIMONIO_LIQUIDO': 'Patrimônio Líquido',
+      'RECEITA': 'Receita',
+      'DESPESA': 'Despesa'
+    }
+    return labels[type] || type
   }
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
         </div>
       </Layout>
     )
@@ -183,213 +155,207 @@ const Balancete = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Scale className="h-8 w-8" />
-            Balancete de Verificação
-          </h1>
-          <p className="text-muted-foreground">
-            Demonstração dos saldos de todas as contas contábeis
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Balancete de Verificação</h1>
+            <p className="text-muted-foreground">Demonstração dos saldos de todas as contas contábeis</p>
+          </div>
+          <Button onClick={handleRefresh}>
+            <Scale className="mr-2 h-4 w-4" />
+            Atualizar Balancete
+          </Button>
         </div>
 
         {/* Filtros */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Período
-            </CardTitle>
+            <CardTitle>Período</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Data Inicial</Label>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="startDate">Data Inicial</Label>
                 <Input
+                  id="startDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Data Final</Label>
+              <div>
+                <Label htmlFor="endDate">Data Final</Label>
                 <Input
+                  id="endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="invisible">Ações</Label>
-                <Button onClick={handleFilter} className="w-full">
-                  Atualizar Balancete
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <Label className="invisible">Opções</Label>
+              <div className="flex items-end">
                 <Button
-                  variant="outline"
+                  variant={showOnlyWithMovement ? "default" : "outline"}
                   onClick={() => setShowOnlyWithMovement(!showOnlyWithMovement)}
                   className="w-full"
                 >
-                  {showOnlyWithMovement ? 'Mostrar Todas' : 'Com Movimento'}
+                  {showOnlyWithMovement ? "Mostrar Todas" : "Apenas com Movimento"}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Status de Verificação */}
-        <Card className={isBalanced ? 'border-green-500' : 'border-red-500'}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isBalanced ? (
-                  <CheckCircle2 className="h-8 w-8 text-green-500" />
-                ) : (
-                  <XCircle className="h-8 w-8 text-red-500" />
-                )}
-                <div>
-                  <p className="text-lg font-bold">
-                    {isBalanced ? 'Balancete Fechado' : 'Balancete Descasado'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {isBalanced
-                      ? 'Débitos e créditos estão balanceados'
-                      : `Diferença: ${formatCurrency(diferenca)}`}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Total Débito</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(totalDebito)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Total Crédito</p>
-                  <p className="text-xl font-bold text-blue-600">{formatCurrency(totalCredito)}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
+        {/* Status do Balancete */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {isBalanced ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  Balancete Fechado
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 text-red-500" />
+                  Balancete Desbalanceado
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {isBalanced
+                ? "Débitos e créditos estão balanceados"
+                : `Diferença: ${formatCurrency(Math.abs(totalDebito - totalCredito))}`}
+            </CardDescription>
+          </CardHeader>
         </Card>
 
-        {/* Resumo por Grupo */}
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {groupTotals.map(group => (
-            <Card key={group.type}>
-              <CardContent className="pt-6">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground mb-2">
-                    {typeLabels[group.type] || group.type}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    D: {formatCurrency(group.totalDebito)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    C: {formatCurrency(group.totalCredito)}
-                  </p>
-                  <p className="text-lg font-bold mt-2">
-                    {formatCurrency(Math.max(group.saldoDevedor, group.saldoCredor))}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Tabela Detalhada */}
-        {Object.entries(groupedByType).map(([type, items]) => (
-          <Card key={type}>
-            <CardHeader>
-              <CardTitle>{typeLabels[type] || type}</CardTitle>
-              <CardDescription>{items.length} conta(s)</CardDescription>
+        {/* Resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Débito
+              </CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalDebito)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Crédito
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalCredito)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Saldo Devedor
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalSaldoDevedor)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Saldo Credor
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalSaldoCredor)}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabela do Balancete */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Balancete por Tipo de Conta</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {Object.entries(groupedByType).map(([type, typeEntries]) => (
+                <div key={type} className="space-y-2">
+                  <h3 className="text-lg font-semibold text-primary">{getTypeLabel(type)}</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Nome da Conta</TableHead>
+                        <TableHead className="text-right">Débito</TableHead>
+                        <TableHead className="text-right">Crédito</TableHead>
+                        <TableHead className="text-right">Saldo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {typeEntries.map((entry) => (
+                        <TableRow key={entry.codigo_conta}>
+                          <TableCell className="font-mono">{entry.codigo_conta}</TableCell>
+                          <TableCell>{entry.nome_conta}</TableCell>
+                          <TableCell className="text-right">
+                            {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {entry.saldo !== 0 && (
+                              <Badge variant={entry.saldo > 0 ? "default" : "secondary"}>
+                                {formatCurrency(Math.abs(entry.saldo))}
+                                {entry.saldo > 0 ? ' D' : ' C'}
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {/* Subtotal por tipo */}
+                      <TableRow className="bg-muted/50 font-semibold">
+                        <TableCell colSpan={2}>Subtotal {getTypeLabel(type)}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_debito, 0))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_credito, 0))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(Math.abs(typeEntries.reduce((sum, e) => sum + e.saldo, 0)))}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+
+              {/* Totais Gerais */}
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-32">Código</TableHead>
-                    <TableHead>Nome da Conta</TableHead>
-                    <TableHead className="w-24 text-center">Natureza</TableHead>
-                    <TableHead className="w-32 text-right">Débito</TableHead>
-                    <TableHead className="w-32 text-right">Crédito</TableHead>
-                    <TableHead className="w-32 text-right">Saldo Devedor</TableHead>
-                    <TableHead className="w-32 text-right">Saldo Credor</TableHead>
-                  </TableRow>
-                </TableHeader>
                 <TableBody>
-                  {items.map((entry, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-mono text-sm">{entry.codigo_conta}</TableCell>
-                      <TableCell>{entry.nome_conta}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={entry.natureza === 'DEVEDORA' ? 'default' : 'secondary'}>
-                          {entry.natureza.charAt(0)}
+                  <TableRow className="bg-primary/10 font-bold text-lg">
+                    <TableCell colSpan={2}>TOTAIS GERAIS</TableCell>
+                    <TableCell className="text-right">{formatCurrency(totalDebito)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(totalCredito)}</TableCell>
+                    <TableCell className="text-right">
+                      {isBalanced ? (
+                        <Badge variant="default" className="bg-green-500">
+                          Balanceado ✓
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-green-600">
-                        {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-blue-600">
-                        {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-green-600">
-                        {entry.saldo > 0 ? formatCurrency(entry.saldo) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-blue-600">
-                        {entry.saldo < 0 ? formatCurrency(Math.abs(entry.saldo)) : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {/* Subtotal */}
-                  <TableRow className="bg-muted font-bold">
-                    <TableCell colSpan={3} className="text-right">
-                      SUBTOTAL {typeLabels[type]}:
-                    </TableCell>
-                    <TableCell className="text-right text-green-600">
-                      {formatCurrency(items.reduce((s, e) => s + e.total_debito, 0))}
-                    </TableCell>
-                    <TableCell className="text-right text-blue-600">
-                      {formatCurrency(items.reduce((s, e) => s + e.total_credito, 0))}
-                    </TableCell>
-                    <TableCell className="text-right text-green-600">
-                      {formatCurrency(items.reduce((s, e) => s + (e.saldo > 0 ? e.saldo : 0), 0))}
-                    </TableCell>
-                    <TableCell className="text-right text-blue-600">
-                      {formatCurrency(items.reduce((s, e) => s + (e.saldo < 0 ? Math.abs(e.saldo) : 0), 0))}
+                      ) : (
+                        <Badge variant="destructive">
+                          Dif: {formatCurrency(Math.abs(totalDebito - totalCredito))}
+                        </Badge>
+                      )}
                     </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Totais Gerais */}
-        <Card className="bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Débito</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(totalDebito)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Crédito</p>
-                <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalCredito)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Saldo Devedor</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(filteredEntries.reduce((s, e) => s + (e.saldo > 0 ? e.saldo : 0), 0))}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Saldo Credor</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(filteredEntries.reduce((s, e) => s + (e.saldo < 0 ? Math.abs(e.saldo) : 0), 0))}
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>
