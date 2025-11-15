@@ -152,7 +152,25 @@ const CashFlow = () => {
         .order("due_date", { ascending: true });
 
       if (payablesError) throw payablesError;
-      setAccountsPayable(payablesData || []);
+
+      // Buscar despesas pendentes (sem duplicar com accounts_payable)
+      const { data: expensesData, error: expensesError } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("status", "pending")
+        .order("due_date", { ascending: true });
+
+      if (expensesError) throw expensesError;
+
+      // Normalizar despesas para a estrutura de contas a pagar
+      const normalizedExpenses = (expensesData || []).map((exp) => ({
+        ...exp,
+        supplier_name: exp.category || "Despesa",
+      }));
+
+      const combinedPayables = [...(payablesData || []), ...normalizedExpenses];
+
+      setAccountsPayable(combinedPayables);
 
       // Buscar faturas pendentes (a receber)
       const { data: invoicesData, error: invoicesError } = await supabase
@@ -174,7 +192,7 @@ const CashFlow = () => {
       setCashFlowTransactions(transactionsData || []);
 
       // Calcular projeção
-      calculateProjection(accountsData || [], payablesData || [], invoicesData || [], transactionsData || []);
+      calculateProjection(accountsData || [], combinedPayables || [], invoicesData || [], transactionsData || []);
     } catch (error: any) {
       console.error("Erro ao carregar fluxo de caixa:", error);
       toast.error("Erro ao carregar dados do fluxo de caixa");
@@ -298,7 +316,18 @@ const CashFlow = () => {
   };
 
   const getTotalPayables = () => {
-    return accountsPayable.reduce((sum, pay) => sum + Number(pay.amount), 0);
+    const today = new Date();
+    const endDate = addDays(today, selectedPeriod);
+    return accountsPayable
+      .filter((pay) => {
+        try {
+          const d = parseISO(pay.due_date);
+          return d >= today && d <= endDate;
+        } catch {
+          return false;
+        }
+      })
+      .reduce((sum, pay) => sum + Number(pay.amount), 0);
   };
 
   const getTotalReceivables = () => {
@@ -601,7 +630,19 @@ const CashFlow = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {accountsPayable.slice(0, 10).map((payable) => (
+                  {accountsPayable
+                    .filter((payable) => {
+                      try {
+                        const d = parseISO(payable.due_date);
+                        const today = new Date();
+                        const endDate = addDays(today, selectedPeriod);
+                        return d >= today && d <= endDate;
+                      } catch {
+                        return false;
+                      }
+                    })
+                    .slice(0, 10)
+                    .map((payable) => (
                     <TableRow key={payable.id}>
                       <TableCell className="font-medium">{payable.supplier_name}</TableCell>
                       <TableCell className="max-w-xs truncate">{payable.description}</TableCell>
