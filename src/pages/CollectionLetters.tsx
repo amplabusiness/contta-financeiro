@@ -61,8 +61,12 @@ const CollectionLetters = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [previewClient, setPreviewClient] = useState<Client | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
