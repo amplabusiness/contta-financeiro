@@ -379,7 +379,7 @@ async function matchTransactionWithAI(
           const matchedExpense = expenses.find(
             (e) =>
               Math.abs(e.amount - transaction.amount) < 1 &&
-              e.category === rule.target_category
+              (e.category === rule.target_category || !rule.target_category)
           );
           if (matchedExpense) {
             return {
