@@ -118,7 +118,9 @@ const LivroRazao = () => {
         if (saldoData) {
           const totalDebito = saldoData.reduce((sum, line) => sum + (line.debit || 0), 0)
           const totalCredito = saldoData.reduce((sum, line) => sum + (line.credit || 0), 0)
-          const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type.toUpperCase())
+          // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
+          const primeiroDigito = account.code.charAt(0)
+          const isDevedora = ['1', '4'].includes(primeiroDigito)
           saldoInicial = isDevedora ? totalDebito - totalCredito : totalCredito - totalDebito
         }
       }
@@ -142,7 +144,9 @@ const LivroRazao = () => {
       const { data, error } = await query
       if (error) throw error
 
-      const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type.toUpperCase())
+      // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
+      const primeiroDigito = account.code.charAt(0)
+      const isDevedora = ['1', '4'].includes(primeiroDigito)
       
       let saldoAcumulado = saldoInicial
       const razaoEntries: RazaoEntry[] = []
