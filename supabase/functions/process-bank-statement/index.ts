@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
             status: 'paid',
             payment_date: transaction.date,
           })
-          .eq('id', aiMatch.invoiceId);
+          .eq('id', aiMatch?.invoiceId || '');
 
         // Criar lançamento contábil de baixa (recebimento)
         if (invoice) {
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
             body: {
               type: 'invoice',
               operation: 'payment',
-              referenceId: aiMatch.invoiceId,
+              referenceId: aiMatch?.invoiceId || '',
               amount: invoice.amount,
               date: transaction.date,
               description: invoice.description || 'Recebimento de honorários',
@@ -148,10 +148,10 @@ Deno.serve(async (req) => {
         const { data: lastBalance } = await supabase
           .from('client_ledger')
           .select('balance')
-          .eq('client_id', aiMatch.clientId)
+          .eq('client_id', aiMatch?.clientId || '')
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         const previousBalance = lastBalance?.balance || 0;
         const newBalance = previousBalance + Math.abs(transaction.amount);
@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
         await supabase
           .from('client_ledger')
           .insert({
-            client_id: aiMatch.clientId,
+            client_id: aiMatch?.clientId || '',
             transaction_date: transaction.date,
             description: `Pagamento recebido - ${transaction.description}`,
             credit: Math.abs(transaction.amount),
@@ -173,13 +173,13 @@ Deno.serve(async (req) => {
       }
 
       // Se for despesa, atualizar para paga
-      if (aiMatch.matched && aiMatch.expenseId) {
+      if (aiMatch?.matched && aiMatch?.expenseId) {
         // Buscar dados da despesa
         const { data: expense } = await supabase
           .from('expenses')
           .select('amount, description')
-          .eq('id', aiMatch.expenseId)
-          .single();
+          .eq('id', aiMatch?.expenseId || '')
+          .maybeSingle();
 
         // Atualizar despesa para paga
         await supabase
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
             status: 'paid',
             payment_date: transaction.date,
           })
-          .eq('id', aiMatch.expenseId);
+          .eq('id', aiMatch?.expenseId || '');
 
         // Criar lançamento contábil de baixa (pagamento)
         if (expense) {
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
             body: {
               type: 'expense',
               operation: 'payment',
-              referenceId: aiMatch.expenseId,
+              referenceId: aiMatch?.expenseId || '',
               amount: expense.amount,
               date: transaction.date,
               description: expense.description || 'Pagamento de despesa',
