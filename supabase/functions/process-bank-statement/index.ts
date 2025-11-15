@@ -79,9 +79,14 @@ Deno.serve(async (req) => {
     for (const transaction of transactions) {
       const aiMatch = await matchTransactionWithAI(
         transaction,
-        expenses || [],
-        invoices || [],
-        clients || [],
+        (expenses || []) as Expense[],
+        (invoices || []).map(inv => ({
+          ...inv,
+          competence: inv.competence || null,
+          description: null,
+          clients: inv.clients?.[0] || { id: '', name: '', cnpj: null }
+        })) as Invoice[],
+        (clients || []) as Client[],
         rules || []
       );
 
