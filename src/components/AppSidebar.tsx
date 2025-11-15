@@ -79,7 +79,7 @@ export function AppSidebar() {
     {
       label: "Contratos",
       items: [
-        { title: "Contratos de Serviço", url: "/contracts", icon: FileCheck },
+        { title: "Contratos de Serviço", url: "/contracts", icon: FileText },
       ],
     },
     {
