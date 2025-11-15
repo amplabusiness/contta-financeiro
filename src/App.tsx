@@ -36,6 +36,14 @@ import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
 import ClientEnrichment from "./pages/ClientEnrichment";
 import BatchEnrichment from "./pages/BatchEnrichment";
+import FeesAnalysis from "./pages/FeesAnalysis";
+import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
+import EconomicGroups from "./pages/EconomicGroups";
+import CollectionDashboard from "./pages/CollectionDashboard";
+import ServiceOrders from "./pages/ServiceOrders";
+import CollectionLetters from "./pages/CollectionLetters";
+import GeneralLedger from "./pages/GeneralLedger";
+import Journal from "./pages/Journal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +89,14 @@ const App = () => (
             <Route path="/unmatched-pix-report" element={<UnmatchedPixReport />} />
             <Route path="/client-enrichment" element={<ClientEnrichment />} />
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
+            <Route path="/fees-analysis" element={<FeesAnalysis />} />
+            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
+            <Route path="/economic-groups" element={<EconomicGroups />} />
+            <Route path="/collection-dashboard" element={<CollectionDashboard />} />
+            <Route path="/service-orders" element={<ServiceOrders />} />
+            <Route path="/collection-letters" element={<CollectionLetters />} />
+            <Route path="/general-ledger" element={<GeneralLedger />} />
+            <Route path="/journal" element={<Journal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
