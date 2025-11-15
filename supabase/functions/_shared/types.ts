@@ -3,6 +3,58 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Type for Supabase client used in Edge Functions
 export type EdgeSupabaseClient = SupabaseClient<any>
 
+// Brasil API types
+export interface BrasilAPISocio {
+  nome_socio?: string
+  nome?: string
+  qualificacao_socio?: string
+  qual?: string
+  data_entrada_sociedade?: string
+}
+
+export interface BrasilAPIResponse {
+  razao_social?: string
+  nome_fantasia?: string
+  porte?: string
+  natureza_juridica?: string
+  situacao_cadastral?: string
+  data_situacao_cadastral?: string
+  motivo_situacao_cadastral?: string
+  data_inicio_atividade?: string
+  cnae_fiscal?: string
+  cnae_fiscal_descricao?: string
+  logradouro?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  municipio?: string
+  uf?: string
+  cep?: string
+  ddd_telefone_1?: string
+  ddd_telefone_2?: string
+  ddd_fax?: string
+  email?: string
+  capital_social?: string
+  opcao_pelo_simples?: boolean
+  data_opcao_simples?: string
+  opcao_pelo_mei?: boolean
+  qsa?: BrasilAPISocio[]
+}
+
+// Boleto types
+export interface BoletoData {
+  clientName: string
+  clientCnpj?: string
+  boletoNumber: string
+  emissionDate: string
+  dueDate: string
+  paymentDate?: string
+  competence: string // Ex: "01/2025"
+  amount: number
+  status: 'EMITIDO' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
+  paymentMethod?: 'BOLETO' | 'PIX' | 'TED' | 'DINHEIRO'
+}
+
 // Common database row types
 export interface BankTransaction {
   id: string
@@ -132,4 +184,11 @@ export interface ChartOfAccounts {
   bancosContaMovimento: ChartOfAccount
   caixa: ChartOfAccount
   receitaHonorarios: ChartOfAccount
+}
+
+export interface ExtendedChartOfAccounts extends ChartOfAccounts {
+  boletosAReceber: ChartOfAccount
+  issRecolher: ChartOfAccount
+  pisRecolher: ChartOfAccount
+  cofinsRecolher: ChartOfAccount
 }

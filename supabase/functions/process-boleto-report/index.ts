@@ -1,19 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-
-interface BoletoData {
-  clientName: string
-  clientCnpj?: string
-  boletoNumber: string
-  emissionDate: string
-  dueDate: string
-  paymentDate?: string
-  competence: string // Ex: "01/2025"
-  amount: number
-  status: 'EMITIDO' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
-  paymentMethod?: 'BOLETO' | 'PIX' | 'TED' | 'DINHEIRO'
-}
+import type {
+  EdgeSupabaseClient,
+  BoletoData,
+  ChartOfAccount,
+  ExtendedChartOfAccounts
+} from '../_shared/types.ts'
 
 interface ProcessedResult {
   total: number
@@ -134,7 +127,7 @@ serve(async (req) => {
   }
 })
 
-async function getChartOfAccounts(supabase: any) {
+async function getChartOfAccounts(supabase: EdgeSupabaseClient): Promise<ExtendedChartOfAccounts> {
   const { data, error } = await supabase
     .from('chart_of_accounts')
     .select('*')
@@ -142,23 +135,25 @@ async function getChartOfAccounts(supabase: any) {
 
   if (error) throw error
 
+  const accounts = data as ChartOfAccount[]
+
   return {
-    honorariosAReceber: data.find((a: any) => a.code === '1.1.02.001'),
-    boletosAReceber: data.find((a: any) => a.code === '1.1.02.002'),
-    bancosContaMovimento: data.find((a: any) => a.code === '1.1.01.002'),
-    caixa: data.find((a: any) => a.code === '1.1.01.001'),
-    receitaHonorarios: data.find((a: any) => a.code === '3.1.01.001'),
-    issRecolher: data.find((a: any) => a.code === '2.1.02.005'),
-    pisRecolher: data.find((a: any) => a.code === '2.1.02.003'),
-    cofinsRecolher: data.find((a: any) => a.code === '2.1.02.004')
+    honorariosAReceber: accounts.find((a) => a.code === '1.1.02.001')!,
+    boletosAReceber: accounts.find((a) => a.code === '1.1.02.002')!,
+    bancosContaMovimento: accounts.find((a) => a.code === '1.1.01.002')!,
+    caixa: accounts.find((a) => a.code === '1.1.01.001')!,
+    receitaHonorarios: accounts.find((a) => a.code === '3.1.01.001')!,
+    issRecolher: accounts.find((a) => a.code === '2.1.02.005')!,
+    pisRecolher: accounts.find((a) => a.code === '2.1.02.003')!,
+    cofinsRecolher: accounts.find((a) => a.code === '2.1.02.004')!
   }
 }
 
 async function processBoleto(
-  supabase: any,
+  supabase: EdgeSupabaseClient,
   boleto: BoletoData,
   reportId: string,
-  accounts: any,
+  accounts: ExtendedChartOfAccounts,
   result: ProcessedResult
 ) {
   // 1. Buscar cliente
@@ -280,12 +275,12 @@ async function processBoleto(
 }
 
 async function createProvisionEntry(
-  supabase: any,
+  supabase: EdgeSupabaseClient,
   boleto: BoletoData,
   reportItemId: string,
   invoiceId: string | null,
   clientId: string | null,
-  accounts: any
+  accounts: ExtendedChartOfAccounts
 ) {
   // Lançamento contábil de PROVISÃO DE RECEITA
   // D - Honorários a Receber (Ativo)
@@ -345,12 +340,12 @@ async function createProvisionEntry(
 }
 
 async function createSettlementEntry(
-  supabase: any,
+  supabase: EdgeSupabaseClient,
   boleto: BoletoData,
   reportItemId: string,
   invoiceId: string | null,
   clientId: string | null,
-  accounts: any
+  accounts: ExtendedChartOfAccounts
 ) {
   // Lançamento contábil de BAIXA DE RECEITA
   // D - Bancos/Caixa (Ativo)

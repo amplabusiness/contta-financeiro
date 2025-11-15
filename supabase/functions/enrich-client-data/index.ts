@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { BrasilAPIResponse, BrasilAPISocio } from '../_shared/types.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -100,11 +101,11 @@ serve(async (req) => {
       }
     }
 
-    const data = await response.json();
+    const data: BrasilAPIResponse = await response.json();
     console.log('Dados recebidos da BrasilAPI:', data);
 
     // Extrair sócios do QSA (Quadro de Sócios e Administradores)
-    const socios = data.qsa?.map((socio: any) => ({
+    const socios = data.qsa?.map((socio: BrasilAPISocio) => ({
       nome: socio.nome_socio || socio.nome,
       qualificacao: socio.qualificacao_socio || socio.qual,
       data_entrada: socio.data_entrada_sociedade
