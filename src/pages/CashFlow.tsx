@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Info } from "lucide-react";
+import { Plus, Loader2, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Info, RefreshCw, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -35,12 +35,15 @@ interface CashFlowProjection {
 
 const CashFlow = () => {
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [cashFlowTransactions, setCashFlowTransactions] = useState<any[]>([]);
   const [projection, setProjection] = useState<CashFlowProjection[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
 
   const [formData, setFormData] = useState({
@@ -51,9 +54,79 @@ const CashFlow = () => {
     account_type: "checking",
   });
 
+  const [transactionFormData, setTransactionFormData] = useState({
+    transaction_type: "inflow",
+    description: "",
+    amount: "",
+    transaction_date: format(new Date(), "yyyy-MM-dd"),
+    category: "",
+    status: "projected",
+  });
+
   useEffect(() => {
     loadCashFlowData();
   }, [selectedPeriod]);
+
+  const syncCashFlow = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-cash-flow');
+      
+      if (error) throw error;
+
+      toast.success(`Fluxo de caixa sincronizado! ${data.summary.total_created} transações criadas.`);
+      loadCashFlowData();
+    } catch (error: any) {
+      console.error("Erro ao sincronizar:", error);
+      toast.error("Erro ao sincronizar fluxo de caixa");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleTransactionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Usuário não autenticado");
+
+      const payload = {
+        ...transactionFormData,
+        amount: parseFloat(transactionFormData.amount),
+        reference_type: 'manual',
+        created_by: user.user.id,
+      };
+
+      const { error } = await supabase
+        .from("cash_flow_transactions")
+        .insert([payload]);
+
+      if (error) throw error;
+
+      toast.success("Transação adicionada com sucesso!");
+      setTransactionDialogOpen(false);
+      resetTransactionForm();
+      loadCashFlowData();
+    } catch (error: any) {
+      console.error("Erro ao salvar transação:", error);
+      toast.error(error.message || "Erro ao salvar transação");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetTransactionForm = () => {
+    setTransactionFormData({
+      transaction_type: "inflow",
+      description: "",
+      amount: "",
+      transaction_date: format(new Date(), "yyyy-MM-dd"),
+      category: "",
+      status: "projected",
+    });
+  };
 
   const loadCashFlowData = async () => {
     try {
@@ -89,8 +162,17 @@ const CashFlow = () => {
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData || []);
 
+      // Buscar transações de fluxo de caixa
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from("cash_flow_transactions")
+        .select("*")
+        .order("transaction_date", { ascending: true });
+
+      if (transactionsError) throw transactionsError;
+      setCashFlowTransactions(transactionsData || []);
+
       // Calcular projeção
-      calculateProjection(accountsData || [], payablesData || [], invoicesData || []);
+      calculateProjection(accountsData || [], payablesData || [], invoicesData || [], transactionsData || []);
     } catch (error: any) {
       console.error("Erro ao carregar fluxo de caixa:", error);
       toast.error("Erro ao carregar dados do fluxo de caixa");
@@ -99,7 +181,7 @@ const CashFlow = () => {
     }
   };
 
-  const calculateProjection = (accounts: BankAccount[], payables: any[], receivables: any[]) => {
+  const calculateProjection = (accounts: BankAccount[], payables: any[], receivables: any[], transactions: any[]) => {
     const startDate = new Date();
     const endDate = addDays(startDate, selectedPeriod);
     const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
@@ -124,13 +206,25 @@ const CashFlow = () => {
         .filter((pay) => isSameDay(parseISO(pay.due_date), date))
         .reduce((sum, pay) => sum + Number(pay.amount), 0);
 
-      runningBalance = runningBalance + dayInflow - dayOutflow;
+      // Adicionar transações manuais do fluxo de caixa
+      const manualInflow = transactions
+        .filter((t) => t.transaction_type === 'inflow' && isSameDay(parseISO(t.transaction_date), date))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const manualOutflow = transactions
+        .filter((t) => t.transaction_type === 'outflow' && isSameDay(parseISO(t.transaction_date), date))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const totalDayInflow = dayInflow + manualInflow;
+      const totalDayOutflow = dayOutflow + manualOutflow;
+
+      runningBalance = runningBalance + totalDayInflow - totalDayOutflow;
 
       projectionData.push({
         date: dateStr,
         balance: runningBalance,
-        inflow: dayInflow,
-        outflow: dayOutflow,
+        inflow: totalDayInflow,
+        outflow: totalDayOutflow,
         projected_balance: runningBalance,
       });
 
@@ -266,6 +360,25 @@ const CashFlow = () => {
                 <SelectItem value="90">90 dias</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              onClick={syncCashFlow}
+              disabled={syncing}
+            >
+              {syncing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Sincronizar
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => { resetTransactionForm(); setTransactionDialogOpen(true); }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Transação Manual
+            </Button>
             <Button onClick={() => { resetForm(); setOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Conta
@@ -509,6 +622,77 @@ const CashFlow = () => {
           </CardContent>
         </Card>
 
+        {/* Transações do Fluxo de Caixa */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Transações do Fluxo de Caixa</CardTitle>
+            <CardDescription>
+              Transações manuais e importadas no fluxo de caixa
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {cashFlowTransactions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma transação cadastrada</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setTransactionDialogOpen(true)} 
+                  className="mt-4"
+                >
+                  Adicionar Primeira Transação
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cashFlowTransactions.slice(0, 15).map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        {transaction.transaction_type === 'inflow' ? (
+                          <div className="flex items-center gap-2 text-green-500">
+                            <ArrowUpRight className="h-4 w-4" />
+                            Entrada
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-destructive">
+                            <ArrowDownRight className="h-4 w-4" />
+                            Saída
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">{transaction.description}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{transaction.category}</Badge>
+                      </TableCell>
+                      <TableCell className={`text-right font-medium ${transaction.transaction_type === 'inflow' ? 'text-green-500' : 'text-destructive'}`}>
+                        {transaction.transaction_type === 'inflow' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {format(parseISO(transaction.transaction_date), "dd/MM/yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={transaction.status === 'confirmed' ? 'default' : 'outline'}>
+                          {transaction.status === 'projected' ? 'Projetado' : 'Confirmado'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Dialog de Nova Conta */}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
@@ -583,6 +767,114 @@ const CashFlow = () => {
                 <Button type="submit" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Cadastrar
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Transação Manual */}
+        <Dialog open={transactionDialogOpen} onOpenChange={setTransactionDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Transação Manual</DialogTitle>
+              <DialogDescription>
+                Registre entradas ou saídas manuais no fluxo de caixa
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleTransactionSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="transaction_type">Tipo *</Label>
+                <Select
+                  value={transactionFormData.transaction_type}
+                  onValueChange={(value) => setTransactionFormData({ ...transactionFormData, transaction_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inflow">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpRight className="h-4 w-4 text-green-500" />
+                        Entrada
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="outflow">
+                      <div className="flex items-center gap-2">
+                        <ArrowDownRight className="h-4 w-4 text-destructive" />
+                        Saída
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Descrição *</Label>
+                <Input
+                  id="description"
+                  value={transactionFormData.description}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, description: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="amount">Valor *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={transactionFormData.amount}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, amount: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="transaction_date">Data *</Label>
+                <Input
+                  id="transaction_date"
+                  type="date"
+                  value={transactionFormData.transaction_date}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, transaction_date: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="category">Categoria *</Label>
+                <Input
+                  id="category"
+                  value={transactionFormData.category}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, category: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={transactionFormData.status}
+                  onValueChange={(value) => setTransactionFormData({ ...transactionFormData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="projected">Projetado</SelectItem>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setTransactionDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Adicionar
                 </Button>
               </DialogFooter>
             </form>
