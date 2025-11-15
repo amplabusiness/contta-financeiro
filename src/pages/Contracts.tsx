@@ -37,6 +37,7 @@ import {
   Send,
   CheckCircle,
   Clock,
+  FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -652,7 +653,7 @@ CPF:
                           <strong>Telefone:</strong> {selectedClient.phone || "Não informado"}
                         </p>
                         <p>
-                          <strong>Cidade:</strong> {selectedClient.city || "Não informado"}/{selectedClient.state || ""}
+                          <strong>Cidade:</strong> {selectedClient.municipio || "Não informado"}/{selectedClient.uf || ""}
                         </p>
                       </div>
                     </div>
