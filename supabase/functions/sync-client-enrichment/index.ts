@@ -80,7 +80,7 @@ serve(async (req) => {
 
           // Verificar sócios adicionados
           for (const socio of newSocios) {
-            if (!oldSociosNames.has(socio.nome)) {
+            if (socio.nome && !oldSociosNames.has(socio.nome)) {
               addedSocios.push(socio.nome);
               sociosChanged = true;
             }
@@ -105,7 +105,7 @@ serve(async (req) => {
           natureza_juridica: data.natureza_juridica,
           situacao: data.descricao_situacao_cadastral,
           data_abertura: data.data_inicio_atividade,
-          capital_social: parseFloat(data.capital_social || 0),
+          capital_social: parseFloat(data.capital_social || '0'),
           logradouro: data.logradouro,
           numero: data.numero,
           complemento: data.complemento,
