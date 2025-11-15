@@ -83,12 +83,20 @@ Deno.serve(async (req) => {
 
     console.log(`💰 Encontradas ${paidInvoices?.length || 0} faturas pagas`);
 
+    // Processar em lotes de 10 faturas para evitar timeout
+    const BATCH_SIZE = 10;
+    const totalInvoices = paidInvoices?.length || 0;
+    const maxToProcess = Math.min(totalInvoices, BATCH_SIZE);
+    const invoicesToProcess = (paidInvoices as Invoice[]).slice(0, maxToProcess);
+
+    console.log(`⚡ Processando ${maxToProcess} faturas (lote de ${BATCH_SIZE})...`);
+
     let processedCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
     const errors: string[] = [];
 
-    for (const invoice of paidInvoices as Invoice[]) {
+    for (const invoice of invoicesToProcess) {
       try {
         console.log(`\n🔍 Processando fatura ${invoice.id}...`);
 
@@ -180,14 +188,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    const remainingInvoices = totalInvoices - maxToProcess;
     const result = {
       success: true,
-      message: `Processamento concluído`,
+      message: remainingInvoices > 0 
+        ? `Lote processado. Execute novamente para processar as ${remainingInvoices} faturas restantes.`
+        : `Processamento concluído`,
       stats: {
-        total: paidInvoices?.length || 0,
+        total: totalInvoices,
         processed: processedCount,
         skipped: skippedCount,
         errors: errorCount,
+        remaining: remainingInvoices,
       },
       errors: errors.length > 0 ? errors : undefined,
     };
