@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface DiarioEntry {
-  numero_lancamento: number
+  numero_lancamento: string
   data_lancamento: string
-  data_competencia: string
   descricao: string
   tipo_lancamento: string
   numero_documento: string
@@ -21,7 +21,6 @@ interface DiarioEntry {
   debito: number
   credito: number
   historico: string
-  cliente_nome: string
 }
 
 const LivroDiario = () => {
@@ -32,7 +31,6 @@ const LivroDiario = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    // Definir datas padrão (mês atual)
     const now = new Date()
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
@@ -47,88 +45,95 @@ const LivroDiario = () => {
     try {
       setLoading(true)
 
-      // Buscar dados da view
       let query = supabase
-        .from('vw_livro_diario')
-        .select('*')
-        .order('numero_lancamento', { ascending: false })
-        .order('codigo_conta', { ascending: true })
+        .from('accounting_entries')
+        .select(`
+          id,
+          entry_date,
+          description,
+          entry_type,
+          document_number,
+          accounting_entry_lines (
+            id,
+            debit,
+            credit,
+            description,
+            chart_of_accounts (
+              code,
+              name
+            )
+          )
+        `)
+        .order('entry_date', { ascending: false })
 
-      if (start) {
-        query = query.gte('data_lancamento', start)
-      }
-      if (end) {
-        query = query.lte('data_lancamento', end)
-      }
+      if (start) query = query.gte('entry_date', start)
+      if (end) query = query.lte('entry_date', end)
 
       const { data, error } = await query
-
       if (error) throw error
 
-      setEntries(data || [])
+      const diarioEntries: DiarioEntry[] = []
+      
+      data?.forEach((entry: any) => {
+        entry.accounting_entry_lines?.forEach((line: any) => {
+          diarioEntries.push({
+            numero_lancamento: entry.id,
+            data_lancamento: entry.entry_date,
+            descricao: entry.description,
+            tipo_lancamento: entry.entry_type,
+            numero_documento: entry.document_number || '',
+            codigo_conta: line.chart_of_accounts?.code || '',
+            nome_conta: line.chart_of_accounts?.name || '',
+            debito: line.debit || 0,
+            credito: line.credit || 0,
+            historico: line.description || entry.description
+          })
+        })
+      })
+
+      setEntries(diarioEntries)
     } catch (error) {
       console.error('Erro ao carregar diário:', error)
+      setEntries([])
     } finally {
       setLoading(false)
     }
   }
 
-  const handleFilter = () => {
-    loadDiario(startDate, endDate)
-  }
+  const handleFilter = () => loadDiario(startDate, endDate)
 
   const handleClearFilter = () => {
     const now = new Date()
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
     setSearchTerm('')
-
     loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
   }
 
-  // Agrupar por número de lançamento
   const groupedEntries = entries.reduce((acc, entry) => {
-    if (!acc[entry.numero_lancamento]) {
-      acc[entry.numero_lancamento] = []
-    }
+    if (!acc[entry.numero_lancamento]) acc[entry.numero_lancamento] = []
     acc[entry.numero_lancamento].push(entry)
     return acc
-  }, {} as Record<number, DiarioEntry[]>)
+  }, {} as Record<string, DiarioEntry[]>)
 
-  // Filtrar por termo de busca
-  const filteredGroups = Object.entries(groupedEntries).filter(([_, items]) => {
-    if (!searchTerm) return true
-    const searchLower = searchTerm.toLowerCase()
-    return items.some(
-      (entry) =>
-        entry.descricao.toLowerCase().includes(searchLower) ||
-        entry.nome_conta.toLowerCase().includes(searchLower) ||
-        entry.historico?.toLowerCase().includes(searchLower) ||
-        entry.cliente_nome?.toLowerCase().includes(searchLower)
-    )
-  })
-
-  const getTipoLancamentoBadge = (tipo: string) => {
-    const tipos: Record<string, { label: string; variant: any }> = {
-      PROVISAO_RECEITA: { label: 'Provisão', variant: 'default' as const },
-      BAIXA_RECEITA: { label: 'Baixa', variant: 'default' as const },
-      DESPESA: { label: 'Despesa', variant: 'destructive' as const },
-      PAGAMENTO: { label: 'Pagamento', variant: 'secondary' as const },
-      MANUAL: { label: 'Manual', variant: 'outline' as const }
-    }
-
-    const config = tipos[tipo] || { label: tipo, variant: 'secondary' as const }
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
+  const filteredGroups = searchTerm
+    ? Object.entries(groupedEntries).filter(([_, items]) =>
+        items.some(item =>
+          item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.nome_conta.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.codigo_conta.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.historico.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      )
+    : Object.entries(groupedEntries)
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
         </div>
       </Layout>
     )
@@ -138,203 +143,115 @@ const LivroDiario = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FileText className="h-8 w-8" />
-            Livro Diário
-          </h1>
-          <p className="text-muted-foreground">
-            Registro cronológico de todos os lançamentos contábeis
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Livro Diário</h1>
+          <p className="text-muted-foreground">Registro cronológico de todos os lançamentos contábeis</p>
         </div>
 
-        {/* Filtros */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filtros
-            </CardTitle>
+            <CardTitle>Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Data Inicial</Label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="startDate">Data Inicial</Label>
+                <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Data Final</Label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
+              <div>
+                <Label htmlFor="endDate">Data Final</Label>
+                <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Buscar</Label>
-                <Input
-                  placeholder="Cliente, conta, histórico..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div>
+                <Label htmlFor="search">Buscar</Label>
+                <Input id="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label className="invisible">Ações</Label>
-                <div className="flex gap-2">
-                  <Button onClick={handleFilter}>Filtrar</Button>
-                  <Button variant="outline" onClick={handleClearFilter}>
-                    Limpar
-                  </Button>
-                </div>
+              <div className="flex items-end gap-2">
+                <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
+                <Button onClick={handleClearFilter} variant="outline" className="flex-1">Limpar</Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Estatísticas */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total de Lançamentos</p>
-                <p className="text-3xl font-bold">{Object.keys(groupedEntries).length}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-500/10">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total Débito</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(entries.reduce((sum, e) => sum + (e.debito || 0), 0))}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-500/10">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total Crédito</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(entries.reduce((sum, e) => sum + (e.credito || 0), 0))}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Lançamentos Contábeis</CardTitle>
+            <CardDescription>{filteredGroups.length} lançamento(s) encontrado(s)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {filteredGroups.map(([lancamentoId, items]) => {
+                const totalDebito = items.reduce((sum, item) => sum + item.debito, 0)
+                const totalCredito = items.reduce((sum, item) => sum + item.credito, 0)
+                const firstItem = items[0]
 
-        {/* Lançamentos */}
-        <div className="space-y-4">
-          {filteredGroups.length === 0 ? (
-            <Card>
-              <CardContent className="py-12">
-                <div className="text-center">
-                  <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
-                  <p className="text-lg font-medium">Nenhum lançamento encontrado</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Não há lançamentos contábeis no período selecionado
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredGroups.map(([numero, items]) => {
-              const firstItem = items[0]
-              const totalDebito = items.reduce((sum, item) => sum + (item.debito || 0), 0)
-              const totalCredito = items.reduce((sum, item) => sum + (item.credito || 0), 0)
-
-              return (
-                <Card key={numero} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-lg">Lançamento #{numero}</CardTitle>
-                          {getTipoLancamentoBadge(firstItem.tipo_lancamento)}
-                        </div>
-                        <CardDescription className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              Data: {new Date(firstItem.data_lancamento).toLocaleDateString('pt-BR')}
-                            </span>
-                            {firstItem.data_competencia !== firstItem.data_lancamento && (
-                              <span className="text-xs">
-                                (Competência: {new Date(firstItem.data_competencia).toLocaleDateString('pt-BR')})
-                              </span>
-                            )}
-                          </div>
-                          <p className="font-medium">{firstItem.descricao}</p>
+                return (
+                  <div key={lancamentoId} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between pb-3 border-b">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            <Calendar className="mr-1 h-3 w-3" />
+                            {new Date(firstItem.data_lancamento).toLocaleDateString('pt-BR')}
+                          </Badge>
                           {firstItem.numero_documento && (
-                            <p className="text-xs">Doc: {firstItem.numero_documento}</p>
+                            <Badge variant="secondary"><FileText className="mr-1 h-3 w-3" />Doc: {firstItem.numero_documento}</Badge>
                           )}
-                        </CardDescription>
+                          <Badge>{firstItem.tipo_lancamento}</Badge>
+                        </div>
+                        <p className="text-sm font-medium">{firstItem.descricao}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Totais</p>
-                        <p className="text-sm font-semibold text-green-600">
-                          D: {formatCurrency(totalDebito)}
-                        </p>
-                        <p className="text-sm font-semibold text-blue-600">
-                          C: {formatCurrency(totalCredito)}
-                        </p>
+                        <p className="text-xs text-muted-foreground">Nº {lancamentoId.substring(0, 8)}</p>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex items-start justify-between p-3 rounded ${
-                            item.debito > 0 ? 'bg-green-50 dark:bg-green-900/10' : 'bg-blue-50 dark:bg-blue-900/10'
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs text-muted-foreground">
-                                {item.codigo_conta}
-                              </span>
-                              <span className="font-medium">{item.nome_conta}</span>
-                            </div>
-                            {item.historico && (
-                              <p className="text-sm text-muted-foreground mt-1">{item.historico}</p>
-                            )}
-                            {item.cliente_nome && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Cliente: {item.cliente_nome}
-                              </p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            {item.debito > 0 ? (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Débito</p>
-                                <p className="text-lg font-bold text-green-600">
-                                  {formatCurrency(item.debito)}
-                                </p>
-                              </div>
-                            ) : (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Crédito</p>
-                                <p className="text-lg font-bold text-blue-600">
-                                  {formatCurrency(item.credito)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })
-          )}
-        </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Código</TableHead>
+                          <TableHead>Conta</TableHead>
+                          <TableHead>Histórico</TableHead>
+                          <TableHead className="text-right">Débito</TableHead>
+                          <TableHead className="text-right">Crédito</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {items.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-mono text-sm">{item.codigo_conta}</TableCell>
+                            <TableCell>{item.nome_conta}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{item.historico}</TableCell>
+                            <TableCell className="text-right">{item.debito > 0 ? formatCurrency(item.debito) : '-'}</TableCell>
+                            <TableCell className="text-right">{item.credito > 0 ? formatCurrency(item.credito) : '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-muted/50 font-semibold">
+                          <TableCell colSpan={3}>Total do Lançamento</TableCell>
+                          <TableCell className="text-right">{formatCurrency(totalDebito)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(totalCredito)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+
+                    {Math.abs(totalDebito - totalCredito) > 0.01 && (
+                      <div className="flex items-center gap-2 text-destructive text-sm">
+                        <FileText className="h-4 w-4" />
+                        <span>Atenção: Lançamento desbalanceado!</span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {filteredGroups.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhum lançamento encontrado no período selecionado.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   )

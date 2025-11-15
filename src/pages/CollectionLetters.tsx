@@ -348,9 +348,15 @@ Ampla Contabilidade 📊`,
         });
       } else {
         // Create new template
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) throw new Error('Usuário não autenticado');
+
         const { error } = await supabase
           .from("message_templates")
-          .insert(templateData);
+          .insert({
+            ...templateData,
+            created_by: user.id,
+          });
 
         if (error) throw error;
 
