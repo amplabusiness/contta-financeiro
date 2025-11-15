@@ -69,9 +69,10 @@ serve(async (req) => {
     for (const boleto of boletos) {
       try {
         await processBoleto(supabase, boleto, report.id, accounts, result)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Erro ao processar boleto ${boleto.boletoNumber}:`, error)
-        result.errors.push(`Boleto ${boleto.boletoNumber}: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        result.errors.push(`Boleto ${boleto.boletoNumber}: ${errorMessage}`)
       }
     }
 
@@ -112,12 +113,13 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erro ao processar relatório de boletos:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: errorMessage
       }),
       {
         status: 400,

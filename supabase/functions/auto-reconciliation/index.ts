@@ -14,6 +14,10 @@ import type {
   ChartOfAccounts
 } from '../_shared/types.ts'
 
+const getErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : 'Erro desconhecido';
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -62,10 +66,11 @@ serve(async (req) => {
       throw new Error(`Ação desconhecida: ${action}`)
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erro na conciliação:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: errorMessage }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

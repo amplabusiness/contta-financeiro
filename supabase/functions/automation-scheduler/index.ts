@@ -6,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const getErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : 'Erro desconhecido';
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -37,7 +41,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'AI Reconciliation',
         status: 'error',
-        error: error.message
+        error: getErrorMessage(error)
       });
       console.error('❌ Reconciliation error:', error);
     }
@@ -56,7 +60,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Expense Classification',
         status: 'error',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       console.error('❌ Classification error:', error);
     }
@@ -81,7 +85,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Financial Analysis',
         status: 'error',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       console.error('❌ Analysis error:', error);
     }
@@ -108,7 +112,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Update Overdue Invoices',
         status: 'error',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       console.error('❌ Overdue update error:', error);
     }
@@ -139,8 +143,9 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Error in automation scheduler:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

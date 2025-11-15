@@ -215,8 +215,9 @@ Forneça sua análise em JSON com:
 
   } catch (error: unknown) {
     console.error('Error in AI financial analyst:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
