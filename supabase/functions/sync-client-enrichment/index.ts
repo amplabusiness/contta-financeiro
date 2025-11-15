@@ -69,8 +69,8 @@ serve(async (req) => {
 
         // Verificar se houve mudanças no quadro societário
         let sociosChanged = false;
-        let addedSocios: string[] = [];
-        let removedSocios: string[] = [];
+        const addedSocios: string[] = [];
+        const removedSocios: string[] = [];
 
         if (client.enrichment) {
           const oldSocios = client.enrichment.socios || [];
@@ -135,7 +135,7 @@ serve(async (req) => {
         if (sociosChanged) {
           changes_detected++;
           
-          let changeDescription = [];
+          const changeDescription = [];
           if (addedSocios.length > 0) {
             changeDescription.push(`Novos sócios: ${addedSocios.join(', ')}`);
           }
