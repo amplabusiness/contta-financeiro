@@ -12,9 +12,9 @@ interface ProcessingResult {
   message: string;
   stats?: {
     total: number;
-    processed: number;
-    skipped: number;
-    errors: number;
+    processed?: number;
+    skipped?: number;
+    errors?: number;
   };
   errors?: string[];
 }
@@ -42,12 +42,17 @@ const FixRevenueEntries = () => {
       setResult(data);
 
       if (data.success) {
-        toast.success("Correção concluída!", {
-          description: `${data.stats.processed} lançamentos criados, ${data.stats.skipped} já existiam.`,
+        const message = data.stats?.processed 
+          ? `${data.stats.processed} lançamentos criados, ${data.stats.skipped || 0} já existiam.`
+          : data.message;
+        
+        toast.success("Processamento concluído!", {
+          description: message,
+          duration: 5000,
         });
       } else {
         toast.error("Erro na correção", {
-          description: data.error || "Erro desconhecido",
+          description: data.message || "Erro desconhecido",
         });
       }
     } catch (error: any) {
@@ -136,15 +141,15 @@ const FixRevenueEntries = () => {
                   </div>
                   <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-lg">
                     <p className="text-xs text-muted-foreground">Criados</p>
-                    <p className="text-2xl font-bold text-green-600">{result.stats.processed}</p>
+                    <p className="text-2xl font-bold text-green-600">{result.stats.processed || 0}</p>
                   </div>
                   <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg">
                     <p className="text-xs text-muted-foreground">Já Existiam</p>
-                    <p className="text-2xl font-bold text-blue-600">{result.stats.skipped}</p>
+                    <p className="text-2xl font-bold text-blue-600">{result.stats.skipped || 0}</p>
                   </div>
                   <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-lg">
                     <p className="text-xs text-muted-foreground">Erros</p>
-                    <p className="text-2xl font-bold text-red-600">{result.stats.errors}</p>
+                    <p className="text-2xl font-bold text-red-600">{result.stats.errors || 0}</p>
                   </div>
                 </div>
               )}

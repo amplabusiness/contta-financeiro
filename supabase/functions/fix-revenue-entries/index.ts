@@ -15,6 +15,125 @@ interface Invoice {
   description: string;
 }
 
+interface ProcessingStats {
+  total: number;
+  processed: number;
+  skipped: number;
+  errors: number;
+}
+
+async function processInvoices(
+  supabaseClient: any,
+  userId: string,
+  invoices: Invoice[],
+  revenueAccountId: string,
+  receivableAccountId: string
+) {
+  const stats: ProcessingStats = {
+    total: invoices.length,
+    processed: 0,
+    skipped: 0,
+    errors: 0,
+  };
+  const errors: string[] = [];
+
+  for (const invoice of invoices) {
+    try {
+      // Verificar se já existe lançamento
+      const { data: existingEntries } = await supabaseClient
+        .from('accounting_entries')
+        .select('id')
+        .eq('entry_type', 'receita')
+        .eq('reference_type', 'invoice')
+        .eq('reference_id', invoice.id);
+
+      if (existingEntries && existingEntries.length > 0) {
+        stats.skipped++;
+        continue;
+      }
+
+      // Criar lançamento
+      const entryDate = invoice.payment_date || invoice.due_date;
+      const description = `Receita: ${invoice.description || 'Honorários'}`;
+
+      const { data: entry, error: entryError } = await supabaseClient
+        .from('accounting_entries')
+        .insert({
+          entry_date: entryDate,
+          entry_type: 'receita',
+          description: description,
+          reference_type: 'invoice',
+          reference_id: invoice.id,
+          total_debit: invoice.amount,
+          total_credit: invoice.amount,
+          balanced: true,
+          created_by: userId,
+        })
+        .select()
+        .single();
+
+      if (entryError) throw new Error(`Erro ao criar entrada: ${entryError.message}`);
+
+      // Criar linhas
+      const lines = [
+        {
+          entry_id: entry.id,
+          account_id: receivableAccountId,
+          debit: invoice.amount,
+          credit: 0,
+          description: 'Débito: Clientes a Receber',
+        },
+        {
+          entry_id: entry.id,
+          account_id: revenueAccountId,
+          debit: 0,
+          credit: invoice.amount,
+          description: 'Crédito: Receita de Honorários',
+        },
+      ];
+
+      const { error: linesError } = await supabaseClient
+        .from('accounting_entry_lines')
+        .insert(lines);
+
+      if (linesError) {
+        await supabaseClient
+          .from('accounting_entries')
+          .delete()
+          .eq('id', entry.id);
+        throw new Error(`Erro ao criar linhas: ${linesError.message}`);
+      }
+
+      stats.processed++;
+
+      if (stats.processed % 50 === 0) {
+        console.log(`✅ ${stats.processed}/${invoices.length} faturas processadas`);
+      }
+
+    } catch (error: any) {
+      errors.push(`Fatura ${invoice.id}: ${error.message}`);
+      stats.errors++;
+    }
+  }
+
+  console.log(`\n✅ CONCLUÍDO: ${stats.processed} criados, ${stats.skipped} já existiam, ${stats.errors} erros`);
+
+  // Salvar log final
+  await supabaseClient
+    .from('audit_logs')
+    .insert({
+      title: 'Correção Automática de Receitas',
+      description: `Processamento concluído: ${stats.processed} lançamentos criados`,
+      audit_type: 'system',
+      entity_type: 'accounting_entries',
+      severity: 'info',
+      created_by: userId,
+      metadata: { stats, errors: errors.slice(0, 10) },
+    });
+
+  return stats;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -81,123 +200,37 @@ Deno.serve(async (req) => {
       throw new Error(`Erro ao buscar faturas: ${invoicesError.message}`);
     }
 
-    console.log(`💰 Encontradas ${paidInvoices?.length || 0} faturas pagas`);
+    const totalInvoices = paidInvoices?.length || 0;
+    console.log(`💰 Encontradas ${totalInvoices} faturas pagas - processando todas automaticamente...`);
 
-    let processedCount = 0;
-    let skippedCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
-
-    for (const invoice of paidInvoices as Invoice[]) {
-      try {
-        console.log(`\n🔍 Processando fatura ${invoice.id}...`);
-
-        // Verificar se já existe lançamento de receita para esta fatura
-        const { data: existingEntries, error: checkError } = await supabaseClient
-          .from('accounting_entries')
-          .select('id')
-          .eq('entry_type', 'receita')
-          .eq('reference_type', 'invoice')
-          .eq('reference_id', invoice.id);
-
-        if (checkError) {
-          throw new Error(`Erro ao verificar lançamentos: ${checkError.message}`);
-        }
-
-        if (existingEntries && existingEntries.length > 0) {
-          console.log(`⏭️  Fatura ${invoice.id} já possui lançamento de receita. Pulando...`);
-          skippedCount++;
-          continue;
-        }
-
-        // Criar lançamento de receita
-        const entryDate = invoice.payment_date || invoice.due_date;
-        const description = `Receita: ${invoice.description || 'Honorários'}`;
-
-        console.log(`✨ Criando lançamento de receita para fatura ${invoice.id}...`);
-
-        // Criar entrada contábil
-        const { data: entry, error: entryError } = await supabaseClient
-          .from('accounting_entries')
-          .insert({
-            entry_date: entryDate,
-            entry_type: 'receita',
-            description: description,
-            reference_type: 'invoice',
-            reference_id: invoice.id,
-            total_debit: invoice.amount,
-            total_credit: invoice.amount,
-            balanced: true,
-            created_by: user.id,
-          })
-          .select()
-          .single();
-
-        if (entryError) {
-          throw new Error(`Erro ao criar entrada: ${entryError.message}`);
-        }
-
-        console.log(`📝 Entrada criada: ${entry.id}`);
-
-        // Criar linhas do lançamento
-        const lines = [
-          {
-            entry_id: entry.id,
-            account_id: receivableAccount.id,
-            debit: invoice.amount,
-            credit: 0,
-            description: `Débito: ${receivableAccount.name}`,
-          },
-          {
-            entry_id: entry.id,
-            account_id: revenueAccount.id,
-            debit: 0,
-            credit: invoice.amount,
-            description: `Crédito: ${revenueAccount.name}`,
-          },
-        ];
-
-        const { error: linesError } = await supabaseClient
-          .from('accounting_entry_lines')
-          .insert(lines);
-
-        if (linesError) {
-          // Tentar deletar a entrada se as linhas falharem
-          await supabaseClient
-            .from('accounting_entries')
-            .delete()
-            .eq('id', entry.id);
-          throw new Error(`Erro ao criar linhas: ${linesError.message}`);
-        }
-
-        console.log(`✅ Lançamento de receita criado com sucesso para fatura ${invoice.id}`);
-        processedCount++;
-
-      } catch (error: any) {
-        console.error(`❌ Erro ao processar fatura ${invoice.id}:`, error.message);
-        errors.push(`Fatura ${invoice.id}: ${error.message}`);
-        errorCount++;
-      }
+    if (totalInvoices === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Nenhuma fatura para processar',
+          stats: { total: 0, processed: 0, skipped: 0, errors: 0 },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
-    const result = {
-      success: true,
-      message: `Processamento concluído`,
-      stats: {
-        total: paidInvoices?.length || 0,
-        processed: processedCount,
-        skipped: skippedCount,
-        errors: errorCount,
-      },
-      errors: errors.length > 0 ? errors : undefined,
-    };
+    // Processar todas as faturas
+    const stats = await processInvoices(
+      supabaseClient,
+      user.id,
+      paidInvoices as Invoice[],
+      revenueAccount.id,
+      receivableAccount.id
+    );
 
-    console.log('\n📊 Resultado final:', result);
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Processamento concluído com sucesso!',
+        stats,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
 
   } catch (error: any) {
     console.error('❌ Erro fatal:', error);

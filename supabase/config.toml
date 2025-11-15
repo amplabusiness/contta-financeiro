@@ -10,16 +10,16 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.ai-reconciliation-agent]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-pix-reconciliation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-financial-analyst]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-expense-classifier]
-verify_jwt = false
+verify_jwt = true
 
 [functions.automation-scheduler]
 verify_jwt = false

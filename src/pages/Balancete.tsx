@@ -84,7 +84,7 @@ const Balancete = () => {
       const balanceteData: BalanceteEntry[] = []
 
       for (const account of accounts) {
-        let query = supabase
+        const query = supabase
           .from('accounting_entry_items')
           .select('debit, credit, entry_id!inner(entry_date, is_draft)')
           .eq('account_id', account.id)
