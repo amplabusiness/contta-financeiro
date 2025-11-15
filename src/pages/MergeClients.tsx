@@ -26,9 +26,24 @@ interface ClientWithStats {
 }
 
 interface DuplicateGroup {
-  cnpj: string;
+  key: string;
+  label: string;
+  type: 'cnpj' | 'name';
   clients: ClientWithStats[];
 }
+
+// Normaliza nomes para detecção de duplicatas por nome
+const normalizeName = (name: string): string => {
+  if (!name) return '';
+  const base = name
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\b(ltda|ltd|me|epp|eireli|mei|s\.?a\.?|sa|ss|holdings?)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return base;
+};
 
 const MergeClients = () => {
   const [loading, setLoading] = useState(false);
@@ -38,6 +53,7 @@ const MergeClients = () => {
   const [primaryClientId, setPrimaryClientId] = useState<string>("");
   const [clientsToMerge, setClientsToMerge] = useState<Set<string>>(new Set());
   const [merging, setMerging] = useState(false);
+  const [mode, setMode] = useState<'cnpj' | 'name'>("cnpj");
 
   useEffect(() => {
     findDuplicates();
@@ -46,54 +62,53 @@ const MergeClients = () => {
   const findDuplicates = async () => {
     setLoading(true);
     try {
-      // Buscar todos os clientes
+      // Buscar todos os clientes (apenas campos necessários)
       const { data: allClients, error: clientsError } = await supabase
         .from("clients")
-        .select("*")
+        .select("id, name, cnpj, email, phone, status, created_at")
         .order("created_at", { ascending: true });
 
       if (clientsError) throw clientsError;
 
-      // Agrupar por CNPJ normalizado
-      const cnpjGroups: { [key: string]: any[] } = {};
-      
+      // Agrupar por CNPJ normalizado OU por Nome normalizado
+      const groups: Record<string, any[]> = {};
+
       for (const client of allClients || []) {
-        if (client.cnpj && client.cnpj.trim()) {
-          const normalized = client.cnpj.replace(/[^\d]/g, '');
-          if (normalized) {
-            if (!cnpjGroups[normalized]) {
-              cnpjGroups[normalized] = [];
-            }
-            cnpjGroups[normalized].push(client);
+        if (mode === 'cnpj') {
+          if (client.cnpj && client.cnpj.trim()) {
+            const normalized = client.cnpj.replace(/[^\d]/g, '');
+            if (!normalized) continue;
+            if (!groups[normalized]) groups[normalized] = [];
+            groups[normalized].push(client);
           }
+        } else {
+          const normName = normalizeName(client.name || '');
+          if (!normName) continue;
+          if (!groups[normName]) groups[normName] = [];
+          groups[normName].push(client);
         }
       }
 
-      // Filtrar apenas grupos com duplicatas
-      const duplicateGroups = Object.entries(cnpjGroups)
-        .filter(([_, clients]) => clients.length > 1)
-        .map(([cnpj, clients]) => ({ cnpj, clients: clients as any[] }));
+      const rawGroups = Object.entries(groups)
+        .filter(([, arr]) => (arr as any[]).length > 1)
+        .map(([key, clients]) => ({ key, clients: clients as any[] }));
 
-      // Buscar estatísticas para cada cliente
+      // Enriquecer com estatísticas
       const enrichedGroups: DuplicateGroup[] = [];
-      
-      for (const group of duplicateGroups) {
+      for (const group of rawGroups) {
         const enrichedClients: ClientWithStats[] = [];
-        
+
         for (const client of group.clients) {
-          // Contar faturas
           const { count: invoicesCount } = await supabase
             .from("invoices")
             .select("*", { count: "exact", head: true })
             .eq("client_id", client.id);
 
-          // Contar movimentações
           const { count: ledgerCount } = await supabase
             .from("client_ledger")
             .select("*", { count: "exact", head: true })
             .eq("client_id", client.id);
 
-          // Calcular receita total
           const { data: invoices } = await supabase
             .from("invoices")
             .select("amount")
@@ -106,18 +121,20 @@ const MergeClients = () => {
             ...client,
             invoices_count: invoicesCount || 0,
             ledger_count: ledgerCount || 0,
-            total_revenue: totalRevenue,
+            total_revenue: totalRevenue || 0,
           });
         }
 
         enrichedGroups.push({
-          cnpj: group.cnpj,
+          key: group.key,
+          label: mode === 'cnpj' ? group.key : (group.clients[0]?.name || group.key),
+          type: mode,
           clients: enrichedClients.sort((a, b) => b.invoices_count - a.invoices_count),
         });
       }
 
       setDuplicates(enrichedGroups);
-      
+
       if (enrichedGroups.length === 0) {
         toast.success("Nenhum cliente duplicado encontrado!");
       } else {
@@ -244,12 +261,23 @@ const MergeClients = () => {
                   Identificação de Duplicatas
                 </CardTitle>
                 <CardDescription>
-                  Clientes com o mesmo CNPJ que podem ser mesclados
+                  Detecte por CNPJ ou por nome semelhante
                 </CardDescription>
               </div>
-              <Button onClick={findDuplicates} disabled={loading}>
-                Buscar Duplicatas
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select value={mode} onValueChange={(v) => setMode(v as 'cnpj' | 'name')}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Detectar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cnpj">Por CNPJ</SelectItem>
+                    <SelectItem value="name">Por Nome</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={findDuplicates} disabled={loading}>
+                  Buscar Duplicatas
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -265,23 +293,23 @@ const MergeClients = () => {
             ) : (
               <div className="space-y-6">
                 {duplicates.map((group) => (
-                  <Card key={group.cnpj} className="border-orange-200">
+                  <Card key={group.key} className="border-orange-200">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
-                            CNPJ: {formatCNPJ(group.cnpj)}
+                            {group.type === 'cnpj' ? (
+                              <>CNPJ: {formatCNPJ(group.key)}</>
+                            ) : (
+                              <>Nome: {group.label}</>
+                            )}
                           </CardTitle>
                           <CardDescription>
                             {group.clients.length} clientes duplicados encontrados
                           </CardDescription>
                         </div>
-                        <Button
-                          onClick={() => openMergeDialog(group)}
-                          variant="outline"
-                          size="sm"
-                        >
+                        <Button onClick={() => openMergeDialog(group)} variant="outline" size="sm">
                           <GitMerge className="h-4 w-4 mr-2" />
                           Mesclar
                         </Button>
