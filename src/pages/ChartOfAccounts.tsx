@@ -214,8 +214,10 @@ const ChartOfAccounts = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="despesa">Despesa</SelectItem>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="passivo">Passivo</SelectItem>
                       <SelectItem value="receita">Receita</SelectItem>
+                      <SelectItem value="despesa">Despesa</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -274,8 +276,14 @@ const ChartOfAccounts = () => {
                       <TableCell className="font-mono font-medium">{account.code}</TableCell>
                       <TableCell>{account.name}</TableCell>
                       <TableCell>
-                        <Badge variant={account.type === "despesa" ? "destructive" : "default"}>
-                          {account.type === "despesa" ? "Despesa" : "Receita"}
+                        <Badge variant={
+                          account.type === "despesa" ? "destructive" :
+                          account.type === "receita" ? "default" :
+                          account.type === "ativo" ? "secondary" : "outline"
+                        }>
+                          {account.type === "despesa" ? "Despesa" : 
+                           account.type === "receita" ? "Receita" :
+                           account.type === "ativo" ? "Ativo" : "Passivo"}
                         </Badge>
                       </TableCell>
                       <TableCell>
