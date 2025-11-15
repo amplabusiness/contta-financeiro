@@ -110,6 +110,7 @@ export function AppSidebar() {
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
         { title: "Livro Diário", url: "/livro-diario", icon: Book },
         { title: "Livro Razão", url: "/livro-razao", icon: Receipt },
+        { title: "Razão Geral", url: "/razao-geral", icon: BookOpen },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
         { title: "DRE", url: "/dre", icon: TrendingUp },
