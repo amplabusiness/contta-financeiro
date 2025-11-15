@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getErrorMessage } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +38,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'AI Reconciliation',
         status: 'error',
-        error: error.message
+        error: getErrorMessage(error)
       });
       console.error('❌ Reconciliation error:', error);
     }
@@ -56,7 +57,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Expense Classification',
         status: 'error',
-        error: error.message
+        error: getErrorMessage(error)
       });
       console.error('❌ Classification error:', error);
     }
@@ -81,7 +82,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Financial Analysis',
         status: 'error',
-        error: error.message
+        error: getErrorMessage(error)
       });
       console.error('❌ Analysis error:', error);
     }
@@ -108,7 +109,7 @@ serve(async (req) => {
       results.tasks.push({
         name: 'Update Overdue Invoices',
         status: 'error',
-        error: error.message
+        error: getErrorMessage(error)
       });
       console.error('❌ Overdue update error:', error);
     }
@@ -140,7 +141,7 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('Error in automation scheduler:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

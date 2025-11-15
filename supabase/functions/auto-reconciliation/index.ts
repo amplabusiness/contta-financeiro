@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { getErrorMessage } from '../_shared/types.ts'
 import type {
   EdgeSupabaseClient,
   BankTransaction,
@@ -65,7 +66,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na conciliação:', error)
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: getErrorMessage(error) }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

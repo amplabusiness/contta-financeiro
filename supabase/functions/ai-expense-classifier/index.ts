@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getErrorMessage } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -161,7 +162,7 @@ Responda APENAS com JSON:
 
       } catch (error: unknown) {
         console.error(`Error classifying expense ${expense.id}:`, error);
-        errors.push(`Expense ${expense.id}: ${error.message}`);
+        errors.push(`Expense ${expense.id}: ${getErrorMessage(error)}`);
       }
     }
 
@@ -179,7 +180,7 @@ Responda APENAS com JSON:
   } catch (error: unknown) {
     console.error('Error in AI expense classifier:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

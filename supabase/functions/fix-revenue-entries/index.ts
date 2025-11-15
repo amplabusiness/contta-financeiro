@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.1';
+import { getErrorMessage } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -111,7 +112,7 @@ async function processInvoices(
       }
 
     } catch (error: unknown) {
-      errors.push(`Fatura ${invoice.id}: ${error.message}`);
+      errors.push(`Fatura ${invoice.id}: ${getErrorMessage(error)}`);
       stats.errors++;
     }
   }
@@ -237,7 +238,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: getErrorMessage(error),
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

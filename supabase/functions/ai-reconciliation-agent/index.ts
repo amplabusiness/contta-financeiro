@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getErrorMessage } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -214,7 +215,7 @@ Responda APENAS com um JSON no formato:
 
       } catch (error: unknown) {
         console.error(`Error processing transaction ${transaction.id}:`, error);
-        errors.push(`Transaction ${transaction.id}: ${error.message}`);
+        errors.push(`Transaction ${transaction.id}: ${getErrorMessage(error)}`);
       }
     }
 
@@ -232,7 +233,7 @@ Responda APENAS com um JSON no formato:
   } catch (error: unknown) {
     console.error('Error in AI reconciliation agent:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
