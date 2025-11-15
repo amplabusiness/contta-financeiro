@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, FileText, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Upload, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
@@ -234,12 +233,12 @@ export function BoletoReportImporter() {
     if (!competenceStr) return getCurrentCompetence()
 
     // Formatos aceitos: MM/YYYY, YYYY-MM, MM-YYYY
-    const match = competenceStr.match(/(\d{2})[\/-](\d{4})/)
+    const match = competenceStr.match(/(\d{2})[/-](\d{4})/)
     if (match) {
       return `${match[1]}/${match[2]}`
     }
 
-    const match2 = competenceStr.match(/(\d{4})[\/-](\d{2})/)
+    const match2 = competenceStr.match(/(\d{4})[/-](\d{2})/)
     if (match2) {
       return `${match2[2]}/${match2[1]}`
     }

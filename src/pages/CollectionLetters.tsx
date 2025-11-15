@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -23,7 +21,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Mail,
@@ -34,8 +31,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Copy,
-  CheckCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -60,13 +55,11 @@ interface Client {
 }
 
 const CollectionLetters = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSending, setIsSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showNewTemplate, setShowNewTemplate] = useState(false);
 
@@ -80,8 +73,7 @@ const CollectionLetters = () => {
   });
 
   // Sample client for preview
-  const [previewClient, setPreviewClient] = useState<Client | null>(null);
-  const [previewData, setPreviewData] = useState({
+  const [previewData] = useState({
     client_name: "Empresa Exemplo Ltda",
     amount: "R$ 2.500,00",
     due_date: "15/01/2025",

@@ -30,7 +30,6 @@ import {
   Book,
   Receipt,
   FileCheck,
-  FileContract,
   Settings,
   CreditCard,
   GitMerge,
@@ -80,7 +79,7 @@ export function AppSidebar() {
     {
       label: "Contratos",
       items: [
-        { title: "Contratos de Serviço", url: "/contracts", icon: FileContract },
+        { title: "Contratos de Serviço", url: "/contracts", icon: FileText },
       ],
     },
     {
