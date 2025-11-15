@@ -64,6 +64,7 @@ export function AppSidebar() {
       items: [
         { title: "Dashboard Principal", url: "/dashboard", icon: LayoutDashboard },
         { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
+        { title: "Fluxo de Caixa", url: "/cash-flow", icon: TrendingUp },
         { title: "Dashboard de Cobrança", url: "/collection-dashboard", icon: AlertTriangle },
         ...(selectedClientId ? [{ title: selectedClientName || "Cliente Selecionado", url: "/client-dashboard", icon: UserSquare2 }] : []),
       ],
