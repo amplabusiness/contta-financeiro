@@ -5,7 +5,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -28,13 +27,10 @@ import {
 } from "@/components/ui/alert";
 import {
   DollarSign,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Clock,
-  Calendar,
   Users,
   FileText,
   Search,

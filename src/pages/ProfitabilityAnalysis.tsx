@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/alert";
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   PieChart,
   AlertTriangle,
@@ -60,7 +59,6 @@ interface ProfitStats {
 }
 
 const ProfitabilityAnalysis = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<string>(

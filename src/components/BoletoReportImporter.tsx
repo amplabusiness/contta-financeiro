@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, FileText, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Upload, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
