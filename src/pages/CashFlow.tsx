@@ -418,6 +418,80 @@ const CashFlow = () => {
           </Alert>
         )}
 
+        {/* Alerta de Saldo Insuficiente para Pagar Contas */}
+        {(() => {
+          const saldoAtual = getTotalBalance();
+          const contasAPagar = getTotalPayables();
+          const deficit = saldoAtual - contasAPagar;
+          const aReceber = getTotalReceivables();
+          
+          if (deficit < 0 && !loading && bankAccounts.length > 0) {
+            return (
+              <Alert variant="destructive" className="border-red-600 bg-red-50">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <AlertTitle className="text-red-800 font-bold text-lg">
+                  ⚠️ ATENÇÃO: Saldo Insuficiente para Pagar Contas!
+                </AlertTitle>
+                <AlertDescription className="text-red-700 space-y-3">
+                  <div className="text-base font-semibold">
+                    Seu saldo atual de {formatCurrency(saldoAtual)} não é suficiente para cobrir 
+                    as {formatCurrency(contasAPagar)} em contas a pagar.
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-lg border border-red-200">
+                    <p className="font-bold text-red-900">Déficit: {formatCurrency(Math.abs(deficit))}</p>
+                  </div>
+                  
+                  {aReceber > 0 && (
+                    <>
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <p className="font-semibold text-green-800">
+                          💰 Você tem {formatCurrency(aReceber)} a receber de clientes
+                        </p>
+                        {aReceber >= Math.abs(deficit) && (
+                          <p className="text-green-700 text-sm mt-1">
+                            ✓ Este valor é suficiente para cobrir o déficit!
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p className="font-bold text-blue-900 mb-2">🎯 AÇÃO URGENTE NECESSÁRIA:</p>
+                        <ul className="list-disc list-inside space-y-1 text-blue-800 text-sm">
+                          <li>Entre em contato IMEDIATAMENTE com os clientes que têm faturas pendentes</li>
+                          <li>Priorize a cobrança das faturas vencidas (overdue)</li>
+                          <li>Negocie recebimento antecipado ou parcelamento se necessário</li>
+                          <li>Considere oferecer desconto para pagamento à vista</li>
+                          {aReceber < Math.abs(deficit) && (
+                            <li className="font-semibold text-red-700">
+                              CRÍTICO: O valor a receber não cobre todo o déficit. 
+                              Considere renegociar prazos com fornecedores.
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    </>
+                  )}
+                  
+                  {aReceber === 0 && (
+                    <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                      <p className="font-bold text-orange-900 mb-2">⚠️ SITUAÇÃO CRÍTICA:</p>
+                      <p className="text-orange-800 text-sm">
+                        Não há valores a receber. Considere urgentemente:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-orange-800 text-sm mt-2">
+                        <li>Renegociar prazos de pagamento com fornecedores</li>
+                        <li>Buscar recursos adicionais (empréstimos, capital de giro)</li>
+                        <li>Antecipar faturamento de novos serviços</li>
+                      </ul>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            );
+          }
+          return null;
+        })()}
+
         {/* Alertas de Saldo Negativo */}
         {alerts.length > 0 && (
           <Alert variant="destructive" className="border-destructive">
