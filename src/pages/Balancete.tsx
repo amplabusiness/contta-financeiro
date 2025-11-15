@@ -30,52 +30,90 @@ const Balancete = () => {
     try {
       setLoading(true)
 
-      // Buscar todas as contas analíticas (não sintéticas)
+      // Buscar TODAS as contas (sintéticas e analíticas)
       const { data: accounts, error: accountsError } = await supabase
         .from('chart_of_accounts')
         .select('id, code, name, type, is_synthetic')
         .eq('is_active', true)
-        .eq('is_synthetic', false)
         .order('code')
 
       if (accountsError) throw accountsError
-      if (!accounts) {
+      if (!accounts || accounts.length === 0) {
         setEntries([])
         return
       }
 
+      // Buscar TODOS os lançamentos de uma vez
+      let linesQuery = supabase
+        .from('accounting_entry_lines')
+        .select(`
+          debit, 
+          credit, 
+          account_id,
+          entry_id!inner(entry_date)
+        `)
+
+      if (start) {
+        linesQuery = linesQuery.gte('entry_id.entry_date', start)
+      }
+      if (end) {
+        linesQuery = linesQuery.lte('entry_id.entry_date', end)
+      }
+
+      const { data: allLines, error: linesError } = await linesQuery
+
+      if (linesError) throw linesError
+
+      // Criar mapa de saldos por conta
+      const accountTotals = new Map<string, { debit: number; credit: number }>()
+
+      allLines?.forEach(line => {
+        const current = accountTotals.get(line.account_id) || { debit: 0, credit: 0 }
+        current.debit += line.debit || 0
+        current.credit += line.credit || 0
+        accountTotals.set(line.account_id, current)
+      })
+
+      // Processar contas e calcular saldos
       const balanceteData: BalanceteEntry[] = []
 
-      // Para cada conta, buscar lançamentos no período
       for (const account of accounts) {
-        let query = supabase
-          .from('accounting_entry_lines')
-          .select('debit, credit, entry_id!inner(entry_date)')
-          .eq('account_id', account.id)
+        let totalDebito = 0
+        let totalCredito = 0
 
-        // Aplicar filtro de data se fornecido
-        if (start) {
-          query = query.gte('entry_id.entry_date', start)
+        if (account.is_synthetic) {
+          // Para contas sintéticas, somar os valores das contas filhas
+          const childAccounts = accounts.filter(a => 
+            a.code.startsWith(account.code + '.') && !a.is_synthetic
+          )
+          
+          childAccounts.forEach(child => {
+            const childTotals = accountTotals.get(child.id)
+            if (childTotals) {
+              totalDebito += childTotals.debit
+              totalCredito += childTotals.credit
+            }
+          })
+        } else {
+          // Para contas analíticas, usar os valores diretos
+          const accountTotal = accountTotals.get(account.id)
+          if (accountTotal) {
+            totalDebito = accountTotal.debit
+            totalCredito = accountTotal.credit
+          }
         }
-        if (end) {
-          query = query.lte('entry_id.entry_date', end)
-        }
-
-        const { data: lines } = await query
-
-        const totalDebito = lines?.reduce((sum, line) => sum + (line.debit || 0), 0) || 0
-        const totalCredito = lines?.reduce((sum, line) => sum + (line.credit || 0), 0) || 0
-
-        // Determinar natureza baseada no tipo da conta
-        const isDevedora = ['ATIVO', 'DESPESA'].includes(account.type)
-        const saldo = isDevedora
-          ? totalDebito - totalCredito
-          : totalCredito - totalDebito
 
         // Se mostrar apenas com movimento, pular contas sem movimento
         if (showOnlyWithMovement && totalDebito === 0 && totalCredito === 0) {
           continue
         }
+
+        // Determinar natureza baseada no tipo da conta
+        const tipo = account.type.toUpperCase()
+        const isDevedora = ['ATIVO', 'DESPESA'].includes(tipo)
+        const saldo = isDevedora
+          ? totalDebito - totalCredito
+          : totalCredito - totalDebito
 
         balanceteData.push({
           codigo_conta: account.code,
