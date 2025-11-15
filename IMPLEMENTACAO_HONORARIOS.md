@@ -197,7 +197,7 @@ const groups = Map<partnerKey, Set<clientId>>;
 // 3. Calcular receita total do grupo
 for each group:
   totalRevenue = sum(company revenues)
-  percentage = (totalRevenue / totalRevenue) * 100
+  percentage = (totalRevenue / totalRevenueOfAllClients) * 100
   riskLevel = calculateRisk(percentage)
 ```
 
