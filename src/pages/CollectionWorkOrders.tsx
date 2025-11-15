@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -115,11 +115,7 @@ const CollectionWorkOrders = () => {
     next_contact_date: "",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch clients
@@ -145,17 +141,21 @@ const CollectionWorkOrders = () => {
       // TODO: Fetch work orders from database
       // For now, using mock data
       setWorkOrders([]);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching data:", error);
       toast({
         title: "Erro ao carregar dados",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreateWorkOrder = () => {
     // TODO: Save to database

@@ -84,12 +84,12 @@ export function BoletoReportImporter() {
         throw new Error(data.error || 'Erro ao processar relatório')
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao importar relatório:', error)
 
       toast({
         title: 'Erro ao importar relatório',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       })
 

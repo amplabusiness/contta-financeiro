@@ -25,9 +25,9 @@ interface UnmatchedTransaction {
 
 interface ReconciliationSuggestion {
   transaction: UnmatchedTransaction
-  invoice: any
+  invoice: unknown
   confidenceScore: number
-  matchCriteria: any
+  matchCriteria: unknown
 }
 
 export function AutoReconciliation() {
@@ -56,7 +56,7 @@ export function AutoReconciliation() {
 
       setUnmatchedTransactions(data || [])
       setUnmatchedCount(data?.length || 0)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao carregar transações:', error)
     }
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -52,11 +52,85 @@ const EconomicGroupAnalysis = () => {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [economicGroups, setEconomicGroups] = useState<EconomicGroup[]>([]);
 
-  useEffect(() => {
-    fetchData();
+  const identifyEconomicGroups = useCallback((
+    partnersData: Array<{ client_id: string; cpf: string; name: string; clients?: { id: string; name: string } }>,
+    clientRevenueMap: Map<string, number>,
+    totalRev: number
+  ) => {
+    // Group companies by shared partners
+    const companyPartnersMap = new Map<string, Set<string>>();
+
+    partnersData.forEach((partner) => {
+      const clientId = partner.client_id;
+      const partnerKey = partner.cpf || partner.name;
+
+      if (!companyPartnersMap.has(clientId)) {
+        companyPartnersMap.set(clientId, new Set());
+      }
+      companyPartnersMap.get(clientId)!.add(partnerKey);
+    });
+
+    // Find groups where companies share partners
+    const groups = new Map<string, Set<string>>();
+    const processedCompanies = new Set<string>();
+
+    companyPartnersMap.forEach((partners, companyId) => {
+      if (processedCompanies.has(companyId)) return;
+
+      const groupKey = Array.from(partners).sort().join("|");
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, new Set());
+      }
+
+      groups.get(groupKey)!.add(companyId);
+      processedCompanies.add(companyId);
+    });
+
+    // Create economic groups array
+    const economicGroupsArray: EconomicGroup[] = [];
+
+    groups.forEach((companyIds, partnersKey) => {
+      if (companyIds.size <= 1) return; // Only groups with multiple companies
+
+      const partnersList = partnersKey.split("|");
+      const companiesData: Array<{ id: string; name: string; revenue: number }> = [];
+      let groupRevenue = 0;
+
+      companyIds.forEach((companyId) => {
+        const revenue = clientRevenueMap.get(companyId) || 0;
+        groupRevenue += revenue;
+
+        // Get company name
+        const partnerRecord = partnersData.find((p) => p.client_id === companyId);
+        companiesData.push({
+          id: companyId,
+          name: partnerRecord?.clients?.name || "Desconhecido",
+          revenue,
+        });
+      });
+
+      const percentage = totalRev > 0 ? (groupRevenue / totalRev) * 100 : 0;
+
+      let riskLevel: "high" | "medium" | "low" = "low";
+      if (percentage >= 20) riskLevel = "high";
+      else if (percentage >= 10) riskLevel = "medium";
+
+      economicGroupsArray.push({
+        group_name: `Grupo ${partnersList[0].substring(0, 20)}`,
+        partners: partnersList,
+        companies: companiesData,
+        total_revenue: groupRevenue,
+        percentage_of_total: percentage,
+        risk_level: riskLevel,
+      });
+    });
+
+    economicGroupsArray.sort((a, b) => b.total_revenue - a.total_revenue);
+    setEconomicGroups(economicGroupsArray);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch partners (shareholders)
@@ -100,7 +174,7 @@ const EconomicGroupAnalysis = () => {
         { name: string; cpf: string; companies: Set<string>; revenue: number }
       >();
 
-      partnersData?.forEach((partner: any) => {
+      partnersData?.forEach((partner) => {
         const key = partner.cpf || partner.name;
         if (!partnerMap.has(key)) {
           partnerMap.set(key, {
@@ -135,95 +209,21 @@ const EconomicGroupAnalysis = () => {
 
       // Identify economic groups (partners who share multiple companies)
       identifyEconomicGroups(partnersData || [], clientRevenueMap, totalRev);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching data:", error);
       toast({
         title: "Erro ao carregar dados",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [identifyEconomicGroups, toast]);
 
-  const identifyEconomicGroups = (
-    partnersData: any[],
-    clientRevenueMap: Map<string, number>,
-    totalRev: number
-  ) => {
-    // Group companies by shared partners
-    const companyPartnersMap = new Map<string, Set<string>>();
-
-    partnersData.forEach((partner: any) => {
-      const clientId = partner.client_id;
-      const partnerKey = partner.cpf || partner.name;
-
-      if (!companyPartnersMap.has(clientId)) {
-        companyPartnersMap.set(clientId, new Set());
-      }
-      companyPartnersMap.get(clientId)!.add(partnerKey);
-    });
-
-    // Find groups where companies share partners
-    const groups = new Map<string, Set<string>>();
-    const processedCompanies = new Set<string>();
-
-    companyPartnersMap.forEach((partners, companyId) => {
-      if (processedCompanies.has(companyId)) return;
-
-      const groupKey = Array.from(partners).sort().join("|");
-
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, new Set());
-      }
-
-      groups.get(groupKey)!.add(companyId);
-      processedCompanies.add(companyId);
-    });
-
-    // Create economic groups array
-    const economicGroupsArray: EconomicGroup[] = [];
-
-    groups.forEach((companyIds, partnersKey) => {
-      if (companyIds.size <= 1) return; // Only groups with multiple companies
-
-      const partnersList = partnersKey.split("|");
-      const companiesData: Array<{ id: string; name: string; revenue: number }> = [];
-      let groupRevenue = 0;
-
-      companyIds.forEach((companyId) => {
-        const revenue = clientRevenueMap.get(companyId) || 0;
-        groupRevenue += revenue;
-
-        // Get company name
-        const partnerRecord = partnersData.find((p: any) => p.client_id === companyId);
-        companiesData.push({
-          id: companyId,
-          name: partnerRecord?.clients?.name || "Desconhecido",
-          revenue,
-        });
-      });
-
-      const percentage = totalRev > 0 ? (groupRevenue / totalRev) * 100 : 0;
-
-      let riskLevel: "high" | "medium" | "low" = "low";
-      if (percentage >= 20) riskLevel = "high";
-      else if (percentage >= 10) riskLevel = "medium";
-
-      economicGroupsArray.push({
-        group_name: `Grupo ${partnersList[0].substring(0, 20)}`,
-        partners: partnersList,
-        companies: companiesData,
-        total_revenue: groupRevenue,
-        percentage_of_total: percentage,
-        risk_level: riskLevel,
-      });
-    });
-
-    economicGroupsArray.sort((a, b) => b.total_revenue - a.total_revenue);
-    setEconomicGroups(economicGroupsArray);
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
