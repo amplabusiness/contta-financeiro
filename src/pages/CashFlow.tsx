@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Info, Brain, Sparkles } from "lucide-react";
+import { Plus, Loader2, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Info, Brain, Sparkles, RefreshCw, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -35,6 +35,7 @@ interface CashFlowProjection {
 
 const CashFlow = () => {
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -42,6 +43,7 @@ const CashFlow = () => {
   const [projection, setProjection] = useState<CashFlowProjection[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
   const [aiAnalysis, setAiAnalysis] = useState<{ analysis: string; timestamp: string; data: any; } | null>(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
