@@ -266,6 +266,51 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_balance: {
+        Row: {
+          account_name: string
+          account_number: string | null
+          account_type: string
+          balance: number
+          balance_date: string
+          bank_name: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number?: string | null
+          account_type?: string
+          balance?: number
+          balance_date?: string
+          bank_name?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string | null
+          account_type?: string
+          balance?: number
+          balance_date?: string
+          bank_name?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bank_transaction_matches: {
         Row: {
           amount: number
@@ -405,6 +450,65 @@ export type Database = {
             columns: ["matched_invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_flow_transactions: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          status: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_flow_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_balance"
             referencedColumns: ["id"]
           },
         ]
