@@ -343,7 +343,7 @@ export function AutoReconciliation() {
                     </div>
 
                     <div className="bg-muted/50 p-3 rounded">
-                      <p className="font-medium">{suggestion.invoice.clients?.name}</p>
+                      <p className="font-medium">{suggestion.invoice.clients?.[0]?.name || 'Cliente não identificado'}</p>
                       <p className="text-sm text-muted-foreground">
                         Honorário - Competência: {suggestion.invoice.competence}
                       </p>
