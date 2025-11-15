@@ -172,11 +172,11 @@ const CashFlow = () => {
 
       setAccountsPayable(combinedPayables);
 
-      // Buscar faturas pendentes (a receber)
+      // Buscar faturas pendentes e vencidas (a receber)
       const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*, clients(name)")
-        .eq("status", "pending")
+        .in("status", ["pending", "overdue"])
         .order("due_date", { ascending: true });
 
       if (invoicesError) throw invoicesError;
@@ -331,7 +331,18 @@ const CashFlow = () => {
   };
 
   const getTotalReceivables = () => {
-    return invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const today = new Date();
+    const endDate = addDays(today, selectedPeriod);
+    return invoices
+      .filter((inv) => {
+        try {
+          const d = parseISO(inv.due_date);
+          return d >= today && d <= endDate;
+        } catch {
+          return false;
+        }
+      })
+      .reduce((sum, inv) => sum + Number(inv.amount), 0);
   };
 
   const getProjectedBalance = () => {
@@ -416,6 +427,18 @@ const CashFlow = () => {
             </Button>
           </div>
         </div>
+
+        {/* Aviso quando não há contas bancárias */}
+        {bankAccounts.length === 0 && !loading && (
+          <Alert className="border-yellow-500 bg-yellow-50">
+            <Info className="h-4 w-4 text-yellow-600" />
+            <AlertTitle className="text-yellow-800">Nenhuma conta bancária cadastrada</AlertTitle>
+            <AlertDescription className="text-yellow-700">
+              Para visualizar o fluxo de caixa, é necessário cadastrar pelo menos uma conta bancária com o saldo atual.
+              Clique em "Nova Conta" para começar.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Alertas de Saldo Negativo */}
         {alerts.length > 0 && (
