@@ -212,7 +212,7 @@ Responda APENAS com um JSON no formato:
           }
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error processing transaction ${transaction.id}:`, error);
         errors.push(`Transaction ${transaction.id}: ${error.message}`);
       }
@@ -229,7 +229,7 @@ Responda APENAS com um JSON no formato:
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in AI reconciliation agent:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

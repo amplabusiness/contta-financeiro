@@ -159,7 +159,7 @@ Responda APENAS com JSON:
           }
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error classifying expense ${expense.id}:`, error);
         errors.push(`Expense ${expense.id}: ${error.message}`);
       }
@@ -176,7 +176,7 @@ Responda APENAS com JSON:
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in AI expense classifier:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

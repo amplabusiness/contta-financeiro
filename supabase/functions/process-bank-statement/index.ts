@@ -1,17 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { Transaction, OFXTransaction, ReconciliationRule, Invoice, Expense, Client } from '../_shared/types.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface Transaction {
-  date: string;
-  description: string;
-  amount: number;
-  type: 'debit' | 'credit';
-  reference?: string;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -247,7 +240,7 @@ function parseOFX(content: string): Transaction[] {
   const transactions: Transaction[] = [];
   const lines = content.split('\n');
 
-  let currentTx: any = {};
+  let currentTx: OFXTransaction = {};
   for (const line of lines) {
     if (line.includes('<STMTTRN>')) {
       currentTx = {};
@@ -361,11 +354,16 @@ function formatOFXDate(ofxDate: string): string {
 
 async function matchTransactionWithAI(
   transaction: Transaction,
-  expenses: any[],
-  invoices: any[],
-  clients: any[],
-  rules: any[]
-): Promise<any> {
+  expenses: Expense[],
+  invoices: Invoice[],
+  clients: Client[],
+  rules: ReconciliationRule[]
+): Promise<{
+  matched: boolean
+  type?: string
+  matchedId?: string
+  confidence?: number
+} | null> {
   try {
     // Primeiro, aplicar regras automáticas
     for (const rule of rules) {

@@ -3,6 +3,37 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Type for Supabase client used in Edge Functions
 export type EdgeSupabaseClient = SupabaseClient<any>
 
+// Transaction processing types
+export interface Transaction {
+  date: string
+  description: string
+  amount: number
+  type: 'debit' | 'credit'
+  reference?: string
+}
+
+export interface OFXTransaction {
+  date?: string
+  amount?: string
+  memo?: string
+  payee?: string
+  fitid?: string
+}
+
+export interface ReconciliationRule {
+  pattern: string
+  rule_type: string
+  auto_match?: boolean
+}
+
+export interface Expense {
+  id: string
+  description: string
+  amount: number
+  due_date: string
+  status: string
+}
+
 // Brasil API types
 export interface BrasilAPISocio {
   nome_socio?: string
@@ -10,6 +41,12 @@ export interface BrasilAPISocio {
   qualificacao_socio?: string
   qual?: string
   data_entrada_sociedade?: string
+}
+
+export interface Socio {
+  nome: string
+  qualificacao: string
+  data_entrada?: string
 }
 
 export interface BrasilAPIResponse {

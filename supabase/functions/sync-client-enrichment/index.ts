@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { BrasilAPIResponse, BrasilAPISocio, Socio } from '../_shared/types.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,10 +59,10 @@ serve(async (req) => {
           continue;
         }
 
-        const data = await response.json();
+        const data: BrasilAPIResponse = await response.json();
 
         // Extrair sócios atuais
-        const newSocios = data.qsa?.map((socio: any) => ({
+        const newSocios = data.qsa?.map((socio: BrasilAPISocio) => ({
           nome: socio.nome_socio || socio.nome,
           qualificacao: socio.qualificacao_socio || socio.qual,
           data_entrada: socio.data_entrada_sociedade
@@ -73,9 +74,9 @@ serve(async (req) => {
         const removedSocios: string[] = [];
 
         if (client.enrichment) {
-          const oldSocios = client.enrichment.socios || [];
-          const oldSociosNames = new Set(oldSocios.map((s: any) => s.nome));
-          const newSociosNames = new Set(newSocios.map((s: any) => s.nome));
+          const oldSocios: Socio[] = client.enrichment.socios || [];
+          const oldSociosNames = new Set(oldSocios.map((s) => s.nome));
+          const newSociosNames = new Set(newSocios.map((s) => s.nome));
 
           // Verificar sócios adicionados
           for (const socio of newSocios) {
@@ -163,7 +164,7 @@ serve(async (req) => {
           // Atualizar client_payers automaticamente
           // Adicionar novos sócios
           for (const socioName of addedSocios) {
-            const socioData = newSocios.find((s: any) => s.nome === socioName);
+            const socioData = newSocios.find((s) => s.nome === socioName);
             await supabase
               .from('client_payers')
               .insert({

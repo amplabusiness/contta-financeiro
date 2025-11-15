@@ -213,7 +213,7 @@ Forneça sua análise em JSON com:
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in AI financial analyst:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

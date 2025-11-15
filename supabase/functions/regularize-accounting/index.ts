@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Erro ao processar invoice ${invoice.id}:`, error);
         errors.push(`Invoice ${invoice.id}: ${error.message}`);
       }
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro na regularização:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Erro ao regularizar lançamentos contábeis' }),
