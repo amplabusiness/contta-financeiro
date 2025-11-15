@@ -45,7 +45,7 @@ const Balancete = () => {
 
       // Buscar dados da view vw_balancete
       // Como a view não tem filtro de data, vamos buscar os lançamentos no período
-      let query = supabase.rpc('get_balancete', {
+      const query = supabase.rpc('get_balancete', {
         data_inicio: start || null,
         data_fim: end || null
       })
@@ -89,7 +89,7 @@ const Balancete = () => {
       const balanceteData: BalanceteEntry[] = []
 
       for (const account of accounts) {
-        let query = supabase
+        const query = supabase
           .from('accounting_entry_items')
           .select('debit, credit, entry_id!inner(entry_date, is_draft)')
           .eq('account_id', account.id)
