@@ -27,7 +27,62 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { boletos, fileName } = await req.json()
+    // Get current user first
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Usuário não autenticado')
+
+    // Check content type
+    const contentType = req.headers.get('content-type') || ''
+    let boletos: BoletoData[]
+    let fileName = 'relatorio.xlsx'
+
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData (file upload)
+      const formData = await req.formData()
+      const file = formData.get('file') as File
+      
+      if (!file) {
+        throw new Error('Nenhum arquivo foi enviado')
+      }
+
+      fileName = file.name
+      const fileContent = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(fileContent)
+
+      // Import XLSX dynamically
+      const { default: XLSX } = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs')
+      
+      const workbook = XLSX.read(uint8Array, { type: 'array' })
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][]
+
+      // Process Excel data to extract boletos
+      boletos = []
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i]
+        if (!row || row.length < 5) continue
+
+        try {
+          boletos.push({
+            boletoNumber: String(row[0] || ''),
+            pagador: String(row[1] || ''),
+            competence: String(row[2] || ''),
+            dataVencimento: String(row[3] || ''),
+            amount: Number(row[4]) || 0,
+            status: String(row[5] || 'EMITIDO').toUpperCase(),
+            dataPagamento: row[6] ? String(row[6]) : null,
+            valorLiquidado: row[7] ? Number(row[7]) : null
+          })
+        } catch (error) {
+          console.error(`Erro ao processar linha ${i}:`, error)
+        }
+      }
+    } else {
+      // Handle JSON (legacy support)
+      const body = await req.json()
+      boletos = body.boletos
+      fileName = body.fileName || fileName
+    }
 
     if (!boletos || !Array.isArray(boletos) || boletos.length === 0) {
       throw new Error('Dados de boletos inválidos ou vazios')
@@ -39,9 +94,10 @@ serve(async (req) => {
     const periodStart = new Date(Math.min(...boletos.map(b => new Date(b.dataVencimento).getTime())))
     const periodEnd = new Date(Math.max(...boletos.map(b => new Date(b.dataVencimento).getTime())))
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Usuário não autenticado')
+    // Get user ID from auth header
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    if (userError || !user) throw new Error('Usuário não autenticado')
 
     const { data: report, error: reportError } = await supabase
       .from('boleto_reports')
