@@ -15,10 +15,41 @@ export interface OFXTransaction {
   memo?: string
 }
 
-export function parseOFX(content: string): OFXTransaction[] {
+export interface OFXBankInfo {
+  bankId: string
+  accountId: string
+  accountType?: string
+  balance?: number
+  balanceDate?: string
+}
+
+export interface OFXParseResult {
+  transactions: OFXTransaction[]
+  bankInfo: OFXBankInfo | null
+}
+
+export function parseOFX(content: string): OFXParseResult {
   const transactions: OFXTransaction[] = []
+  let bankInfo: OFXBankInfo | null = null
 
   try {
+    // Extract bank info
+    const bankIdMatch = content.match(/<BANKID>([^<]+)/)
+    const acctIdMatch = content.match(/<ACCTID>([^<]+)/)
+    const acctTypeMatch = content.match(/<ACCTTYPE>([^<]+)/)
+    const balanceMatch = content.match(/<BALAMT>([^<]+)/)
+    const balanceDateMatch = content.match(/<DTASOF>([^<]+)/)
+
+    if (bankIdMatch && acctIdMatch) {
+      bankInfo = {
+        bankId: bankIdMatch[1].trim(),
+        accountId: acctIdMatch[1].trim(),
+        accountType: acctTypeMatch ? acctTypeMatch[1].trim() : undefined,
+        balance: balanceMatch ? parseFloat(balanceMatch[1]) : undefined,
+        balanceDate: balanceDateMatch ? formatOFXDate(balanceDateMatch[1]) : undefined
+      }
+    }
+
     // Extract all STMTTRN (statement transaction) blocks
     const stmtTrnRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/g
     let match
@@ -51,7 +82,7 @@ export function parseOFX(content: string): OFXTransaction[] {
       })
     }
 
-    return transactions
+    return { transactions, bankInfo }
   } catch (error) {
     console.error('Error parsing OFX:', error)
     throw new Error(`Failed to parse OFX: ${error instanceof Error ? error.message : 'Unknown error'}`)

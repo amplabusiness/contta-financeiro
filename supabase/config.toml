@@ -80,3 +80,6 @@ verify_jwt = true
 
 [functions.process-honorarios-spreadsheet]
 verify_jwt = true
+
+[functions.ai-accountant-agent]
+verify_jwt = true
