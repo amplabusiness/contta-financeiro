@@ -1609,6 +1609,8 @@ export type Database = {
       }
     }
     Functions: {
+      get_cnpj_branch: { Args: { cnpj_value: string }; Returns: string }
+      get_cnpj_root: { Args: { cnpj_value: string }; Returns: string }
       get_economic_group_impact: {
         Args: { p_year?: number }
         Returns: {
