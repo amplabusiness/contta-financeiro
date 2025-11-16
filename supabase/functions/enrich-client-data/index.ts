@@ -240,10 +240,8 @@ serve(async (req) => {
             .insert({
               client_id: clientId,
               name: socio.nome,
-              cpf: socio.cpf_cnpj_socio,
               partner_type: socio.qualificacao,
-              percentage: parseFloat(socio.percentual_capital_social || '0'),
-              joined_date: socio.data_entrada_sociedade,
+              joined_date: socio.data_entrada,
             });
         }
       }
@@ -263,7 +261,6 @@ serve(async (req) => {
             .insert({
               client_id: clientId,
               payer_name: socio.nome,
-              payer_document: socio.cpf_cnpj_socio,
               relationship: 'socio',
               notes: `Qualificação: ${socio.qualificacao}`,
               created_by: userData?.user?.id
