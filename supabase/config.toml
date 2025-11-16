@@ -74,3 +74,6 @@ verify_jwt = true
 
 [functions.ai-client-segmenter]
 verify_jwt = true
+
+[functions.process-boleto-report]
+verify_jwt = true

@@ -32,6 +32,7 @@ import CostCenterAnalysis from "./pages/CostCenterAnalysis";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ImportInvoices from "./pages/ImportInvoices";
+import ImportBoletoReport from "./pages/ImportBoletoReport";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
 import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
@@ -74,6 +75,8 @@ const App = () => (
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/import" element={<Import />} />
             <Route path="/import-boletos" element={<ImportBoletos />} />
+            <Route path="/import-invoices" element={<ImportInvoices />} />
+            <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
             <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
