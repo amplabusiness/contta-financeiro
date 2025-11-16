@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, CalendarDays, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, CalendarDays, Zap, Brain, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { AIInvoiceClassifier } from "@/components/ai/AIInvoiceClassifier";
+import { AICollectionAgent } from "@/components/ai/AICollectionAgent";
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -541,6 +543,7 @@ const Invoices = () => {
                     <TableHead>Vencimento</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>IA</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -552,6 +555,27 @@ const Invoices = () => {
                       <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <AIInvoiceClassifier
+                            invoiceId={invoice.id}
+                            clientId={invoice.client_id}
+                            amount={invoice.amount}
+                            dueDate={invoice.due_date}
+                          />
+                          {invoice.status === "pending" && (
+                            <AICollectionAgent
+                              clientId={invoice.client_id}
+                              invoiceId={invoice.id}
+                              trigger={
+                                <Button size="sm" variant="outline">
+                                  <Bot className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
                         {invoice.status === "pending" && (
                           <Button

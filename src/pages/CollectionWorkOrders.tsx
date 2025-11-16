@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AIEmailComposer } from "@/components/ai/AIEmailComposer";
 
 interface WorkOrder {
   id: string;
@@ -307,6 +308,7 @@ const CollectionWorkOrders = () => {
                         <TableHead>Próxima Data</TableHead>
                         <TableHead>Prioridade</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>IA</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -330,6 +332,18 @@ const CollectionWorkOrders = () => {
                           <TableCell>{formatDate(order.next_action_date)}</TableCell>
                           <TableCell>{getPriorityBadge(order.priority)}</TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>
+                            <AIEmailComposer
+                              clientId={order.client_id}
+                              invoiceId={order.invoice_id}
+                              context="collection"
+                              trigger={
+                                <Button size="sm" variant="outline">
+                                  <Mail className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
                               <Button
