@@ -65,7 +65,7 @@ const Clients = () => {
 
   const loadClients = async () => {
     try {
-      // Buscar clientes com informações de faturas
+      // Buscar clientes com informações de faturas (exceto pro-bono)
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select(`
@@ -77,6 +77,9 @@ const Clients = () => {
             status
           )
         `)
+        .eq("status", "active")
+        .not("is_pro_bono", "eq", true)
+        .not("monthly_fee", "eq", 0)
         .order("name");
 
       if (clientsError) throw clientsError;
