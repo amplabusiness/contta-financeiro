@@ -79,6 +79,7 @@ export function AppSidebar() {
         { title: "Enriquecimento de Dados", url: "/client-enrichment", icon: Database },
         { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
         { title: "Mesclar Clientes", url: "/merge-clients", icon: GitMerge },
+        { title: "🔧 Auto-Mesclar Duplicados", url: "/auto-merge-duplicates", icon: GitMerge },
       ],
     },
     {

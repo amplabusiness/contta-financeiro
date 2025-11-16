@@ -56,6 +56,7 @@ import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
 import ImportDefaultReport from "./pages/ImportDefaultReport";
+import AutoMergeDuplicates from "./pages/AutoMergeDuplicates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -101,6 +102,7 @@ const App = () => (
             <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
             <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/merge-clients" element={<MergeClients />} />
+            <Route path="/auto-merge-duplicates" element={<AutoMergeDuplicates />} />
             <Route path="/unmatched-pix-report" element={<UnmatchedPixReport />} />
             <Route path="/client-enrichment" element={<ClientEnrichment />} />
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
