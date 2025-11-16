@@ -6,6 +6,7 @@ import {
   Wallet,
   TrendingUp,
   BarChart3,
+  BarChart4,
   FolderTree,
   Upload,
   Building2,
@@ -143,6 +144,7 @@ export function AppSidebar() {
         { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
         { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
         { title: "Relatório Completo", url: "/import-boleto-report", icon: FileSpreadsheet },
+        { title: "Dashboard de Relatórios", url: "/boleto-reports-dashboard", icon: BarChart4 },
       ],
     },
     {
