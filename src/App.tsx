@@ -58,6 +58,7 @@ import ImportDefaultReport from "./pages/ImportDefaultReport";
 import ImportHonorarios from "./pages/ImportHonorarios";
 import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
+import AIAccountant from "./pages/AIAccountant";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -126,6 +127,7 @@ const App = () => (
             <Route path="/import-default-report" element={<ImportDefaultReport />} />
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-insights" element={<AIInsights />} />
+            <Route path="/ai-accountant" element={<AIAccountant />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
