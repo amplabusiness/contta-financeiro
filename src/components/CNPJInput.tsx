@@ -31,26 +31,40 @@ interface CNPJInputProps {
   value: string;
   onChange: (value: string) => void;
   onDataFetched?: (data: CNPJData) => void;
+  onCPFInput?: (cpf: string) => void;
   autoFetch?: boolean;
   label?: string;
   required?: boolean;
   className?: string;
+  allowCPF?: boolean;
 }
 
 export const CNPJInput = ({ 
   value, 
   onChange, 
   onDataFetched,
+  onCPFInput,
   autoFetch = true,
   label = "CNPJ",
   required = false,
-  className = ""
+  className = "",
+  allowCPF = false
 }: CNPJInputProps) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
-  const formatCNPJ = (val: string) => {
+  const formatDocument = (val: string) => {
     const numbers = val.replace(/\D/g, "");
+    
+    // CPF format: 000.000.000-00 (11 digits)
+    if (allowCPF && numbers.length <= 11) {
+      return numbers
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1-$2");
+    }
+    
+    // CNPJ format: 00.000.000/0000-00 (14 digits)
     if (numbers.length <= 14) {
       return numbers
         .replace(/^(\d{2})(\d)/, "$1.$2")
@@ -62,14 +76,21 @@ export const CNPJInput = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCNPJ(e.target.value);
+    const formatted = formatDocument(e.target.value);
     onChange(formatted);
     setStatus("idle");
 
-    // Auto-fetch when 14 digits are entered
     const numbers = formatted.replace(/\D/g, "");
+    
+    // Auto-fetch CNPJ when 14 digits are entered
     if (autoFetch && numbers.length === 14 && !loading) {
       fetchCNPJData(numbers);
+    }
+    
+    // Notify CPF completion (11 digits) if allowed
+    if (allowCPF && numbers.length === 11 && onCPFInput) {
+      onCPFInput(formatted);
+      setStatus("success");
     }
   };
 
@@ -127,8 +148,8 @@ export const CNPJInput = ({
           type="text"
           value={value}
           onChange={handleChange}
-          placeholder="00.000.000/0000-00"
-          maxLength={18}
+          placeholder={allowCPF ? "00.000.000/0000-00 ou 000.000.000-00" : "00.000.000/0000-00"}
+          maxLength={allowCPF ? 18 : 18}
           required={required}
           disabled={loading}
           className="pr-10"
@@ -137,9 +158,14 @@ export const CNPJInput = ({
           {getStatusIcon()}
         </div>
       </div>
-      {autoFetch && (
+      {autoFetch && !allowCPF && (
         <p className="text-xs text-muted-foreground mt-1">
           Dados serão carregados automaticamente ao digitar o CNPJ completo
+        </p>
+      )}
+      {autoFetch && allowCPF && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Digite CNPJ (14 dígitos) ou CPF (11 dígitos). Dados da empresa serão carregados automaticamente.
         </p>
       )}
     </div>
