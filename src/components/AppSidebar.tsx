@@ -189,32 +189,42 @@ export function AppSidebar() {
         </div>
 
         {/* Menu Groups */}
-        {menuGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            {!collapsed && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.url);
-                  
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.url)}
-                        isActive={active}
-                        tooltip={collapsed ? item.title : undefined}
-                      >
-                        <Icon className="w-4 h-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        <div className="space-y-1">
+          {menuGroups.map((group, groupIndex) => (
+            <SidebarGroup key={group.label} className={groupIndex > 0 ? "pt-2" : ""}>
+              {!collapsed && (
+                <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider px-3 py-2">
+                  {group.label}
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.url);
+                    
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          onClick={() => navigate(item.url)}
+                          isActive={active}
+                          tooltip={collapsed ? item.title : undefined}
+                          className={`${!collapsed ? 'pl-6' : ''} transition-colors`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          {!collapsed && <span className="text-sm truncate">{item.title}</span>}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+              {!collapsed && groupIndex < menuGroups.length - 1 && (
+                <div className="mx-3 my-2 border-t border-border/40" />
+              )}
+            </SidebarGroup>
+          ))}
+        </div>
       </SidebarContent>
     </Sidebar>
   );
