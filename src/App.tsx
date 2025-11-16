@@ -54,6 +54,7 @@ import EconomicGroupAnalysis from "./pages/EconomicGroupAnalysis";
 import ProBonoClients from "./pages/ProBonoClients";
 import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
+import DefaultAnalysis from "./pages/DefaultAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -117,6 +118,7 @@ const App = () => (
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/cash-flow" element={<CashFlow />} />
+            <Route path="/default-analysis" element={<DefaultAnalysis />} />
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/settings" element={<Settings />} />
