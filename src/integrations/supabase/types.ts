@@ -980,6 +980,7 @@ export type Database = {
           cep: string | null
           cnpj: string | null
           complemento: string | null
+          cpf: string | null
           created_at: string
           created_by: string
           data_abertura: string | null
@@ -1015,6 +1016,7 @@ export type Database = {
           cep?: string | null
           cnpj?: string | null
           complemento?: string | null
+          cpf?: string | null
           created_at?: string
           created_by: string
           data_abertura?: string | null
@@ -1050,6 +1052,7 @@ export type Database = {
           cep?: string | null
           cnpj?: string | null
           complemento?: string | null
+          cpf?: string | null
           created_at?: string
           created_by?: string
           data_abertura?: string | null
