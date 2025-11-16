@@ -142,6 +142,7 @@ export function AppSidebar() {
         { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
         { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
         { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
+        { title: "📊 Processar Planilha Honorários", url: "/import-honorarios", icon: FileSpreadsheet },
         { title: "Relatório Completo", url: "/import-boleto-report", icon: FileSpreadsheet },
         { title: "Inadimplência", url: "/import-default-report", icon: AlertTriangle },
         { title: "Dashboard de Relatórios", url: "/boleto-reports-dashboard", icon: BarChart4 },

@@ -77,3 +77,6 @@ verify_jwt = true
 
 [functions.process-boleto-report]
 verify_jwt = true
+
+[functions.process-honorarios-spreadsheet]
+verify_jwt = true

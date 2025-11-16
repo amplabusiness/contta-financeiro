@@ -55,6 +55,7 @@ import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
 import ImportDefaultReport from "./pages/ImportDefaultReport";
+import ImportHonorarios from "./pages/ImportHonorarios";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/import-boletos" element={<ImportBoletos />} />
             <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
+            <Route path="/import-honorarios" element={<ImportHonorarios />} />
             <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
             <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
