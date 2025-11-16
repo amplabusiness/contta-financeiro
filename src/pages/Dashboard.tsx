@@ -64,7 +64,8 @@ const Dashboard = () => {
       const allInvoices = allInvoicesRes.data || [];
 
       // CORRIGIDO: Calcular KPIs com TODAS as invoices, não apenas as 10 recentes
-      const pendingInvoices = allInvoices.filter((i) => i.status === "pending");
+      // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
+      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
       const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
       const pendingExpenses = expenses.filter((e) => e.status === "pending");
 
