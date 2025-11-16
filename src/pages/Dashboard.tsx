@@ -51,7 +51,7 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes] = await Promise.all([
-        supabase.from("clients").select("*", { count: "exact" }).eq("status", "active").order("name"),
+        supabase.from("clients").select("*", { count: "exact" }).eq("status", "active").eq("is_pro_bono", false).order("name"),
         supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10),
         supabase.from("expenses").select("*"),
         supabase.from("invoices").select("*"),

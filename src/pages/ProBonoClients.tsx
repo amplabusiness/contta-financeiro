@@ -45,7 +45,7 @@ const ProBonoClients = () => {
             status
           )
         `)
-        .or("is_pro_bono.eq.true,monthly_fee.eq.0")
+        .eq("is_pro_bono", true)
         .order("name");
 
       if (clientsError) throw clientsError;
