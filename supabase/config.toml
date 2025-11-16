@@ -77,3 +77,6 @@ verify_jwt = true
 
 [functions.process-boleto-report]
 verify_jwt = true
+
+[functions.merge-duplicate-clients]
+verify_jwt = true
