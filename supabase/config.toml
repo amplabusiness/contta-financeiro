@@ -50,3 +50,27 @@ verify_jwt = false
 
 [functions.run-automation-jobs]
 verify_jwt = false
+
+[functions.ai-collection-agent]
+verify_jwt = true
+
+[functions.ai-partner-analyzer]
+verify_jwt = true
+
+[functions.ai-contract-generator]
+verify_jwt = true
+
+[functions.ai-email-composer]
+verify_jwt = true
+
+[functions.ai-invoice-classifier]
+verify_jwt = true
+
+[functions.ai-accounting-validator]
+verify_jwt = true
+
+[functions.ai-revenue-predictor]
+verify_jwt = true
+
+[functions.ai-client-segmenter]
+verify_jwt = true
