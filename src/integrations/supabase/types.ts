@@ -119,18 +119,26 @@ export type Database = {
           approved_by: string | null
           bank_account: string | null
           category: string
+          cost_center: string | null
           created_at: string
           created_by: string
           description: string
           document_number: string | null
           due_date: string
           id: string
+          is_recurring: boolean | null
+          is_suspended: boolean | null
           notes: string | null
+          parent_expense_id: string | null
           payment_date: string | null
           payment_method: string | null
+          recurrence_day: number | null
+          recurrence_frequency: string | null
           status: string
           supplier_document: string | null
           supplier_name: string
+          suspended_at: string | null
+          suspended_reason: string | null
           updated_at: string
         }
         Insert: {
@@ -144,18 +152,26 @@ export type Database = {
           approved_by?: string | null
           bank_account?: string | null
           category: string
+          cost_center?: string | null
           created_at?: string
           created_by: string
           description: string
           document_number?: string | null
           due_date: string
           id?: string
+          is_recurring?: boolean | null
+          is_suspended?: boolean | null
           notes?: string | null
+          parent_expense_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          recurrence_day?: number | null
+          recurrence_frequency?: string | null
           status?: string
           supplier_document?: string | null
           supplier_name: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Update: {
@@ -169,21 +185,37 @@ export type Database = {
           approved_by?: string | null
           bank_account?: string | null
           category?: string
+          cost_center?: string | null
           created_at?: string
           created_by?: string
           description?: string
           document_number?: string | null
           due_date?: string
           id?: string
+          is_recurring?: boolean | null
+          is_suspended?: boolean | null
           notes?: string | null
+          parent_expense_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          recurrence_day?: number | null
+          recurrence_frequency?: string | null
           status?: string
           supplier_document?: string | null
           supplier_name?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_parent_expense_id_fkey"
+            columns: ["parent_expense_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_payable"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -1609,6 +1641,13 @@ export type Database = {
       }
     }
     Functions: {
+      generate_recurring_expenses: {
+        Args: never
+        Returns: {
+          expenses_created: string[]
+          generated_count: number
+        }[]
+      }
       get_cnpj_branch: { Args: { cnpj_value: string }; Returns: string }
       get_cnpj_root: { Args: { cnpj_value: string }; Returns: string }
       get_economic_group_impact: {
