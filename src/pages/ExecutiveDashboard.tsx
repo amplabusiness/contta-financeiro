@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingDown, AlertTriangle, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface MonthlyData {
   month: string;
@@ -16,7 +17,12 @@ interface MonthlyData {
 }
 
 const ExecutiveDashboard = () => {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  
   const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth.toString());
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalDefault, setTotalDefault] = useState(0);
@@ -25,32 +31,42 @@ const ExecutiveDashboard = () => {
 
   useEffect(() => {
     loadExecutiveData();
-  }, []);
+  }, [selectedYear, selectedMonth]);
 
   const loadExecutiveData = async () => {
     setLoading(true);
     try {
-      // Buscar faturamento (invoices pagas)
+      const year = parseInt(selectedYear);
+      const month = parseInt(selectedMonth);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
+
+      // Buscar faturamento (invoices pagas no período)
       const { data: paidInvoices, error: invoicesError } = await supabase
         .from("invoices")
         .select("amount, payment_date")
-        .eq("status", "paid");
+        .eq("status", "paid")
+        .gte("payment_date", startDate.toISOString())
+        .lte("payment_date", endDate.toISOString());
 
       if (invoicesError) throw invoicesError;
 
-      // Buscar despesas (pagas)
+      // Buscar despesas (pagas no período)
       const { data: paidExpenses, error: expensesError } = await supabase
         .from("expenses")
         .select("amount, payment_date")
-        .eq("status", "paid");
+        .eq("status", "paid")
+        .gte("payment_date", startDate.toISOString())
+        .lte("payment_date", endDate.toISOString());
 
       if (expensesError) throw expensesError;
 
-      // Buscar inadimplência (pendentes e atrasadas)
+      // Buscar inadimplência (pendentes e atrasadas até a data final do período)
       const { data: overdueInvoices, error: overdueError } = await supabase
         .from("invoices")
-        .select("amount")
-        .in("status", ["pending", "overdue"]);
+        .select("amount, due_date")
+        .in("status", ["pending", "overdue"])
+        .lte("due_date", endDate.toISOString());
 
       if (overdueError) throw overdueError;
 
@@ -65,12 +81,12 @@ const ExecutiveDashboard = () => {
       setTotalDefault(defaultAmount);
       setNetMargin(margin);
 
-      // Calcular dados mensais (últimos 12 meses)
+      // Calcular dados mensais (últimos 12 meses a partir do mês/ano selecionado)
       const monthlyMap = new Map<string, MonthlyData>();
-      const today = new Date();
+      const selectedDate = new Date(year, month - 1, 1);
       
       for (let i = 11; i >= 0; i--) {
-        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - i, 1);
         const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
         const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
         
@@ -138,6 +154,22 @@ const ExecutiveDashboard = () => {
     }
   };
 
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const months = [
+    { value: "1", label: "Janeiro" },
+    { value: "2", label: "Fevereiro" },
+    { value: "3", label: "Março" },
+    { value: "4", label: "Abril" },
+    { value: "5", label: "Maio" },
+    { value: "6", label: "Junho" },
+    { value: "7", label: "Julho" },
+    { value: "8", label: "Agosto" },
+    { value: "9", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+  ];
+
   if (loading) {
     return (
       <Layout>
@@ -151,11 +183,41 @@ const ExecutiveDashboard = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
-          <p className="text-muted-foreground mt-1">
-            Visão estratégica dos principais indicadores financeiros
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
+            <p className="text-muted-foreground mt-1">
+              Visão estratégica dos principais indicadores financeiros
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* KPIs Principais */}
