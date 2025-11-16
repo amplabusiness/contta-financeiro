@@ -44,3 +44,9 @@ verify_jwt = true
 
 [functions.ai-cash-flow-analyst]
 verify_jwt = true
+
+[functions.auto-create-collection-orders]
+verify_jwt = false
+
+[functions.run-automation-jobs]
+verify_jwt = false
