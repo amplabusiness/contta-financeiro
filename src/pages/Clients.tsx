@@ -11,11 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -774,6 +775,7 @@ const Clients = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Honorário</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>IA</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -821,6 +823,16 @@ const Clients = () => {
                           <Badge variant={client.status === "active" ? "default" : "secondary"}>
                             {client.status === "active" ? "Ativo" : "Inativo"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <AIClientAnalyzer
+                            clientId={client.id}
+                            trigger={
+                              <Button size="sm" variant="outline">
+                                <Users className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
                         </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
