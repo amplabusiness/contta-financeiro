@@ -141,6 +141,7 @@ export function AppSidebar() {
       items: [
         { title: "Importar Clientes", url: "/import", icon: Upload },
         { title: "Importar Empresas", url: "/import-companies", icon: Building2 },
+        { title: "🤖 Upload Automático", url: "/automated-upload", icon: Upload },
         { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
         { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
         { title: "📊 Processar Planilha Honorários", url: "/import-honorarios", icon: FileSpreadsheet },
