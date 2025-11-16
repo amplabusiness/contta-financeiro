@@ -56,6 +56,8 @@ import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
 import ImportDefaultReport from "./pages/ImportDefaultReport";
 import ImportHonorarios from "./pages/ImportHonorarios";
+import RecurringExpenses from "./pages/RecurringExpenses";
+import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -117,6 +119,8 @@ const App = () => (
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
+            <Route path="/recurring-expenses" element={<RecurringExpenses />} />
+            <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
             <Route path="/import-default-report" element={<ImportDefaultReport />} />

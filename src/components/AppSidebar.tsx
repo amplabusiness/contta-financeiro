@@ -125,6 +125,7 @@ export function AppSidebar() {
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
         { title: "Contas a Pagar", url: "/accounts-payable", icon: CreditCard },
+        { title: "💰 Despesas Recorrentes", url: "/recurring-expenses", icon: RefreshCw },
         { title: "Centro de Custos", url: "/cost-center-analysis", icon: Target },
       ],
     },
@@ -143,6 +144,7 @@ export function AppSidebar() {
         { title: "Importar Boletos", url: "/import-boletos", icon: FileSpreadsheet },
         { title: "Importar Honorários", url: "/import-invoices", icon: FileInput },
         { title: "📊 Processar Planilha Honorários", url: "/import-honorarios", icon: FileSpreadsheet },
+        { title: "📋 Importar Despesas Recorrentes", url: "/import-expenses-spreadsheet", icon: FileSpreadsheet },
         { title: "Relatório Completo", url: "/import-boleto-report", icon: FileSpreadsheet },
         { title: "Inadimplência", url: "/import-default-report", icon: AlertTriangle },
         { title: "Dashboard de Relatórios", url: "/boleto-reports-dashboard", icon: BarChart4 },
