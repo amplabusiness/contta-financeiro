@@ -95,7 +95,7 @@ export function AppSidebar() {
         { title: "Ordens de Serviço", url: "/collection-work-orders", icon: Clipboard },
         { title: "Razão do Cliente", url: "/client-ledger", icon: BookOpen },
         { title: "Análise de Ausências", url: "/boleto-gaps", icon: Calendar },
-        { title: "Inadimplência", url: "/reports", icon: AlertTriangle },
+        { title: "Análise de Inadimplência", url: "/default-analysis", icon: AlertTriangle },
         { title: "Cartas de Cobrança", url: "/collection-letters", icon: FileText },
       ],
     },
