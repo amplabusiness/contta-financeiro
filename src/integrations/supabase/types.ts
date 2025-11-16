@@ -718,6 +718,59 @@ export type Database = {
           },
         ]
       }
+      client_partners: {
+        Row: {
+          client_id: string
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_administrator: boolean | null
+          joined_date: string | null
+          name: string
+          partner_type: string | null
+          percentage: number | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_administrator?: boolean | null
+          joined_date?: string | null
+          name: string
+          partner_type?: string | null
+          percentage?: number | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_administrator?: boolean | null
+          joined_date?: string | null
+          name?: string
+          partner_type?: string | null
+          percentage?: number | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_partners_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_payers: {
         Row: {
           client_id: string
@@ -872,6 +925,119 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      collection_work_order_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          next_contact_date: string | null
+          next_step: string | null
+          result: string | null
+          work_order_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          next_contact_date?: string | null
+          next_step?: string | null
+          result?: string | null
+          work_order_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          next_contact_date?: string | null
+          next_step?: string | null
+          result?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_work_order_logs_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "collection_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collection_work_orders: {
+        Row: {
+          action_type: string
+          assigned_at: string | null
+          assigned_to: string
+          client_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          invoice_id: string | null
+          next_action_date: string
+          priority: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          assigned_at?: string | null
+          assigned_to: string
+          client_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          next_action_date: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          assigned_at?: string | null
+          assigned_to?: string
+          client_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          next_action_date?: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_work_orders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       enrichment_logs: {
         Row: {
@@ -1250,10 +1416,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_partner_groups: {
+        Row: {
+          companies_count: number | null
+          company_ids: string[] | null
+          company_names: string[] | null
+          cpf: string | null
+          partner_key: string | null
+          partner_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_economic_group_impact: {
+        Args: { p_year?: number }
+        Returns: {
+          company_count: number
+          company_ids: string[]
+          company_names: string[]
+          group_key: string
+          partner_names: string[]
+          percentage_of_total: number
+          risk_level: string
+          total_revenue: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
