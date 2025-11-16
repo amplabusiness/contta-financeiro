@@ -70,7 +70,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Enriquecendo dados do cliente ${clientId} com CNPJ ${cnpj}`);
+    console.log(`Enriquecendo dados ${clientId ? `do cliente ${clientId}` : 'de CNPJ'} com CNPJ ${cnpj}`);
 
     // Limpar CNPJ (remover pontuação)
     const cleanCnpj = cnpj.replace(/\D/g, '');
@@ -153,7 +153,6 @@ serve(async (req) => {
 
     // Salvar dados enriquecidos na tabela de histórico
     const enrichmentData = {
-      client_id: clientId,
       cnpj: cleanCnpj,
       razao_social: data.razao_social,
       nome_fantasia: data.nome_fantasia,
@@ -175,47 +174,107 @@ serve(async (req) => {
         codigo: data.cnae_fiscal,
         descricao: data.cnae_fiscal_descricao
       } : null,
-      atividades_secundarias: data.cnaes_secundarios ? JSON.stringify(data.cnaes_secundarios) : null,
-      socios: socios,
+      atividades_secundarias: data.cnaes_secundarios,
       qsa: data.qsa,
-      last_updated: new Date().toISOString(),
-      data_source: 'brasilapi'
     };
 
-    const { error: enrichmentError } = await supabase
-      .from('client_enrichment')
-      .upsert(enrichmentData, { onConflict: 'client_id' });
+    // If clientId is provided, save to database
+    if (clientId) {
+      // Update client data
+      const { error: clientUpdateError } = await supabase
+        .from('clients')
+        .update({
+          razao_social: data.razao_social,
+          nome_fantasia: data.nome_fantasia,
+          cnpj: cleanCnpj,
+          email: data.email,
+          phone: data.ddd_telefone_1,
+          cep: data.cep,
+          logradouro: data.logradouro,
+          numero: data.numero,
+          complemento: data.complemento,
+          bairro: data.bairro,
+          municipio: data.municipio,
+          uf: data.uf,
+          porte: data.porte,
+          natureza_juridica: data.natureza_juridica,
+          situacao_cadastral: data.descricao_situacao_cadastral,
+          data_abertura: data.data_inicio_atividade,
+          capital_social: parseFloat(data.capital_social || '0'),
+          atividade_principal: data.cnae_fiscal_descricao ? {
+            codigo: data.cnae_fiscal,
+            descricao: data.cnae_fiscal_descricao
+          } : null,
+          atividades_secundarias: data.cnaes_secundarios,
+          qsa: data.qsa,
+        })
+        .eq('id', clientId);
 
-    if (enrichmentError) throw enrichmentError;
+      if (clientUpdateError) throw clientUpdateError;
 
-    // Criar registros de pagadores automaticamente para cada sócio
-    const { data: userData } = await supabase.auth.getUser(
-      req.headers.get('authorization')?.replace('Bearer ', '') || ''
-    );
+      // Save enrichment data
+      const { error: enrichmentError } = await supabase
+        .from('client_enrichment')
+        .upsert({ ...enrichmentData, client_id: clientId, last_updated: new Date().toISOString(), data_source: 'brasilapi' }, { onConflict: 'client_id' });
 
-    for (const socio of socios) {
-      // Verificar se já existe
-      const { data: existing } = await supabase
-        .from('client_payers')
-        .select('id')
-        .eq('client_id', clientId)
-        .eq('payer_name', socio.nome)
-        .single();
+      if (enrichmentError) throw enrichmentError;
 
-      if (!existing) {
-        await supabase
-          .from('client_payers')
-          .insert({
-            client_id: clientId,
-            payer_name: socio.nome,
-            relationship: 'socio',
-            notes: `Qualificação: ${socio.qualificacao}`,
-            created_by: userData?.user?.id
-          });
+      // Get user for created_by field
+      const { data: userData } = await supabase.auth.getUser(
+        req.headers.get('authorization')?.replace('Bearer ', '') || ''
+      );
+
+      // Save partners to client_partners table
+      for (const socio of socios) {
+        // Check if already exists
+        const { data: existing } = await supabase
+          .from('client_partners')
+          .select('id')
+          .eq('client_id', clientId)
+          .eq('name', socio.nome)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase
+            .from('client_partners')
+            .insert({
+              client_id: clientId,
+              name: socio.nome,
+              cpf: socio.cpf_cnpj_socio,
+              partner_type: socio.qualificacao,
+              percentage: parseFloat(socio.percentual_capital_social || '0'),
+              joined_date: socio.data_entrada_sociedade,
+            });
+        }
       }
-    }
 
-    console.log(`Cliente ${clientId} enriquecido com sucesso`);
+      // Also create payers from partners
+      for (const socio of socios) {
+        const { data: existing } = await supabase
+          .from('client_payers')
+          .select('id')
+          .eq('client_id', clientId)
+          .eq('payer_name', socio.nome)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase
+            .from('client_payers')
+            .insert({
+              client_id: clientId,
+              payer_name: socio.nome,
+              payer_document: socio.cpf_cnpj_socio,
+              relationship: 'socio',
+              notes: `Qualificação: ${socio.qualificacao}`,
+              created_by: userData?.user?.id
+            });
+        }
+      }
+
+      console.log(`Cliente ${clientId} enriquecido com sucesso. Salvos ${socios.length} sócios.`);
+    } else {
+      console.log(`Dados do CNPJ ${cnpj} retornados (sem salvar no banco)`);
+    }
 
     return new Response(
       JSON.stringify({
