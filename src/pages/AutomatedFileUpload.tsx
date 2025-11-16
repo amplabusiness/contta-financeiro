@@ -117,11 +117,16 @@ export default function AutomatedFileUpload() {
   };
 
   return (
-    <Layout
-      title="🤖 Upload Automático"
-      description="Envie arquivos para processamento automático - sem necessidade de cliques adicionais"
-    >
-      <div className="grid gap-6 md:grid-cols-2">
+    <Layout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">🤖 Upload Automático</h1>
+          <p className="text-muted-foreground">
+            Envie arquivos para processamento automático - sem necessidade de cliques adicionais
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Upload de Arquivos</CardTitle>
@@ -295,6 +300,7 @@ export default function AutomatedFileUpload() {
           </Alert>
         </CardContent>
       </Card>
+      </div>
     </Layout>
   );
 }

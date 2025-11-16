@@ -61,6 +61,7 @@ import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import AIAccountant from "./pages/AIAccountant";
 import GenerateRecurringInvoices from "./pages/GenerateRecurringInvoices";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
+import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/ai-accountant" element={<AIAccountant />} />
             <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
             <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
+            <Route path="/automated-upload" element={<AutomatedFileUpload />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
