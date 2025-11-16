@@ -156,6 +156,7 @@ export function AppSidebar() {
         { title: "Dashboard de IA", url: "/ai-insights", icon: Brain },
         { title: "Agentes de IA", url: "/ai-agents", icon: Bot },
         { title: "🤖 Contador AI", url: "/ai-accountant", icon: Bot },
+        { title: "Gerar Honorários 2025", url: "/generate-recurring-invoices", icon: Calendar },
         { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
         { title: "Regularizar Contabilidade", url: "/regularize-accounting", icon: FileCheck },
         { title: "Auditoria de Boletos", url: "/audit-logs", icon: ShieldAlert },
