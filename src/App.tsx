@@ -27,6 +27,7 @@ import FixRevenueEntries from "./pages/FixRevenueEntries";
 import ClientDashboard from "./pages/ClientDashboard";
 import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
+import AIInsights from "./pages/AIInsights";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
@@ -111,6 +112,9 @@ const App = () => (
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/cash-flow" element={<CashFlow />} />
+            <Route path="/ai-agents" element={<AIAgents />} />
+            <Route path="/ai-insights" element={<AIInsights />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

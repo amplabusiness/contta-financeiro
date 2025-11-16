@@ -19,6 +19,7 @@ import {
   Calendar,
   PieChart,
   Bot,
+  Brain,
   Target,
   Activity,
   FileInput,
@@ -146,6 +147,7 @@ export function AppSidebar() {
     {
       label: "Ferramentas",
       items: [
+        { title: "Dashboard de IA", url: "/ai-insights", icon: Brain },
         { title: "Agentes de IA", url: "/ai-agents", icon: Bot },
         { title: "Corrigir Lançamentos", url: "/fix-revenue-entries", icon: Wrench },
         { title: "Regularizar Contabilidade", url: "/regularize-accounting", icon: FileCheck },
