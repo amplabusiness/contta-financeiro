@@ -148,6 +148,7 @@ export function AppSidebar() {
         { title: "Relatório Completo", url: "/import-boleto-report", icon: FileSpreadsheet },
         { title: "Inadimplência", url: "/import-default-report", icon: AlertTriangle },
         { title: "Dashboard de Relatórios", url: "/boleto-reports-dashboard", icon: BarChart4 },
+        { title: "🔄 Conciliar Boletos", url: "/boleto-reconciliation", icon: RefreshCw },
       ],
     },
     {
