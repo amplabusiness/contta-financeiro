@@ -55,6 +55,7 @@ import ProBonoClients from "./pages/ProBonoClients";
 import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
+import ImportDefaultReport from "./pages/ImportDefaultReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -119,6 +120,7 @@ const App = () => (
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
+            <Route path="/import-default-report" element={<ImportDefaultReport />} />
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/settings" element={<Settings />} />
