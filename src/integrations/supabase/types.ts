@@ -1339,6 +1339,45 @@ export type Database = {
           },
         ]
       }
+      file_processing_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_path: string
+          file_type: string
+          id: string
+          processed_at: string | null
+          processing_result: Json | null
+          status: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_path: string
+          file_type: string
+          id?: string
+          processed_at?: string | null
+          processing_result?: Json | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_path?: string
+          file_type?: string
+          id?: string
+          processed_at?: string | null
+          processing_result?: Json | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       financial_analysis: {
         Row: {
           alerts: Json | null

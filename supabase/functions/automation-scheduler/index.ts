@@ -90,7 +90,29 @@ serve(async (req) => {
       console.error('❌ Analysis error:', error);
     }
 
-    // 4. Verificar boletos vencidos e atualizar status
+    // 4. Processar fila de arquivos automaticamente
+    console.log('📁 Processing file queue...');
+    try {
+      const { data: fileQueueResult, error: fileQueueError } = await supabase.functions.invoke('process-file-queue');
+      
+      if (fileQueueError) throw fileQueueError;
+
+      results.tasks.push({
+        name: 'Process File Queue',
+        status: 'success',
+        result: fileQueueResult
+      });
+      console.log('✅ File queue processed:', fileQueueResult);
+    } catch (error: unknown) {
+      results.tasks.push({
+        name: 'Process File Queue',
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      console.error('❌ File queue error:', error);
+    }
+
+    // 5. Verificar boletos vencidos e atualizar status
     console.log('📅 Checking overdue invoices...');
     try {
       const { data: overdueInvoices, error: overdueError } = await supabase
