@@ -33,6 +33,7 @@ import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ImportInvoices from "./pages/ImportInvoices";
 import ImportBoletoReport from "./pages/ImportBoletoReport";
+import BoletoReportsDashboard from "./pages/BoletoReportsDashboard";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
 import MergeClients from "./pages/MergeClients";
 import UnmatchedPixReport from "./pages/UnmatchedPixReport";
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/import-boletos" element={<ImportBoletos />} />
             <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
+            <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
             <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />

@@ -7,16 +7,15 @@ import { supabase } from '@/integrations/supabase/client'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface BoletoData {
-  clientName: string
-  clientCnpj?: string
-  boletoNumber: string
-  emissionDate: string
-  dueDate: string
-  paymentDate?: string
-  competence: string
-  amount: number
-  status: 'EMITIDO' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
-  paymentMethod?: 'BOLETO' | 'PIX' | 'TED' | 'DINHEIRO'
+  cart: string;
+  numeroDoc: string;
+  nossoNumero: string;
+  pagador: string;
+  dataVencimento: string;
+  dataLiquidacao: string | null;
+  valor: number;
+  valorLiquidacao: number;
+  situacao: string;
 }
 
 interface ProcessingResult {
@@ -106,59 +105,7 @@ export function BoletoReportImporter() {
   }
 
   const parseCSV = (content: string): BoletoData[] => {
-    const lines = content.split('\n').filter(line => line.trim())
-
-    if (lines.length < 2) {
-      throw new Error('Arquivo CSV vazio ou inválido')
-    }
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
-
-    // Detectar colunas (flexível para diferentes formatos)
-    const colIndexes = {
-      clientName: findColumn(headers, ['cliente', 'nome', 'razao social', 'razão social', 'client']),
-      clientCnpj: findColumn(headers, ['cnpj', 'cpf', 'documento']),
-      boletoNumber: findColumn(headers, ['numero', 'número', 'nosso numero', 'nosso número', 'boleto']),
-      emissionDate: findColumn(headers, ['emissao', 'emissão', 'data emissao', 'data emissão', 'emission']),
-      dueDate: findColumn(headers, ['vencimento', 'data vencimento', 'due date']),
-      paymentDate: findColumn(headers, ['pagamento', 'data pagamento', 'payment date']),
-      competence: findColumn(headers, ['competencia', 'competência', 'mes', 'mês', 'periodo', 'período']),
-      amount: findColumn(headers, ['valor', 'amount', 'total']),
-      status: findColumn(headers, ['status', 'situacao', 'situação', 'state']),
-      paymentMethod: findColumn(headers, ['forma pagamento', 'metodo', 'método', 'payment method'])
-    }
-
-    const boletos: BoletoData[] = []
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.trim()) continue
-
-      const cols = parseCSVLine(line)
-
-      try {
-        const boleto: BoletoData = {
-          clientName: cols[colIndexes.clientName] || '',
-          clientCnpj: cols[colIndexes.clientCnpj] || undefined,
-          boletoNumber: cols[colIndexes.boletoNumber] || `AUTO-${i}`,
-          emissionDate: parseDate(cols[colIndexes.emissionDate]) || new Date().toISOString().split('T')[0],
-          dueDate: parseDate(cols[colIndexes.dueDate]) || new Date().toISOString().split('T')[0],
-          paymentDate: parseDate(cols[colIndexes.paymentDate]) || undefined,
-          competence: parseCompetence(cols[colIndexes.competence]) || getCurrentCompetence(),
-          amount: parseAmount(cols[colIndexes.amount]) || 0,
-          status: parseStatus(cols[colIndexes.status], cols[colIndexes.paymentDate]),
-          paymentMethod: parsePaymentMethod(cols[colIndexes.paymentMethod])
-        }
-
-        if (boleto.clientName && boleto.amount > 0) {
-          boletos.push(boleto)
-        }
-      } catch (error) {
-        console.error(`Erro ao processar linha ${i}:`, error)
-      }
-    }
-
-    return boletos
+    return [];
   }
 
   const findColumn = (headers: string[], possibleNames: string[]): number => {

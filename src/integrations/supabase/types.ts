@@ -454,6 +454,159 @@ export type Database = {
           },
         ]
       }
+      boleto_report_items: {
+        Row: {
+          amount: number
+          boleto_number: string
+          client_id: string | null
+          competence: string
+          created_at: string
+          due_date: string
+          error_message: string | null
+          id: string
+          invoice_id: string | null
+          liquidation_amount: number | null
+          pagador: string
+          payment_date: string | null
+          provision_entry_id: string | null
+          provisioned: boolean | null
+          report_id: string
+          settled: boolean | null
+          settlement_entry_id: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          boleto_number: string
+          client_id?: string | null
+          competence: string
+          created_at?: string
+          due_date: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          liquidation_amount?: number | null
+          pagador: string
+          payment_date?: string | null
+          provision_entry_id?: string | null
+          provisioned?: boolean | null
+          report_id: string
+          settled?: boolean | null
+          settlement_entry_id?: string | null
+          status: string
+        }
+        Update: {
+          amount?: number
+          boleto_number?: string
+          client_id?: string | null
+          competence?: string
+          created_at?: string
+          due_date?: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          liquidation_amount?: number | null
+          pagador?: string
+          payment_date?: string | null
+          provision_entry_id?: string | null
+          provisioned?: boolean | null
+          report_id?: string
+          settled?: boolean | null
+          settlement_entry_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boleto_report_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boleto_report_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boleto_report_items_provision_entry_id_fkey"
+            columns: ["provision_entry_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boleto_report_items_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "boleto_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boleto_report_items_settlement_entry_id_fkey"
+            columns: ["settlement_entry_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boleto_reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          entries_created: number | null
+          file_name: string
+          file_type: string
+          id: string
+          period_end: string
+          period_start: string
+          processed_at: string | null
+          processing_log: Json | null
+          status: string
+          total_boletos: number
+          total_emitidos: number | null
+          total_pagos: number | null
+          total_pendentes: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entries_created?: number | null
+          file_name: string
+          file_type?: string
+          id?: string
+          period_end: string
+          period_start: string
+          processed_at?: string | null
+          processing_log?: Json | null
+          status?: string
+          total_boletos?: number
+          total_emitidos?: number | null
+          total_pagos?: number | null
+          total_pendentes?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entries_created?: number | null
+          file_name?: string
+          file_type?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          processed_at?: string | null
+          processing_log?: Json | null
+          status?: string
+          total_boletos?: number
+          total_emitidos?: number | null
+          total_pagos?: number | null
+          total_pendentes?: number | null
+        }
+        Relationships: []
+      }
       cash_flow_transactions: {
         Row: {
           amount: number

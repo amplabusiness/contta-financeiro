@@ -36,18 +36,23 @@ serve(async (req) => {
     console.log(`Processando ${boletos.length} boletos do arquivo: ${fileName}`)
 
     // Criar registro do relatório
-    const periodStart = new Date(Math.min(...boletos.map(b => new Date(b.emissionDate).getTime())))
-    const periodEnd = new Date(Math.max(...boletos.map(b => new Date(b.dueDate).getTime())))
+    const periodStart = new Date(Math.min(...boletos.map(b => new Date(b.dataVencimento).getTime())))
+    const periodEnd = new Date(Math.max(...boletos.map(b => new Date(b.dataVencimento).getTime())))
+
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Usuário não autenticado')
 
     const { data: report, error: reportError } = await supabase
       .from('boleto_reports')
       .insert({
         file_name: fileName,
-        file_type: fileName.endsWith('.csv') ? 'CSV' : fileName.endsWith('.xlsx') ? 'XLSX' : 'TXT',
+        file_type: fileName.endsWith('.xls') ? 'XLS' : fileName.endsWith('.xlsx') ? 'XLSX' : 'CSV',
         period_start: periodStart.toISOString().split('T')[0],
         period_end: periodEnd.toISOString().split('T')[0],
         total_boletos: boletos.length,
-        status: 'PROCESSING'
+        status: 'PROCESSING',
+        created_by: user.id
       })
       .select()
       .single()
