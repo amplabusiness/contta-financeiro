@@ -60,6 +60,7 @@ import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import AIAccountant from "./pages/AIAccountant";
 import GenerateRecurringInvoices from "./pages/GenerateRecurringInvoices";
+import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
 import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import NotFound from "./pages/NotFound";
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/ai-accountant" element={<AIAccountant />} />
             <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
+            <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
             <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
             <Route path="/automated-upload" element={<AutomatedFileUpload />} />
             <Route path="/settings" element={<Settings />} />
