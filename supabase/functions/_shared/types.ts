@@ -1,4 +1,4 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 // Type for Supabase client used in Edge Functions
 export type EdgeSupabaseClient = SupabaseClient<any>

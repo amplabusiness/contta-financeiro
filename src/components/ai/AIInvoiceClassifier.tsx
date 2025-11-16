@@ -34,13 +34,17 @@ export function AIInvoiceClassifier({
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-invoice-classifier", {
-        body: { invoiceId, clientId },
+        body: { invoiceIds: [invoiceId] },
       });
 
       if (error) throw error;
 
-      setAnalysis(data);
-      onAnalysisComplete?.(data);
+      // Extract first result since we're passing single invoice
+      const result = data?.results?.[0];
+      if (!result) throw new Error("Nenhum resultado retornado");
+      
+      setAnalysis(result);
+      onAnalysisComplete?.(result);
       
       const riskLevel = data.classification?.risk_level;
       if (riskLevel === "high") {
