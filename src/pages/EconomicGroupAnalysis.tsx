@@ -160,6 +160,10 @@ const EconomicGroupAnalysis = () => {
         errorMessage = error;
       }
 
+      if (errorMessage.toLowerCase().includes('body stream already read')) {
+        errorMessage = 'Falha ao interpretar a resposta do Supabase. Aplique a migração 20251120_fix_economic_group_return_types.sql para atualizar a função get_economic_group_impact.';
+      }
+
       console.error('Error loading economic groups:', errorMessage);
 
       // Truncate if too long
