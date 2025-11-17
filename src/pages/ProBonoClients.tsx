@@ -3,9 +3,15 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Loader2, Calendar, FileText } from "lucide-react";
+import { Heart, Loader2, Calendar, FileText, Edit, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,6 +23,16 @@ const ProBonoClients = () => {
     total: 0,
     active: 0,
     totalWaived: 0
+  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    is_pro_bono: false,
+    pro_bono_start_date: "",
+    pro_bono_end_date: "",
+    pro_bono_reason: "",
+    monthly_fee: "",
+    payment_day: ""
   });
 
   useEffect(() => {
@@ -89,7 +105,7 @@ const ProBonoClients = () => {
       active: "default",
       inactive: "secondary"
     };
-    
+
     const labels: Record<string, string> = {
       active: "Ativo",
       inactive: "Inativo"
@@ -100,6 +116,75 @@ const ProBonoClients = () => {
         {labels[status] || status}
       </Badge>
     );
+  };
+
+  const handleEditClick = (client: any) => {
+    setEditingClient(client);
+    setFormData({
+      is_pro_bono: client.is_pro_bono || false,
+      pro_bono_start_date: client.pro_bono_start_date || "",
+      pro_bono_end_date: client.pro_bono_end_date || "",
+      pro_bono_reason: client.pro_bono_reason || "",
+      monthly_fee: client.monthly_fee?.toString() || "",
+      payment_day: client.payment_day?.toString() || ""
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveChanges = async () => {
+    if (!editingClient) return;
+
+    try {
+      // Validações
+      if (!formData.is_pro_bono && (!formData.monthly_fee || parseFloat(formData.monthly_fee) <= 0)) {
+        toast.error("Informe o valor do honorário mensal para clientes pagos");
+        return;
+      }
+
+      if (!formData.is_pro_bono && !formData.payment_day) {
+        toast.error("Informe o dia de pagamento para clientes pagos");
+        return;
+      }
+
+      if (formData.is_pro_bono && !formData.pro_bono_start_date) {
+        toast.error("Informe a data de início do período Pro-Bono");
+        return;
+      }
+
+      if (formData.is_pro_bono && !formData.pro_bono_reason) {
+        toast.error("Informe o motivo/justificativa do Pro-Bono");
+        return;
+      }
+
+      const updateData: any = {
+        is_pro_bono: formData.is_pro_bono,
+        monthly_fee: formData.is_pro_bono ? 0 : parseFloat(formData.monthly_fee),
+        payment_day: formData.is_pro_bono ? null : parseInt(formData.payment_day),
+        pro_bono_start_date: formData.is_pro_bono ? formData.pro_bono_start_date : null,
+        pro_bono_end_date: formData.is_pro_bono && formData.pro_bono_end_date ? formData.pro_bono_end_date : null,
+        pro_bono_reason: formData.is_pro_bono ? formData.pro_bono_reason : null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from("clients")
+        .update(updateData)
+        .eq("id", editingClient.id);
+
+      if (error) throw error;
+
+      toast.success(
+        formData.is_pro_bono
+          ? "Cliente mantido como Pro-Bono"
+          : "Cliente convertido para Pago com sucesso!"
+      );
+
+      setEditDialogOpen(false);
+      loadProBonoClients();
+    } catch (error: any) {
+      console.error("Erro ao atualizar cliente:", error);
+      toast.error("Erro ao atualizar cliente");
+    }
   };
 
   if (loading) {
@@ -198,6 +283,7 @@ const ProBonoClients = () => {
                       <TableHead>Período Pro-Bono</TableHead>
                       <TableHead>Motivo</TableHead>
                       <TableHead className="text-right">Valor Dispensado</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -248,6 +334,16 @@ const ProBonoClients = () => {
                         <TableCell className="text-right font-medium">
                           {formatCurrency(client.totalWaived)}
                         </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditClick(client)}
+                            title="Editar cliente"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -256,6 +352,153 @@ const ProBonoClients = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Edição */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Editar Cliente Pro-Bono
+              </DialogTitle>
+              <DialogDescription>
+                {editingClient?.name} - Altere o status do cliente ou converta para pago
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Checkbox Pro-Bono */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_pro_bono"
+                  checked={formData.is_pro_bono}
+                  onCheckedChange={(checked) => {
+                    setFormData({
+                      ...formData,
+                      is_pro_bono: checked as boolean,
+                      monthly_fee: checked ? "0" : formData.monthly_fee
+                    });
+                  }}
+                />
+                <Label htmlFor="is_pro_bono" className="font-medium cursor-pointer">
+                  Cliente Pro-Bono (Gratuito)
+                </Label>
+              </div>
+
+              {/* Campos Pro-Bono */}
+              {formData.is_pro_bono && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Heart className="h-4 w-4 text-primary" />
+                    <span>Informações Pro-Bono</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="pro_bono_start_date">
+                        Data Início <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="pro_bono_start_date"
+                        type="date"
+                        value={formData.pro_bono_start_date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pro_bono_start_date: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="pro_bono_end_date">Data Fim (Opcional)</Label>
+                      <Input
+                        id="pro_bono_end_date"
+                        type="date"
+                        value={formData.pro_bono_end_date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pro_bono_end_date: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pro_bono_reason">
+                      Justificativa/Motivo <span className="text-destructive">*</span>
+                    </Label>
+                    <Textarea
+                      id="pro_bono_reason"
+                      placeholder="Descreva o motivo do atendimento gratuito..."
+                      value={formData.pro_bono_reason}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pro_bono_reason: e.target.value })
+                      }
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Campos Cliente Pago */}
+              {!formData.is_pro_bono && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <span>Informações de Pagamento</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthly_fee">
+                        Honorário Mensal <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="monthly_fee"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0,00"
+                        value={formData.monthly_fee}
+                        onChange={(e) =>
+                          setFormData({ ...formData, monthly_fee: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_day">
+                        Dia de Pagamento <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="payment_day"
+                        type="number"
+                        min="1"
+                        max="31"
+                        placeholder="Ex: 10"
+                        value={formData.payment_day}
+                        onChange={(e) =>
+                          setFormData({ ...formData, payment_day: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    Ao converter para cliente pago, o histórico Pro-Bono será removido.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveChanges}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
