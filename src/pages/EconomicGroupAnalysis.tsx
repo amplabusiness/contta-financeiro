@@ -66,7 +66,26 @@ const EconomicGroupAnalysis = () => {
         p_year: selectedYear || new Date().getFullYear()
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a "function not found" error
+        if (error.code === 'PGRST116' || error.message?.includes('function') || error.message?.includes('does not exist')) {
+          console.warn('RPC function not found - database migrations may not be applied');
+          setGroups([]);
+          setStats({
+            totalGroups: 0,
+            totalCompanies: 0,
+            highRiskGroups: 0,
+            averageConcentration: 0,
+          });
+          toast({
+            title: "Análise de Grupos Econômicos",
+            description: "Funcionalidade não configurada. As migrações do banco de dados precisam ser aplicadas.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       const groupData = (data || []) as EconomicGroup[];
       setGroups(groupData);
@@ -392,7 +411,7 @@ const EconomicGroupAnalysis = () => {
                 <div>
                   <p className="font-medium">Análise de Receita</p>
                   <p className="text-sm text-muted-foreground">
-                    Consolidação da receita paga de todas as empresas do grupo no período selecionado
+                    Consolidaç��o da receita paga de todas as empresas do grupo no período selecionado
                   </p>
                 </div>
               </div>
