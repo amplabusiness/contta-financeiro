@@ -87,24 +87,49 @@ const EconomicGroupAnalysis = () => {
 
     } catch (error: any) {
       console.error('Error loading economic groups:', error);
-      console.error('Error details:', {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-        errorObject: JSON.stringify(error)
-      });
+
+      // Comprehensive error logging
+      try {
+        const errorInfo: any = {
+          type: typeof error,
+          message: error?.message || 'No message',
+          details: error?.details || 'No details',
+          hint: error?.hint || 'No hint',
+          code: error?.code || 'No code',
+          status: error?.status || error?.statusCode || 'No status',
+        };
+
+        // Try to get all own properties
+        if (error && typeof error === 'object') {
+          Object.keys(error).forEach(key => {
+            try {
+              errorInfo[`raw_${key}`] = String(error[key]);
+            } catch (e) {
+              errorInfo[`raw_${key}`] = 'Unable to serialize';
+            }
+          });
+        }
+
+        console.error('Full error details:', errorInfo);
+      } catch (logError) {
+        console.error('Error while logging:', logError);
+      }
 
       let errorMessage = 'Erro desconhecido ao carregar grupos econômicos';
 
+      // Try to extract a meaningful error message
       if (typeof error === 'string') {
         errorMessage = error;
-      } else if (error?.message) {
+      } else if (error?.message && typeof error.message === 'string') {
         errorMessage = error.message;
-      } else if (error?.details) {
+      } else if (error?.details && typeof error.details === 'string') {
         errorMessage = error.details;
-      } else if (error?.hint) {
+      } else if (error?.hint && typeof error.hint === 'string') {
         errorMessage = error.hint;
+      } else if (error?.statusCode === 404) {
+        errorMessage = 'Função não encontrada no servidor';
+      } else if (error?.status === 'PGRST116') {
+        errorMessage = 'Função RPC não existe';
       }
 
       toast({
