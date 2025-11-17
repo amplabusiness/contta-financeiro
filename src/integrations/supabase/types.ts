@@ -298,6 +298,54 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string | null
+          agency: string | null
+          bank_code: string | null
+          bank_name: string
+          created_at: string
+          created_by: string
+          current_balance: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          bank_code?: string | null
+          bank_name: string
+          created_at?: string
+          created_by: string
+          current_balance?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          bank_code?: string | null
+          bank_name?: string
+          created_at?: string
+          created_by?: string
+          current_balance?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bank_balance: {
         Row: {
           account_name: string
@@ -342,6 +390,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      bank_imports: {
+        Row: {
+          bank_account_id: string
+          created_at: string
+          created_by: string
+          file_name: string
+          id: string
+          import_date: string
+          period_end: string | null
+          period_start: string | null
+          status: string | null
+          total_transactions: number | null
+        }
+        Insert: {
+          bank_account_id: string
+          created_at?: string
+          created_by: string
+          file_name: string
+          id?: string
+          import_date?: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string | null
+          total_transactions?: number | null
+        }
+        Update: {
+          bank_account_id?: string
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          id?: string
+          import_date?: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string | null
+          total_transactions?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_imports_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bank_transaction_matches: {
         Row: {

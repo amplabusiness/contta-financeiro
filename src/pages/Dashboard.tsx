@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
+import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
+import { usePeriod } from "@/contexts/PeriodContext";
 import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 
 const Dashboard = () => {
@@ -219,6 +221,8 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Visão geral do sistema financeiro</p>
         </div>
+
+        <PeriodFilter />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => showDetail("clients")} className="cursor-pointer">

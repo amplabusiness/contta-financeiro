@@ -17,16 +17,16 @@ import { Badge } from "@/components/ui/badge";
 interface BankAccount {
   id: string;
   name: string;
-  bank_code: string;
+  bank_code: string | null;
   bank_name: string;
-  agency: string;
-  account_number: string;
+  agency: string | null;
+  account_number: string | null;
   account_type: string;
-  initial_balance: number;
   current_balance: number;
   is_active: boolean;
-  notes: string;
+  notes: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 const BankAccounts = () => {
@@ -47,7 +47,7 @@ const BankAccounts = () => {
     agency: "",
     account_number: "",
     account_type: "checking",
-    initial_balance: "0",
+    current_balance: "0",
     is_active: true,
     notes: ""
   });
@@ -93,7 +93,7 @@ const BankAccounts = () => {
       agency: "",
       account_number: "",
       account_type: "checking",
-      initial_balance: "0",
+      current_balance: "0",
       is_active: true,
       notes: ""
     });
@@ -109,7 +109,7 @@ const BankAccounts = () => {
       agency: account.agency || "",
       account_number: account.account_number || "",
       account_type: account.account_type || "checking",
-      initial_balance: account.initial_balance?.toString() || "0",
+      current_balance: account.current_balance?.toString() || "0",
       is_active: account.is_active,
       notes: account.notes || ""
     });
@@ -123,7 +123,7 @@ const BankAccounts = () => {
         return;
       }
 
-      const initialBalance = parseFloat(formData.initial_balance) || 0;
+      const currentBalance = parseFloat(formData.current_balance) || 0;
 
       if (editingAccount) {
         // Update
@@ -136,7 +136,7 @@ const BankAccounts = () => {
             agency: formData.agency,
             account_number: formData.account_number,
             account_type: formData.account_type,
-            initial_balance: initialBalance,
+            current_balance: currentBalance,
             is_active: formData.is_active,
             notes: formData.notes,
             updated_at: new Date().toISOString()
@@ -147,7 +147,10 @@ const BankAccounts = () => {
 
         toast.success("Conta atualizada com sucesso!");
       } else {
-        // Insert
+        // Insert - Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
         const { error } = await supabase.from("bank_accounts").insert({
           name: formData.name,
           bank_code: formData.bank_code,
@@ -155,10 +158,10 @@ const BankAccounts = () => {
           agency: formData.agency,
           account_number: formData.account_number,
           account_type: formData.account_type,
-          initial_balance: initialBalance,
-          current_balance: initialBalance, // Inicialmente igual ao saldo inicial
+          current_balance: currentBalance,
           is_active: formData.is_active,
-          notes: formData.notes
+          notes: formData.notes,
+          created_by: user.id
         });
 
         if (error) throw error;
@@ -304,7 +307,6 @@ const BankAccounts = () => {
                       <TableHead>Conta</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Saldo Inicial</TableHead>
                       <TableHead className="text-right">Saldo Atual</TableHead>
                       <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
@@ -327,8 +329,8 @@ const BankAccounts = () => {
                             {account.is_active ? "Ativa" : "Inativa"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(account.initial_balance)}
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(account.current_balance)}
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           <div className="flex items-center justify-end gap-1">
@@ -460,14 +462,14 @@ const BankAccounts = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="initial_balance">Saldo Inicial</Label>
+                  <Label htmlFor="current_balance">Saldo Atual</Label>
                   <Input
-                    id="initial_balance"
+                    id="current_balance"
                     type="number"
                     step="0.01"
                     placeholder="0,00"
-                    value={formData.initial_balance}
-                    onChange={(e) => setFormData({ ...formData, initial_balance: e.target.value })}
+                    value={formData.current_balance}
+                    onChange={(e) => setFormData({ ...formData, current_balance: e.target.value })}
                   />
                 </div>
               </div>

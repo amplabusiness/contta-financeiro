@@ -125,16 +125,21 @@ const BankImport = () => {
       const errors: string[] = [];
       let totalAmount = 0;
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       // Create import record
       const { data: importRecord, error: importError } = await supabase
         .from("bank_imports")
         .insert({
           bank_account_id: selectedAccount,
           file_name: `Import ${format(new Date(), 'dd/MM/yyyy HH:mm')}`,
-          start_date: format(parsedData.startDate, 'yyyy-MM-dd'),
-          end_date: format(parsedData.endDate, 'yyyy-MM-dd'),
+          period_start: format(parsedData.startDate, 'yyyy-MM-dd'),
+          period_end: format(parsedData.endDate, 'yyyy-MM-dd'),
           total_transactions: parsedData.transactions.length,
-          status: 'processing'
+          status: 'processing',
+          created_by: user.id
         })
         .select()
         .single();
@@ -144,13 +149,12 @@ const BankImport = () => {
       // Import each transaction
       for (const txn of parsedData.transactions) {
         try {
-          // Check if transaction already exists (by FITID)
+          // Check if transaction already exists (by bank_reference)
           const { data: existing } = await supabase
             .from("bank_transactions")
             .select("id")
-            .eq("bank_account_id", selectedAccount)
-            .eq("fitid", txn.fitid)
-            .single();
+            .eq("bank_reference", txn.fitid || '')
+            .maybeSingle();
 
           if (existing) {
             duplicateTransactions++;
@@ -161,16 +165,15 @@ const BankImport = () => {
           const { error: txnError } = await supabase
             .from("bank_transactions")
             .insert({
-              bank_account_id: selectedAccount,
               transaction_date: format(txn.date, 'yyyy-MM-dd'),
-              transaction_type: txn.type.toLowerCase(),
-              amount: txn.amount,
-              description: txn.description,
-              document_number: txn.checkNumber,
-              memo: txn.memo,
-              fitid: txn.fitid,
-              import_id: importRecord.id,
-              is_reconciled: false
+              transaction_type: txn.type.toLowerCase() === 'credit' ? 'credit' : 'debit',
+              amount: Math.abs(txn.amount),
+              description: txn.memo || txn.description || 'Sem descrição',
+              bank_reference: txn.fitid || null,
+              category: null,
+              matched: false,
+              imported_from: 'ofx',
+              created_by: user.id
             });
 
           if (txnError) {
@@ -487,7 +490,7 @@ const BankImport = () => {
                         <TableCell>{formatDate(imp.import_date)}</TableCell>
                         <TableCell>{imp.bank_accounts?.name}</TableCell>
                         <TableCell className="text-sm">
-                          {formatDate(imp.start_date)} - {formatDate(imp.end_date)}
+                          {imp.period_start && imp.period_end ? `${formatDate(imp.period_start)} - ${formatDate(imp.period_end)}` : '-'}
                         </TableCell>
                         <TableCell className="text-center">{imp.total_transactions}</TableCell>
                         <TableCell className="text-center text-green-600 font-medium">

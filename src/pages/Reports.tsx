@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
+import { PeriodFilter } from "@/components/PeriodFilter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -224,6 +225,8 @@ const Reports = () => {
           <h1 className="text-3xl font-bold">Relatório de Inadimplência</h1>
           <p className="text-muted-foreground">Ranking dos clientes com honorários em atraso</p>
         </div>
+
+        <PeriodFilter />
 
         <Card>
           <CardHeader>
