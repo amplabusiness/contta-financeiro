@@ -105,8 +105,6 @@ const EconomicGroupAnalysis = () => {
       });
 
     } catch (error: any) {
-      console.error('Error loading economic groups:', error);
-
       // Comprehensive error logging
       try {
         const errorInfo: any = {
@@ -122,16 +120,22 @@ const EconomicGroupAnalysis = () => {
         if (error && typeof error === 'object') {
           Object.keys(error).forEach(key => {
             try {
-              errorInfo[`raw_${key}`] = String(error[key]);
+              const val = error[key];
+              if (typeof val === 'object') {
+                errorInfo[`raw_${key}`] = JSON.stringify(val);
+              } else {
+                errorInfo[`raw_${key}`] = String(val);
+              }
             } catch (e) {
               errorInfo[`raw_${key}`] = 'Unable to serialize';
             }
           });
         }
 
+        console.error('Error loading economic groups:', errorInfo.message);
         console.error('Full error details:', errorInfo);
       } catch (logError) {
-        console.error('Error while logging:', logError);
+        console.error('Error while logging - failed to serialize error', String(logError));
       }
 
       let errorMessage = 'Erro desconhecido ao carregar grupos econômicos';
