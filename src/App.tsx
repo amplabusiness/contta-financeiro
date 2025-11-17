@@ -53,6 +53,7 @@ import EconomicGroupAnalysis from "./pages/EconomicGroupAnalysis";
 import ProBonoClients from "./pages/ProBonoClients";
 import ProcessProBonoFix from "./pages/ProcessProBonoFix";
 import BarterClients from "./pages/BarterClients";
+import ConvertProBonoToBarter from "./pages/ConvertProBonoToBarter";
 import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
             <Route path="/barter-clients" element={<BarterClients />} />
+            <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/recurring-expenses" element={<RecurringExpenses />} />
             <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
