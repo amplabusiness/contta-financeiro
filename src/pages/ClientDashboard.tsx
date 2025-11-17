@@ -26,6 +26,7 @@ const ClientDashboard = () => {
   });
   const [invoices, setInvoices] = useState<any[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
+  const [clientMonthlyFee, setClientMonthlyFee] = useState<number | null>(null);
 
   const formatMonthYear = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
@@ -65,7 +66,7 @@ const ClientDashboard = () => {
 
   const getDisplayStatus = (invoice: any) => invoice.computedStatus || getInvoiceStatus(invoice);
 
-  const aggregateInvoicesByCompetence = (invoiceList: any[]) => {
+  const aggregateInvoicesByCompetence = (invoiceList: any[], defaultMonthlyFee: number | null) => {
     const statusPriority: Record<string, number> = { overdue: 3, pending: 2, paid: 1 };
     const groups = new Map<string, any>();
 
@@ -74,7 +75,7 @@ const ClientDashboard = () => {
       const key = normalizedCompetence ?? `invoice-${invoice.id}`;
       const label = normalizedCompetence ?? normalizeCompetenceLabel(null, invoice.due_date) ?? invoice.competence ?? "-";
       const currentStatus = getInvoiceStatus(invoice);
-      const amount = Number(invoice.amount);
+      const amount = defaultMonthlyFee ?? Number(invoice.amount);
 
       if (!groups.has(key)) {
         groups.set(key, {
@@ -87,7 +88,11 @@ const ClientDashboard = () => {
       }
 
       const existing = groups.get(key);
-      existing.amount = Number(existing.amount) + amount;
+      if (defaultMonthlyFee == null) {
+        existing.amount = Number(existing.amount) + Number(invoice.amount);
+      } else {
+        existing.amount = defaultMonthlyFee;
+      }
 
       if (new Date(invoice.due_date).getTime() > new Date(existing.due_date).getTime()) {
         existing.due_date = invoice.due_date;
