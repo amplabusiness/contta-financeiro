@@ -87,9 +87,11 @@ const EconomicGroupAnalysis = () => {
 
     } catch (error: any) {
       console.error('Error loading economic groups:', error);
+      const errorMessage = error?.message || error?.details || error?.hint ||
+                          (typeof error === 'string' ? error : 'Erro desconhecido ao carregar grupos econômicos');
       toast({
         title: "Erro ao carregar grupos econômicos",
-        description: error.message || "Erro desconhecido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
