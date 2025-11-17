@@ -69,17 +69,38 @@ const EconomicGroupAnalysis = () => {
       });
 
       if (error) {
-        // Log the error details
-        const errorMessage = error.message || 'Unknown error occurred';
-        console.error('RPC Error:', {
-          code: error.code,
-          message: errorMessage,
-          details: error.details,
-          hint: error.hint,
-        });
+        // Extract error message safely to avoid serialization issues
+        let errorMsg = 'Unknown error';
+
+        try {
+          // Try to get error message from various properties
+          if (error && typeof error === 'object') {
+            if (error.message) {
+              errorMsg = String(error.message);
+            } else if (error.details) {
+              errorMsg = String(error.details);
+            } else if (error.hint) {
+              errorMsg = String(error.hint);
+            }
+          } else if (typeof error === 'string') {
+            errorMsg = error;
+          }
+        } catch (e) {
+          // If extraction fails, use default message
+          errorMsg = 'Erro ao processar resposta do servidor';
+        }
+
+        console.error('RPC Error:', errorMsg);
 
         // Check if it's a "function not found" error
-        if (error.code === 'PGRST116' || error.code === '42883' || errorMessage.toLowerCase().includes('function') || errorMessage.toLowerCase().includes('does not exist')) {
+        const isNotFound =
+          (error?.code && String(error.code).includes('PGRST116')) ||
+          (error?.code && String(error.code).includes('42883')) ||
+          errorMsg.toLowerCase().includes('function') ||
+          errorMsg.toLowerCase().includes('does not exist') ||
+          errorMsg.toLowerCase().includes('undefined function');
+
+        if (isNotFound) {
           console.warn('RPC function not found - database migrations may not be applied');
           setGroups([]);
           setStats({
@@ -96,7 +117,7 @@ const EconomicGroupAnalysis = () => {
           return;
         }
 
-        throw new Error(errorMessage);
+        throw new Error(errorMsg);
       }
 
       const groupData = (data || []) as EconomicGroup[];
@@ -117,24 +138,34 @@ const EconomicGroupAnalysis = () => {
       });
 
     } catch (error) {
-      // Simple error handling to avoid "body stream already read" issues
+      // Catch any errors including "body stream already read"
       let errorMessage = 'Erro ao carregar grupos econômicos';
 
       if (error instanceof Error) {
         errorMessage = error.message;
-        console.error('Error loading economic groups:', errorMessage);
-      } else {
-        console.error('Error loading economic groups:', error);
+      } else if (error && typeof error === 'object') {
+        try {
+          // Try to get message property if it exists
+          const err = error as any;
+          errorMessage = err.message || String(error).substring(0, 200) || errorMessage;
+        } catch (e) {
+          // Fallback if anything goes wrong
+          errorMessage = 'Erro desconhecido ao carregar dados';
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
 
+      console.error('Error loading economic groups:', errorMessage);
+
       // Truncate if too long
-      if (errorMessage.length > 200) {
+      if (errorMessage && errorMessage.length > 200) {
         errorMessage = errorMessage.substring(0, 197) + '...';
       }
 
       toast({
         title: "Erro ao carregar grupos econômicos",
-        description: errorMessage,
+        description: errorMessage || 'Erro desconhecido',
         variant: "destructive",
       });
     } finally {
