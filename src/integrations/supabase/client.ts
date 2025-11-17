@@ -2,13 +2,29 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim();
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID?.trim();
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+const resolvedSupabaseUrl =
+  SUPABASE_URL && SUPABASE_URL.length > 0
+    ? SUPABASE_URL
+    : SUPABASE_PROJECT_ID && SUPABASE_PROJECT_ID.length > 0
+      ? `https://${SUPABASE_PROJECT_ID}.supabase.co`
+      : undefined;
+
+if (!resolvedSupabaseUrl) {
+  throw new Error("Supabase URL is not configured. Set VITE_SUPABASE_URL or provide VITE_SUPABASE_PROJECT_ID.");
+}
+
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error("Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.");
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(resolvedSupabaseUrl, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
