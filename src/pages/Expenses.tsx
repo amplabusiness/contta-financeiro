@@ -13,15 +13,16 @@ import { Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 const Expenses = () => {
+  const { selectedYear, selectedMonth } = usePeriod();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
-  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
-  const [filterMonth, setFilterMonth] = useState<string>("");
   const [formData, setFormData] = useState({
     category: "",
     description: "",
@@ -55,27 +56,10 @@ const Expenses = () => {
     "Marketing",
   ];
 
-  const months = [
-    { value: "01", label: "Janeiro" },
-    { value: "02", label: "Fevereiro" },
-    { value: "03", label: "Março" },
-    { value: "04", label: "Abril" },
-    { value: "05", label: "Maio" },
-    { value: "06", label: "Junho" },
-    { value: "07", label: "Julho" },
-    { value: "08", label: "Agosto" },
-    { value: "09", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" },
-  ];
-
-  const years = ["2024", "2025", "2026"];
-
   useEffect(() => {
     loadExpenses();
     loadAccounts();
-  }, [filterYear, filterMonth]);
+  }, [selectedYear, selectedMonth]);
 
   const loadAccounts = async () => {
     try {
@@ -98,11 +82,12 @@ const Expenses = () => {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
 
       // Filtrar por competência se ano ou mês estiverem selecionados
-      if (filterYear && filterMonth) {
-        const competence = `${filterMonth}/${filterYear}`;
+      if (selectedYear && selectedMonth) {
+        const monthStr = selectedMonth.toString().padStart(2, '0');
+        const competence = `${monthStr}/${selectedYear}`;
         query = query.eq("competence", competence);
-      } else if (filterYear) {
-        query = query.like("competence", `%/${filterYear}`);
+      } else if (selectedYear) {
+        query = query.like("competence", `%/${selectedYear}`);
       }
 
       const { data, error } = await query;
@@ -287,51 +272,7 @@ const Expenses = () => {
             <CardDescription>Filtrar despesas por período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="space-y-2 w-40">
-                <Label>Ano</Label>
-                <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os anos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 w-40">
-                <Label>Mês</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(filterYear || filterMonth) && (
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => {
-                      setFilterYear("");
-                      setFilterMonth("");
-                    }} 
-                    variant="outline"
-                  >
-                    Limpar Filtros
-                  </Button>
-                </div>
-              )}
-            </div>
+            <PeriodFilter />
           </CardContent>
         </Card>
 
