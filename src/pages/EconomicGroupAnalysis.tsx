@@ -153,76 +153,22 @@ const EconomicGroupAnalysis = () => {
   const loadEconomicGroups = async () => {
     setIsLoading(true);
     try {
-      // Call the Supabase RPC function to get economic group impact
       const year = selectedYear || new Date().getFullYear();
+      let groupData: EconomicGroup[] = [];
 
-      let { data, error } = await supabase.rpc('get_economic_group_impact', {
+      // Try RPC first
+      const { data, error } = await supabase.rpc('get_economic_group_impact', {
         p_year: year
       });
 
-      // Fallback: if RPC fails, load data directly from tables
       if (error || !data) {
-        console.warn('RPC function failed, using fallback method to load economic groups');
-        data = await loadEconomicGroupsFromTables(year);
+        // Fallback to direct table queries
+        console.warn('RPC function unavailable, using fallback method to load economic groups');
+        groupData = await loadEconomicGroupsFromTables(year);
+      } else {
+        groupData = (data || []) as EconomicGroup[];
       }
 
-      if (error) {
-        // Extract error message safely to avoid serialization issues
-        let errorMsg = 'Unknown error';
-
-        try {
-          // Try to get error message from various properties
-          if (error && typeof error === 'object') {
-            if (error.message) {
-              errorMsg = String(error.message);
-            } else if (error.details) {
-              errorMsg = String(error.details);
-            } else if (error.hint) {
-              errorMsg = String(error.hint);
-            }
-          } else if (typeof error === 'string') {
-            errorMsg = error;
-          }
-        } catch (e) {
-          // If extraction fails, use default message
-          errorMsg = 'Erro ao processar resposta do servidor';
-        }
-
-        console.error('RPC Error:', errorMsg);
-
-        if (errorMsg.toLowerCase().includes('body stream already read')) {
-          errorMsg = 'Falha ao processar a resposta do Supabase. Reaplique a função get_economic_group_impact com a última migração em supabase/migrations/20251120_fix_economic_group_return_types.sql.';
-        }
-
-        // Check if it's a "function not found" error
-        const isNotFound =
-          (error?.code && String(error.code).includes('PGRST116')) ||
-          (error?.code && String(error.code).includes('42883')) ||
-          errorMsg.toLowerCase().includes('function') ||
-          errorMsg.toLowerCase().includes('does not exist') ||
-          errorMsg.toLowerCase().includes('undefined function');
-
-        if (isNotFound) {
-          console.warn('RPC function not found - database migrations may not be applied');
-          setGroups([]);
-          setStats({
-            totalGroups: 0,
-            totalCompanies: 0,
-            highRiskGroups: 0,
-            averageConcentration: 0,
-          });
-          toast({
-            title: "Análise de Grupos Econômicos",
-            description: "Funcionalidade não configurada. As migrações do banco de dados precisam ser aplicadas.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        throw new Error(errorMsg);
-      }
-
-      const groupData = (data || []) as EconomicGroup[];
       setGroups(groupData);
 
       // Calculate stats
