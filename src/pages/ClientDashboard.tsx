@@ -27,6 +27,84 @@ const ClientDashboard = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
 
+  const formatMonthYear = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+
+  const normalizeCompetenceLabel = (competence?: string | null, dueDate?: string) => {
+    if (competence) {
+      const trimmed = competence.trim();
+      if (/^\d{2}\/\d{4}$/.test(trimmed)) {
+        return trimmed;
+      }
+      if (/^\d{4}-\d{2}$/.test(trimmed)) {
+        const [year, month] = trimmed.split("-");
+        return `${month}/${year}`;
+      }
+      const parsed = new Date(trimmed);
+      if (!isNaN(parsed.getTime())) {
+        return formatMonthYear(parsed);
+      }
+    }
+
+    if (dueDate) {
+      const parsed = new Date(dueDate);
+      if (!isNaN(parsed.getTime())) {
+        return formatMonthYear(parsed);
+      }
+    }
+
+    return null;
+  };
+
+  const getInvoiceStatus = (invoice: any) => {
+    if (invoice.status === "paid") return "paid";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(invoice.due_date);
+    return dueDate < today ? "overdue" : "pending";
+  };
+
+  const getDisplayStatus = (invoice: any) => invoice.computedStatus || getInvoiceStatus(invoice);
+
+  const aggregateInvoicesByCompetence = (invoiceList: any[]) => {
+    const statusPriority: Record<string, number> = { overdue: 3, pending: 2, paid: 1 };
+    const groups = new Map<string, any>();
+
+    invoiceList.forEach((invoice) => {
+      const normalizedCompetence = normalizeCompetenceLabel(invoice.competence, invoice.due_date);
+      const key = normalizedCompetence ?? `invoice-${invoice.id}`;
+      const label = normalizedCompetence ?? normalizeCompetenceLabel(null, invoice.due_date) ?? invoice.competence ?? "-";
+      const currentStatus = getInvoiceStatus(invoice);
+      const amount = Number(invoice.amount);
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          ...invoice,
+          amount,
+          competenceLabel: label,
+          computedStatus: currentStatus,
+        });
+        return;
+      }
+
+      const existing = groups.get(key);
+      existing.amount = Number(existing.amount) + amount;
+
+      if (new Date(invoice.due_date).getTime() > new Date(existing.due_date).getTime()) {
+        existing.due_date = invoice.due_date;
+      }
+
+      const existingStatus = existing.computedStatus || "paid";
+      if ((statusPriority[currentStatus] || 0) > (statusPriority[existingStatus] || 0)) {
+        existing.status = invoice.status;
+        existing.computedStatus = currentStatus;
+      }
+    });
+
+    return Array.from(groups.values()).sort(
+      (a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime()
+    );
+  };
+
   useEffect(() => {
     if (!selectedClientId) {
       navigate("/dashboard");
@@ -57,37 +135,25 @@ const ClientDashboard = () => {
         .limit(20);
 
       const allInvoices = invoicesData || [];
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices);
 
-      const overdue = allInvoices.filter((i) => {
-        if (i.status === "paid") return false;
-        const dueDate = new Date(i.due_date);
-        return dueDate < today;
-      });
+      const overdue = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "overdue");
+      const pending = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "pending");
+      const paid = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "paid");
 
-      const pending = allInvoices.filter((i) => {
-        if (i.status !== "pending") return false;
-        const dueDate = new Date(i.due_date);
-        return dueDate >= today;
-      });
-
-      const paid = allInvoices.filter((i) => i.status === "paid");
-
-      // Calcular saldo atual (último registro do razão)
       const lastBalance = ledgerData?.[0]?.balance || 0;
 
       setStats({
-        totalOverdue: overdue.reduce((sum, i) => sum + Number(i.amount), 0),
+        totalOverdue: overdue.reduce((sum, invoice) => sum + Number(invoice.amount), 0),
         overdueCount: overdue.length,
-        totalPending: pending.reduce((sum, i) => sum + Number(i.amount), 0),
+        totalPending: pending.reduce((sum, invoice) => sum + Number(invoice.amount), 0),
         pendingCount: pending.length,
-        totalPaid: paid.reduce((sum, i) => sum + Number(i.amount), 0),
+        totalPaid: paid.reduce((sum, invoice) => sum + Number(invoice.amount), 0),
         paidCount: paid.length,
         currentBalance: lastBalance,
       });
 
-      setInvoices(allInvoices);
+      setInvoices(aggregatedInvoices);
       setLedgerEntries(ledgerData || []);
     } catch (error) {
       console.error("Erro ao carregar dados do cliente:", error);
@@ -108,14 +174,6 @@ const ClientDashboard = () => {
       overdue: "Vencido",
     };
     return <Badge variant={variants[status] || "secondary"}>{labels[status] || status}</Badge>;
-  };
-
-  const getInvoiceStatus = (invoice: any) => {
-    if (invoice.status === "paid") return "paid";
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(invoice.due_date);
-    return dueDate < today ? "overdue" : "pending";
   };
 
   if (loading) {
@@ -217,12 +275,12 @@ const ClientDashboard = () => {
                     <TableBody>
                       {invoices.map((invoice) => (
                         <TableRow key={invoice.id}>
-                          <TableCell>{invoice.competence || "-"}</TableCell>
+                          <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
                           <TableCell>
                             {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
                           </TableCell>
                           <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                          <TableCell>{getStatusBadge(getInvoiceStatus(invoice))}</TableCell>
+                          <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
