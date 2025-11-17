@@ -1,8 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ClientProvider } from "@/contexts/ClientContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import Auth from "./pages/Auth";
@@ -71,17 +70,12 @@ import BoletoReconciliation from "./pages/BoletoReconciliation";
 import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ClientProvider>
-        <PeriodProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+  <TooltipProvider>
+    <ClientProvider>
+      <Toaster />
+      <Sonner />
+      <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -152,11 +146,8 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-        </PeriodProvider>
-      </ClientProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+        </ClientProvider>
+      </TooltipProvider>
 );
 
 export default App;
