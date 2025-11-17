@@ -124,6 +124,18 @@ const ClientDashboard = () => {
     try {
       setLoading(true);
 
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("monthly_fee")
+        .eq("id", selectedClientId)
+        .single();
+
+      const monthlyFeeFromCadastro =
+        clientData && clientData.monthly_fee !== null && clientData.monthly_fee !== undefined
+          ? Number(clientData.monthly_fee)
+          : null;
+      setClientMonthlyFee(monthlyFeeFromCadastro);
+
       // Carregar honorários
       const { data: invoicesData } = await supabase
         .from("invoices")
@@ -140,7 +152,7 @@ const ClientDashboard = () => {
         .limit(20);
 
       const allInvoices = invoicesData || [];
-      const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices);
+      const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro);
 
       const overdue = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "overdue");
       const pending = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "pending");
