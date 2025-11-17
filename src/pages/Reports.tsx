@@ -9,12 +9,12 @@ import { AlertTriangle, TrendingDown, Calendar, DollarSign, Eye, TrendingUp } fr
 import { formatCurrency } from "@/data/expensesData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultEvolutionChart } from "@/components/DefaultEvolutionChart";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 interface ClientDebt {
   client_id: string;
@@ -27,32 +27,14 @@ interface ClientDebt {
 }
 
 const Reports = () => {
+  const { selectedYear, selectedMonth } = usePeriod();
   const [debtReport, setDebtReport] = useState<ClientDebt[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterYear, setFilterYear] = useState<string>("");
-  const [filterMonth, setFilterMonth] = useState<string>("");
   const [totalOverdue, setTotalOverdue] = useState(0);
   const [totalClients, setTotalClients] = useState(0);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientDebt | null>(null);
   const [evolutionData, setEvolutionData] = useState<any[]>([]);
-
-  const months = [
-    { value: "01", label: "Janeiro" },
-    { value: "02", label: "Fevereiro" },
-    { value: "03", label: "Março" },
-    { value: "04", label: "Abril" },
-    { value: "05", label: "Maio" },
-    { value: "06", label: "Junho" },
-    { value: "07", label: "Julho" },
-    { value: "08", label: "Agosto" },
-    { value: "09", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" },
-  ];
-
-  const years = ["2024", "2025", "2026"];
 
   const loadDebtReport = useCallback(async () => {
     setLoading(true);
@@ -63,11 +45,12 @@ const Reports = () => {
         .in("status", ["pending", "overdue"]);
 
       // Filtrar por competência se selecionado
-      if (filterYear && filterMonth) {
-        const competence = `${filterMonth}/${filterYear}`;
+      if (selectedYear && selectedMonth) {
+        const monthStr = selectedMonth.toString().padStart(2, '0');
+        const competence = `${monthStr}/${selectedYear}`;
         query = query.eq("competence", competence);
-      } else if (filterYear) {
-        query = query.like("competence", `%/${filterYear}`);
+      } else if (selectedYear) {
+        query = query.like("competence", `%/${selectedYear}`);
       }
 
       const { data: invoices, error } = await query;
@@ -123,7 +106,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterYear, filterMonth]);
+  }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
     loadDebtReport();
@@ -234,53 +217,11 @@ const Reports = () => {
             <CardDescription>Filtrar inadimplência por período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="space-y-2 w-40">
-                <Label>Ano</Label>
-                <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os anos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 w-40">
-                <Label>Mês</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end gap-2">
-                {(filterYear || filterMonth) && (
-                  <Button 
-                    onClick={() => {
-                      setFilterYear("");
-                      setFilterMonth("");
-                    }} 
-                    variant="outline"
-                  >
-                    Limpar Filtros
-                  </Button>
-                )}
-                <Button onClick={loadDebtReport} variant="outline">
-                  Atualizar
-                </Button>
-              </div>
+            <div className="flex flex-wrap gap-4 items-end">
+              <PeriodFilter />
+              <Button onClick={loadDebtReport} variant="outline">
+                Atualizar
+              </Button>
             </div>
           </CardContent>
         </Card>

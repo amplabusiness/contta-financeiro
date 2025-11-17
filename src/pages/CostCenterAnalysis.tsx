@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Loader2 } from "lucide-react";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 const CostCenterAnalysis = () => {
+  const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
-  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
-  const [filterMonth, setFilterMonth] = useState<string>("");
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -34,11 +33,9 @@ const CostCenterAnalysis = () => {
     { value: "12", label: "Dezembro" },
   ];
 
-  const years = ["2024", "2025", "2026"];
-
   useEffect(() => {
     loadCostCenterData();
-  }, [filterYear, filterMonth]);
+  }, [selectedYear, selectedMonth]);
 
   const loadCostCenterData = async () => {
     try {
@@ -50,11 +47,12 @@ const CostCenterAnalysis = () => {
         .select("*")
         .eq("status", "paid");
 
-      if (filterYear && filterMonth) {
-        const competence = `${filterMonth}/${filterYear}`;
+      if (selectedYear && selectedMonth) {
+        const monthStr = selectedMonth.toString().padStart(2, '0');
+        const competence = `${monthStr}/${selectedYear}`;
         query = query.eq("competence", competence);
-      } else if (filterYear) {
-        query = query.like("competence", `%/${filterYear}`);
+      } else if (selectedYear) {
+        query = query.like("competence", `%/${selectedYear}`);
       }
 
       const { data: expenses, error } = await query;
@@ -100,7 +98,7 @@ const CostCenterAnalysis = () => {
         .from("expenses")
         .select("*")
         .eq("status", "paid")
-        .like("competence", `%/${filterYear}`);
+        .like("competence", `%/${selectedYear}`);
 
       if (error) throw error;
 
@@ -169,38 +167,7 @@ const CostCenterAnalysis = () => {
             <CardDescription>Filtrar análise por período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="space-y-2 w-40">
-                <Label>Ano</Label>
-                <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o ano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 w-40">
-                <Label>Mês</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <PeriodFilter />
           </CardContent>
         </Card>
 

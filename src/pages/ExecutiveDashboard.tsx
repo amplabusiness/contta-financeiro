@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingDown, AlertTriangle, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 interface MonthlyData {
   month: string;
@@ -17,12 +18,8 @@ interface MonthlyData {
 }
 
 const ExecutiveDashboard = () => {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  
+  const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth.toString());
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalDefault, setTotalDefault] = useState(0);
@@ -36,8 +33,9 @@ const ExecutiveDashboard = () => {
   const loadExecutiveData = async () => {
     setLoading(true);
     try {
-      const year = parseInt(selectedYear);
-      const month = parseInt(selectedMonth);
+      // Use selectedYear and selectedMonth from context, with defaults if empty
+      const year = selectedYear || new Date().getFullYear();
+      const month = selectedMonth || new Date().getMonth() + 1;
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59);
 
@@ -154,22 +152,6 @@ const ExecutiveDashboard = () => {
     }
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
-  const months = [
-    { value: "1", label: "Janeiro" },
-    { value: "2", label: "Fevereiro" },
-    { value: "3", label: "Março" },
-    { value: "4", label: "Abril" },
-    { value: "5", label: "Maio" },
-    { value: "6", label: "Junho" },
-    { value: "7", label: "Julho" },
-    { value: "8", label: "Agosto" },
-    { value: "9", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" },
-  ];
-
   if (loading) {
     return (
       <Layout>
@@ -183,42 +165,21 @@ const ExecutiveDashboard = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
-            <p className="text-muted-foreground mt-1">
-              Visão estratégica dos principais indicadores financeiros
-            </p>
-          </div>
-          
-          <div className="flex gap-3">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
+          <p className="text-muted-foreground mt-1">
+            Visão estratégica dos principais indicadores financeiros
+          </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PeriodFilter />
+          </CardContent>
+        </Card>
 
         {/* KPIs Principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
