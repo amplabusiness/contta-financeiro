@@ -271,7 +271,14 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Honorários do Cliente</CardTitle>
-              <CardDescription>Todos os honorários deste cliente</CardDescription>
+              <CardDescription>
+                Todos os honorários deste cliente
+                {clientMonthlyFee !== null && (
+                  <span className="block text-xs text-muted-foreground">
+                    Valor cadastrado: {formatCurrency(clientMonthlyFee)}
+                  </span>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {invoices.length === 0 ? (
