@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 interface AccountBalance {
   account_code: string;
@@ -17,33 +16,15 @@ interface AccountBalance {
 }
 
 const DRE = () => {
+  const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
-  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
-  const [filterMonth, setFilterMonth] = useState<string>("");
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
 
-  const months = [
-    { value: "01", label: "Janeiro" },
-    { value: "02", label: "Fevereiro" },
-    { value: "03", label: "Março" },
-    { value: "04", label: "Abril" },
-    { value: "05", label: "Maio" },
-    { value: "06", label: "Junho" },
-    { value: "07", label: "Julho" },
-    { value: "08", label: "Agosto" },
-    { value: "09", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" },
-  ];
-
-  const years = ["2024", "2025", "2026"];
-
   useEffect(() => {
     loadDREData();
-  }, [filterYear, filterMonth]);
+  }, [selectedYear, selectedMonth]);
 
   const loadDREData = async () => {
     try {
@@ -55,11 +36,12 @@ const DRE = () => {
         .select("amount")
         .eq("status", "paid");
 
-      if (filterYear && filterMonth) {
-        const competence = `${filterMonth}/${filterYear}`;
+      if (selectedYear && selectedMonth) {
+        const monthStr = selectedMonth.toString().padStart(2, '0');
+        const competence = `${monthStr}/${selectedYear}`;
         revenueQuery = revenueQuery.eq("competence", competence);
-      } else if (filterYear) {
-        revenueQuery = revenueQuery.like("competence", `%/${filterYear}`);
+      } else if (selectedYear) {
+        revenueQuery = revenueQuery.like("competence", `%/${selectedYear}`);
       }
 
       const { data: invoices, error: invoicesError } = await revenueQuery;
@@ -83,11 +65,12 @@ const DRE = () => {
         `)
         .eq("status", "paid");
 
-      if (filterYear && filterMonth) {
-        const competence = `${filterMonth}/${filterYear}`;
+      if (selectedYear && selectedMonth) {
+        const monthStr = selectedMonth.toString().padStart(2, '0');
+        const competence = `${monthStr}/${selectedYear}`;
         expensesQuery = expensesQuery.eq("competence", competence);
-      } else if (filterYear) {
-        expensesQuery = expensesQuery.like("competence", `%/${filterYear}`);
+      } else if (selectedYear) {
+        expensesQuery = expensesQuery.like("competence", `%/${selectedYear}`);
       }
 
       const { data: expenses, error: expensesError } = await expensesQuery;
@@ -156,51 +139,7 @@ const DRE = () => {
             <CardDescription>Selecione o período para análise</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="space-y-2 w-40">
-                <Label>Ano</Label>
-                <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os anos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 w-40">
-                <Label>Mês</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(filterYear || filterMonth) && (
-                <div className="flex items-end">
-                  <Button 
-                    onClick={() => {
-                      setFilterYear("");
-                      setFilterMonth("");
-                    }} 
-                    variant="outline"
-                  >
-                    Limpar Filtros
-                  </Button>
-                </div>
-              )}
-            </div>
+            <PeriodFilter />
           </CardContent>
         </Card>
 
