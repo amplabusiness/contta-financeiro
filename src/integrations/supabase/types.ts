@@ -486,6 +486,59 @@ export type Database = {
           },
         ]
       }
+      barter_credits: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          client_id: string
+          competence: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          reference_date: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number
+          balance_before?: number
+          client_id: string
+          competence?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          reference_date: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          client_id?: string
+          competence?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          reference_date?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barter_credits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boleto_report_items: {
         Row: {
           amount: number
@@ -1008,6 +1061,9 @@ export type Database = {
           atividade_principal: Json | null
           atividades_secundarias: Json | null
           bairro: string | null
+          barter_description: string | null
+          barter_monthly_credit: number | null
+          barter_start_date: string | null
           capital_social: number | null
           cep: string | null
           cnpj: string | null
@@ -1018,6 +1074,7 @@ export type Database = {
           data_abertura: string | null
           email: string | null
           id: string
+          is_barter: boolean
           is_pro_bono: boolean
           logradouro: string | null
           monthly_fee: number
@@ -1044,6 +1101,9 @@ export type Database = {
           atividade_principal?: Json | null
           atividades_secundarias?: Json | null
           bairro?: string | null
+          barter_description?: string | null
+          barter_monthly_credit?: number | null
+          barter_start_date?: string | null
           capital_social?: number | null
           cep?: string | null
           cnpj?: string | null
@@ -1054,6 +1114,7 @@ export type Database = {
           data_abertura?: string | null
           email?: string | null
           id?: string
+          is_barter?: boolean
           is_pro_bono?: boolean
           logradouro?: string | null
           monthly_fee?: number
@@ -1080,6 +1141,9 @@ export type Database = {
           atividade_principal?: Json | null
           atividades_secundarias?: Json | null
           bairro?: string | null
+          barter_description?: string | null
+          barter_monthly_credit?: number | null
+          barter_start_date?: string | null
           capital_social?: number | null
           cep?: string | null
           cnpj?: string | null
@@ -1090,6 +1154,7 @@ export type Database = {
           data_abertura?: string | null
           email?: string | null
           id?: string
+          is_barter?: boolean
           is_pro_bono?: boolean
           logradouro?: string | null
           monthly_fee?: number
@@ -1680,6 +1745,17 @@ export type Database = {
       }
     }
     Functions: {
+      add_barter_credit: {
+        Args: {
+          p_amount: number
+          p_client_id: string
+          p_competence?: string
+          p_description: string
+          p_reference_date: string
+          p_type: string
+        }
+        Returns: string
+      }
       generate_recurring_expenses: {
         Args: never
         Returns: {
@@ -1687,6 +1763,7 @@ export type Database = {
           generated_count: number
         }[]
       }
+      get_barter_balance: { Args: { p_client_id: string }; Returns: number }
       get_cnpj_branch: { Args: { cnpj_value: string }; Returns: string }
       get_cnpj_root: { Args: { cnpj_value: string }; Returns: string }
       get_economic_group_impact: {

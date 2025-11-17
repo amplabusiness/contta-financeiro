@@ -125,7 +125,7 @@ const BarterClients = () => {
 
       if (error) throw error;
 
-      setMovements(data || []);
+      setMovements((data || []) as CreditMovement[]);
     } catch (error: any) {
       console.error("Erro ao carregar movimentações:", error);
       toast.error("Erro ao carregar movimentações");

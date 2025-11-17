@@ -231,6 +231,7 @@ const ProcessProBonoFix = () => {
             }
 
             // Criar invoice
+            const { data: userData } = await supabase.auth.getUser();
             const { error: invoiceError } = await supabase.from("invoices").insert({
               client_id: proBonoClient.id,
               competence: competence,
@@ -238,6 +239,7 @@ const ProcessProBonoFix = () => {
               due_date: format(dueDate, "yyyy-MM-dd"),
               status: invoiceStatus,
               payment_date: paymentDate ? format(paymentDate, "yyyy-MM-dd") : null,
+              created_by: userData.user?.id || '',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
