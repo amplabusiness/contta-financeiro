@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd edit functionality for Pro-Bono clients\n\nImplementado sistema de edição de clientes Pro-Bono com funcionalidade de conversão para clientes pagos:\n\n- Adicionado botão de edição na tabela de clientes Pro-Bono\n- Criado modal de edição com campos condicionais baseados no status\n- Implementada lógica de conversão de Pro-Bono para cliente pago\n- Adicionadas validações para campos obrigatórios\n- Campos Pro-Bono: data início/fim, justificativa\n- Campos Cliente Pago: honorário mensal, dia de pagamento\n- Sistema de atualização via Supabase com feedback visual\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git config:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
