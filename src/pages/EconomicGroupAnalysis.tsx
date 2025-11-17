@@ -92,6 +92,10 @@ const EconomicGroupAnalysis = () => {
 
         console.error('RPC Error:', errorMsg);
 
+        if (errorMsg.toLowerCase().includes('body stream already read')) {
+          errorMsg = 'Falha ao processar a resposta do Supabase. Reaplique a função get_economic_group_impact com a última migração em supabase/migrations/20251120_fix_economic_group_return_types.sql.';
+        }
+
         // Check if it's a "function not found" error
         const isNotFound =
           (error?.code && String(error.code).includes('PGRST116')) ||
