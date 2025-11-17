@@ -58,6 +58,98 @@ const EconomicGroupAnalysis = () => {
     loadEconomicGroups();
   }, [selectedYear]);
 
+  const loadEconomicGroupsFromTables = async (year: number): Promise<EconomicGroup[]> => {
+    try {
+      // Fetch all client partners
+      const { data: partners, error: partnersError } = await supabase
+        .from('client_partners')
+        .select('id, client_id, name, cpf');
+
+      if (partnersError) throw partnersError;
+
+      // Fetch invoices for the year
+      const { data: invoices, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('client_id, amount, payment_date')
+        .eq('status', 'paid');
+
+      if (invoicesError) throw invoicesError;
+
+      // Fetch clients
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, name');
+
+      if (clientsError) throw clientsError;
+
+      if (!partners || !invoices || !clients) {
+        return [];
+      }
+
+      // Calculate total revenue for the year
+      const totalYearRevenue = invoices
+        .filter((inv: any) => {
+          const invYear = new Date(inv.payment_date).getFullYear();
+          return invYear === year;
+        })
+        .reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+
+      // Group partners by client
+      const clientPartnersMap = new Map<string, string[]>();
+      partners.forEach((p: any) => {
+        const key = p.client_id;
+        const partnerKey = p.cpf || p.name;
+        if (!clientPartnersMap.has(key)) {
+          clientPartnersMap.set(key, []);
+        }
+        const arr = clientPartnersMap.get(key)!;
+        if (!arr.includes(partnerKey)) {
+          arr.push(partnerKey);
+        }
+      });
+
+      // Group clients by partners
+      const groupMap = new Map<string, string[]>();
+      clientPartnersMap.forEach((partners: string[], clientId: string) => {
+        const key = partners.sort().join('|');
+        if (!groupMap.has(key)) {
+          groupMap.set(key, []);
+        }
+        groupMap.get(key)!.push(clientId);
+      });
+
+      // Create economic groups (only those with 2+ companies)
+      const groups: EconomicGroup[] = [];
+      groupMap.forEach((companyIds: string[], groupKey: string) => {
+        if (companyIds.length > 1) {
+          const groupInvoices = invoices.filter((inv: any) => {
+            const invYear = new Date(inv.payment_date).getFullYear();
+            return invYear === year && companyIds.includes(inv.client_id);
+          });
+
+          const totalRevenue = groupInvoices.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+          const percentageOfTotal = totalYearRevenue > 0 ? (totalRevenue / totalYearRevenue) * 100 : 0;
+
+          groups.push({
+            group_key: groupKey,
+            partner_names: groupKey.split('|'),
+            company_count: companyIds.length,
+            company_names: companyIds.map(id => clients.find((c: any) => c.id === id)?.name || 'Unknown').filter(Boolean),
+            company_ids: companyIds,
+            total_revenue: totalRevenue,
+            percentage_of_total: percentageOfTotal,
+            risk_level: percentageOfTotal >= 20 ? 'high' : percentageOfTotal >= 10 ? 'medium' : 'low',
+          });
+        }
+      });
+
+      return groups.sort((a, b) => b.total_revenue - a.total_revenue);
+    } catch (error) {
+      console.error('Error loading economic groups from tables:', error);
+      return [];
+    }
+  };
+
   const loadEconomicGroups = async () => {
     setIsLoading(true);
     try {
