@@ -64,9 +64,15 @@ const EconomicGroupAnalysis = () => {
       // Call the Supabase RPC function to get economic group impact
       const year = selectedYear || new Date().getFullYear();
 
-      const { data, error } = await supabase.rpc('get_economic_group_impact', {
+      let { data, error } = await supabase.rpc('get_economic_group_impact', {
         p_year: year
       });
+
+      // Fallback: if RPC fails, load data directly from tables
+      if (error || !data) {
+        console.warn('RPC function failed, using fallback method to load economic groups');
+        data = await loadEconomicGroupsFromTables(year);
+      }
 
       if (error) {
         // Extract error message safely to avoid serialization issues
