@@ -62,13 +62,24 @@ const EconomicGroupAnalysis = () => {
     setIsLoading(true);
     try {
       // Call the Supabase RPC function to get economic group impact
+      const year = selectedYear || new Date().getFullYear();
+
       const { data, error } = await supabase.rpc('get_economic_group_impact', {
-        p_year: selectedYear || new Date().getFullYear()
+        p_year: year
       });
 
       if (error) {
+        // Log the error details
+        const errorMessage = error.message || 'Unknown error occurred';
+        console.error('RPC Error:', {
+          code: error.code,
+          message: errorMessage,
+          details: error.details,
+          hint: error.hint,
+        });
+
         // Check if it's a "function not found" error
-        if (error.code === 'PGRST116' || error.message?.includes('function') || error.message?.includes('does not exist')) {
+        if (error.code === 'PGRST116' || error.code === '42883' || errorMessage.toLowerCase().includes('function') || errorMessage.toLowerCase().includes('does not exist')) {
           console.warn('RPC function not found - database migrations may not be applied');
           setGroups([]);
           setStats({
@@ -84,7 +95,8 @@ const EconomicGroupAnalysis = () => {
           });
           return;
         }
-        throw error;
+
+        throw new Error(errorMessage);
       }
 
       const groupData = (data || []) as EconomicGroup[];
@@ -104,60 +116,15 @@ const EconomicGroupAnalysis = () => {
         averageConcentration: avgConcentration,
       });
 
-    } catch (error: any) {
-      // Comprehensive error logging
-      try {
-        const errorInfo: any = {
-          type: typeof error,
-          message: error?.message || 'No message',
-          details: error?.details || 'No details',
-          hint: error?.hint || 'No hint',
-          code: error?.code || 'No code',
-          status: error?.status || error?.statusCode || 'No status',
-        };
+    } catch (error) {
+      // Simple error handling to avoid "body stream already read" issues
+      let errorMessage = 'Erro ao carregar grupos econômicos';
 
-        // Try to get all own properties
-        if (error && typeof error === 'object') {
-          Object.keys(error).forEach(key => {
-            try {
-              const val = error[key];
-              if (typeof val === 'object') {
-                errorInfo[`raw_${key}`] = JSON.stringify(val);
-              } else {
-                errorInfo[`raw_${key}`] = String(val);
-              }
-            } catch (e) {
-              errorInfo[`raw_${key}`] = 'Unable to serialize';
-            }
-          });
-        }
-
-        console.error('Error loading economic groups:', errorInfo.message);
-        console.error('Full error details:', errorInfo);
-      } catch (logError) {
-        console.error('Error while logging - failed to serialize error', String(logError));
-      }
-
-      let errorMessage = 'Erro desconhecido ao carregar grupos econômicos';
-
-      // Try to extract a meaningful error message
-      if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error?.message && typeof error.message === 'string') {
+      if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error?.details && typeof error.details === 'string') {
-        errorMessage = error.details;
-      } else if (error?.hint && typeof error.hint === 'string') {
-        errorMessage = error.hint;
-      } else if (error?.statusCode === 404) {
-        errorMessage = 'Função não encontrada no servidor';
-      } else if (error?.status === 'PGRST116') {
-        errorMessage = 'Função RPC não existe';
-      }
-
-      // Ensure it's always a string
-      if (typeof errorMessage !== 'string') {
-        errorMessage = String(errorMessage);
+        console.error('Error loading economic groups:', errorMessage);
+      } else {
+        console.error('Error loading economic groups:', error);
       }
 
       // Truncate if too long
