@@ -62,11 +62,67 @@ const EconomicGroupAnalysis = () => {
     setIsLoading(true);
     try {
       // Call the Supabase RPC function to get economic group impact
+      const year = selectedYear || new Date().getFullYear();
+
       const { data, error } = await supabase.rpc('get_economic_group_impact', {
-        p_year: selectedYear || new Date().getFullYear()
+        p_year: year
       });
 
-      if (error) throw error;
+      if (error) {
+        // Extract error message safely to avoid serialization issues
+        let errorMsg = 'Unknown error';
+
+        try {
+          // Try to get error message from various properties
+          if (error && typeof error === 'object') {
+            if (error.message) {
+              errorMsg = String(error.message);
+            } else if (error.details) {
+              errorMsg = String(error.details);
+            } else if (error.hint) {
+              errorMsg = String(error.hint);
+            }
+          } else if (typeof error === 'string') {
+            errorMsg = error;
+          }
+        } catch (e) {
+          // If extraction fails, use default message
+          errorMsg = 'Erro ao processar resposta do servidor';
+        }
+
+        console.error('RPC Error:', errorMsg);
+
+        if (errorMsg.toLowerCase().includes('body stream already read')) {
+          errorMsg = 'Falha ao processar a resposta do Supabase. Reaplique a função get_economic_group_impact com a última migração em supabase/migrations/20251120_fix_economic_group_return_types.sql.';
+        }
+
+        // Check if it's a "function not found" error
+        const isNotFound =
+          (error?.code && String(error.code).includes('PGRST116')) ||
+          (error?.code && String(error.code).includes('42883')) ||
+          errorMsg.toLowerCase().includes('function') ||
+          errorMsg.toLowerCase().includes('does not exist') ||
+          errorMsg.toLowerCase().includes('undefined function');
+
+        if (isNotFound) {
+          console.warn('RPC function not found - database migrations may not be applied');
+          setGroups([]);
+          setStats({
+            totalGroups: 0,
+            totalCompanies: 0,
+            highRiskGroups: 0,
+            averageConcentration: 0,
+          });
+          toast({
+            title: "Análise de Grupos Econômicos",
+            description: "Funcionalidade não configurada. As migrações do banco de dados precisam ser aplicadas.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        throw new Error(errorMsg);
+      }
 
       const groupData = (data || []) as EconomicGroup[];
       setGroups(groupData);
@@ -85,31 +141,39 @@ const EconomicGroupAnalysis = () => {
         averageConcentration: avgConcentration,
       });
 
-    } catch (error: any) {
-      console.error('Error loading economic groups:', error);
-      console.error('Error details:', {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-        errorObject: JSON.stringify(error)
-      });
+    } catch (error) {
+      // Catch any errors including "body stream already read"
+      let errorMessage = 'Erro ao carregar grupos econômicos';
 
-      let errorMessage = 'Erro desconhecido ao carregar grupos econômicos';
-
-      if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error?.message) {
+      if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error?.details) {
-        errorMessage = error.details;
-      } else if (error?.hint) {
-        errorMessage = error.hint;
+      } else if (error && typeof error === 'object') {
+        try {
+          // Try to get message property if it exists
+          const err = error as any;
+          errorMessage = err.message || String(error).substring(0, 200) || errorMessage;
+        } catch (e) {
+          // Fallback if anything goes wrong
+          errorMessage = 'Erro desconhecido ao carregar dados';
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      if (errorMessage.toLowerCase().includes('body stream already read')) {
+        errorMessage = 'Falha ao interpretar a resposta do Supabase. Aplique a migração 20251120_fix_economic_group_return_types.sql para atualizar a função get_economic_group_impact.';
+      }
+
+      console.error('Error loading economic groups:', errorMessage);
+
+      // Truncate if too long
+      if (errorMessage && errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 197) + '...';
       }
 
       toast({
         title: "Erro ao carregar grupos econômicos",
-        description: errorMessage,
+        description: errorMessage || 'Erro desconhecido',
         variant: "destructive",
       });
     } finally {
@@ -357,7 +421,7 @@ const EconomicGroupAnalysis = () => {
                 <div>
                   <p className="font-medium">Análise de Receita</p>
                   <p className="text-sm text-muted-foreground">
-                    Consolidação da receita paga de todas as empresas do grupo no período selecionado
+                    Consolidaç��o da receita paga de todas as empresas do grupo no período selecionado
                   </p>
                 </div>
               </div>

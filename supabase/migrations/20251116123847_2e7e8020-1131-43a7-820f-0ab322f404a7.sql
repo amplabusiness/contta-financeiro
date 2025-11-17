@@ -1,4 +1,3 @@
-
 -- ================================================
 -- CLIENT PARTNERS TABLE
 -- ================================================
@@ -119,7 +118,7 @@ BEGIN
   WITH company_partners AS (
     SELECT
       client_id,
-      ARRAY_AGG(DISTINCT COALESCE(cpf, name) ORDER BY COALESCE(cpf, name)) as partners_array
+      ARRAY_AGG(DISTINCT COALESCE(cpf, name) ORDER BY COALESCE(cpf, name))::TEXT[] as partners_array
     FROM client_partners
     GROUP BY client_id
   ),
