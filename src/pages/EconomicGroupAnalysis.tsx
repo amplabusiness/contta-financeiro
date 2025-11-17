@@ -132,6 +132,16 @@ const EconomicGroupAnalysis = () => {
         errorMessage = 'Função RPC não existe';
       }
 
+      // Ensure it's always a string
+      if (typeof errorMessage !== 'string') {
+        errorMessage = String(errorMessage);
+      }
+
+      // Truncate if too long
+      if (errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 197) + '...';
+      }
+
       toast({
         title: "Erro ao carregar grupos econômicos",
         description: errorMessage,
