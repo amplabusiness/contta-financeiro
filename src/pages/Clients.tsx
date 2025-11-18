@@ -37,6 +37,7 @@ const Clients = () => {
     notes: "",
     status: "active",
     is_pro_bono: false,
+    is_internal: false,
     pro_bono_start_date: "",
     pro_bono_end_date: "",
     pro_bono_reason: "",
@@ -161,6 +162,7 @@ const Clients = () => {
         notes: formData.notes,
         status: formData.status,
         is_pro_bono: formData.is_pro_bono,
+        is_internal: formData.is_internal,
         pro_bono_start_date: formData.pro_bono_start_date || null,
         pro_bono_end_date: formData.pro_bono_end_date || null,
         pro_bono_reason: formData.pro_bono_reason || null,
@@ -335,6 +337,7 @@ const Clients = () => {
       notes: "",
       status: "active",
       is_pro_bono: false,
+      is_internal: false,
       pro_bono_start_date: "",
       pro_bono_end_date: "",
       pro_bono_reason: "",
@@ -370,6 +373,7 @@ const Clients = () => {
       notes: client.notes || "",
       status: client.status,
       is_pro_bono: client.is_pro_bono || false,
+      is_internal: client.is_internal || false,
       pro_bono_start_date: client.pro_bono_start_date || "",
       pro_bono_end_date: client.pro_bono_end_date || "",
       pro_bono_reason: client.pro_bono_reason || "",
@@ -702,6 +706,23 @@ const Clients = () => {
                           />
                           <Label htmlFor="is_pro_bono" className="font-semibold text-base cursor-pointer">
                             Cliente Pro-Bono (Gratuito)
+                          </Label>
+                        </div>
+
+                        {/* Checkbox Empresa Interna */}
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="is_internal"
+                            checked={formData.is_internal}
+                            onCheckedChange={(checked) => {
+                              setFormData({ 
+                                ...formData, 
+                                is_internal: checked === true
+                              });
+                            }}
+                          />
+                          <Label htmlFor="is_internal" className="font-semibold text-base cursor-pointer">
+                            Empresa Interna
                           </Label>
                         </div>
                         
