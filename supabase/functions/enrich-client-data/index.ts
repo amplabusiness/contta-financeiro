@@ -75,9 +75,22 @@ serve(async (req) => {
     // Limpar CNPJ (remover pontuação)
     const cleanCnpj = cnpj.replace(/\D/g, '');
 
+    // Validar se é CPF ou CNPJ
+    if (cleanCnpj.length === 11) {
+      // É um CPF - não pode ser enriquecido pela BrasilAPI de CNPJ
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Este cliente possui CPF. O enriquecimento automático está disponível apenas para clientes com CNPJ (empresas).',
+          is_cpf: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     // Validar CNPJ
     if (cleanCnpj.length !== 14) {
-      throw new Error(`CNPJ inválido: deve ter 14 dígitos, recebido ${cleanCnpj.length} (${cleanCnpj})`);
+      throw new Error(`Documento inválido: deve ter 14 dígitos (CNPJ) ou 11 dígitos (CPF), recebido ${cleanCnpj.length} (${cleanCnpj})`);
     }
 
     // Buscar dados na BrasilAPI com retry automático
@@ -111,45 +124,7 @@ serve(async (req) => {
       data_entrada: socio.data_entrada_sociedade
     })) || [];
 
-    // Atualizar dados do cliente principal
-    const { error: clientUpdateError } = await supabase
-      .from('clients')
-      .update({
-        razao_social: data.razao_social,
-        nome_fantasia: data.nome_fantasia,
-        porte: data.porte,
-        natureza_juridica: data.natureza_juridica,
-        situacao_cadastral: data.descricao_situacao_cadastral,
-        data_abertura: data.data_inicio_atividade,
-        capital_social: parseFloat(data.capital_social || '0'),
-        logradouro: data.logradouro,
-        numero: data.numero,
-        complemento: data.complemento,
-        bairro: data.bairro,
-        municipio: data.municipio,
-        uf: data.uf,
-        cep: data.cep,
-        email: data.email || null,
-        phone: data.ddd_telefone_1 || null,
-        // ✅ NOVOS CAMPOS ADICIONADOS DA API BRASIL
-        telefone_secundario: data.ddd_telefone_2 || null,
-        fax: data.ddd_fax || null,
-        opcao_pelo_simples: data.opcao_pelo_simples || false,
-        data_opcao_simples: data.data_opcao_pelo_simples || data.data_opcao_simples || null,
-        opcao_pelo_mei: data.opcao_pelo_mei || false,
-        motivo_situacao_cadastral: data.motivo_situacao_cadastral || null,
-        data_situacao_cadastral: data.data_situacao_cadastral || null,
-        // FIM NOVOS CAMPOS
-        atividade_principal: data.cnae_fiscal_descricao ? {
-          codigo: data.cnae_fiscal,
-          descricao: data.cnae_fiscal_descricao
-        } : null,
-        atividades_secundarias: data.cnaes_secundarios ? JSON.stringify(data.cnaes_secundarios) : null,
-        qsa: socios
-      })
-      .eq('id', clientId);
-
-    if (clientUpdateError) throw clientUpdateError;
+    // Este bloco foi removido - estava duplicado
 
     // Salvar dados enriquecidos na tabela de histórico
     const enrichmentData = {
@@ -180,7 +155,7 @@ serve(async (req) => {
 
     // If clientId is provided, save to database
     if (clientId) {
-      // Update client data
+      // Update client data - Apenas campos que existem na tabela clients
       const { error: clientUpdateError } = await supabase
         .from('clients')
         .update({
@@ -206,7 +181,7 @@ serve(async (req) => {
             descricao: data.cnae_fiscal_descricao
           } : null,
           atividades_secundarias: data.cnaes_secundarios,
-          qsa: data.qsa,
+          qsa: socios
         })
         .eq('id', clientId);
 
@@ -285,10 +260,22 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Erro ao enriquecer dados:', error);
+    
+    // Melhor tratamento de erro para evitar [object Object]
+    let errorMessage = 'Erro desconhecido ao enriquecer dados';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      errorMessage = JSON.stringify(error);
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
