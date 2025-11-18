@@ -78,7 +78,7 @@ const Clients = () => {
             status
           )
         `)
-        .eq("status", "active")
+        .in("status", ["active", "inactive"])
         .not("is_pro_bono", "eq", true)
         .not("monthly_fee", "eq", 0)
         .order("name");
@@ -808,9 +808,13 @@ const Clients = () => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
                       (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
+                    const isSuspended = client.status === "inactive";
                     
                     return (
-                      <TableRow key={client.id}>
+                      <TableRow 
+                        key={client.id}
+                        className={isSuspended ? "border-l-4 border-l-destructive bg-destructive/5" : ""}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {client.name}
@@ -844,8 +848,8 @@ const Clients = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                            {client.status === "active" ? "Ativo" : "Inativo"}
+                          <Badge variant={client.status === "active" ? "default" : "destructive"}>
+                            {client.status === "active" ? "Ativo" : "Suspenso"}
                           </Badge>
                         </TableCell>
                         <TableCell>
