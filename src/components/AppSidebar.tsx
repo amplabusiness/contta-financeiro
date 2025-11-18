@@ -68,6 +68,8 @@ export function AppSidebar() {
         { title: "Dashboard Executivo", url: "/executive-dashboard", icon: PieChart },
         { title: "Fluxo de Caixa", url: "/cash-flow", icon: TrendingUp },
         { title: "Dashboard de Cobrança", url: "/collection-dashboard", icon: AlertTriangle },
+        { title: "Enriquecimento de Dados", url: "/client-enrichment", icon: Database },
+        { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
         ...(selectedClientId ? [{ title: selectedClientName || "Cliente Selecionado", url: "/client-dashboard", icon: UserSquare2 }] : []),
       ],
     },
@@ -77,8 +79,6 @@ export function AppSidebar() {
         { title: "Lista de Clientes", url: "/clients", icon: Users },
         { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Empresas Internas", url: "/internal-companies", icon: Building2 },
-        { title: "Enriquecimento de Dados", url: "/client-enrichment", icon: Database },
-        { title: "Processamento em Lote", url: "/batch-enrichment", icon: Zap },
       ],
     },
     {
