@@ -3,14 +3,14 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Loader2, Edit } from "lucide-react";
+import { Building2, Heart, Loader2, Calendar, FileText, Edit, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/data/expensesData";
 
@@ -26,9 +26,13 @@ const InternalCompanies = () => {
   const [editingClient, setEditingClient] = useState<any>(null);
   const [formData, setFormData] = useState({
     is_internal: false,
+    is_pro_bono: false,
     monthly_fee: "",
     payment_day: "",
-    notes: ""
+    notes: "",
+    pro_bono_start_date: "",
+    pro_bono_end_date: "",
+    pro_bono_reason: ""
   });
 
   useEffect(() => {
@@ -91,9 +95,13 @@ const InternalCompanies = () => {
     setEditingClient(client);
     setFormData({
       is_internal: client.is_internal || false,
+      is_pro_bono: client.is_pro_bono || false,
       monthly_fee: client.monthly_fee?.toString() || "",
       payment_day: client.payment_day?.toString() || "",
-      notes: client.notes || ""
+      notes: client.notes || "",
+      pro_bono_start_date: client.pro_bono_start_date || "",
+      pro_bono_end_date: client.pro_bono_end_date || "",
+      pro_bono_reason: client.pro_bono_reason || ""
     });
     setEditDialogOpen(true);
   };
@@ -102,13 +110,27 @@ const InternalCompanies = () => {
     if (!editingClient) return;
 
     try {
+      if (formData.is_pro_bono && !formData.pro_bono_start_date) {
+        toast.error("Informe a data de início do período Pro-Bono");
+        return;
+      }
+
+      if (formData.is_pro_bono && !formData.pro_bono_reason) {
+        toast.error("Informe o motivo/justificativa do Pro-Bono");
+        return;
+      }
+
       const { error } = await supabase
         .from("clients")
         .update({
           is_internal: formData.is_internal,
-          monthly_fee: formData.monthly_fee ? parseFloat(formData.monthly_fee) : 0,
-          payment_day: formData.payment_day ? parseInt(formData.payment_day) : null,
-          notes: formData.notes
+          is_pro_bono: formData.is_pro_bono,
+          monthly_fee: formData.is_pro_bono ? 0 : (formData.monthly_fee ? parseFloat(formData.monthly_fee) : 0),
+          payment_day: formData.is_pro_bono ? null : (formData.payment_day ? parseInt(formData.payment_day) : null),
+          notes: formData.notes,
+          pro_bono_start_date: formData.is_pro_bono ? formData.pro_bono_start_date : null,
+          pro_bono_end_date: formData.is_pro_bono && formData.pro_bono_end_date ? formData.pro_bono_end_date : null,
+          pro_bono_reason: formData.is_pro_bono ? formData.pro_bono_reason : null
         })
         .eq("id", editingClient.id);
 
@@ -255,43 +277,149 @@ const InternalCompanies = () => {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_internal"
-                checked={formData.is_internal}
-                onCheckedChange={(checked) => 
-                  setFormData({ ...formData, is_internal: checked as boolean })
+            {/* Tipo de Cliente */}
+            <div className="space-y-3 pb-4 border-b">
+              <Label className="font-semibold text-base">Tipo de Cliente</Label>
+              <RadioGroup
+                value={
+                  formData.is_pro_bono ? "pro_bono" : 
+                  formData.is_internal ? "internal" : 
+                  "regular"
                 }
-              />
-              <Label htmlFor="is_internal">Marcar como Empresa Interna</Label>
+                onValueChange={(value) => {
+                  if (value === "regular") {
+                    setFormData({ 
+                      ...formData, 
+                      is_pro_bono: false,
+                      is_internal: false,
+                      pro_bono_start_date: "",
+                      pro_bono_end_date: "",
+                      pro_bono_reason: ""
+                    });
+                  } else if (value === "pro_bono") {
+                    setFormData({ 
+                      ...formData, 
+                      is_pro_bono: true,
+                      is_internal: false,
+                      monthly_fee: "0",
+                      payment_day: ""
+                    });
+                  } else if (value === "internal") {
+                    setFormData({ 
+                      ...formData, 
+                      is_pro_bono: false,
+                      is_internal: true,
+                      pro_bono_start_date: "",
+                      pro_bono_end_date: "",
+                      pro_bono_reason: ""
+                    });
+                  }
+                }}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="regular" id="regular" />
+                  <Label htmlFor="regular" className="font-normal cursor-pointer">
+                    Lista de Clientes (Regular)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="pro_bono" id="pro_bono" />
+                  <Label htmlFor="pro_bono" className="font-normal cursor-pointer">
+                    Clientes Pro-Bono (Gratuito)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="internal" id="internal" />
+                  <Label htmlFor="internal" className="font-normal cursor-pointer">
+                    Empresas Internas
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="monthly_fee">Honorário Mensal</Label>
-                <Input
-                  id="monthly_fee"
-                  type="number"
-                  step="0.01"
-                  value={formData.monthly_fee}
-                  onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
-                  placeholder="0.00"
-                />
-              </div>
+            {/* Campos Pro-Bono */}
+            {formData.is_pro_bono && (
+              <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <span>Informações Pro-Bono</span>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="payment_day">Dia de Pagamento</Label>
-                <Input
-                  id="payment_day"
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={formData.payment_day}
-                  onChange={(e) => setFormData({ ...formData, payment_day: e.target.value })}
-                  placeholder="Ex: 10"
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pro_bono_start_date">
+                      Data Início <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="pro_bono_start_date"
+                      type="date"
+                      value={formData.pro_bono_start_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pro_bono_start_date: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pro_bono_end_date">Data Fim (Opcional)</Label>
+                    <Input
+                      id="pro_bono_end_date"
+                      type="date"
+                      value={formData.pro_bono_end_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pro_bono_end_date: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pro_bono_reason">
+                    Justificativa/Motivo <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="pro_bono_reason"
+                    placeholder="Descreva o motivo do atendimento gratuito..."
+                    value={formData.pro_bono_reason}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pro_bono_reason: e.target.value })
+                    }
+                    rows={3}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Campos Cliente Regular */}
+            {!formData.is_pro_bono && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="monthly_fee">Honorário Mensal</Label>
+                  <Input
+                    id="monthly_fee"
+                    type="number"
+                    step="0.01"
+                    value={formData.monthly_fee}
+                    onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_day">Dia de Pagamento</Label>
+                  <Input
+                    id="payment_day"
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={formData.payment_day}
+                    onChange={(e) => setFormData({ ...formData, payment_day: e.target.value })}
+                    placeholder="Ex: 10"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="notes">Observações</Label>
