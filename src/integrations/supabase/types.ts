@@ -1170,6 +1170,7 @@ export type Database = {
           email: string | null
           id: string
           is_barter: boolean
+          is_internal: boolean
           is_pro_bono: boolean
           logradouro: string | null
           monthly_fee: number
@@ -1210,6 +1211,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_barter?: boolean
+          is_internal?: boolean
           is_pro_bono?: boolean
           logradouro?: string | null
           monthly_fee?: number
@@ -1250,6 +1252,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_barter?: boolean
+          is_internal?: boolean
           is_pro_bono?: boolean
           logradouro?: string | null
           monthly_fee?: number
