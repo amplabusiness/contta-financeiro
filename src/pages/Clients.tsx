@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users } from "lucide-react";
@@ -688,42 +688,66 @@ const Clients = () => {
                         />
                       </div>
 
-                      {/* Seção Pro-Bono */}
+                      {/* Tipo de Cliente */}
                       <div className="space-y-4 col-span-2 border-t pt-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="is_pro_bono"
-                            checked={formData.is_pro_bono}
-                            onCheckedChange={(checked) => {
-                              const isProBono = checked === true;
-                              setFormData({ 
-                                ...formData, 
-                                is_pro_bono: isProBono,
-                                monthly_fee: isProBono ? "0" : formData.monthly_fee,
-                                payment_day: isProBono ? "" : formData.payment_day
-                              });
+                        <div className="space-y-3">
+                          <Label className="font-semibold text-base">Tipo de Cliente</Label>
+                          <RadioGroup
+                            value={
+                              formData.is_pro_bono ? "pro_bono" : 
+                              formData.is_internal ? "internal" : 
+                              "regular"
+                            }
+                            onValueChange={(value) => {
+                              if (value === "regular") {
+                                setFormData({ 
+                                  ...formData, 
+                                  is_pro_bono: false,
+                                  is_internal: false,
+                                  pro_bono_start_date: "",
+                                  pro_bono_end_date: "",
+                                  pro_bono_reason: ""
+                                });
+                              } else if (value === "pro_bono") {
+                                setFormData({ 
+                                  ...formData, 
+                                  is_pro_bono: true,
+                                  is_internal: false,
+                                  monthly_fee: "0",
+                                  payment_day: ""
+                                });
+                              } else if (value === "internal") {
+                                setFormData({ 
+                                  ...formData, 
+                                  is_pro_bono: false,
+                                  is_internal: true,
+                                  pro_bono_start_date: "",
+                                  pro_bono_end_date: "",
+                                  pro_bono_reason: ""
+                                });
+                              }
                             }}
-                          />
-                          <Label htmlFor="is_pro_bono" className="font-semibold text-base cursor-pointer">
-                            Cliente Pro-Bono (Gratuito)
-                          </Label>
-                        </div>
-
-                        {/* Checkbox Empresa Interna */}
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="is_internal"
-                            checked={formData.is_internal}
-                            onCheckedChange={(checked) => {
-                              setFormData({ 
-                                ...formData, 
-                                is_internal: checked === true
-                              });
-                            }}
-                          />
-                          <Label htmlFor="is_internal" className="font-semibold text-base cursor-pointer">
-                            Empresa Interna
-                          </Label>
+                            className="flex flex-col space-y-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="regular" id="regular" />
+                              <Label htmlFor="regular" className="font-normal cursor-pointer">
+                                Lista de Clientes (Regular)
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="pro_bono" id="pro_bono" />
+                              <Label htmlFor="pro_bono" className="font-normal cursor-pointer">
+                                Clientes Pro-Bono (Gratuito)
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="internal" id="internal" />
+                              <Label htmlFor="internal" className="font-normal cursor-pointer">
+                                Empresas Internas
+                              </Label>
+                            </div>
+                          </RadioGroup>
                         </div>
                         
                         {formData.is_pro_bono && (
