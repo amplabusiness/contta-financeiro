@@ -78,7 +78,6 @@ export function AppSidebar() {
       items: [
         { title: "Lista de Clientes", url: "/clients", icon: Users },
         { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
-        { title: "Empresas Internas", url: "/internal-companies", icon: Building2 },
       ],
     },
     {

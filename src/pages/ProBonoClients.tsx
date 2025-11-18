@@ -50,7 +50,7 @@ const ProBonoClients = () => {
         return;
       }
 
-      // Buscar clientes pro-bono (marcados como pro-bono OU com honorário zerado)
+      // Buscar clientes sem honorário mensal (Pro-Bono)
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select(`
@@ -62,7 +62,7 @@ const ProBonoClients = () => {
             status
           )
         `)
-        .or("is_pro_bono.eq.true,monthly_fee.eq.0")
+        .eq('monthly_fee', 0)
         .order("name");
 
       if (clientsError) throw clientsError;

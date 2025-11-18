@@ -54,7 +54,6 @@ import ProBonoClients from "./pages/ProBonoClients";
 import ProcessProBonoFix from "./pages/ProcessProBonoFix";
 import BarterClients from "./pages/BarterClients";
 import ConvertProBonoToBarter from "./pages/ConvertProBonoToBarter";
-import InternalCompanies from "./pages/InternalCompanies";
 import BankAccounts from "./pages/BankAccounts";
 import BankImport from "./pages/BankImport";
 import AccountsPayable from "./pages/AccountsPayable";
@@ -128,7 +127,6 @@ const App = () => (
             <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
             <Route path="/barter-clients" element={<BarterClients />} />
             <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
-            <Route path="/internal-companies" element={<InternalCompanies />} />
             <Route path="/bank-accounts" element={<BankAccounts />} />
             <Route path="/bank-import" element={<BankImport />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
