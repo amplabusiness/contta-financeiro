@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ const Clients = () => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [enriching, setEnriching] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -804,13 +806,33 @@ const Clients = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Clientes</CardTitle>
-            <CardDescription>Total: {clients.length} clientes</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Lista de Clientes</CardTitle>
+                <CardDescription>Total: {clients.filter(client => 
+                  statusFilter === "all" || client.status === statusFilter
+                ).length} clientes</CardDescription>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="inactive">Suspensos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
-            {clients.length === 0 ? (
+            {clients.filter(client => 
+              statusFilter === "all" || client.status === statusFilter
+            ).length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Nenhum cliente cadastrado ainda
+                {statusFilter === "all" 
+                  ? "Nenhum cliente cadastrado ainda" 
+                  : `Nenhum cliente ${statusFilter === "active" ? "ativo" : "suspenso"} encontrado`}
               </p>
             ) : (
               <Table>
@@ -826,7 +848,9 @@ const Clients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.map((client) => {
+                  {clients.filter(client => 
+                    statusFilter === "all" || client.status === statusFilter
+                  ).map((client) => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
                       (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
