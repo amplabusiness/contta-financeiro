@@ -38,6 +38,7 @@ const PixReconciliation = () => {
         .select("*")
         .eq("matched", false)
         .eq("transaction_type", "credit")
+        .is("matched_invoice_id", null)
         .or("description.ilike.%PIX%,description.ilike.%pix%")
         .order("transaction_date", { ascending: true });
 
