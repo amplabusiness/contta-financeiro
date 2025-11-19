@@ -43,6 +43,18 @@ const PixReconciliation = () => {
 
       if (txError) throw txError;
 
+      // Remover duplicatas das transações PIX
+      const uniqueTransactions = new Map();
+      pixTransactions?.forEach((tx) => {
+        // Criar chave única baseada em data + valor + (referência bancária ou descrição)
+        const key = `${tx.transaction_date}_${tx.amount}_${tx.bank_reference || tx.description}`;
+        // Manter apenas a primeira ocorrência de cada transação única
+        if (!uniqueTransactions.has(key)) {
+          uniqueTransactions.set(key, tx);
+        }
+      });
+      const deduplicatedTransactions = Array.from(uniqueTransactions.values());
+
       // Buscar boletos pendentes ou pagos recentemente
       const { data: invoices, error: invError } = await supabase
         .from("invoices")
@@ -56,7 +68,7 @@ const PixReconciliation = () => {
       const foundMatches: PixMatch[] = [];
       const unmatchedList: any[] = [];
 
-      for (const tx of pixTransactions || []) {
+      for (const tx of deduplicatedTransactions) {
         let bestMatch: PixMatch | null = null;
         let bestScore = 0;
 
