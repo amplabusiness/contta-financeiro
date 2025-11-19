@@ -478,40 +478,63 @@ const ImportBoletos = () => {
                 <p className="text-xs text-muted-foreground text-center">{Math.round(progress)}%</p>
               </div>
             )}
-
-            {results && (
-              <div className="space-y-4 mt-6">
-                {results.success > 0 && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>{results.success} boletos importados</span>
-                  </div>
-                )}
-
-                {results.clientsCreated > 0 && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <UserPlus className="h-5 w-5" />
-                    <span>{results.clientsCreated} clientes cadastrados</span>
-                  </div>
-                )}
-
-                {results.errors.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-red-600">
-                      <AlertCircle className="h-5 w-5" />
-                      <span>Erros ({results.errors.length})</span>
-                    </div>
-                    <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-md max-h-48 overflow-y-auto">
-                      {results.errors.map((e, i) => (
-                        <p key={i} className="text-sm">• {e}</p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {results && (
+          <Card className={results.errors.length > 0 ? 'border-yellow-500' : 'border-green-500'}>
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                {results.errors.length === 0 ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                )}
+
+                <div className="flex-1 space-y-2">
+                  <h4 className="font-medium">
+                    {results.errors.length === 0 ? 'Importação Concluída!' : 'Importação Concluída com Avisos'}
+                  </h4>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div className="bg-muted/50 p-3 rounded">
+                      <p className="text-xs text-muted-foreground">Total Importado</p>
+                      <p className="text-lg font-bold">{results.success}</p>
+                    </div>
+                    {results.clientsCreated > 0 && (
+                      <div className="bg-blue-500/10 p-3 rounded">
+                        <p className="text-xs text-muted-foreground">Clientes Criados</p>
+                        <p className="text-lg font-bold text-blue-600">{results.clientsCreated}</p>
+                      </div>
+                    )}
+                    {results.errors.length > 0 && (
+                      <div className="bg-yellow-500/10 p-3 rounded">
+                        <p className="text-xs text-muted-foreground">Erros</p>
+                        <p className="text-lg font-bold text-yellow-600">{results.errors.length}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {results.errors.length > 0 && (
+                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                      <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                        {results.errors.length} erro(s):
+                      </p>
+                      <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+                        {results.errors.slice(0, 5).map((error, i) => (
+                          <li key={i}>• {error}</li>
+                        ))}
+                        {results.errors.length > 5 && (
+                          <li>• ... e mais {results.errors.length - 5} erros</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
