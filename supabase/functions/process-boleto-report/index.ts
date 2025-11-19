@@ -63,15 +63,20 @@ serve(async (req) => {
         if (!row || row.length < 5) continue
 
         try {
+          const statusValue = String(row[5] || 'EMITIDO').toUpperCase();
+          const validStatus = ['EMITIDO', 'PAGO', 'VENCIDO', 'CANCELADO'].includes(statusValue) 
+            ? statusValue as 'EMITIDO' | 'PAGO' | 'VENCIDO' | 'CANCELADO'
+            : 'EMITIDO';
+          
           boletos.push({
             boletoNumber: String(row[0] || ''),
-            pagador: String(row[1] || ''),
+            clientName: String(row[1] || ''),
             competence: String(row[2] || ''),
-            dataVencimento: String(row[3] || ''),
+            dueDate: String(row[3] || ''),
+            emissionDate: String(row[3] || ''),
             amount: Number(row[4]) || 0,
-            status: String(row[5] || 'EMITIDO').toUpperCase(),
-            dataPagamento: row[6] ? String(row[6]) : null,
-            valorLiquidado: row[7] ? Number(row[7]) : null
+            status: validStatus,
+            paymentDate: row[6] ? String(row[6]) : undefined
           })
         } catch (error) {
           console.error(`Erro ao processar linha ${i}:`, error)
@@ -91,8 +96,8 @@ serve(async (req) => {
     console.log(`Processando ${boletos.length} boletos do arquivo: ${fileName}`)
 
     // Criar registro do relatório
-    const periodStart = new Date(Math.min(...boletos.map(b => new Date(b.dataVencimento).getTime())))
-    const periodEnd = new Date(Math.max(...boletos.map(b => new Date(b.dataVencimento).getTime())))
+    const periodStart = new Date(Math.min(...boletos.map(b => new Date(b.dueDate).getTime())))
+    const periodEnd = new Date(Math.max(...boletos.map(b => new Date(b.dueDate).getTime())))
 
     // Get user ID from auth header
     const token = authHeader.replace('Bearer ', '')

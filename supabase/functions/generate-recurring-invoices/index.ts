@@ -139,7 +139,8 @@ Deno.serve(async (req) => {
 
       } catch (clientError) {
         console.error(`Erro ao processar cliente ${client.name}:`, clientError);
-        errors.push(`${client.name}: ${clientError.message}`);
+        const errorMessage = clientError instanceof Error ? clientError.message : 'Erro desconhecido';
+        errors.push(`${client.name}: ${errorMessage}`);
       }
     }
 
@@ -172,9 +173,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Erro ao gerar honorários recorrentes:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         details: 'Erro ao gerar honorários recorrentes de 2025'
       }),
       { 
