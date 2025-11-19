@@ -817,9 +817,16 @@ const Clients = () => {
                   {selectedClientId ? (
                     <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
                   ) : (
-                    <>Total: {clients.filter(client => 
-                      statusFilter === "all" || client.status === statusFilter
-                    ).length} clientes</>
+                    <>Total: {clients.filter(client => {
+                      if (statusFilter === "all") return true;
+                      if (statusFilter === "active") return client.status === "active";
+                      if (statusFilter === "inactive") return client.status === "inactive";
+                      if (statusFilter === "inactive_with_history") {
+                        const hasFinancialHistory = client.invoices && client.invoices.length > 0;
+                        return client.status === "inactive" && hasFinancialHistory;
+                      }
+                      return true;
+                    }).length} clientes</>
                   )}
                 </CardDescription>
               </div>
@@ -841,20 +848,36 @@ const Clients = () => {
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="active">Ativos</SelectItem>
                     <SelectItem value="inactive">Suspensos</SelectItem>
+                    <SelectItem value="inactive_with_history">Inativos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {clients.filter(client => 
-              (selectedClientId ? client.id === selectedClientId : true) &&
-              (statusFilter === "all" || client.status === statusFilter)
-            ).length === 0 ? (
+            {clients.filter(client => {
+              // Filtro por seleção de cliente
+              if (selectedClientId && client.id !== selectedClientId) return false;
+              
+              // Filtro por status
+              if (statusFilter === "all") return true;
+              if (statusFilter === "active") return client.status === "active";
+              if (statusFilter === "inactive") return client.status === "inactive";
+              if (statusFilter === "inactive_with_history") {
+                // Clientes inativos com histórico financeiro
+                const hasFinancialHistory = client.invoices && client.invoices.length > 0;
+                return client.status === "inactive" && hasFinancialHistory;
+              }
+              return true;
+            }).length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 {statusFilter === "all" 
                   ? "Nenhum cliente cadastrado ainda" 
-                  : `Nenhum cliente ${statusFilter === "active" ? "ativo" : "suspenso"} encontrado`}
+                  : statusFilter === "active" 
+                  ? "Nenhum cliente ativo encontrado"
+                  : statusFilter === "inactive"
+                  ? "Nenhum cliente suspenso encontrado"
+                  : "Nenhum cliente inativo com histórico encontrado"}
               </p>
             ) : (
               <Table>
@@ -870,10 +893,21 @@ const Clients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.filter(client => 
-                    (selectedClientId ? client.id === selectedClientId : true) &&
-                    (statusFilter === "all" || client.status === statusFilter)
-                  ).map((client) => {
+                  {clients.filter(client => {
+                    // Filtro por seleção de cliente
+                    if (selectedClientId && client.id !== selectedClientId) return false;
+                    
+                    // Filtro por status
+                    if (statusFilter === "all") return true;
+                    if (statusFilter === "active") return client.status === "active";
+                    if (statusFilter === "inactive") return client.status === "inactive";
+                    if (statusFilter === "inactive_with_history") {
+                      // Clientes inativos com histórico financeiro
+                      const hasFinancialHistory = client.invoices && client.invoices.length > 0;
+                      return client.status === "inactive" && hasFinancialHistory;
+                    }
+                    return true;
+                  }).map((client) => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
                       (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
