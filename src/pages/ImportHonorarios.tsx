@@ -14,6 +14,7 @@ export default function ImportHonorarios() {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<any>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +52,16 @@ export default function ImportHonorarios() {
     }
 
     setLoading(true);
+    setProgress(0);
     setResults(null);
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 500);
 
     try {
       // Create FormData
@@ -66,6 +76,8 @@ export default function ImportHonorarios() {
       if (error) throw error;
 
       if (data.success) {
+        clearInterval(progressInterval);
+        setProgress(100);
         setResults(data.results);
         toast({
           title: "Processamento Concluído",
@@ -76,6 +88,8 @@ export default function ImportHonorarios() {
       }
 
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       console.error('Error uploading file:', error);
       toast({
         title: "Erro ao Processar",
@@ -138,10 +152,8 @@ export default function ImportHonorarios() {
 
             {loading && (
               <div className="space-y-2">
-                <Progress value={50} className="w-full" />
-                <p className="text-sm text-muted-foreground text-center">
-                  Processando planilha e atualizando clientes...
-                </p>
+                <Progress value={progress} className="w-full h-2" />
+                <p className="text-xs text-center text-muted-foreground">{Math.round(progress)}%</p>
               </div>
             )}
           </div>

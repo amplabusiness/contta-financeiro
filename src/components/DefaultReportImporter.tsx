@@ -6,6 +6,7 @@ import { Upload, FileSpreadsheet, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import * as XLSX from "xlsx";
 
 interface DefaultData {
@@ -26,6 +27,7 @@ interface ImportResult {
 
 export function DefaultReportImporter() {
   const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -124,7 +126,16 @@ export function DefaultReportImporter() {
   const handleFileImport = async (file: File) => {
     try {
       setImporting(true);
+      setProgress(0);
       setResult(null);
+      
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 500);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -220,10 +231,13 @@ export function DefaultReportImporter() {
       };
 
       setResult(importResult);
+      clearInterval(progressInterval);
+      setProgress(100);
       toast.success(`Importação concluída! ${invoicesCreated} faturas processadas.`);
     } catch (error) {
       console.error("Error importing default report:", error);
       toast.error("Erro ao importar relatório de inadimplência");
+      setProgress(0);
     } finally {
       setImporting(false);
     }
@@ -260,9 +274,13 @@ export function DefaultReportImporter() {
           >
             <input {...getInputProps()} />
             {importing ? (
-              <div className="space-y-2">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-                <p className="text-sm text-muted-foreground">Processando relatório...</p>
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className="w-full max-w-md space-y-3">
+                  <Upload className="h-8 w-8 text-primary mx-auto" />
+                  <p className="text-sm font-medium text-center">Processando relatório...</p>
+                  <Progress value={progress} className="w-full h-2" />
+                  <p className="text-xs text-center text-muted-foreground">{Math.round(progress)}%</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
