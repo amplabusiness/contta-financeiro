@@ -32,14 +32,14 @@ const PixReconciliation = () => {
   const analyzePixTransactions = async () => {
     setAnalyzing(true);
     try {
-      // Buscar transações PIX não conciliadas
+      // Buscar transações PIX não conciliadas (do mais antigo para o mais novo)
       const { data: pixTransactions, error: txError } = await supabase
         .from("bank_transactions")
         .select("*")
         .eq("matched", false)
         .eq("transaction_type", "credit")
         .or("description.ilike.%PIX%,description.ilike.%pix%")
-        .order("transaction_date", { ascending: false });
+        .order("transaction_date", { ascending: true });
 
       if (txError) throw txError;
 
