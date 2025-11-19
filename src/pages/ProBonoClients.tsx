@@ -202,20 +202,62 @@ const ProBonoClients = () => {
     if (!deletingClient) return;
 
     try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', deletingClient.id);
+      // Verificar se há invoices (faturas) vinculadas
+      const { data: invoices, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('client_id', deletingClient.id)
+        .limit(1);
 
-      if (error) throw error;
+      if (invoicesError) throw invoicesError;
 
-      toast.success(`Cliente ${deletingClient.name} excluído com sucesso`);
+      // Se houver faturas, apenas inativar o cliente
+      if (invoices && invoices.length > 0) {
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({ status: 'inactive' })
+          .eq('id', deletingClient.id);
+
+        if (updateError) throw updateError;
+
+        toast.warning(`Cliente ${deletingClient.name} foi inativado`, {
+          description: 'Cliente possui faturas vinculadas e não pode ser excluído permanentemente'
+        });
+      } else {
+        // Se não houver faturas, excluir completamente
+        // As foreign keys com ON DELETE CASCADE devem cuidar dos relacionamentos
+        const { error } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', deletingClient.id);
+
+        if (error) {
+          // Se houver erro de constraint, tentar inativar
+          if (error.code === '23503') { // Foreign key violation
+            const { error: updateError } = await supabase
+              .from('clients')
+              .update({ status: 'inactive' })
+              .eq('id', deletingClient.id);
+
+            if (updateError) throw updateError;
+
+            toast.warning(`Cliente ${deletingClient.name} foi inativado`, {
+              description: 'Cliente possui registros vinculados e não pode ser excluído permanentemente'
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          toast.success(`Cliente ${deletingClient.name} excluído com sucesso`);
+        }
+      }
+
       setDeleteDialogOpen(false);
       setDeletingClient(null);
       loadProBonoClients();
     } catch (error: any) {
-      console.error("Erro ao excluir cliente:", error);
-      toast.error("Erro ao excluir cliente");
+      console.error("Erro ao excluir/inativar cliente:", error);
+      toast.error("Erro ao processar exclusão do cliente");
     }
   };
 
@@ -592,7 +634,12 @@ const ProBonoClients = () => {
               <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
               <AlertDialogDescription>
                 Tem certeza que deseja excluir o cliente <strong>{deletingClient?.name}</strong>?
-                Esta ação não pode ser desfeita.
+                <br/><br/>
+                <span className="text-xs text-muted-foreground">
+                  • Se o cliente possuir faturas ou lançamentos contábeis, será apenas <strong>inativado</strong> para preservar o histórico financeiro.
+                  <br/>
+                  • Caso contrário, será <strong>excluído permanentemente</strong> do sistema.
+                </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -601,7 +648,7 @@ const ProBonoClients = () => {
                 onClick={handleConfirmDelete}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Excluir
+                Confirmar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
