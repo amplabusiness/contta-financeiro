@@ -21,40 +21,97 @@ export default function Partners() {
         return [];
       }
 
-      // Normalizar o termo de busca para remover acentos e converter para maiúsculas
-      const searchTerm = activeSearch.trim();
+      const searchTerm = activeSearch.trim().toUpperCase();
 
-      const { data, error } = await supabase
-        .from("client_partners")
-        .select(`
-          id,
-          name,
-          cpf,
-          email,
-          phone,
-          percentage,
-          is_administrator,
-          client_id,
-          clients (
+      // Buscar em ambas as fontes: client_partners e qsa dos clients
+      const [partnersData, clientsData] = await Promise.all([
+        // Buscar na tabela client_partners
+        supabase
+          .from("client_partners")
+          .select(`
             id,
             name,
-            cnpj,
-            status
-          )
-        `)
-        .ilike("name", `%${searchTerm}%`)
-        .order("name");
+            cpf,
+            email,
+            phone,
+            percentage,
+            is_administrator,
+            client_id,
+            clients (
+              id,
+              name,
+              cnpj,
+              status
+            )
+          `)
+          .ilike("name", `%${searchTerm}%`)
+          .order("name"),
+        
+        // Buscar no campo qsa dos clients
+        supabase
+          .from("clients")
+          .select("id, name, cnpj, status, qsa")
+          .not("qsa", "is", null)
+      ]);
 
-      if (error) {
+      if (partnersData.error) {
         toast({
           title: "Erro ao buscar sócios",
-          description: error.message,
+          description: partnersData.error.message,
           variant: "destructive",
         });
-        throw error;
+        throw partnersData.error;
       }
 
-      return data;
+      if (clientsData.error) {
+        toast({
+          title: "Erro ao buscar empresas",
+          description: clientsData.error.message,
+          variant: "destructive",
+        });
+        throw clientsData.error;
+      }
+
+      // Processar resultados da tabela client_partners
+      const fromPartners = partnersData.data || [];
+
+      // Processar resultados do campo qsa
+      const fromQsa: any[] = [];
+      (clientsData.data || []).forEach((client: any) => {
+        if (client.qsa && Array.isArray(client.qsa)) {
+          client.qsa.forEach((socio: any) => {
+            const socioName = socio.nome || socio.name || "";
+            if (socioName.toUpperCase().includes(searchTerm)) {
+              fromQsa.push({
+                id: `qsa-${client.id}-${socioName}`,
+                name: socioName,
+                cpf: socio.cpf || null,
+                email: null,
+                phone: null,
+                percentage: socio.participacao || socio.percentage || null,
+                is_administrator: socio.qual === "Administrador" || socio.is_administrator || false,
+                client_id: client.id,
+                clients: {
+                  id: client.id,
+                  name: client.name,
+                  cnpj: client.cnpj,
+                  status: client.status
+                }
+              });
+            }
+          });
+        }
+      });
+
+      // Combinar e remover duplicatas
+      const combined = [...fromPartners, ...fromQsa];
+      const unique = combined.filter((item, index, self) =>
+        index === self.findIndex((t) => 
+          t.name === item.name && t.clients?.cnpj === item.clients?.cnpj
+        )
+      );
+
+      return unique.sort((a, b) => a.name.localeCompare(b.name));
     },
     enabled: activeSearch.trim().length >= 2,
   });
