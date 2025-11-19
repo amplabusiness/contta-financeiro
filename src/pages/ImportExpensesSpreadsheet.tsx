@@ -22,6 +22,7 @@ export default function ImportExpensesSpreadsheet() {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<any>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +43,16 @@ export default function ImportExpensesSpreadsheet() {
     }
 
     setLoading(true);
+    setProgress(0);
     setResults(null);
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 500);
 
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -161,11 +171,16 @@ export default function ImportExpensesSpreadsheet() {
         errors,
       });
 
+      clearInterval(progressInterval);
+      setProgress(100);
+
       toast({
         title: "Importação Concluída",
         description: `${created} despesas cadastradas com sucesso!`,
       });
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       console.error("Error processing file:", error);
       toast({
         title: "Erro ao Processar",
@@ -224,8 +239,8 @@ export default function ImportExpensesSpreadsheet() {
 
             {loading && (
               <div className="space-y-2">
-                <Progress value={50} className="w-full" />
-                <p className="text-sm text-muted-foreground text-center">Processando planilha...</p>
+                <Progress value={progress} className="w-full h-2" />
+                <p className="text-xs text-center text-muted-foreground">{Math.round(progress)}%</p>
               </div>
             )}
           </div>

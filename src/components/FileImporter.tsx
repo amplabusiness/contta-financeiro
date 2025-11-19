@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
+import { Progress } from '@/components/ui/progress'
 
 interface ImportResult {
   success: boolean
@@ -17,6 +18,7 @@ type FileType = 'ofx' | 'cnab' | 'nfe' | 'csv'
 
 export function FileImporter() {
   const [importing, setImporting] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [fileType, setFileType] = useState<FileType>('ofx')
   const { toast } = useToast()
@@ -39,7 +41,16 @@ export function FileImporter() {
 
   const handleFileImport = async (file: File) => {
     setImporting(true)
+    setProgress(0)
     setResult(null)
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 500);
 
     try {
       const content = await file.text()
@@ -79,6 +90,8 @@ export function FileImporter() {
       if (error) throw error
 
       if (data.success) {
+        clearInterval(progressInterval);
+        setProgress(100);
         setResult({
           success: true,
           imported: data.imported || 0,
@@ -94,6 +107,8 @@ export function FileImporter() {
       }
 
     } catch (error: any) {
+      clearInterval(progressInterval);
+      setProgress(0);
       console.error('Import error:', error)
 
       setResult({
@@ -156,10 +171,15 @@ export function FileImporter() {
 
         <div className="flex flex-col items-center justify-center text-center">
           {importing ? (
-            <>
-              <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-              <p className="text-sm text-muted-foreground">Importing file...</p>
-            </>
+            <div className="w-full max-w-md space-y-3">
+              <Upload className="h-12 w-12 text-primary mx-auto" />
+              <p className="text-sm font-medium">Importando arquivo...</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Processando {fileType.toUpperCase()}
+              </p>
+              <Progress value={progress} className="w-full h-2" />
+              <p className="text-xs text-muted-foreground">{Math.round(progress)}%</p>
+            </div>
           ) : (
             <>
               <Upload className="h-12 w-12 text-muted-foreground mb-4" />

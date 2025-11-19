@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Progress } from '@/components/ui/progress'
 
 interface BoletoData {
   cart: string;
@@ -28,6 +29,7 @@ interface ProcessingResult {
 
 export function BoletoReportImporter() {
   const [importing, setImporting] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<ProcessingResult | null>(null)
   const { toast } = useToast()
 
@@ -48,7 +50,16 @@ export function BoletoReportImporter() {
 
   const handleFileImport = async (file: File) => {
     setImporting(true)
+    setProgress(0)
     setResult(null)
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 500);
 
     try {
       const content = await file.text()
@@ -72,6 +83,9 @@ export function BoletoReportImporter() {
 
       if (error) throw error
 
+      clearInterval(progressInterval);
+      setProgress(100);
+
       if (data.success) {
         setResult(data.data)
 
@@ -84,6 +98,8 @@ export function BoletoReportImporter() {
       }
 
     } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
       console.error('Erro ao importar relatório:', error)
 
       toast({
@@ -257,13 +273,15 @@ export function BoletoReportImporter() {
 
           <div className="flex flex-col items-center justify-center text-center">
             {importing ? (
-              <>
-                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground">Processando relatório...</p>
-                <p className="text-xs text-muted-foreground mt-1">
+              <div className="w-full max-w-md">
+                <Upload className="h-12 w-12 text-primary mx-auto mb-4" />
+                <p className="text-lg font-semibold mb-2">Importando relatório...</p>
+                <p className="text-sm text-muted-foreground mb-4">
                   Criando lançamentos contábeis automáticos
                 </p>
-              </>
+                <Progress value={progress} className="w-full h-2" />
+                <p className="text-xs text-muted-foreground mt-2">{Math.round(progress)}%</p>
+              </div>
             ) : (
               <>
                 <Upload className="h-12 w-12 text-muted-foreground mb-4" />
