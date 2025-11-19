@@ -68,6 +68,7 @@ import GenerateRecurringInvoices from "./pages/GenerateRecurringInvoices";
 import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
 import AutomatedFileUpload from "./pages/AutomatedFileUpload";
+import Partners from "./pages/Partners";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -124,6 +125,7 @@ const App = () => (
             <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
+            <Route path="/partners" element={<Partners />} />
             <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
             <Route path="/barter-clients" element={<BarterClients />} />
             <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
