@@ -3,11 +3,12 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Loader2, Calendar, FileText, Edit, DollarSign } from "lucide-react";
+import { Heart, Loader2, Calendar, FileText, Edit, DollarSign, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -25,7 +26,9 @@ const ProBonoClients = () => {
     totalWaived: 0
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
+  const [deletingClient, setDeletingClient] = useState<any>(null);
   const [formData, setFormData] = useState({
     is_pro_bono: false,
     is_internal: false,
@@ -190,6 +193,32 @@ const ProBonoClients = () => {
     }
   };
 
+  const handleDeleteClick = (client: any) => {
+    setDeletingClient(client);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingClient) return;
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', deletingClient.id);
+
+      if (error) throw error;
+
+      toast.success(`Cliente ${deletingClient.name} excluído com sucesso`);
+      setDeleteDialogOpen(false);
+      setDeletingClient(null);
+      loadProBonoClients();
+    } catch (error: any) {
+      console.error("Erro ao excluir cliente:", error);
+      toast.error("Erro ao excluir cliente");
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -338,14 +367,25 @@ const ProBonoClients = () => {
                           {formatCurrency(client.totalWaived)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditClick(client)}
-                            title="Editar cliente"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditClick(client)}
+                              title="Editar cliente"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick(client)}
+                              title="Excluir cliente"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -544,6 +584,28 @@ const ProBonoClients = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de Confirmação de Exclusão */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o cliente <strong>{deletingClient?.name}</strong>?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
