@@ -22,12 +22,12 @@ import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 
 const Clients = () => {
   const navigate = useNavigate();
-  const { setSelectedClient } = useClient();
+  const { selectedClientId, setSelectedClient, clearSelectedClient } = useClient();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [enriching, setEnriching] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -237,15 +237,15 @@ const Clients = () => {
   };
 
   const handleDelete = async () => {
-    if (!selectedClientId) return;
+    if (!deleteClientId) return;
 
     try {
-      const { error } = await supabase.from("clients").delete().eq("id", selectedClientId);
+      const { error } = await supabase.from("clients").delete().eq("id", deleteClientId);
 
       if (error) throw error;
       toast.success("Cliente excluído com sucesso!");
       setDeleteDialogOpen(false);
-      setSelectedClientId(null);
+      setDeleteClientId(null);
       loadClients();
     } catch (error: any) {
       toast.error("Erro ao excluir cliente: " + error.message);
@@ -811,25 +811,43 @@ const Clients = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Lista de Clientes</CardTitle>
-                <CardDescription>Total: {clients.filter(client => 
-                  statusFilter === "all" || client.status === statusFilter
-                ).length} clientes</CardDescription>
+                <CardDescription>
+                  {selectedClientId ? (
+                    <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
+                  ) : (
+                    <>Total: {clients.filter(client => 
+                      statusFilter === "all" || client.status === statusFilter
+                    ).length} clientes</>
+                  )}
+                </CardDescription>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="active">Ativos</SelectItem>
-                  <SelectItem value="inactive">Suspensos</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                {selectedClientId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearSelectedClient()}
+                  >
+                    Limpar seleção
+                  </Button>
+                )}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Ativos</SelectItem>
+                    <SelectItem value="inactive">Suspensos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             {clients.filter(client => 
-              statusFilter === "all" || client.status === statusFilter
+              (selectedClientId ? client.id === selectedClientId : true) &&
+              (statusFilter === "all" || client.status === statusFilter)
             ).length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 {statusFilter === "all" 
@@ -851,7 +869,8 @@ const Clients = () => {
                 </TableHeader>
                 <TableBody>
                   {clients.filter(client => 
-                    statusFilter === "all" || client.status === statusFilter
+                    (selectedClientId ? client.id === selectedClientId : true) &&
+                    (statusFilter === "all" || client.status === statusFilter)
                   ).map((client) => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
@@ -947,7 +966,7 @@ const Clients = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              setSelectedClientId(client.id);
+                              setDeleteClientId(client.id);
                               setDeleteDialogOpen(true);
                             }}
                             title="Excluir"
