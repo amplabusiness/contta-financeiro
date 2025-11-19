@@ -232,29 +232,26 @@ const ImportBoletos = () => {
         clientsCreated: 0,
       });
       
-      if (successCount > 0) {
-        toast.success(`${successCount} boletos importados!`);
-      }
-      if (missing.size > 0) {
-        toast.info(`${missing.size} clientes não encontrados`);
-      }
-      
       clearInterval(progressInterval);
       setProgress(100);
       
-      // Mostrar toast com resultados
-      if (results && results.success > 0) {
-        const message = results.clientsCreated > 0 
-          ? `${results.success} boletos importados • ${results.clientsCreated} clientes cadastrados`
-          : `${results.success} boletos importados com sucesso`;
-        
-        if (results.errors.length > 0) {
-          toast.warning(message, {
-            description: `${results.errors.length} erros encontrados. Verifique os detalhes.`
+      // Mostrar toast com resultados consolidados
+      if (successCount > 0) {
+        if (errors.length > 0) {
+          toast.warning(`${successCount} boletos importados`, {
+            description: `${errors.length} erros encontrados durante a importação`
           });
         } else {
-          toast.success(message);
+          toast.success(`${successCount} boletos importados com sucesso!`);
         }
+      } else if (errors.length > 0) {
+        toast.error('Nenhum boleto foi importado', {
+          description: `${errors.length} erros encontrados`
+        });
+      }
+      
+      if (missing.size > 0) {
+        toast.info(`${missing.size} clientes não encontrados - cadastro necessário`);
       }
     } catch (error: any) {
       clearInterval(progressInterval);
