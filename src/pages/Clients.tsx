@@ -997,15 +997,10 @@ const Clients = () => {
             </DialogHeader>
             
             {viewingClient && (
-              <Tabs defaultValue="basico" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="basico">Básico</TabsTrigger>
-                  <TabsTrigger value="empresa">Empresa</TabsTrigger>
-                  <TabsTrigger value="endereco">Endereço</TabsTrigger>
-                  <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="basico" className="space-y-4">
+              <div className="space-y-6">
+                {/* Seção Informações Básicas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Informações Básicas</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-muted-foreground">Nome</Label>
@@ -1036,9 +1031,11 @@ const Clients = () => {
                       <p className="font-medium whitespace-pre-wrap">{viewingClient.notes}</p>
                     </div>
                   )}
-                </TabsContent>
+                </div>
 
-                <TabsContent value="empresa" className="space-y-4">
+                {/* Seção Dados da Empresa */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Dados da Empresa</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-muted-foreground">Razão Social</Label>
@@ -1103,9 +1100,9 @@ const Clients = () => {
                   {viewingClient.qsa && viewingClient.qsa.length > 0 && (
                     <div>
                       <Label className="text-muted-foreground">Quadro de Sócios e Administradores</Label>
-                      <div className="space-y-2">
+                      <div className="space-y-2 mt-2">
                         {viewingClient.qsa.map((socio: any, index: number) => (
-                          <div key={index} className="border rounded p-3">
+                          <div key={index} className="border rounded p-3 bg-muted/50">
                             <p className="font-medium">{socio.nome}</p>
                             <p className="text-sm text-muted-foreground">{socio.qual}</p>
                           </div>
@@ -1113,9 +1110,11 @@ const Clients = () => {
                       </div>
                     </div>
                   )}
-                </TabsContent>
+                </div>
 
-                <TabsContent value="endereco" className="space-y-4">
+                {/* Seção Endereço */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Endereço</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-muted-foreground">CEP</Label>
@@ -1146,9 +1145,11 @@ const Clients = () => {
                       <p className="font-medium">{viewingClient.uf || "-"}</p>
                     </div>
                   </div>
-                </TabsContent>
+                </div>
 
-                <TabsContent value="financeiro" className="space-y-4">
+                {/* Seção Financeiro */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Informações Financeiras</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-muted-foreground">Honorário Mensal</Label>
@@ -1224,8 +1225,8 @@ const Clients = () => {
                       </>
                     )}
                   </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+              </div>
             )}
           </DialogContent>
         </Dialog>
