@@ -36,6 +36,7 @@ const ImportBoletos = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ImportResult | null>(null);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
   const [missingClients, setMissingClients] = useState<MissingClient[]>([]);
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [currentClientIndex, setCurrentClientIndex] = useState(0);
@@ -241,6 +242,7 @@ const ImportBoletos = () => {
       
       clearInterval(progressInterval);
       setProgress(100);
+      setShowResultsDialog(true);
     } catch (error: any) {
       clearInterval(progressInterval);
       setProgress(0);
@@ -481,61 +483,6 @@ const ImportBoletos = () => {
           </CardContent>
         </Card>
 
-        {results && (
-          <Card className={results.errors.length > 0 ? 'border-yellow-500' : 'border-green-500'}>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                {results.errors.length === 0 ? (
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-                )}
-
-                <div className="flex-1 space-y-2">
-                  <h4 className="font-medium">
-                    {results.errors.length === 0 ? 'Importação Concluída!' : 'Importação Concluída com Avisos'}
-                  </h4>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div className="bg-muted/50 p-3 rounded">
-                      <p className="text-xs text-muted-foreground">Total Importado</p>
-                      <p className="text-lg font-bold">{results.success}</p>
-                    </div>
-                    {results.clientsCreated > 0 && (
-                      <div className="bg-blue-500/10 p-3 rounded">
-                        <p className="text-xs text-muted-foreground">Clientes Criados</p>
-                        <p className="text-lg font-bold text-blue-600">{results.clientsCreated}</p>
-                      </div>
-                    )}
-                    {results.errors.length > 0 && (
-                      <div className="bg-yellow-500/10 p-3 rounded">
-                        <p className="text-xs text-muted-foreground">Erros</p>
-                        <p className="text-lg font-bold text-yellow-600">{results.errors.length}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {results.errors.length > 0 && (
-                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded">
-                      <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                        {results.errors.length} erro(s):
-                      </p>
-                      <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                        {results.errors.slice(0, 5).map((error, i) => (
-                          <li key={i}>• {error}</li>
-                        ))}
-                        {results.errors.length > 5 && (
-                          <li>• ... e mais {results.errors.length - 5} erros</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader>
             <CardTitle>Instruções</CardTitle>
@@ -636,6 +583,70 @@ const ImportBoletos = () => {
               Cadastrar
               {currentClientIndex < missingClients.length - 1 && <ArrowRight className="h-4 w-4 ml-2" />}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Resultados */}
+      <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {results && results.errors.length === 0 ? (
+                <>
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  Importação Concluída!
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                  Importação Concluída com Avisos
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              Resumo da importação de boletos
+            </DialogDescription>
+          </DialogHeader>
+
+          {results && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="bg-muted/50 p-4 rounded">
+                  <p className="text-xs text-muted-foreground">Total Importado</p>
+                  <p className="text-2xl font-bold">{results.success}</p>
+                </div>
+                {results.clientsCreated > 0 && (
+                  <div className="bg-blue-500/10 p-4 rounded">
+                    <p className="text-xs text-muted-foreground">Clientes Criados</p>
+                    <p className="text-2xl font-bold text-blue-600">{results.clientsCreated}</p>
+                  </div>
+                )}
+                {results.errors.length > 0 && (
+                  <div className="bg-yellow-500/10 p-4 rounded">
+                    <p className="text-xs text-muted-foreground">Erros</p>
+                    <p className="text-2xl font-bold text-yellow-600">{results.errors.length}</p>
+                  </div>
+                )}
+              </div>
+
+              {results.errors.length > 0 && (
+                <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                    Erros encontrados:
+                  </p>
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {results.errors.map((error, i) => (
+                      <p key={i} className="text-sm text-yellow-700 dark:text-yellow-300">• {error}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setShowResultsDialog(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
