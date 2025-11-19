@@ -82,6 +82,19 @@ const PixReconciliation = () => {
         }
       }
 
+      // Garante ordenação do mais antigo para o mais novo em todas as listas
+      foundMatches.sort(
+        (a, b) =>
+          new Date(a.transaction.transaction_date).getTime() -
+          new Date(b.transaction.transaction_date).getTime()
+      );
+
+      unmatchedList.sort(
+        (a, b) =>
+          new Date(a.transaction_date).getTime() -
+          new Date(b.transaction_date).getTime()
+      );
+
       setMatches(foundMatches);
       setUnmatched(unmatchedList);
       
@@ -473,7 +486,7 @@ const PixReconciliation = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {unmatched.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()).map((tx) => (
+                  {unmatched.map((tx) => (
                     <TableRow key={tx.id}>
                       <TableCell>
                         {format(new Date(tx.transaction_date), "dd/MM/yyyy", { locale: ptBR })}
