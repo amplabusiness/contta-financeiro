@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -52,12 +53,46 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+const SCROLL_POSITION_KEY = "sidebar-scroll-position";
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
   const { selectedClientId, selectedClientName } = useClient();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Restaurar posição de scroll quando o componente monta ou a rota muda
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem(SCROLL_POSITION_KEY);
+    if (savedPosition && scrollContainerRef.current) {
+      // Pequeno delay para garantir que o DOM foi atualizado
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = parseInt(savedPosition, 10);
+        }
+      }, 0);
+    }
+  }, [location.pathname]);
+
+  // Salvar posição de scroll antes de desmontar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        sessionStorage.setItem(
+          SCROLL_POSITION_KEY,
+          scrollContainerRef.current.scrollTop.toString()
+        );
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
+    }
+  }, []);
 
   // Unified menu structure - more organized and no redundancy
   const menuGroups = [
@@ -178,7 +213,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <SidebarContent>
+      <SidebarContent ref={scrollContainerRef}>
         {/* Logo */}
         <div className={`flex items-center gap-3 p-4 border-b ${collapsed ? 'justify-center' : ''}`}>
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
