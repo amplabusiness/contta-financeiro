@@ -69,7 +69,10 @@ export function Layout({ children }: LayoutProps) {
 
   const handleClearClient = () => {
     clearSelectedClient();
-    navigate("/dashboard");
+    // Só redireciona para o dashboard se não estiver na página de clientes
+    if (location.pathname !== "/clients") {
+      navigate("/dashboard");
+    }
   };
 
   const handleSignOut = async () => {
