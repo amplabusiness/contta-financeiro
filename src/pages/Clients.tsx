@@ -242,15 +242,63 @@ const Clients = () => {
     if (!deleteClientId) return;
 
     try {
-      const { error } = await supabase.from("clients").delete().eq("id", deleteClientId);
+      // Verificar se há invoices (faturas) vinculadas
+      const { data: invoices, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('client_id', deleteClientId)
+        .limit(1);
 
-      if (error) throw error;
-      toast.success("Cliente excluído com sucesso!");
+      if (invoicesError) throw invoicesError;
+
+      // Se houver faturas, apenas inativar o cliente
+      if (invoices && invoices.length > 0) {
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({ status: 'inactive' })
+          .eq('id', deleteClientId);
+
+        if (updateError) throw updateError;
+
+        const clientName = clients.find(c => c.id === deleteClientId)?.name;
+        toast.warning(`Cliente ${clientName} foi suspenso`, {
+          description: 'Cliente possui faturas vinculadas e não pode ser excluído permanentemente'
+        });
+      } else {
+        // Se não houver faturas, excluir completamente
+        const { error } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', deleteClientId);
+
+        if (error) {
+          // Se houver erro de constraint, tentar inativar
+          if (error.code === '23503') { // Foreign key violation
+            const { error: updateError } = await supabase
+              .from('clients')
+              .update({ status: 'inactive' })
+              .eq('id', deleteClientId);
+
+            if (updateError) throw updateError;
+
+            const clientName = clients.find(c => c.id === deleteClientId)?.name;
+            toast.warning(`Cliente ${clientName} foi suspenso`, {
+              description: 'Cliente possui registros vinculados e não pode ser excluído permanentemente'
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          toast.success("Cliente excluído com sucesso!");
+        }
+      }
+
       setDeleteDialogOpen(false);
       setDeleteClientId(null);
       loadClients();
     } catch (error: any) {
-      toast.error("Erro ao excluir cliente: " + error.message);
+      console.error("Erro ao excluir/inativar cliente:", error);
+      toast.error("Erro ao processar exclusão do cliente");
     }
   };
 
@@ -817,16 +865,9 @@ const Clients = () => {
                   {selectedClientId ? (
                     <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
                   ) : (
-                    <>Total: {clients.filter(client => {
-                      if (statusFilter === "all") return true;
-                      if (statusFilter === "active") return client.status === "active";
-                      if (statusFilter === "inactive") return client.status === "inactive";
-                      if (statusFilter === "inactive_with_history") {
-                        const hasFinancialHistory = client.invoices && client.invoices.length > 0;
-                        return client.status === "inactive" && hasFinancialHistory;
-                      }
-                      return true;
-                    }).length} clientes</>
+                    <>Total: {clients.filter(client => 
+                      statusFilter === "all" || client.status === statusFilter
+                    ).length} clientes</>
                   )}
                 </CardDescription>
               </div>
@@ -848,36 +889,20 @@ const Clients = () => {
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="active">Ativos</SelectItem>
                     <SelectItem value="inactive">Suspensos</SelectItem>
-                    <SelectItem value="inactive_with_history">Inativos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {clients.filter(client => {
-              // Filtro por seleção de cliente
-              if (selectedClientId && client.id !== selectedClientId) return false;
-              
-              // Filtro por status
-              if (statusFilter === "all") return true;
-              if (statusFilter === "active") return client.status === "active";
-              if (statusFilter === "inactive") return client.status === "inactive";
-              if (statusFilter === "inactive_with_history") {
-                // Clientes inativos com histórico financeiro
-                const hasFinancialHistory = client.invoices && client.invoices.length > 0;
-                return client.status === "inactive" && hasFinancialHistory;
-              }
-              return true;
-            }).length === 0 ? (
+            {clients.filter(client => 
+              (selectedClientId ? client.id === selectedClientId : true) &&
+              (statusFilter === "all" || client.status === statusFilter)
+            ).length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 {statusFilter === "all" 
                   ? "Nenhum cliente cadastrado ainda" 
-                  : statusFilter === "active" 
-                  ? "Nenhum cliente ativo encontrado"
-                  : statusFilter === "inactive"
-                  ? "Nenhum cliente suspenso encontrado"
-                  : "Nenhum cliente inativo com histórico encontrado"}
+                  : `Nenhum cliente ${statusFilter === "active" ? "ativo" : "suspenso"} encontrado`}
               </p>
             ) : (
               <Table>
@@ -893,21 +918,10 @@ const Clients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.filter(client => {
-                    // Filtro por seleção de cliente
-                    if (selectedClientId && client.id !== selectedClientId) return false;
-                    
-                    // Filtro por status
-                    if (statusFilter === "all") return true;
-                    if (statusFilter === "active") return client.status === "active";
-                    if (statusFilter === "inactive") return client.status === "inactive";
-                    if (statusFilter === "inactive_with_history") {
-                      // Clientes inativos com histórico financeiro
-                      const hasFinancialHistory = client.invoices && client.invoices.length > 0;
-                      return client.status === "inactive" && hasFinancialHistory;
-                    }
-                    return true;
-                  }).map((client) => {
+                  {clients.filter(client => 
+                    (selectedClientId ? client.id === selectedClientId : true) &&
+                    (statusFilter === "all" || client.status === statusFilter)
+                  ).map((client) => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
                       (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
@@ -1270,13 +1284,19 @@ const Clients = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita e todos os dados relacionados serão perdidos.
+                Tem certeza que deseja excluir este cliente?
+                <br/><br/>
+                <span className="text-xs text-muted-foreground">
+                  • Se o cliente possuir faturas ou lançamentos contábeis, será apenas <strong>suspenso</strong> para preservar o histórico financeiro.
+                  <br/>
+                  • Caso contrário, será <strong>excluído permanentemente</strong> do sistema.
+                </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Excluir
+                Confirmar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
