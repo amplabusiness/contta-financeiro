@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface ImportResult {
   success: number;
@@ -33,6 +34,7 @@ interface MissingClient {
 const ImportBoletos = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ImportResult | null>(null);
   const [missingClients, setMissingClients] = useState<MissingClient[]>([]);
   const [showClientDialog, setShowClientDialog] = useState(false);
@@ -50,6 +52,7 @@ const ImportBoletos = () => {
       setFile(e.target.files[0]);
       setResults(null);
       setMissingClients([]);
+      setProgress(0);
     }
   };
 
@@ -145,6 +148,15 @@ const ImportBoletos = () => {
     setLoading(true);
     setResults(null);
     setMissingClients([]);
+    setProgress(0);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 500);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -226,7 +238,12 @@ const ImportBoletos = () => {
       if (missing.size > 0) {
         toast.info(`${missing.size} clientes não encontrados`);
       }
+      
+      clearInterval(progressInterval);
+      setProgress(100);
     } catch (error: any) {
+      clearInterval(progressInterval);
+      setProgress(0);
       toast.error("Erro: " + error.message);
     } finally {
       setLoading(false);
@@ -454,6 +471,13 @@ const ImportBoletos = () => {
               <Upload className="mr-2 h-4 w-4" />
               {loading ? "Importando..." : "Importar"}
             </Button>
+
+            {loading && (
+              <div className="space-y-2">
+                <Progress value={progress} className="w-full h-2" />
+                <p className="text-xs text-muted-foreground text-center">{Math.round(progress)}%</p>
+              </div>
+            )}
 
             {results && (
               <div className="space-y-4 mt-6">
