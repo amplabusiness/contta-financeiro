@@ -86,7 +86,7 @@ serve(async (req) => {
     const transactionsWithBank = transactions.map((t: any) => ({
       ...t,
       imported_from: 'OFX',
-      notes: bankAccountId ? `Conta: ${bankInfo.accountId}` : t.notes
+      notes: (bankAccountId && bankInfo) ? `Conta: ${bankInfo.accountId}` : t.notes
     }))
 
     // Insert transactions (ignore duplicates)

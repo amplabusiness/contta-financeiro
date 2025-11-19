@@ -1,4 +1,4 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import * as XLSX from 'npm:xlsx@0.18.5'
 
 const corsHeaders = {
