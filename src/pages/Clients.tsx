@@ -12,8 +12,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useClient } from "@/contexts/ClientContext";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -21,6 +22,7 @@ import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 
 const Clients = () => {
   const navigate = useNavigate();
+  const { setSelectedClient } = useClient();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -910,6 +912,17 @@ const Clients = () => {
                         </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedClient(client.id, client.name);
+                              navigate("/client-dashboard");
+                            }}
+                            title="Ver Dashboard"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"

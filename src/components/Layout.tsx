@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, X } from "lucide-react";
@@ -16,6 +16,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<any[]>([]);
@@ -59,7 +60,10 @@ export function Layout({ children }: LayoutProps) {
     const client = clients.find((c) => c.id === clientId);
     if (client) {
       setSelectedClient(client.id, client.name);
-      navigate("/client-dashboard");
+      // Só navega para client-dashboard se não estiver na página de clientes
+      if (location.pathname !== "/clients") {
+        navigate("/client-dashboard");
+      }
     }
   };
 
