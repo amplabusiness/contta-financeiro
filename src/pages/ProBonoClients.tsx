@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Loader2, Calendar, FileText, Edit, DollarSign, Trash2 } from "lucide-react";
+import { Heart, Loader2, Calendar, FileText, Edit, DollarSign, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,10 @@ const ProBonoClients = () => {
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [deletingClient, setDeletingClient] = useState<any>(null);
+  const [viewingClient, setViewingClient] = useState<any>(null);
   const [formData, setFormData] = useState({
     is_pro_bono: false,
     is_internal: false,
@@ -413,6 +415,17 @@ const ProBonoClients = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => {
+                                setViewingClient(client);
+                                setViewDialogOpen(true);
+                              }}
+                              title="Ver Dados da Empresa"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditClick(client)}
                               title="Editar cliente"
                             >
@@ -437,6 +450,251 @@ const ProBonoClients = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Dialog de Visualização de Dados da Empresa */}
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Dados da Empresa</DialogTitle>
+              <DialogDescription>
+                Informações completas do cliente
+              </DialogDescription>
+            </DialogHeader>
+            
+            {viewingClient && (
+              <div className="space-y-6">
+                {/* Seção Informações Básicas */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Informações Básicas</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Nome</Label>
+                      <p className="font-medium">{viewingClient.name || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">CNPJ/CPF</Label>
+                      <p className="font-medium">{viewingClient.cnpj || viewingClient.cpf || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Email</Label>
+                      <p className="font-medium">{viewingClient.email || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Telefone</Label>
+                      <p className="font-medium">{viewingClient.phone || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Status</Label>
+                      <Badge variant={viewingClient.status === "active" ? "default" : "destructive"}>
+                        {viewingClient.status === "active" ? "Ativo" : "Suspenso"}
+                      </Badge>
+                    </div>
+                  </div>
+                  {viewingClient.notes && (
+                    <div>
+                      <Label className="text-muted-foreground">Observações</Label>
+                      <p className="font-medium whitespace-pre-wrap">{viewingClient.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Seção Dados da Empresa */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Dados da Empresa</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Razão Social</Label>
+                      <p className="font-medium">{viewingClient.razao_social || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Nome Fantasia</Label>
+                      <p className="font-medium">{viewingClient.nome_fantasia || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Situação Cadastral</Label>
+                      <p className="font-medium">{viewingClient.situacao_cadastral || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Porte</Label>
+                      <p className="font-medium">{viewingClient.porte || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Natureza Jurídica</Label>
+                      <p className="font-medium">{viewingClient.natureza_juridica || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Data de Abertura</Label>
+                      <p className="font-medium">
+                        {viewingClient.data_abertura 
+                          ? new Date(viewingClient.data_abertura).toLocaleDateString('pt-BR')
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Capital Social</Label>
+                      <p className="font-medium">
+                        {viewingClient.capital_social 
+                          ? formatCurrency(Number(viewingClient.capital_social))
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {viewingClient.atividade_principal && (
+                    <div>
+                      <Label className="text-muted-foreground">Atividade Principal (CNAE)</Label>
+                      <p className="font-medium">
+                        {viewingClient.atividade_principal.code} - {viewingClient.atividade_principal.text}
+                      </p>
+                    </div>
+                  )}
+
+                  {viewingClient.atividades_secundarias && viewingClient.atividades_secundarias.length > 0 && (
+                    <div>
+                      <Label className="text-muted-foreground">Atividades Secundárias</Label>
+                      <div className="space-y-1">
+                        {viewingClient.atividades_secundarias.map((atividade: any, index: number) => (
+                          <p key={index} className="text-sm">
+                            {atividade.code} - {atividade.text}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewingClient.qsa && viewingClient.qsa.length > 0 && (
+                    <div>
+                      <Label className="text-muted-foreground">Quadro de Sócios e Administradores</Label>
+                      <div className="space-y-2 mt-2">
+                        {viewingClient.qsa.map((socio: any, index: number) => (
+                          <div key={index} className="border rounded p-3 bg-muted/50">
+                            <p className="font-medium">{socio.nome}</p>
+                            <p className="text-sm text-muted-foreground">{socio.qual}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Seção Endereço */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Endereço</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">CEP</Label>
+                      <p className="font-medium">{viewingClient.cep || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Logradouro</Label>
+                      <p className="font-medium">{viewingClient.logradouro || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Número</Label>
+                      <p className="font-medium">{viewingClient.numero || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Complemento</Label>
+                      <p className="font-medium">{viewingClient.complemento || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Bairro</Label>
+                      <p className="font-medium">{viewingClient.bairro || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Município</Label>
+                      <p className="font-medium">{viewingClient.municipio || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">UF</Label>
+                      <p className="font-medium">{viewingClient.uf || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção Financeiro */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Informações Financeiras</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Honorário Mensal</Label>
+                      <p className="font-medium text-lg">
+                        {formatCurrency(Number(viewingClient.monthly_fee))}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Dia de Vencimento</Label>
+                      <p className="font-medium">{viewingClient.payment_day || "-"}</p>
+                    </div>
+                    
+                    {viewingClient.is_pro_bono && (
+                      <>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
+                            <Heart className="h-3 w-3 fill-current" />
+                            Cliente Pro-Bono
+                          </Badge>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Data Início Pro-Bono</Label>
+                          <p className="font-medium">
+                            {viewingClient.pro_bono_start_date 
+                              ? new Date(viewingClient.pro_bono_start_date).toLocaleDateString('pt-BR')
+                              : "-"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Data Fim Pro-Bono</Label>
+                          <p className="font-medium">
+                            {viewingClient.pro_bono_end_date 
+                              ? new Date(viewingClient.pro_bono_end_date).toLocaleDateString('pt-BR')
+                              : "Indefinido"}
+                          </p>
+                        </div>
+                        {viewingClient.pro_bono_reason && (
+                          <div className="col-span-2">
+                            <Label className="text-muted-foreground">Motivo Pro-Bono</Label>
+                            <p className="font-medium">{viewingClient.pro_bono_reason}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {viewingClient.is_barter && (
+                      <>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="gap-1">
+                            Cliente Barter
+                          </Badge>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Crédito Mensal Barter</Label>
+                          <p className="font-medium">
+                            {formatCurrency(Number(viewingClient.barter_monthly_credit))}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Data Início Barter</Label>
+                          <p className="font-medium">
+                            {viewingClient.barter_start_date 
+                              ? new Date(viewingClient.barter_start_date).toLocaleDateString('pt-BR')
+                              : "-"}
+                          </p>
+                        </div>
+                        {viewingClient.barter_description && (
+                          <div className="col-span-2">
+                            <Label className="text-muted-foreground">Descrição do Barter</Label>
+                            <p className="font-medium">{viewingClient.barter_description}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Modal de Edição */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
