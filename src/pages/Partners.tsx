@@ -21,6 +21,9 @@ export default function Partners() {
         return [];
       }
 
+      // Normalizar o termo de busca para remover acentos e converter para maiúsculas
+      const searchTerm = activeSearch.trim();
+
       const { data, error } = await supabase
         .from("client_partners")
         .select(`
@@ -39,7 +42,7 @@ export default function Partners() {
             status
           )
         `)
-        .ilike("name", `%${activeSearch}%`)
+        .ilike("name", `%${searchTerm}%`)
         .order("name");
 
       if (error) {
@@ -97,7 +100,7 @@ export default function Partners() {
           <CardContent>
             <div className="flex gap-2">
               <Input
-                placeholder="Digite o nome do sócio..."
+                placeholder="Digite qualquer parte do nome (mínimo 2 caracteres)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => {
@@ -112,6 +115,9 @@ export default function Partners() {
                 Buscar
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              A busca funciona com letras maiúsculas ou minúsculas e procura em qualquer parte do nome
+            </p>
           </CardContent>
         </Card>
 
