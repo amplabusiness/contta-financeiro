@@ -39,6 +39,7 @@ import {
   Clipboard,
   LineChart,
   Heart,
+  Network,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -113,7 +114,7 @@ export function AppSidebar() {
       items: [
         { title: "Lista de Clientes", url: "/clients", icon: Users },
         { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
-        { title: "Sócios", url: "/partners", icon: Users },
+        { title: "Sócios", url: "/partners", icon: Network },
       ],
     },
     {
