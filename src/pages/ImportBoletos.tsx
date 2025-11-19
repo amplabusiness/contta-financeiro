@@ -145,6 +145,7 @@ const ImportBoletos = () => {
       return;
     }
 
+    console.log("Iniciando importação de boletos...");
     setLoading(true);
     setResults(null);
     setMissingClients([]);
@@ -162,6 +163,8 @@ const ImportBoletos = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      console.log("Usuário autenticado:", user.id);
+
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
         .select("id, name, cnpj")
@@ -169,10 +172,14 @@ const ImportBoletos = () => {
 
       if (clientsError) throw clientsError;
 
+      console.log("Clientes carregados:", clients?.length);
+
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      console.log("Dados lidos:", jsonData.length, "registros");
 
       let successCount = 0;
       const errors: string[] = [];
@@ -182,7 +189,10 @@ const ImportBoletos = () => {
       for (let i = 0; i < jsonData.length; i++) {
         const row: any = jsonData[i];
         
+        console.log(`Processando linha ${i + 1}:`, row);
+        
         if (!row["Pagador"] || !row["Data Vencimento"] || !row["Valor (R$)"]) {
+          console.log("Linha ignorada - campos obrigatórios faltando");
           continue;
         }
 
@@ -203,10 +213,18 @@ const ImportBoletos = () => {
         try {
           await processBoleto(row, client.id, user.id);
           successCount++;
+          console.log(`Boleto ${i + 1} processado com sucesso`);
         } catch (err: any) {
+          console.error(`Erro ao processar boleto ${i + 1}:`, err);
           errors.push(`Erro na linha ${i + 2}: ${err.message}`);
         }
       }
+
+      console.log("Processamento concluído:", {
+        successCount,
+        errors: errors.length,
+        missing: missing.size
+      });
 
       if (missing.size > 0) {
         const missingList: MissingClient[] = [];
@@ -235,6 +253,8 @@ const ImportBoletos = () => {
       clearInterval(progressInterval);
       setProgress(100);
       
+      console.log("Mostrando resultados:", { successCount, errors: errors.length });
+      
       // Mostrar toast com resultados consolidados
       if (successCount > 0) {
         if (errors.length > 0) {
@@ -248,17 +268,21 @@ const ImportBoletos = () => {
         toast.error('Nenhum boleto foi importado', {
           description: `${errors.length} erros encontrados`
         });
+      } else {
+        toast.info('Nenhum boleto válido encontrado na planilha');
       }
       
       if (missing.size > 0) {
         toast.info(`${missing.size} clientes não encontrados - cadastro necessário`);
       }
     } catch (error: any) {
+      console.error("Erro geral na importação:", error);
       clearInterval(progressInterval);
       setProgress(0);
       toast.error("Erro: " + error.message);
     } finally {
       setLoading(false);
+      console.log("Importação finalizada");
     }
   };
 
