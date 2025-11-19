@@ -473,7 +473,7 @@ const PixReconciliation = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {unmatched.map((tx) => (
+                  {unmatched.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()).map((tx) => (
                     <TableRow key={tx.id}>
                       <TableCell>
                         {format(new Date(tx.transaction_date), "dd/MM/yyyy", { locale: ptBR })}
