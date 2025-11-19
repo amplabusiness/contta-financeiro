@@ -267,8 +267,14 @@ function parseOFX(content: string): Transaction[] {
           reference: currentTx.fitid,
         });
       }
+    } else if (line.includes('<DTAVAIL>')) {
+      // DTAVAIL is the date funds are available (preferred for reconciliation)
+      currentTx.date = line.replace(/<DTAVAIL>|<\/DTAVAIL>/g, '').trim();
     } else if (line.includes('<DTPOSTED>')) {
-      currentTx.date = line.replace(/<DTPOSTED>|<\/DTPOSTED>/g, '').trim();
+      // Only use DTPOSTED if DTAVAIL is not available
+      if (!currentTx.date) {
+        currentTx.date = line.replace(/<DTPOSTED>|<\/DTPOSTED>/g, '').trim();
+      }
     } else if (line.includes('<TRNAMT>')) {
       currentTx.amount = line.replace(/<TRNAMT>|<\/TRNAMT>/g, '').trim();
     } else if (line.includes('<MEMO>')) {
