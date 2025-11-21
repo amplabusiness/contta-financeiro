@@ -16,8 +16,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useClient } from "@/contexts/ClientContext";
 
 const ProBonoClients = () => {
+  const { selectedClientId } = useClient();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -86,7 +88,7 @@ const ProBonoClients = () => {
 
       setClients(enrichedClients);
 
-      // Calcular estatísticas gerais
+      // Calcular estatísticas gerais - sempre do total de clientes
       const total = enrichedClients.length;
       const active = enrichedClients.filter((c: any) => c.status === 'active').length;
       const totalWaived = enrichedClients.reduce((sum: number, c: any) => sum + c.totalWaived, 0);
@@ -260,6 +262,11 @@ const ProBonoClients = () => {
     }
   };
 
+  // Filtrar clientes baseado no contexto
+  const filteredClients = selectedClientId 
+    ? clients.filter(client => client.id === selectedClientId)
+    : clients;
+
   if (loading) {
     return (
       <Layout>
@@ -335,11 +342,12 @@ const ProBonoClients = () => {
           <CardHeader>
             <CardTitle>Lista de Clientes Pro-Bono</CardTitle>
             <CardDescription>
-              {clients.length} cliente{clients.length !== 1 ? 's' : ''} encontrado{clients.length !== 1 ? 's' : ''}
+              {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} encontrado{filteredClients.length !== 1 ? 's' : ''}
+              {selectedClientId && ` (filtrado)`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {clients.length === 0 ? (
+            {filteredClients.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Heart className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhum cliente pro-bono cadastrado</p>
@@ -360,7 +368,7 @@ const ProBonoClients = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients.map((client) => (
+                    {filteredClients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
