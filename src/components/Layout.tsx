@@ -139,14 +139,15 @@ export function Layout({ children }: LayoutProps) {
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Digite o nome do cliente..." />
+                        <CommandInput placeholder="Digite o nome ou CNPJ do cliente..." />
                         <CommandList>
                           <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                           <CommandGroup>
                             {clients.map((client) => (
                               <CommandItem
                                 key={client.id}
-                                value={client.name}
+                                value={`${client.name} ${client.cnpj || ''}`}
+                                keywords={[client.name, client.cnpj || '']}
                                 onSelect={() => handleClientChange(client.id)}
                               >
                                 <Check
