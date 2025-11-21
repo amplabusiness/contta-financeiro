@@ -8,6 +8,10 @@ if (!ENCRYPTION_KEY) {
   throw new Error('ENCRYPTION_KEY environment variable is required')
 }
 
+if (ENCRYPTION_KEY.length < 32) {
+  throw new Error('ENCRYPTION_KEY must be at least 32 characters long')
+}
+
 const encryptionKey = ENCRYPTION_KEY
 
 export async function encrypt(text: string): Promise<string> {
@@ -16,7 +20,7 @@ export async function encrypt(text: string): Promise<string> {
 
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+    encoder.encode(encryptionKey.slice(0, 32)),
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt']
@@ -47,7 +51,7 @@ export async function decrypt(encryptedText: string): Promise<string> {
 
   const key = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+    encoder.encode(encryptionKey.slice(0, 32)),
     { name: 'AES-GCM', length: 256 },
     false,
     ['decrypt']
