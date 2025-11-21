@@ -23,6 +23,7 @@ export function Layout({ children }: LayoutProps) {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
   useEffect(() => {
@@ -64,12 +65,24 @@ export function Layout({ children }: LayoutProps) {
     if (client) {
       setSelectedClient(client.id, client.name);
       setOpen(false);
+      setSearchTerm("");
       // Só navega para client-dashboard se não estiver na página de clientes
       if (location.pathname !== "/clients") {
         navigate("/client-dashboard");
       }
     }
   };
+
+  // Filtrar clientes baseado no termo de busca
+  const filteredClients = clients.filter((client) => {
+    if (!searchTerm) return true;
+    
+    const term = searchTerm.toLowerCase().replace(/[^\w\s]/g, '');
+    const name = client.name.toLowerCase();
+    const cnpj = (client.cnpj || '').replace(/[^\d]/g, '');
+    
+    return name.includes(term) || cnpj.includes(term);
+  });
 
   const handleClearClient = () => {
     clearSelectedClient();
@@ -138,16 +151,19 @@ export function Layout({ children }: LayoutProps) {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Digite o nome ou CNPJ do cliente..." />
+                      <Command shouldFilter={false}>
+                        <CommandInput 
+                          placeholder="Digite o nome ou CNPJ do cliente..." 
+                          value={searchTerm}
+                          onValueChange={setSearchTerm}
+                        />
                         <CommandList>
                           <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
                           <CommandGroup>
-                            {clients.map((client) => (
+                            {filteredClients.map((client) => (
                               <CommandItem
                                 key={client.id}
-                                value={`${client.name} ${client.cnpj || ''}`}
-                                keywords={[client.name, client.cnpj || '']}
+                                value={client.id}
                                 onSelect={() => handleClientChange(client.id)}
                               >
                                 <Check
@@ -156,12 +172,14 @@ export function Layout({ children }: LayoutProps) {
                                     selectedClientId === client.id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {client.name}
-                                {client.cnpj && (
-                                  <span className="ml-2 text-xs text-muted-foreground">
-                                    {client.cnpj}
-                                  </span>
-                                )}
+                                <div className="flex flex-col">
+                                  <span>{client.name}</span>
+                                  {client.cnpj && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {client.cnpj}
+                                    </span>
+                                  )}
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
