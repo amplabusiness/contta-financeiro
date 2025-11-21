@@ -66,8 +66,8 @@ export function Layout({ children }: LayoutProps) {
       setSelectedClient(client.id, client.name);
       setOpen(false);
       setSearchTerm("");
-      // Só navega para client-dashboard se não estiver na página de clientes
-      if (location.pathname !== "/clients") {
+      // Só navega para client-dashboard se não estiver em páginas que devem manter o filtro
+      if (location.pathname !== "/clients" && location.pathname !== "/pro-bono-clients") {
         navigate("/client-dashboard");
       }
     }
@@ -86,8 +86,8 @@ export function Layout({ children }: LayoutProps) {
 
   const handleClearClient = () => {
     clearSelectedClient();
-    // Só redireciona para o dashboard se não estiver na página de clientes
-    if (location.pathname !== "/clients") {
+    // Só redireciona para o dashboard se não estiver em páginas que devem manter o filtro
+    if (location.pathname !== "/clients" && location.pathname !== "/pro-bono-clients") {
       navigate("/dashboard");
     }
   };
