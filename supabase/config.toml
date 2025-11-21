@@ -7,7 +7,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.regularize-accounting]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-reconciliation-agent]
 verify_jwt = true
@@ -22,16 +22,16 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.automation-scheduler]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-billing-data]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-client-data]
 verify_jwt = true
 
 [functions.sync-client-enrichment]
-verify_jwt = false
+verify_jwt = true
 
 [functions.fix-revenue-entries]
 verify_jwt = true
@@ -46,10 +46,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.auto-create-collection-orders]
-verify_jwt = false
+verify_jwt = true
 
 [functions.run-automation-jobs]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-collection-agent]
 verify_jwt = true
