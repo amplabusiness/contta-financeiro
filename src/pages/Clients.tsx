@@ -43,7 +43,6 @@ const Clients = () => {
     notes: "",
     status: "active",
     is_pro_bono: false,
-    is_internal: false,
     pro_bono_start_date: "",
     pro_bono_end_date: "",
     pro_bono_reason: "",
@@ -166,7 +165,6 @@ const Clients = () => {
         notes: formData.notes,
         status: formData.status,
         is_pro_bono: formData.is_pro_bono,
-        is_internal: formData.is_internal,
         pro_bono_start_date: formData.pro_bono_start_date || null,
         pro_bono_end_date: formData.pro_bono_end_date || null,
         pro_bono_reason: formData.pro_bono_reason || null,
@@ -389,7 +387,6 @@ const Clients = () => {
       notes: "",
       status: "active",
       is_pro_bono: false,
-      is_internal: false,
       pro_bono_start_date: "",
       pro_bono_end_date: "",
       pro_bono_reason: "",
@@ -425,7 +422,6 @@ const Clients = () => {
       notes: client.notes || "",
       status: client.status,
       is_pro_bono: client.is_pro_bono || false,
-      is_internal: client.is_internal || false,
       pro_bono_start_date: client.pro_bono_start_date || "",
       pro_bono_end_date: client.pro_bono_end_date || "",
       pro_bono_reason: client.pro_bono_reason || "",
@@ -745,17 +741,12 @@ const Clients = () => {
                         <div className="space-y-3">
                           <Label className="font-semibold text-base">Tipo de Cliente</Label>
                           <RadioGroup
-                            value={
-                              formData.is_pro_bono ? "pro_bono" : 
-                              formData.is_internal ? "internal" : 
-                              "regular"
-                            }
+                            value={formData.is_pro_bono ? "pro_bono" : "regular"}
                             onValueChange={(value) => {
                               if (value === "regular") {
                                 setFormData({ 
                                   ...formData, 
                                   is_pro_bono: false,
-                                  is_internal: false,
                                   pro_bono_start_date: "",
                                   pro_bono_end_date: "",
                                   pro_bono_reason: ""
@@ -764,18 +755,8 @@ const Clients = () => {
                                 setFormData({ 
                                   ...formData, 
                                   is_pro_bono: true,
-                                  is_internal: false,
                                   monthly_fee: "0",
                                   payment_day: ""
-                                });
-                              } else if (value === "internal") {
-                                setFormData({ 
-                                  ...formData, 
-                                  is_pro_bono: false,
-                                  is_internal: true,
-                                  pro_bono_start_date: "",
-                                  pro_bono_end_date: "",
-                                  pro_bono_reason: ""
                                 });
                               }
                             }}
@@ -791,12 +772,6 @@ const Clients = () => {
                               <RadioGroupItem value="pro_bono" id="pro_bono" />
                               <Label htmlFor="pro_bono" className="font-normal cursor-pointer">
                                 Clientes Pro-Bono (Gratuito)
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="internal" id="internal" />
-                              <Label htmlFor="internal" className="font-normal cursor-pointer">
-                                Empresas Internas
                               </Label>
                             </div>
                           </RadioGroup>
