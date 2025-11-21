@@ -274,8 +274,16 @@ async function getStatement(startDate: string, endDate: string) {
 
 /**
  * Handle webhook from Cora
+ * SECURITY: This function should validate webhook signatures in production.
+ * Cora webhooks should include an HMAC signature in the 'x-cora-signature' header.
  */
 async function handleWebhook(webhookData: any) {
+  // Nota: A verificação de assinatura deve ser feita pela aplicação que chama este edge function
+  // passando a assinatura como parte dos dados. Por enquanto, esta função assume que
+  // a verificação já foi feita no nível de rota HTTP ou pela aplicação chamadora.
+  
+  console.log('Processing webhook:', webhookData);
+  
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
