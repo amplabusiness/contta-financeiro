@@ -249,10 +249,22 @@ async function sendSMS(phone: string, message: string): Promise<string> {
 /**
  * Render template with variables
  */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
 function renderTemplate(template: string, vars: Record<string, string>): string {
   let result = template
   for (const [key, value] of Object.entries(vars)) {
-    result = result.replace(new RegExp(`{${key}}`, 'g'), value)
+    // Escapar HTML para prevenir injeção
+    const escaped = escapeHtml(value)
+    result = result.replace(new RegExp(`{${key}}`, 'g'), escaped)
   }
   return result
 }

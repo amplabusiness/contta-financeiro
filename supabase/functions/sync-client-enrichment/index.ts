@@ -158,7 +158,7 @@ serve(async (req) => {
                 removed_socios: removedSocios,
                 sync_date: new Date().toISOString()
               },
-              created_by: '00000000-0000-0000-0000-000000000000' // Sistema
+              created_by: null // Sistema automático
             });
 
           // Atualizar client_payers automaticamente
@@ -172,7 +172,7 @@ serve(async (req) => {
                 payer_name: socioName,
                 relationship: 'socio',
                 notes: `Adicionado automaticamente - Qualificação: ${socioData?.qualificacao}`,
-                created_by: '00000000-0000-0000-0000-000000000000' // Sistema
+                created_by: null // Sistema automático
               });
           }
 
@@ -233,7 +233,7 @@ serve(async (req) => {
         description: `Sincronização mensal dos dados da Receita Federal concluída. ${synced} clientes atualizados, ${changes_detected} mudanças detectadas.`,
         severity: changes_detected > 0 ? 'warn' : 'info',
         metadata: summary,
-        created_by: '00000000-0000-0000-0000-000000000000' // Sistema
+        created_by: null // Sistema automático
       });
 
     return new Response(

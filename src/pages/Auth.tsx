@@ -8,6 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
+import { z } from "zod";
+
+const passwordSchema = z.string()
+  .min(12, 'Senha deve ter no mínimo 12 caracteres')
+  .regex(/[A-Z]/, 'Deve conter letra maiúscula')
+  .regex(/[a-z]/, 'Deve conter letra minúscula')
+  .regex(/[0-9]/, 'Deve conter número')
+  .regex(/[^A-Za-z0-9]/, 'Deve conter caractere especial (@, !, #, etc.)');
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,6 +37,9 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validar senha forte
+      passwordSchema.parse(password);
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -45,7 +56,11 @@ const Auth = () => {
       toast.success("Conta criada com sucesso!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Erro ao criar conta");
+      }
     } finally {
       setLoading(false);
     }
@@ -148,12 +163,15 @@ const Auth = () => {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Mínimo 12 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={12}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Deve ter 12+ caracteres, maiúscula, minúscula, número e caractere especial
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Criando..." : "Criar Conta"}
