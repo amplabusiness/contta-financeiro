@@ -2,13 +2,15 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, X } from "lucide-react";
+import { LogOut, User, X, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClient } from "@/contexts/ClientContext";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children: ReactNode;
@@ -20,6 +22,7 @@ export function Layout({ children }: LayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export function Layout({ children }: LayoutProps) {
     const client = clients.find((c) => c.id === clientId);
     if (client) {
       setSelectedClient(client.id, client.name);
+      setOpen(false);
       // Só navega para client-dashboard se não estiver na página de clientes
       if (location.pathname !== "/clients") {
         navigate("/client-dashboard");
@@ -119,18 +123,51 @@ export function Layout({ children }: LayoutProps) {
               ) : (
                 <div className="flex items-center gap-2 flex-1">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  <Select value={selectedClientId || ""} onValueChange={handleClientChange}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="flex-1 justify-between"
+                      >
+                        {selectedClientId
+                          ? clients.find((client) => client.id === selectedClientId)?.name
+                          : "Selecione um cliente"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Digite o nome do cliente..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {clients.map((client) => (
+                              <CommandItem
+                                key={client.id}
+                                value={client.name}
+                                onSelect={() => handleClientChange(client.id)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedClientId === client.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {client.name}
+                                {client.cnpj && (
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    {client.cnpj}
+                                  </span>
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
             </div>
