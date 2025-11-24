@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
+import { CNPJInput } from "@/components/CNPJInput";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const Clients = () => {
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
+    cpf: "",
     email: "",
     phone: "",
     monthly_fee: "",
@@ -127,37 +129,54 @@ const Clients = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Validar CNPJ duplicado antes de inserir
-      if (formData.cnpj && formData.cnpj.trim()) {
-        const cnpjNormalized = formData.cnpj.replace(/[^\d]/g, '');
-        
-        const { data: existingClients, error: checkError } = await supabase
-          .from("clients")
-          .select("id, name, cnpj")
-          .not("id", "eq", editingClient?.id || "00000000-0000-0000-0000-000000000000");
+      // Identificar se é CPF ou CNPJ baseado no campo preenchido
+      const documentValue = formData.cnpj || formData.cpf;
+      const documentNormalized = documentValue.replace(/[^\d]/g, '');
+      const isCPF = documentNormalized.length === 11;
+      const isCNPJ = documentNormalized.length === 14;
 
-        if (checkError) throw checkError;
+      // Validação: deve ter CPF ou CNPJ
+      if (!isCPF && !isCNPJ) {
+        toast.error("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
+        setLoading(false);
+        return;
+      }
 
-        // Verificar se já existe um cliente com o mesmo CNPJ (normalizado)
-        const duplicateCNPJ = existingClients?.find(client => {
-          if (!client.cnpj) return false;
-          const existingCNPJ = client.cnpj.replace(/[^\d]/g, '');
-          return existingCNPJ === cnpjNormalized;
-        });
+      // Validar documento duplicado antes de inserir
+      const { data: existingClients, error: checkError } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf")
+        .not("id", "eq", editingClient?.id || "00000000-0000-0000-0000-000000000000");
 
-        if (duplicateCNPJ) {
-          toast.error(`CNPJ já cadastrado para o cliente: ${duplicateCNPJ.name}`, {
-            description: "Não é possível cadastrar o mesmo CNPJ duas vezes.",
-            duration: 5000,
-          });
-          setLoading(false);
-          return;
+      if (checkError) throw checkError;
+
+      // Verificar duplicata
+      const duplicateClient = existingClients?.find(client => {
+        if (isCPF && client.cpf) {
+          const existingCPF = client.cpf.replace(/[^\d]/g, '');
+          return existingCPF === documentNormalized;
         }
+        if (isCNPJ && client.cnpj) {
+          const existingCNPJ = client.cnpj.replace(/[^\d]/g, '');
+          return existingCNPJ === documentNormalized;
+        }
+        return false;
+      });
+
+      if (duplicateClient) {
+        const docType = isCPF ? "CPF" : "CNPJ";
+        toast.error(`${docType} já cadastrado para o cliente: ${duplicateClient.name}`, {
+          description: `Não é possível cadastrar o mesmo ${docType} duas vezes.`,
+          duration: 5000,
+        });
+        setLoading(false);
+        return;
       }
 
       const clientData = {
         name: formData.name,
-        cnpj: formData.cnpj,
+        cnpj: isCNPJ ? documentValue : null,
+        cpf: isCPF ? documentValue : null,
         email: formData.email,
         phone: formData.phone,
         monthly_fee: parseFloat(formData.monthly_fee) || 0,
@@ -194,34 +213,11 @@ const Clients = () => {
           .update(clientData)
           .eq("id", editingClient.id);
 
-        if (error) {
-          // Verificar se o erro é de CNPJ duplicado
-          if (error.message.includes('clients_cnpj_normalized_unique')) {
-            toast.error("CNPJ já cadastrado para outro cliente", {
-              description: "Não é possível ter dois clientes com o mesmo CNPJ.",
-              duration: 5000,
-            });
-            setLoading(false);
-            return;
-          }
-          throw error;
-        }
+        if (error) throw error;
         toast.success("Cliente atualizado com sucesso!");
       } else {
         const { error } = await supabase.from("clients").insert(clientData);
-
-        if (error) {
-          // Verificar se o erro é de CNPJ duplicado
-          if (error.message.includes('clients_cnpj_normalized_unique')) {
-            toast.error("CNPJ já cadastrado para outro cliente", {
-              description: "Não é possível ter dois clientes com o mesmo CNPJ.",
-              duration: 5000,
-            });
-            setLoading(false);
-            return;
-          }
-          throw error;
-        }
+        if (error) throw error;
         toast.success("Cliente cadastrado com sucesso!");
       }
 
@@ -318,12 +314,48 @@ const Clients = () => {
     }
   };
 
+  const handleCNPJDataFetched = (data: any) => {
+    // Callback quando CNPJInput buscar dados automaticamente
+    const socios = data.qsa?.map((socio: any) => ({
+      nome: socio.nome_socio || socio.nome,
+      qualificacao: socio.qualificacao_socio || socio.qual,
+      data_entrada: socio.data_entrada_sociedade
+    })) || [];
+    
+    setFormData(prev => ({
+      ...prev,
+      name: data.razao_social || prev.name,
+      email: data.email || prev.email,
+      phone: data.telefone || prev.phone,
+      razao_social: data.razao_social,
+      nome_fantasia: data.nome_fantasia,
+      porte: data.porte,
+      natureza_juridica: data.natureza_juridica,
+      situacao_cadastral: data.situacao,
+      data_abertura: data.data_abertura,
+      capital_social: data.capital_social,
+      logradouro: data.logradouro,
+      numero: data.numero,
+      complemento: data.complemento,
+      bairro: data.bairro,
+      municipio: data.municipio,
+      uf: data.uf,
+      cep: data.cep,
+      atividade_principal: data.atividade_principal,
+      atividades_secundarias: data.atividades_secundarias || [],
+      qsa: socios
+    }));
+  };
+
   const enrichByCNPJ = async (cnpj: string) => {
-    if (!cnpj || cnpj.length < 14) return;
+    const cleanCnpj = cnpj.replace(/\D/g, '');
+    if (!cleanCnpj || cleanCnpj.length !== 14) {
+      toast.error('Digite um CNPJ válido com 14 dígitos');
+      return;
+    }
     
     setEnriching(true);
     try {
-      const cleanCnpj = cnpj.replace(/\D/g, '');
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       
       if (!response.ok) {
@@ -380,6 +412,7 @@ const Clients = () => {
     setFormData({
       name: "",
       cnpj: "",
+      cpf: "",
       email: "",
       phone: "",
       monthly_fee: "",
@@ -415,6 +448,7 @@ const Clients = () => {
     setFormData({
       name: client.name,
       cnpj: client.cnpj || "",
+      cpf: client.cpf || "",
       email: client.email || "",
       phone: client.phone || "",
       monthly_fee: client.monthly_fee?.toString() || "",
@@ -492,30 +526,22 @@ const Clients = () => {
                   <TabsContent value="basico" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2 col-span-2">
-                        <Label htmlFor="cnpj">CNPJ</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="cnpj"
-                            value={formData.cnpj}
-                            onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                            placeholder="Digite o CNPJ"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => enrichByCNPJ(formData.cnpj)}
-                            disabled={enriching || !formData.cnpj || formData.cnpj.length < 14}
-                          >
-                            {enriching ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              'Buscar na Receita'
-                            )}
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Digite o CNPJ e clique em Buscar para preencher automaticamente todos os dados
-                        </p>
+                        <CNPJInput
+                          value={formData.cnpj || formData.cpf}
+                          onChange={(value) => {
+                            const normalized = value.replace(/[^\d]/g, '');
+                            if (normalized.length <= 11) {
+                              setFormData({ ...formData, cpf: value, cnpj: "" });
+                            } else {
+                              setFormData({ ...formData, cnpj: value, cpf: "" });
+                            }
+                          }}
+                          onDataFetched={handleCNPJDataFetched}
+                          autoFetch={true}
+                          label="CPF/CNPJ"
+                          required={true}
+                          allowCPF={true}
+                        />
                       </div>
 
                       <div className="space-y-2 col-span-2">
