@@ -80,8 +80,9 @@ export function Layout({ children }: LayoutProps) {
     const term = searchTerm.toLowerCase().replace(/[^\w\s]/g, '');
     const name = client.name.toLowerCase();
     const cnpj = (client.cnpj || '').replace(/[^\d]/g, '');
+    const cpf = (client.cpf || '').replace(/[^\d]/g, '');
     
-    return name.includes(term) || cnpj.includes(term);
+    return name.includes(term) || cnpj.includes(term) || cpf.includes(term);
   });
 
   const handleClearClient = () => {
@@ -153,7 +154,7 @@ export function Layout({ children }: LayoutProps) {
                     <PopoverContent className="w-[400px] p-0" align="start">
                       <Command shouldFilter={false}>
                         <CommandInput 
-                          placeholder="Digite o nome ou CNPJ do cliente..." 
+                          placeholder="Digite o nome, CPF ou CNPJ do cliente..." 
                           value={searchTerm}
                           onValueChange={setSearchTerm}
                         />
@@ -174,9 +175,9 @@ export function Layout({ children }: LayoutProps) {
                                 />
                                 <div className="flex flex-col">
                                   <span>{client.name}</span>
-                                  {client.cnpj && (
+                                  {(client.cnpj || client.cpf) && (
                                     <span className="text-xs text-muted-foreground">
-                                      {client.cnpj}
+                                      {client.cnpj || client.cpf}
                                     </span>
                                   )}
                                 </div>
