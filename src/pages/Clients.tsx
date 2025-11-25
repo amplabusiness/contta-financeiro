@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 import { CNPJInput } from "@/components/CNPJInput";
+import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -926,6 +927,7 @@ const Clients = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Honorário</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Grupo Econômico</TableHead>
                     <TableHead>IA</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -981,6 +983,9 @@ const Clients = () => {
                           <Badge variant={client.status === "active" ? "default" : "destructive"}>
                             {client.status === "active" ? "Ativo" : "Suspenso"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <EconomicGroupIndicator client={client} allClients={clients} />
                         </TableCell>
                         <TableCell>
                           <AIClientAnalyzer
