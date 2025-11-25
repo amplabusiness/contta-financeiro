@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface Client {
   cnpj: string | null;
   cpf: string | null;
   qsa: any[] | null;
+  monthly_fee?: number;
 }
 
 interface EconomicGroupIndicatorProps {
@@ -58,6 +60,8 @@ const findEconomicGroups = (client: Client, allClients: Client[]): EconomicGroup
 
 export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndicatorProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const { setSelectedClient } = useClient();
   const groups = findEconomicGroups(client, allClients);
 
@@ -74,8 +78,29 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
   const totalCompanies = uniqueCompanies.size;
 
   const handleCompanyClick = (companyId: string, companyName: string) => {
+    const selectedCompany = allClients.find((c) => c.id === companyId);
+    if (!selectedCompany) return;
+
     setSelectedClient(companyId, companyName);
     setDialogOpen(false);
+
+    // Verifica se o cliente é pro-bono ou não
+    const isProBono = selectedCompany.monthly_fee === 0;
+    const isOnClientsPage = location.pathname === "/clients";
+    const isOnProBonoPage = location.pathname === "/pro-bono-clients";
+
+    // Se estiver na página de clientes mas o cliente é pro-bono, vai para pro-bono
+    if (isOnClientsPage && isProBono) {
+      navigate("/pro-bono-clients");
+    }
+    // Se estiver na página de pro-bono mas o cliente não é pro-bono, vai para clientes
+    else if (isOnProBonoPage && !isProBono) {
+      navigate("/clients");
+    }
+    // Só navega para client-dashboard se não estiver em páginas que devem manter o filtro
+    else if (!isOnClientsPage && !isOnProBonoPage) {
+      navigate("/client-dashboard");
+    }
   };
 
   const formatDocument = (company: Client) => {
