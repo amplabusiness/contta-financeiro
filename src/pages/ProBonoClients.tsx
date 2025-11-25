@@ -17,10 +17,12 @@ import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useClient } from "@/contexts/ClientContext";
+import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 
 const ProBonoClients = () => {
   const { selectedClientId } = useClient();
   const [clients, setClients] = useState<any[]>([]);
+  const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
@@ -72,6 +74,15 @@ const ProBonoClients = () => {
         .order("name");
 
       if (clientsError) throw clientsError;
+
+      // Buscar TODOS os clientes para identificação de grupos econômicos
+      const { data: allClientsData, error: allClientsError } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf, qsa")
+        .order("name");
+
+      if (allClientsError) throw allClientsError;
+      setAllClientsForGroups(allClientsData || []);
 
       // Calcular estatísticas
       const enrichedClients = (clientsData || []).map((client: any) => {
@@ -363,6 +374,7 @@ const ProBonoClients = () => {
                       <TableHead>Honorário Mensal</TableHead>
                       <TableHead>Período Pro-Bono</TableHead>
                       <TableHead>Motivo</TableHead>
+                      <TableHead>Grupo Econômico</TableHead>
                       <TableHead className="text-right">Valor Dispensado</TableHead>
                       <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
@@ -411,6 +423,9 @@ const ProBonoClients = () => {
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <EconomicGroupIndicator client={client} allClients={allClientsForGroups} />
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(client.totalWaived)}

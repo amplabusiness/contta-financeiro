@@ -26,6 +26,7 @@ const Clients = () => {
   const navigate = useNavigate();
   const { selectedClientId, setSelectedClient, clearSelectedClient } = useClient();
   const [clients, setClients] = useState<any[]>([]);
+  const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -102,6 +103,15 @@ const Clients = () => {
         .order("name");
 
       if (clientsError) throw clientsError;
+
+      // Buscar TODOS os clientes para identificação de grupos econômicos
+      const { data: allClientsData, error: allClientsError } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf, qsa")
+        .order("name");
+
+      if (allClientsError) throw allClientsError;
+      setAllClientsForGroups(allClientsData || []);
       
       // Calcular estatísticas de boletos para cada cliente
       const enrichedClients = (clientsData || []).map((client: any) => {
@@ -985,7 +995,7 @@ const Clients = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <EconomicGroupIndicator client={client} allClients={clients} />
+                          <EconomicGroupIndicator client={client} allClients={allClientsForGroups} />
                         </TableCell>
                         <TableCell>
                           <AIClientAnalyzer
