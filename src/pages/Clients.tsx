@@ -107,7 +107,7 @@ const Clients = () => {
       // Buscar TODOS os clientes para identificação de grupos econômicos
       const { data: allClientsData, error: allClientsError } = await supabase
         .from("clients")
-        .select("id, name, cnpj, cpf, qsa")
+        .select("id, name, cnpj, cpf, qsa, monthly_fee")
         .order("name");
 
       if (allClientsError) throw allClientsError;
