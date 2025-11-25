@@ -66,8 +66,22 @@ export function Layout({ children }: LayoutProps) {
       setSelectedClient(client.id, client.name);
       setOpen(false);
       setSearchTerm("");
+      
+      // Verifica se o cliente é pro-bono ou não
+      const isProBono = client.monthly_fee === 0;
+      const isOnClientsPage = location.pathname === "/clients";
+      const isOnProBonoPage = location.pathname === "/pro-bono-clients";
+      
+      // Se estiver na página de clientes mas o cliente é pro-bono, vai para pro-bono
+      if (isOnClientsPage && isProBono) {
+        navigate("/pro-bono-clients");
+      }
+      // Se estiver na página de pro-bono mas o cliente não é pro-bono, vai para clientes
+      else if (isOnProBonoPage && !isProBono) {
+        navigate("/clients");
+      }
       // Só navega para client-dashboard se não estiver em páginas que devem manter o filtro
-      if (location.pathname !== "/clients" && location.pathname !== "/pro-bono-clients") {
+      else if (!isOnClientsPage && !isOnProBonoPage) {
         navigate("/client-dashboard");
       }
     }
