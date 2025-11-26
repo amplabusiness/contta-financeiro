@@ -72,6 +72,7 @@ import Partners from "./pages/Partners";
 import ClientVerification from "./pages/ClientVerification";
 import InactiveClientVerification from "./pages/InactiveClientVerification";
 import ClientComparisonVerification from "./pages/ClientComparisonVerification";
+import ClientSpreadsheetVerification from "./pages/ClientSpreadsheetVerification";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -150,6 +151,7 @@ const App = () => (
           <Route path="/client-verification" element={<ClientVerification />} />
           <Route path="/inactive-client-verification" element={<InactiveClientVerification />} />
           <Route path="/client-comparison-verification" element={<ClientComparisonVerification />} />
+          <Route path="/client-spreadsheet-verification" element={<ClientSpreadsheetVerification />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
