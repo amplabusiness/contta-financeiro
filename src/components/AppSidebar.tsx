@@ -33,6 +33,7 @@ import {
   Book,
   Receipt,
   FileCheck,
+  FileX,
   Settings,
   CreditCard,
   GitMerge,
@@ -116,6 +117,7 @@ export function AppSidebar() {
         { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Sócios", url: "/partners", icon: Network },
         { title: "Verificação de Cadastros", url: "/client-verification", icon: FileCheck },
+        { title: "Verificação de Ex-Clientes", url: "/inactive-client-verification", icon: FileX },
       ],
     },
     {
