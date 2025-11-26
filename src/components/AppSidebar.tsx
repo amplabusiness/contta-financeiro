@@ -117,6 +117,7 @@ export function AppSidebar() {
         { title: "Lista de Clientes", url: "/clients", icon: Users },
         { title: "Clientes Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Sócios", url: "/partners", icon: Network },
+        { title: "Verificar Planilha", url: "/client-spreadsheet-verification", icon: FileSearch },
       ],
     },
     {
