@@ -87,7 +87,7 @@ const Clients = () => {
 
   const loadClients = async () => {
     try {
-      // Buscar clientes com honorário mensal
+      // Buscar clientes com honorário mensal E QUE ESTEJAM ATIVOS
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select(`
@@ -100,6 +100,7 @@ const Clients = () => {
           )
         `)
         .gt('monthly_fee', 0)
+        .eq('status', 'active')
         .order("name");
 
       if (clientsError) throw clientsError;
