@@ -2,9 +2,21 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, AlertCircle, FileSpreadsheet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, XCircle, AlertCircle, FileSpreadsheet, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SpreadsheetClient {
   name: string;
@@ -27,6 +39,7 @@ interface VerificationResult {
 
 const ClientVerification = () => {
   const [loading, setLoading] = useState(true);
+  const [registering, setRegistering] = useState(false);
   const [results, setResults] = useState<VerificationResult[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -48,6 +61,62 @@ const ClientVerification = () => {
       return normalized.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
     }
     return doc;
+  };
+
+  const handleRegisterMissingClients = async () => {
+    setRegistering(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const missingClients = results.filter(r => !r.found);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const result of missingClients) {
+        const normalizedDoc = normalizeDocument(result.spreadsheetClient.document);
+        const isCPF = normalizedDoc.length === 11;
+        
+        try {
+          const { error } = await supabase.from("clients").insert({
+            name: result.spreadsheetClient.name,
+            cnpj: isCPF ? null : normalizedDoc,
+            cpf: isCPF ? normalizedDoc : null,
+            monthly_fee: 0,
+            status: "active",
+            created_by: user.id,
+          });
+
+          if (error) {
+            console.error(`Erro ao cadastrar ${result.spreadsheetClient.name}:`, error);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Erro ao cadastrar ${result.spreadsheetClient.name}:`, err);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} cliente(s) cadastrado(s) com sucesso!`);
+        // Recarregar a página para atualizar a verificação
+        window.location.reload();
+      }
+      
+      if (errorCount > 0) {
+        toast.error(`${errorCount} cliente(s) falharam no cadastro`);
+      }
+    } catch (error) {
+      console.error("Erro ao cadastrar clientes:", error);
+      toast.error("Erro ao cadastrar clientes");
+    } finally {
+      setRegistering(false);
+    }
   };
 
   useEffect(() => {
@@ -231,13 +300,51 @@ const ClientVerification = () => {
       {notFoundClients.length > 0 && (
         <Card className="border-red-200">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="h-5 w-5" />
-              Clientes NÃO Cadastrados ({notFoundClients.length})
-            </CardTitle>
-            <CardDescription>
-              Os seguintes clientes estão na planilha mas não foram encontrados no sistema
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <AlertCircle className="h-5 w-5" />
+                  Clientes NÃO Cadastrados ({notFoundClients.length})
+                </CardTitle>
+                <CardDescription>
+                  Os seguintes clientes estão na planilha mas não foram encontrados no sistema
+                </CardDescription>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" size="lg" disabled={registering}>
+                    {registering ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Cadastrando...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Cadastrar Todos
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cadastrar {notFoundClients.length} cliente(s)?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação irá cadastrar automaticamente todos os {notFoundClients.length} clientes que não foram encontrados no sistema. 
+                      Os clientes serão cadastrados como <strong>clientes ativos com mensalidade R$ 0,00</strong>.
+                      <br/><br/>
+                      Você poderá editar os valores de mensalidade posteriormente nas páginas de clientes.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRegisterMissingClients}>
+                      Confirmar Cadastro
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
