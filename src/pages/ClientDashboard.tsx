@@ -28,7 +28,6 @@ const ClientDashboard = () => {
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [clientMonthlyFee, setClientMonthlyFee] = useState<number | null>(null);
   const [clientPaymentDay, setClientPaymentDay] = useState<number | null>(null);
-  const [hasDateMismatch, setHasDateMismatch] = useState(false);
 
   const formatMonthYear = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
@@ -68,7 +67,7 @@ const ClientDashboard = () => {
 
   const getDisplayStatus = (invoice: any) => invoice.computedStatus || getInvoiceStatus(invoice);
 
-  const aggregateInvoicesByCompetence = (invoiceList: any[], defaultMonthlyFee: number | null) => {
+  const aggregateInvoicesByCompetence = (invoiceList: any[], defaultMonthlyFee: number | null, paymentDay: number | null) => {
     const statusPriority: Record<string, number> = { overdue: 3, pending: 2, paid: 1 };
     const groups = new Map<string, any>();
 
@@ -79,10 +78,21 @@ const ClientDashboard = () => {
       const currentStatus = getInvoiceStatus(invoice);
       const amount = defaultMonthlyFee ?? Number(invoice.amount);
 
+      // Corrigir data de vencimento se houver dia de pagamento cadastrado
+      let correctedDueDate = invoice.due_date;
+      if (paymentDay !== null) {
+        const originalDate = new Date(invoice.due_date);
+        const year = originalDate.getFullYear();
+        const month = originalDate.getMonth();
+        const newDate = new Date(year, month, paymentDay);
+        correctedDueDate = newDate.toISOString().split('T')[0];
+      }
+
       if (!groups.has(key)) {
         groups.set(key, {
           ...invoice,
           amount,
+          due_date: correctedDueDate,
           competenceLabel: label,
           computedStatus: currentStatus,
         });
@@ -96,8 +106,10 @@ const ClientDashboard = () => {
         existing.amount = defaultMonthlyFee;
       }
 
-      if (new Date(invoice.due_date).getTime() > new Date(existing.due_date).getTime()) {
-        existing.due_date = invoice.due_date;
+      const correctedExistingDate = new Date(existing.due_date);
+      const correctedNewDate = new Date(correctedDueDate);
+      if (correctedNewDate.getTime() > correctedExistingDate.getTime()) {
+        existing.due_date = correctedDueDate;
       }
 
       const existingStatus = existing.computedStatus || "paid";
@@ -160,16 +172,7 @@ const ClientDashboard = () => {
         .limit(20);
 
       const allInvoices = invoicesData || [];
-      const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro);
-
-      // Verificar se há honorários com dia de vencimento diferente do cadastrado
-      if (paymentDayFromCadastro !== null) {
-        const hasMismatch = aggregatedInvoices.some((invoice) => {
-          const dueDate = new Date(invoice.due_date);
-          return dueDate.getDate() !== paymentDayFromCadastro;
-        });
-        setHasDateMismatch(hasMismatch);
-      }
+      const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro, paymentDayFromCadastro);
 
       const overdue = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "overdue");
       const pending = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "pending");
@@ -284,18 +287,6 @@ const ClientDashboard = () => {
           </Card>
         )}
 
-        {hasDateMismatch && clientPaymentDay !== null && (
-          <Card className="border-warning/50 bg-warning/5">
-            <CardHeader>
-              <CardTitle className="text-warning">⚠️ Atenção: Divergência nas Datas de Vencimento</CardTitle>
-              <CardDescription>
-                Alguns honorários não estão vencendo no dia cadastrado (dia {clientPaymentDay}). 
-                Verifique se os honorários foram gerados corretamente.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
@@ -333,29 +324,16 @@ const ClientDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoices.map((invoice) => {
-                        const dueDate = new Date(invoice.due_date);
-                        const dueDateDay = dueDate.getDate();
-                        const hasDayMismatch = clientPaymentDay !== null && dueDateDay !== clientPaymentDay;
-                        
-                        return (
-                          <TableRow key={invoice.id}>
-                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {dueDate.toLocaleDateString("pt-BR")}
-                                {hasDayMismatch && (
-                                  <Badge variant="outline" className="text-xs text-warning border-warning">
-                                    Dia {dueDateDay}
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                            <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {invoices.map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
+                          <TableCell>
+                            {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
+                          </TableCell>
+                          <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
+                          <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
