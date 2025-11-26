@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -312,14 +312,20 @@ const ProBonoClients = () => {
         </div>
 
         {/* Filtro de Status */}
-        <div className="flex items-center justify-between">
-          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
-            <TabsList>
-              <TabsTrigger value="active">Ativos ({stats.active})</TabsTrigger>
-              <TabsTrigger value="inactive">Inativos ({stats.inactive})</TabsTrigger>
-              <TabsTrigger value="all">Todos ({stats.total})</TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="flex items-center gap-3">
+          <Label htmlFor="status-filter" className="text-sm font-medium">
+            Filtrar por status:
+          </Label>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+            <SelectTrigger id="status-filter" className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos ({stats.total})</SelectItem>
+              <SelectItem value="active">Ativos ({stats.active})</SelectItem>
+              <SelectItem value="inactive">Inativos ({stats.inactive})</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Cards de Estatísticas */}
