@@ -71,6 +71,7 @@ import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import Partners from "./pages/Partners";
 import ClientVerification from "./pages/ClientVerification";
 import InactiveClientVerification from "./pages/InactiveClientVerification";
+import ClientComparisonVerification from "./pages/ClientComparisonVerification";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -146,8 +147,9 @@ const App = () => (
             <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
             <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
             <Route path="/automated-upload" element={<AutomatedFileUpload />} />
-            <Route path="/client-verification" element={<ClientVerification />} />
-            <Route path="/inactive-client-verification" element={<InactiveClientVerification />} />
+          <Route path="/client-verification" element={<ClientVerification />} />
+          <Route path="/inactive-client-verification" element={<InactiveClientVerification />} />
+          <Route path="/client-comparison-verification" element={<ClientComparisonVerification />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
