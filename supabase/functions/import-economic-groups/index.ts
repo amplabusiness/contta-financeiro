@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Grupos econômicos definidos
+    // Grupos econômicos definidos (TODOS os 21 grupos)
     const groups: GroupData[] = [
       {
         groupNumber: 1,
@@ -80,11 +80,53 @@ Deno.serve(async (req) => {
         paymentDay: 10
       },
       {
+        groupNumber: 7,
+        companies: ['BOA VISTA AGROPECUARIA', 'BONUCCE INDUSTRIA', 'DINUCCI INVESTIMENTOS', 'EFS EMPREENDIMENTOS'],
+        mainPayer: '', // Será determinado automaticamente
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 8,
+        companies: ['C D C OLIVEIRA ASSESSORIA EMPRESARIAL', 'ESTACAO ALEGRIA EVENTOS'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 10,
+        companies: ['CONTRONWEB TECNOLOGIA', 'JCP NEGOCIOS IMOBILIARIOS'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 11,
+        companies: ['ELETROMETALURGICA ITAMBE', 'LG INDUSTRIA METALURGICA', 'PRO AMBIENTAL'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
         groupNumber: 12,
         companies: ['GA ELOHIM PRESTADORA DE SERVICOS', 'GARIBALDI ADRIANO DE CAMILI', 'MARIAH PARTICIPACOES E EMPREENDIMENTOS'],
         mainPayer: 'MARIAH PARTICIPACOES E EMPREENDIMENTOS',
         totalFee: 3036.00,
         paymentDay: 10
+      },
+      {
+        groupNumber: 13,
+        companies: ['IMOBILIARIS TIMES NEGOCIOS IMOBILIARIOS', 'TIMES NEGOCIOS IMOBILIARIOS'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 14,
+        companies: ['JPL AGROPECUARIA', 'PASQUALOTTO TRANSPORTES', 'PASQUALOTTO E CIA', 'PASQUALOTTO E PASQUALOTTO SERVICOS', 'SEMENTES PASQUALOTTO', 'TRADING PASQUALOTTO', 'V M PARTICIPACOES', 'W P PARTICIPACOES', 'WP PASQUALOTTO'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
       },
       {
         groupNumber: 15,
@@ -94,11 +136,46 @@ Deno.serve(async (req) => {
         paymentDay: 5
       },
       {
+        groupNumber: 16,
+        companies: ['LEK COLLOR COMERCIO DE VEICULOS', 'CASA NOVA TINTAS E ACABAMENTOS', 'MDL EMPREENDIMENTOS'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 17,
+        companies: ['MG ALTERNATIVA', 'MG MECANICA INDUSTRIAL', 'MVA CONSTRUCOES', 'AGROSYSTEM', 'GRUPO MINASGRAOS TRADING', 'RV MECANICA INDUSTRIAL', 'TERENAS AGRO INDUSTRIAL', 'VALE DO SAO FRANCISCO CONSULTORIA'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 18,
+        companies: ['MURANO MOVEIS', 'TCC COMERCIO DE COMPONENTES ELETRONICOS', 'TCC CONSTRUCOES'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
+        groupNumber: 19,
+        companies: ['PAES AGROPECUARIA', 'DEL PAPA INDUSTRIA'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
+      },
+      {
         groupNumber: 20,
         companies: ['PET SHOP E CAOPANHIA', 'RL CONSULTORIA E ASSESSORIA EMPRESARIAL'],
         mainPayer: 'PET SHOP E CAOPANHIA',
         totalFee: 1518.00,
         paymentDay: 5
+      },
+      {
+        groupNumber: 21,
+        companies: ['QUELUZ ADMINISTRADORA DE BENS', 'NUTRYMED SUPLEMENTOS ALIMENTARES'],
+        mainPayer: '',
+        totalFee: 0,
+        paymentDay: 0
       }
     ];
 
@@ -110,7 +187,7 @@ Deno.serve(async (req) => {
       // Buscar IDs dos clientes pelo nome
       const { data: clients, error: clientsError } = await supabase
         .from('clients')
-        .select('id, name, cnpj, cpf')
+        .select('id, name, cnpj, cpf, monthly_fee, payment_day')
         .in('name', group.companies)
         .eq('status', 'active');
 
@@ -126,16 +203,40 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Encontrar ID da empresa pagadora
-      const mainPayerClient = clients.find(c => c.name === group.mainPayer);
+      // Se não tiver pagadora definida, usar a primeira empresa com monthly_fee > 0
+      // Se nenhuma tiver, usar a primeira empresa
+      let mainPayerClient;
+      let totalFee = group.totalFee;
+      let paymentDay = group.paymentDay;
+
+      if (group.mainPayer) {
+        mainPayerClient = clients.find(c => c.name === group.mainPayer);
+      }
+
       if (!mainPayerClient) {
-        console.error(`Main payer not found for group ${group.groupNumber}: ${group.mainPayer}`);
-        results.push({ group: group.groupNumber, error: 'Main payer not found' });
+        // Tentar encontrar uma empresa com honorário cadastrado
+        mainPayerClient = clients.find(c => c.monthly_fee && c.monthly_fee > 0);
+        
+        if (mainPayerClient) {
+          // Usar o honorário já cadastrado
+          totalFee = mainPayerClient.monthly_fee * clients.length;
+          paymentDay = mainPayerClient.payment_day || 10;
+        } else {
+          // Se nenhuma empresa tem honorário, usar a primeira e definir valores padrão
+          mainPayerClient = clients[0];
+          totalFee = 1518.00; // Valor padrão
+          paymentDay = 10;
+        }
+      }
+
+      if (!mainPayerClient) {
+        console.error(`Could not determine main payer for group ${group.groupNumber}`);
+        results.push({ group: group.groupNumber, error: 'Could not determine main payer' });
         continue;
       }
 
       // Calcular honorário individual
-      const individualFee = group.totalFee / group.companies.length;
+      const individualFee = totalFee / clients.length;
 
       // Criar o grupo econômico
       const { data: economicGroup, error: groupError } = await supabase
@@ -143,8 +244,8 @@ Deno.serve(async (req) => {
         .insert({
           name: `Grupo ${group.groupNumber}`,
           main_payer_client_id: mainPayerClient.id,
-          total_monthly_fee: group.totalFee,
-          payment_day: group.paymentDay,
+          total_monthly_fee: totalFee,
+          payment_day: paymentDay,
           created_by: user.id,
           is_active: true
         })
@@ -182,7 +283,7 @@ Deno.serve(async (req) => {
           .from('clients')
           .update({
             monthly_fee: individualFee,
-            payment_day: group.paymentDay,
+            payment_day: paymentDay,
             is_pro_bono: false,
             pro_bono_start_date: null,
             pro_bono_end_date: null,
