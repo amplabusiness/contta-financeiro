@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,9 +25,11 @@ const ProBonoClients = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
+    inactive: 0,
     totalWaived: 0
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -46,7 +49,7 @@ const ProBonoClients = () => {
 
   useEffect(() => {
     loadProBonoClients();
-  }, []);
+  }, [statusFilter]);
 
   const loadProBonoClients = async () => {
     try {
@@ -59,7 +62,7 @@ const ProBonoClients = () => {
       }
 
       // Buscar clientes sem honorário mensal (Pro-Bono)
-      const { data: clientsData, error: clientsError } = await supabase
+      let query = supabase
         .from("clients")
         .select(`
           *,
@@ -70,8 +73,14 @@ const ProBonoClients = () => {
             status
           )
         `)
-        .eq('monthly_fee', 0)
-        .order("name");
+        .eq('monthly_fee', 0);
+
+      // Aplicar filtro de status
+      if (statusFilter !== "all") {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data: clientsData, error: clientsError } = await query.order("name");
 
       if (clientsError) throw clientsError;
 
@@ -99,12 +108,13 @@ const ProBonoClients = () => {
 
       setClients(enrichedClients);
 
-      // Calcular estatísticas gerais - sempre do total de clientes
+      // Calcular estatísticas gerais
       const total = enrichedClients.length;
       const active = enrichedClients.filter((c: any) => c.status === 'active').length;
+      const inactive = enrichedClients.filter((c: any) => c.status === 'inactive').length;
       const totalWaived = enrichedClients.reduce((sum: number, c: any) => sum + c.totalWaived, 0);
 
-      setStats({ total, active, totalWaived });
+      setStats({ total, active, inactive, totalWaived });
     } catch (error: any) {
       console.error("Erro ao carregar clientes pro-bono:", error);
       toast.error("Erro ao carregar clientes pro-bono");
@@ -301,6 +311,17 @@ const ProBonoClients = () => {
           </div>
         </div>
 
+        {/* Filtro de Status */}
+        <div className="flex items-center justify-between">
+          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+            <TabsList>
+              <TabsTrigger value="active">Ativos ({stats.active})</TabsTrigger>
+              <TabsTrigger value="inactive">Inativos ({stats.inactive})</TabsTrigger>
+              <TabsTrigger value="all">Todos ({stats.total})</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Cards de Estatísticas */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
@@ -312,7 +333,7 @@ const ProBonoClients = () => {
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.active} ativos
+                {stats.active} ativos • {stats.inactive} inativos
               </p>
             </CardContent>
           </Card>
