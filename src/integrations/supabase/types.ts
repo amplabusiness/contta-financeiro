@@ -1390,6 +1390,89 @@ export type Database = {
           },
         ]
       }
+      economic_group_members: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          economic_group_id: string
+          id: string
+          individual_fee: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          economic_group_id: string
+          id?: string
+          individual_fee?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          economic_group_id?: string
+          id?: string
+          individual_fee?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "economic_group_members_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "economic_group_members_economic_group_id_fkey"
+            columns: ["economic_group_id"]
+            isOneToOne: false
+            referencedRelation: "economic_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      economic_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          is_active: boolean | null
+          main_payer_client_id: string | null
+          name: string
+          payment_day: number | null
+          total_monthly_fee: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          is_active?: boolean | null
+          main_payer_client_id?: string | null
+          name: string
+          payment_day?: number | null
+          total_monthly_fee?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          is_active?: boolean | null
+          main_payer_client_id?: string | null
+          name?: string
+          payment_day?: number | null
+          total_monthly_fee?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "economic_groups_main_payer_client_id_fkey"
+            columns: ["main_payer_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrichment_logs: {
         Row: {
           client_id: string | null
@@ -1864,6 +1947,16 @@ export type Database = {
       get_barter_balance: { Args: { p_client_id: string }; Returns: number }
       get_cnpj_branch: { Args: { cnpj_value: string }; Returns: string }
       get_cnpj_root: { Args: { cnpj_value: string }; Returns: string }
+      get_economic_group_by_client: {
+        Args: { p_client_id: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          main_payer_client_id: string
+          payment_day: number
+          total_monthly_fee: number
+        }[]
+      }
       get_economic_group_impact: {
         Args: { p_year?: number }
         Returns: {
@@ -1877,6 +1970,17 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      get_group_invoices_for_competence: {
+        Args: { p_client_id: string; p_competence: string }
+        Returns: {
+          amount: number
+          client_id: string
+          competence: string
+          due_date: string
+          id: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1884,6 +1988,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_in_economic_group: { Args: { p_client_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "accountant" | "viewer"
