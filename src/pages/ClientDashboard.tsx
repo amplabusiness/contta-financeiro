@@ -27,6 +27,8 @@ const ClientDashboard = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [clientMonthlyFee, setClientMonthlyFee] = useState<number | null>(null);
+  const [clientPaymentDay, setClientPaymentDay] = useState<number | null>(null);
+  const [hasDateMismatch, setHasDateMismatch] = useState(false);
 
   const formatMonthYear = (date: Date) => `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
@@ -126,7 +128,7 @@ const ClientDashboard = () => {
 
       const { data: clientData } = await supabase
         .from("clients")
-        .select("monthly_fee")
+        .select("monthly_fee, payment_day")
         .eq("id", selectedClientId)
         .single();
 
@@ -134,7 +136,13 @@ const ClientDashboard = () => {
         clientData && clientData.monthly_fee !== null && clientData.monthly_fee !== undefined
           ? Number(clientData.monthly_fee)
           : null;
+      const paymentDayFromCadastro =
+        clientData && clientData.payment_day !== null && clientData.payment_day !== undefined
+          ? Number(clientData.payment_day)
+          : null;
+      
       setClientMonthlyFee(monthlyFeeFromCadastro);
+      setClientPaymentDay(paymentDayFromCadastro);
 
       // Carregar honorários
       const { data: invoicesData } = await supabase
@@ -153,6 +161,15 @@ const ClientDashboard = () => {
 
       const allInvoices = invoicesData || [];
       const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro);
+
+      // Verificar se há honorários com dia de vencimento diferente do cadastrado
+      if (paymentDayFromCadastro !== null) {
+        const hasMismatch = aggregatedInvoices.some((invoice) => {
+          const dueDate = new Date(invoice.due_date);
+          return dueDate.getDate() !== paymentDayFromCadastro;
+        });
+        setHasDateMismatch(hasMismatch);
+      }
 
       const overdue = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "overdue");
       const pending = aggregatedInvoices.filter((invoice) => getDisplayStatus(invoice) === "pending");
@@ -267,17 +284,36 @@ const ClientDashboard = () => {
           </Card>
         )}
 
+        {hasDateMismatch && clientPaymentDay !== null && (
+          <Card className="border-warning/50 bg-warning/5">
+            <CardHeader>
+              <CardTitle className="text-warning">⚠️ Atenção: Divergência nas Datas de Vencimento</CardTitle>
+              <CardDescription>
+                Alguns honorários não estão vencendo no dia cadastrado (dia {clientPaymentDay}). 
+                Verifique se os honorários foram gerados corretamente.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Honorários do Cliente</CardTitle>
               <CardDescription>
                 Todos os honorários deste cliente
-                {clientMonthlyFee !== null && (
-                  <span className="block text-xs text-muted-foreground">
-                    Valor cadastrado: {formatCurrency(clientMonthlyFee)}
-                  </span>
-                )}
+                <div className="mt-1 space-y-0.5">
+                  {clientMonthlyFee !== null && (
+                    <span className="block text-xs text-muted-foreground">
+                      Valor cadastrado: {formatCurrency(clientMonthlyFee)}
+                    </span>
+                  )}
+                  {clientPaymentDay !== null && (
+                    <span className="block text-xs text-muted-foreground">
+                      Dia de vencimento cadastrado: {clientPaymentDay}
+                    </span>
+                  )}
+                </div>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -297,16 +333,29 @@ const ClientDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoices.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                          <TableCell>
-                            {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
-                          </TableCell>
-                          <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                          <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
-                        </TableRow>
-                      ))}
+                      {invoices.map((invoice) => {
+                        const dueDate = new Date(invoice.due_date);
+                        const dueDateDay = dueDate.getDate();
+                        const hasDayMismatch = clientPaymentDay !== null && dueDateDay !== clientPaymentDay;
+                        
+                        return (
+                          <TableRow key={invoice.id}>
+                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {dueDate.toLocaleDateString("pt-BR")}
+                                {hasDayMismatch && (
+                                  <Badge variant="outline" className="text-xs text-warning border-warning">
+                                    Dia {dueDateDay}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
+                            <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
