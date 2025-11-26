@@ -36,6 +36,7 @@ const Clients = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [importingGroups, setImportingGroups] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -504,6 +505,32 @@ const Clients = () => {
     setOpen(true);
   };
 
+  const handleImportGroups = async () => {
+    setImportingGroups(true);
+    toast.loading("Importando grupos econômicos...");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('import-economic-groups');
+      
+      if (error) throw error;
+      
+      toast.dismiss();
+      toast.success(`Grupos econômicos importados com sucesso!`, {
+        description: `${data.groupsCreated} grupos e ${data.membersCreated} membros vinculados.`
+      });
+      
+      loadClients();
+    } catch (error: any) {
+      toast.dismiss();
+      console.error('Erro ao importar grupos:', error);
+      toast.error("Erro ao importar grupos econômicos", {
+        description: error.message
+      });
+    } finally {
+      setImportingGroups(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -513,6 +540,18 @@ const Clients = () => {
             <p className="text-muted-foreground">Gerencie o cadastro de clientes</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleImportGroups}
+              disabled={importingGroups}
+            >
+              {importingGroups ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Users className="w-4 h-4 mr-2" />
+              )}
+              Importar Grupos Econômicos
+            </Button>
             <Button variant="outline" onClick={() => navigate("/import")}>
               <Upload className="w-4 h-4 mr-2" />
               Importar Planilha
