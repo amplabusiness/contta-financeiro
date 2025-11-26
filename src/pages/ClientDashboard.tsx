@@ -57,6 +57,13 @@ const ClientDashboard = () => {
     return null;
   };
 
+  const formatLocalDate = (dateStr?: string | null) => {
+    if (!dateStr) return "-";
+    const date = new Date(`${dateStr}T00:00:00`);
+    if (isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("pt-BR");
+  };
+
   const getInvoiceStatus = (invoice: any) => {
     if (invoice.status === "paid") return "paid";
     const today = new Date();
@@ -327,9 +334,7 @@ const ClientDashboard = () => {
                       {invoices.map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                          <TableCell>
-                            {new Date(invoice.due_date).toLocaleDateString("pt-BR")}
-                          </TableCell>
+                          <TableCell>{formatLocalDate(invoice.due_date)}</TableCell>
                           <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
                           <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
                         </TableRow>
@@ -366,9 +371,7 @@ const ClientDashboard = () => {
                     <TableBody>
                       {ledgerEntries.map((entry) => (
                         <TableRow key={entry.id}>
-                          <TableCell>
-                            {new Date(entry.transaction_date).toLocaleDateString("pt-BR")}
-                          </TableCell>
+                          <TableCell>{formatLocalDate(entry.transaction_date)}</TableCell>
                           <TableCell className="max-w-[200px] truncate">
                             {entry.description}
                           </TableCell>
