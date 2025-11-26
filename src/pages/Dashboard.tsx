@@ -144,7 +144,7 @@ const Dashboard = () => {
         const { data } = await supabase
           .from("invoices")
           .select("*, clients(name)")
-          .eq("status", "pending")
+          .in("status", ["pending", "overdue"])
           .order("due_date", { ascending: true });
         
         setDetailDialog({
