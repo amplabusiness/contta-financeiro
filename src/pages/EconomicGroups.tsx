@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Building2, Users, AlertTriangle, DollarSign } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -31,6 +32,7 @@ interface GroupMember {
 export default function EconomicGroups() {
   const [groups, setGroups] = useState<EconomicGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -100,6 +102,29 @@ export default function EconomicGroups() {
     }
   };
 
+  const handleImportGroups = async () => {
+    try {
+      setImporting(true);
+      toast.loading('Importando grupos econômicos...');
+
+      const { data, error } = await supabase.functions.invoke('import-economic-groups');
+
+      if (error) throw error;
+
+      toast.dismiss();
+      toast.success(`Grupos importados com sucesso! ${data.results.length} grupos processados.`);
+      
+      // Recarregar a lista de grupos
+      await loadGroups();
+    } catch (error) {
+      console.error('Error importing groups:', error);
+      toast.dismiss();
+      toast.error('Erro ao importar grupos econômicos');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
@@ -136,21 +161,34 @@ export default function EconomicGroups() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Grupos Econômicos</h1>
-          <p className="text-muted-foreground">
-            Empresas relacionadas com pagamento consolidado
-          </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Grupos Econômicos</h1>
+            <p className="text-muted-foreground">
+              Empresas relacionadas com pagamento consolidado
+            </p>
+          </div>
+          {totalGroups === 0 && !loading && (
+            <Button 
+              onClick={handleImportGroups} 
+              disabled={importing}
+              size="lg"
+            >
+              {importing ? 'Importando...' : 'Importar Grupos'}
+            </Button>
+          )}
         </div>
 
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Pagamento Consolidado:</strong> Quando uma empresa pagadora de um grupo realiza
-            o pagamento, todas as faturas das empresas do mesmo grupo para aquela competência são
-            automaticamente marcadas como pagas.
-          </AlertDescription>
-        </Alert>
+        {totalGroups > 0 && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Pagamento Consolidado:</strong> Quando uma empresa pagadora de um grupo realiza
+              o pagamento, todas as faturas das empresas do mesmo grupo para aquela competência são
+              automaticamente marcadas como pagas.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6">
@@ -190,8 +228,17 @@ export default function EconomicGroups() {
           </Card>
         </div>
 
-        <div className="space-y-4">
-          {groups.map((group) => (
+        {totalGroups === 0 ? (
+          <Card className="p-8 text-center">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum grupo econômico encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              Clique no botão acima para importar os grupos econômicos configurados.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {groups.map((group) => (
             <Collapsible
               key={group.id}
               open={expandedGroups.has(group.id)}
@@ -263,9 +310,10 @@ export default function EconomicGroups() {
                   </div>
                 </CollapsibleContent>
               </Card>
-            </Collapsible>
-          ))}
-        </div>
+              </Collapsible>
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );
