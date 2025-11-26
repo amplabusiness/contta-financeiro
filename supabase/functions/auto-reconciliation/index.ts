@@ -338,19 +338,36 @@ async function processReconciliation(
   confidenceScore: number,
   matchCriteria: MatchCriteria
 ) {
-  // 1. Buscar contas contábeis
+  // 1. Verificar se o cliente pertence a um grupo econômico
+  const { data: groupInvoices } = await supabase
+    .rpc('get_group_invoices_for_competence', {
+      p_client_id: invoice.client_id,
+      p_competence: invoice.competence
+    })
+
+  const invoicesToPay = groupInvoices && groupInvoices.length > 0 
+    ? groupInvoices 
+    : [invoice]
+
+  console.log(`Processando ${invoicesToPay.length} fatura(s) para pagamento consolidado`)
+
+  // 2. Buscar contas contábeis
   const accounts = await getChartOfAccounts(supabase)
 
-  // 2. Criar lançamento contábil de BAIXA
+  // 3. Criar lançamento contábil de BAIXA
   const transactionDate = new Date(transaction.transaction_date)
   const amount = Math.abs(transaction.amount)
+
+  const description = invoicesToPay.length > 1
+    ? `Recebimento consolidado - ${invoice.clients?.name || 'Cliente'} - ${invoicesToPay.length} faturas - Competência ${invoice.competence}`
+    : `Recebimento de honorário - ${invoice.clients?.name || 'Cliente'} - Competência ${invoice.competence}`
 
   const { data: entry, error: entryError } = await supabase
     .from('accounting_entries')
     .insert({
       entry_date: transactionDate.toISOString().split('T')[0],
       competence_date: transactionDate.toISOString().split('T')[0],
-      description: `Recebimento de honorário - ${invoice.clients?.name || 'Cliente'} - Competência ${invoice.competence}`,
+      description: description,
       history: `${transaction.description} - Conciliação automática (${method})`,
       entry_type: 'BAIXA_RECEITA',
       document_type: getPaymentMethod(transaction.description),
@@ -366,7 +383,7 @@ async function processReconciliation(
 
   if (entryError) throw entryError
 
-  // 3. Criar itens do lançamento (partidas dobradas)
+  // 4. Criar itens do lançamento (partidas dobradas)
   const items = [
     {
       entry_id: entry.id,
@@ -388,22 +405,30 @@ async function processReconciliation(
 
   await supabase.from('accounting_entry_items').insert(items)
 
-  // 4. Atualizar invoice como pago
-  await supabase
-    .from('invoices')
-    .update({
-      status: 'paid',
-      payment_date: transaction.transaction_date
-    })
-    .eq('id', invoice.id)
+  // 5. Atualizar TODAS as invoices do grupo como pagas
+  for (const inv of invoicesToPay) {
+    await supabase
+      .from('invoices')
+      .update({
+        status: 'paid',
+        payment_date: transaction.transaction_date
+      })
+      .eq('id', inv.id)
 
-  // 5. Linkar transação ao invoice
+    console.log(`Marcada como paga: Invoice ${inv.id} - Cliente ${inv.client_id} - R$ ${inv.amount}`)
+  }
+
+  // 6. Linkar transação ao invoice principal
   await supabase
     .from('bank_transactions')
     .update({ invoice_id: invoice.id })
     .eq('id', transaction.id)
 
-  // 6. Registrar na tabela de conciliação
+  // 7. Registrar na tabela de conciliação
+  const notes = invoicesToPay.length > 1
+    ? `Conciliação ${method} - Score: ${confidenceScore}% - Pagamento consolidado de ${invoicesToPay.length} faturas do grupo econômico`
+    : `Conciliação ${method} - Score: ${confidenceScore}%`
+
   await supabase
     .from('bank_reconciliation')
     .insert({
@@ -413,10 +438,10 @@ async function processReconciliation(
       reconciliation_method: method,
       confidence_score: confidenceScore,
       match_criteria: matchCriteria,
-      notes: `Conciliação ${method} - Score: ${confidenceScore}%`
+      notes: notes
     })
 
-  return { success: true, entryId: entry.id }
+  return { success: true, entryId: entry.id, invoicesPaid: invoicesToPay.length }
 }
 
 async function getChartOfAccounts(supabase: EdgeSupabaseClient): Promise<ChartOfAccounts> {

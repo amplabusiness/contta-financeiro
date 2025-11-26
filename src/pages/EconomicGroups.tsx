@@ -1,286 +1,272 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Building2, Users, AlertTriangle, DollarSign } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Users, AlertTriangle, TrendingUp, Building2 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-interface Partner {
-  nome: string;
-  cpf?: string;
-  qualificacao?: string;
-}
 
 interface EconomicGroup {
-  partnerName: string;
-  partnerCpf: string;
-  clients: Array<{
-    id: string;
-    name: string;
-    cnpj: string;
-    monthlyFee: number;
-    status: string;
-  }>;
-  totalRevenue: number;
-  clientCount: number;
-  riskLevel: "low" | "medium" | "high";
+  id: string;
+  name: string;
+  main_payer_client_id: string;
+  total_monthly_fee: number;
+  payment_day: number;
+  is_active: boolean;
+  member_count: number;
+  main_payer_name: string;
+  members: GroupMember[];
 }
 
-const EconomicGroups = () => {
-  const [loading, setLoading] = useState(true);
+interface GroupMember {
+  client_id: string;
+  client_name: string;
+  individual_fee: number;
+  is_main_payer: boolean;
+}
+
+export default function EconomicGroups() {
   const [groups, setGroups] = useState<EconomicGroup[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-
-  const loadGroups = async () => {
-    setLoading(true);
-    try {
-      // Buscar todos os clientes com seus sócios
-      const { data: clients, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("status", "active");
-
-      if (clientsError) throw clientsError;
-
-      // Mapear sócios por CPF
-      const partnersMap = new Map<string, EconomicGroup>();
-
-      clients?.forEach(client => {
-        const qsa = client.qsa as any;
-        if (Array.isArray(qsa)) {
-          qsa.forEach((partner: Partner) => {
-            const cpf = partner.cpf || partner.nome;
-            if (!cpf) return;
-
-            if (!partnersMap.has(cpf)) {
-              partnersMap.set(cpf, {
-                partnerName: partner.nome,
-                partnerCpf: cpf,
-                clients: [],
-                totalRevenue: 0,
-                clientCount: 0,
-                riskLevel: "low",
-              });
-            }
-
-            const group = partnersMap.get(cpf)!;
-            group.clients.push({
-              id: client.id,
-              name: client.name,
-              cnpj: client.cnpj || "",
-              monthlyFee: Number(client.monthly_fee || 0),
-              status: client.status,
-            });
-            group.totalRevenue += Number(client.monthly_fee || 0);
-            group.clientCount++;
-          });
-        }
-      });
-
-      // Filtrar apenas grupos com mais de 1 empresa
-      const economicGroups = Array.from(partnersMap.values())
-        .filter(group => group.clientCount > 1)
-        .sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-      // Calcular nível de risco
-      const totalRev = clients?.reduce((sum, c) => sum + Number(c.monthly_fee || 0), 0) || 0;
-      setTotalRevenue(totalRev);
-
-      economicGroups.forEach(group => {
-        const concentration = totalRev > 0 ? (group.totalRevenue / totalRev) * 100 : 0;
-        if (concentration > 20) {
-          group.riskLevel = "high";
-        } else if (concentration > 10) {
-          group.riskLevel = "medium";
-        } else {
-          group.riskLevel = "low";
-        }
-      });
-
-      setGroups(economicGroups);
-      toast.success("Grupos econômicos identificados!");
-    } catch (error: any) {
-      console.error("Erro ao carregar grupos:", error);
-      toast.error("Erro ao carregar dados", {
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadGroups();
   }, []);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const loadGroups = async () => {
+    try {
+      setLoading(true);
 
-  const getRiskBadge = (level: string) => {
-    switch (level) {
-      case "high":
-        return <Badge variant="destructive">Alto Risco</Badge>;
-      case "medium":
-        return <Badge variant="secondary">Médio Risco</Badge>;
-      default:
-        return <Badge>Baixo Risco</Badge>;
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('economic_groups')
+        .select(`
+          id,
+          name,
+          main_payer_client_id,
+          total_monthly_fee,
+          payment_day,
+          is_active,
+          clients!economic_groups_main_payer_client_id_fkey(name)
+        `)
+        .eq('is_active', true)
+        .order('name');
+
+      if (groupsError) throw groupsError;
+
+      const { data: membersData, error: membersError } = await supabase
+        .from('economic_group_members')
+        .select(`
+          economic_group_id,
+          client_id,
+          individual_fee,
+          clients(name)
+        `);
+
+      if (membersError) throw membersError;
+
+      const consolidatedGroups: EconomicGroup[] = (groupsData || []).map(group => {
+        const groupMembers = (membersData || [])
+          .filter(m => m.economic_group_id === group.id)
+          .map(m => ({
+            client_id: m.client_id,
+            client_name: (m.clients as any)?.name || 'Nome não disponível',
+            individual_fee: m.individual_fee,
+            is_main_payer: m.client_id === group.main_payer_client_id
+          }));
+
+        return {
+          id: group.id,
+          name: group.name,
+          main_payer_client_id: group.main_payer_client_id,
+          total_monthly_fee: group.total_monthly_fee,
+          payment_day: group.payment_day,
+          is_active: group.is_active,
+          member_count: groupMembers.length,
+          main_payer_name: (group.clients as any)?.name || 'Nome não disponível',
+          members: groupMembers
+        };
+      });
+
+      setGroups(consolidatedGroups);
+    } catch (error) {
+      console.error('Error loading economic groups:', error);
+      toast.error('Erro ao carregar grupos econômicos');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const highRiskGroups = groups.filter(g => g.riskLevel === "high");
-  const totalGroupRevenue = groups.reduce((sum, g) => sum + g.totalRevenue, 0);
-  const concentration = totalRevenue > 0 ? (totalGroupRevenue / totalRevenue) * 100 : 0;
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const totalGroups = groups.length;
+  const totalCompanies = groups.reduce((sum, g) => sum + g.member_count, 0);
+  const totalRevenue = groups.reduce((sum, g) => sum + g.total_monthly_fee, 0);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">🏢 Grupos Econômicos</h1>
+          <h1 className="text-3xl font-bold">Grupos Econômicos</h1>
           <p className="text-muted-foreground">
-            Mapeamento de sócios e análise de risco de concentração
+            Empresas relacionadas com pagamento consolidado
           </p>
         </div>
 
-        {/* Alertas de Risco */}
-        {highRiskGroups.length > 0 && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Atenção: Alta Concentração Detectada</AlertTitle>
-            <AlertDescription>
-              Foram identificados {highRiskGroups.length} grupo(s) econômico(s) com alta concentração de receita.
-              Considere diversificar a carteira de clientes para reduzir o risco.
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Pagamento Consolidado:</strong> Quando uma empresa pagadora de um grupo realiza
+            o pagamento, todas as faturas das empresas do mesmo grupo para aquela competência são
+            automaticamente marcadas como pagas.
+          </AlertDescription>
+        </Alert>
 
-        {/* Cards Principais */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Grupos Identificados</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{groups.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Sócios com múltiplas empresas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita de Grupos</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(totalGroupRevenue)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Users className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {concentration.toFixed(1)}% da receita total
-              </p>
-            </CardContent>
+              <div>
+                <p className="text-sm text-muted-foreground">Total de Grupos</p>
+                <p className="text-2xl font-bold">{totalGroups}</p>
+              </div>
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Grupos de Alto Risco</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{highRiskGroups.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Concentração &gt; 20% da receita
-              </p>
-            </CardContent>
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Empresas Vinculadas</p>
+                <p className="text-2xl font-bold">{totalCompanies}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <DollarSign className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Receita Total Mensal</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
+              </div>
+            </div>
           </Card>
         </div>
 
-        {/* Lista de Grupos */}
-        {groups.map((group, idx) => {
-          const groupConcentration = totalRevenue > 0 ? (group.totalRevenue / totalRevenue) * 100 : 0;
-          
-          return (
-            <Card key={idx}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
-                      {group.partnerName}
-                    </CardTitle>
-                    <CardDescription>
-                      {group.clientCount} empresas • {formatCurrency(group.totalRevenue)}/mês
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getRiskBadge(group.riskLevel)}
-                    <Badge variant="outline">{groupConcentration.toFixed(1)}% da receita</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>CNPJ</TableHead>
-                      <TableHead className="text-right">Mensalidade</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.clients.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-medium">{client.name}</TableCell>
-                        <TableCell>{client.cnpj}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(client.monthlyFee)}</TableCell>
-                        <TableCell>
-                          <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                            {client.status}
+        <div className="space-y-4">
+          {groups.map((group) => (
+            <Collapsible
+              key={group.id}
+              open={expandedGroups.has(group.id)}
+              onOpenChange={() => toggleGroup(group.id)}
+            >
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <div className="p-6 flex items-center justify-between hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <Building2 className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-lg">{group.name}</h3>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-sm text-muted-foreground">
+                            Pagadora: <strong>{group.main_payer_name}</strong>
+                          </span>
+                          <Badge variant="outline">
+                            {group.member_count} {group.member_count === 1 ? 'empresa' : 'empresas'}
                           </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          <Badge variant="secondary">
+                            Vencimento: Dia {group.payment_day}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Honorário Total</p>
+                        <p className="text-lg font-bold text-primary">
+                          {formatCurrency(group.total_monthly_fee)}
+                        </p>
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 transition-transform ${
+                          expandedGroups.has(group.id) ? 'transform rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
 
-                {/* Impacto */}
-                <Alert className="mt-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Impacto se o grupo sair</AlertTitle>
-                  <AlertDescription>
-                    Perda de receita: {formatCurrency(group.totalRevenue)}/mês ({groupConcentration.toFixed(1)}% do faturamento total)
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {groups.length === 0 && !loading && (
-          <Card>
-            <CardContent className="py-10 text-center">
-              <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum grupo econômico identificado</h3>
-              <p className="text-muted-foreground">
-                Adicione informações de sócios (QSA) aos seus clientes para identificar grupos econômicos.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+                <CollapsibleContent>
+                  <div className="px-6 pb-6 border-t">
+                    <div className="mt-4 space-y-2">
+                      <h4 className="font-semibold mb-3">Empresas do Grupo:</h4>
+                      {group.members.map((member) => (
+                        <div
+                          key={member.client_id}
+                          className="flex items-center justify-between p-3 bg-accent/20 rounded-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            <span>{member.client_name}</span>
+                            {member.is_main_payer && (
+                              <Badge variant="default" className="text-xs">
+                                Pagadora
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Honorário Individual</p>
+                            <p className="font-semibold">{formatCurrency(member.individual_fee)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ))}
+        </div>
       </div>
     </Layout>
   );
-};
-
-export default EconomicGroups;
+}
