@@ -89,69 +89,65 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
 
       setAllClients(clientOptions);
 
-      // Parse da planilha - Identificar grupos separadamente
-      const parsedGroups: SpreadsheetGroup[] = [];
-      let currentGroup: SpreadsheetGroup | null = null;
-      let groupIndex = -1;
+      // Parse da planilha - Estrutura: A=Empresa, B=CNPJ/CPF, C=Grupo
+      const groupsMap = new Map<string, SpreadsheetCompany[]>();
 
       console.log("📊 Iniciando parse - Total de linhas:", spreadsheetData.length);
 
       for (let i = 0; i < spreadsheetData.length; i++) {
         const row = spreadsheetData[i];
-        if (!row || row.length === 0) continue;
+        if (!row || row.length < 3) continue;
 
-        const colA = String(row[0] ?? "").trim();
-        const colB = String(row[1] ?? "").trim();
+        const companyName = String(row[0] ?? "").trim();  // Coluna A
+        const document = String(row[1] ?? "").trim();      // Coluna B
+        const groupIdentifier = String(row[2] ?? "").trim(); // Coluna C
 
-        const normalized = normalizeDocument(colB);
+        const normalized = normalizeDocument(document);
         const hasValidDoc = normalized.length === 11 || normalized.length === 14;
 
-        console.log(`Linha ${i}: colA="${colA}", colB="${colB}", hasValidDoc=${hasValidDoc}`);
+        console.log(`Linha ${i}: empresa="${companyName}", doc="${document}", grupo="${groupIdentifier}", valid=${hasValidDoc}`);
 
-        // Detectar cabeçalho de NOVO GRUPO (linha com "grupo" em colA e SEM documento em colB)
-        if (colA.toLowerCase().includes("grupo") && !hasValidDoc) {
-          // Salvar grupo anterior se existir
-          if (currentGroup && currentGroup.companies.length > 0) {
-            console.log(`✅ Salvando grupo anterior: ${currentGroup.groupName} com ${currentGroup.companies.length} empresas`);
-            parsedGroups.push(currentGroup);
-          }
-
-          groupIndex++;
-          const match = colA.match(/\d+/);
-          const groupNumber = match ? parseInt(match[0]) : groupIndex + 1;
-
-          currentGroup = {
-            groupNumber,
-            groupName: colA,
-            companies: [],
-            color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
-          };
-
-          console.log(`🆕 Novo grupo criado: ${currentGroup.groupName} (índice ${groupIndex})`);
+        // Pular cabeçalho ou linhas sem documento válido
+        if (!hasValidDoc || !companyName) {
+          console.log(`  ⏭️ Ignorando linha ${i} (cabeçalho ou inválida)`);
+          continue;
         }
-        // Empresa com documento válido - adicionar ao grupo ATUAL
-        else if (hasValidDoc && currentGroup) {
-          currentGroup.companies.push({
-            name: colA || `Empresa ${currentGroup.companies.length + 1}`,
-            document: colB
-          });
-          console.log(`  ➕ Empresa adicionada ao ${currentGroup.groupName}: ${colA}`);
+
+        // Agrupar empresas pelo identificador da coluna C
+        if (!groupsMap.has(groupIdentifier)) {
+          groupsMap.set(groupIdentifier, []);
         }
-        // Empresa com documento válido MAS sem grupo atual (erro de formato)
-        else if (hasValidDoc && !currentGroup) {
-          console.warn(`⚠️ Empresa encontrada sem grupo definido na linha ${i}. Ignorando.`);
-        }
+
+        groupsMap.get(groupIdentifier)!.push({
+          name: companyName,
+          document: document
+        });
+
+        console.log(`  ✅ Empresa "${companyName}" adicionada ao ${groupIdentifier}`);
       }
 
-      // Salvar último grupo
-      if (currentGroup && currentGroup.companies.length > 0) {
-        console.log(`✅ Salvando último grupo: ${currentGroup.groupName} com ${currentGroup.companies.length} empresas`);
-        parsedGroups.push(currentGroup);
-      }
+      // Converter Map para array de grupos
+      const parsedGroups: SpreadsheetGroup[] = [];
+      let groupIndex = 0;
+
+      groupsMap.forEach((companies, groupName) => {
+        const match = groupName.match(/\d+/);
+        const groupNumber = match ? parseInt(match[0]) : groupIndex + 1;
+
+        parsedGroups.push({
+          groupNumber,
+          groupName,
+          companies,
+          color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
+        });
+
+        console.log(`📦 Grupo criado: ${groupName} com ${companies.length} empresas`);
+        groupIndex++;
+      });
 
       console.log(`📊 RESULTADO: ${parsedGroups.length} grupos identificados`);
       parsedGroups.forEach((g, i) => {
-        console.log(`  Grupo ${i + 1}: ${g.groupName} - ${g.companies.length} empresas`);
+        console.log(`  ${i + 1}. ${g.groupName} - ${g.companies.length} empresas`);
       });
 
       // Fazer match automático
