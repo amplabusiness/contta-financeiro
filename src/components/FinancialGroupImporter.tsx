@@ -280,6 +280,13 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       return;
     }
 
+    // Verificar se pelo menos uma empresa tem honorário configurado
+    const hasValidFee = groupMatch.matches.some(m => m.currentFee && m.currentFee > 0);
+    if (!hasValidFee) {
+      toast.error("Pelo menos uma empresa do grupo deve ter um valor de honorário configurado. Grupos financeiros não podem ter todas as empresas em pro-bono.");
+      return;
+    }
+
     setGroups(prev => prev.map((g, i) => 
       i === groupIndex ? { ...g, processing: true } : g
     ));
@@ -294,7 +301,12 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       }
 
       // Calcular honorário total e individual
-      const totalFee = mainPayer.currentFee || 1518.00;
+      const totalFee = mainPayer.currentFee || 0;
+      
+      if (totalFee <= 0) {
+        throw new Error("Empresa pagadora deve ter um valor de honorário configurado");
+      }
+      
       const paymentDay = mainPayer.currentPaymentDay || 10;
       const individualFee = totalFee / groupMatch.matches.length;
 
@@ -407,9 +419,11 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       <div className="space-y-4">
         {groups.map((groupMatch, groupIndex) => {
           const allMatched = groupMatch.matches.every(m => m.found);
+          const hasValidFee = groupMatch.matches.some(m => m.currentFee && m.currentFee > 0);
           const mainPayer = groupMatch.matches[groupMatch.mainPayerIndex];
           const totalFee = mainPayer?.currentFee || 0;
           const individualFee = totalFee / groupMatch.matches.length;
+          const canApprove = allMatched && hasValidFee;
 
           return (
             <Card 
@@ -445,7 +459,7 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                   ) : (
                     <Button
                       onClick={() => handleApproveGroup(groupIndex)}
-                      disabled={!allMatched || groupMatch.processing}
+                      disabled={!canApprove || groupMatch.processing}
                       size="sm"
                     >
                       {groupMatch.processing ? "Processando..." : "Aprovar Grupo"}
@@ -453,6 +467,16 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                   )}
                 </div>
               </CardHeader>
+              {!hasValidFee && !groupMatch.approved && (
+                <div className="px-6 pb-4">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Impossível aprovar:</strong> Pelo menos uma empresa do grupo deve ter um valor de honorário configurado. Grupos financeiros não podem ter todas as empresas em pro-bono.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
               <CardContent>
                 <div className="space-y-3">
                   {groupMatch.matches.map((match, matchIndex) => (
