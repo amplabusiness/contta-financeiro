@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, XCircle, AlertCircle, Building2, Crown, Search } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, Building2, Crown, Search, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDocument, normalizeDocument } from "@/lib/formatters";
@@ -391,7 +391,16 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                   <div className="flex items-center gap-3">
                     <Building2 className="h-5 w-5" style={{ color: groupMatch.group.color }} />
                     <div>
-                      <CardTitle className="text-lg">{groupMatch.group.groupName}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{groupMatch.group.groupName}</CardTitle>
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-muted rounded-md">
+                          <Circle 
+                            className="h-3 w-3 fill-current" 
+                            style={{ color: groupMatch.group.color }}
+                          />
+                          <span className="text-xs text-muted-foreground">Identificador do grupo</span>
+                        </div>
+                      </div>
                       <CardDescription>
                         {groupMatch.matches.length} empresa(s) • {groupMatch.matches.filter(m => m.found).length} encontrada(s)
                       </CardDescription>
