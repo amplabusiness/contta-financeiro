@@ -63,7 +63,7 @@ serve(async (req) => {
         const uint8Array = new Uint8Array(arrayBuffer);
         const base64 = btoa(String.fromCharCode(...uint8Array));
 
-        let processingResult: any = {};
+        const processingResult: any = {};
 
         // Process based on file type
         if (file.file_type === 'boleto_report') {

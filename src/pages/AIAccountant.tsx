@@ -129,7 +129,7 @@ const AIAccountant = () => {
     }
   };
 
-  const useQuickPrompt = (prompt: string) => {
+  const handleQuickPrompt = (prompt: string) => {
     setInput(prompt);
   };
 
@@ -231,7 +231,7 @@ const AIAccountant = () => {
                         key={idx}
                         variant="outline"
                         size="sm"
-                        onClick={() => useQuickPrompt(prompt)}
+                        onClick={() => handleQuickPrompt(prompt)}
                         className="text-xs"
                       >
                         {prompt}
