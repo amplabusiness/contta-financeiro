@@ -72,17 +72,6 @@ const Clients = () => {
     qsa: [] as any[]
   });
 
-  const formatDocument = (client: any) => {
-    if (client.cnpj) {
-      const cleaned = client.cnpj.replace(/\D/g, "");
-      return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-    }
-    if (client.cpf) {
-      const cleaned = client.cpf.replace(/\D/g, "");
-      return cleaned.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-    }
-    return "-";
-  };
 
   useEffect(() => {
     loadClients();
@@ -1013,7 +1002,7 @@ const Clients = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{formatDocument(client.cnpj || client.cpf || "")}</TableCell>
+                        <TableCell>{(client.cnpj || client.cpf) ? formatDocument(client.cnpj || client.cpf || "") : "-"}</TableCell>
                         <TableCell>{client.email || "-"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">

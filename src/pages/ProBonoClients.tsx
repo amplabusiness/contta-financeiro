@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useClient } from "@/contexts/ClientContext";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
+import { formatDocument } from "@/lib/formatters";
 
 const ProBonoClients = () => {
   const { selectedClientId } = useClient();
@@ -397,7 +398,7 @@ const ProBonoClients = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>CNPJ</TableHead>
+                      <TableHead>CPF/CNPJ</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Honorário Mensal</TableHead>
                       <TableHead>Período Pro-Bono</TableHead>
@@ -418,9 +419,7 @@ const ProBonoClients = () => {
                             {client.name}
                           </div>
                         </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {client.cnpj || "-"}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{(client.cnpj || client.cpf) ? formatDocument(client.cnpj || client.cpf || "") : "-"}</TableCell>
                         <TableCell>
                           {getStatusBadge(client.status)}
                         </TableCell>
