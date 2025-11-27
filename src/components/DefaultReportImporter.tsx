@@ -166,7 +166,7 @@ export function DefaultReportImporter() {
 
       const warnings: string[] = [];
       let invoicesCreated = 0;
-      let clientsProcessed = new Set<string>();
+      const clientsProcessed = new Set<string>();
 
       // Process each default entry
       for (const defaultEntry of defaults) {
