@@ -1012,7 +1012,7 @@ const Clients = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{formatDocument(client)}</TableCell>
+                        <TableCell>{formatDocument(client.cnpj || client.cpf || "")}</TableCell>
                         <TableCell>{client.email || "-"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
