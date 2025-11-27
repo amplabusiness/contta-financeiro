@@ -89,10 +89,12 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
 
       setAllClients(clientOptions);
 
-      // Parse da planilha
+      // Parse da planilha - Identificar grupos separadamente
       const parsedGroups: SpreadsheetGroup[] = [];
       let currentGroup: SpreadsheetGroup | null = null;
-      let groupIndex = 0;
+      let groupIndex = -1;
+
+      console.log("📊 Iniciando parse - Total de linhas:", spreadsheetData.length);
 
       for (let i = 0; i < spreadsheetData.length; i++) {
         const row = spreadsheetData[i];
@@ -104,13 +106,17 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
         const normalized = normalizeDocument(colB);
         const hasValidDoc = normalized.length === 11 || normalized.length === 14;
 
-        // Cabeçalho de grupo
+        console.log(`Linha ${i}: colA="${colA}", colB="${colB}", hasValidDoc=${hasValidDoc}`);
+
+        // Detectar cabeçalho de NOVO GRUPO (linha com "grupo" em colA e SEM documento em colB)
         if (colA.toLowerCase().includes("grupo") && !hasValidDoc) {
+          // Salvar grupo anterior se existir
           if (currentGroup && currentGroup.companies.length > 0) {
+            console.log(`✅ Salvando grupo anterior: ${currentGroup.groupName} com ${currentGroup.companies.length} empresas`);
             parsedGroups.push(currentGroup);
-            groupIndex++;
           }
 
+          groupIndex++;
           const match = colA.match(/\d+/);
           const groupNumber = match ? parseInt(match[0]) : groupIndex + 1;
 
@@ -120,28 +126,33 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
             companies: [],
             color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
           };
-        }
-        // Empresa com documento válido
-        else if (hasValidDoc) {
-          if (!currentGroup) {
-            currentGroup = {
-              groupNumber: groupIndex + 1,
-              groupName: `Grupo ${groupIndex + 1}`,
-              companies: [],
-              color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
-            };
-          }
 
+          console.log(`🆕 Novo grupo criado: ${currentGroup.groupName} (índice ${groupIndex})`);
+        }
+        // Empresa com documento válido - adicionar ao grupo ATUAL
+        else if (hasValidDoc && currentGroup) {
           currentGroup.companies.push({
-            name: colA,
+            name: colA || `Empresa ${currentGroup.companies.length + 1}`,
             document: colB
           });
+          console.log(`  ➕ Empresa adicionada ao ${currentGroup.groupName}: ${colA}`);
+        }
+        // Empresa com documento válido MAS sem grupo atual (erro de formato)
+        else if (hasValidDoc && !currentGroup) {
+          console.warn(`⚠️ Empresa encontrada sem grupo definido na linha ${i}. Ignorando.`);
         }
       }
 
+      // Salvar último grupo
       if (currentGroup && currentGroup.companies.length > 0) {
+        console.log(`✅ Salvando último grupo: ${currentGroup.groupName} com ${currentGroup.companies.length} empresas`);
         parsedGroups.push(currentGroup);
       }
+
+      console.log(`📊 RESULTADO: ${parsedGroups.length} grupos identificados`);
+      parsedGroups.forEach((g, i) => {
+        console.log(`  Grupo ${i + 1}: ${g.groupName} - ${g.companies.length} empresas`);
+      });
 
       // Fazer match automático
       const groupMatches: GroupMatch[] = parsedGroups.map(group => {
