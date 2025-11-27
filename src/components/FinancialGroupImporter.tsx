@@ -151,7 +151,7 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       });
 
       // Fazer match automático
-      const groupMatches: GroupMatch[] = parsedGroups.map(group => {
+      const baseGroupMatches: GroupMatch[] = parsedGroups.map(group => {
         const matches: MatchedCompany[] = group.companies.map(company => {
           const normalizedDoc = normalizeDocument(company.document);
           const matchedClient = clientOptions.find(c => 
@@ -193,6 +193,36 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
           processing: false
         };
       });
+
+      // Verificar quais clientes já pertencem a algum grupo financeiro existente
+      const allClientIds = baseGroupMatches
+        .flatMap(g => g.matches.map(m => m.clientId))
+        .filter((id): id is string => Boolean(id));
+
+      let groupMatches: GroupMatch[] = baseGroupMatches;
+
+      if (allClientIds.length > 0) {
+        const { data: existingMembers, error: existingError } = await supabase
+          .from("economic_group_members")
+          .select("client_id")
+          .in("client_id", allClientIds);
+
+        if (existingError) {
+          console.error("Erro ao verificar grupos existentes:", existingError);
+        } else {
+          const existingClientIds = new Set<string>((existingMembers || []).map(m => m.client_id));
+
+          groupMatches = baseGroupMatches.map(g => {
+            const hasClientInExistingGroup = g.matches.some(m => m.clientId && existingClientIds.has(m.clientId));
+
+            // Se qualquer empresa do grupo já estiver em um grupo financeiro,
+            // marcamos este grupo como já aprovado para evitar duplicação.
+            return hasClientInExistingGroup
+              ? { ...g, approved: true }
+              : g;
+          });
+        }
+      }
 
       setGroups(groupMatches);
       setInitialized(true);
