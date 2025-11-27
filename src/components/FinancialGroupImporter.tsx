@@ -300,11 +300,11 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
         throw new Error("Empresa pagadora não definida");
       }
 
-      // Calcular honorário total e individual
-      const totalFee = mainPayer.currentFee || 0;
+      // Calcular honorário total e individual somando TODOS os valores existentes
+      const totalFee = groupMatch.matches.reduce((sum, m) => sum + (m.currentFee || 0), 0);
       
       if (totalFee <= 0) {
-        throw new Error("Empresa pagadora deve ter um valor de honorário configurado");
+        throw new Error("Pelo menos uma empresa do grupo deve ter valor de honorário configurado");
       }
       
       const paymentDay = mainPayer.currentPaymentDay || 10;
@@ -420,9 +420,18 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
         {groups.map((groupMatch, groupIndex) => {
           const allMatched = groupMatch.matches.every(m => m.found);
           const hasValidFee = groupMatch.matches.some(m => m.currentFee && m.currentFee > 0);
-          const mainPayer = groupMatch.matches[groupMatch.mainPayerIndex];
-          const totalFee = mainPayer?.currentFee || 0;
+          
+          // Somar TODOS os honorários existentes no grupo
+          const totalFee = groupMatch.matches.reduce((sum, m) => sum + (m.currentFee || 0), 0);
           const individualFee = totalFee / groupMatch.matches.length;
+          
+          // Identificar TODAS as empresas que contribuem com honorários (pagadoras)
+          const payerIndices = groupMatch.matches
+            .map((m, idx) => ({ match: m, index: idx }))
+            .filter(({ match }) => match.currentFee && match.currentFee > 0)
+            .map(({ index }) => index);
+          
+          const mainPayer = groupMatch.matches[groupMatch.mainPayerIndex];
           const canApprove = allMatched && hasValidFee;
 
           return (
@@ -477,6 +486,16 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                   </Alert>
                 </div>
               )}
+              {payerIndices.length > 1 && !groupMatch.approved && (
+                <div className="px-6 pb-4">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Múltiplas empresas pagadoras:</strong> Os valores de honorários de {payerIndices.length} empresas (R$ {totalFee.toFixed(2)} no total) serão somados e divididos igualmente entre todas as {groupMatch.matches.length} empresas do grupo (R$ {individualFee.toFixed(2)} cada).
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
               <CardContent>
                 <div className="space-y-3">
                   {groupMatch.matches.map((match, matchIndex) => (
@@ -497,21 +516,11 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                               <Search className="h-4 w-4 text-amber-600" />
                             )}
                             <span className="font-medium text-sm">{match.spreadsheetName}</span>
-                            {matchIndex === groupMatch.mainPayerIndex && (
+                            {payerIndices.includes(matchIndex) && (
                               <Badge variant="secondary" className="text-xs gap-1">
                                 <Crown className="h-3 w-3" />
                                 Pagadora
                               </Badge>
-                            )}
-                            {match.found && matchIndex !== groupMatch.mainPayerIndex && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2 text-xs"
-                                onClick={() => handleSetMainPayer(groupIndex, matchIndex)}
-                              >
-                                Definir como Pagadora
-                              </Button>
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground mb-2">
@@ -562,17 +571,33 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                         
                         {match.found && (
                           <div className="text-right text-xs">
-                            <div className="text-muted-foreground">
-                              {matchIndex === groupMatch.mainPayerIndex ? "Total:" : "Individual:"}
-                            </div>
-                            <div className="font-semibold">
-                              R$ {(matchIndex === groupMatch.mainPayerIndex ? totalFee : individualFee).toFixed(2)}
-                            </div>
+                            {payerIndices.includes(matchIndex) ? (
+                              <>
+                                <div className="text-muted-foreground">Atual:</div>
+                                <div className="font-medium line-through text-muted-foreground">
+                                  R$ {(match.currentFee || 0).toFixed(2)}
+                                </div>
+                                <div className="text-muted-foreground mt-1">Novo:</div>
+                                <div className="font-semibold text-green-700">
+                                  R$ {individualFee.toFixed(2)}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-muted-foreground">Individual:</div>
+                                <div className="font-semibold">
+                                  R$ {individualFee.toFixed(2)}
+                                </div>
+                              </>
+                            )}
                             {match.currentPaymentDay && (
                               <div className="text-muted-foreground mt-1">
                                 Venc: dia {match.currentPaymentDay}
                               </div>
                             )}
+                            <div className="text-muted-foreground mt-1 text-[10px]">
+                              (Total grupo: R$ {totalFee.toFixed(2)})
+                            </div>
                           </div>
                         )}
                       </div>
