@@ -168,15 +168,13 @@ export default function EconomicGroups() {
               Empresas relacionadas com pagamento consolidado
             </p>
           </div>
-          {totalGroups === 0 && !loading && (
-            <Button 
-              onClick={handleImportGroups} 
-              disabled={importing}
-              size="lg"
-            >
-              {importing ? 'Importando...' : 'Importar Grupos'}
-            </Button>
-          )}
+          <Button 
+            onClick={handleImportGroups} 
+            disabled={importing}
+            size="lg"
+          >
+            {importing ? 'Importando...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
+          </Button>
         </div>
 
         {totalGroups > 0 && (
