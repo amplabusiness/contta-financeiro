@@ -76,7 +76,7 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       const { data: clients } = await supabase
         .from("clients")
         .select("id, name, cnpj, cpf, monthly_fee, payment_day")
-        .eq("status", "active")
+        .eq("is_active", true)
         .order("name");
 
       const clientOptions: ClientOption[] = (clients || []).map(c => ({

@@ -57,7 +57,7 @@ const BoletoGapsAnalysis = () => {
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
         .select("id, name, status")
-        .eq("status", "active");
+        .eq("is_active", true);
 
       if (clientsError) throw clientsError;
 

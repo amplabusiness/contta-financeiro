@@ -156,7 +156,7 @@ export function DefaultReportImporter() {
       const { data: existingClients, error: clientsError } = await supabase
         .from("clients")
         .select("id, name, cnpj")
-        .eq("status", "active");
+        .eq("is_active", true);
 
       if (clientsError) throw clientsError;
 

@@ -143,7 +143,7 @@ export default function DefaultAnalysis() {
       const { count: totalActiveClients } = await supabase
         .from("clients")
         .select("*", { count: "exact", head: true })
-        .eq("status", "active");
+        .eq("is_active", true);
 
       setStats({
         totalClients: clientsArray.length,

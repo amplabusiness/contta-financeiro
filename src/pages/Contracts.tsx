@@ -131,7 +131,7 @@ const Contracts = () => {
       const { data, error } = await supabase
         .from("clients")
         .select("*")
-        .eq("status", "active")
+        .eq("is_active", true)
         .order("name");
 
       if (error) throw error;

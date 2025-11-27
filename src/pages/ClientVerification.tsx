@@ -145,7 +145,7 @@ const ClientVerification = () => {
         const { data: dbClients, error } = await supabase
           .from("clients")
           .select("name, cnpj, cpf, monthly_fee")
-          .eq("status", "active");
+          .eq("is_active", true);
 
         if (error) throw error;
 

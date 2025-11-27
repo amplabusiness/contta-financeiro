@@ -108,7 +108,7 @@ const ReconciliationDiscrepancies = () => {
     const { data } = await supabase
       .from("clients")
       .select("*")
-      .eq("status", "active")
+      .eq("is_active", true)
       .order("name");
     setClients(data || []);
   };

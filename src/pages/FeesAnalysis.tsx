@@ -114,7 +114,7 @@ const FeesAnalysis = () => {
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("*")
-        .eq("status", "active")
+        .eq("is_active", true)
         .order("name");
 
       if (clientsError) throw clientsError;
