@@ -53,7 +53,7 @@ const Clients = () => {
     monthly_fee: "",
     payment_day: "",
     notes: "",
-    status: "active",
+    is_active: true,
     is_pro_bono: false,
     pro_bono_start_date: "",
     pro_bono_end_date: "",
@@ -84,7 +84,7 @@ const Clients = () => {
 
   const loadClients = async () => {
     try {
-      // Buscar clientes com honorário mensal E QUE ESTEJAM ATIVOS
+      // Buscar TODOS os clientes ativos (independente do honorário mensal)
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select(`
@@ -96,8 +96,7 @@ const Clients = () => {
             status
           )
         `)
-        .gt('monthly_fee', 0)
-        .eq('status', 'active')
+        .eq('is_active', true)
         .order("name");
 
       if (clientsError) throw clientsError;
@@ -105,7 +104,7 @@ const Clients = () => {
       // Buscar TODOS os clientes para identificação de grupos econômicos
       const { data: allClientsData, error: allClientsError } = await supabase
         .from("clients")
-        .select("id, name, cnpj, cpf, qsa, monthly_fee")
+        .select("id, name, cnpj, cpf, qsa, monthly_fee, is_active")
         .order("name");
 
       if (allClientsError) throw allClientsError;
@@ -203,7 +202,7 @@ const Clients = () => {
         monthly_fee: parseFloat(formData.monthly_fee) || 0,
         payment_day: formData.payment_day ? parseInt(formData.payment_day) : null,
         notes: formData.notes,
-        status: formData.status,
+        is_active: formData.is_active,
         is_pro_bono: formData.is_pro_bono,
         pro_bono_start_date: formData.pro_bono_start_date || null,
         pro_bono_end_date: formData.pro_bono_end_date || null,
@@ -270,7 +269,7 @@ const Clients = () => {
       if (invoices && invoices.length > 0) {
         const { error: updateError } = await supabase
           .from('clients')
-          .update({ status: 'inactive' })
+          .update({ is_active: false })
           .eq('id', deleteClientId);
 
         if (updateError) throw updateError;
@@ -291,7 +290,7 @@ const Clients = () => {
           if (error.code === '23503') { // Foreign key violation
             const { error: updateError } = await supabase
               .from('clients')
-              .update({ status: 'inactive' })
+              .update({ is_active: false })
               .eq('id', deleteClientId);
 
             if (updateError) throw updateError;
@@ -318,13 +317,13 @@ const Clients = () => {
   };
 
   const handleToggleStatus = async (client: any) => {
-    const newStatus = client.status === "active" ? "inactive" : "active";
-    const action = newStatus === "active" ? "ativado" : "suspenso";
+    const newStatus = !client.is_active;
+    const action = newStatus ? "ativado" : "suspenso";
 
     try {
       const { error } = await supabase
         .from("clients")
-        .update({ status: newStatus })
+        .update({ is_active: newStatus })
         .eq("id", client.id);
 
       if (error) throw error;
@@ -439,7 +438,7 @@ const Clients = () => {
       monthly_fee: "",
       payment_day: "",
       notes: "",
-      status: "active",
+      is_active: true,
       is_pro_bono: false,
       pro_bono_start_date: "",
       pro_bono_end_date: "",
@@ -475,7 +474,7 @@ const Clients = () => {
       monthly_fee: client.monthly_fee?.toString() || "",
       payment_day: client.payment_day?.toString() || "",
       notes: client.notes || "",
-      status: client.status,
+      is_active: client.is_active !== undefined ? client.is_active : true,
       is_pro_bono: client.is_pro_bono || false,
       pro_bono_start_date: client.pro_bono_start_date || "",
       pro_bono_end_date: client.pro_bono_end_date || "",
@@ -966,7 +965,11 @@ const Clients = () => {
                     <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
                   ) : (
                     <>Total: {clients.filter(client => 
-                      statusFilter === "all" || client.status === statusFilter
+                      statusFilter === "all" || 
+                      (statusFilter === "active" && client.is_active) || 
+                      (statusFilter === "inactive" && !client.is_active)
+                      (statusFilter === "active" && client.is_active) || 
+                      (statusFilter === "inactive" && !client.is_active)
                     ).length} clientes</>
                   )}
                 </CardDescription>
@@ -1021,12 +1024,14 @@ const Clients = () => {
                 <TableBody>
                   {clients.filter(client => 
                     (selectedClientId ? client.id === selectedClientId : true) &&
-                    (statusFilter === "all" || client.status === statusFilter)
+                    (statusFilter === "all" || 
+                     (statusFilter === "active" && client.is_active) || 
+                     (statusFilter === "inactive" && !client.is_active))
                   ).map((client) => {
                     const today = new Date();
                     const isProBonoActive = client.is_pro_bono && 
                       (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
-                    const isSuspended = client.status === "inactive";
+                    const isSuspended = !client.is_active;
                     
                     return (
                       <TableRow 
@@ -1069,8 +1074,8 @@ const Clients = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={client.status === "active" ? "default" : "destructive"}>
-                            {client.status === "active" ? "Ativo" : "Suspenso"}
+                          <Badge variant={client.is_active ? "default" : "destructive"}>
+                            {client.is_active ? "Ativo" : "Suspenso"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -1108,9 +1113,9 @@ const Clients = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleToggleStatus(client)}
-                            title={client.status === "active" ? "Suspender" : "Ativar"}
+                            title={client.is_active ? "Suspender" : "Ativar"}
                           >
-                            {client.status === "active" ? (
+                            {client.is_active ? (
                               <Ban className="w-4 h-4 text-destructive" />
                             ) : (
                               <CheckCircle className="w-4 h-4 text-success" />
@@ -1172,8 +1177,8 @@ const Clients = () => {
                     </div>
                     <div>
                       <Label className="text-muted-foreground">Status</Label>
-                      <Badge variant={viewingClient.status === "active" ? "default" : "destructive"}>
-                        {viewingClient.status === "active" ? "Ativo" : "Suspenso"}
+                      <Badge variant={viewingClient.is_active ? "default" : "destructive"}>
+                        {viewingClient.is_active ? "Ativo" : "Suspenso"}
                       </Badge>
                     </div>
                   </div>
