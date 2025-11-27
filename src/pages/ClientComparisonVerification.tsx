@@ -17,7 +17,7 @@ interface DatabaseClient {
   cpf: string | null;
   id: string;
   is_pro_bono: boolean;
-  status: string;
+  is_active: boolean;
 }
 
 interface MissingClient {
@@ -72,8 +72,8 @@ export default function ClientComparisonVerification() {
         // Fetch all active clients from database
         const { data: dbClients, error } = await supabase
           .from('clients')
-          .select('id, name, cnpj, cpf, is_pro_bono, status')
-          .eq('status', 'active');
+          .select('id, name, cnpj, cpf, is_pro_bono, is_active')
+          .eq('is_active', true);
 
         if (error) {
           console.error('Error fetching clients:', error);
