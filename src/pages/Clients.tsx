@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users, Eye, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 import { CNPJInput } from "@/components/CNPJInput";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
+import { FinancialGroupsDialog } from "@/components/FinancialGroupsDialog";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const Clients = () => {
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [importingGroups, setImportingGroups] = useState(false);
+  const [financialGroupsDialogOpen, setFinancialGroupsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -542,6 +544,13 @@ const Clients = () => {
                 <Users className="w-4 h-4 mr-2" />
               )}
               Importar Grupos Econômicos
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setFinancialGroupsDialogOpen(true)}
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Grupos Financeiros
             </Button>
             <Button variant="outline" onClick={() => navigate("/import")}>
               <Upload className="w-4 h-4 mr-2" />
@@ -1363,6 +1372,11 @@ const Clients = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <FinancialGroupsDialog 
+          open={financialGroupsDialogOpen} 
+          onOpenChange={setFinancialGroupsDialogOpen}
+        />
       </div>
     </Layout>
   );
