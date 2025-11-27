@@ -163,7 +163,7 @@ export default function EconomicGroups() {
       <div className="space-y-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold">Grupos Econômicos</h1>
+            <h1 className="text-3xl font-bold">Grupos Financeiros</h1>
             <p className="text-muted-foreground">
               Empresas relacionadas com pagamento consolidado
             </p>
@@ -231,9 +231,9 @@ export default function EconomicGroups() {
         {totalGroups === 0 ? (
           <Card className="p-8 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum grupo econômico encontrado</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum grupo financeiro encontrado</h3>
             <p className="text-muted-foreground mb-4">
-              Clique no botão acima para importar os grupos econômicos configurados.
+              Clique no botão acima para importar os grupos financeiros configurados.
             </p>
           </Card>
         ) : (
