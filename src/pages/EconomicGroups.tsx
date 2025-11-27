@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDocument } from '@/lib/formatters';
+import * as XLSX from "xlsx";
 
 interface EconomicGroup {
   id: string;
@@ -36,6 +37,9 @@ export default function EconomicGroups() {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [importPreview, setImportPreview] = useState<any[][] | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -105,29 +109,52 @@ export default function EconomicGroups() {
     }
   };
 
-  const handleImportGroups = async () => {
+  const parseExcelFile = (file: File): Promise<any[][]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data as string, { type: "binary" });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = (error) => reject(error);
+      reader.readAsBinaryString(file);
+    });
+  };
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     try {
       setImporting(true);
-      toast.loading('Importando grupos financeiros...');
-
-      const { data, error } = await supabase.functions.invoke('import-economic-groups');
-
-      if (error) throw error;
-
-      toast.dismiss();
-      toast.success(`Grupos financeiros importados com sucesso! ${data.groupsCreated} grupos criados.`);
-      
-      // Recarregar a lista de grupos
-      await loadGroups();
+      setImportFileName(file.name);
+      const data = await parseExcelFile(file);
+      setImportPreview(data);
+      toast.success("Planilha de grupos financeiros carregada. Vamos configurar os matchs a partir deste arquivo.");
     } catch (error) {
-      console.error('Error importing groups:', error);
-      toast.dismiss();
-      toast.error('Erro ao importar grupos financeiros');
+      console.error("Erro ao ler planilha de grupos financeiros:", error);
+      toast.error("Erro ao ler a planilha de grupos financeiros. Verifique o arquivo e tente novamente.");
     } finally {
       setImporting(false);
+      // Permitir selecionar o mesmo arquivo novamente se necessário
+      event.target.value = "";
     }
   };
 
+  const handleImportGroups = () => {
+    // Agora o botão apenas abre o seletor de arquivos, não cria grupos automaticamente
+    fileInputRef.current?.click();
+  };
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
@@ -164,6 +191,13 @@ export default function EconomicGroups() {
   return (
     <Layout>
       <div className="space-y-6">
+        <input
+          type="file"
+          accept=".csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileSelected}
+        />
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold">Grupos Financeiros</h1>
@@ -176,7 +210,7 @@ export default function EconomicGroups() {
             disabled={importing}
             size="lg"
           >
-            {importing ? 'Importando...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
+            {importing ? 'Lendo planilha...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
           </Button>
         </div>
 
@@ -233,9 +267,14 @@ export default function EconomicGroups() {
           <Card className="p-8 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum grupo financeiro encontrado</h3>
-            <p className="text-muted-foreground mb-4">
-              Clique no botão acima para importar os grupos financeiros configurados.
+            <p className="text-muted-foreground mb-2">
+              Clique no botão acima para importar a planilha de grupos financeiros.
             </p>
+            {importPreview && (
+              <p className="text-xs text-muted-foreground">
+                Arquivo carregado: <strong>{importFileName}</strong> com {Math.max(importPreview.length - 1, 0)} linhas de dados.
+              </p>
+            )}
           </Card>
         ) : (
           <div className="space-y-4">
