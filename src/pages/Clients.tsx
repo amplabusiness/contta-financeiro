@@ -39,6 +39,9 @@ const Clients = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingClientInvoices, setViewingClientInvoices] = useState<any[]>([]);
+  const [viewingClientOpeningBalances, setViewingClientOpeningBalances] = useState<any[]>([]);
+  const [loadingClientDetails, setLoadingClientDetails] = useState(false);
   const [importingGroups, setImportingGroups] = useState(false);
   const [financialGroupsDialogOpen, setFinancialGroupsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -521,6 +524,39 @@ const Clients = () => {
       });
     } finally {
       setImportingGroups(false);
+    }
+  };
+
+  const handleViewClient = async (client: any) => {
+    setViewingClient(client);
+    setViewDialogOpen(true);
+    setLoadingClientDetails(true);
+
+    try {
+      // Buscar honorários (invoices) do cliente
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", client.id)
+        .order("competence", { ascending: false });
+
+      if (invoicesError) throw invoicesError;
+      setViewingClientInvoices(invoicesData || []);
+
+      // Buscar saldo de abertura do cliente
+      const { data: openingBalanceData, error: openingBalanceError } = await supabase
+        .from("client_opening_balance")
+        .select("*")
+        .eq("client_id", client.id)
+        .order("competence", { ascending: false });
+
+      if (openingBalanceError) throw openingBalanceError;
+      setViewingClientOpeningBalances(openingBalanceData || []);
+    } catch (error) {
+      console.error("Erro ao carregar detalhes do cliente:", error);
+      toast.error("Erro ao carregar detalhes do cliente");
+    } finally {
+      setLoadingClientDetails(false);
     }
   };
 
@@ -1055,10 +1091,7 @@ const Clients = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              setViewingClient(client);
-                              setViewDialogOpen(true);
-                            }}
+                            onClick={() => handleViewClient(client)}
                             title="Ver Dados da Empresa"
                           >
                             <Eye className="w-4 h-4" />
@@ -1344,6 +1377,143 @@ const Clients = () => {
                       </>
                     )}
                   </div>
+                </div>
+
+                {/* Seção Honorários do Cliente */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">Honorários do Cliente</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Todos os honorários deste cliente
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                    <div>
+                      <Label className="text-muted-foreground">Valor cadastrado</Label>
+                      <p className="font-medium text-lg">
+                        {formatCurrency(Number(viewingClient.monthly_fee))}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Dia de vencimento cadastrado</Label>
+                      <p className="font-medium text-lg">{viewingClient.payment_day || "-"}</p>
+                    </div>
+                  </div>
+
+                  {loadingClientDetails ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Saldo de Abertura (Competências Anteriores) */}
+                      {viewingClientOpeningBalances.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-sm">Saldo de Abertura (2024)</h4>
+                            <Badge variant="outline" className="text-orange-600 border-orange-600">
+                              {viewingClientOpeningBalances.filter(b => b.status !== 'paid').length} pendentes
+                            </Badge>
+                          </div>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Competência</TableHead>
+                                <TableHead>Vencimento</TableHead>
+                                <TableHead className="text-right">Valor</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {viewingClientOpeningBalances.map((balance) => (
+                                <TableRow key={balance.id}>
+                                  <TableCell className="font-medium">{balance.competence}</TableCell>
+                                  <TableCell>
+                                    {balance.due_date 
+                                      ? new Date(balance.due_date).toLocaleDateString('pt-BR')
+                                      : "-"}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {formatCurrency(Number(balance.amount))}
+                                  </TableCell>
+                                  <TableCell>
+                                    {balance.status === 'paid' ? (
+                                      <Badge variant="default" className="bg-green-600">Pago</Badge>
+                                    ) : balance.status === 'partial' ? (
+                                      <Badge variant="outline" className="border-yellow-500 text-yellow-700">Parcial</Badge>
+                                    ) : (
+                                      <Badge variant="destructive">Pendente</Badge>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+
+                      {/* Honorários Regulares (2025+) */}
+                      {viewingClientInvoices.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-sm">Honorários Regulares</h4>
+                            <Badge variant="outline">
+                              {viewingClientInvoices.filter(i => i.status === 'pending' || i.status === 'overdue').length} pendentes
+                            </Badge>
+                          </div>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Competência</TableHead>
+                                <TableHead>Vencimento</TableHead>
+                                <TableHead className="text-right">Valor</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {viewingClientInvoices.slice(0, 10).map((invoice) => {
+                                const isOverdue = invoice.status === 'pending' && 
+                                  new Date(invoice.due_date) < new Date();
+                                
+                                return (
+                                  <TableRow key={invoice.id}>
+                                    <TableCell className="font-medium">{invoice.competence || "-"}</TableCell>
+                                    <TableCell>
+                                      {invoice.due_date 
+                                        ? new Date(invoice.due_date).toLocaleDateString('pt-BR')
+                                        : "-"}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {formatCurrency(Number(invoice.amount))}
+                                    </TableCell>
+                                    <TableCell>
+                                      {invoice.status === 'paid' ? (
+                                        <Badge variant="default" className="bg-green-600">Pago</Badge>
+                                      ) : isOverdue ? (
+                                        <Badge variant="destructive">Vencido</Badge>
+                                      ) : (
+                                        <Badge variant="outline">Pendente</Badge>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                          {viewingClientInvoices.length > 10 && (
+                            <p className="text-xs text-muted-foreground text-center">
+                              Mostrando 10 de {viewingClientInvoices.length} honorários
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {viewingClientInvoices.length === 0 && viewingClientOpeningBalances.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          Nenhum honorário cadastrado para este cliente
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
