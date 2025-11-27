@@ -61,40 +61,74 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
 
       for (let i = 0; i < spreadsheetData.length; i++) {
         const row = spreadsheetData[i];
-        if (!row || row.length < 2) continue;
+        if (!row || row.length === 0) continue;
 
-        const colA = String(row[0] || "").trim();
-        const colB = String(row[1] || "").trim();
+        const colA = String(row[0] ?? "").trim(); // pode ser NOME ou GRUPO
+        const colB = String(row[1] ?? "").trim(); // CNPJ/CPF (coluna B)
+        const colC = String(row[2] ?? "").trim(); // em algumas planilhas o nome pode estar na coluna C
 
-        console.log(`📊 Linha ${i}: colA="${colA}", colB="${colB}"`);
+        console.log(`📊 Linha ${i}: colA="${colA}", colB="${colB}", colC="${colC}"`);
 
-        // Detectar início de novo grupo (ex: "GRUPO 1", "Grupo 2", etc)
-        if (colA.toLowerCase().includes("grupo")) {
-          console.log(`✅ Grupo detectado na linha ${i}: ${colA}`);
-          // Salvar grupo anterior se existir
+        const normalized = normalizeDocument(colB);
+        const hasValidDoc = normalized.length === 11 || normalized.length === 14;
+
+        // Pular claramente cabeçalhos sem documento
+        if (!hasValidDoc && i === 0) {
+          console.log("⏭️ Cabeçalho detectado na primeira linha, ignorando.");
+          continue;
+        }
+
+        // Caso 1: linha com documento válido (regra principal)
+        if (hasValidDoc) {
+          // Definir nome do grupo: na maioria dos casos vem na coluna A
+          let groupName = colA;
+          if (!groupName) {
+            // Se não houver nada na coluna A, reaproveita o grupo atual ou cria um genérico
+            groupName = currentGroup?.groupName || `Grupo ${parsedGroups.length + 1}`;
+          }
+
+          // Se ainda não temos grupo atual ou mudou o identificador do grupo, cria novo
+          if (!currentGroup || currentGroup.groupName !== groupName) {
+            if (currentGroup && currentGroup.companies.length > 0) {
+              parsedGroups.push(currentGroup);
+            }
+
+            const existingIndex = parsedGroups.findIndex(g => g.groupName === groupName);
+            const groupNumber = existingIndex >= 0
+              ? parsedGroups[existingIndex].groupNumber
+              : parsedGroups.length + 1;
+
+            currentGroup = {
+              groupNumber,
+              groupName,
+              companies: []
+            };
+
+            console.log(`✅ Novo grupo detectado por coluna A na linha ${i}: ${groupName}`);
+          }
+
+          const companyName = colC || colA || `Empresa ${currentGroup.companies.length + 1}`;
+
+          currentGroup.companies.push({
+            name: companyName,
+            document: colB
+          });
+        }
+        // Caso 2: linha sem documento mas com texto "grupo" na coluna A (título de grupo)
+        else if (colA.toLowerCase().includes("grupo")) {
+          console.log(`✅ Cabeçalho de grupo detectado na linha ${i}: ${colA}`);
           if (currentGroup && currentGroup.companies.length > 0) {
             parsedGroups.push(currentGroup);
           }
 
-          // Extrair número do grupo
           const match = colA.match(/\d+/);
           const groupNumber = match ? parseInt(match[0]) : parsedGroups.length + 1;
-          
+
           currentGroup = {
             groupNumber,
             groupName: colA,
             companies: []
           };
-        } 
-        // Adicionar empresa ao grupo atual
-        else if (currentGroup && colB) {
-          const normalized = normalizeDocument(colB);
-          if (normalized.length === 11 || normalized.length === 14) {
-            currentGroup.companies.push({
-              name: colA,
-              document: colB
-            });
-          }
         }
       }
 
@@ -102,6 +136,8 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       if (currentGroup && currentGroup.companies.length > 0) {
         parsedGroups.push(currentGroup);
       }
+
+      console.log("📊 Grupos identificados:", parsedGroups.length, parsedGroups);
 
       // Buscar matches para cada grupo
       const groupMatches: GroupMatch[] = [];
