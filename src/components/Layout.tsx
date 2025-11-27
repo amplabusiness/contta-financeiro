@@ -11,6 +11,7 @@ import { useClient } from "@/contexts/ClientContext";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { formatDocument } from "@/lib/formatters";
 
 interface LayoutProps {
   children: ReactNode;
@@ -191,7 +192,7 @@ export function Layout({ children }: LayoutProps) {
                                   <span>{client.name}</span>
                                   {(client.cnpj || client.cpf) && (
                                     <span className="text-xs text-muted-foreground">
-                                      {client.cnpj || client.cpf}
+                                      {formatDocument(client.cnpj || client.cpf || "")}
                                     </span>
                                   )}
                                 </div>
