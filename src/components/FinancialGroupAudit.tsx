@@ -81,25 +81,30 @@ export function FinancialGroupAudit() {
 
       const audits: GroupAudit[] = (data || []).map((group: FinancialGroup) => {
         const memberCount = group.economic_group_members.length;
-        const currentTotal = group.total_monthly_fee;
-        const calculatedIndividual = currentTotal / memberCount;
-
-        // Inicializar com os valores atuais como "originais" para edição
+        
+        // Buscar os valores ATUAIS de monthly_fee de cada empresa do banco
         const originalFees: { [key: string]: number } = {};
+        let sumOfCurrentFees = 0;
+        
         group.economic_group_members.forEach(member => {
-          originalFees[member.client_id] = member.clients.monthly_fee;
+          const currentFee = member.clients.monthly_fee || 0;
+          originalFees[member.client_id] = currentFee;
+          sumOfCurrentFees += currentFee;
         });
 
-        // Verificar se precisa correção: se individual_fee não bate com a divisão correta
+        // Calcular o que DEVERIA ser o individual_fee (soma de todos / número de empresas)
+        const correctIndividualFee = sumOfCurrentFees / memberCount;
+
+        // Verificar se precisa correção: comparar individual_fee com o valor correto calculado
         const needsCorrection = group.economic_group_members.some(
-          member => Math.abs(member.individual_fee - calculatedIndividual) > 0.01
+          member => Math.abs(member.individual_fee - correctIndividualFee) > 0.01
         );
 
         return {
           group,
           needsCorrection,
-          currentTotal,
-          calculatedIndividual,
+          currentTotal: group.total_monthly_fee,
+          calculatedIndividual: correctIndividualFee,
           memberCount,
           originalFees
         };
@@ -114,23 +119,6 @@ export function FinancialGroupAudit() {
     }
   };
 
-  const handleFeeChange = (groupId: string, clientId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setGroups(prev => prev.map(audit => {
-      if (audit.group.id !== groupId) return audit;
-      
-      const newOriginalFees = {
-        ...audit.originalFees,
-        [clientId]: numValue
-      };
-
-      return {
-        ...audit,
-        originalFees: newOriginalFees
-      };
-    }));
-  };
-
   const handleCorrectGroup = async (groupId: string) => {
     setCorrecting(groupId);
     
@@ -141,16 +129,15 @@ export function FinancialGroupAudit() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Somar todos os valores originais informados pelo usuário
+      // Usar os valores já calculados automaticamente
       const totalFee = Object.values(audit.originalFees).reduce((sum, fee) => sum + fee, 0);
+      const individualFee = audit.calculatedIndividual;
       
       if (totalFee <= 0) {
         toast.error("O total de honorários deve ser maior que zero");
         setCorrecting(null);
         return;
       }
-
-      const individualFee = totalFee / audit.memberCount;
 
       // Atualizar o grupo
       const { error: groupError } = await supabase
@@ -213,8 +200,8 @@ export function FinancialGroupAudit() {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Auditoria de Grupos Financeiros:</strong> {groupsNeedingCorrection.length} de {totalGroups} grupos podem precisar de correção. 
-          Verifique os valores originais de honorários de cada empresa e corrija se necessário.
+          <strong>Auditoria Automática:</strong> {groupsNeedingCorrection.length} de {totalGroups} grupos precisam de correção. 
+          O sistema detectou automaticamente os valores de honorários de cada empresa no banco, somou todos e calculou a divisão correta.
         </AlertDescription>
       </Alert>
 
@@ -226,6 +213,39 @@ export function FinancialGroupAudit() {
             <p className="text-muted-foreground">
               Nenhuma inconsistência foi detectada nos {totalGroups} grupos financeiros.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {groupsNeedingCorrection.length > 0 && (
+        <Card className="border-amber-500">
+          <CardContent className="pt-6">
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>{groupsNeedingCorrection.length} grupo(s)</strong> precisam de correção. 
+                As empresas desses grupos têm valores de honorários no banco que não correspondem aos valores divididos registrados no grupo.
+              </AlertDescription>
+            </Alert>
+            <Button
+              onClick={async () => {
+                for (const audit of groupsNeedingCorrection) {
+                  await handleCorrectGroup(audit.group.id);
+                }
+              }}
+              disabled={correcting !== null}
+              className="w-full"
+              variant="destructive"
+            >
+              {correcting ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Corrigindo grupos...
+                </>
+              ) : (
+                <>Corrigir Todos os {groupsNeedingCorrection.length} Grupos Automaticamente</>
+              )}
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -260,67 +280,66 @@ export function FinancialGroupAudit() {
             </CardHeader>
             <CardContent>
               {audit.needsCorrection && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Inconsistência detectada:</strong> O valor individual por empresa não corresponde à divisão correta do total. 
-                    Informe abaixo os valores originais de honorários que cada empresa tinha ANTES de entrar no grupo.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Inconsistência detectada:</strong> Os valores de honorários das empresas no banco não correspondem ao individual_fee registrado. 
+                  Somando todos os valores atuais e dividindo igualmente, cada empresa deveria ter {formatCurrency(audit.calculatedIndividual)}.
+                </AlertDescription>
+              </Alert>
+            )}
 
-              <div className="space-y-3 mb-4">
-                {audit.group.economic_group_members.map((member) => (
-                  <div key={member.id} className="p-3 rounded-lg border bg-muted/50">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm mb-2">{member.clients.name}</div>
-                        <Label htmlFor={`fee-${member.id}`} className="text-xs text-muted-foreground">
-                          Valor original de honorários (antes do grupo):
-                        </Label>
-                        <Input
-                          id={`fee-${member.id}`}
-                          type="number"
-                          step="0.01"
-                          value={audit.originalFees[member.client_id] || 0}
-                          onChange={(e) => handleFeeChange(audit.group.id, member.client_id, e.target.value)}
-                          className="mt-1"
-                          disabled={correcting === audit.group.id}
-                        />
-                      </div>
-                      <div className="text-right text-xs">
-                        <div className="text-muted-foreground">Atual:</div>
-                        <div className="font-semibold">{formatCurrency(member.clients.monthly_fee)}</div>
-                        <div className="text-muted-foreground mt-1">Individual BD:</div>
-                        <div className="text-xs">{formatCurrency(member.individual_fee)}</div>
+            <div className="space-y-3 mb-4">
+              {audit.group.economic_group_members.map((member) => (
+                <div key={member.id} className="p-3 rounded-lg border bg-muted/50">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm mb-1">{member.clients.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Valor atual no banco: <strong>{formatCurrency(audit.originalFees[member.client_id] || 0)}</strong>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-primary/5 rounded-lg p-4 mb-4">
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Soma dos valores informados:</div>
-                    <div className="font-semibold text-lg">
-                      {formatCurrency(Object.values(audit.originalFees).reduce((sum, fee) => sum + fee, 0))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Novo individual por empresa:</div>
-                    <div className="font-semibold text-lg text-green-600">
-                      {formatCurrency(Object.values(audit.originalFees).reduce((sum, fee) => sum + fee, 0) / audit.memberCount)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Total no BD atual:</div>
-                    <div className="font-semibold text-lg">
-                      {formatCurrency(audit.currentTotal)}
+                    <div className="text-right text-xs">
+                      <div className="text-muted-foreground">Individual (BD):</div>
+                      <div className={`font-semibold ${audit.needsCorrection ? 'text-red-600' : ''}`}>
+                        {formatCurrency(member.individual_fee)}
+                      </div>
+                      {audit.needsCorrection && (
+                        <>
+                          <div className="text-muted-foreground mt-1">Deveria ser:</div>
+                          <div className="text-green-600 font-semibold">
+                            {formatCurrency(audit.calculatedIndividual)}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            <div className="bg-primary/5 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <div className="text-muted-foreground">Soma dos valores no banco:</div>
+                  <div className="font-semibold text-lg">
+                    {formatCurrency(Object.values(audit.originalFees).reduce((sum, fee) => sum + fee, 0))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Individual correto:</div>
+                  <div className="font-semibold text-lg text-green-600">
+                    {formatCurrency(audit.calculatedIndividual)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Total atual (BD):</div>
+                  <div className="font-semibold text-lg">
+                    {formatCurrency(audit.currentTotal)}
+                  </div>
+                </div>
               </div>
+            </div>
 
               {audit.needsCorrection && (
                 <Button
