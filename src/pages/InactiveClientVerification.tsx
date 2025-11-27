@@ -103,7 +103,7 @@ const InactiveClientVerification = () => {
         // 2. Buscar todos os clientes no banco (ativos e inativos)
         const { data: dbClients, error } = await supabase
           .from('clients')
-          .select('id, name, cnpj, cpf, is_pro_bono, status');
+          .select('id, name, cnpj, cpf, is_active, is_pro_bono');
 
         if (error) throw error;
 
@@ -118,7 +118,7 @@ const InactiveClientVerification = () => {
               cpf: client.cpf,
               id: client.id,
               is_pro_bono: client.is_pro_bono,
-              status: client.status,
+              is_active: client.is_active,
             });
           }
         });

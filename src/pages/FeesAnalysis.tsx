@@ -120,7 +120,7 @@ const FeesAnalysis = () => {
       if (clientsError) throw clientsError;
       setClients(clientsData || []);
 
-      // Identify pro bono clients (assuming we have an is_pro_bono field)
+      // Identify pro bono clients
       const proBono = (clientsData || []).filter((c) => c.is_pro_bono);
       setProBonoClients(proBono);
 
@@ -133,6 +133,7 @@ const FeesAnalysis = () => {
             id,
             name,
             cnpj,
+            monthly_fee,
             is_pro_bono
           )
         `)
