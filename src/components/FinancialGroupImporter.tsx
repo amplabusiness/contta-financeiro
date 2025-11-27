@@ -138,7 +138,7 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
           groupNumber,
           groupName,
           companies,
-          color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
+          color: GROUP_COLORS[(groupNumber - 1) % GROUP_COLORS.length]
         });
 
         console.log(`📦 Grupo criado: ${groupName} com ${companies.length} empresas`);
