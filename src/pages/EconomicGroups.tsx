@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDocument } from '@/lib/formatters';
 import * as XLSX from "xlsx";
+import { FinancialGroupImporter } from "@/components/FinancialGroupImporter";
 
 interface EconomicGroup {
   id: string;
@@ -140,15 +141,22 @@ export default function EconomicGroups() {
       setImportFileName(file.name);
       const data = await parseExcelFile(file);
       setImportPreview(data);
-      toast.success("Planilha de grupos financeiros carregada. Vamos configurar os matchs a partir deste arquivo.");
+      toast.success("Planilha carregada! Iniciando análise dos grupos financeiros...");
     } catch (error) {
-      console.error("Erro ao ler planilha de grupos financeiros:", error);
-      toast.error("Erro ao ler a planilha de grupos financeiros. Verifique o arquivo e tente novamente.");
+      console.error("Erro ao ler planilha:", error);
+      toast.error("Erro ao ler a planilha. Verifique o formato.");
+      setImportPreview(null);
+      setImportFileName(null);
     } finally {
       setImporting(false);
-      // Permitir selecionar o mesmo arquivo novamente se necessário
       event.target.value = "";
     }
+  };
+
+  const handleCompleteImport = () => {
+    setImportPreview(null);
+    setImportFileName(null);
+    loadGroups();
   };
 
   const handleImportGroups = () => {
@@ -198,21 +206,49 @@ export default function EconomicGroups() {
           className="hidden"
           onChange={handleFileSelected}
         />
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">Grupos Financeiros</h1>
-            <p className="text-muted-foreground">
-              Empresas relacionadas com pagamento consolidado
-            </p>
+
+        {importPreview ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Importar Grupos Financeiros</h1>
+                <p className="text-muted-foreground">
+                  Arquivo: <strong>{importFileName}</strong>
+                </p>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setImportPreview(null);
+                  setImportFileName(null);
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+
+            <FinancialGroupImporter 
+              spreadsheetData={importPreview} 
+              onComplete={handleCompleteImport}
+            />
           </div>
-          <Button 
-            onClick={handleImportGroups} 
-            disabled={importing}
-            size="lg"
-          >
-            {importing ? 'Lendo planilha...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
-          </Button>
-        </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold">Grupos Financeiros</h1>
+                <p className="text-muted-foreground">
+                  Empresas relacionadas com pagamento consolidado
+                </p>
+              </div>
+              <Button 
+                onClick={handleImportGroups} 
+                disabled={importing}
+                size="lg"
+              >
+                {importing ? 'Lendo planilha...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
+              </Button>
+            </div>
 
         {totalGroups > 0 && (
           <Alert>
@@ -270,11 +306,6 @@ export default function EconomicGroups() {
             <p className="text-muted-foreground mb-2">
               Clique no botão acima para importar a planilha de grupos financeiros.
             </p>
-            {importPreview && (
-              <p className="text-xs text-muted-foreground">
-                Arquivo carregado: <strong>{importFileName}</strong> com {Math.max(importPreview.length - 1, 0)} linhas de dados.
-              </p>
-            )}
           </Card>
         ) : (
           <div className="space-y-4">
@@ -360,6 +391,8 @@ export default function EconomicGroups() {
               </Collapsible>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
     </Layout>
