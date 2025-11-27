@@ -277,6 +277,7 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
           total_monthly_fee: totalFee,
           payment_day: paymentDay,
           is_active: true,
+          group_color: groupMatch.group.color,
           created_by: user.id
         })
         .select()

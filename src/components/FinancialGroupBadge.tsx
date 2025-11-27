@@ -13,6 +13,7 @@ interface GroupInfo {
   groupNumber: number;
   mainPayerName: string;
   isMainPayer: boolean;
+  groupColor?: string;
 }
 
 // Paleta de cores para os 21 grupos financeiros
@@ -59,6 +60,7 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
             id,
             name,
             main_payer_client_id,
+            group_color,
             clients!economic_groups_main_payer_client_id_fkey (
               name
             )
@@ -80,7 +82,8 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
         groupName: group.name,
         groupNumber: groupNumber,
         mainPayerName: group.clients?.name || 'Desconhecido',
-        isMainPayer: group.main_payer_client_id === clientId
+        isMainPayer: group.main_payer_client_id === clientId,
+        groupColor: group.group_color
       });
     } catch (error) {
       console.error('Error loading financial group:', error);
@@ -94,7 +97,7 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
     return null;
   }
 
-  const color = GROUP_COLORS[(groupInfo.groupNumber - 1) % GROUP_COLORS.length];
+  const color = groupInfo.groupColor || GROUP_COLORS[(groupInfo.groupNumber - 1) % GROUP_COLORS.length];
   const borderWidth = groupInfo.isMainPayer ? '4px' : '3px';
 
   return (

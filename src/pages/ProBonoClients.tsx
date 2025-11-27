@@ -20,6 +20,7 @@ import { ptBR } from "date-fns/locale";
 import { useClient } from "@/contexts/ClientContext";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 import { formatDocument } from "@/lib/formatters";
+import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
 
 const ProBonoClients = () => {
   const { selectedClientId } = useClient();
@@ -411,8 +412,9 @@ const ProBonoClients = () => {
                   <TableBody>
                     {filteredClients.map((client) => (
                       <TableRow key={client.id}>
-                        <TableCell className="font-medium">
+                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
+                            <FinancialGroupBadge clientId={client.id} />
                             {client.is_pro_bono && (
                               <Heart className="h-4 w-4 text-primary" />
                             )}

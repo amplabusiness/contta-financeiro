@@ -1433,6 +1433,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string
+          group_color: string | null
           id: string
           is_active: boolean | null
           main_payer_client_id: string | null
@@ -1444,6 +1445,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by: string
+          group_color?: string | null
           id?: string
           is_active?: boolean | null
           main_payer_client_id?: string | null
@@ -1455,6 +1457,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string
+          group_color?: string | null
           id?: string
           is_active?: boolean | null
           main_payer_client_id?: string | null
