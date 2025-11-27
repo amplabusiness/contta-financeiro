@@ -18,6 +18,7 @@ import { useClient } from "@/contexts/ClientContext";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { formatDocument } from "@/lib/formatters";
 import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 import { CNPJInput } from "@/components/CNPJInput";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
