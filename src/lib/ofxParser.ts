@@ -37,7 +37,7 @@ export interface OFXParseResult {
 export async function parseOFX(fileContent: string): Promise<OFXParseResult> {
   try {
     // Remove BOM if present
-    let content = fileContent.replace(/^\uFEFF/, '');
+    const content = fileContent.replace(/^\uFEFF/, '');
 
     // Detect OFX version
     const isXML = content.includes('<?xml');
