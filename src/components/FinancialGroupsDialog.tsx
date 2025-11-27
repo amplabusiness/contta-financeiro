@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Building2, Users, AlertTriangle, DollarSign, FileCheck } from "lucide-react";
+import { Building2, Users, AlertTriangle, DollarSign, FileCheck, Pencil } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ import { formatDocument } from '@/lib/formatters';
 import * as XLSX from "xlsx";
 import { FinancialGroupImporter } from "@/components/FinancialGroupImporter";
 import { FinancialGroupAudit } from "@/components/FinancialGroupAudit";
+import { FinancialGroupEditDialog } from "@/components/FinancialGroupEditDialog";
 
 interface EconomicGroup {
   id: string;
@@ -48,6 +49,8 @@ export function FinancialGroupsDialog({ open, onOpenChange }: FinancialGroupsDia
   const [importPreview, setImportPreview] = useState<any[][] | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState<string>("");
 
   useEffect(() => {
     if (open) {
@@ -196,16 +199,17 @@ export function FinancialGroupsDialog({ open, onOpenChange }: FinancialGroupsDia
   const totalRevenue = groups.reduce((sum, g) => sum + g.total_monthly_fee, 0);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Grupos Financeiros</DialogTitle>
-          <DialogDescription>
-            Empresas relacionadas com pagamento consolidado
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Grupos Financeiros</DialogTitle>
+            <DialogDescription>
+              Empresas relacionadas com pagamento consolidado
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6">
+          <div className="space-y-6">
           <input
             type="file"
             accept=".csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -352,6 +356,17 @@ export function FinancialGroupsDialog({ open, onOpenChange }: FinancialGroupsDia
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingGroupId(group.id);
+                                      setEditingGroupName(group.name);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
                                   <div className="text-right">
                                     <p className="text-sm text-muted-foreground">Honorário Total</p>
                                     <p className="text-lg font-bold text-primary">
@@ -417,5 +432,25 @@ export function FinancialGroupsDialog({ open, onOpenChange }: FinancialGroupsDia
         </div>
       </DialogContent>
     </Dialog>
+
+    {editingGroupId && (
+      <FinancialGroupEditDialog
+        open={!!editingGroupId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingGroupId(null);
+            setEditingGroupName("");
+          }
+        }}
+        groupId={editingGroupId}
+        groupName={editingGroupName}
+        onComplete={() => {
+          loadGroups();
+          setEditingGroupId(null);
+          setEditingGroupName("");
+        }}
+      />
+    )}
+    </>
   );
 }
