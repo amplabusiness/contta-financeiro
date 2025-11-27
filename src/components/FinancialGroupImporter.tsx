@@ -51,6 +51,10 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
   const parseSpreadsheet = async () => {
     setLoading(true);
     try {
+      console.log("📊 Iniciando parse da planilha...");
+      console.log("📊 Total de linhas:", spreadsheetData.length);
+      console.log("📊 Primeiras 5 linhas:", spreadsheetData.slice(0, 5));
+      
       // Parse a planilha e identifica os grupos
       const parsedGroups: SpreadsheetGroup[] = [];
       let currentGroup: SpreadsheetGroup | null = null;
@@ -62,8 +66,11 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
         const colA = String(row[0] || "").trim();
         const colB = String(row[1] || "").trim();
 
+        console.log(`📊 Linha ${i}: colA="${colA}", colB="${colB}"`);
+
         // Detectar início de novo grupo (ex: "GRUPO 1", "Grupo 2", etc)
         if (colA.toLowerCase().includes("grupo")) {
+          console.log(`✅ Grupo detectado na linha ${i}: ${colA}`);
           // Salvar grupo anterior se existir
           if (currentGroup && currentGroup.companies.length > 0) {
             parsedGroups.push(currentGroup);
