@@ -105,21 +105,21 @@ export default function EconomicGroups() {
   const handleImportGroups = async () => {
     try {
       setImporting(true);
-      toast.loading('Importando grupos econômicos...');
+      toast.loading('Importando grupos financeiros...');
 
       const { data, error } = await supabase.functions.invoke('import-economic-groups');
 
       if (error) throw error;
 
       toast.dismiss();
-      toast.success(`Grupos importados com sucesso! ${data.results.length} grupos processados.`);
+      toast.success(`Grupos financeiros importados com sucesso! ${data.groupsCreated} grupos criados.`);
       
       // Recarregar a lista de grupos
       await loadGroups();
     } catch (error) {
       console.error('Error importing groups:', error);
       toast.dismiss();
-      toast.error('Erro ao importar grupos econômicos');
+      toast.error('Erro ao importar grupos financeiros');
     } finally {
       setImporting(false);
     }
