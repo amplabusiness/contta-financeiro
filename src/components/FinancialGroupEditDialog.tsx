@@ -46,6 +46,7 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
   const [showAddClient, setShowAddClient] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [removingMembers, setRemovingMembers] = useState<Set<string>>(new Set());
+  const [removedMembersData, setRemovedMembersData] = useState<Map<string, { fee: number, paymentDay: number }>>(new Map());
   const [newPayerId, setNewPayerId] = useState<string>("");
   const [newPayerFee, setNewPayerFee] = useState<string>("");
   const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
@@ -56,6 +57,11 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
     if (open) {
       loadGroupMembers();
       loadAvailableClients();
+      // Limpar estados ao abrir o diálogo
+      setRemovedMembersData(new Map());
+      setRemovingMembers(new Set());
+      setNewPayerId("");
+      setNewPayerFee("");
     }
   }, [open, groupId]);
 
@@ -199,13 +205,25 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
       }
     }
 
+    // Armazenar dados da empresa removida
+    setRemovedMembersData(prev => {
+      const newMap = new Map(prev);
+      newMap.set(memberToRemove.client_id, { fee, paymentDay });
+      return newMap;
+    });
+    
     setRemovingMembers(prev => new Set(prev).add(memberToRemove.client_id));
     setMembers(prev => prev.filter(m => m.client_id !== memberToRemove.client_id));
     setMemberToRemove(null);
     setNewMemberFee("");
     setNewMemberPaymentDay("");
-    setNewPayerId("");
-    setNewPayerFee("");
+    
+    // Limpar dados de nova pagadora apenas se não for uma remoção de pagadora
+    if (!memberToRemove.is_main_payer) {
+      setNewPayerId("");
+      setNewPayerFee("");
+    }
+    
     toast.success('Empresa removida do grupo');
   };
 
@@ -270,14 +288,17 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
 
         if (deleteMemberError) throw deleteMemberError;
 
-        const fee = parseFloat(newMemberFee);
-        const paymentDay = parseInt(newMemberPaymentDay);
+        // Buscar os dados armazenados para esta empresa
+        const memberData = removedMembersData.get(memberId);
+        if (!memberData) {
+          throw new Error(`Dados não encontrados para empresa removida: ${memberId}`);
+        }
 
         const { error: updateRemovedClientError } = await supabase
           .from('clients')
           .update({
-            monthly_fee: fee,
-            payment_day: paymentDay
+            monthly_fee: memberData.fee,
+            payment_day: memberData.paymentDay
           })
           .eq('id', memberId);
 
@@ -309,6 +330,10 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
       }
 
       toast.success('Grupo atualizado com sucesso');
+      setRemovedMembersData(new Map()); // Limpar dados de empresas removidas
+      setRemovingMembers(new Set());
+      setNewPayerId("");
+      setNewPayerFee("");
       onComplete();
       onOpenChange(false);
     } catch (error) {
