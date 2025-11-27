@@ -155,7 +155,18 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
 
     setMemberToRemove(member);
     setNewMemberFee(member.original_monthly_fee?.toString() || "");
+    
+    // Se estiver removendo a pagadora, deixar payment_day vazio para forçar preenchimento
     setNewMemberPaymentDay(member.is_main_payer ? "" : "15");
+    
+    // Se estiver removendo a pagadora, pré-selecionar a primeira empresa restante como nova pagadora
+    if (member.is_main_payer && members.length > 1) {
+      const firstRemaining = members.find(m => m.client_id !== member.client_id);
+      if (firstRemaining) {
+        setNewPayerId(firstRemaining.client_id);
+        setNewPayerFee(firstRemaining.original_monthly_fee?.toString() || "");
+      }
+    }
   };
 
   const confirmRemoveMember = () => {
@@ -174,15 +185,13 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
       return;
     }
 
-    const isRemovingOnlyPayer = memberToRemove.is_main_payer && 
-      members.filter(m => m.client_id !== memberToRemove.client_id && m.original_monthly_fee && m.original_monthly_fee > 0).length === 0;
-
-    if (isRemovingOnlyPayer && !newPayerId) {
-      toast.error('Selecione uma nova empresa pagadora');
-      return;
-    }
-
-    if (isRemovingOnlyPayer) {
+    // Se estiver removendo a pagadora atual
+    if (memberToRemove.is_main_payer) {
+      if (!newPayerId) {
+        toast.error('Selecione uma nova empresa pagadora');
+        return;
+      }
+      
       const newPayerFeeValue = parseFloat(newPayerFee);
       if (isNaN(newPayerFeeValue) || newPayerFeeValue <= 0) {
         toast.error('Informe o novo honorário da empresa pagadora');
@@ -195,6 +204,8 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
     setMemberToRemove(null);
     setNewMemberFee("");
     setNewMemberPaymentDay("");
+    setNewPayerId("");
+    setNewPayerFee("");
     toast.success('Empresa removida do grupo');
   };
 
@@ -325,8 +336,8 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
   const calculatedIndividualFee = members.length > 0 ? totalOriginalFee / members.length : 0;
 
   const currentMainPayer = members.find(m => m.is_main_payer);
-  const isRemovingOnlyPayer = memberToRemove?.is_main_payer && 
-    members.filter(m => m.client_id !== memberToRemove.client_id && m.original_monthly_fee && m.original_monthly_fee > 0).length === 0;
+  // Se estiver removendo a pagadora, sempre mostrar campos de nova pagadora
+  const isRemovingMainPayer = memberToRemove?.is_main_payer;
 
   return (
     <>
@@ -508,12 +519,12 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
               />
             </div>
 
-            {isRemovingOnlyPayer && (
+            {isRemovingMainPayer && (
               <>
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    Esta é a única empresa pagadora do grupo. Selecione uma nova pagadora.
+                    Você está removendo a empresa pagadora do grupo. Selecione uma nova pagadora.
                   </AlertDescription>
                 </Alert>
 
