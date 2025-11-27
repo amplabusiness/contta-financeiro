@@ -14,11 +14,12 @@ interface Client {
   cnpj: string | null;
   cpf: string | null;
   monthly_fee?: number;
+  payment_day?: number;
 }
 
 interface EconomicGroupIndicatorProps {
-  client: Client;
-  allClients?: Client[];
+  client: Client & { qsa?: any[] };
+  allClients?: (Client & { qsa?: any[] })[];
 }
 
 interface EconomicGroupData {
@@ -28,14 +29,13 @@ interface EconomicGroupData {
   total_monthly_fee: number;
   payment_day: number;
   members: {
-    client_id: string;
-    client_name: string;
+    id: string;
+    name: string;
     individual_fee: number;
-    is_main_payer: boolean;
   }[];
 }
 
-export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) => {
+export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndicatorProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [groupData, setGroupData] = useState<EconomicGroupData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,42 +50,63 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
   }, [dialogOpen]);
 
   const loadGroupData = async () => {
+    if (!dialogOpen) return;
+    
+    setLoading(true);
     try {
-      setLoading(true);
+      // Identificar empresas com sócios em comum
+      if (!client.qsa || client.qsa.length === 0) {
+        setLoading(false);
+        return;
+      }
 
-      // Buscar dados do grupo econômico do cliente
-      const { data: groupInfo, error: groupError } = await supabase
-        .rpc('get_economic_group_by_client', { p_client_id: client.id });
+      // Extrair CPFs dos sócios do cliente atual
+      const clientPartnerCPFs = new Set(
+        client.qsa
+          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
+          .filter((cpf: string) => cpf && cpf.length === 11)
+      );
 
-      if (groupError) throw groupError;
-      if (!groupInfo || groupInfo.length === 0) return;
+      if (clientPartnerCPFs.size === 0) {
+        setLoading(false);
+        return;
+      }
 
-      const group = groupInfo[0];
+      // Buscar outras empresas que compartilham os mesmos sócios
+      const relatedCompanies = (allClients || [])
+        .filter(otherClient => {
+          if (otherClient.id === client.id || !otherClient.qsa) return false;
+          
+          const otherPartnerCPFs = otherClient.qsa
+            .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
+            .filter((cpf: string) => cpf && cpf.length === 11);
 
-      // Buscar membros do grupo
-      const { data: members, error: membersError } = await supabase
-        .from('economic_group_members')
-        .select(`
-          client_id,
-          individual_fee,
-          clients(name)
-        `)
-        .eq('economic_group_id', group.group_id);
+          return otherPartnerCPFs.some((cpf: string) => clientPartnerCPFs.has(cpf));
+        })
+        .map(c => ({
+          id: c.id,
+          name: c.name,
+          individual_fee: c.monthly_fee || 0
+        }));
 
-      if (membersError) throw membersError;
+      if (relatedCompanies.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Calcular total de honorários
+      const totalFee = relatedCompanies.reduce((sum, c) => sum + c.individual_fee, 0) + (client.monthly_fee || 0);
 
       setGroupData({
-        group_id: group.group_id,
-        group_name: group.group_name,
-        main_payer_client_id: group.main_payer_client_id,
-        total_monthly_fee: group.total_monthly_fee,
-        payment_day: group.payment_day,
-        members: (members || []).map(m => ({
-          client_id: m.client_id,
-          client_name: (m.clients as any)?.name || 'Nome não disponível',
-          individual_fee: m.individual_fee,
-          is_main_payer: m.client_id === group.main_payer_client_id
-        }))
+        group_id: 'economic-group',
+        group_name: 'Grupo Econômico (Sócios em Comum)',
+        main_payer_client_id: client.id,
+        total_monthly_fee: totalFee,
+        payment_day: client.payment_day || 10,
+        members: [
+          { id: client.id, name: client.name, individual_fee: client.monthly_fee || 0 },
+          ...relatedCompanies
+        ]
       });
     } catch (error) {
       console.error('Error loading group data:', error);
@@ -135,9 +156,41 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
   }, [client.id]);
 
   const checkGroupMembership = async () => {
-    const { data } = await supabase
-      .rpc('is_in_economic_group', { p_client_id: client.id });
-    setBelongsToGroup(data || false);
+    try {
+      // Verificar se há sócios em comum com outras empresas
+      if (!client.qsa || client.qsa.length === 0) {
+        setBelongsToGroup(false);
+        return;
+      }
+
+      // Extrair CPFs dos sócios
+      const clientPartnerCPFs = new Set(
+        client.qsa
+          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
+          .filter((cpf: string) => cpf && cpf.length === 11)
+      );
+
+      if (clientPartnerCPFs.size === 0) {
+        setBelongsToGroup(false);
+        return;
+      }
+
+      // Verificar se alguma outra empresa compartilha os mesmos sócios
+      const hasSharedPartners = allClients?.some(otherClient => {
+        if (otherClient.id === client.id || !otherClient.qsa) return false;
+        
+        const otherPartnerCPFs = otherClient.qsa
+          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
+          .filter((cpf: string) => cpf && cpf.length === 11);
+
+        return otherPartnerCPFs.some((cpf: string) => clientPartnerCPFs.has(cpf));
+      });
+
+      setBelongsToGroup(hasSharedPartners || false);
+    } catch (error) {
+      console.error('Error checking group membership:', error);
+      setBelongsToGroup(false);
+    }
   };
 
   if (!belongsToGroup) {
@@ -151,19 +204,19 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
         className="cursor-pointer gap-1 hover:bg-secondary/80 transition-colors"
         onClick={() => setDialogOpen(true)}
       >
-        <Building2 className="h-3 w-3" />
-        Grupo Econômico
+        <Users className="h-3 w-3" />
+        Sócios em Comum
       </Badge>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Grupo Econômico - Pagamento Consolidado
+              <Users className="h-5 w-5" />
+              Empresas com Sócios em Comum
             </DialogTitle>
             <DialogDescription>
-              Esta empresa faz parte de um grupo com pagamento consolidado
+              Empresas que compartilham os mesmos sócios/proprietários
             </DialogDescription>
           </DialogHeader>
 
@@ -173,23 +226,17 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
             </div>
           ) : groupData ? (
             <div className="space-y-6">
-              <Card className="p-4 bg-primary/5 border-primary">
+              <Card className="p-4 bg-muted/50">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Empresa Pagadora:</span>
-                    <span className="font-semibold">
-                      {groupData.members.find(m => m.is_main_payer)?.client_name}
-                    </span>
+                    <span className="text-sm text-muted-foreground">Total de Empresas:</span>
+                    <span className="font-semibold">{groupData.members.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Honorário Total Mensal:</span>
+                    <span className="text-sm text-muted-foreground">Receita Total Combinada:</span>
                     <span className="font-semibold text-primary">
                       {formatCurrency(groupData.total_monthly_fee)}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Dia de Vencimento:</span>
-                    <span className="font-semibold">Dia {groupData.payment_day}</span>
                   </div>
                 </div>
               </Card>
@@ -203,9 +250,9 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
                 <div className="space-y-2">
                   {groupData.members.map((member) => (
                     <Card
-                      key={member.client_id}
+                      key={member.id}
                       className={`p-4 transition-all ${
-                        member.client_id === client.id
+                        member.id === client.id
                           ? "bg-primary/5 border-primary"
                           : "hover:bg-accent cursor-pointer"
                       }`}
@@ -214,13 +261,8 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-medium">{member.client_name}</p>
-                            {member.is_main_payer && (
-                              <Badge variant="default" className="text-xs">
-                                Pagadora
-                              </Badge>
-                            )}
-                            {member.client_id === client.id && (
+                            <p className="font-medium">{member.name}</p>
+                            {member.id === client.id && (
                               <Badge variant="outline" className="text-xs">
                                 Empresa Atual
                               </Badge>
@@ -229,16 +271,16 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
                           <div className="flex items-center gap-2 mt-2">
                             <DollarSign className="h-3 w-3 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">
-                              Honorário Individual: <strong>{formatCurrency(member.individual_fee)}</strong>
+                              Honorário Mensal: <strong>{formatCurrency(member.individual_fee)}</strong>
                             </span>
                           </div>
                         </div>
 
-                        {member.client_id !== client.id && (
+                        {member.id !== client.id && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCompanyClick(member.client_id, member.client_name)}
+                            onClick={() => handleCompanyClick(member.id, member.name)}
                           >
                             Ver empresa →
                           </Button>
@@ -251,9 +293,8 @@ export const EconomicGroupIndicator = ({ client }: EconomicGroupIndicatorProps) 
 
               <Card className="p-4 bg-muted/50">
                 <p className="text-sm text-muted-foreground">
-                  <strong>Pagamento Consolidado:</strong> Quando a empresa pagadora efetua o pagamento,
-                  todas as faturas das empresas deste grupo para aquela competência são automaticamente
-                  marcadas como pagas.
+                  <strong>Sócios em Comum:</strong> Estas empresas compartilham os mesmos sócios/proprietários
+                  de acordo com os dados cadastrais da Receita Federal (QSA - Quadro Societário).
                 </p>
               </Card>
             </div>

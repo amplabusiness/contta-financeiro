@@ -21,6 +21,7 @@ import { formatCurrency } from "@/data/expensesData";
 import { AIClientAnalyzer } from "@/components/ai/AIClientAnalyzer";
 import { CNPJInput } from "@/components/CNPJInput";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
+import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -998,14 +999,17 @@ const Clients = () => {
                         className={isSuspended ? "border-l-4 border-l-destructive bg-destructive/5" : ""}
                       >
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {client.name}
-                            {client.is_pro_bono && (
-                              <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
-                                <Heart className="h-3 w-3 fill-current" />
-                                Pro-Bono
-                              </Badge>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <FinancialGroupBadge clientId={client.id} />
+                            <div className="flex items-center gap-2">
+                              {client.name}
+                              {client.is_pro_bono && (
+                                <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
+                                  <Heart className="h-3 w-3 fill-current" />
+                                  Pro-Bono
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>{formatDocument(client)}</TableCell>
