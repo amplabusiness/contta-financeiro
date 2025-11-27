@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Building2, Users, AlertTriangle, DollarSign } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Users, AlertTriangle, DollarSign, FileCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { formatDocument } from '@/lib/formatters';
 import * as XLSX from "xlsx";
 import { FinancialGroupImporter } from "@/components/FinancialGroupImporter";
+import { FinancialGroupAudit } from "@/components/FinancialGroupAudit";
 
 interface EconomicGroup {
   id: string;
@@ -250,17 +252,6 @@ export default function EconomicGroups() {
               </Button>
             </div>
 
-        {totalGroups > 0 && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Pagamento Consolidado:</strong> Quando uma empresa pagadora de um grupo realiza
-              o pagamento, todas as faturas das empresas do mesmo grupo para aquela competência são
-              automaticamente marcadas como pagas.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6">
             <div className="flex items-center gap-4">
@@ -308,7 +299,32 @@ export default function EconomicGroups() {
             </p>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <>
+            <Tabs defaultValue="groups" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="groups">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Grupos Cadastrados
+                </TabsTrigger>
+                <TabsTrigger value="audit">
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  Auditoria e Correção
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="groups" className="space-y-4">
+                {totalGroups > 0 && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Pagamento Consolidado:</strong> Quando uma empresa pagadora de um grupo realiza
+                      o pagamento, todas as faturas das empresas do mesmo grupo para aquela competência são
+                      automaticamente marcadas como pagas.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="space-y-4">
             {groups.map((group) => (
             <Collapsible
               key={group.id}
@@ -391,6 +407,13 @@ export default function EconomicGroups() {
               </Collapsible>
             ))}
           </div>
+              </TabsContent>
+
+              <TabsContent value="audit">
+                <FinancialGroupAudit />
+              </TabsContent>
+            </Tabs>
+          </>
         )}
           </>
         )}
