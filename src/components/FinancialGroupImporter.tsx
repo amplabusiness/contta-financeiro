@@ -3,21 +3,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, XCircle, AlertCircle, Building2, Users, Crown } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, Building2, Crown, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDocument, normalizeDocument } from "@/lib/formatters";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+interface SpreadsheetCompany {
+  name: string;
+  document: string;
+}
 
 interface SpreadsheetGroup {
   groupNumber: number;
   groupName: string;
-  companies: {
-    name: string;
-    document: string; // CNPJ/CPF da coluna B
-    isMainPayer?: boolean;
-  }[];
-  totalFee?: number;
-  paymentDay?: number;
+  companies: SpreadsheetCompany[];
+  color: string;
 }
 
 interface MatchedCompany {
@@ -27,16 +29,33 @@ interface MatchedCompany {
   clientName: string | null;
   currentFee: number | null;
   currentPaymentDay: number | null;
-  isProBono: boolean | null;
   found: boolean;
+  manualSearch?: string;
 }
 
 interface GroupMatch {
   group: SpreadsheetGroup;
   matches: MatchedCompany[];
+  mainPayerIndex: number;
   approved: boolean;
   processing: boolean;
 }
+
+interface ClientOption {
+  id: string;
+  name: string;
+  document: string;
+  monthly_fee: number;
+  payment_day: number;
+}
+
+const GROUP_COLORS = [
+  "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6",
+  "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16",
+  "#06b6d4", "#eab308", "#a855f7", "#22c55e", "#f43f5e",
+  "#0ea5e9", "#d946ef", "#16a34a", "#dc2626", "#7c3aed",
+  "#059669"
+];
 
 interface FinancialGroupImporterProps {
   spreadsheetData: any[][];
@@ -47,170 +66,138 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
   const [groups, setGroups] = useState<GroupMatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [allClients, setAllClients] = useState<ClientOption[]>([]);
+  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
 
   const parseSpreadsheet = async () => {
     setLoading(true);
     try {
-      console.log("📊 Iniciando parse da planilha...");
-      console.log("📊 Total de linhas:", spreadsheetData.length);
-      console.log("📊 Primeiras 5 linhas:", spreadsheetData.slice(0, 5));
-      
-      // Parse a planilha e identifica os grupos
+      // Buscar todos os clientes para o dropdown
+      const { data: clients } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf, monthly_fee, payment_day")
+        .eq("status", "active")
+        .order("name");
+
+      const clientOptions: ClientOption[] = (clients || []).map(c => ({
+        id: c.id,
+        name: c.name,
+        document: formatDocument(c.cnpj || c.cpf || ""),
+        monthly_fee: c.monthly_fee || 0,
+        payment_day: c.payment_day || 10
+      }));
+
+      setAllClients(clientOptions);
+
+      // Parse da planilha
       const parsedGroups: SpreadsheetGroup[] = [];
       let currentGroup: SpreadsheetGroup | null = null;
+      let groupIndex = 0;
 
       for (let i = 0; i < spreadsheetData.length; i++) {
         const row = spreadsheetData[i];
         if (!row || row.length === 0) continue;
 
-        const colA = String(row[0] ?? "").trim(); // pode ser NOME ou GRUPO
-        const colB = String(row[1] ?? "").trim(); // CNPJ/CPF (coluna B)
-        const colC = String(row[2] ?? "").trim(); // em algumas planilhas o nome pode estar na coluna C
-
-        console.log(`📊 Linha ${i}: colA="${colA}", colB="${colB}", colC="${colC}"`);
+        const colA = String(row[0] ?? "").trim();
+        const colB = String(row[1] ?? "").trim();
 
         const normalized = normalizeDocument(colB);
         const hasValidDoc = normalized.length === 11 || normalized.length === 14;
 
-        // Pular claramente cabeçalhos sem documento
-        if (!hasValidDoc && i === 0) {
-          console.log("⏭️ Cabeçalho detectado na primeira linha, ignorando.");
-          continue;
-        }
-
-        // Caso 1: linha com documento válido (regra principal)
-        if (hasValidDoc) {
-          // Definir nome do grupo: na maioria dos casos vem na coluna A
-          let groupName = colA;
-          if (!groupName) {
-            // Se não houver nada na coluna A, reaproveita o grupo atual ou cria um genérico
-            groupName = currentGroup?.groupName || `Grupo ${parsedGroups.length + 1}`;
-          }
-
-          // Se ainda não temos grupo atual ou mudou o identificador do grupo, cria novo
-          if (!currentGroup || currentGroup.groupName !== groupName) {
-            if (currentGroup && currentGroup.companies.length > 0) {
-              parsedGroups.push(currentGroup);
-            }
-
-            const existingIndex = parsedGroups.findIndex(g => g.groupName === groupName);
-            const groupNumber = existingIndex >= 0
-              ? parsedGroups[existingIndex].groupNumber
-              : parsedGroups.length + 1;
-
-            currentGroup = {
-              groupNumber,
-              groupName,
-              companies: []
-            };
-
-            console.log(`✅ Novo grupo detectado por coluna A na linha ${i}: ${groupName}`);
-          }
-
-          const companyName = colC || colA || `Empresa ${currentGroup.companies.length + 1}`;
-
-          currentGroup.companies.push({
-            name: companyName,
-            document: colB
-          });
-        }
-        // Caso 2: linha sem documento mas com texto "grupo" na coluna A (título de grupo)
-        else if (colA.toLowerCase().includes("grupo")) {
-          console.log(`✅ Cabeçalho de grupo detectado na linha ${i}: ${colA}`);
+        // Cabeçalho de grupo
+        if (colA.toLowerCase().includes("grupo") && !hasValidDoc) {
           if (currentGroup && currentGroup.companies.length > 0) {
             parsedGroups.push(currentGroup);
+            groupIndex++;
           }
 
           const match = colA.match(/\d+/);
-          const groupNumber = match ? parseInt(match[0]) : parsedGroups.length + 1;
+          const groupNumber = match ? parseInt(match[0]) : groupIndex + 1;
 
           currentGroup = {
             groupNumber,
             groupName: colA,
-            companies: []
+            companies: [],
+            color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
           };
+        }
+        // Empresa com documento válido
+        else if (hasValidDoc) {
+          if (!currentGroup) {
+            currentGroup = {
+              groupNumber: groupIndex + 1,
+              groupName: `Grupo ${groupIndex + 1}`,
+              companies: [],
+              color: GROUP_COLORS[groupIndex % GROUP_COLORS.length]
+            };
+          }
+
+          currentGroup.companies.push({
+            name: colA,
+            document: colB
+          });
         }
       }
 
-      // Adicionar último grupo
       if (currentGroup && currentGroup.companies.length > 0) {
         parsedGroups.push(currentGroup);
       }
 
-      console.log("📊 Grupos identificados:", parsedGroups.length, parsedGroups);
-
-      // Buscar matches para cada grupo
-      const groupMatches: GroupMatch[] = [];
-
-      for (const group of parsedGroups) {
-        const matches: MatchedCompany[] = [];
-
-        for (const company of group.companies) {
+      // Fazer match automático
+      const groupMatches: GroupMatch[] = parsedGroups.map(group => {
+        const matches: MatchedCompany[] = group.companies.map(company => {
           const normalizedDoc = normalizeDocument(company.document);
-          
-          // Buscar em clientes (tanto pagos quanto pro-bono)
-          const { data: clients, error } = await supabase
-            .from("clients")
-            .select("id, name, cnpj, cpf, monthly_fee, payment_day, is_pro_bono, status")
-            .eq("status", "active");
-
-          if (error) {
-            console.error("Erro ao buscar clientes:", error);
-            matches.push({
-              spreadsheetName: company.name,
-              spreadsheetDocument: company.document,
-              clientId: null,
-              clientName: null,
-              currentFee: null,
-              currentPaymentDay: null,
-              isProBono: null,
-              found: false
-            });
-            continue;
-          }
-
-          // Procurar match pelo documento
-          const matchedClient = clients?.find(c => {
-            const clientDoc = normalizeDocument(c.cnpj || c.cpf || "");
-            return clientDoc === normalizedDoc;
-          });
+          const matchedClient = clientOptions.find(c => 
+            normalizeDocument(c.document) === normalizedDoc
+          );
 
           if (matchedClient) {
-            matches.push({
+            return {
               spreadsheetName: company.name,
               spreadsheetDocument: company.document,
               clientId: matchedClient.id,
               clientName: matchedClient.name,
               currentFee: matchedClient.monthly_fee,
               currentPaymentDay: matchedClient.payment_day,
-              isProBono: matchedClient.is_pro_bono,
               found: true
-            });
-          } else {
-            matches.push({
-              spreadsheetName: company.name,
-              spreadsheetDocument: company.document,
-              clientId: null,
-              clientName: null,
-              currentFee: null,
-              currentPaymentDay: null,
-              isProBono: null,
-              found: false
-            });
+            };
           }
-        }
 
-        groupMatches.push({
+          return {
+            spreadsheetName: company.name,
+            spreadsheetDocument: company.document,
+            clientId: null,
+            clientName: null,
+            currentFee: null,
+            currentPaymentDay: null,
+            found: false,
+            manualSearch: ""
+          };
+        });
+
+        // Primeira empresa com fee > 0 ou primeira empresa é a pagadora por padrão
+        const mainPayerIndex = matches.findIndex(m => m.currentFee && m.currentFee > 0);
+
+        return {
           group,
           matches,
+          mainPayerIndex: mainPayerIndex >= 0 ? mainPayerIndex : 0,
           approved: false,
           processing: false
-        });
-      }
+        };
+      });
 
       setGroups(groupMatches);
       setInitialized(true);
-      toast.success(`${parsedGroups.length} grupos identificados na planilha`);
+      
+      const totalCompanies = groupMatches.reduce((sum, g) => sum + g.matches.length, 0);
+      const foundCompanies = groupMatches.reduce((sum, g) => 
+        sum + g.matches.filter(m => m.found).length, 0
+      );
+      
+      toast.success(
+        `${parsedGroups.length} grupos identificados • ${foundCompanies} de ${totalCompanies} empresas encontradas`
+      );
     } catch (error) {
       console.error("Erro ao processar planilha:", error);
       toast.error("Erro ao processar a planilha");
@@ -219,17 +206,43 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
     }
   };
 
+  const handleManualMatch = (groupIndex: number, matchIndex: number, clientId: string) => {
+    const client = allClients.find(c => c.id === clientId);
+    if (!client) return;
+
+    setGroups(prev => prev.map((g, gi) => {
+      if (gi !== groupIndex) return g;
+
+      const newMatches = [...g.matches];
+      newMatches[matchIndex] = {
+        ...newMatches[matchIndex],
+        clientId: client.id,
+        clientName: client.name,
+        currentFee: client.monthly_fee,
+        currentPaymentDay: client.payment_day,
+        found: true
+      };
+
+      return { ...g, matches: newMatches };
+    }));
+  };
+
+  const handleSetMainPayer = (groupIndex: number, matchIndex: number) => {
+    setGroups(prev => prev.map((g, gi) => 
+      gi === groupIndex ? { ...g, mainPayerIndex: matchIndex } : g
+    ));
+  };
+
   const handleApproveGroup = async (groupIndex: number) => {
     const groupMatch = groups[groupIndex];
     
-    // Verificar se há empresas não encontradas
-    const notFound = groupMatch.matches.filter(m => !m.found);
-    if (notFound.length > 0) {
-      toast.error(`${notFound.length} empresa(s) não encontrada(s) no sistema. Todas as empresas do grupo devem estar cadastradas.`);
+    // Verificar se todas as empresas foram identificadas
+    const allMatched = groupMatch.matches.every(m => m.found && m.clientId);
+    if (!allMatched) {
+      toast.error("Todas as empresas do grupo devem ser identificadas antes da aprovação");
       return;
     }
 
-    // Marcar como processando
     setGroups(prev => prev.map((g, i) => 
       i === groupIndex ? { ...g, processing: true } : g
     ));
@@ -238,12 +251,9 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Determinar empresa pagadora (primeira com monthly_fee > 0, ou a primeira)
-      const mainPayer = groupMatch.matches.find(m => m.currentFee && m.currentFee > 0) 
-        || groupMatch.matches[0];
-
+      const mainPayer = groupMatch.matches[groupMatch.mainPayerIndex];
       if (!mainPayer?.clientId) {
-        throw new Error("Não foi possível determinar a empresa pagadora");
+        throw new Error("Empresa pagadora não definida");
       }
 
       // Calcular honorário total e individual
@@ -280,47 +290,30 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
 
       if (membersError) throw membersError;
 
-      // Atualizar main payer
-      const { error: mainPayerError } = await supabase
-        .from("clients")
-        .update({
-          monthly_fee: totalFee,
-          payment_day: paymentDay,
-          is_pro_bono: false,
-          pro_bono_start_date: null,
-          pro_bono_end_date: null,
-          pro_bono_reason: null
-        })
-        .eq("id", mainPayer.clientId);
-
-      if (mainPayerError) throw mainPayerError;
-
-      // Atualizar demais membros
-      const otherMembers = groupMatch.matches.filter(m => m.clientId !== mainPayer.clientId);
-      for (const member of otherMembers) {
+      // Atualizar todos os clientes do grupo com mesmo payment_day
+      for (const match of groupMatch.matches) {
         const { error: updateError } = await supabase
           .from("clients")
           .update({
-            monthly_fee: individualFee,
+            monthly_fee: match.clientId === mainPayer.clientId ? totalFee : individualFee,
             payment_day: paymentDay,
             is_pro_bono: false,
             pro_bono_start_date: null,
             pro_bono_end_date: null,
             pro_bono_reason: null
           })
-          .eq("id", member.clientId!);
+          .eq("id", match.clientId!);
 
         if (updateError) throw updateError;
       }
 
-      // Marcar como aprovado
       setGroups(prev => prev.map((g, i) => 
         i === groupIndex ? { ...g, approved: true, processing: false } : g
       ));
 
-      toast.success(`${groupMatch.group.groupName} criado com sucesso!`);
+      toast.success(`Grupo Financeiro "${groupMatch.group.groupName}" aprovado com sucesso!`);
     } catch (error) {
-      console.error("Erro ao criar grupo:", error);
+      console.error("Erro ao aprovar grupo:", error);
       toast.error("Erro ao criar grupo financeiro");
       setGroups(prev => prev.map((g, i) => 
         i === groupIndex ? { ...g, processing: false } : g
@@ -351,6 +344,18 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
   const totalCompanies = groups.reduce((sum, g) => sum + g.matches.length, 0);
   const foundCompanies = groups.reduce((sum, g) => sum + g.matches.filter(m => m.found).length, 0);
 
+  const filteredClients = (groupIndex: number, matchIndex: number) => {
+    const searchKey = `${groupIndex}-${matchIndex}`;
+    const search = searchTerms[searchKey]?.toLowerCase() || "";
+    
+    if (!search) return allClients.slice(0, 50);
+    
+    return allClients.filter(c => 
+      c.name.toLowerCase().includes(search) ||
+      c.document.includes(search)
+    ).slice(0, 50);
+  };
+
   return (
     <div className="space-y-6">
       <Alert>
@@ -362,16 +367,22 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
       </Alert>
 
       <div className="space-y-4">
-        {groups.map((groupMatch, index) => {
-          const notFoundCount = groupMatch.matches.filter(m => !m.found).length;
-          const canApprove = notFoundCount === 0 && !groupMatch.approved;
+        {groups.map((groupMatch, groupIndex) => {
+          const allMatched = groupMatch.matches.every(m => m.found);
+          const mainPayer = groupMatch.matches[groupMatch.mainPayerIndex];
+          const totalFee = mainPayer?.currentFee || 0;
+          const individualFee = totalFee / groupMatch.matches.length;
 
           return (
-            <Card key={index} className={groupMatch.approved ? "border-green-500 bg-green-50" : ""}>
+            <Card 
+              key={groupIndex} 
+              className={groupMatch.approved ? "border-green-500 bg-green-50" : ""}
+              style={{ borderLeftWidth: "4px", borderLeftColor: groupMatch.group.color }}
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-primary" />
+                    <Building2 className="h-5 w-5" style={{ color: groupMatch.group.color }} />
                     <div>
                       <CardTitle className="text-lg">{groupMatch.group.groupName}</CardTitle>
                       <CardDescription>
@@ -386,8 +397,8 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                     </Badge>
                   ) : (
                     <Button
-                      onClick={() => handleApproveGroup(index)}
-                      disabled={!canApprove || groupMatch.processing}
+                      onClick={() => handleApproveGroup(groupIndex)}
+                      disabled={!allMatched || groupMatch.processing}
                       size="sm"
                     >
                       {groupMatch.processing ? "Processando..." : "Aprovar Grupo"}
@@ -396,51 +407,104 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {groupMatch.matches.map((match, matchIndex) => (
                     <div
                       key={matchIndex}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                      className={`p-3 rounded-lg border ${
                         match.found 
                           ? "bg-green-50 border-green-200" 
-                          : "bg-red-50 border-red-200"
+                          : "bg-amber-50 border-amber-200"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        {match.found ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-600" />
-                        )}
-                        <div>
-                          <div className="flex items-center gap-2">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {match.found ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <Search className="h-4 w-4 text-amber-600" />
+                            )}
                             <span className="font-medium text-sm">{match.spreadsheetName}</span>
-                            {matchIndex === 0 && (
+                            {matchIndex === groupMatch.mainPayerIndex && (
                               <Badge variant="secondary" className="text-xs gap-1">
                                 <Crown className="h-3 w-3" />
                                 Pagadora
                               </Badge>
                             )}
+                            {match.found && matchIndex !== groupMatch.mainPayerIndex && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleSetMainPayer(groupIndex, matchIndex)}
+                              >
+                                Definir como Pagadora
+                              </Button>
+                            )}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground mb-2">
                             {formatDocument(match.spreadsheetDocument)}
                           </div>
-                          {match.found && (
-                            <div className="text-xs text-green-700 mt-1">
-                              ✓ Encontrado: {match.clientName}
-                              {match.isProBono && " (Pro-Bono)"}
+                          
+                          {match.found ? (
+                            <div className="text-xs text-green-700">
+                              ✓ {match.clientName}
+                            </div>
+                          ) : (
+                            <div className="mt-2">
+                              <Select
+                                onValueChange={(value) => handleManualMatch(groupIndex, matchIndex, value)}
+                                onOpenChange={(open) => {
+                                  if (open) {
+                                    const searchKey = `${groupIndex}-${matchIndex}`;
+                                    setSearchTerms(prev => ({ ...prev, [searchKey]: "" }));
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-full h-8 text-xs">
+                                  <SelectValue placeholder="Buscar cliente..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className="p-2">
+                                    <Input
+                                      placeholder="Digite para buscar..."
+                                      className="h-8 text-xs"
+                                      value={searchTerms[`${groupIndex}-${matchIndex}`] || ""}
+                                      onChange={(e) => {
+                                        const searchKey = `${groupIndex}-${matchIndex}`;
+                                        setSearchTerms(prev => ({ ...prev, [searchKey]: e.target.value }));
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  {filteredClients(groupIndex, matchIndex).map((client) => (
+                                    <SelectItem key={client.id} value={client.id} className="text-xs">
+                                      {client.name} - {client.document}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           )}
                         </div>
-                      </div>
-                      {match.found && (
-                        <div className="text-right text-xs">
-                          <div className="text-muted-foreground">Honorário atual:</div>
-                          <div className="font-semibold">
-                            R$ {(match.currentFee || 0).toFixed(2)}
+                        
+                        {match.found && (
+                          <div className="text-right text-xs">
+                            <div className="text-muted-foreground">
+                              {matchIndex === groupMatch.mainPayerIndex ? "Total:" : "Individual:"}
+                            </div>
+                            <div className="font-semibold">
+                              R$ {(matchIndex === groupMatch.mainPayerIndex ? totalFee : individualFee).toFixed(2)}
+                            </div>
+                            {match.currentPaymentDay && (
+                              <div className="text-muted-foreground mt-1">
+                                Venc: dia {match.currentPaymentDay}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -450,13 +514,13 @@ export function FinancialGroupImporter({ spreadsheetData, onComplete }: Financia
         })}
       </div>
 
-      {approvedGroups === totalGroups && (
+      {approvedGroups === totalGroups && totalGroups > 0 && (
         <Card className="border-green-500 bg-green-50">
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Importação Concluída!</h3>
             <p className="text-muted-foreground mb-4">
-              Todos os {totalGroups} grupos financeiros foram criados com sucesso.
+              Todos os {totalGroups} grupos financeiros foram aprovados e atualizados.
             </p>
             <Button onClick={onComplete}>
               Voltar para Grupos Financeiros
