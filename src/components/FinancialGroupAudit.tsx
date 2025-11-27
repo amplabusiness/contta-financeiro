@@ -25,6 +25,7 @@ interface FinancialGroup {
   total_monthly_fee: number;
   payment_day: number;
   group_color: string | null;
+  created_at: string | null;
   economic_group_members: GroupMember[];
 }
 
@@ -64,6 +65,7 @@ export function FinancialGroupAudit() {
           total_monthly_fee,
           payment_day,
           group_color,
+          created_at,
           economic_group_members (
             id,
             client_id,
@@ -79,36 +81,83 @@ export function FinancialGroupAudit() {
 
       if (error) throw error;
 
-      const audits: GroupAudit[] = (data || []).map((group: FinancialGroup) => {
-        const memberCount = group.economic_group_members.length;
-        
-        // Buscar os valores ATUAIS de monthly_fee de cada empresa do banco
-        const originalFees: { [key: string]: number } = {};
-        let sumOfCurrentFees = 0;
-        
-        group.economic_group_members.forEach(member => {
-          const currentFee = member.clients.monthly_fee || 0;
-          originalFees[member.client_id] = currentFee;
-          sumOfCurrentFees += currentFee;
-        });
+      const groupsData = (data || []) as FinancialGroup[];
 
-        // Calcular o que DEVERIA ser o individual_fee (soma de todos / número de empresas)
-        const correctIndividualFee = sumOfCurrentFees / memberCount;
+      const audits: GroupAudit[] = await Promise.all(
+        groupsData.map(async (group) => {
+          const memberCount = group.economic_group_members.length;
+          const memberClientIds = group.economic_group_members.map(
+            (member) => member.client_id
+          );
 
-        // Verificar se precisa correção: comparar individual_fee com o valor correto calculado
-        const needsCorrection = group.economic_group_members.some(
-          member => Math.abs(member.individual_fee - correctIndividualFee) > 0.01
-        );
+          let originalFees: { [key: string]: number } = {};
+          let sumOfOriginalFees = 0;
 
-        return {
-          group,
-          needsCorrection,
-          currentTotal: group.total_monthly_fee,
-          calculatedIndividual: correctIndividualFee,
-          memberCount,
-          originalFees
-        };
-      });
+          if (memberClientIds.length > 0 && group.created_at) {
+            const { data: invoices, error: invoicesError } = await supabase
+              .from("invoices")
+              .select("client_id, amount, created_at")
+              .in("client_id", memberClientIds)
+              .lt("created_at", group.created_at);
+
+            if (invoicesError) {
+              console.error(
+                "Erro ao buscar invoices para grupo financeiro:",
+                invoicesError
+              );
+            } else {
+              const latestByClient: {
+                [clientId: string]: { created_at: string; amount: number };
+              } = {};
+
+              (invoices || []).forEach((invoice) => {
+                const clientId = invoice.client_id as string;
+                const existing = latestByClient[clientId];
+                if (
+                  !existing ||
+                  new Date(invoice.created_at).getTime() >
+                    new Date(existing.created_at).getTime()
+                ) {
+                  latestByClient[clientId] = {
+                    created_at: invoice.created_at,
+                    amount: Number(invoice.amount) || 0,
+                  };
+                }
+              });
+
+              originalFees = {};
+              sumOfOriginalFees = 0;
+
+              Object.entries(latestByClient).forEach(([clientId, info]) => {
+                originalFees[clientId] = info.amount;
+                sumOfOriginalFees += info.amount;
+              });
+            }
+          }
+
+          const hasAnyOriginalFee = sumOfOriginalFees > 0;
+          const safeMemberCount = memberCount || 1;
+          const correctIndividualFee = sumOfOriginalFees / safeMemberCount;
+
+          const needsCorrection =
+            hasAnyOriginalFee &&
+            group.economic_group_members.some(
+              (member) =>
+                Math.abs(member.individual_fee - correctIndividualFee) > 0.01
+            );
+
+          return {
+            group,
+            needsCorrection,
+            currentTotal: group.total_monthly_fee,
+            calculatedIndividual: correctIndividualFee,
+            memberCount,
+            originalFees,
+          };
+        })
+      );
+
+      setGroups(audits);
 
       setGroups(audits);
     } catch (error) {
@@ -201,7 +250,7 @@ export function FinancialGroupAudit() {
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           <strong>Auditoria Automática:</strong> {groupsNeedingCorrection.length} de {totalGroups} grupos precisam de correção. 
-          O sistema detectou automaticamente os valores de honorários de cada empresa no banco, somou todos e calculou a divisão correta.
+          O sistema buscou automaticamente os honorários originais de cada empresa nas faturas anteriores à criação do grupo, somou todos e calculou a divisão correta.
         </AlertDescription>
       </Alert>
 
@@ -283,8 +332,8 @@ export function FinancialGroupAudit() {
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Inconsistência detectada:</strong> Os valores de honorários das empresas no banco não correspondem ao individual_fee registrado. 
-                  Somando todos os valores atuais e dividindo igualmente, cada empresa deveria ter {formatCurrency(audit.calculatedIndividual)}.
+                  <strong>Inconsistência detectada:</strong> Os honorários originais das empresas (antes da criação do grupo) não correspondem ao individual_fee registrado. 
+                  Somando todos esses valores originais e dividindo igualmente, cada empresa deveria ter {formatCurrency(audit.calculatedIndividual)}.
                 </AlertDescription>
               </Alert>
             )}
@@ -294,10 +343,10 @@ export function FinancialGroupAudit() {
                 <div key={member.id} className="p-3 rounded-lg border bg-muted/50">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="font-medium text-sm mb-1">{member.clients.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Valor atual no banco: <strong>{formatCurrency(audit.originalFees[member.client_id] || 0)}</strong>
-                      </div>
+                    <div className="font-medium text-sm mb-1">{member.clients.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Honorário original (antes do grupo): <strong>{formatCurrency(audit.originalFees[member.client_id] || 0)}</strong>
+                    </div>
                     </div>
                     <div className="text-right text-xs">
                       <div className="text-muted-foreground">Individual (BD):</div>
@@ -321,7 +370,7 @@ export function FinancialGroupAudit() {
             <div className="bg-primary/5 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <div className="text-muted-foreground">Soma dos valores no banco:</div>
+                  <div className="text-muted-foreground">Soma dos honorários originais:</div>
                   <div className="font-semibold text-lg">
                     {formatCurrency(Object.values(audit.originalFees).reduce((sum, fee) => sum + fee, 0))}
                   </div>
