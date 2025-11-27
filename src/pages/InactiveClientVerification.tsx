@@ -55,7 +55,7 @@ const InactiveClientVerification = () => {
   const handleInactivateClients = async () => {
     setInactivating(true);
     try {
-      const activeClients = results.filter(r => r.found && r.databaseClient?.status === 'active');
+      const activeClients = results.filter(r => r.found && r.databaseClient?.is_active === true);
       
       if (activeClients.length === 0) {
         toast.info("Nenhum cliente ativo para inativar");
@@ -67,7 +67,7 @@ const InactiveClientVerification = () => {
 
       const { error } = await supabase
         .from('clients')
-        .update({ status: 'inactive' })
+        .update({ is_active: false })
         .in('id', clientIds);
 
       if (error) throw error;
@@ -138,8 +138,8 @@ const InactiveClientVerification = () => {
         setResults(verificationResults);
 
         // 5. Calcular estatísticas
-        const stillActive = verificationResults.filter(r => r.found && r.databaseClient?.status === 'active').length;
-        const alreadyInactive = verificationResults.filter(r => r.found && r.databaseClient?.status === 'inactive').length;
+        const stillActive = verificationResults.filter(r => r.found && r.databaseClient?.is_active === true).length;
+        const alreadyInactive = verificationResults.filter(r => r.found && r.databaseClient?.is_active === false).length;
 
         setStats({
           total: spreadsheetClients.length,
@@ -158,8 +158,8 @@ const InactiveClientVerification = () => {
     loadAndVerify();
   }, []);
 
-  const stillActiveClients = results.filter(r => r.found && r.databaseClient?.status === 'active');
-  const alreadyInactiveClients = results.filter(r => r.found && r.databaseClient?.status === 'inactive');
+  const stillActiveClients = results.filter(r => r.found && r.databaseClient?.is_active === true);
+  const alreadyInactiveClients = results.filter(r => r.found && r.databaseClient?.is_active === false);
   const notFoundClients = results.filter(r => !r.found);
 
   if (loading) {

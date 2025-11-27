@@ -125,7 +125,7 @@ const CollectionWorkOrders = () => {
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("id, name")
-        .eq("status", "active")
+        .eq("is_active", true)
         .order("name");
 
       if (clientsError) throw clientsError;

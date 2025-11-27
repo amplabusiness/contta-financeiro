@@ -56,7 +56,7 @@ const Dashboard = () => {
         supabase
           .from("clients")
           .select("*", { count: "exact" })
-          .eq("status", "active")
+          .eq("is_active", true)
           .not("is_pro_bono", "eq", true)
           .not("monthly_fee", "eq", 0)
           .order("name"),

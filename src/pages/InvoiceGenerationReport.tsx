@@ -74,7 +74,7 @@ export default function InvoiceGenerationReport() {
         let reason = '';
         if (hasInvoices) {
           reason = `✅ ${invoiceCount} honorários gerados`;
-        } else if (client.status !== 'active') {
+        } else if (!client.is_active) {
           reason = '❌ Cliente inativo';
         } else if (client.is_pro_bono) {
           reason = '🤝 Cliente Pro Bono';
@@ -97,9 +97,9 @@ export default function InvoiceGenerationReport() {
         total: report.length,
         generated: report.filter(c => c.has_invoices).length,
         notGenerated: report.filter(c => !c.has_invoices).length,
-        inactive: report.filter(c => c.status !== 'active').length,
-        noFee: report.filter(c => (!c.monthly_fee || c.monthly_fee <= 0) && c.status === 'active').length,
-        proBono: report.filter(c => c.is_pro_bono && c.status === 'active').length
+        inactive: report.filter(c => !c.is_active).length,
+        noFee: report.filter(c => (!c.monthly_fee || c.monthly_fee <= 0) && c.is_active).length,
+        proBono: report.filter(c => c.is_pro_bono && c.is_active).length
       };
 
       setClients(report);
@@ -274,8 +274,8 @@ export default function InvoiceGenerationReport() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={client.status === 'active' ? "default" : "secondary"}>
-                            {client.status === 'active' ? 'Ativo' : 'Inativo'}
+                          <Badge variant={client.is_active ? "default" : "secondary"}>
+                            {client.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm">{client.reason}</TableCell>

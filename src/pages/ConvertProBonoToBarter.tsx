@@ -176,7 +176,7 @@ const ConvertProBonoToBarter = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Status:</span>{" "}
-                    {foundClient.status === 'active' ? 'Ativo' : 'Inativo'}
+                    {foundClient.is_active ? 'Ativo' : 'Inativo'}
                   </div>
                   <div>
                     <span className="text-muted-foreground">Pro-Bono:</span>{" "}

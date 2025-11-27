@@ -169,7 +169,7 @@ const ImportCompanies = () => {
           payment_day: paymentDay ? Number(paymentDay) : null,
           monthly_fee: monthlyFee ? Number(monthlyFee) : 0,
           notes: notes || null,
-          status: "active",
+          is_active: true,
           created_by: user.id,
         });
 

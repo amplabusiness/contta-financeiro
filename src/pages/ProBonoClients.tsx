@@ -76,11 +76,11 @@ const ProBonoClients = () => {
           )
         `)
         .eq('monthly_fee', 0)
-        .eq('status', 'active');
+        .eq('is_active', true);
 
       // Aplicar filtro de status (somente se quiser ver ativos + inativos no futuro)
       if (statusFilter !== "all") {
-        query = query.eq('status', statusFilter);
+        query = query.eq('is_active', statusFilter === 'active');
       }
 
       const { data: clientsData, error: clientsError } = await query.order("name");
@@ -113,8 +113,8 @@ const ProBonoClients = () => {
 
       // Calcular estatísticas gerais
       const total = enrichedClients.length;
-      const active = enrichedClients.filter((c: any) => c.status === 'active').length;
-      const inactive = enrichedClients.filter((c: any) => c.status === 'inactive').length;
+      const active = enrichedClients.filter((c: any) => c.is_active === true).length;
+      const inactive = enrichedClients.filter((c: any) => c.is_active === false).length;
       const totalWaived = enrichedClients.reduce((sum: number, c: any) => sum + c.totalWaived, 0);
 
       setStats({ total, active, inactive, totalWaived });
@@ -261,7 +261,7 @@ const ProBonoClients = () => {
           if (error.code === '23503') { // Foreign key violation
             const { error: updateError } = await supabase
               .from('clients')
-              .update({ status: 'inactive' })
+              .update({ is_active: false })
               .eq('id', deletingClient.id);
 
             if (updateError) throw updateError;
@@ -534,8 +534,8 @@ const ProBonoClients = () => {
                     </div>
                     <div>
                       <Label className="text-muted-foreground">Status</Label>
-                      <Badge variant={viewingClient.status === "active" ? "default" : "destructive"}>
-                        {viewingClient.status === "active" ? "Ativo" : "Suspenso"}
+                      <Badge variant={viewingClient.is_active ? "default" : "destructive"}>
+                        {viewingClient.is_active ? "Ativo" : "Suspenso"}
                       </Badge>
                     </div>
                   </div>

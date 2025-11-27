@@ -102,7 +102,7 @@ const ImportInvoices = () => {
           const { data: clients } = await supabase
             .from("clients")
             .select("id, name")
-            .eq("status", "active");
+            .eq("is_active", true);
 
           const clientMap = new Map(clients?.map((c) => [c.name.toUpperCase().trim(), c.id]) || []);
 

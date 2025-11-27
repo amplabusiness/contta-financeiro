@@ -39,7 +39,7 @@ const BankReconciliation = () => {
   }, []);
 
   const loadClients = async () => {
-    const { data } = await supabase.from("clients").select("*").eq("status", "active");
+    const { data } = await supabase.from("clients").select("*").eq("is_active", true);
     setClients(data || []);
   };
 

@@ -67,7 +67,7 @@ const ClientOpeningBalance = () => {
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("id, name, cnpj, cpf, opening_balance")
-        .eq("status", "active")
+        .eq("is_active", true)
         .order("name");
 
       if (clientsError) throw clientsError;

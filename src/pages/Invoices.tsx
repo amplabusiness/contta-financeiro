@@ -54,7 +54,7 @@ const Invoices = () => {
 
       const [invoicesRes, clientsRes] = await Promise.all([
         query,
-        supabase.from("clients").select("*").eq("status", "active").order("name"),
+        supabase.from("clients").select("*").eq("is_active", true).order("name"),
       ]);
 
       setInvoices(invoicesRes.data || []);
@@ -101,7 +101,7 @@ const Invoices = () => {
       const { data: activeClients } = await supabase
         .from("clients")
         .select("*")
-        .eq("status", "active")
+        .eq("is_active", true)
         .gt("monthly_fee", 0);
 
       if (!activeClients || activeClients.length === 0) {

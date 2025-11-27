@@ -89,7 +89,7 @@ const Import = () => {
           notes: row["Regime"]?.toString().trim() || "",
           monthly_fee: parseFloat(row["Honorário"]) || 0,
           payment_day: parseInt(row["Dia Pagamento"]) || null,
-          status: "active" as const,
+          is_active: true,
           created_by: user.id,
         };
 
