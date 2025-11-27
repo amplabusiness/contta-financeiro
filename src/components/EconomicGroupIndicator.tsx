@@ -54,34 +54,36 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
     
     setLoading(true);
     try {
-      // Identificar empresas com sócios em comum
+      // Identificar empresas com sócios em comum por NOME
       if (!client.qsa || client.qsa.length === 0) {
         setLoading(false);
         return;
       }
 
-      // Extrair CPFs dos sócios do cliente atual
-      const clientPartnerCPFs = new Set(
+      // Extrair NOMES dos sócios do cliente atual (normalizado)
+      const clientPartnerNames = new Set(
         client.qsa
-          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
-          .filter((cpf: string) => cpf && cpf.length === 11)
+          .map((socio: any) => socio.nome)
+          .filter((nome: string) => nome && nome.trim().length > 0)
+          .map((nome: string) => nome.toUpperCase().trim())
       );
 
-      if (clientPartnerCPFs.size === 0) {
+      if (clientPartnerNames.size === 0) {
         setLoading(false);
         return;
       }
 
-      // Buscar outras empresas que compartilham os mesmos sócios
+      // Buscar outras empresas que compartilham os mesmos sócios por NOME
       const relatedCompanies = (allClients || [])
         .filter(otherClient => {
           if (otherClient.id === client.id || !otherClient.qsa) return false;
           
-          const otherPartnerCPFs = otherClient.qsa
-            .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
-            .filter((cpf: string) => cpf && cpf.length === 11);
+          const otherPartnerNames = otherClient.qsa
+            .map((socio: any) => socio.nome)
+            .filter((nome: string) => nome && nome.trim().length > 0)
+            .map((nome: string) => nome.toUpperCase().trim());
 
-          return otherPartnerCPFs.some((cpf: string) => clientPartnerCPFs.has(cpf));
+          return otherPartnerNames.some((nome: string) => clientPartnerNames.has(nome));
         })
         .map(c => ({
           id: c.id,
@@ -157,33 +159,35 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
 
   const checkGroupMembership = async () => {
     try {
-      // Verificar se há sócios em comum com outras empresas
+      // Verificar se há sócios em comum com outras empresas por NOME
       if (!client.qsa || client.qsa.length === 0) {
         setBelongsToGroup(false);
         return;
       }
 
-      // Extrair CPFs dos sócios
-      const clientPartnerCPFs = new Set(
+      // Extrair NOMES dos sócios (normalizado)
+      const clientPartnerNames = new Set(
         client.qsa
-          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
-          .filter((cpf: string) => cpf && cpf.length === 11)
+          .map((socio: any) => socio.nome)
+          .filter((nome: string) => nome && nome.trim().length > 0)
+          .map((nome: string) => nome.toUpperCase().trim())
       );
 
-      if (clientPartnerCPFs.size === 0) {
+      if (clientPartnerNames.size === 0) {
         setBelongsToGroup(false);
         return;
       }
 
-      // Verificar se alguma outra empresa compartilha os mesmos sócios
+      // Verificar se alguma outra empresa compartilha os mesmos sócios por NOME
       const hasSharedPartners = allClients?.some(otherClient => {
         if (otherClient.id === client.id || !otherClient.qsa) return false;
         
-        const otherPartnerCPFs = otherClient.qsa
-          .map((socio: any) => socio.cpf_cnpj_socio || socio.cpf)
-          .filter((cpf: string) => cpf && cpf.length === 11);
+        const otherPartnerNames = otherClient.qsa
+          .map((socio: any) => socio.nome)
+          .filter((nome: string) => nome && nome.trim().length > 0)
+          .map((nome: string) => nome.toUpperCase().trim());
 
-        return otherPartnerCPFs.some((cpf: string) => clientPartnerCPFs.has(cpf));
+        return otherPartnerNames.some((nome: string) => clientPartnerNames.has(nome));
       });
 
       setBelongsToGroup(hasSharedPartners || false);
