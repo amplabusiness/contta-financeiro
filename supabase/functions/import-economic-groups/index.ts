@@ -294,13 +294,13 @@ Deno.serve(async (req) => {
     for (const group of groups) {
       console.log(`Processing Group ${group.groupNumber}: ${group.companies.length} companies`);
 
-      // Normalizar documentos (remover formatação)
-      const normalizedDocs = group.companies.map(c => c.document.replace(/[^\d]/g, ''));
-
-      // Buscar IDs dos clientes pelo CNPJ ou CPF normalizado
-      const { data: allClients, error: clientsError } = await supabase
+      // Buscar clientes pelo nome (mais confiável que documento)
+      const companyNames = group.companies.map(c => c.name);
+      
+      const { data: clients, error: clientsError } = await supabase
         .from('clients')
         .select('id, name, cnpj, cpf, monthly_fee, payment_day')
+        .in('name', companyNames)
         .eq('status', 'active');
 
       if (clientsError) {
@@ -309,30 +309,36 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Filtrar clientes que pertencem ao grupo
-      const clients = allClients?.filter(client => {
-        const clientDoc = (client.cnpj || client.cpf || '').replace(/[^\d]/g, '');
-        return normalizedDocs.includes(clientDoc);
-      }) || [];
-
       if (!clients || clients.length === 0) {
-        console.error(`No clients found for group ${group.groupNumber}`);
-        results.push({ group: group.groupNumber, error: 'No clients found', details: `Searched for: ${normalizedDocs.join(', ')}` });
+        console.error(`No clients found for group ${group.groupNumber}. Searched for: ${companyNames.join(', ')}`);
+        results.push({ 
+          group: group.groupNumber, 
+          error: 'No clients found',
+          searchedNames: companyNames
+        });
         continue;
       }
 
-      // Se não tiver pagadora definida, usar a primeira empresa com monthly_fee > 0
-      // Se nenhuma tiver, usar a primeira empresa
+      // Determinar empresa pagadora
       let mainPayerClient;
       let totalFee = group.totalFee;
       let paymentDay = group.paymentDay;
 
+      // Tentar encontrar pelo documento da pagadora
       if (group.mainPayerDocument) {
-        const normalizedMainPayer = group.mainPayerDocument.replace(/[^\d]/g, '');
+        const normalizedMainDoc = group.mainPayerDocument.replace(/[^\d]/g, '');
         mainPayerClient = clients.find(c => {
           const clientDoc = (c.cnpj || c.cpf || '').replace(/[^\d]/g, '');
-          return clientDoc === normalizedMainPayer;
+          return clientDoc === normalizedMainDoc;
         });
+      }
+
+      // Se não encontrou pela documento, tentar pelo nome
+      if (!mainPayerClient) {
+        const mainPayerCompany = group.companies.find(c => c.document === group.mainPayerDocument);
+        if (mainPayerCompany) {
+          mainPayerClient = clients.find(c => c.name === mainPayerCompany.name);
+        }
       }
 
       if (!mainPayerClient) {

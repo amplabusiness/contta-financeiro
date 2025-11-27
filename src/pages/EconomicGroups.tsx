@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatDocument } from '@/lib/formatters';
 
 interface EconomicGroup {
   id: string;
@@ -25,6 +26,7 @@ interface EconomicGroup {
 interface GroupMember {
   client_id: string;
   client_name: string;
+  client_document?: string;
   individual_fee: number;
   is_main_payer: boolean;
 }
@@ -65,7 +67,7 @@ export default function EconomicGroups() {
           economic_group_id,
           client_id,
           individual_fee,
-          clients(name)
+          clients(name, cnpj, cpf)
         `);
 
       if (membersError) throw membersError;
@@ -76,6 +78,7 @@ export default function EconomicGroups() {
           .map(m => ({
             client_id: m.client_id,
             client_name: (m.clients as any)?.name || 'Nome não disponível',
+            client_document: (m.clients as any)?.cnpj || (m.clients as any)?.cpf || '',
             individual_fee: m.individual_fee,
             is_main_payer: m.client_id === group.main_payer_client_id
           }));
@@ -291,7 +294,14 @@ export default function EconomicGroups() {
                         >
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span>{member.client_name}</span>
+                            <div>
+                              <span className="font-medium">{member.client_name}</span>
+                              {member.client_document && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {formatDocument(member.client_document)}
+                                </span>
+                              )}
+                            </div>
                             {member.is_main_payer && (
                               <Badge variant="default" className="text-xs">
                                 Pagadora
