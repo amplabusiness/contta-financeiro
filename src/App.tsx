@@ -69,6 +69,7 @@ import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
 import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import Partners from "./pages/Partners";
+import EconomicGroups from "./pages/EconomicGroups";
 import ClientVerification from "./pages/ClientVerification";
 import InactiveClientVerification from "./pages/InactiveClientVerification";
 import ClientComparisonVerification from "./pages/ClientComparisonVerification";
@@ -130,6 +131,7 @@ const App = () => (
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/partners" element={<Partners />} />
+            <Route path="/economic-groups" element={<EconomicGroups />} />
             <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
             <Route path="/barter-clients" element={<BarterClients />} />
             <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
