@@ -275,7 +275,24 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Atualizar clientes não-pagadores com honorário individual e dia de pagamento
+      // Atualizar o main payer para cliente pagante com o total fee
+      const { error: mainPayerUpdateError } = await supabase
+        .from('clients')
+        .update({
+          monthly_fee: totalFee,
+          payment_day: paymentDay,
+          is_pro_bono: false,
+          pro_bono_start_date: null,
+          pro_bono_end_date: null,
+          pro_bono_reason: null
+        })
+        .eq('id', mainPayerClient.id);
+
+      if (mainPayerUpdateError) {
+        console.error(`Error updating main payer ${mainPayerClient.name}:`, mainPayerUpdateError);
+      }
+
+      // Atualizar demais clientes do grupo com honorário individual
       const nonPayerClients = clients.filter(c => c.id !== mainPayerClient.id);
       
       for (const client of nonPayerClients) {
@@ -307,9 +324,14 @@ Deno.serve(async (req) => {
       console.log(`Successfully created Group ${group.groupNumber} with ${clients.length} companies`);
     }
 
+    const successCount = results.filter(r => r.success).length;
+    const totalMembersCount = results.reduce((sum, r) => sum + (r.companiesCount || 0), 0);
+
     return new Response(
       JSON.stringify({
         message: 'Economic groups import completed',
+        groupsCreated: successCount,
+        membersCreated: totalMembersCount,
         results
       }),
       {
