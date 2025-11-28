@@ -1,0 +1,217 @@
+# Roadmap - Ampla Contabilidade SaaS
+
+## Fase 1: Fundação (Atual)
+**Status**: Em Progresso
+**Objetivo**: Estabilizar arquitetura e preparar para multi-tenancy
+
+### 1.1 Arquitetura de Dados ✅
+- [x] Criar views materializadas para consultas
+- [x] Implementar CQRS (Commands/Queries separados)
+- [x] Event Sourcing com `domain_events`
+- [x] Triggers para captura automática de eventos
+
+### 1.2 Multi-Tenancy 🔄
+- [x] Tabela `tenants` e `tenant_users`
+- [ ] Adicionar `tenant_id` em todas as tabelas
+- [ ] Implementar RLS policies com tenant_id
+- [ ] Migrar dados existentes para tenant padrão
+- [ ] Função de switch de tenant
+
+### 1.3 API Unificada 📋
+- [ ] Versionamento de API (v1, v2)
+- [ ] Rate limiting por tenant/plano
+- [ ] Documentação OpenAPI/Swagger
+- [ ] SDK JavaScript para integrações
+
+### 1.4 Autenticação Avançada 📋
+- [ ] SSO (SAML, OAuth)
+- [ ] MFA (TOTP, SMS)
+- [ ] Gestão de sessões
+- [ ] Audit log de acessos
+
+---
+
+## Fase 2: Recursos Avançados
+**Timeline**: 2-3 meses após Fase 1
+**Objetivo**: Diferenciação competitiva
+
+### 2.1 IA Contábil Avançada
+- [ ] Classificação automática de lançamentos
+- [ ] Detecção de anomalias
+- [ ] Previsão de inadimplência
+- [ ] Sugestões de otimização fiscal
+- [ ] Chat com documentos (OCR + RAG)
+
+### 2.2 Automação Total
+- [ ] Conciliação 100% automática
+- [ ] Fechamento contábil automatizado
+- [ ] Geração automática de relatórios
+- [ ] Alertas inteligentes (WhatsApp, Email)
+- [ ] Workflows personalizáveis
+
+### 2.3 Integrações
+- [ ] Bancos via Open Finance
+- [ ] Sistemas de NF-e (SEFAZ)
+- [ ] ERPs (SAP, TOTVS, Omie)
+- [ ] Contabilidade (Domínio, Fortes)
+- [ ] Planilhas (Google Sheets, Excel)
+
+### 2.4 Portal do Cliente
+- [ ] Dashboard self-service
+- [ ] Upload de documentos
+- [ ] Chat com contador
+- [ ] Assinatura digital
+- [ ] Pagamento online de honorários
+
+---
+
+## Fase 3: Escala SaaS
+**Timeline**: 3-6 meses após Fase 2
+**Objetivo**: Preparar para crescimento
+
+### 3.1 Infraestrutura
+- [ ] CDN para assets estáticos
+- [ ] Edge Functions globais
+- [ ] Database replicas
+- [ ] Cache distribuído (Redis)
+- [ ] Backup automatizado
+
+### 3.2 Monetização
+- [ ] Planos (Starter, Pro, Enterprise)
+- [ ] Billing com Stripe
+- [ ] Usage metering
+- [ ] Upgrade/downgrade self-service
+- [ ] Trials e coupons
+
+### 3.3 Onboarding
+- [ ] Wizard de configuração
+- [ ] Importação de dados legados
+- [ ] Templates de plano de contas
+- [ ] Vídeos tutoriais
+- [ ] Suporte in-app
+
+### 3.4 White Label
+- [ ] Customização de branding
+- [ ] Domínio personalizado
+- [ ] Emails branded
+- [ ] Relatórios com logo do cliente
+
+---
+
+## Fase 4: Ecossistema
+**Timeline**: 6-12 meses após Fase 3
+**Objetivo**: Plataforma completa
+
+### 4.1 Marketplace
+- [ ] API pública para parceiros
+- [ ] Apps de terceiros
+- [ ] Templates de relatórios
+- [ ] Integrações prontas
+
+### 4.2 Comunidade
+- [ ] Fórum de usuários
+- [ ] Base de conhecimento
+- [ ] Programa de afiliados
+- [ ] Certificações
+
+### 4.3 Mobile
+- [ ] App iOS/Android
+- [ ] Push notifications
+- [ ] Offline mode
+- [ ] Biometria
+
+### 4.4 Analytics Avançado
+- [ ] Business Intelligence
+- [ ] Benchmarking do setor
+- [ ] Insights preditivos
+- [ ] Dashboards personalizáveis
+
+---
+
+## Métricas de Sucesso
+
+### Técnicas
+| Métrica | Meta Fase 1 | Meta Final |
+|---------|-------------|------------|
+| Uptime | 99.5% | 99.99% |
+| Response Time (p95) | < 500ms | < 100ms |
+| Error Rate | < 1% | < 0.1% |
+| Conciliação automática | 70% | 95% |
+
+### Negócio
+| Métrica | Meta Fase 1 | Meta Final |
+|---------|-------------|------------|
+| Tenants | 5 | 1000+ |
+| MRR | R$ 5k | R$ 500k+ |
+| Churn | < 10% | < 3% |
+| NPS | 30+ | 60+ |
+
+---
+
+## Decisões Técnicas Pendentes
+
+### 1. Background Jobs
+**Opções**:
+- Supabase Edge Functions + pg_cron
+- Inngest
+- Trigger.dev
+- AWS Lambda + EventBridge
+
+**Recomendação**: Inngest (melhor DX, retry automático)
+
+### 2. Real-time
+**Opções**:
+- Supabase Realtime (atual)
+- Pusher
+- Ably
+- Socket.io
+
+**Recomendação**: Manter Supabase Realtime (já integrado)
+
+### 3. File Storage
+**Opções**:
+- Supabase Storage (atual)
+- Cloudflare R2
+- AWS S3
+
+**Recomendação**: Supabase Storage + CDN
+
+### 4. Email
+**Opções**:
+- Resend
+- Postmark
+- SendGrid
+
+**Recomendação**: Resend (melhor DX, bom pricing)
+
+### 5. Monitoring
+**Opções**:
+- Sentry (errors)
+- LogFlare (logs)
+- Grafana Cloud
+
+**Recomendação**: Sentry + LogFlare (integração Supabase)
+
+---
+
+## Notas de Implementação
+
+### Prioridade Alta (Próximas 2 semanas)
+1. Aplicar migration de arquitetura SaaS
+2. Testar views materializadas
+3. Criar job de refresh periódico
+4. Migrar dashboard para usar views
+5. Implementar tenant padrão
+
+### Prioridade Média (Próximo mês)
+1. RLS completo
+2. API versionada
+3. Documentação
+4. Testes automatizados
+5. CI/CD
+
+### Prioridade Baixa (Backlog)
+1. Mobile app
+2. White label
+3. Marketplace
+4. Analytics avançado

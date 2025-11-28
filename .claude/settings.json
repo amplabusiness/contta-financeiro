@@ -1,0 +1,74 @@
+{
+  "project": {
+    "name": "Ampla Contabilidade",
+    "version": "1.0.0",
+    "type": "saas",
+    "language": "typescript",
+    "framework": "react"
+  },
+  "memory": {
+    "files": [
+      "MEMORY.md",
+      "ROADMAP.md",
+      "CONTEXT.md",
+      "ARCHITECTURE.md"
+    ],
+    "loadOrder": [
+      "MEMORY.md",
+      "CONTEXT.md"
+    ]
+  },
+  "conventions": {
+    "components": "PascalCase",
+    "functions": "camelCase",
+    "constants": "UPPER_SNAKE_CASE",
+    "files": {
+      "pages": "PascalCase.tsx",
+      "components": "PascalCase.tsx",
+      "hooks": "use*.ts",
+      "utils": "camelCase.ts"
+    }
+  },
+  "database": {
+    "provider": "supabase",
+    "rls": true,
+    "multiTenant": true,
+    "eventSourcing": true
+  },
+  "api": {
+    "style": "rest",
+    "versioning": true,
+    "authentication": "jwt"
+  },
+  "testing": {
+    "unit": "vitest",
+    "e2e": "playwright",
+    "coverage": 80
+  },
+  "deployment": {
+    "frontend": "vercel",
+    "backend": "supabase",
+    "ci": "github-actions"
+  },
+  "integrations": {
+    "ai": {
+      "provider": "lovable",
+      "model": "gemini-2.5-flash"
+    },
+    "email": {
+      "provider": "resend"
+    },
+    "monitoring": {
+      "errors": "sentry",
+      "logs": "logflare"
+    }
+  },
+  "features": {
+    "proBono": true,
+    "barter": true,
+    "economicGroups": true,
+    "superConciliador": true,
+    "smartAccounting": true,
+    "aiAccountant": true
+  }
+}
