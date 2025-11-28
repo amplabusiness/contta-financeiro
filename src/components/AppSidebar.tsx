@@ -42,6 +42,7 @@ import {
   LineChart,
   Heart,
   Network,
+  Calculator,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -123,6 +124,7 @@ export function AppSidebar() {
       items: [
         { title: "Honorários", url: "/invoices", icon: CreditCard },
         { title: "Análise de Honorários", url: "/fees-analysis", icon: TrendingUp },
+        { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
         { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
         { title: "Cobrança", url: "/collection-dashboard", icon: FileText },
         { title: "Despesas", url: "/expenses", icon: Wallet },
