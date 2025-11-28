@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Calendar, DollarSign, Loader2, FileText, CheckCircle, XCircle, CalendarRange } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, DollarSign, Loader2, FileText, CheckCircle, XCircle, CalendarRange, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -63,6 +63,7 @@ const ClientOpeningBalance = () => {
   const [balances, setBalances] = useState<OpeningBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingBatch, setSavingBatch] = useState(false);
+  const [reprocessing, setReprocessing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [editingBalance, setEditingBalance] = useState<OpeningBalance | null>(null);
@@ -596,6 +597,143 @@ const ClientOpeningBalance = () => {
     .filter(b => b.status === "paid")
     .reduce((sum, b) => sum + b.amount, 0);
 
+  // Função para reprocessar saldos existentes que não têm honorário/razão
+  const reprocessExistingBalances = async () => {
+    try {
+      setReprocessing(true);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+
+      // Buscar todos os saldos de abertura
+      const { data: allBalances, error: balancesError } = await supabase
+        .from("client_opening_balance")
+        .select("*");
+
+      if (balancesError) throw balancesError;
+
+      if (!allBalances || allBalances.length === 0) {
+        toast.info("Nenhum saldo de abertura encontrado");
+        return;
+      }
+
+      // Buscar invoices que já foram criados a partir de saldos de abertura
+      const { data: existingInvoices } = await supabase
+        .from("invoices")
+        .select("source_id")
+        .eq("source", "opening_balance");
+
+      const existingSourceIds = new Set((existingInvoices || []).map(i => i.source_id));
+
+      // Filtrar apenas saldos que ainda não têm invoice
+      const balancesToProcess = allBalances.filter(b => !existingSourceIds.has(b.id));
+
+      if (balancesToProcess.length === 0) {
+        toast.info("Todos os saldos já foram processados!");
+        return;
+      }
+
+      toast.info(`Processando ${balancesToProcess.length} saldo(s) de abertura...`);
+
+      let processed = 0;
+      let errors = 0;
+
+      for (const balance of balancesToProcess) {
+        try {
+          // 1. Criar honorário
+          const { data: invoiceData, error: invoiceError } = await supabase
+            .from("invoices")
+            .insert({
+              client_id: balance.client_id,
+              amount: balance.amount,
+              competence: balance.competence,
+              due_date: balance.due_date || new Date().toISOString().split('T')[0],
+              description: balance.description || `Honorários de ${balance.competence}`,
+              status: balance.status === "paid" ? "paid" : "pending",
+              payment_date: balance.status === "paid" ? balance.paid_date : null,
+              source: "opening_balance",
+              source_id: balance.id,
+              created_by: userId
+            })
+            .select()
+            .single();
+
+          if (invoiceError) {
+            console.error("Erro ao criar honorário:", invoiceError);
+            errors++;
+            continue;
+          }
+
+          // 2. Criar lançamento no razão do cliente (débito)
+          const { data: lastBalance } = await supabase
+            .from("client_ledger")
+            .select("balance")
+            .eq("client_id", balance.client_id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          const previousBalance = lastBalance?.balance || 0;
+          const newBalance = previousBalance + balance.amount;
+
+          await supabase
+            .from("client_ledger")
+            .insert({
+              client_id: balance.client_id,
+              transaction_date: balance.due_date || new Date().toISOString().split('T')[0],
+              description: `Saldo de Abertura: ${balance.description || `Honorários de ${balance.competence}`}`,
+              debit: balance.amount,
+              credit: 0,
+              balance: newBalance,
+              reference_type: "opening_balance",
+              reference_id: balance.id,
+              invoice_id: invoiceData?.id || null,
+              created_by: userId
+            });
+
+          // 3. Criar lançamento contábil
+          await supabase.functions.invoke('create-accounting-entry', {
+            body: {
+              type: 'opening_balance',
+              operation: 'provision',
+              referenceId: balance.id,
+              amount: balance.amount,
+              date: balance.due_date || new Date().toISOString().split('T')[0],
+              description: balance.description || `Honorários de ${balance.competence}`,
+              clientId: balance.client_id,
+              competence: balance.competence
+            }
+          });
+
+          processed++;
+        } catch (err) {
+          console.error("Erro ao processar saldo:", err);
+          errors++;
+        }
+      }
+
+      if (processed > 0) {
+        toast.success(`${processed} saldo(s) reprocessado(s) com sucesso!`);
+      }
+      if (errors > 0) {
+        toast.warning(`${errors} erro(s) durante o processamento`);
+      }
+
+      // Recarregar dados
+      loadData();
+    } catch (error) {
+      console.error("Erro ao reprocessar:", error);
+      toast.error("Erro ao reprocessar saldos de abertura");
+    } finally {
+      setReprocessing(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -607,6 +745,25 @@ const ClientOpeningBalance = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            {/* Botão Reprocessar Existentes */}
+            <Button
+              variant="outline"
+              onClick={reprocessExistingBalances}
+              disabled={reprocessing}
+            >
+              {reprocessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reprocessar Existentes
+                </>
+              )}
+            </Button>
+
             {/* Botão Lançamento em Lote */}
             <Dialog open={batchDialogOpen} onOpenChange={(open) => {
               setBatchDialogOpen(open);
