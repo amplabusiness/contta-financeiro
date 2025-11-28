@@ -95,8 +95,8 @@ const ClientOpeningBalance = () => {
     loadData();
   }, []);
 
-  // Função para criar lançamento contábil
-  const createAccountingEntry = async (
+  // Função para criar honorário (invoice) + lançamento contábil + razão do cliente
+  const createInvoiceAndAccountingEntry = async (
     balanceId: string,
     clientId: string,
     amount: number,
@@ -107,10 +107,69 @@ const ClientOpeningBalance = () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        console.warn("Usuário não autenticado, lançamento contábil não criado");
+        console.warn("Usuário não autenticado");
         return;
       }
 
+      const userId = sessionData.session.user.id;
+
+      // 1. Criar o honorário (invoice) para aparecer na ficha do cliente
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from("invoices")
+        .insert({
+          client_id: clientId,
+          amount: amount,
+          competence: competence,
+          due_date: dueDate || new Date().toISOString().split('T')[0],
+          description: description,
+          status: "pending",
+          source: "opening_balance",
+          source_id: balanceId,
+          created_by: userId
+        })
+        .select()
+        .single();
+
+      if (invoiceError) {
+        console.error("Erro ao criar honorário:", invoiceError);
+      } else {
+        console.log("Honorário criado:", invoiceData);
+      }
+
+      // 2. Criar lançamento no razão do cliente (débito = valor a receber)
+      const { data: lastBalance } = await supabase
+        .from("client_ledger")
+        .select("balance")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      const previousBalance = lastBalance?.balance || 0;
+      const newBalance = previousBalance + amount; // Débito aumenta o saldo devedor
+
+      const { error: ledgerError } = await supabase
+        .from("client_ledger")
+        .insert({
+          client_id: clientId,
+          transaction_date: dueDate || new Date().toISOString().split('T')[0],
+          description: `Saldo de Abertura: ${description}`,
+          debit: amount,
+          credit: 0,
+          balance: newBalance,
+          reference_type: "opening_balance",
+          reference_id: balanceId,
+          invoice_id: invoiceData?.id || null,
+          created_by: userId
+        });
+
+      if (ledgerError) {
+        console.error("Erro ao criar lançamento no razão:", ledgerError);
+      } else {
+        console.log("Lançamento no razão criado");
+      }
+
+      // 3. Criar lançamento contábil
       const response = await supabase.functions.invoke('create-accounting-entry', {
         body: {
           type: 'opening_balance',
@@ -126,13 +185,11 @@ const ClientOpeningBalance = () => {
 
       if (response.error) {
         console.error("Erro ao criar lançamento contábil:", response.error);
-        // Não lançar erro para não interromper o fluxo principal
       } else {
         console.log("Lançamento contábil criado:", response.data);
       }
     } catch (error) {
-      console.error("Erro ao criar lançamento contábil:", error);
-      // Não lançar erro para não interromper o fluxo principal
+      console.error("Erro ao criar registros:", error);
     }
   };
 
@@ -243,9 +300,9 @@ const ClientOpeningBalance = () => {
 
         if (error) throw error;
 
-        // Criar lançamento contábil automaticamente
+        // Criar honorário + razão + lançamento contábil automaticamente
         if (insertedData) {
-          await createAccountingEntry(
+          await createInvoiceAndAccountingEntry(
             insertedData.id,
             formData.client_id,
             parseFloat(formData.amount),
@@ -255,7 +312,7 @@ const ClientOpeningBalance = () => {
           );
         }
 
-        toast.success("Saldo de abertura cadastrado com lançamento contábil!");
+        toast.success("Saldo de abertura cadastrado com honorário e lançamentos!");
       }
 
       setDialogOpen(false);
@@ -346,12 +403,12 @@ const ClientOpeningBalance = () => {
 
       if (error) throw error;
 
-      // Criar lançamentos contábeis para cada entrada
+      // Criar honorários + razão + lançamentos contábeis para cada entrada
       if (insertedEntries && insertedEntries.length > 0) {
-        toast.info(`Criando ${insertedEntries.length} lançamentos contábeis...`);
+        toast.info(`Criando ${insertedEntries.length} honorários e lançamentos...`);
 
         for (const entry of insertedEntries) {
-          await createAccountingEntry(
+          await createInvoiceAndAccountingEntry(
             entry.id,
             entry.client_id,
             entry.amount,
@@ -362,7 +419,7 @@ const ClientOpeningBalance = () => {
         }
       }
 
-      let message = `${entries.length} competência(s) lançada(s) com lançamentos contábeis!`;
+      let message = `${entries.length} competência(s) lançada(s) com honorários e lançamentos!`;
       if (skipped > 0) {
         message += ` (${skipped} já existente(s) foram ignoradas)`;
       }
