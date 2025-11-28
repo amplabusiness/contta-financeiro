@@ -63,7 +63,7 @@ const ProBonoClients = () => {
         return;
       }
 
-      // Buscar clientes sem honorário mensal (Pro-Bono) ATIVOS
+      // Buscar clientes Pro-Bono ATIVOS
       let query = supabase
         .from("clients")
         .select(`
@@ -75,7 +75,7 @@ const ProBonoClients = () => {
             status
           )
         `)
-        .eq('monthly_fee', 0)
+        .eq('is_pro_bono', true)
         .eq('is_active', true);
 
       // Aplicar filtro de status (somente se quiser ver ativos + inativos no futuro)

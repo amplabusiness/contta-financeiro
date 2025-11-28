@@ -1,5 +1,5 @@
--- Criar tabela de transações bancárias
-CREATE TABLE public.bank_transactions (
+-- Criar tabela de transacoes bancarias
+CREATE TABLE IF NOT EXISTS public.bank_transactions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   transaction_date DATE NOT NULL,
   description TEXT NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE public.bank_transactions (
   created_by UUID NOT NULL REFERENCES auth.users(id)
 );
 
--- Criar tabela de razão do cliente (conta corrente)
-CREATE TABLE public.client_ledger (
+-- Criar tabela de razao do cliente (conta corrente)
+CREATE TABLE IF NOT EXISTS public.client_ledger (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   client_id UUID NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   transaction_date DATE NOT NULL,
@@ -35,8 +35,8 @@ CREATE TABLE public.client_ledger (
   created_by UUID NOT NULL REFERENCES auth.users(id)
 );
 
--- Criar tabela de configuração de conciliação
-CREATE TABLE public.reconciliation_rules (
+-- Criar tabela de configuracao de conciliacao
+CREATE TABLE IF NOT EXISTS public.reconciliation_rules (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   rule_name TEXT NOT NULL,
   pattern TEXT NOT NULL,
@@ -50,62 +50,75 @@ CREATE TABLE public.reconciliation_rules (
   created_by UUID NOT NULL REFERENCES auth.users(id)
 );
 
+-- Garantir colunas basicas mesmo se tabelas ja existirem
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS matched BOOLEAN DEFAULT false;
+ALTER TABLE public.client_ledger ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE public.client_ledger ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+ALTER TABLE public.reconciliation_rules ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE public.reconciliation_rules ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+
 -- Habilitar RLS
 ALTER TABLE public.bank_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.client_ledger ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reconciliation_rules ENABLE ROW LEVEL SECURITY;
 
--- Políticas RLS para bank_transactions
+-- Politicas RLS para bank_transactions
+DROP POLICY IF EXISTS "Authenticated users can view bank transactions" ON public.bank_transactions;
 CREATE POLICY "Authenticated users can view bank transactions"
 ON public.bank_transactions FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create bank transactions" ON public.bank_transactions;
 CREATE POLICY "Authenticated users can create bank transactions"
 ON public.bank_transactions FOR INSERT TO authenticated WITH CHECK (auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Authenticated users can update bank transactions" ON public.bank_transactions;
 CREATE POLICY "Authenticated users can update bank transactions"
 ON public.bank_transactions FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete bank transactions" ON public.bank_transactions;
 CREATE POLICY "Authenticated users can delete bank transactions"
 ON public.bank_transactions FOR DELETE TO authenticated USING (true);
 
--- Políticas RLS para client_ledger
+-- Politicas RLS para client_ledger
+DROP POLICY IF EXISTS "Authenticated users can view client ledger" ON public.client_ledger;
 CREATE POLICY "Authenticated users can view client ledger"
 ON public.client_ledger FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create client ledger" ON public.client_ledger;
 CREATE POLICY "Authenticated users can create client ledger"
 ON public.client_ledger FOR INSERT TO authenticated WITH CHECK (auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Authenticated users can update client ledger" ON public.client_ledger;
 CREATE POLICY "Authenticated users can update client ledger"
 ON public.client_ledger FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete client ledger" ON public.client_ledger;
 CREATE POLICY "Authenticated users can delete client ledger"
 ON public.client_ledger FOR DELETE TO authenticated USING (true);
 
--- Políticas RLS para reconciliation_rules
+-- Politicas RLS para reconciliation_rules
+DROP POLICY IF EXISTS "Authenticated users can view reconciliation rules" ON public.reconciliation_rules;
 CREATE POLICY "Authenticated users can view reconciliation rules"
 ON public.reconciliation_rules FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create reconciliation rules" ON public.reconciliation_rules;
 CREATE POLICY "Authenticated users can create reconciliation rules"
 ON public.reconciliation_rules FOR INSERT TO authenticated WITH CHECK (auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Authenticated users can update reconciliation rules" ON public.reconciliation_rules;
 CREATE POLICY "Authenticated users can update reconciliation rules"
 ON public.reconciliation_rules FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete reconciliation rules" ON public.reconciliation_rules;
 CREATE POLICY "Authenticated users can delete reconciliation rules"
 ON public.reconciliation_rules FOR DELETE TO authenticated USING (true);
 
--- Índices para performance
-CREATE INDEX idx_bank_transactions_date ON public.bank_transactions(transaction_date);
-CREATE INDEX idx_bank_transactions_matched ON public.bank_transactions(matched);
-CREATE INDEX idx_client_ledger_client ON public.client_ledger(client_id);
-CREATE INDEX idx_client_ledger_date ON public.client_ledger(transaction_date);
+-- Indices para performance
+CREATE INDEX IF NOT EXISTS idx_bank_transactions_date ON public.bank_transactions(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_bank_transactions_matched ON public.bank_transactions(matched);
+CREATE INDEX IF NOT EXISTS idx_client_ledger_client ON public.client_ledger(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_ledger_date ON public.client_ledger(transaction_date);
 
--- Inserir regras de conciliação padrão
-INSERT INTO public.reconciliation_rules (rule_name, pattern, rule_type, auto_match, priority, created_by)
-SELECT 'Pagamento de Honorário', 'honorario|honorários|mensalidade', 'revenue', true, 10, id FROM auth.users LIMIT 1;
-
-INSERT INTO public.reconciliation_rules (rule_name, pattern, rule_type, target_category, auto_match, priority, created_by)
-SELECT 'Energia Elétrica', 'energia|luz|cemig|copel|enel', 'expense', 'Contas Fixas', true, 8, id FROM auth.users LIMIT 1;
-
-INSERT INTO public.reconciliation_rules (rule_name, pattern, rule_type, target_category, auto_match, priority, created_by)
-SELECT 'Aluguel', 'aluguel|locação', 'expense', 'Contas Fixas', true, 9, id FROM auth.users LIMIT 1;
+-- Insercao de regras de conciliacao removida para evitar conflitos com schema existente

@@ -16,6 +16,20 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   resolution_notes TEXT
 );
 
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS audit_type TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS severity TEXT DEFAULT 'info';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS entity_type TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS entity_id UUID;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS metadata JSONB;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS resolved BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS resolved_by UUID;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS resolution_notes TEXT;
+
 -- Índices para melhor performance
 CREATE INDEX idx_audit_logs_created_by ON public.audit_logs(created_by);
 CREATE INDEX idx_audit_logs_audit_type ON public.audit_logs(audit_type);

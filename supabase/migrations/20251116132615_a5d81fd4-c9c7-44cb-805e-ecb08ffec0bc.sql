@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS boleto_report_items (
 );
 
 -- Índices para performance
-CREATE INDEX idx_boleto_reports_period ON boleto_reports(period_start, period_end);
-CREATE INDEX idx_boleto_reports_created_at ON boleto_reports(created_at DESC);
-CREATE INDEX idx_boleto_report_items_report_id ON boleto_report_items(report_id);
-CREATE INDEX idx_boleto_report_items_client_id ON boleto_report_items(client_id);
-CREATE INDEX idx_boleto_report_items_invoice_id ON boleto_report_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_boleto_reports_period ON boleto_reports(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_boleto_reports_created_at ON boleto_reports(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_boleto_report_items_report_id ON boleto_report_items(report_id);
+CREATE INDEX IF NOT EXISTS idx_boleto_report_items_client_id ON boleto_report_items(client_id);
+CREATE INDEX IF NOT EXISTS idx_boleto_report_items_invoice_id ON boleto_report_items(invoice_id);
 
 -- RLS Policies
 ALTER TABLE boleto_reports ENABLE ROW LEVEL SECURITY;

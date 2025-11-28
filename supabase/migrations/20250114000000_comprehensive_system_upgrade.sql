@@ -50,6 +50,24 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Garantir colunas mesmo se a tabela jǭ existir (evita erros ao criar ���ndices)
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES clients(id) ON DELETE CASCADE;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS bank_name TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS account_number TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS account_type TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS agency TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS balance NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS pluggy_item_id TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS pluggy_account_id TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS cora_account_id TEXT;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS sync_enabled BOOLEAN DEFAULT true;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS last_sync_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 CREATE INDEX idx_bank_accounts_client ON bank_accounts(client_id);
 CREATE INDEX idx_bank_accounts_sync ON bank_accounts(sync_enabled, is_active);
 
@@ -144,6 +162,38 @@ COMMENT ON TABLE collection_rules IS 'Régua de cobrança automática';
 -- ==========================================
 -- 3. DOCUMENTS & OCR
 -- ==========================================
+
+-- Garantir tabela expenses antes de referenciar em documents
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  due_date DATE NOT NULL,
+  payment_date DATE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'overdue', 'canceled')),
+  competence TEXT,
+  notes TEXT,
+  created_by UUID NOT NULL REFERENCES auth.users(id),
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES clients(id) ON DELETE CASCADE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2);
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS payment_date DATE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS competence TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -321,6 +371,28 @@ COMMENT ON TABLE organizations IS 'Escritórios contábeis (multi-tenant)';
 
 -- ==========================================
 
+
+CREATE TABLE IF NOT EXISTS roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  permissions JSONB NOT NULL DEFAULT '[]', -- Array de permiss?es
+  is_system BOOLEAN DEFAULT false, -- System roles n?o podem ser deletados
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insert default roles
+INSERT INTO roles (name, description, permissions, is_system) VALUES
+('admin', 'Administrador completo', '["*"]', true),
+('contador', 'Contador com acesso completo aos dados', '["clients.*", "invoices.*", "expenses.*", "reports.*", "ai.*"]', true),
+('assistente', 'Assistente com acesso limitado', '["clients.read", "invoices.read", "expenses.read"]', true),
+('financeiro', 'Respons?vel financeiro', '["invoices.*", "expenses.*", "bank_transactions.*", "reports.*"]', true),
+('cliente', 'Cliente com acesso ao portal', '["portal.*"]', true)
+ON CONFLICT (name) DO NOTHING;
+
+-- ==========================================
+
 CREATE TABLE IF NOT EXISTS organization_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
@@ -334,27 +406,6 @@ CREATE TABLE IF NOT EXISTS organization_users (
 
 CREATE INDEX idx_org_users_org ON organization_users(organization_id);
 CREATE INDEX idx_org_users_user ON organization_users(user_id);
-
--- ==========================================
-
-CREATE TABLE IF NOT EXISTS roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL UNIQUE,
-  description TEXT,
-  permissions JSONB NOT NULL DEFAULT '[]', -- Array de permissões
-  is_system BOOLEAN DEFAULT false, -- System roles não podem ser deletados
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Insert default roles
-INSERT INTO roles (name, description, permissions, is_system) VALUES
-('admin', 'Administrador completo', '["*"]', true),
-('contador', 'Contador com acesso completo aos dados', '["clients.*", "invoices.*", "expenses.*", "reports.*", "ai.*"]', true),
-('assistente', 'Assistente com acesso limitado', '["clients.read", "invoices.read", "expenses.read"]', true),
-('financeiro', 'Responsável financeiro', '["invoices.*", "expenses.*", "bank_transactions.*", "reports.*"]', true),
-('cliente', 'Cliente com acesso ao portal', '["portal.*"]', true)
-ON CONFLICT (name) DO NOTHING;
 
 -- ==========================================
 

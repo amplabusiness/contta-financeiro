@@ -86,6 +86,7 @@ COMMENT ON VIEW vw_partner_groups IS 'Sócios que participam de múltiplas empre
 -- FUNCTION TO GET ECONOMIC GROUP IMPACT
 -- ================================================
 
+DROP FUNCTION IF EXISTS get_economic_group_impact(INT);
 CREATE OR REPLACE FUNCTION get_economic_group_impact(
   p_year INT DEFAULT NULL
 )

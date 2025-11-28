@@ -436,6 +436,17 @@ USING (auth.uid() = created_by);
 -- ============================================
 -- 15. FIX ENRICHMENT_LOGS TABLE
 -- ============================================
+
+-- Garantir que a tabela exista antes de ajustar as políticas
+CREATE TABLE IF NOT EXISTS enrichment_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  created_by UUID,
+  message TEXT,
+  metadata JSONB
+);
+ALTER TABLE enrichment_logs ADD COLUMN IF NOT EXISTS created_by UUID;
+
 DROP POLICY IF EXISTS "Authenticated users can view enrichment logs" ON enrichment_logs;
 
 CREATE POLICY "Users can view their own enrichment logs"

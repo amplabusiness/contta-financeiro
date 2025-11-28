@@ -81,6 +81,7 @@ CREATE INDEX idx_bank_imports_bank_account_id ON public.bank_imports(bank_accoun
 CREATE INDEX idx_bank_imports_status ON public.bank_imports(status);
 
 -- Add trigger for updated_at
+DROP TRIGGER IF EXISTS update_bank_accounts_updated_at ON public.bank_accounts;
 CREATE TRIGGER update_bank_accounts_updated_at
 BEFORE UPDATE ON public.bank_accounts
 FOR EACH ROW

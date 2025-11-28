@@ -6,6 +6,11 @@
 -- 1. CONSTRAINTS PARA PREVENIR DUPLICATAS
 -- =====================================================
 
+-- Garantir coluna status na tabela clients (necessária para índices filtrados)
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+-- Garantir coluna client_id na tabela expenses para índices únicos
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES clients(id) ON DELETE CASCADE;
+
 -- 1.1. Constraint UNIQUE para invoices (prevenir duplicatas)
 -- Garante que não pode haver duas faturas do mesmo cliente na mesma competência
 ALTER TABLE invoices

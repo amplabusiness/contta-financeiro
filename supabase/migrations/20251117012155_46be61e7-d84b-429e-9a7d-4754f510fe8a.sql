@@ -50,18 +50,22 @@ COMMENT ON COLUMN public.barter_credits.balance_after IS 'Saldo após a moviment
 ALTER TABLE public.barter_credits ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for barter_credits
+DROP POLICY IF EXISTS "Users can view barter credits" ON public.barter_credits;
 CREATE POLICY "Users can view barter credits"
   ON public.barter_credits FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can insert barter credits" ON public.barter_credits;
 CREATE POLICY "Users can insert barter credits"
   ON public.barter_credits FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can update barter credits" ON public.barter_credits;
 CREATE POLICY "Users can update barter credits"
   ON public.barter_credits FOR UPDATE
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can delete barter credits" ON public.barter_credits;
 CREATE POLICY "Users can delete barter credits"
   ON public.barter_credits FOR DELETE
   USING (auth.uid() IS NOT NULL);

@@ -15,6 +15,18 @@ CREATE TABLE IF NOT EXISTS public.accounting_entries (
   notes TEXT
 );
 
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS entry_date DATE;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS entry_type TEXT;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS document_number TEXT;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS reference_type TEXT;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS reference_id UUID;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS total_debit NUMERIC DEFAULT 0;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS total_credit NUMERIC DEFAULT 0;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS balanced BOOLEAN DEFAULT true;
+ALTER TABLE public.accounting_entries ADD COLUMN IF NOT EXISTS notes TEXT;
+
 -- Criar tabela de itens de lançamento (débitos e créditos)
 CREATE TABLE IF NOT EXISTS public.accounting_entry_lines (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -27,11 +39,11 @@ CREATE TABLE IF NOT EXISTS public.accounting_entry_lines (
 );
 
 -- Índices para performance
-CREATE INDEX idx_accounting_entries_date ON public.accounting_entries(entry_date);
-CREATE INDEX idx_accounting_entries_type ON public.accounting_entries(entry_type);
-CREATE INDEX idx_accounting_entries_reference ON public.accounting_entries(reference_type, reference_id);
-CREATE INDEX idx_accounting_entry_lines_entry ON public.accounting_entry_lines(entry_id);
-CREATE INDEX idx_accounting_entry_lines_account ON public.accounting_entry_lines(account_id);
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_date ON public.accounting_entries(entry_date);
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_type ON public.accounting_entries(entry_type);
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_reference ON public.accounting_entries(reference_type, reference_id);
+CREATE INDEX IF NOT EXISTS idx_accounting_entry_lines_entry ON public.accounting_entry_lines(entry_id);
+CREATE INDEX IF NOT EXISTS idx_accounting_entry_lines_account ON public.accounting_entry_lines(account_id);
 
 -- Habilitar RLS
 ALTER TABLE public.accounting_entries ENABLE ROW LEVEL SECURITY;

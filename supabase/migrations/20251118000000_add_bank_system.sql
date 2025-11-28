@@ -71,7 +71,12 @@ CREATE TABLE IF NOT EXISTS public.bank_imports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.bank_imports ADD COLUMN IF NOT EXISTS duplicated_transactions INTEGER DEFAULT 0;
+ALTER TABLE public.bank_imports ADD COLUMN IF NOT EXISTS new_transactions INTEGER DEFAULT 0;
+
 -- Create indexes
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS fitid TEXT;
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS is_reconciled BOOLEAN DEFAULT false;
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_account_id ON public.bank_transactions(bank_account_id);
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_date ON public.bank_transactions(transaction_date DESC);
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_fitid ON public.bank_transactions(fitid);
@@ -100,18 +105,22 @@ ALTER TABLE public.bank_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bank_imports ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
+DROP POLICY IF EXISTS "Users can view bank accounts" ON public.bank_accounts;
 CREATE POLICY "Users can view bank accounts"
   ON public.bank_accounts FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can insert bank accounts" ON public.bank_accounts;
 CREATE POLICY "Users can insert bank accounts"
   ON public.bank_accounts FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can update bank accounts" ON public.bank_accounts;
 CREATE POLICY "Users can update bank accounts"
   ON public.bank_accounts FOR UPDATE
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can delete bank accounts" ON public.bank_accounts;
 CREATE POLICY "Users can delete bank accounts"
   ON public.bank_accounts FOR DELETE
   USING (auth.uid() IS NOT NULL);
@@ -132,10 +141,12 @@ CREATE POLICY "Users can delete bank transactions"
   ON public.bank_transactions FOR DELETE
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can view bank imports" ON public.bank_imports;
 CREATE POLICY "Users can view bank imports"
   ON public.bank_imports FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Users can insert bank imports" ON public.bank_imports;
 CREATE POLICY "Users can insert bank imports"
   ON public.bank_imports FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);

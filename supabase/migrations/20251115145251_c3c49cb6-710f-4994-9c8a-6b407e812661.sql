@@ -34,6 +34,7 @@ CREATE POLICY "Usuários podem deletar seus próprios templates"
   USING (auth.uid() = created_by);
 
 -- Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_message_templates_updated_at ON public.message_templates;
 CREATE TRIGGER update_message_templates_updated_at
   BEFORE UPDATE ON public.message_templates
   FOR EACH ROW
