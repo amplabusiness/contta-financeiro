@@ -77,6 +77,7 @@ import ClientSpreadsheetVerification from "./pages/ClientSpreadsheetVerification
 import ClientOpeningBalance from "./pages/ClientOpeningBalance";
 import BankFolderImport from "./pages/BankFolderImport";
 import SmartAccounting from "./pages/SmartAccounting";
+import SuperConciliador from "./pages/SuperConciliador";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -160,6 +161,7 @@ const App = () => (
           <Route path="/client-opening-balance" element={<ClientOpeningBalance />} />
           <Route path="/bank-folder-import" element={<BankFolderImport />} />
           <Route path="/smart-accounting" element={<SmartAccounting />} />
+          <Route path="/super-conciliador" element={<SuperConciliador />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

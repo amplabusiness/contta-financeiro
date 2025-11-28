@@ -132,6 +132,7 @@ export function AppSidebar() {
     {
       label: "Conciliação Bancária",
       items: [
+        { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
         { title: "Pasta Banco", url: "/bank-folder-import", icon: FolderTree },
         { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
         { title: "PIX", url: "/pix-reconciliation", icon: Zap },
