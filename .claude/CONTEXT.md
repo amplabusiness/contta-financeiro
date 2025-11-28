@@ -1,46 +1,75 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-28
+2025-11-28 (Sessão 2 - Migrações e Documentação)
 
-## Trabalho em Andamento
+## ✅ Trabalho Concluído Nesta Sessão
 
-### Super Conciliador ✅
-- Implementado `src/pages/SuperConciliador.tsx`
-- Implementado `supabase/functions/smart-reconciliation/index.ts`
-- Permite split de transações para múltiplos clientes
-- Sugestões com IA via Gemini
+### 1. Configuração de Ambiente
+- [x] Verificado `.gitignore` - `.env` está protegido
+- [x] Criado `.env.example` como template seguro
+- [x] Criado `vercel.json` para deploy
+- [x] Linkado Supabase CLI com projeto
 
-### Saldo de Abertura ✅
-- Corrigido fluxo em `src/pages/ClientOpeningBalance.tsx`
-- Agora cria: invoice + client_ledger + accounting_entry
-- Adicionado botão "Reprocessar Existentes"
+### 2. Migrações SQL Aplicadas
+- [x] `20251128_saas_architecture_foundation.sql` - Arquitetura SaaS completa
+- [x] `20251128000000_add_clients_notes_column.sql` - Coluna notes
+- [x] `20251120000200_grant_rpc_permissions.sql` - Permissões RPC
+- [x] `20251120000300_create_super_conciliador_functions.sql` - Super Conciliador
 
-### Arquitetura SaaS 🔄
-- Criada migration `20251128_saas_architecture_foundation.sql`
-- Includes:
-  - Multi-tenancy (tenants, tenant_users)
-  - Event Sourcing (domain_events)
-  - Views materializadas (mv_*)
-  - CQRS functions (cmd_*, qry_*)
-  - RLS helpers
+### 3. Correções de Schema
+- [x] Corrigido `mv_client_balances` para usar `client_ledger`
+- [x] Corrigido `mv_dre_monthly` para usar `accounting_entry_items`
+- [x] Corrigido `mv_trial_balance` para usar `accounting_entry_items`
+- [x] Corrigido `mv_cash_flow` para usar `due_date` de invoices
 
-## Próximas Tarefas
-1. Aplicar migration no Supabase
-2. Testar views materializadas
-3. Migrar componentes para usar views
-4. Adicionar tenant_id nas tabelas existentes
+### 4. Documentação
+- [x] Atualizado ROADMAP.md com status atual
+- [x] Criado histórico de migrações
+- [x] Documentado lições aprendidas
 
-## Arquivos Modificados Recentemente
-- `src/pages/SuperConciliador.tsx` (novo)
-- `src/pages/ClientOpeningBalance.tsx` (modificado)
-- `src/App.tsx` (rotas adicionadas)
-- `src/components/AppSidebar.tsx` (menu atualizado)
-- `supabase/functions/smart-reconciliation/index.ts` (novo)
-- `supabase/migrations/20251128_saas_architecture_foundation.sql` (novo)
+## Funcionalidades Disponíveis no Banco
 
-## Problemas Pendentes
-- Nenhum crítico no momento
+### Views Materializadas
+| View | Status | Descrição |
+|------|--------|-----------|
+| `mv_client_balances` | ✅ Criada | Saldos por cliente |
+| `mv_default_summary` | ✅ Criada | Resumo inadimplência |
+| `mv_dre_monthly` | ✅ Criada | DRE mensal |
+| `mv_cash_flow` | ✅ Criada | Fluxo de caixa |
+| `mv_trial_balance` | ✅ Criada | Balancete |
+
+### Funções CQRS
+| Função | Status | Descrição |
+|--------|--------|-----------|
+| `cmd_create_accounting_entry()` | ✅ Criada | Criar lançamento |
+| `qry_client_dashboard()` | ✅ Criada | Dashboard cliente |
+| `qry_executive_summary()` | ✅ Criada | Resumo executivo |
+| `refresh_materialized_views()` | ✅ Criada | Atualizar views |
+
+### Tabelas Multi-Tenancy
+| Tabela | Status | Descrição |
+|--------|--------|-----------|
+| `tenants` | ✅ Criada | Organizações |
+| `tenant_users` | ✅ Criada | Usuários por tenant |
+| `tenant_features` | ✅ Criada | Feature flags |
+| `domain_events` | ✅ Criada | Event sourcing |
+
+## Próximas Tarefas Recomendadas
+1. Testar views materializadas no frontend
+2. Configurar pg_cron para refresh automático
+3. Migrar dashboard para usar `qry_executive_summary()`
+4. Adicionar `tenant_id` nas tabelas existentes
+5. Criar tenant padrão para dados existentes
+
+## Arquivos Modificados Nesta Sessão
+- `supabase/migrations/20251128_saas_architecture_foundation.sql` (corrigido)
+- `supabase/migrations/20251128000000_add_clients_notes_column.sql` (corrigido)
+- `supabase/migrations/20251120000200_grant_rpc_permissions.sql` (renomeado)
+- `supabase/migrations/20251120000300_create_super_conciliador_functions.sql` (renomeado)
+- `.claude/ROADMAP.md` (atualizado)
+- `.claude/CONTEXT.md` (atualizado)
+- `.claude/MEMORY.md` (atualizado)
 
 ## Comandos Úteis
 ```bash
@@ -49,6 +78,12 @@ npm run dev
 
 # Aplicar migrations
 supabase db push
+
+# Verificar status de migrations
+supabase migration list
+
+# Reparar migration
+supabase migration repair <timestamp> --status reverted
 
 # Deploy functions
 supabase functions deploy
@@ -60,4 +95,5 @@ git status
 ## Links Importantes
 - Dashboard: http://localhost:5173/dashboard
 - Super Conciliador: http://localhost:5173/super-conciliador
-- Supabase Studio: https://supabase.com/dashboard
+- Supabase Studio: https://supabase.com/dashboard/project/xdtlhzysrpoinqtsglmr
+- GitHub: https://github.com/amplabusiness/data-bling-sheets-3122699b

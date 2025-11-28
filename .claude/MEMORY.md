@@ -103,13 +103,24 @@ supabase/
 
 ## Views Materializadas (CQRS)
 
-| View | Propósito | Refresh |
-|------|-----------|---------|
-| `mv_client_balances` | Saldos por cliente | 5 min |
-| `mv_default_summary` | Resumo inadimplência | 5 min |
-| `mv_dre_monthly` | DRE mensal | 5 min |
-| `mv_cash_flow` | Fluxo de caixa | 5 min |
-| `mv_trial_balance` | Balancete | 5 min |
+| View | Propósito | Fonte de Dados | Refresh |
+|------|-----------|----------------|---------|
+| `mv_client_balances` | Saldos por cliente | `client_ledger` | 5 min |
+| `mv_default_summary` | Resumo inadimplência | `invoices` + `clients` | 5 min |
+| `mv_dre_monthly` | DRE mensal | `accounting_entry_items` | 5 min |
+| `mv_cash_flow` | Fluxo de caixa | `invoices` + `expenses` | 5 min |
+| `mv_trial_balance` | Balancete | `accounting_entry_items` | 5 min |
+
+### Funções CQRS Disponíveis
+
+| Função | Tipo | Descrição |
+|--------|------|-----------|
+| `cmd_create_accounting_entry()` | Command | Criar lançamento contábil |
+| `qry_client_dashboard()` | Query | Dashboard do cliente |
+| `qry_executive_summary()` | Query | Resumo executivo |
+| `refresh_materialized_views()` | Utility | Atualizar todas as views |
+| `get_current_tenant_id()` | RLS | Obter tenant atual |
+| `user_has_permission()` | RLS | Verificar permissão |
 
 ## Padrões de Código
 
@@ -170,6 +181,28 @@ serve(async (req) => {
 ### 3. Valor do honorário errado no dashboard
 **Causa**: Usava valor do invoice ao invés do `monthly_fee` do cadastro
 **Solução**: `aggregateInvoicesByCompetence` usa `monthly_fee` quando disponível
+
+### 4. Erros em Migrações SQL (28/11/2025)
+
+#### 4.1 `ALTER TABLE IF NOT EXISTS` inválido
+**Causa**: PostgreSQL não suporta `ALTER TABLE IF NOT EXISTS column`
+**Solução**: Usar bloco `DO $$ BEGIN IF NOT EXISTS (SELECT FROM information_schema.columns...) THEN ALTER TABLE... END IF; END $$;`
+
+#### 4.2 Coluna `client_id` não existe em `accounting_entries`
+**Causa**: Schema usa `accounting_entry_items` para relação com cliente
+**Solução**: Views materializadas devem usar `accounting_entry_items` ou `client_ledger`
+
+#### 4.3 Coluna `transaction_type` não existe em `bank_transactions`
+**Causa**: Schema real é diferente do planejado
+**Solução**: Simplificar `mv_cash_flow` para usar `invoices` e `expenses`
+
+#### 4.4 Coluna `payment_date` não existe
+**Causa**: Invoices usa `due_date` para vencimento
+**Solução**: Usar `due_date` ao invés de `payment_date`
+
+#### 4.5 Conflito de timestamp em migrations
+**Causa**: Múltiplas migrations com mesmo timestamp base (20251120)
+**Solução**: Usar timestamps com precisão de segundos (20251120000200)
 
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md

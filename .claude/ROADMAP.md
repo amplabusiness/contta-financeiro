@@ -1,21 +1,39 @@
 # Roadmap - Ampla Contabilidade SaaS
 
 ## Fase 1: Fundação (Atual)
-**Status**: Em Progresso
+**Status**: 70% Concluído ✅
 **Objetivo**: Estabilizar arquitetura e preparar para multi-tenancy
+**Última Atualização**: 2025-11-28
 
-### 1.1 Arquitetura de Dados ✅
+### 1.1 Arquitetura de Dados ✅ (100% Concluído)
 - [x] Criar views materializadas para consultas
+  - `mv_client_balances` - Saldos por cliente via `client_ledger`
+  - `mv_default_summary` - Resumo de inadimplência
+  - `mv_dre_monthly` - DRE mensal via `accounting_entry_items`
+  - `mv_cash_flow` - Fluxo de caixa via invoices/expenses
+  - `mv_trial_balance` - Balancete via `accounting_entry_items`
 - [x] Implementar CQRS (Commands/Queries separados)
+  - `cmd_create_accounting_entry()` - Criação de lançamentos
+  - `qry_client_dashboard()` - Dashboard do cliente
+  - `qry_executive_summary()` - Resumo executivo
 - [x] Event Sourcing com `domain_events`
+  - Tabela criada com campos: aggregate_type, event_type, payload, correlation_id
+  - Triggers automáticos em clients, invoices, expenses, bank_transactions
 - [x] Triggers para captura automática de eventos
+- [x] **Migration aplicada em produção (28/11/2025)**
 
-### 1.2 Multi-Tenancy 🔄
+### 1.2 Multi-Tenancy 🔄 (40% Concluído)
 - [x] Tabela `tenants` e `tenant_users`
-- [ ] Adicionar `tenant_id` em todas as tabelas
+  - Estrutura: id, name, slug, plan, status, settings
+  - Roles: owner, admin, manager, member, viewer
+- [x] Tabela `tenant_features` para feature flags
+- [x] Função `get_current_tenant_id()`
+- [x] Função `user_has_permission()`
+- [ ] Adicionar `tenant_id` em todas as tabelas existentes
 - [ ] Implementar RLS policies com tenant_id
 - [ ] Migrar dados existentes para tenant padrão
-- [ ] Função de switch de tenant
+- [ ] Função de switch de tenant no frontend
+- [ ] UI de seleção de tenant
 
 ### 1.3 API Unificada 📋
 - [ ] Versionamento de API (v1, v2)
@@ -196,22 +214,61 @@
 
 ## Notas de Implementação
 
-### Prioridade Alta (Próximas 2 semanas)
-1. Aplicar migration de arquitetura SaaS
-2. Testar views materializadas
-3. Criar job de refresh periódico
-4. Migrar dashboard para usar views
-5. Implementar tenant padrão
+### ✅ Concluído (28/11/2025)
+1. ~~Aplicar migration de arquitetura SaaS~~ ✅
+2. ~~Criar estrutura de event sourcing~~ ✅
+3. ~~Criar views materializadas~~ ✅
+4. ~~Criar funções CQRS~~ ✅
+5. ~~Linkar Supabase CLI~~ ✅
+6. ~~Organizar arquivos de documentação~~ ✅
 
-### Prioridade Média (Próximo mês)
-1. RLS completo
+### Prioridade Alta (Próximas tarefas)
+1. Testar views materializadas no frontend
+2. Criar job de refresh periódico (pg_cron)
+3. Migrar dashboard para usar views
+4. Implementar tenant padrão com dados existentes
+5. Adicionar `tenant_id` nas tabelas principais
+
+### Prioridade Média
+1. RLS completo por tenant
 2. API versionada
-3. Documentação
-4. Testes automatizados
-5. CI/CD
+3. Testes automatizados
+4. CI/CD pipeline
+5. Documentação OpenAPI
 
 ### Prioridade Baixa (Backlog)
 1. Mobile app
 2. White label
 3. Marketplace
 4. Analytics avançado
+
+---
+
+## Histórico de Migrações Aplicadas
+
+| Data | Migration | Descrição |
+|------|-----------|-----------|
+| 2025-11-28 | `20251128_saas_architecture_foundation.sql` | Arquitetura SaaS completa |
+| 2025-11-28 | `20251128000000_add_clients_notes_column.sql` | Coluna notes em clients |
+| 2025-11-20 | `20251120000200_grant_rpc_permissions.sql` | Permissões RPC |
+| 2025-11-20 | `20251120000300_create_super_conciliador_functions.sql` | Super Conciliador |
+
+## Lições Aprendidas
+
+### Erros Comuns em Migrations
+
+1. **`ALTER TABLE IF NOT EXISTS` inválido no PostgreSQL**
+   - Usar `DO $$ BEGIN IF NOT EXISTS... END $$;` para DDL condicional
+
+2. **Referência a colunas inexistentes em views**
+   - Sempre verificar schema real antes de criar views
+   - `accounting_entries` não tem `client_id` - usar `accounting_entry_items`
+   - `bank_transactions` pode não ter `transaction_type`
+
+3. **Conflitos de timestamp em migrations**
+   - Usar timestamps com precisão de segundos: `20251120000200` ao invés de `20251120`
+
+4. **Usar tabelas corretas para cada contexto**
+   - `client_ledger` para saldos de clientes
+   - `accounting_entry_items` para itens de lançamento
+   - `invoices.due_date` (não `payment_date`)
