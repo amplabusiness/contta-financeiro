@@ -41,6 +41,8 @@ serve(async (req) => {
     // Calcular métricas
     const totalRevenue = invoices?.reduce((sum, inv) => sum + parseFloat(inv.amount), 0) || 0;
     const totalExpenses = expenses?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0;
+    const margin = totalRevenue === 0 ? 0 : ((totalRevenue - totalExpenses) / totalRevenue) * 100;
+    const paymentRate = (paidInvoices + pendingInvoices) === 0 ? 0 : (paidInvoices / (paidInvoices + pendingInvoices)) * 100;
     const paidInvoices = invoices?.filter(inv => inv.status === 'paid').length || 0;
     const pendingInvoices = invoices?.filter(inv => inv.status === 'pending').length || 0;
     const overdueInvoices = invoices?.filter(inv => 
@@ -53,11 +55,11 @@ DADOS FINANCEIROS (Últimos 6 meses):
 - Receita Total: R$ ${totalRevenue.toFixed(2)}
 - Despesas Totais: R$ ${totalExpenses.toFixed(2)}
 - Lucro: R$ ${(totalRevenue - totalExpenses).toFixed(2)}
-- Margem: ${((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1)}%
+- Margem: ${margin.toFixed(1)}%
 - Boletos Pagos: ${paidInvoices}
 - Boletos Pendentes: ${pendingInvoices}
 - Boletos Vencidos: ${overdueInvoices}
-- Taxa de Pagamento: ${(paidInvoices / (paidInvoices + pendingInvoices) * 100).toFixed(1)}%
+- Taxa de Pagamento: ${paymentRate.toFixed(1)}%
 - Transações Bancárias: ${transactions?.length || 0}
 
 Por mês (receitas):
@@ -147,6 +149,11 @@ Forneça sua análise em JSON com:
       }),
     });
 
+    if (!aiResponse.ok) {
+      const text = await aiResponse.text().catch(() => '');
+      throw new Error(`AI gateway erro ${aiResponse.status}: ${text}`);
+    }
+
     const aiData = await aiResponse.json();
     
     let analysis: any;
@@ -167,7 +174,7 @@ Forneça sua análise em JSON com:
       }
     } catch (e) {
       console.error('Failed to parse AI response:', e, aiData?.choices?.[0]?.message);
-      throw new Error('Formato de resposta da IA inválido');
+      throw new Error('Formato de resposta da IA inválido ou vazio');
     }
 
     console.log('📈 AI Analysis:', analysis);

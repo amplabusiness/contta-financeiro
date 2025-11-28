@@ -1,9 +1,9 @@
 // deno-lint-file no-explicit-any
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-// @deno-types="https://cdn.sheetjs.com/xlsx-0.20.3/package/types/index.d.ts"
-import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
-import * as cptable from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/cpexcel.full.mjs';
+// SheetJS via esm.sh (evita CDN externo que quebra o bundle das edge functions)
+import * as XLSX from '../_shared/sheetjs/xlsx.mjs';
+import * as cptable from '../_shared/sheetjs/cpexcel.full.mjs';
 import { corsHeaders } from '../_shared/cors.ts';
 
 XLSX.set_cptable(cptable);
