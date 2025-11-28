@@ -20,7 +20,9 @@ import {
   History,
   Settings,
   Play,
-  DollarSign
+  DollarSign,
+  Cloud,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
@@ -30,7 +32,9 @@ import { ptBR } from "date-fns/locale";
 interface MinimumWage {
   id: string;
   effective_date: string;
+  end_date: string | null;
   value: number;
+  source: string | null;
   notes: string | null;
 }
 
@@ -92,6 +96,7 @@ const FeeAdjustment = () => {
   });
   const [referenceDate, setReferenceDate] = useState("");
   const [applyingBatch, setApplyingBatch] = useState(false);
+  const [syncingMinWage, setSyncingMinWage] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -284,6 +289,34 @@ const FeeAdjustment = () => {
     }
   };
 
+  const handleSyncMinimumWage = async () => {
+    try {
+      setSyncingMinWage(true);
+      toast.info("Sincronizando salários mínimos do Banco Central...");
+
+      const { data, error } = await supabase.functions.invoke('sync-minimum-wage', {
+        body: { action: 'sync' }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        const stats = data.stats;
+        toast.success(
+          `Sincronização concluída! ${stats.inserted} novos registros, ${stats.updated} atualizados. SM atual: ${formatCurrency(stats.current_minimum_wage)}`
+        );
+        loadData();
+      } else {
+        toast.error(data?.error || "Erro na sincronização");
+      }
+    } catch (error: any) {
+      console.error("Erro ao sincronizar SM:", error);
+      toast.error(error.message || "Erro ao sincronizar salário mínimo");
+    } finally {
+      setSyncingMinWage(false);
+    }
+  };
+
   const formatDate = (date: string | null) => {
     if (!date) return "-";
     return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
@@ -327,9 +360,21 @@ const FeeAdjustment = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSyncMinimumWage}
+              disabled={syncingMinWage}
+            >
+              {syncingMinWage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Cloud className="h-4 w-4 mr-2" />
+              )}
+              Sincronizar SM (BCB)
+            </Button>
             <Button variant="outline" onClick={() => setAddWageDialogOpen(true)}>
               <DollarSign className="h-4 w-4 mr-2" />
-              Novo SM
+              Novo SM Manual
             </Button>
             <Button onClick={() => setBatchAdjustDialogOpen(true)}>
               <Play className="h-4 w-4 mr-2" />
@@ -587,18 +632,34 @@ const FeeAdjustment = () => {
                     Valores históricos usados para cálculo de reajustes
                   </CardDescription>
                 </div>
-                <Button onClick={() => setAddWageDialogOpen(true)}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Adicionar
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleSyncMinimumWage}
+                    disabled={syncingMinWage}
+                  >
+                    {syncingMinWage ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    Sincronizar BCB
+                  </Button>
+                  <Button onClick={() => setAddWageDialogOpen(true)}>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Adicionar Manual
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Vigência</TableHead>
+                        <TableHead>Vigência Início</TableHead>
+                        <TableHead>Vigência Fim</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
+                        <TableHead>Fonte</TableHead>
                         <TableHead>Observações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -611,10 +672,20 @@ const FeeAdjustment = () => {
                               <Badge className="ml-2 bg-green-500">Atual</Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            {wage.end_date ? formatDate(wage.end_date) : (
+                              <span className="text-green-600 font-medium">Vigente</span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(wage.value)}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell>
+                            <Badge variant={wage.source === 'BCB_SGS_1619' ? 'default' : 'outline'}>
+                              {wage.source === 'BCB_SGS_1619' ? 'Banco Central' : wage.source || 'Manual'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">
                             {wage.notes || "-"}
                           </TableCell>
                         </TableRow>
