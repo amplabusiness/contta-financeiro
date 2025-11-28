@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Calendar, DollarSign, Loader2, FileText, Upload, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, DollarSign, Loader2, FileText, CheckCircle, XCircle, CalendarRange } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,6 +23,7 @@ interface Client {
   cnpj: string | null;
   cpf: string | null;
   opening_balance: number;
+  monthly_fee: number | null;
 }
 
 interface OpeningBalance {
@@ -38,13 +40,35 @@ interface OpeningBalance {
   notes: string | null;
 }
 
+const MONTHS = [
+  { value: "01", label: "Janeiro" },
+  { value: "02", label: "Fevereiro" },
+  { value: "03", label: "Março" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Maio" },
+  { value: "06", label: "Junho" },
+  { value: "07", label: "Julho" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Setembro" },
+  { value: "10", label: "Outubro" },
+  { value: "11", label: "Novembro" },
+  { value: "12", label: "Dezembro" },
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
 const ClientOpeningBalance = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [balances, setBalances] = useState<OpeningBalance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingBatch, setSavingBatch] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [editingBalance, setEditingBalance] = useState<OpeningBalance | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+
+  // Form para lançamento individual
   const [formData, setFormData] = useState({
     client_id: "",
     competence: "",
@@ -54,19 +78,31 @@ const ClientOpeningBalance = () => {
     notes: ""
   });
 
+  // Form para lançamento em lote
+  const [batchForm, setBatchForm] = useState({
+    client_id: "",
+    year: currentYear.toString(),
+    selectedMonths: [] as string[],
+    customAmount: "",
+    useClientFee: true,
+    notes: ""
+  });
+
+  // Cliente selecionado para lote
+  const [selectedClientForBatch, setSelectedClientForBatch] = useState<Client | null>(null);
+
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // Buscar clientes ativos
+      // Buscar clientes ativos com monthly_fee
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
-        .select("id, name, cnpj, cpf, opening_balance")
+        .select("id, name, cnpj, cpf, opening_balance, monthly_fee")
         .eq("is_active", true)
         .order("name");
 
@@ -117,7 +153,6 @@ const ClientOpeningBalance = () => {
     e.preventDefault();
 
     try {
-      // Validações
       if (!formData.client_id) {
         toast.error("Selecione um cliente");
         return;
@@ -128,7 +163,6 @@ const ClientOpeningBalance = () => {
         return;
       }
 
-      // Validar formato da competência
       const competenceRegex = /^(0[1-9]|1[0-2])\/\d{4}$/;
       if (!competenceRegex.test(formData.competence)) {
         toast.error("Formato de competência inválido. Use MM/AAAA (ex: 01/2024)");
@@ -145,7 +179,7 @@ const ClientOpeningBalance = () => {
         competence: formData.competence,
         amount: parseFloat(formData.amount),
         due_date: formData.due_date || null,
-        description: formData.description || null,
+        description: formData.description || `Honorários de ${getMonthName(formData.competence.split('/')[0])}/${formData.competence.split('/')[1]}`,
         notes: formData.notes || null,
         status: "pending",
         paid_amount: 0
@@ -176,6 +210,106 @@ const ClientOpeningBalance = () => {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast.error("Erro ao salvar saldo de abertura: " + errorMessage);
     }
+  };
+
+  const handleBatchSubmit = async () => {
+    if (!batchForm.client_id) {
+      toast.error("Selecione um cliente");
+      return;
+    }
+
+    if (batchForm.selectedMonths.length === 0) {
+      toast.error("Selecione pelo menos uma competência");
+      return;
+    }
+
+    const amount = batchForm.useClientFee
+      ? selectedClientForBatch?.monthly_fee || 0
+      : parseFloat(batchForm.customAmount);
+
+    if (!amount || amount <= 0) {
+      toast.error("Informe um valor válido para os honorários");
+      return;
+    }
+
+    try {
+      setSavingBatch(true);
+
+      // Verificar competências já existentes
+      const { data: existingBalances, error: checkError } = await supabase
+        .from("client_opening_balance")
+        .select("competence")
+        .eq("client_id", batchForm.client_id);
+
+      if (checkError) throw checkError;
+
+      const existingCompetences = new Set(existingBalances?.map(b => b.competence) || []);
+
+      // Preparar lançamentos
+      const entries = batchForm.selectedMonths
+        .map(month => {
+          const competence = `${month}/${batchForm.year}`;
+
+          // Pular se já existe
+          if (existingCompetences.has(competence)) {
+            return null;
+          }
+
+          // Calcular data de vencimento (dia 10 do mês seguinte)
+          const [m, y] = competence.split('/').map(Number);
+          const nextMonth = m === 12 ? 1 : m + 1;
+          const nextYear = m === 12 ? y + 1 : y;
+          const dueDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-10`;
+
+          return {
+            client_id: batchForm.client_id,
+            competence,
+            amount,
+            due_date: dueDate,
+            description: `Honorários de ${getMonthName(month)}/${batchForm.year}`,
+            notes: batchForm.notes || null,
+            status: "pending",
+            paid_amount: 0
+          };
+        })
+        .filter(Boolean);
+
+      if (entries.length === 0) {
+        toast.warning("Todas as competências selecionadas já existem para este cliente");
+        setSavingBatch(false);
+        return;
+      }
+
+      const skipped = batchForm.selectedMonths.length - entries.length;
+
+      // Inserir em lote
+      const { error } = await supabase
+        .from("client_opening_balance")
+        .insert(entries);
+
+      if (error) throw error;
+
+      let message = `${entries.length} competência(s) lançada(s) com sucesso!`;
+      if (skipped > 0) {
+        message += ` (${skipped} já existente(s) foram ignoradas)`;
+      }
+      toast.success(message);
+
+      setBatchDialogOpen(false);
+      resetBatchForm();
+      loadData();
+    } catch (error) {
+      console.error("Erro ao salvar em lote:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error("Erro ao salvar em lote: " + errorMessage);
+    } finally {
+      setSavingBatch(false);
+    }
+  };
+
+  const getMonthName = (monthNum: string) => {
+    const month = MONTHS.find(m => m.value === monthNum);
+    return month?.label || monthNum;
   };
 
   const handleEdit = (balance: OpeningBalance) => {
@@ -221,6 +355,18 @@ const ClientOpeningBalance = () => {
     setEditingBalance(null);
   };
 
+  const resetBatchForm = () => {
+    setBatchForm({
+      client_id: "",
+      year: currentYear.toString(),
+      selectedMonths: [],
+      customAmount: "",
+      useClientFee: true,
+      notes: ""
+    });
+    setSelectedClientForBatch(null);
+  };
+
   const handleClientFilter = (clientId: string) => {
     setSelectedClientId(clientId);
     if (clientId === "all") {
@@ -228,6 +374,39 @@ const ClientOpeningBalance = () => {
     } else {
       loadBalances(clientId);
     }
+  };
+
+  const handleBatchClientChange = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    setSelectedClientForBatch(client || null);
+    setBatchForm({
+      ...batchForm,
+      client_id: clientId,
+      customAmount: client?.monthly_fee?.toString() || ""
+    });
+  };
+
+  const handleMonthToggle = (month: string) => {
+    setBatchForm(prev => ({
+      ...prev,
+      selectedMonths: prev.selectedMonths.includes(month)
+        ? prev.selectedMonths.filter(m => m !== month)
+        : [...prev.selectedMonths, month]
+    }));
+  };
+
+  const selectAllMonths = () => {
+    setBatchForm(prev => ({
+      ...prev,
+      selectedMonths: MONTHS.map(m => m.value)
+    }));
+  };
+
+  const clearAllMonths = () => {
+    setBatchForm(prev => ({
+      ...prev,
+      selectedMonths: []
+    }));
   };
 
   const getStatusBadge = (balance: OpeningBalance) => {
@@ -259,17 +438,17 @@ const ClientOpeningBalance = () => {
     const totals = new Map<string, { name: string; total: number; pending: number }>();
 
     balances.forEach(balance => {
-      const current = totals.get(balance.client_id) || { 
-        name: balance.client_name || "", 
-        total: 0, 
-        pending: 0 
+      const current = totals.get(balance.client_id) || {
+        name: balance.client_name || "",
+        total: 0,
+        pending: 0
       };
-      
+
       current.total += balance.amount;
       if (balance.status !== "paid") {
         current.pending += (balance.amount - balance.paid_amount);
       }
-      
+
       totals.set(balance.client_id, current);
     });
 
@@ -294,36 +473,36 @@ const ClientOpeningBalance = () => {
           <div>
             <h1 className="text-3xl font-bold">Saldo de Abertura</h1>
             <p className="text-muted-foreground">
-              Gerencie honorários não pagos de 2024 (competências anteriores)
+              Gerencie honorários não pagos de competências anteriores
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Competência
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingBalance ? "Editar Saldo de Abertura" : "Adicionar Saldo de Abertura"}
-                </DialogTitle>
-                <DialogDescription>
-                  Registre as competências devidas de 2024 para cada cliente
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 col-span-2">
-                    <Label htmlFor="client_id">Cliente *</Label>
+          <div className="flex gap-2">
+            {/* Botão Lançamento em Lote */}
+            <Dialog open={batchDialogOpen} onOpenChange={(open) => {
+              setBatchDialogOpen(open);
+              if (!open) resetBatchForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <CalendarRange className="w-4 h-4 mr-2" />
+                  Lançamento em Lote
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Lançamento em Lote por Ano</DialogTitle>
+                  <DialogDescription>
+                    Selecione o cliente, ano e as competências para lançar automaticamente
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 py-4">
+                  {/* Seleção de Cliente */}
+                  <div className="space-y-2">
+                    <Label>Cliente *</Label>
                     <Select
-                      value={formData.client_id}
-                      onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-                      required
+                      value={batchForm.client_id}
+                      onValueChange={handleBatchClientChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o cliente" />
@@ -331,85 +510,340 @@ const ClientOpeningBalance = () => {
                       <SelectContent>
                         {clients.map((client) => (
                           <SelectItem key={client.id} value={client.id}>
-                            {client.name}
+                            <div className="flex items-center justify-between w-full">
+                              <span>{client.name}</span>
+                              {client.monthly_fee && (
+                                <span className="text-muted-foreground ml-2">
+                                  ({formatCurrency(client.monthly_fee)})
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {selectedClientForBatch && (
+                      <div className="bg-muted p-3 rounded-lg mt-2">
+                        <p className="text-sm font-medium">
+                          Honorário mensal cadastrado: {" "}
+                          <span className="text-primary">
+                            {selectedClientForBatch.monthly_fee
+                              ? formatCurrency(selectedClientForBatch.monthly_fee)
+                              : "Não informado"}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Seleção de Ano */}
+                  <div className="space-y-2">
+                    <Label>Ano *</Label>
+                    <Select
+                      value={batchForm.year}
+                      onValueChange={(value) => setBatchForm({ ...batchForm, year: value })}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {YEARS.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
+                  {/* Seleção de Meses */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Competências *</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={selectAllMonths}
+                        >
+                          Selecionar Todos
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={clearAllMonths}
+                        >
+                          Limpar
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                      {MONTHS.map((month) => (
+                        <div
+                          key={month.value}
+                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            batchForm.selectedMonths.includes(month.value)
+                              ? "bg-primary/10 border-primary"
+                              : "hover:bg-muted"
+                          }`}
+                          onClick={() => handleMonthToggle(month.value)}
+                        >
+                          <Checkbox
+                            id={`month-${month.value}`}
+                            checked={batchForm.selectedMonths.includes(month.value)}
+                            onCheckedChange={() => handleMonthToggle(month.value)}
+                          />
+                          <label
+                            htmlFor={`month-${month.value}`}
+                            className="text-sm font-medium cursor-pointer flex-1"
+                          >
+                            {month.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    {batchForm.selectedMonths.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        {batchForm.selectedMonths.length} competência(s) selecionada(s)
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Valor dos Honorários */}
+                  <div className="space-y-3">
+                    <Label>Valor dos Honorários *</Label>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="useClientFee"
+                        checked={batchForm.useClientFee}
+                        onCheckedChange={(checked) => setBatchForm({
+                          ...batchForm,
+                          useClientFee: checked === true,
+                          customAmount: checked ? "" : (selectedClientForBatch?.monthly_fee?.toString() || "")
+                        })}
+                      />
+                      <label htmlFor="useClientFee" className="text-sm">
+                        Usar valor cadastrado do cliente ({selectedClientForBatch?.monthly_fee ? formatCurrency(selectedClientForBatch.monthly_fee) : "N/A"})
+                      </label>
+                    </div>
+
+                    {!batchForm.useClientFee && (
+                      <div className="space-y-2">
+                        <Label htmlFor="customAmount">Valor personalizado</Label>
+                        <Input
+                          id="customAmount"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="0,00"
+                          value={batchForm.customAmount}
+                          onChange={(e) => setBatchForm({ ...batchForm, customAmount: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Observações */}
                   <div className="space-y-2">
-                    <Label htmlFor="competence">Competência *</Label>
-                    <Input
-                      id="competence"
-                      placeholder="MM/AAAA (ex: 01/2024)"
-                      value={formData.competence}
-                      onChange={(e) => setFormData({ ...formData, competence: e.target.value })}
-                      maxLength={7}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Formato: MM/AAAA (ex: 01/2024, 03/2024)
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Valor *</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      placeholder="0,00"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="due_date">Data de Vencimento</Label>
-                    <Input
-                      id="due_date"
-                      type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2 col-span-2">
-                    <Label htmlFor="description">Descrição</Label>
-                    <Input
-                      id="description"
-                      placeholder="Ex: Honorários de Janeiro/2024"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2 col-span-2">
-                    <Label htmlFor="notes">Observações</Label>
+                    <Label htmlFor="batchNotes">Observações (opcional)</Label>
                     <Textarea
-                      id="notes"
-                      placeholder="Observações adicionais..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      rows={3}
+                      id="batchNotes"
+                      placeholder="Observações adicionais para todos os lançamentos..."
+                      value={batchForm.notes}
+                      onChange={(e) => setBatchForm({ ...batchForm, notes: e.target.value })}
+                      rows={2}
                     />
                   </div>
+
+                  {/* Resumo */}
+                  {batchForm.client_id && batchForm.selectedMonths.length > 0 && (
+                    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        Resumo do Lançamento
+                      </h4>
+                      <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• Cliente: {selectedClientForBatch?.name}</li>
+                        <li>• Ano: {batchForm.year}</li>
+                        <li>• Competências: {batchForm.selectedMonths.length}</li>
+                        <li>• Valor unitário: {formatCurrency(
+                          batchForm.useClientFee
+                            ? selectedClientForBatch?.monthly_fee || 0
+                            : parseFloat(batchForm.customAmount) || 0
+                        )}</li>
+                        <li className="font-semibold pt-1 border-t border-blue-300 dark:border-blue-700 mt-2">
+                          • Total: {formatCurrency(
+                            (batchForm.useClientFee
+                              ? selectedClientForBatch?.monthly_fee || 0
+                              : parseFloat(batchForm.customAmount) || 0) * batchForm.selectedMonths.length
+                          )}
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setBatchDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit">
-                    {editingBalance ? "Atualizar" : "Cadastrar"}
+                  <Button
+                    onClick={handleBatchSubmit}
+                    disabled={savingBatch || !batchForm.client_id || batchForm.selectedMonths.length === 0}
+                  >
+                    {savingBatch ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Lançar {batchForm.selectedMonths.length} Competência(s)
+                      </>
+                    )}
                   </Button>
                 </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+
+            {/* Botão Lançamento Individual */}
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Individual
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingBalance ? "Editar Saldo de Abertura" : "Adicionar Saldo de Abertura"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Registre uma competência devida individualmente
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="client_id">Cliente *</Label>
+                      <Select
+                        value={formData.client_id}
+                        onValueChange={(value) => {
+                          const client = clients.find(c => c.id === value);
+                          setFormData({
+                            ...formData,
+                            client_id: value,
+                            amount: client?.monthly_fee?.toString() || formData.amount
+                          });
+                        }}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{client.name}</span>
+                                {client.monthly_fee && (
+                                  <span className="text-muted-foreground ml-2">
+                                    ({formatCurrency(client.monthly_fee)})
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="competence">Competência *</Label>
+                      <Input
+                        id="competence"
+                        placeholder="MM/AAAA (ex: 01/2024)"
+                        value={formData.competence}
+                        onChange={(e) => setFormData({ ...formData, competence: e.target.value })}
+                        maxLength={7}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formato: MM/AAAA (ex: 01/2024, 03/2024)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">Valor *</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="0,00"
+                        value={formData.amount}
+                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="due_date">Data de Vencimento</Label>
+                      <Input
+                        id="due_date"
+                        type="date"
+                        value={formData.due_date}
+                        onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="description">Descrição</Label>
+                      <Input
+                        id="description"
+                        placeholder="Gerada automaticamente se vazio"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Se deixar vazio, será gerada automaticamente: "Honorários de Mês/Ano"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="notes">Observações</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Observações adicionais..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">
+                      {editingBalance ? "Atualizar" : "Cadastrar"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Cards de Resumo */}
@@ -424,7 +858,7 @@ const ClientOpeningBalance = () => {
                 {formatCurrency(totalPending)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Competências não pagas de 2024
+                Competências não pagas
               </p>
             </CardContent>
           </Card>
@@ -439,7 +873,7 @@ const ClientOpeningBalance = () => {
                 {formatCurrency(totalPaid)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Já recebido em 2025
+                Já recebido
               </p>
             </CardContent>
           </Card>
@@ -465,7 +899,7 @@ const ClientOpeningBalance = () => {
           <CardHeader>
             <CardTitle>Resumo por Cliente</CardTitle>
             <CardDescription>
-              Saldo devedor de cada cliente (competências de 2024)
+              Saldo devedor de cada cliente
             </CardDescription>
           </CardHeader>
           <CardContent>
