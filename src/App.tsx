@@ -79,6 +79,7 @@ import BankFolderImport from "./pages/BankFolderImport";
 import SmartAccounting from "./pages/SmartAccounting";
 import SuperConciliador from "./pages/SuperConciliador";
 import FeeAdjustment from "./pages/FeeAdjustment";
+import DebtNegotiation from "./pages/DebtNegotiation";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/fees-analysis" element={<FeesAnalysis />} />
             <Route path="/fee-adjustment" element={<FeeAdjustment />} />
+            <Route path="/debt-negotiation" element={<DebtNegotiation />} />
             <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
             <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />

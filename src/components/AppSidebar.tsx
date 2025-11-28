@@ -43,6 +43,7 @@ import {
   Heart,
   Network,
   Calculator,
+  Handshake,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -127,6 +128,7 @@ export function AppSidebar() {
         { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
         { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
         { title: "Cobrança", url: "/collection-dashboard", icon: FileText },
+        { title: "Negociação", url: "/debt-negotiation", icon: Handshake },
         { title: "Despesas", url: "/expenses", icon: Wallet },
         { title: "Contas a Pagar", url: "/accounts-payable", icon: CreditCard },
       ],
