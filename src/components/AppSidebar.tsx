@@ -142,6 +142,7 @@ export function AppSidebar() {
     {
       label: "Contabilidade",
       items: [
+        { title: "Contabilidade Inteligente", url: "/smart-accounting", icon: Zap },
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },

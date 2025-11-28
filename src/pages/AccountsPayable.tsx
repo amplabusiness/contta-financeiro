@@ -113,11 +113,38 @@ const AccountsPayable = () => {
         if (error) throw error;
         toast.success("Conta atualizada com sucesso!");
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from("accounts_payable")
-          .insert([payload]);
+          .insert([payload])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Criar lançamento contábil de provisionamento
+        if (insertedData) {
+          try {
+            await supabase.functions.invoke('smart-accounting', {
+              body: {
+                action: 'create_entry',
+                entry: {
+                  type: 'expense',
+                  operation: 'provision',
+                  referenceId: insertedData.id,
+                  referenceType: 'accounts_payable',
+                  amount: parseFloat(formData.amount),
+                  date: formData.due_date,
+                  description: `Provisão: ${formData.description}`,
+                  category: formData.category,
+                  supplierName: formData.supplier_name
+                }
+              }
+            });
+          } catch (accError) {
+            console.warn("Erro ao criar lançamento contábil:", accError);
+          }
+        }
+
         toast.success("Conta criada com sucesso!");
       }
 
@@ -201,6 +228,9 @@ const AccountsPayable = () => {
 
   const markAsPaid = async (id: string) => {
     try {
+      // Buscar dados da conta para criar lançamento
+      const account = accounts.find(a => a.id === id);
+
       const { error } = await supabase
         .from("accounts_payable")
         .update({
@@ -210,6 +240,31 @@ const AccountsPayable = () => {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Criar lançamento contábil de pagamento
+      if (account) {
+        try {
+          await supabase.functions.invoke('smart-accounting', {
+            body: {
+              action: 'create_entry',
+              entry: {
+                type: 'expense',
+                operation: 'payment',
+                referenceId: id,
+                referenceType: 'accounts_payable',
+                amount: account.amount,
+                date: new Date().toISOString().split('T')[0],
+                description: `Pagamento: ${account.description}`,
+                category: account.category,
+                supplierName: account.supplier_name
+              }
+            }
+          });
+        } catch (accError) {
+          console.warn("Erro ao criar lançamento contábil de pagamento:", accError);
+        }
+      }
+
       toast.success("Pagamento confirmado!");
       loadAccounts();
     } catch (error: any) {

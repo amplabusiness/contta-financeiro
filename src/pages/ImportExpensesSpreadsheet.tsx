@@ -132,7 +132,7 @@ export default function ImportExpensesSpreadsheet() {
 
       for (const expense of expenses) {
         try {
-          const { error } = await supabase.from("accounts_payable").insert({
+          const { data: insertedData, error } = await supabase.from("accounts_payable").insert({
             supplier_name: expense.description,
             description: expense.description,
             category: expense.category,
@@ -144,7 +144,7 @@ export default function ImportExpensesSpreadsheet() {
             recurrence_frequency: "monthly",
             recurrence_day: 10,
             created_by: userData.user.id,
-          });
+          }).select().single();
 
           if (error) {
             if (error.message.includes("duplicate")) {
@@ -154,6 +154,29 @@ export default function ImportExpensesSpreadsheet() {
             }
           } else {
             created++;
+
+            // Criar lançamento contábil via smart-accounting
+            if (insertedData) {
+              try {
+                await supabase.functions.invoke('smart-accounting', {
+                  body: {
+                    action: 'create_entry',
+                    entry: {
+                      type: 'expense',
+                      operation: 'provision',
+                      referenceId: insertedData.id,
+                      referenceType: 'accounts_payable',
+                      amount: expense.amount,
+                      date: new Date().toISOString().split("T")[0],
+                      description: `Provisão: ${expense.description}`,
+                      category: expense.category
+                    }
+                  }
+                });
+              } catch (accError) {
+                console.warn("Erro ao criar lançamento contábil:", accError);
+              }
+            }
           }
         } catch (error) {
           console.error("Error inserting expense:", error);
