@@ -95,6 +95,47 @@ const ClientOpeningBalance = () => {
     loadData();
   }, []);
 
+  // Função para criar lançamento contábil
+  const createAccountingEntry = async (
+    balanceId: string,
+    clientId: string,
+    amount: number,
+    competence: string,
+    description: string,
+    dueDate: string | null
+  ) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        console.warn("Usuário não autenticado, lançamento contábil não criado");
+        return;
+      }
+
+      const response = await supabase.functions.invoke('create-accounting-entry', {
+        body: {
+          type: 'opening_balance',
+          operation: 'provision',
+          referenceId: balanceId,
+          amount: amount,
+          date: dueDate || new Date().toISOString().split('T')[0],
+          description: description,
+          clientId: clientId,
+          competence: competence
+        }
+      });
+
+      if (response.error) {
+        console.error("Erro ao criar lançamento contábil:", response.error);
+        // Não lançar erro para não interromper o fluxo principal
+      } else {
+        console.log("Lançamento contábil criado:", response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao criar lançamento contábil:", error);
+      // Não lançar erro para não interromper o fluxo principal
+    }
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -194,12 +235,27 @@ const ClientOpeningBalance = () => {
         if (error) throw error;
         toast.success("Saldo de abertura atualizado!");
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from("client_opening_balance")
-          .insert(balanceData);
+          .insert(balanceData)
+          .select()
+          .single();
 
         if (error) throw error;
-        toast.success("Saldo de abertura cadastrado!");
+
+        // Criar lançamento contábil automaticamente
+        if (insertedData) {
+          await createAccountingEntry(
+            insertedData.id,
+            formData.client_id,
+            parseFloat(formData.amount),
+            formData.competence,
+            balanceData.description || `Honorários de ${formData.competence}`,
+            formData.due_date || null
+          );
+        }
+
+        toast.success("Saldo de abertura cadastrado com lançamento contábil!");
       }
 
       setDialogOpen(false);
@@ -282,14 +338,31 @@ const ClientOpeningBalance = () => {
 
       const skipped = batchForm.selectedMonths.length - entries.length;
 
-      // Inserir em lote
-      const { error } = await supabase
+      // Inserir em lote e retornar os IDs
+      const { data: insertedEntries, error } = await supabase
         .from("client_opening_balance")
-        .insert(entries);
+        .insert(entries)
+        .select();
 
       if (error) throw error;
 
-      let message = `${entries.length} competência(s) lançada(s) com sucesso!`;
+      // Criar lançamentos contábeis para cada entrada
+      if (insertedEntries && insertedEntries.length > 0) {
+        toast.info(`Criando ${insertedEntries.length} lançamentos contábeis...`);
+
+        for (const entry of insertedEntries) {
+          await createAccountingEntry(
+            entry.id,
+            entry.client_id,
+            entry.amount,
+            entry.competence,
+            entry.description || `Honorários de ${entry.competence}`,
+            entry.due_date
+          );
+        }
+      }
+
+      let message = `${entries.length} competência(s) lançada(s) com lançamentos contábeis!`;
       if (skipped > 0) {
         message += ` (${skipped} já existente(s) foram ignoradas)`;
       }

@@ -30,17 +30,110 @@ serve(async (req) => {
       });
     }
 
-    const { 
-      type, // 'invoice' ou 'expense'
+    const {
+      type, // 'invoice', 'expense' ou 'opening_balance'
       operation, // 'provision' (provisionamento) ou 'payment' (pagamento/recebimento)
       referenceId,
       amount,
       date,
       description,
-      clientId
+      clientId,
+      competence // Para opening_balance: MM/YYYY
     } = await req.json();
 
-    console.log('Creating accounting entry:', { type, operation, referenceId, amount, date, description });
+    console.log('Creating accounting entry:', { type, operation, referenceId, amount, date, description, competence });
+
+    // SALDO DE ABERTURA - Honorários de competências anteriores
+    if (type === 'opening_balance') {
+      // PROVISIONAMENTO DE SALDO DE ABERTURA (Regime de Competência)
+      // Débito: Clientes a Receber (1.1.3)
+      // Crédito: Receita de Honorários (3.1.1)
+
+      const { data: receivableAccount } = await supabaseClient
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.3')
+        .eq('type', 'ativo')
+        .single();
+
+      const { data: revenueAccount } = await supabaseClient
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '3.1.1')
+        .eq('type', 'receita')
+        .single();
+
+      if (!receivableAccount || !revenueAccount) {
+        throw new Error('Contas contábeis não encontradas (Clientes a Receber 1.1.3 ou Receita 3.1.1)');
+      }
+
+      // Determinar a data do lançamento baseada na competência
+      let entryDate = date;
+      if (competence) {
+        const [month, year] = competence.split('/');
+        // Último dia do mês da competência
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        entryDate = `${year}-${month}-${lastDay}`;
+      }
+
+      const { data: entry, error: entryError } = await supabaseClient
+        .from('accounting_entries')
+        .insert({
+          entry_date: entryDate,
+          entry_type: 'saldo_abertura',
+          description: `Saldo de Abertura: ${description}`,
+          reference_type: 'opening_balance',
+          reference_id: referenceId,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (entryError) throw entryError;
+
+      const { error: linesError } = await supabaseClient
+        .from('accounting_entry_lines')
+        .insert([
+          {
+            entry_id: entry.id,
+            account_id: receivableAccount.id,
+            description: `A receber (Saldo Abertura): ${description}`,
+            debit: amount,
+            credit: 0,
+          },
+          {
+            entry_id: entry.id,
+            account_id: revenueAccount.id,
+            description: `Receita (Saldo Abertura): ${description}`,
+            debit: 0,
+            credit: amount,
+          },
+        ]);
+
+      if (linesError) throw linesError;
+
+      // Criar lançamento no razão do cliente
+      if (clientId) {
+        await supabaseClient
+          .from('client_ledger')
+          .insert({
+            client_id: clientId,
+            transaction_date: entryDate,
+            description: `Saldo de Abertura: ${description}`,
+            debit: amount,
+            credit: 0,
+            balance: 0,
+            reference_type: 'opening_balance',
+            reference_id: referenceId,
+            created_by: user.id,
+          });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, entryId: entry.id }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (type === 'invoice') {
       if (operation === 'provision') {
