@@ -74,20 +74,20 @@ CREATE INDEX IF NOT EXISTS idx_domain_events_pending ON domain_events(processed_
 -- 3. CQRS - VIEWS MATERIALIZADAS (Read Models)
 -- =====================================================
 
--- View materializada: Saldos consolidados por cliente
+-- View materializada: Saldos consolidados por cliente (usando client_ledger)
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_client_balances AS
 SELECT
   c.id AS client_id,
   c.name AS client_name,
   c.cnpj,
   c.is_active,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'debit' THEN ae.amount ELSE 0 END), 0) AS total_debits,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'credit' THEN ae.amount ELSE 0 END), 0) AS total_credits,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'debit' THEN ae.amount ELSE -ae.amount END), 0) AS balance,
-  COUNT(DISTINCT ae.id) AS total_entries,
-  MAX(ae.created_at) AS last_entry_at
+  COALESCE(SUM(cl.debit), 0) AS total_debits,
+  COALESCE(SUM(cl.credit), 0) AS total_credits,
+  COALESCE((SELECT balance FROM client_ledger WHERE client_id = c.id ORDER BY created_at DESC LIMIT 1), 0) AS balance,
+  COUNT(DISTINCT cl.id) AS total_entries,
+  MAX(cl.created_at) AS last_entry_at
 FROM clients c
-LEFT JOIN accounting_entries ae ON ae.client_id = c.id
+LEFT JOIN client_ledger cl ON cl.client_id = c.id
 GROUP BY c.id, c.name, c.cnpj, c.is_active;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_client_balances_id ON mv_client_balances(client_id);
@@ -114,7 +114,7 @@ GROUP BY c.id, c.name, c.cnpj, c.monthly_fee, c.payment_day;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_default_summary_id ON mv_default_summary(client_id);
 
--- View materializada: DRE mensal
+-- View materializada: DRE mensal (usando accounting_entry_items)
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_dre_monthly AS
 WITH monthly_data AS (
   SELECT
@@ -122,10 +122,11 @@ WITH monthly_data AS (
     ca.account_type,
     ca.code AS account_code,
     ca.name AS account_name,
-    SUM(CASE WHEN ae.entry_type = 'debit' THEN ae.amount ELSE 0 END) AS debits,
-    SUM(CASE WHEN ae.entry_type = 'credit' THEN ae.amount ELSE 0 END) AS credits
+    SUM(aei.debit) AS debits,
+    SUM(aei.credit) AS credits
   FROM accounting_entries ae
-  JOIN chart_of_accounts ca ON ca.id = ae.account_id
+  JOIN accounting_entry_items aei ON aei.entry_id = ae.id
+  JOIN chart_of_accounts ca ON ca.id = aei.account_id
   WHERE ae.entry_date >= DATE_TRUNC('year', CURRENT_DATE)
   GROUP BY DATE_TRUNC('month', ae.entry_date), ca.account_type, ca.code, ca.name
 )
@@ -137,31 +138,45 @@ SELECT
   debits,
   credits,
   CASE
-    WHEN account_type IN ('revenue', 'income') THEN credits - debits
-    WHEN account_type IN ('expense', 'cost') THEN debits - credits
+    WHEN account_type IN ('RECEITA', 'revenue', 'income') THEN credits - debits
+    WHEN account_type IN ('DESPESA', 'expense', 'cost') THEN debits - credits
     ELSE debits - credits
   END AS net_value
 FROM monthly_data;
 
 CREATE INDEX IF NOT EXISTS idx_mv_dre_monthly_month ON mv_dre_monthly(month);
 
--- View materializada: Fluxo de caixa
+-- View materializada: Fluxo de caixa (baseado em invoices e expenses)
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_cash_flow AS
+WITH daily_inflows AS (
+  SELECT
+    due_date AS date,
+    SUM(amount) AS inflows
+  FROM invoices
+  WHERE status = 'paid'
+    AND due_date >= CURRENT_DATE - INTERVAL '90 days'
+  GROUP BY due_date
+),
+daily_outflows AS (
+  SELECT
+    due_date AS date,
+    SUM(amount) AS outflows
+  FROM expenses
+  WHERE status = 'paid'
+    AND due_date >= CURRENT_DATE - INTERVAL '90 days'
+  GROUP BY due_date
+)
 SELECT
-  DATE_TRUNC('day', bt.transaction_date) AS date,
-  bt.bank_account_id,
-  SUM(CASE WHEN bt.transaction_type = 'credit' THEN bt.amount ELSE 0 END) AS inflows,
-  SUM(CASE WHEN bt.transaction_type = 'debit' THEN bt.amount ELSE 0 END) AS outflows,
-  SUM(CASE WHEN bt.transaction_type = 'credit' THEN bt.amount ELSE -bt.amount END) AS net_flow,
-  COUNT(*) AS transaction_count,
-  COUNT(CASE WHEN bt.matched = true THEN 1 END) AS matched_count
-FROM bank_transactions bt
-WHERE bt.transaction_date >= CURRENT_DATE - INTERVAL '90 days'
-GROUP BY DATE_TRUNC('day', bt.transaction_date), bt.bank_account_id;
+  COALESCE(i.date, o.date) AS date,
+  COALESCE(i.inflows, 0) AS inflows,
+  COALESCE(o.outflows, 0) AS outflows,
+  COALESCE(i.inflows, 0) - COALESCE(o.outflows, 0) AS net_flow
+FROM daily_inflows i
+FULL OUTER JOIN daily_outflows o ON i.date = o.date;
 
 CREATE INDEX IF NOT EXISTS idx_mv_cash_flow_date ON mv_cash_flow(date);
 
--- View materializada: Balancete
+-- View materializada: Balancete (usando accounting_entry_items)
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_trial_balance AS
 SELECT
   ca.id AS account_id,
@@ -169,11 +184,12 @@ SELECT
   ca.name,
   ca.account_type,
   ca.parent_id,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'debit' THEN ae.amount ELSE 0 END), 0) AS total_debits,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'credit' THEN ae.amount ELSE 0 END), 0) AS total_credits,
-  COALESCE(SUM(CASE WHEN ae.entry_type = 'debit' THEN ae.amount ELSE -ae.amount END), 0) AS balance
+  COALESCE(SUM(aei.debit), 0) AS total_debits,
+  COALESCE(SUM(aei.credit), 0) AS total_credits,
+  COALESCE(SUM(aei.debit) - SUM(aei.credit), 0) AS balance
 FROM chart_of_accounts ca
-LEFT JOIN accounting_entries ae ON ae.account_id = ca.id
+LEFT JOIN accounting_entry_items aei ON aei.account_id = ca.id
+LEFT JOIN accounting_entries ae ON ae.id = aei.entry_id
   AND ae.entry_date >= DATE_TRUNC('year', CURRENT_DATE)
 GROUP BY ca.id, ca.code, ca.name, ca.account_type, ca.parent_id;
 
@@ -343,11 +359,11 @@ END $$;
 -- 7. API FUNCTIONS (RPCs para operações CQRS)
 -- =====================================================
 
--- Comando: Criar lançamento com validação e eventos
+-- Comando: Criar lançamento contábil completo (entry + items)
 CREATE OR REPLACE FUNCTION cmd_create_accounting_entry(
   p_account_id UUID,
   p_entry_date DATE,
-  p_entry_type TEXT,
+  p_entry_type TEXT, -- 'debit' ou 'credit'
   p_amount NUMERIC,
   p_description TEXT,
   p_client_id UUID DEFAULT NULL,
@@ -356,8 +372,10 @@ CREATE OR REPLACE FUNCTION cmd_create_accounting_entry(
 )
 RETURNS UUID AS $$
 DECLARE
-  new_id UUID;
+  new_entry_id UUID;
   account_exists BOOLEAN;
+  debit_amount NUMERIC := 0;
+  credit_amount NUMERIC := 0;
 BEGIN
   -- Validação
   SELECT EXISTS(SELECT 1 FROM chart_of_accounts WHERE id = p_account_id) INTO account_exists;
@@ -373,19 +391,33 @@ BEGIN
     RAISE EXCEPTION 'Tipo de lançamento inválido: %', p_entry_type;
   END IF;
 
-  -- Inserir
+  -- Definir valores de débito/crédito
+  IF p_entry_type = 'debit' THEN
+    debit_amount := p_amount;
+  ELSE
+    credit_amount := p_amount;
+  END IF;
+
+  -- Criar entrada principal (accounting_entries)
   INSERT INTO accounting_entries (
-    account_id, entry_date, entry_type, amount, description,
-    client_id, reference_type, reference_id, created_by
+    entry_date, competence_date, description, entry_type,
+    total_debit, total_credit, created_by
   ) VALUES (
-    p_account_id, p_entry_date, p_entry_type, p_amount, p_description,
-    p_client_id, p_reference_type, p_reference_id, auth.uid()
-  ) RETURNING id INTO new_id;
+    p_entry_date, p_entry_date, p_description, p_reference_type,
+    debit_amount, credit_amount, auth.uid()
+  ) RETURNING id INTO new_entry_id;
+
+  -- Criar item do lançamento (accounting_entry_items)
+  INSERT INTO accounting_entry_items (
+    entry_id, account_id, debit, credit, history, client_id
+  ) VALUES (
+    new_entry_id, p_account_id, debit_amount, credit_amount, p_description, p_client_id
+  );
 
   -- Marcar views para refresh
   PERFORM pg_notify('refresh_views', 'mv_client_balances,mv_trial_balance');
 
-  RETURN new_id;
+  RETURN new_entry_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -463,7 +495,7 @@ BEGIN
   cash AS (
     SELECT COALESCE(SUM(net_flow), 0) AS total
     FROM mv_cash_flow
-    WHERE date BETWEEN p_start_date AND p_end_date
+    WHERE date IS NOT NULL AND date BETWEEN p_start_date AND p_end_date
   ),
   clients AS (
     SELECT COUNT(*) AS total FROM clients WHERE is_active = true
@@ -502,8 +534,8 @@ COMMENT ON FUNCTION refresh_all_materialized_views IS
 CREATE INDEX IF NOT EXISTS idx_invoices_status_due ON invoices(status, due_date) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS idx_expenses_status_due ON expenses(status, due_date) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS idx_accounting_entries_date ON accounting_entries(entry_date DESC);
-CREATE INDEX IF NOT EXISTS idx_accounting_entries_client ON accounting_entries(client_id) WHERE client_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_bank_transactions_matched ON bank_transactions(matched, transaction_date) WHERE matched = false;
+CREATE INDEX IF NOT EXISTS idx_accounting_entry_items_client ON accounting_entry_items(client_id) WHERE client_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_client_ledger_client ON client_ledger(client_id, created_at DESC);
 
 -- 10. GRANTS PARA RPCs
 -- =====================================================
