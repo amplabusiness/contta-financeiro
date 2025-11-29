@@ -37,16 +37,24 @@ const DRE = () => {
     try {
       setLoading(true);
 
-      // Buscar contas de receita (3.x) e despesa (4.x) do plano de contas
-      const { data: accounts, error: accountsError } = await supabase
+      // Buscar TODAS as contas ativas (filtrar em JS para evitar problemas com .or())
+      const { data: allAccounts, error: accountsError } = await supabase
         .from('chart_of_accounts')
         .select('id, code, name, type, is_synthetic')
         .eq('is_active', true)
-        .or('code.like.3%,code.like.4%')
         .order('code');
 
       if (accountsError) throw accountsError;
-      if (!accounts || accounts.length === 0) {
+
+      // Filtrar contas de receita (3.x) e despesa (4.x) em JavaScript
+      const accounts = allAccounts?.filter(acc =>
+        acc.code.startsWith('3') || acc.code.startsWith('4')
+      ) || [];
+
+      console.log('DRE - Contas 3.x e 4.x encontradas:', accounts.length);
+
+      if (accounts.length === 0) {
+        console.log('DRE - Nenhuma conta de receita/despesa encontrada');
         setDreData({
           revenueAccounts: [],
           expenseAccounts: [],
@@ -74,36 +82,46 @@ const DRE = () => {
         endDate = `${selectedYear}-12-31`;
       }
 
-      // Buscar lançamentos contábeis do período
-      let linesQuery = supabase
+      console.log('DRE - Período:', startDate, 'a', endDate);
+
+      // Buscar TODOS os lançamentos contábeis (sem filtro na query)
+      const { data: allLines, error: linesError } = await supabase
         .from('accounting_entry_lines')
         .select(`
           debit,
           credit,
           account_id,
-          entry_id!inner(entry_date, competence_date)
+          entry_id(entry_date, competence_date)
         `);
-
-      // Filtrar por competence_date se disponível, senão por entry_date
-      if (startDate && endDate) {
-        linesQuery = linesQuery
-          .gte('entry_id.competence_date', startDate)
-          .lte('entry_id.competence_date', endDate);
-      }
-
-      const { data: allLines, error: linesError } = await linesQuery;
 
       if (linesError) throw linesError;
 
-      // Criar mapa de saldos por conta
+      console.log('DRE - Total de linhas carregadas:', allLines?.length);
+
+      // Filtrar por data em JavaScript (usar competence_date se disponível, senão entry_date)
+      const filteredLines = allLines?.filter((line: any) => {
+        if (!startDate || !endDate) return true;
+
+        // Usar competence_date se disponível, senão entry_date
+        const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+        if (!lineDate) return true; // Incluir se não tiver data
+
+        return lineDate >= startDate && lineDate <= endDate;
+      }) || [];
+
+      console.log('DRE - Linhas após filtro de data:', filteredLines.length);
+
+      // Criar mapa de saldos por conta usando linhas filtradas
       const accountTotals = new Map<string, { debit: number; credit: number }>();
 
-      allLines?.forEach(line => {
+      filteredLines.forEach((line: any) => {
         const current = accountTotals.get(line.account_id) || { debit: 0, credit: 0 };
         current.debit += line.debit || 0;
         current.credit += line.credit || 0;
         accountTotals.set(line.account_id, current);
       });
+
+      console.log('DRE - Contas com movimento:', accountTotals.size);
 
       // Processar contas
       const revenueAccounts: DREAccount[] = [];
