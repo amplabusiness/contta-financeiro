@@ -120,10 +120,23 @@ serve(async (req) => {
 
     // AÇÃO: Gerar lançamentos retroativos
     if (action === 'generate_retroactive') {
-      const result = await generateRetroactiveEntries(supabaseClient, user.id, body);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      console.log('[v2] Starting generate_retroactive for:', body.table);
+      try {
+        const result = await generateRetroactiveEntries(supabaseClient, user.id, body);
+        console.log('[v2] generate_retroactive completed:', result);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err: any) {
+        console.error('[v2] generate_retroactive error:', err);
+        return new Response(JSON.stringify({
+          success: false,
+          error: err.message,
+          message: `Erro ao processar ${body.table}: ${err.message}`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     // AÇÃO: Análise IA do plano de contas
@@ -601,11 +614,12 @@ function mapExpenseCategoryToAccount(category: string): { code: string; name: st
 }
 
 // Gerar lançamentos retroativos para registros existentes
+// v2 - 2024-11-29 05:35
 async function generateRetroactiveEntries(supabase: any, userId: string, params: any) {
   const { table } = params;
   const results = { created: 0, skipped: 0, errors: [] as string[] };
 
-  console.log(`generateRetroactiveEntries started for table: ${table}`);
+  console.log(`[v2] generateRetroactiveEntries started for table: ${table}`);
 
   if (table === 'client_opening_balance') {
     // Buscar saldos de abertura sem lançamento contábil
