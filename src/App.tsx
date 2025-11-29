@@ -65,6 +65,7 @@ import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import AIAccountant from "./pages/AIAccountant";
 import BusinessManager from "./pages/BusinessManager";
+import AINetwork from "./pages/AINetwork";
 import GenerateRecurringInvoices from "./pages/GenerateRecurringInvoices";
 import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
@@ -155,6 +156,7 @@ const App = () => (
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/ai-accountant" element={<AIAccountant />} />
             <Route path="/business-manager" element={<BusinessManager />} />
+            <Route path="/ai-network" element={<AINetwork />} />
             <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
             <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
             <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
