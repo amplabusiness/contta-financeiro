@@ -514,29 +514,64 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
       throw new Error(`Tipo de lançamento inválido: ${entry_type}`);
   }
 
-  // Determinar data do lançamento e competência
-  let entryDate = date;
-  let competenceDate = date; // Por padrão, competência = data do lançamento
+  // Função auxiliar para extrair data no formato YYYY-MM-DD
+  const extractDate = (dateValue: any): string | null => {
+    if (!dateValue) return null;
+    // Se já é uma string no formato YYYY-MM-DD
+    if (typeof dateValue === 'string') {
+      // Se contém T (ISO timestamp), extrair só a data
+      if (dateValue.includes('T')) {
+        return dateValue.split('T')[0];
+      }
+      // Se já está no formato YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+      // Se está no formato DD/MM/YYYY
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+        const [day, month, year] = dateValue.split('/');
+        return `${year}-${month}-${day}`;
+      }
+    }
+    // Se é uma Date ou pode ser convertido
+    try {
+      const d = new Date(dateValue);
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    } catch {
+      // Ignorar erro
+    }
+    return null;
+  };
 
-  if (competence) {
-    // Se temos competência no formato MM/YYYY, usar último dia do mês
-    const [month, year] = competence.split('/');
-    if (month && year) {
-      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-      competenceDate = `${year}-${month.padStart(2, '0')}-${lastDay}`;
-      if (!date) {
-        entryDate = competenceDate;
+  // Determinar data do lançamento e competência
+  let entryDate = extractDate(date);
+  let competenceDate: string | null = null;
+
+  // Se temos competência no formato MM/YYYY, usar último dia do mês
+  if (competence && typeof competence === 'string' && competence.includes('/')) {
+    const parts = competence.split('/');
+    if (parts.length === 2) {
+      const [month, year] = parts;
+      if (month && year && !isNaN(parseInt(month)) && !isNaN(parseInt(year))) {
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        competenceDate = `${year}-${month.padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
       }
     }
   }
 
-  // Garantir que temos uma data válida
+  // Fallbacks para garantir que nunca temos null
+  const today = new Date().toISOString().split('T')[0];
+
   if (!entryDate) {
-    entryDate = new Date().toISOString().split('T')[0];
+    entryDate = competenceDate || today;
   }
   if (!competenceDate) {
-    competenceDate = entryDate;
+    competenceDate = entryDate || today;
   }
+
+  console.log(`Entry dates calculated: entryDate=${entryDate}, competenceDate=${competenceDate}, original date=${date}, competence=${competence}`);
 
   // Criar lançamento contábil
   const { data: entry, error: entryError } = await supabase
