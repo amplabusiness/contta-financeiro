@@ -36,6 +36,10 @@ const DRE = () => {
   const loadDREData = useCallback(async () => {
     try {
       setLoading(true);
+
+      // ALERTA PARA DEBUG - REMOVER DEPOIS
+      alert("DRE: Iniciando carregamento - se você vê isso, o código novo está rodando!");
+
       toast.info("Carregando DRE...");
 
       // Buscar TODAS as contas ativas (filtrar em JS para evitar problemas com .or())
