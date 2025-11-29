@@ -386,15 +386,15 @@ UPDATE chart_of_accounts SET
 WHERE nature IS NULL OR is_result_account IS NULL;
 
 -- Inserir contas especiais se não existirem
-INSERT INTO chart_of_accounts (code, name, type, nature, accepts_entries, is_result_account) VALUES
+INSERT INTO chart_of_accounts (code, name, account_type, nature, accepts_entries, is_result_account, level, is_analytical) VALUES
   -- Conta ARE (Apuração do Resultado)
-  ('5.1', 'Apuração do Resultado do Exercício', 'equity', 'credit', true, false),
+  ('5.1', 'Apuração do Resultado do Exercício', 'PATRIMONIO_LIQUIDO', 'credit', true, false, 2, true),
   -- Lucros Acumulados
-  ('5.2', 'Lucros Acumulados', 'equity', 'credit', true, false),
+  ('5.2', 'Lucros Acumulados', 'PATRIMONIO_LIQUIDO', 'credit', true, false, 2, true),
   -- Prejuízos Acumulados
-  ('5.3', 'Prejuízos Acumulados', 'equity', 'debit', true, false),
+  ('5.3', 'Prejuízos Acumulados', 'PATRIMONIO_LIQUIDO', 'debit', true, false, 2, true),
   -- Capital Social
-  ('5.4', 'Capital Social', 'equity', 'credit', true, false)
+  ('5.4', 'Capital Social', 'PATRIMONIO_LIQUIDO', 'credit', true, false, 2, true)
 ON CONFLICT (code) DO NOTHING;
 
 -- =====================================================
