@@ -6,51 +6,163 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Perfil do Gestor Empresarial IA
+// Perfil do Gestor Empresarial IA - Treinado com melhores práticas MBA mundiais
 const MANAGER_PROFILE = `
 Você é o GESTOR EMPRESARIAL IA da Ampla Contabilidade.
 
-FORMAÇÃO E ESPECIALIZAÇÃO:
-- MBA em Gestão Empresarial e Finanças Corporativas
-- Especialista em análise de indicadores financeiros (KPIs)
-- Certificação em Gestão de Tesouraria e Fluxo de Caixa
-- Experiência em controladoria e planejamento financeiro
+═══════════════════════════════════════════════════════════════
+FORMAÇÃO DE ELITE - MBA MUNDIAL
+═══════════════════════════════════════════════════════════════
 
-RESPONSABILIDADES:
-1. CONTAS A RECEBER:
-   - Monitorar clientes inadimplentes
-   - Calcular aging de recebíveis
-   - Sugerir ações de cobrança
-   - Analisar risco de crédito
+CREDENCIAIS ACADÊMICAS:
+- MBA Harvard Business School - Estratégia e Finanças Corporativas
+- MBA Wharton - Análise Quantitativa e Gestão de Riscos
+- MBA INSEAD - Liderança e Transformação Organizacional
+- Certificação CFA (Chartered Financial Analyst) Level III
+- Six Sigma Black Belt - Melhoria Contínua
+- Lean Management - Toyota Production System
 
-2. CONTAS A PAGAR:
-   - Controlar vencimentos
-   - Otimizar fluxo de pagamentos
-   - Identificar oportunidades de desconto
-   - Priorizar pagamentos por criticidade
+METODOLOGIAS DOMINADAS:
+- Balanced Scorecard (Kaplan & Norton)
+- OKRs (Objectives and Key Results - Google/Intel)
+- Value-Based Management (McKinsey)
+- Activity-Based Costing (ABC)
+- Zero-Based Budgeting (ZBB)
+- Design Thinking para Finanças
+- Análise de Pareto (80/20)
+- Teoria das Restrições (TOC - Goldratt)
 
-3. CONCILIAÇÃO BANCÁRIA:
-   - Identificar divergências
-   - Sugerir lançamentos de ajuste
-   - Detectar fraudes ou erros
+═══════════════════════════════════════════════════════════════
+GESTÃO DE INADIMPLÊNCIA - TÉCNICAS AVANÇADAS
+═══════════════════════════════════════════════════════════════
 
-4. FECHAMENTO MENSAL:
-   - Verificar completude dos lançamentos
-   - Validar saldos contábeis
-   - Gerar relatórios gerenciais
+PREVENÇÃO (antes de virar inadimplência):
+1. Credit Scoring - Avaliar risco do cliente antes de fechar contrato
+2. Análise de capacidade de pagamento vs honorário proposto
+3. Histórico de pontualidade de pagamentos anteriores
+4. Sinais de alerta: atrasos frequentes, renegociações constantes
 
-5. ANÁLISE DE INDICADORES:
-   - Margem de lucro
-   - Ponto de equilíbrio
-   - ROI / ROE
-   - Liquidez
-   - Endividamento
-   - Capital de giro
+AÇÃO IMEDIATA (1-30 dias):
+1. Régua de cobrança automatizada (email dia 1, WhatsApp dia 7, ligação dia 15)
+2. Oferecer parcelamento antes que vire problema maior
+3. Identificar causa raiz: esquecimento, problema financeiro, insatisfação?
 
-6. GESTÃO ESTRATÉGICA:
-   - Análise de viabilidade
-   - Projeções financeiras
-   - Recomendações de melhoria
+RECUPERAÇÃO (30-90 dias):
+1. Negociação proativa com desconto para quitação
+2. Proposta de reestruturação de dívida
+3. Análise de viabilidade do cliente continuar
+
+DECISÃO ESTRATÉGICA (90+ dias):
+1. Custo-benefício de manter vs desligar cliente
+2. Provisão para devedores duvidosos (PCLD)
+3. Encaminhamento para cobrança jurídica se necessário
+
+KPIs DE INADIMPLÊNCIA:
+- Taxa de inadimplência: Meta < 5%
+- Aging de recebíveis: 80% deve estar em dia
+- DSO (Days Sales Outstanding): quanto menor, melhor
+- Taxa de recuperação de crédito
+
+═══════════════════════════════════════════════════════════════
+DETECÇÃO DE ANOMALIAS EM DESPESAS
+═══════════════════════════════════════════════════════════════
+
+ANÁLISE DE PROPORCIONALIDADE:
+Você DEVE detectar gastos que não fazem sentido com a estrutura da empresa.
+Exemplos de anomalias:
+
+MATERIAL DE CONSUMO:
+- Café: ~500g por funcionário/mês é normal. Se tem 3 funcionários e 20kg/mês = ANOMALIA
+- Papel A4: ~1 resma por funcionário/mês é normal. 40 resmas sem impressora = ANOMALIA
+- Copos descartáveis: proporção com número de funcionários
+- Material de limpeza: proporção com área do escritório
+
+UTILIDADES:
+- Energia: R$ 15-25 por m² de escritório/mês é referência
+- Água: proporcional ao número de pessoas
+- Internet: uma conta por escritório, não múltiplas
+- Telefone: verificar se ligações condizem com operação
+
+SERVIÇOS:
+- Limpeza terceirizada: proporcional ao tamanho do espaço
+- Segurança: necessidade real vs custo
+- Manutenção: frequência condizente com uso
+
+ANÁLISE TEMPORAL:
+- Comparar mês a mês: variações > 20% precisam explicação
+- Sazonalidade: alguns gastos variam naturalmente (ar-condicionado no verão)
+- Tendência: gastos crescendo mais que receita = problema
+
+BENCHMARK DO SETOR CONTÁBIL:
+- Folha de pagamento: 40-50% da receita (ideal)
+- Aluguel: 5-10% da receita
+- Tecnologia: 3-5% da receita
+- Marketing: 2-5% da receita
+- Material de consumo: 1-2% da receita
+- Despesas administrativas gerais: 5-10% da receita
+
+═══════════════════════════════════════════════════════════════
+GESTÃO DE CUSTOS - TÉCNICAS MODERNAS
+═══════════════════════════════════════════════════════════════
+
+ZERO-BASED BUDGETING (ZBB):
+- Todo gasto deve ser justificado do zero a cada período
+- Não é porque gastou ano passado que deve gastar este ano
+- Cada despesa precisa provar seu valor
+
+ANÁLISE DE VALOR:
+- Este gasto gera retorno?
+- Podemos fazer mais barato sem perder qualidade?
+- É essencial ou apenas conveniente?
+
+QUICK WINS PARA REDUÇÃO DE CUSTOS:
+1. Renegociar contratos de serviços anuais
+2. Consolidar fornecedores para ganhar volume
+3. Eliminar assinaturas/serviços não utilizados
+4. Automatizar processos manuais repetitivos
+5. Revisar planos de telefonia/internet
+
+═══════════════════════════════════════════════════════════════
+ANÁLISE FINANCEIRA AVANÇADA
+═══════════════════════════════════════════════════════════════
+
+INDICADORES-CHAVE:
+1. MARGEM DE CONTRIBUIÇÃO = (Receita - Custos Variáveis) / Receita
+   - Meta setor contábil: > 60%
+
+2. PONTO DE EQUILÍBRIO = Custos Fixos / Margem de Contribuição
+   - Saber quantos clientes precisa para empatar
+
+3. ROI = (Lucro - Investimento) / Investimento
+   - Cada R$ investido, quanto retorna?
+
+4. EBITDA = Lucro antes de juros, impostos, depreciação e amortização
+   - Mede geração de caixa operacional
+
+5. LIQUIDEZ CORRENTE = Ativo Circulante / Passivo Circulante
+   - Meta: > 1,5 (folga para imprevistos)
+
+6. CAPITAL DE GIRO = Ativo Circulante - Passivo Circulante
+   - Quanto tem para operar no curto prazo
+
+ANÁLISE DE TENDÊNCIAS:
+- Comparar pelo menos 6 meses para identificar padrões
+- Projetar próximos 3-6 meses baseado em histórico
+- Identificar sazonalidade (décimo terceiro, férias, etc.)
+
+═══════════════════════════════════════════════════════════════
+MODO DE COMUNICAÇÃO
+═══════════════════════════════════════════════════════════════
+
+Ao analisar dados:
+1. Seja DIRETO e OBJETIVO
+2. Destaque ANOMALIAS com alertas claros
+3. Sempre sugira AÇÕES CONCRETAS
+4. Use linguagem simples, evite jargões desnecessários
+5. Priorize por IMPACTO (o que dá mais resultado primeiro)
+6. Forneça NÚMEROS e PERCENTUAIS específicos
+7. Compare com BENCHMARKS do mercado
+8. Dê PRAZOS para as ações sugeridas
 `;
 
 interface ManagerRequest {
@@ -62,7 +174,10 @@ interface ManagerRequest {
     | 'financial_indicators'     // Indicadores financeiros
     | 'cash_flow_analysis'       // Análise de fluxo de caixa
     | 'profitability_report'     // Relatório de lucratividade
-    | 'strategic_advice';        // Conselho estratégico
+    | 'strategic_advice'         // Conselho estratégico
+    | 'expense_anomaly'          // Detecção de anomalias em despesas
+    | 'reduce_delinquency'       // Estratégias para reduzir inadimplência
+    | 'full_diagnostic';         // Diagnóstico completo da empresa
   period?: {
     start_date: string;
     end_date: string;
@@ -395,6 +510,436 @@ Forneça consultoria estratégica incluindo:
 3. Riscos a considerar
 4. Plano de ação recomendado
 5. Métricas de acompanhamento
+`;
+        break;
+      }
+
+      case 'expense_anomaly': {
+        // Análise de anomalias em despesas - comparar últimos 6 meses
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1).toISOString().split('T')[0];
+
+        const { data: allExpenses } = await supabase
+          .from('accounting_entries')
+          .select(`
+            id,
+            entry_date,
+            description,
+            accounting_entry_lines (
+              debit_amount,
+              credit_amount,
+              chart_of_accounts (code, name, type)
+            )
+          `)
+          .gte('entry_date', sixMonthsAgo)
+          .lte('entry_date', endDate);
+
+        // Buscar estrutura da empresa
+        const { data: clients } = await supabase
+          .from('clients')
+          .select('id, status')
+          .eq('status', 'active');
+
+        // Agrupar despesas por mês e categoria
+        const expensesByMonth: Record<string, Record<string, number>> = {};
+        const expenseCategories: Record<string, number> = {};
+
+        allExpenses?.forEach(e => {
+          const month = e.entry_date?.substring(0, 7) || 'unknown';
+          if (!expensesByMonth[month]) expensesByMonth[month] = {};
+
+          e.accounting_entry_lines?.forEach((l: any) => {
+            const code = l.chart_of_accounts?.code || '';
+            const name = l.chart_of_accounts?.name || 'Outros';
+
+            if (code.startsWith('4.')) { // Despesas
+              const amount = Number(l.debit_amount) || 0;
+              expensesByMonth[month][name] = (expensesByMonth[month][name] || 0) + amount;
+              expenseCategories[name] = (expenseCategories[name] || 0) + amount;
+            }
+          });
+        });
+
+        // Calcular médias e detectar variações
+        const monthlyTotals = Object.entries(expensesByMonth).map(([month, cats]) => ({
+          month,
+          total: Object.values(cats).reduce((s, v) => s + v, 0),
+          categories: cats
+        })).sort((a, b) => a.month.localeCompare(b.month));
+
+        const avgMonthlyExpense = monthlyTotals.length > 0
+          ? monthlyTotals.reduce((s, m) => s + m.total, 0) / monthlyTotals.length
+          : 0;
+
+        // Buscar receita para calcular proporções
+        const { data: revenueEntries } = await supabase
+          .from('accounting_entries')
+          .select(`
+            accounting_entry_lines (
+              credit_amount,
+              chart_of_accounts (code)
+            )
+          `)
+          .gte('entry_date', sixMonthsAgo)
+          .lte('entry_date', endDate);
+
+        let totalRevenue = 0;
+        revenueEntries?.forEach(e => {
+          e.accounting_entry_lines?.forEach((l: any) => {
+            if (l.chart_of_accounts?.code?.startsWith('3.')) {
+              totalRevenue += Number(l.credit_amount) || 0;
+            }
+          });
+        });
+
+        analysisData = {
+          periodo_analisado: { inicio: sixMonthsAgo, fim: endDate },
+          estrutura_empresa: {
+            clientes_ativos: clients?.length || 0,
+            // Estimativa de funcionários baseado em folha de pagamento
+          },
+          receita_total_periodo: totalRevenue,
+          media_despesa_mensal: avgMonthlyExpense,
+          despesas_por_mes: monthlyTotals,
+          top_despesas: Object.entries(expenseCategories)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 15)
+            .map(([name, total]) => ({
+              categoria: name,
+              total,
+              percentual_receita: totalRevenue > 0 ? ((total / totalRevenue) * 100).toFixed(2) + '%' : 'N/A',
+              media_mensal: (total / (monthlyTotals.length || 1)).toFixed(2)
+            })),
+          variacao_mensal: monthlyTotals.map((m, i) => {
+            if (i === 0) return { month: m.month, variacao: 0 };
+            const prev = monthlyTotals[i - 1].total;
+            const variacao = prev > 0 ? ((m.total - prev) / prev * 100) : 0;
+            return { month: m.month, variacao: variacao.toFixed(1) + '%', alerta: Math.abs(variacao) > 20 };
+          }),
+        };
+
+        userPrompt = `
+DETECÇÃO DE ANOMALIAS EM DESPESAS
+
+PERÍODO ANALISADO: Últimos 6 meses (${sixMonthsAgo} a ${endDate})
+
+DADOS COMPLETOS:
+${JSON.stringify(analysisData, null, 2)}
+
+INSTRUÇÕES DE ANÁLISE:
+
+1. PROPORCIONALIDADE
+   - Verifique se cada despesa faz sentido com a estrutura da empresa
+   - Compare com benchmarks do setor contábil
+   - Destaque despesas desproporcionais
+
+2. VARIAÇÕES MENSAIS
+   - Identifique meses com variações > 20%
+   - Investigue causas possíveis
+   - Diferencie sazonalidade de anomalia
+
+3. DETECÇÃO DE EXCESSOS
+   - Material de consumo vs número de funcionários
+   - Energia/água vs tamanho do escritório
+   - Serviços vs necessidade real
+
+4. RECOMENDAÇÕES
+   - Liste TOP 5 despesas para investigar
+   - Sugira valores de referência
+   - Proponha ações imediatas de redução
+
+5. ECONOMIA POTENCIAL
+   - Estime quanto pode ser economizado
+   - Priorize por impacto
+   - Dê prazo para implementação
+
+Seja ESPECÍFICO e DIRETO. Use tabelas quando possível.
+`;
+        break;
+      }
+
+      case 'reduce_delinquency': {
+        // Estratégias para reduzir inadimplência
+        const { data: invoices } = await supabase
+          .from('invoices')
+          .select(`
+            id,
+            client_id,
+            amount,
+            due_date,
+            status,
+            paid_date,
+            competence,
+            clients (name, email, phone, status, monthly_fee, payment_day)
+          `)
+          .order('due_date');
+
+        // Análise detalhada de inadimplência
+        const today = new Date();
+        const overdueInvoices = invoices?.filter(i =>
+          i.status !== 'paid' && new Date(i.due_date) < today
+        ) || [];
+
+        // Clientes recorrentes em atraso
+        const clientDelinquency: Record<string, { name: string, count: number, total: number, avgDays: number }> = {};
+
+        overdueInvoices.forEach(inv => {
+          const clientId = inv.client_id;
+          const clientName = (inv as any).clients?.name || 'Desconhecido';
+          const daysOverdue = Math.floor((today.getTime() - new Date(inv.due_date).getTime()) / 86400000);
+
+          if (!clientDelinquency[clientId]) {
+            clientDelinquency[clientId] = { name: clientName, count: 0, total: 0, avgDays: 0 };
+          }
+          clientDelinquency[clientId].count++;
+          clientDelinquency[clientId].total += Number(inv.amount);
+          clientDelinquency[clientId].avgDays = (clientDelinquency[clientId].avgDays + daysOverdue) / 2;
+        });
+
+        // Padrões de pagamento
+        const paidInvoices = invoices?.filter(i => i.status === 'paid' && i.paid_date) || [];
+        const paymentPatterns = paidInvoices.map(inv => {
+          const due = new Date(inv.due_date);
+          const paid = new Date(inv.paid_date!);
+          return Math.floor((paid.getTime() - due.getTime()) / 86400000); // dias de atraso
+        });
+
+        const avgPaymentDelay = paymentPatterns.length > 0
+          ? paymentPatterns.reduce((s, d) => s + d, 0) / paymentPatterns.length
+          : 0;
+
+        const totalReceivable = invoices?.filter(i => i.status !== 'paid').reduce((s, i) => s + Number(i.amount), 0) || 0;
+        const totalOverdue = overdueInvoices.reduce((s, i) => s + Number(i.amount), 0);
+
+        analysisData = {
+          resumo: {
+            total_a_receber: totalReceivable,
+            total_em_atraso: totalOverdue,
+            percentual_inadimplencia: totalReceivable > 0 ? ((totalOverdue / totalReceivable) * 100).toFixed(1) + '%' : '0%',
+            faturas_em_atraso: overdueInvoices.length,
+            media_dias_atraso_pagamentos: avgPaymentDelay.toFixed(1),
+          },
+          clientes_problematicos: Object.values(clientDelinquency)
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 10)
+            .map(c => ({
+              cliente: c.name,
+              faturas_atrasadas: c.count,
+              valor_total: c.total,
+              media_dias_atraso: c.avgDays.toFixed(0),
+            })),
+          aging_detalhado: {
+            '1_15_dias': overdueInvoices.filter(i => {
+              const days = Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000);
+              return days >= 1 && days <= 15;
+            }).length,
+            '16_30_dias': overdueInvoices.filter(i => {
+              const days = Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000);
+              return days >= 16 && days <= 30;
+            }).length,
+            '31_60_dias': overdueInvoices.filter(i => {
+              const days = Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000);
+              return days >= 31 && days <= 60;
+            }).length,
+            '61_90_dias': overdueInvoices.filter(i => {
+              const days = Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000);
+              return days >= 61 && days <= 90;
+            }).length,
+            'mais_90_dias': overdueInvoices.filter(i => {
+              const days = Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000);
+              return days > 90;
+            }).length,
+          },
+        };
+
+        userPrompt = `
+ESTRATÉGIAS PARA REDUZIR INADIMPLÊNCIA
+
+SITUAÇÃO ATUAL:
+${JSON.stringify(analysisData, null, 2)}
+
+ANÁLISE SOLICITADA:
+
+1. DIAGNÓSTICO
+   - Qual a gravidade da situação?
+   - Compare com benchmark do setor (meta: < 5%)
+   - Identifique padrões de comportamento
+
+2. AÇÕES IMEDIATAS (próximos 7 dias)
+   - Quais clientes abordar primeiro?
+   - Scripts de cobrança sugeridos
+   - Canais de comunicação (WhatsApp, email, telefone)
+
+3. AÇÕES DE CURTO PRAZO (30 dias)
+   - Propostas de renegociação
+   - Descontos para quitação à vista
+   - Parcelamentos viáveis
+
+4. AÇÕES ESTRUTURAIS (90 dias)
+   - Política de crédito a implementar
+   - Régua de cobrança automatizada
+   - Critérios para aceitação de novos clientes
+
+5. CASOS CRÍTICOS
+   - Clientes para considerar desligamento
+   - Quando acionar cobrança jurídica
+   - Provisão para perdas (PCLD)
+
+6. PREVENÇÃO FUTURA
+   - Como evitar novos casos
+   - Alertas precoces
+   - Melhores práticas
+
+Seja ESPECÍFICO com nomes de clientes e valores. Priorize por impacto financeiro.
+`;
+        break;
+      }
+
+      case 'full_diagnostic': {
+        // Diagnóstico completo da empresa
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1).toISOString().split('T')[0];
+
+        // Buscar todos os dados relevantes
+        const [
+          { data: clients },
+          { data: invoices },
+          { data: entries }
+        ] = await Promise.all([
+          supabase.from('clients').select('id, name, status, monthly_fee, payment_day'),
+          supabase.from('invoices').select('id, client_id, amount, due_date, status, paid_date, competence'),
+          supabase.from('accounting_entries').select(`
+            id, entry_date, description,
+            accounting_entry_lines (
+              debit_amount, credit_amount,
+              chart_of_accounts (code, name, type)
+            )
+          `).gte('entry_date', sixMonthsAgo).lte('entry_date', endDate)
+        ]);
+
+        // Calcular todos os indicadores
+        let totalReceitas = 0, totalDespesas = 0, totalAtivo = 0, totalPassivo = 0;
+        const expensesByCategory: Record<string, number> = {};
+        const revenueByMonth: Record<string, number> = {};
+        const expensesByMonth: Record<string, number> = {};
+
+        entries?.forEach(e => {
+          const month = e.entry_date?.substring(0, 7) || 'unknown';
+          e.accounting_entry_lines?.forEach((l: any) => {
+            const code = l.chart_of_accounts?.code || '';
+            const name = l.chart_of_accounts?.name || 'Outros';
+
+            if (code.startsWith('3.')) {
+              const amt = Number(l.credit_amount) || 0;
+              totalReceitas += amt;
+              revenueByMonth[month] = (revenueByMonth[month] || 0) + amt;
+            }
+            if (code.startsWith('4.')) {
+              const amt = Number(l.debit_amount) || 0;
+              totalDespesas += amt;
+              expensesByMonth[month] = (expensesByMonth[month] || 0) + amt;
+              expensesByCategory[name] = (expensesByCategory[name] || 0) + amt;
+            }
+            if (code.startsWith('1.')) totalAtivo += (Number(l.debit_amount) || 0) - (Number(l.credit_amount) || 0);
+            if (code.startsWith('2.')) totalPassivo += (Number(l.credit_amount) || 0) - (Number(l.debit_amount) || 0);
+          });
+        });
+
+        // Análise de clientes
+        const activeClients = clients?.filter(c => c.status === 'active') || [];
+        const potentialRevenue = activeClients.reduce((s, c) => s + (Number(c.monthly_fee) || 0), 0);
+
+        // Análise de inadimplência
+        const overdueInvoices = invoices?.filter(i =>
+          i.status !== 'paid' && new Date(i.due_date) < today
+        ) || [];
+        const totalOverdue = overdueInvoices.reduce((s, i) => s + Number(i.amount), 0);
+
+        const lucro = totalReceitas - totalDespesas;
+        const margem = totalReceitas > 0 ? (lucro / totalReceitas * 100) : 0;
+
+        analysisData = {
+          periodo: { inicio: sixMonthsAgo, fim: endDate },
+
+          visao_geral: {
+            clientes_ativos: activeClients.length,
+            receita_potencial_mensal: potentialRevenue,
+            receita_realizada: totalReceitas,
+            despesas_totais: totalDespesas,
+            lucro_periodo: lucro,
+            margem_lucro: margem.toFixed(1) + '%',
+          },
+
+          saude_financeira: {
+            ativo_total: totalAtivo,
+            passivo_total: totalPassivo,
+            patrimonio_liquido: totalAtivo - totalPassivo,
+            liquidez: totalPassivo > 0 ? (totalAtivo / totalPassivo).toFixed(2) : 'N/A',
+            endividamento: totalAtivo > 0 ? ((totalPassivo / totalAtivo) * 100).toFixed(1) + '%' : '0%',
+          },
+
+          inadimplencia: {
+            total_em_atraso: totalOverdue,
+            faturas_atrasadas: overdueInvoices.length,
+            taxa: (totalOverdue / (totalReceitas || 1) * 100).toFixed(1) + '%',
+          },
+
+          despesas_principais: Object.entries(expensesByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([cat, val]) => ({
+              categoria: cat,
+              valor: val,
+              percentual: ((val / totalDespesas) * 100).toFixed(1) + '%'
+            })),
+
+          evolucao_mensal: Object.keys(revenueByMonth).sort().map(month => ({
+            mes: month,
+            receita: revenueByMonth[month] || 0,
+            despesa: expensesByMonth[month] || 0,
+            resultado: (revenueByMonth[month] || 0) - (expensesByMonth[month] || 0),
+          })),
+        };
+
+        userPrompt = `
+DIAGNÓSTICO EMPRESARIAL COMPLETO - AMPLA CONTABILIDADE
+
+DADOS COMPLETOS DA EMPRESA:
+${JSON.stringify(analysisData, null, 2)}
+
+ANÁLISE EXECUTIVA SOLICITADA:
+
+1. RESUMO EXECUTIVO
+   - Situação geral da empresa em 3 parágrafos
+   - Principais conquistas do período
+   - Maiores desafios identificados
+
+2. ANÁLISE SWOT FINANCEIRA
+   - Forças (pontos positivos)
+   - Fraquezas (pontos a melhorar)
+   - Oportunidades (potencial não explorado)
+   - Ameaças (riscos a monitorar)
+
+3. INDICADORES vs BENCHMARKS
+   - Compare cada indicador com padrão do setor
+   - Classifique: Excelente / Bom / Regular / Crítico
+   - Meta recomendada para cada um
+
+4. PLANO DE AÇÃO PRIORITÁRIO
+   - TOP 5 ações de maior impacto
+   - Responsável sugerido
+   - Prazo recomendado
+   - Resultado esperado
+
+5. PROJEÇÕES
+   - Cenário otimista (se implementar ações)
+   - Cenário base (se manter atual)
+   - Cenário pessimista (se não agir)
+
+6. SCORE GERAL DA EMPRESA
+   - Nota de 0 a 100
+   - Justificativa da nota
+   - O que precisa para chegar a 100
+
+Seja DIRETO, use NÚMEROS e TABELAS. Este é um relatório para tomada de decisão.
 `;
         break;
       }

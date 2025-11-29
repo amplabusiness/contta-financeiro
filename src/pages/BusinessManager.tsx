@@ -22,6 +22,10 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle2,
+  Search,
+  ShieldAlert,
+  Target,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +42,35 @@ const BusinessManager = () => {
   const [customQuestion, setCustomQuestion] = useState("");
 
   const actions = [
+    // Análises principais - em destaque
+    {
+      id: "full_diagnostic",
+      title: "Diagnóstico Completo",
+      description: "Análise SWOT, score e plano de ação",
+      icon: Target,
+      color: "text-violet-600",
+      bgColor: "bg-violet-50",
+      featured: true,
+    },
+    {
+      id: "expense_anomaly",
+      title: "Detector de Anomalias",
+      description: "Encontra gastos excessivos e suspeitos",
+      icon: Search,
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      featured: true,
+    },
+    {
+      id: "reduce_delinquency",
+      title: "Reduzir Inadimplência",
+      description: "Estratégias e ações para cobrar melhor",
+      icon: ShieldAlert,
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      featured: true,
+    },
+    // Análises operacionais
     {
       id: "analyze_receivables",
       title: "Contas a Receber",
@@ -275,35 +308,84 @@ const BusinessManager = () => {
           </TabsList>
 
           {/* Ações de Análise */}
-          <TabsContent value="actions" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actions.filter(a => a.id !== "strategic_advice").map((action) => (
-                <Card
-                  key={action.id}
-                  className={cn(
-                    "cursor-pointer transition-all hover:shadow-md",
-                    loading === action.id && "ring-2 ring-primary"
-                  )}
-                  onClick={() => !loading && runAnalysis(action.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", action.bgColor)}>
-                      <action.icon className={cn("h-5 w-5", action.color)} />
-                    </div>
-                    <CardTitle className="text-lg mt-2">{action.title}</CardTitle>
-                    <CardDescription>{action.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      disabled={!!loading}
-                    >
-                      {loading === action.id ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Analisando...
-                        </>
+          <TabsContent value="actions" className="space-y-6">
+            {/* Análises em Destaque */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <GraduationCap className="h-5 w-5 text-violet-600" />
+                <h3 className="font-semibold text-lg">Análises MBA Avançadas</h3>
+                <Badge variant="secondary" className="text-xs">Recomendado</Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {actions.filter((a: any) => a.featured).map((action) => (
+                  <Card
+                    key={action.id}
+                    className={cn(
+                      "cursor-pointer transition-all hover:shadow-lg border-2",
+                      loading === action.id && "ring-2 ring-primary",
+                      "hover:border-violet-300"
+                    )}
+                    onClick={() => !loading && runAnalysis(action.id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", action.bgColor)}>
+                        <action.icon className={cn("h-6 w-6", action.color)} />
+                      </div>
+                      <CardTitle className="text-lg mt-2">{action.title}</CardTitle>
+                      <CardDescription>{action.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        disabled={!!loading}
+                      >
+                        {loading === action.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Analisando...
+                          </>
+                        ) : (
+                          "Executar Análise"
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Outras Análises */}
+            <div>
+              <h3 className="font-semibold text-lg mb-3">Análises Operacionais</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {actions.filter((a: any) => !a.featured && a.id !== "strategic_advice").map((action) => (
+                  <Card
+                    key={action.id}
+                    className={cn(
+                      "cursor-pointer transition-all hover:shadow-md",
+                      loading === action.id && "ring-2 ring-primary"
+                    )}
+                    onClick={() => !loading && runAnalysis(action.id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", action.bgColor)}>
+                        <action.icon className={cn("h-5 w-5", action.color)} />
+                      </div>
+                      <CardTitle className="text-lg mt-2">{action.title}</CardTitle>
+                      <CardDescription>{action.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        disabled={!!loading}
+                      >
+                        {loading === action.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Analisando...
+                          </>
                       ) : (
                         "Executar Análise"
                       )}
