@@ -514,12 +514,28 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
       throw new Error(`Tipo de lançamento inválido: ${entry_type}`);
   }
 
-  // Determinar data do lançamento
+  // Determinar data do lançamento e competência
   let entryDate = date;
-  if (competence && !date) {
+  let competenceDate = date; // Por padrão, competência = data do lançamento
+
+  if (competence) {
+    // Se temos competência no formato MM/YYYY, usar último dia do mês
     const [month, year] = competence.split('/');
-    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-    entryDate = `${year}-${month}-${lastDay}`;
+    if (month && year) {
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      competenceDate = `${year}-${month.padStart(2, '0')}-${lastDay}`;
+      if (!date) {
+        entryDate = competenceDate;
+      }
+    }
+  }
+
+  // Garantir que temos uma data válida
+  if (!entryDate) {
+    entryDate = new Date().toISOString().split('T')[0];
+  }
+  if (!competenceDate) {
+    competenceDate = entryDate;
   }
 
   // Criar lançamento contábil
@@ -527,6 +543,7 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
     .from('accounting_entries')
     .insert({
       entry_date: entryDate,
+      competence_date: competenceDate,
       entry_type: entry_type,
       description: entryDescription,
       reference_type: reference_type || entry_type,
