@@ -114,10 +114,67 @@ supabase/
 | `smart-reconciliation` | Sugestões de match com IA |
 | `smart-accounting` | Lançamentos contábeis inteligentes |
 | `create-accounting-entry` | Criação de lançamentos |
-| `ai-accountant` | IA para consultas contábeis |
-| `ai-accountant-background` | **Contador IA automático** - valida lançamentos em background |
-| `ai-business-manager` | **Gestor Empresarial IA** - análises MBA para gestão |
 | `client-enrichment` | Enriquecimento via ReceitaWS |
+
+## Ecossistema de IA (21 Edge Functions)
+
+### Agentes Contábeis
+| Função | Propósito |
+|--------|-----------|
+| `ai-accountant-agent` | Agente contador para análises contábeis |
+| `ai-accountant-background` | Validação automática de lançamentos em background |
+| `ai-accounting-validator` | Validação de conformidade contábil |
+| `ai-expense-classifier` | Classificação automática de despesas |
+| `ai-invoice-classifier` | Classificação de faturas |
+
+### Agentes Financeiros
+| Função | Propósito |
+|--------|-----------|
+| `ai-financial-analyst` | Análise financeira avançada |
+| `ai-cash-flow-analyst` | Análise e projeção de fluxo de caixa |
+| `ai-revenue-predictor` | Previsão de receitas |
+| `ai-pricing-optimizer` | Otimização de precificação |
+
+### Agentes de Cobrança e Clientes
+| Função | Propósito |
+|--------|-----------|
+| `ai-collection-agent` | Automação de cobrança |
+| `ai-churn-predictor` | Previsão de cancelamento de clientes |
+| `ai-client-segmenter` | Segmentação inteligente de clientes |
+| `ai-partner-analyzer` | Análise de parceiros |
+
+### Agentes de Conciliação
+| Função | Propósito |
+|--------|-----------|
+| `ai-reconciliation-agent` | Conciliação bancária automática |
+| `ai-pix-reconciliation` | Conciliação específica de PIX |
+
+### Agentes de Segurança
+| Função | Propósito |
+|--------|-----------|
+| `ai-fraud-detector` | Detecção de fraudes |
+| `ai-fraud-analyzer` | Análise aprofundada de fraudes |
+
+### Agentes de Comunicação
+| Função | Propósito |
+|--------|-----------|
+| `ai-chatbot` | Chatbot para atendimento |
+| `ai-email-composer` | Composição de e-mails |
+| `ai-contract-generator` | Geração de contratos |
+
+### Gestão Empresarial
+| Função | Propósito |
+|--------|-----------|
+| `ai-business-manager` | **Gestor Empresarial IA** - análises MBA, benchmarks, anomalias |
+
+## Páginas de IA
+
+| Página | Rota | Descrição |
+|--------|------|-----------|
+| `AIAccountant.tsx` | `/ai-accountant` | Contador IA interativo |
+| `AIAgents.tsx` | `/ai-agents` | Painel de agentes de IA |
+| `AIInsights.tsx` | `/ai-insights` | Insights automáticos da IA |
+| `BusinessManager.tsx` | `/business-manager` | Gestor Empresarial IA (MBA) |
 
 ## Sistema de IA Autônoma
 
