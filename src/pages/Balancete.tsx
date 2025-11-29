@@ -18,6 +18,7 @@ interface BalanceteEntry {
   total_credito: number
   saldo: number
   isDevedora: boolean // true = natureza devedora (Ativo, Despesa), false = credora (Passivo, PL, Receita)
+  isSynthetic: boolean // true = conta sintética (grupo), false = conta analítica (folha)
 }
 
 const Balancete = () => {
@@ -126,7 +127,8 @@ const Balancete = () => {
           total_debito: totalDebito,
           total_credito: totalCredito,
           saldo: saldo,
-          isDevedora: isDevedora
+          isDevedora: isDevedora,
+          isSynthetic: account.is_synthetic
         })
       }
 
@@ -158,14 +160,16 @@ const Balancete = () => {
     loadBalancete(startDate, endDate)
   }
 
-  // Calcular totais
-  const totalDebito = entries.reduce((sum, entry) => sum + entry.total_debito, 0)
-  const totalCredito = entries.reduce((sum, entry) => sum + entry.total_credito, 0)
+  // Calcular totais usando apenas contas ANALÍTICAS (não sintéticas) para evitar duplicação
+  const analyticalEntries = entries.filter(entry => !entry.isSynthetic)
+
+  const totalDebito = analyticalEntries.reduce((sum, entry) => sum + entry.total_debito, 0)
+  const totalCredito = analyticalEntries.reduce((sum, entry) => sum + entry.total_credito, 0)
 
   // Saldo devedor: quando débito > crédito (saldo positivo)
   // Saldo credor: quando crédito > débito (saldo negativo)
-  const totalSaldoDevedor = entries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
-  const totalSaldoCredor = entries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
+  const totalSaldoDevedor = analyticalEntries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
+  const totalSaldoCredor = analyticalEntries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
 
   // Balancete está fechado quando saldo devedor = saldo credor
   const isBalanced = Math.abs(totalSaldoDevedor - totalSaldoCredor) < 0.01
