@@ -14,8 +14,14 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Suporte a múltiplas APIs de IA - prioriza Gemini
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
+
+    console.log(`📞 AI Collection Agent started (using ${AI_PROVIDER})`);
 
     const { clientId, invoiceId } = await req.json();
 
@@ -107,102 +113,143 @@ TAREFA: Analise o histórico e o contexto atual para recomendar:
 6. Próximos passos recomendados
 `;
 
-    // Chamar Lovable AI com tool calling para resposta estruturada
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um especialista em cobrança e análise de crédito. Analise o contexto fornecido e retorne recomendações estruturadas.",
-          },
-          { role: "user", content: context },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "recommend_collection_strategy",
-              description: "Retorna recomendações estruturadas de cobrança",
-              parameters: {
-                type: "object",
-                properties: {
-                  best_channel: {
-                    type: "string",
-                    enum: ["phone", "email", "whatsapp", "in_person"],
-                    description: "Melhor canal de contato",
+    // Chamar API de IA
+    let recommendations: any = null;
+    const systemPrompt = "Você é um especialista em cobrança e análise de crédito. Analise o contexto fornecido e retorne recomendações estruturadas.";
+
+    if (AI_PROVIDER === 'gemini') {
+      // Chamar Gemini diretamente
+      const geminiPrompt = `${systemPrompt}
+
+${context}
+
+Responda APENAS com JSON no formato:
+{
+  "best_channel": "phone" | "email" | "whatsapp" | "in_person",
+  "best_time": "morning" | "afternoon" | "evening",
+  "message_tone": "cordial" | "firm" | "urgent",
+  "payment_probability": número de 0 a 100,
+  "negotiation_strategy": "estratégia específica",
+  "recommended_actions": ["ação1", "ação2"],
+  "reasoning": "justificativa"
+}`;
+
+      const aiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: geminiPrompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 1000 }
+          })
+        }
+      );
+
+      if (!aiResponse.ok) {
+        throw new Error(`Gemini API error: ${aiResponse.status}`);
+      }
+
+      const result = await aiResponse.json();
+      const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        recommendations = JSON.parse(jsonMatch[0]);
+      }
+    } else {
+      // Chamar via Lovable Gateway
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: context },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "recommend_collection_strategy",
+                description: "Retorna recomendações estruturadas de cobrança",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    best_channel: {
+                      type: "string",
+                      enum: ["phone", "email", "whatsapp", "in_person"],
+                      description: "Melhor canal de contato",
+                    },
+                    best_time: {
+                      type: "string",
+                      enum: ["morning", "afternoon", "evening"],
+                      description: "Melhor horário para contato",
+                    },
+                    message_tone: {
+                      type: "string",
+                      enum: ["cordial", "firm", "urgent"],
+                      description: "Tom da mensagem",
+                    },
+                    payment_probability: {
+                      type: "number",
+                      minimum: 0,
+                      maximum: 100,
+                      description: "Probabilidade de pagamento (0-100)",
+                    },
+                    negotiation_strategy: {
+                      type: "string",
+                      description: "Estratégia de negociação específica",
+                    },
+                    recommended_actions: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Lista de próximos passos recomendados",
+                    },
+                    reasoning: {
+                      type: "string",
+                      description: "Justificativa da análise",
+                    },
                   },
-                  best_time: {
-                    type: "string",
-                    enum: ["morning", "afternoon", "evening"],
-                    description: "Melhor horário para contato",
-                  },
-                  message_tone: {
-                    type: "string",
-                    enum: ["cordial", "firm", "urgent"],
-                    description: "Tom da mensagem",
-                  },
-                  payment_probability: {
-                    type: "number",
-                    minimum: 0,
-                    maximum: 100,
-                    description: "Probabilidade de pagamento (0-100)",
-                  },
-                  negotiation_strategy: {
-                    type: "string",
-                    description: "Estratégia de negociação específica",
-                  },
-                  recommended_actions: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Lista de próximos passos recomendados",
-                  },
-                  reasoning: {
-                    type: "string",
-                    description: "Justificativa da análise",
-                  },
+                  required: [
+                    "best_channel",
+                    "best_time",
+                    "message_tone",
+                    "payment_probability",
+                    "negotiation_strategy",
+                    "recommended_actions",
+                    "reasoning",
+                  ],
+                  additionalProperties: false,
                 },
-                required: [
-                  "best_channel",
-                  "best_time",
-                  "message_tone",
-                  "payment_probability",
-                  "negotiation_strategy",
-                  "recommended_actions",
-                  "reasoning",
-                ],
-                additionalProperties: false,
               },
             },
+          ],
+          tool_choice: {
+            type: "function",
+            function: { name: "recommend_collection_strategy" },
           },
-        ],
-        tool_choice: {
-          type: "function",
-          function: { name: "recommend_collection_strategy" },
-        },
-      }),
-    });
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("Lovable AI error:", errorText);
-      throw new Error(`Lovable AI retornou erro: ${aiResponse.status}`);
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error("Lovable AI error:", errorText);
+        throw new Error(`Lovable AI retornou erro: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      console.log("AI Response:", JSON.stringify(aiData, null, 2));
+
+      // Extrair argumentos do tool call
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      recommendations = toolCall?.function?.arguments
+        ? JSON.parse(toolCall.function.arguments)
+        : null;
     }
-
-    const aiData = await aiResponse.json();
-    console.log("AI Response:", JSON.stringify(aiData, null, 2));
-
-    // Extrair argumentos do tool call
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    const recommendations = toolCall?.function?.arguments
-      ? JSON.parse(toolCall.function.arguments)
-      : null;
 
     if (!recommendations) {
       throw new Error("IA não retornou recomendações estruturadas");

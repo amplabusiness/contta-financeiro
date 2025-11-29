@@ -19,10 +19,12 @@ import { AICollectionAgent } from "@/components/ai/AICollectionAgent";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
+import { useAccounting } from "@/hooks/useAccounting";
 
 const Invoices = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
+  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false });
   const [invoices, setInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,18 +194,17 @@ const Invoices = () => {
           created++;
           console.log(`Honorário criado com sucesso para ${client.name}, ID: ${newInvoice.id}`);
 
-          // Criar provisionamento contábil automaticamente (não bloqueia)
-          supabase.functions.invoke('create-accounting-entry', {
-            body: {
-              type: 'invoice',
-              operation: 'provision',
-              referenceId: newInvoice.id,
-              amount: Number(client.monthly_fee),
-              date: clientDueDate,
-              clientId: client.id,
-            },
+          // ✅ CONTABILIDADE INTEGRADA: Criar lançamento contábil automaticamente
+          registrarHonorario({
+            invoiceId: newInvoice.id,
+            clientId: client.id,
+            clientName: client.name,
+            amount: Number(client.monthly_fee),
+            competence: competence,
+            dueDate: clientDueDate,
+            description: `Honorários ${competence} - ${client.name}`,
           }).catch(provisionError => {
-            console.error('Erro ao provisionar:', provisionError);
+            console.error('Erro ao criar lançamento contábil:', provisionError);
           });
         } else {
           console.warn(`Insert retornou null para ${client.name}`);
@@ -268,24 +269,26 @@ const Invoices = () => {
         const { data: newInvoice, error } = await supabase.from("invoices").insert(invoiceData).select().single();
 
         if (error) throw error;
-        
-        // Criar provisionamento contábil automaticamente
-        try {
-          await supabase.functions.invoke('create-accounting-entry', {
-            body: {
-              type: 'invoice',
-              operation: 'provision',
-              referenceId: newInvoice.id,
-              amount: parseFloat(formData.amount),
-              date: formData.due_date,
-              description: formData.description || 'Honorário',
-              clientId: formData.client_id,
-            },
-          });
-          toast.success("Honorário cadastrado e provisionamento criado!");
-        } catch (provisionError) {
-          console.error('Erro ao provisionar:', provisionError);
-          toast.warning("Honorário cadastrado, mas erro ao criar provisionamento");
+
+        // Buscar nome do cliente para o lançamento
+        const client = clients.find(c => c.id === formData.client_id);
+
+        // ✅ CONTABILIDADE INTEGRADA: Criar lançamento contábil automaticamente
+        const accountingResult = await registrarHonorario({
+          invoiceId: newInvoice.id,
+          clientId: formData.client_id,
+          clientName: client?.name || 'Cliente',
+          amount: parseFloat(formData.amount),
+          competence: formData.competence,
+          dueDate: formData.due_date,
+          description: formData.description || `Honorários ${formData.competence}`,
+        });
+
+        if (accountingResult.success) {
+          toast.success("Honorário cadastrado com lançamento contábil!");
+        } else {
+          console.error('Erro ao criar lançamento contábil:', accountingResult.error);
+          toast.warning("Honorário cadastrado, mas erro no lançamento contábil");
         }
       }
 
@@ -303,7 +306,7 @@ const Invoices = () => {
   const handleMarkAsPaid = async (invoice: any) => {
     try {
       const paymentDate = new Date().toISOString().split("T")[0];
-      
+
       // Atualizar status da invoice
       const { error } = await supabase
         .from("invoices")
@@ -312,7 +315,24 @@ const Invoices = () => {
 
       if (error) throw error;
 
-      toast.success("Honorário marcado como pago!");
+      // ✅ CONTABILIDADE INTEGRADA: Registrar recebimento automaticamente
+      const accountingResult = await registrarRecebimento({
+        paymentId: `${invoice.id}_payment`,
+        invoiceId: invoice.id,
+        clientId: invoice.client_id,
+        clientName: invoice.clients?.name || 'Cliente',
+        amount: Number(invoice.amount),
+        paymentDate: paymentDate,
+        description: `Recebimento ${invoice.competence || ''} - ${invoice.clients?.name || 'Cliente'}`,
+      });
+
+      if (accountingResult.success) {
+        toast.success("Honorário pago e lançamento contábil criado!");
+      } else {
+        console.error('Erro ao criar lançamento de recebimento:', accountingResult.error);
+        toast.warning("Honorário pago, mas erro no lançamento contábil");
+      }
+
       loadData();
     } catch (error: any) {
       toast.error("Erro ao atualizar honorário");

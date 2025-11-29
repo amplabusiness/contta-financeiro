@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
+import { useAccountingHealth } from "@/hooks/useAccountingHealth";
 
 interface LayoutProps {
   children: ReactNode;
@@ -26,6 +27,9 @@ export function Layout({ children }: LayoutProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
+
+  // Auto-manutenção contábil - roda silenciosamente no background
+  useAccountingHealth();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

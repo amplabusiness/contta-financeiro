@@ -17,6 +17,7 @@ interface BalanceteEntry {
   total_debito: number
   total_credito: number
   saldo: number
+  is_analytical: boolean // Indica se é conta analítica (true) ou sintética (false)
 }
 
 const Balancete = () => {
@@ -33,7 +34,7 @@ const Balancete = () => {
       // Buscar TODAS as contas (sintéticas e analíticas)
       const { data: accounts, error: accountsError } = await supabase
         .from('chart_of_accounts')
-        .select('id, code, name, type, is_synthetic')
+        .select('id, code, name, account_type, is_analytical')
         .eq('is_active', true)
         .order('code')
 
@@ -43,24 +44,42 @@ const Balancete = () => {
         return
       }
 
-      // Buscar TODOS os lançamentos de uma vez
-      let linesQuery = supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit, 
-          credit, 
-          account_id,
-          entry_id!inner(entry_date)
-        `)
+      // Buscar lançamentos do período
+      // Primeiro buscar os IDs dos entries no período
+      let entriesQuery = supabase
+        .from('accounting_entries')
+        .select('id')
 
       if (start) {
-        linesQuery = linesQuery.gte('entry_id.entry_date', start)
+        entriesQuery = entriesQuery.gte('entry_date', start)
       }
       if (end) {
-        linesQuery = linesQuery.lte('entry_id.entry_date', end)
+        entriesQuery = entriesQuery.lte('entry_date', end)
       }
 
-      const { data: allLines, error: linesError } = await linesQuery
+      const { data: entriesInPeriod, error: entriesError } = await entriesQuery
+
+      if (entriesError) {
+        console.error('Erro ao buscar entries:', entriesError)
+        throw entriesError
+      }
+
+      console.log('Entries no período:', entriesInPeriod?.length || 0)
+
+      // Se não há entries, retornar vazio
+      if (!entriesInPeriod || entriesInPeriod.length === 0) {
+        setEntries([])
+        return
+      }
+
+      // Buscar as linhas desses entries
+      const entryIds = entriesInPeriod.map(e => e.id)
+      const { data: allLines, error: linesError } = await supabase
+        .from('accounting_entry_lines')
+        .select('debit, credit, account_id, entry_id')
+        .in('entry_id', entryIds)
+
+      console.log('Linhas encontradas:', allLines?.length || 0)
 
       if (linesError) throw linesError
 
@@ -81,12 +100,14 @@ const Balancete = () => {
         let totalDebito = 0
         let totalCredito = 0
 
-        if (account.is_synthetic) {
-          // Para contas sintéticas, somar os valores das contas filhas
-          const childAccounts = accounts.filter(a => 
-            a.code.startsWith(account.code + '.') && !a.is_synthetic
+        // is_analytical = true significa conta analítica (recebe lançamentos)
+        // is_analytical = false significa conta sintética (agrupa outras contas)
+        if (!account.is_analytical) {
+          // Para contas sintéticas, somar os valores das contas filhas analíticas
+          const childAccounts = accounts.filter(a =>
+            a.code.startsWith(account.code + '.') && a.is_analytical
           )
-          
+
           childAccounts.forEach(child => {
             const childTotals = accountTotals.get(child.id)
             if (childTotals) {
@@ -119,10 +140,11 @@ const Balancete = () => {
         balanceteData.push({
           codigo_conta: account.code,
           nome_conta: account.name,
-          tipo_conta: account.type,
+          tipo_conta: account.account_type || 'ATIVO',
           total_debito: totalDebito,
           total_credito: totalCredito,
-          saldo: saldo
+          saldo: saldo,
+          is_analytical: account.is_analytical === true
         })
       }
 
@@ -154,11 +176,13 @@ const Balancete = () => {
     loadBalancete(startDate, endDate)
   }
 
-  // Calcular totais
-  const totalDebito = entries.reduce((sum, entry) => sum + entry.total_debito, 0)
-  const totalCredito = entries.reduce((sum, entry) => sum + entry.total_credito, 0)
-  const totalSaldoDevedor = entries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
-  const totalSaldoCredor = entries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
+  // Calcular totais - SOMENTE das contas ANALÍTICAS para evitar duplicação
+  // Contas sintéticas apenas acumulam valores das analíticas, então não devem ser somadas novamente
+  const analyticalEntries = entries.filter(e => e.is_analytical)
+  const totalDebito = analyticalEntries.reduce((sum, entry) => sum + entry.total_debito, 0)
+  const totalCredito = analyticalEntries.reduce((sum, entry) => sum + entry.total_credito, 0)
+  const totalSaldoDevedor = analyticalEntries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
+  const totalSaldoCredor = analyticalEntries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
   const isBalanced = Math.abs(totalDebito - totalCredito) < 0.01
 
   // Agrupar por tipo de conta
@@ -336,39 +360,65 @@ const Balancete = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {typeEntries.map((entry) => (
-                        <TableRow key={entry.codigo_conta}>
-                          <TableCell className="font-mono">{entry.codigo_conta}</TableCell>
-                          <TableCell>{entry.nome_conta}</TableCell>
-                          <TableCell className="text-right">
-                            {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {entry.saldo !== 0 && (
-                              <Badge variant={entry.saldo > 0 ? "default" : "secondary"}>
-                                {formatCurrency(Math.abs(entry.saldo))}
-                                {entry.saldo > 0 ? ' D' : ' C'}
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {/* Subtotal por tipo */}
-                      <TableRow className="bg-muted/50 font-semibold">
-                        <TableCell colSpan={2}>Subtotal {getTypeLabel(type)}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_debito, 0))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_credito, 0))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(Math.abs(typeEntries.reduce((sum, e) => sum + e.saldo, 0)))}
-                        </TableCell>
-                      </TableRow>
+                      {typeEntries.map((entry) => {
+                        // Calcular nível de indentação baseado no código (cada ponto = um nível)
+                        const level = (entry.codigo_conta.match(/\./g) || []).length
+                        const isSynthetic = !entry.is_analytical
+
+                        return (
+                          <TableRow
+                            key={entry.codigo_conta}
+                            className={isSynthetic ? "bg-muted/30 text-muted-foreground" : ""}
+                          >
+                            <TableCell className="font-mono">
+                              <span style={{ paddingLeft: `${level * 12}px` }}>
+                                {entry.codigo_conta}
+                              </span>
+                            </TableCell>
+                            <TableCell className={isSynthetic ? "font-medium" : ""}>
+                              {entry.nome_conta}
+                              {isSynthetic && (
+                                <span className="ml-2 text-xs text-muted-foreground">(sintética)</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {entry.saldo !== 0 && (
+                                <Badge variant={entry.saldo > 0 ? "default" : "secondary"}>
+                                  {formatCurrency(Math.abs(entry.saldo))}
+                                  {entry.saldo > 0 ? ' D' : ' C'}
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                      {/* Subtotal por tipo - SOMENTE contas analíticas */}
+                      {(() => {
+                        const analyticalTypeEntries = typeEntries.filter(e => e.is_analytical)
+                        const subtotalDebito = analyticalTypeEntries.reduce((sum, e) => sum + e.total_debito, 0)
+                        const subtotalCredito = analyticalTypeEntries.reduce((sum, e) => sum + e.total_credito, 0)
+                        const subtotalSaldo = analyticalTypeEntries.reduce((sum, e) => sum + e.saldo, 0)
+                        return (
+                          <TableRow className="bg-muted/50 font-semibold">
+                            <TableCell colSpan={2}>Subtotal {getTypeLabel(type)}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(subtotalDebito)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(subtotalCredito)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(Math.abs(subtotalSaldo))}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })()}
                     </TableBody>
                   </Table>
                 </div>

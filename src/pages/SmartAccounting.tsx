@@ -1,264 +1,316 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2,
   CheckCircle,
-  AlertCircle,
-  PlayCircle,
-  RefreshCw,
   BookOpen,
-  Users,
-  Receipt,
-  CreditCard,
-  TrendingUp,
-  Settings,
   Zap,
-  Database
+  Database,
+  TrendingUp,
+  Loader2,
+  Activity,
+  Play,
+  FileText,
+  Receipt,
+  RefreshCw
 } from "lucide-react";
 
-interface TaskResult {
-  success: boolean;
-  created?: number;
-  skipped?: number;
-  errors?: string[];
-  message?: string;
-}
-
-interface StatusMessage {
-  text: string;
-  type: 'info' | 'success' | 'error';
-  timestamp: Date;
+interface AccountingStats {
+  chartOfAccounts: number;
+  entries: number;
+  lines: number;
+  invoices: number;
+  openingBalances: number;
+  expenses: number;
+  healthStatus: 'healthy' | 'warning' | 'error' | 'loading';
+  orphanEntries: number;
 }
 
 const SmartAccounting = () => {
-  const [loading, setLoading] = useState<string | null>(null);
-  const [results, setResults] = useState<Record<string, TaskResult>>({});
-  const [progress, setProgress] = useState(0);
-  const [statusMessages, setStatusMessages] = useState<StatusMessage[]>([]);
-  const [currentOperation, setCurrentOperation] = useState<string>('');
+  const { toast } = useToast();
+  const [stats, setStats] = useState<AccountingStats>({
+    chartOfAccounts: 0,
+    entries: 0,
+    lines: 0,
+    invoices: 0,
+    openingBalances: 0,
+    expenses: 0,
+    healthStatus: 'loading',
+    orphanEntries: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
 
-  const addStatusMessage = (text: string, type: 'info' | 'success' | 'error' = 'info') => {
-    setStatusMessages(prev => [...prev.slice(-9), { text, type, timestamp: new Date() }]);
+  const addLog = (msg: string) => {
+    const timestamp = new Date().toLocaleTimeString('pt-BR');
+    setLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
   };
 
-  const invokeSmartAccounting = async (action: string, params: any = {}, skipLoadingReset = false) => {
+  useEffect(() => {
+    loadStats();
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(loadStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadStats = async () => {
     try {
-      if (!skipLoadingReset) {
-        setLoading(action);
-        setProgress(10);
-        setStatusMessages([]);
+      // Buscar estatísticas em paralelo
+      const [
+        { count: chartCount },
+        { count: entriesCount },
+        { count: linesCount },
+        { count: invoicesCount },
+        { count: openingBalancesCount },
+        { count: expensesCount }
+      ] = await Promise.all([
+        supabase.from('chart_of_accounts').select('*', { count: 'exact', head: true }),
+        supabase.from('accounting_entries').select('*', { count: 'exact', head: true }),
+        supabase.from('accounting_entry_lines').select('*', { count: 'exact', head: true }),
+        supabase.from('invoices').select('*', { count: 'exact', head: true }),
+        (supabase as any).from('client_opening_balance').select('*', { count: 'exact', head: true }),
+        supabase.from('expenses').select('*', { count: 'exact', head: true })
+      ]);
+
+      // Verificar se há órfãos
+      let orphanCount = 0;
+      if ((entriesCount || 0) > 0 && (linesCount || 0) === 0) {
+        orphanCount = entriesCount || 0;
+      } else if ((entriesCount || 0) > 0 && (linesCount || 0) > 0) {
+        // Verificação mais precisa
+        const { data: entriesWithLines } = await supabase
+          .from('accounting_entry_lines')
+          .select('entry_id');
+
+        const validIds = new Set((entriesWithLines || []).map(e => e.entry_id));
+
+        const { data: allEntries } = await supabase
+          .from('accounting_entries')
+          .select('id');
+
+        orphanCount = (allEntries || []).filter(e => !validIds.has(e.id)).length;
       }
 
-      const actionNames: Record<string, string> = {
-        'init_chart': 'Inicializando plano de contas...',
-        'generate_retroactive': `Processando ${params.table || 'dados'}...`,
-      };
+      // Determinar status de saúde
+      let healthStatus: AccountingStats['healthStatus'] = 'healthy';
+      if (orphanCount > 0) {
+        healthStatus = 'warning';
+      }
+      if ((chartCount || 0) === 0) {
+        healthStatus = 'warning';
+      }
 
-      const operationName = actionNames[action] || `Executando ${action}...`;
-      setCurrentOperation(operationName);
-      addStatusMessage(operationName, 'info');
+      setStats({
+        chartOfAccounts: chartCount || 0,
+        entries: entriesCount || 0,
+        lines: linesCount || 0,
+        invoices: invoicesCount || 0,
+        openingBalances: openingBalancesCount || 0,
+        expenses: expensesCount || 0,
+        healthStatus,
+        orphanEntries: orphanCount
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      setStats(prev => ({ ...prev, healthStatus: 'error' }));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Adicionar timeout de 30 segundos para evitar travamento
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const getHealthBadge = () => {
+    switch (stats.healthStatus) {
+      case 'healthy':
+        return <Badge className="bg-green-500">Sistema Saudável</Badge>;
+      case 'warning':
+        return <Badge className="bg-yellow-500">Atenção Necessária</Badge>;
+      case 'error':
+        return <Badge variant="destructive">Erro no Sistema</Badge>;
+      default:
+        return <Badge variant="secondary">Verificando...</Badge>;
+    }
+  };
 
+  // Inicializar Plano de Contas
+  const initChartOfAccounts = async () => {
+    setProcessing('chart');
+    addLog('Inicializando Plano de Contas...');
+
+    try {
       const { data, error } = await supabase.functions.invoke('smart-accounting', {
-        body: { action, ...params }
+        body: { action: 'init_chart' }
       });
 
-      clearTimeout(timeoutId);
+      if (error) throw error;
 
-      console.log('SmartAccounting response:', { action, data, error });
+      addLog(`Plano de Contas: ${data.created?.length || 0} contas criadas, ${data.existing?.length || 0} já existiam`);
 
-      if (!skipLoadingReset) {
-        setProgress(100);
-      }
+      toast({
+        title: "Plano de Contas Inicializado",
+        description: data.message
+      });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!data) {
-        throw new Error('Resposta vazia da função');
-      }
-
-      setResults(prev => ({ ...prev, [action]: data }));
-
-      if (data.success) {
-        const successMsg = data.message || 'Operação concluída com sucesso!';
-        addStatusMessage(`✓ ${successMsg}`, 'success');
-        if (!skipLoadingReset) {
-          toast.success(successMsg);
-        }
-      } else {
-        addStatusMessage(`✗ ${data.error || 'Erro na operação'}`, 'error');
-        if (!skipLoadingReset) {
-          toast.error(data.error || 'Erro na operação');
-        }
-      }
-
-      return data;
+      await loadStats();
     } catch (error: any) {
-      console.error('Erro:', error);
-      addStatusMessage(`✗ Erro: ${error.message}`, 'error');
-      if (!skipLoadingReset) {
-        toast.error(`Erro: ${error.message}`);
-      }
-      setResults(prev => ({ ...prev, [action]: { success: false, message: error.message } }));
-      // Retornar resultado de erro em vez de undefined
-      return { success: false, error: error.message };
+      addLog(`ERRO: ${error.message}`);
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
-      if (!skipLoadingReset) {
-        setLoading(null);
-        setProgress(0);
-        setCurrentOperation('');
-      }
+      setProcessing(null);
     }
   };
 
-  const handleInitChart = () => invokeSmartAccounting('init_chart');
+  // Processar Saldos de Abertura (Janeiro/2025)
+  const processOpeningBalances = async () => {
+    setProcessing('opening');
+    addLog('Processando Saldos de Abertura de Janeiro/2025...');
 
-  const handleRetroactiveOpeningBalance = () => invokeSmartAccounting('generate_retroactive', {
-    table: 'client_opening_balance'
-  });
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-accounting', {
+        body: { action: 'generate_retroactive', table: 'client_opening_balance' }
+      });
 
-  const handleRetroactiveInvoices = () => invokeSmartAccounting('generate_retroactive', {
-    table: 'invoices'
-  });
+      if (error) throw error;
 
-  const handleRetroactiveExpenses = () => invokeSmartAccounting('generate_retroactive', {
-    table: 'expenses'
-  });
+      addLog(`Saldos de Abertura: ${data.created || 0} lançamentos criados, ${data.skipped || 0} já existiam`);
 
-  const handleRetroactiveAccountsPayable = () => invokeSmartAccounting('generate_retroactive', {
-    table: 'accounts_payable'
-  });
-
-  const handleRunAll = async () => {
-    setLoading('all');
-    setProgress(0);
-    setStatusMessages([]);
-
-    const steps = [
-      { progress: 10, name: 'Inicializando plano de contas', action: 'init_chart', params: {} },
-      { progress: 30, name: 'Processando saldos de abertura', action: 'generate_retroactive', params: { table: 'client_opening_balance' } },
-      { progress: 50, name: 'Processando faturas', action: 'generate_retroactive', params: { table: 'invoices' } },
-      { progress: 70, name: 'Processando despesas', action: 'generate_retroactive', params: { table: 'expenses' } },
-      { progress: 90, name: 'Processando contas a pagar', action: 'generate_retroactive', params: { table: 'accounts_payable' } },
-    ];
-
-    let hasErrors = false;
-
-    for (const step of steps) {
-      setProgress(step.progress);
-      setCurrentOperation(step.name + '...');
-      addStatusMessage(`➤ ${step.name}...`, 'info');
-
-      const result = await invokeSmartAccounting(step.action, step.params, true);
-
-      if (!result?.success) {
-        hasErrors = true;
-        // Continuar mesmo com erro para processar todos os passos
+      if (data.errors?.length > 0) {
+        addLog(`Erros: ${data.errors.length}`);
       }
+
+      toast({
+        title: "Saldos de Abertura Processados",
+        description: `${data.created || 0} lançamentos no Livro Diário`
+      });
+
+      await loadStats();
+    } catch (error: any) {
+      addLog(`ERRO: ${error.message}`);
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setProcessing(null);
     }
-
-    setProgress(100);
-
-    if (hasErrors) {
-      setCurrentOperation('Concluído com erros');
-      addStatusMessage('⚠ Algumas operações tiveram erros. Verifique os logs.', 'error');
-      toast.warning('Algumas operações tiveram erros');
-    } else {
-      setCurrentOperation('Concluído!');
-      addStatusMessage('✓ Todas as operações concluídas com sucesso!', 'success');
-      toast.success('Todas as operações concluídas!');
-    }
-
-    setLoading(null);
-    setTimeout(() => {
-      setProgress(0);
-      setCurrentOperation('');
-    }, 3000);
   };
 
-  const TaskCard = ({
-    title,
-    description,
-    icon: Icon,
-    action,
-    onRun,
-    result
-  }: {
-    title: string;
-    description: string;
-    icon: any;
-    action: string;
-    onRun: () => void;
-    result?: TaskResult;
-  }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center gap-2">
-          <Icon className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </div>
-        {result && (
-          <Badge variant={result.success ? "default" : "destructive"}>
-            {result.success ? (
-              <>
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Concluído
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Erro
-              </>
-            )}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="mb-4">{description}</CardDescription>
+  // Processar Honorários (Faturas de Janeiro/2025)
+  const processInvoices = async () => {
+    setProcessing('invoices');
+    addLog('Processando Honorários de Janeiro/2025...');
 
-        {result && result.success && (
-          <div className="bg-muted p-3 rounded-lg mb-4 text-sm">
-            <p>Criados: <strong>{result.created || 0}</strong></p>
-            <p>Já existiam: <strong>{result.skipped || 0}</strong></p>
-            {result.errors && result.errors.length > 0 && (
-              <p className="text-destructive">Erros: {result.errors.length}</p>
-            )}
-          </div>
-        )}
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-accounting', {
+        body: { action: 'generate_retroactive', table: 'invoices' }
+      });
 
-        <Button
-          onClick={onRun}
-          disabled={loading !== null}
-          className="w-full"
-        >
-          {loading === action ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processando...
-            </>
-          ) : (
-            <>
-              <PlayCircle className="h-4 w-4 mr-2" />
-              Executar
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
-  );
+      if (error) throw error;
+
+      addLog(`Honorários: ${data.created || 0} lançamentos criados, ${data.skipped || 0} já existiam`);
+
+      if (data.errors?.length > 0) {
+        addLog(`Erros: ${data.errors.length}`);
+      }
+
+      toast({
+        title: "Honorários Processados",
+        description: `${data.created || 0} lançamentos no Livro Diário`
+      });
+
+      await loadStats();
+    } catch (error: any) {
+      addLog(`ERRO: ${error.message}`);
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // Processar Tudo (Ciclo Completo)
+  const processAll = async () => {
+    setProcessing('all');
+    setLogs([]);
+    addLog('=== INICIANDO CICLO CONTÁBIL COMPLETO ===');
+
+    try {
+      // 1. Limpar órfãos PRIMEIRO (entries sem linhas que impedem recriação)
+      addLog('1. Limpando lançamentos órfãos...');
+      let totalDeleted = 0;
+      let keepCleaning = true;
+      while (keepCleaning) {
+        const { data: cleanupData } = await supabase.functions.invoke('smart-accounting', {
+          body: { action: 'cleanup_orphans' }
+        });
+        const deleted = cleanupData?.deleted || 0;
+        totalDeleted += deleted;
+        if (deleted === 0 || cleanupData?.after?.entries === 0) {
+          keepCleaning = false;
+        } else {
+          addLog(`   Lote removido: ${deleted} órfãos`);
+        }
+      }
+      addLog(`   Total órfãos removidos: ${totalDeleted}`);
+
+      // 2. Inicializar Plano de Contas
+      addLog('2. Inicializando Plano de Contas...');
+      const { data: chartData, error: chartError } = await supabase.functions.invoke('smart-accounting', {
+        body: { action: 'init_chart' }
+      });
+      if (chartError) throw chartError;
+      addLog(`   Plano de Contas: ${chartData.created?.length || 0} novas, ${chartData.existing?.length || 0} existentes`);
+
+      // 3. Processar Saldos de Abertura
+      addLog('3. Processando Saldos de Abertura...');
+      const { data: openingData, error: openingError } = await supabase.functions.invoke('smart-accounting', {
+        body: { action: 'generate_retroactive', table: 'client_opening_balance' }
+      });
+      if (openingError) throw openingError;
+      addLog(`   Saldos: ${openingData.created || 0} lançamentos (D: Cliente / C: Receita)`);
+
+      // 4. Processar Honorários
+      addLog('4. Processando Honorários de Janeiro/2025...');
+      const { data: invoiceData, error: invoiceError } = await supabase.functions.invoke('smart-accounting', {
+        body: { action: 'generate_retroactive', table: 'invoices' }
+      });
+      if (invoiceError) throw invoiceError;
+      addLog(`   Honorários: ${invoiceData.created || 0} lançamentos (D: Cliente / C: Receita)`);
+
+      addLog('=== CICLO CONTÁBIL CONCLUÍDO ===');
+
+      const totalCreated = (openingData.created || 0) + (invoiceData.created || 0);
+
+      toast({
+        title: "Ciclo Contábil Completo!",
+        description: `${totalCreated} lançamentos criados no Livro Diário`
+      });
+
+      await loadStats();
+    } catch (error: any) {
+      addLog(`ERRO: ${error.message}`);
+      toast({
+        title: "Erro no Ciclo Contábil",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
 
   return (
     <Layout>
@@ -270,256 +322,329 @@ const SmartAccounting = () => {
               Contabilidade Inteligente
             </h1>
             <p className="text-muted-foreground">
-              Sistema automatizado de lançamentos contábeis integrados
+              Sistema automatizado de lançamentos contábeis
             </p>
           </div>
-          <Button
-            onClick={handleRunAll}
-            disabled={loading !== null}
-            size="lg"
-            className="bg-gradient-to-r from-primary to-blue-600"
-          >
-            {loading === 'all' ? (
-              <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Processando Tudo...
-              </>
+          <div className="flex items-center gap-2">
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <>
-                <RefreshCw className="h-5 w-5 mr-2" />
-                Executar Todas as Tarefas
-              </>
-            )}
-          </Button>
-        </div>
-
-        {loading && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-sm font-medium">{currentOperation || 'Processando...'}</span>
-              <span className="text-sm text-muted-foreground ml-auto">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-
-            {statusMessages.length > 0 && (
-              <div className="bg-muted/50 rounded-lg p-3 max-h-40 overflow-y-auto">
-                <div className="space-y-1 text-sm font-mono">
-                  {statusMessages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-start gap-2 ${
-                        msg.type === 'success' ? 'text-green-600' :
-                        msg.type === 'error' ? 'text-red-600' :
-                        'text-muted-foreground'
-                      }`}
-                    >
-                      <span className="text-xs opacity-50">
-                        {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                      <span>{msg.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              getHealthBadge()
             )}
           </div>
-        )}
+        </div>
 
-        <Alert>
-          <Database className="h-4 w-4" />
-          <AlertTitle>Sistema de Contabilidade Inteligente</AlertTitle>
+        {/* Ações de Processamento */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Play className="h-5 w-5 text-blue-600" />
+              Processar Lançamentos Contábeis - Janeiro/2025
+            </CardTitle>
+            <CardDescription>
+              Gerar lançamentos no Livro Diário para saldos de abertura e honorários
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={initChartOfAccounts}
+                disabled={processing !== null}
+                variant="outline"
+              >
+                {processing === 'chart' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <BookOpen className="mr-2 h-4 w-4" />
+                )}
+                Plano de Contas
+              </Button>
+
+              <Button
+                onClick={processOpeningBalances}
+                disabled={processing !== null}
+                variant="outline"
+              >
+                {processing === 'opening' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="mr-2 h-4 w-4" />
+                )}
+                Saldos de Abertura
+              </Button>
+
+              <Button
+                onClick={processInvoices}
+                disabled={processing !== null}
+                variant="outline"
+              >
+                {processing === 'invoices' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Receipt className="mr-2 h-4 w-4" />
+                )}
+                Honorários Jan/2025
+              </Button>
+
+              <Button
+                onClick={processAll}
+                disabled={processing !== null}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {processing === 'all' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="mr-2 h-4 w-4" />
+                )}
+                Processar Tudo
+              </Button>
+
+              <Button
+                onClick={loadStats}
+                disabled={processing !== null || loading}
+                variant="ghost"
+                size="icon"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  setProcessing('debug');
+                  addLog('=== DEBUG: Verificando dados das tabelas ===');
+                  try {
+                    const { data, error } = await supabase.functions.invoke('smart-accounting', {
+                      body: { action: 'debug_status' }
+                    });
+                    if (error) throw error;
+                    const debug = data.debug;
+                    addLog(`Plano de Contas: ${debug.counts.chart_of_accounts}`);
+                    addLog(`Saldos de Abertura: ${debug.counts.client_opening_balance}`);
+                    addLog(`Faturas (invoices): ${debug.counts.invoices}`);
+                    addLog(`Lançamentos: ${debug.counts.accounting_entries}`);
+                    addLog(`Linhas: ${debug.counts.accounting_entry_lines}`);
+                    if (debug.sampleEntries?.length > 0) {
+                      addLog('--- Últimos lançamentos ---');
+                      debug.sampleEntries.forEach((e: any) => {
+                        addLog(`  ${e.entry_date}: ${e.description} (D:${e.total_debit} C:${e.total_credit})`);
+                      });
+                    }
+                  } catch (error: any) {
+                    addLog(`ERRO: ${error.message}`);
+                  } finally {
+                    setProcessing(null);
+                  }
+                }}
+                disabled={processing !== null}
+                variant="outline"
+                size="sm"
+              >
+                {processing === 'debug' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="mr-2 h-4 w-4" />
+                )}
+                Debug
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  setProcessing('test');
+                  addLog('=== TESTE: Criando um único lançamento ===');
+                  try {
+                    const { data, error } = await supabase.functions.invoke('smart-accounting', {
+                      body: { action: 'test_single_entry' }
+                    });
+                    if (error) throw error;
+
+                    if (data.success) {
+                      addLog(`SUCESSO: ${data.message}`);
+                      addLog(`Invoice: ${data.invoice?.id}`);
+                      addLog(`Cliente: ${data.invoice?.client_name || 'N/A'}`);
+                      addLog(`Valor: R$ ${data.invoice?.amount}`);
+                      addLog(`Entry ID: ${data.entry?.entry_id}`);
+                      await loadStats();
+                    } else {
+                      addLog(`ERRO: ${data.error}`);
+                      if (data.stack) {
+                        addLog(`Stack: ${data.stack}`);
+                      }
+                    }
+                  } catch (error: any) {
+                    addLog(`ERRO: ${error.message}`);
+                  } finally {
+                    setProcessing(null);
+                  }
+                }}
+                disabled={processing !== null}
+                variant="outline"
+                size="sm"
+                className="bg-yellow-100 hover:bg-yellow-200"
+              >
+                {processing === 'test' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="mr-2 h-4 w-4" />
+                )}
+                Testar 1
+              </Button>
+            </div>
+
+            {/* Logs de Processamento */}
+            {logs.length > 0 && (
+              <div className="mt-4 p-3 bg-black/5 dark:bg-white/5 rounded-lg font-mono text-xs max-h-48 overflow-y-auto">
+                {logs.map((log, i) => (
+                  <div key={i} className={log.includes('ERRO') ? 'text-red-600' : log.includes('===') ? 'font-bold text-blue-600' : ''}>
+                    {log}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle>Sistema Totalmente Automatizado</AlertTitle>
           <AlertDescription>
-            Este sistema cria automaticamente lançamentos contábeis para todos os valores
-            registrados na aplicação. Contas contábeis são criadas dinamicamente quando necessário,
-            incluindo contas individuais para cada cliente.
+            A contabilidade é gerenciada automaticamente. Todos os lançamentos são criados
+            no momento da inserção de dados, sem necessidade de intervenção manual.
+            O sistema executa verificações de saúde automaticamente a cada hora.
           </AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="setup" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="setup">
-              <Settings className="h-4 w-4 mr-2" />
-              Configuração
-            </TabsTrigger>
-            <TabsTrigger value="retroactive">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Lançamentos Retroativos
-            </TabsTrigger>
-            <TabsTrigger value="info">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Informações
-            </TabsTrigger>
-          </TabsList>
+        {/* Cards de Estatísticas */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Plano de Contas</CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.chartOfAccounts}</div>
+              <p className="text-xs text-muted-foreground">contas cadastradas</p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="setup" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <TaskCard
-                title="Inicializar Plano de Contas"
-                description="Cria a estrutura básica do plano de contas: Ativo, Passivo, Receitas e Despesas com todas as contas sintéticas e analíticas padrão."
-                icon={BookOpen}
-                action="init_chart"
-                onRun={handleInitChart}
-                result={results['init_chart']}
-              />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Lançamentos</CardTitle>
+              <Database className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.entries}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.lines} linhas de lançamento
+              </p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                    Funcionalidades
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Criação automática de contas contábeis
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Conta individual por cliente (Clientes a Receber)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Lançamentos por regime de competência
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Razão do cliente automático
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Sugestão de conta via IA
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Honorários</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.invoices}</div>
+              <p className="text-xs text-muted-foreground">faturas no sistema</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Status</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">Ativo</div>
+              <p className="text-xs text-muted-foreground">processamento automático</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Informações sobre o funcionamento */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Como Funciona
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">1.</span>
+                  <span>Ao cadastrar um <strong>honorário</strong>, o lançamento contábil é criado automaticamente (D: Cliente a Receber / C: Receita)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">2.</span>
+                  <span>Ao marcar como <strong>pago</strong>, o recebimento é registrado (D: Caixa / C: Cliente a Receber)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">3.</span>
+                  <span>Ao cadastrar uma <strong>despesa</strong>, é criado o lançamento correspondente</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 font-bold">4.</span>
+                  <span><strong>Saldos de abertura</strong> geram lançamentos retroativos automaticamente</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Estrutura do Plano de Contas</CardTitle>
+              <CardDescription>Hierarquia padronizada</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm font-mono">
+              <div className="space-y-1">
+                <p className="font-bold text-blue-600">1 - ATIVO</p>
+                <p className="ml-4">1.1 - Ativo Circulante</p>
+                <p className="ml-8 text-muted-foreground">1.1.1 - Caixa e Equivalentes</p>
+                <p className="ml-8 text-muted-foreground">1.1.2 - Clientes a Receber</p>
+
+                <p className="font-bold text-red-600 mt-2">2 - PASSIVO</p>
+                <p className="ml-4">2.1 - Passivo Circulante</p>
+                <p className="ml-8 text-muted-foreground">2.1.1 - Fornecedores</p>
+
+                <p className="font-bold text-green-600 mt-2">3 - RECEITAS</p>
+                <p className="ml-4">3.1 - Receitas Operacionais</p>
+                <p className="ml-8 text-muted-foreground">3.1.1 - Honorários Contábeis</p>
+
+                <p className="font-bold text-orange-600 mt-2">4 - DESPESAS</p>
+                <p className="ml-4">4.1 - Despesas Operacionais</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Card informativo sobre automação */}
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-blue-600" />
+              Automação Inteligente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="text-center p-4">
+                <div className="text-3xl font-bold text-blue-600 mb-2">100%</div>
+                <p className="text-sm text-muted-foreground">Automatizado</p>
+              </div>
+              <div className="text-center p-4">
+                <div className="text-3xl font-bold text-green-600 mb-2">0</div>
+                <p className="text-sm text-muted-foreground">Intervenções manuais</p>
+              </div>
+              <div className="text-center p-4">
+                <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
+                <p className="text-sm text-muted-foreground">Monitoramento ativo</p>
+              </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="retroactive" className="space-y-4">
-            <Alert variant="default" className="bg-amber-50 dark:bg-amber-950 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertTitle>Lançamentos Retroativos</AlertTitle>
-              <AlertDescription>
-                Execute estas tarefas para criar lançamentos contábeis para registros que já existem
-                no sistema mas ainda não possuem lançamentos contábeis associados.
-              </AlertDescription>
-            </Alert>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <TaskCard
-                title="Saldos de Abertura"
-                description="Cria lançamentos contábeis para todos os saldos de abertura cadastrados (client_opening_balance)."
-                icon={CreditCard}
-                action="generate_retroactive_opening_balance"
-                onRun={handleRetroactiveOpeningBalance}
-                result={results['generate_retroactive'] && results['generate_retroactive']}
-              />
-
-              <TaskCard
-                title="Faturas (Invoices)"
-                description="Cria lançamentos de provisionamento e recebimento para todas as faturas existentes."
-                icon={Receipt}
-                action="generate_retroactive_invoices"
-                onRun={handleRetroactiveInvoices}
-                result={results['generate_retroactive_invoices']}
-              />
-
-              <TaskCard
-                title="Despesas (Expenses)"
-                description="Cria lançamentos de despesas e pagamentos para registros da tabela expenses."
-                icon={CreditCard}
-                action="generate_retroactive_expenses"
-                onRun={handleRetroactiveExpenses}
-                result={results['generate_retroactive_expenses']}
-              />
-
-              <TaskCard
-                title="Contas a Pagar"
-                description="Cria lançamentos contábeis para todos os registros de accounts_payable."
-                icon={Users}
-                action="generate_retroactive_accounts_payable"
-                onRun={handleRetroactiveAccountsPayable}
-                result={results['generate_retroactive_accounts_payable']}
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="info" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Estrutura do Plano de Contas</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm font-mono">
-                  <div className="space-y-1">
-                    <p className="font-bold text-blue-600">1 - ATIVO</p>
-                    <p className="ml-4">1.1 - Ativo Circulante</p>
-                    <p className="ml-8">1.1.1 - Caixa e Equivalentes</p>
-                    <p className="ml-8">1.1.2 - Créditos a Receber</p>
-                    <p className="ml-12">1.1.2.01 - Clientes a Receber (sintética)</p>
-                    <p className="ml-16 text-green-600">1.1.2.01.XXX - Cliente: [Nome]</p>
-
-                    <p className="font-bold text-red-600 mt-4">2 - PASSIVO</p>
-                    <p className="ml-4">2.1 - Passivo Circulante</p>
-                    <p className="ml-8">2.1.1 - Fornecedores</p>
-
-                    <p className="font-bold text-green-600 mt-4">3 - RECEITAS</p>
-                    <p className="ml-4">3.1 - Receitas Operacionais</p>
-                    <p className="ml-8">3.1.1 - Receita de Honorários</p>
-
-                    <p className="font-bold text-orange-600 mt-4">4 - DESPESAS</p>
-                    <p className="ml-4">4.1 - Despesas Operacionais</p>
-                    <p className="ml-8">4.1.1 - Despesas com Pessoal</p>
-                    <p className="ml-8">4.1.2 - Despesas Administrativas</p>
-                    <p className="ml-8">4.1.3 - Despesas Financeiras</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tipos de Lançamentos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <p className="font-medium text-green-700 dark:text-green-300">Receita de Honorários</p>
-                    <p className="text-sm text-muted-foreground">
-                      D: Cliente a Receber (1.1.2.01.XXX)<br />
-                      C: Receita de Honorários (3.1.1.01)
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                    <p className="font-medium text-blue-700 dark:text-blue-300">Recebimento</p>
-                    <p className="text-sm text-muted-foreground">
-                      D: Caixa (1.1.1.01)<br />
-                      C: Cliente a Receber (1.1.2.01.XXX)
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                    <p className="font-medium text-orange-700 dark:text-orange-300">Despesa</p>
-                    <p className="text-sm text-muted-foreground">
-                      D: Conta de Despesa (4.x.x.xx)<br />
-                      C: Fornecedores a Pagar (2.1.1.01)
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg">
-                    <p className="font-medium text-red-700 dark:text-red-300">Pagamento</p>
-                    <p className="text-sm text-muted-foreground">
-                      D: Fornecedores a Pagar (2.1.1.01)<br />
-                      C: Caixa (1.1.1.01)
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );

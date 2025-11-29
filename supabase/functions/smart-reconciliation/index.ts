@@ -34,7 +34,11 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    // Suporte a múltiplas APIs de IA - prioriza Gemini
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
+    const AI_KEY = GEMINI_API_KEY || LOVABLE_API_KEY;
 
     const { action, transaction, filters } = await req.json();
 
@@ -256,37 +260,58 @@ serve(async (req) => {
       suggestions.sort((a, b) => b.confidence - a.confidence);
 
       // Usar IA para refinar sugestões se houver muitas opções
-      if (suggestions.length > 10 && LOVABLE_API_KEY) {
+      if (suggestions.length > 10 && AI_KEY) {
         try {
-          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                {
-                  role: 'system',
-                  content: `Você é um especialista em conciliação bancária. Analise a transação e as sugestões, e retorne os IDs das 5 melhores correspondências em ordem de relevância. Retorne APENAS um array JSON de IDs, exemplo: ["id1", "id2", "id3"]`
-                },
-                {
-                  role: 'user',
-                  content: `Transação: ${transaction.description} - R$ ${transaction.amount} - ${transaction.date}
+          console.log(`[SmartReconciliation] Using ${AI_PROVIDER} for AI refinement`);
+
+          const systemPrompt = `Você é um especialista em conciliação bancária. Analise a transação e as sugestões, e retorne os IDs das 5 melhores correspondências em ordem de relevância. Retorne APENAS um array JSON de IDs, exemplo: ["id1", "id2", "id3"]`;
+          const userPrompt = `Transação: ${transaction.description} - R$ ${transaction.amount} - ${transaction.date}
 
 Sugestões (top 15):
-${suggestions.slice(0, 15).map((s, i) => `${i+1}. ID: ${s.id} | ${s.description} | R$ ${s.amount} | Confiança: ${s.confidence} | Motivo: ${s.reason}`).join('\n')}`
-                }
-              ],
-            }),
-          });
+${suggestions.slice(0, 15).map((s, i) => `${i+1}. ID: ${s.id} | ${s.description} | R$ ${s.amount} | Confiança: ${s.confidence} | Motivo: ${s.reason}`).join('\n')}`;
 
-          if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
-            let content = aiData.choices[0].message.content;
+          let content = '';
+
+          if (AI_PROVIDER === 'gemini') {
+            // Chamar Gemini diretamente
+            const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
+              })
+            });
+
+            if (aiResponse.ok) {
+              const result = await aiResponse.json();
+              content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+          } else {
+            // Chamar via Lovable Gateway
+            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPrompt }
+                ],
+              }),
+            });
+
+            if (aiResponse.ok) {
+              const aiData = await aiResponse.json();
+              content = aiData.choices[0].message.content;
+            }
+          }
+
+          if (content) {
             content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-
             const topIds: string[] = JSON.parse(content);
 
             // Reordenar sugestões com base na IA
@@ -297,6 +322,8 @@ ${suggestions.slice(0, 15).map((s, i) => `${i+1}. ID: ${s.id} | ${s.description}
             // Adicionar o resto que a IA não selecionou
             const remaining = suggestions.filter(s => !topIds.includes(s.id));
             suggestions = [...aiSorted, ...remaining];
+
+            console.log(`[SmartReconciliation] AI refined ${topIds.length} suggestions`);
           }
         } catch (aiError) {
           console.error('Erro na IA:', aiError);

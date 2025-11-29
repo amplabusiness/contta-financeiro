@@ -58,9 +58,10 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Cliente com token do usuário para autenticação
+    const authClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Usar service role para criar contas
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -68,13 +69,23 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Verificar autenticação do usuário
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
     if (userError || !user) {
+      console.error('Auth error:', userError);
       return new Response(JSON.stringify({ error: 'Não autorizado' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Cliente com SERVICE_ROLE_KEY para queries que bypassam RLS
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    console.log('Authenticated user:', user.id, user.email);
 
     const body = await req.json();
     const { action } = body;
@@ -143,6 +154,234 @@ serve(async (req) => {
     if (action === 'ai_analyze') {
       const result = await aiAnalyzeTransaction(supabaseClient, body);
       return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Limpar entries órfãos (sem linhas)
+    if (action === 'cleanup_orphans') {
+      console.log('[v8] Running cleanup_orphans...');
+
+      // Contar antes
+      const { count: entriesBefore } = await supabaseClient
+        .from('accounting_entries')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: linesBefore } = await supabaseClient
+        .from('accounting_entry_lines')
+        .select('*', { count: 'exact', head: true });
+
+      console.log(`[v8] Before cleanup: ${entriesBefore} entries, ${linesBefore} lines`);
+
+      // Buscar IDs de entries que TÊM linhas
+      const { data: entriesWithLines } = await supabaseClient
+        .from('accounting_entry_lines')
+        .select('entry_id');
+
+      const validEntryIds = new Set((entriesWithLines || []).map((e: any) => e.entry_id));
+      console.log(`[v8] Valid entry IDs (have lines): ${validEntryIds.size}`);
+
+      // Buscar todos os entries
+      const { data: allEntries } = await supabaseClient
+        .from('accounting_entries')
+        .select('id');
+
+      // Identificar órfãos
+      const orphanIds = (allEntries || [])
+        .filter((e: any) => !validEntryIds.has(e.id))
+        .map((e: any) => e.id);
+
+      console.log(`[v8] Found ${orphanIds.length} orphan entries to delete`);
+
+      // Deletar órfãos em batches (evitar timeout)
+      let deletedCount = 0;
+      const batchSize = 50;
+      for (let i = 0; i < orphanIds.length; i += batchSize) {
+        const batch = orphanIds.slice(i, i + batchSize);
+        const { error: deleteError } = await supabaseClient
+          .from('accounting_entries')
+          .delete()
+          .in('id', batch);
+
+        if (deleteError) {
+          console.error('[v8] Error deleting batch:', deleteError);
+        } else {
+          deletedCount += batch.length;
+          console.log(`[v8] Deleted batch ${i / batchSize + 1}, total deleted: ${deletedCount}`);
+        }
+      }
+
+      // Contar depois
+      const { count: entriesAfter } = await supabaseClient
+        .from('accounting_entries')
+        .select('*', { count: 'exact', head: true });
+
+      const result = {
+        success: true,
+        before: { entries: entriesBefore, lines: linesBefore },
+        after: { entries: entriesAfter, lines: linesBefore },
+        deleted: deletedCount,
+        message: `Deletados ${deletedCount} entries órfãos. Restam ${entriesAfter} entries válidos.`,
+        version: 'v8'
+      };
+
+      console.log('[v8] Cleanup result:', JSON.stringify(result));
+
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Desabilitar triggers automáticos (retorna instruções SQL)
+    if (action === 'disable_triggers') {
+      console.log('[v11] Returning SQL to disable automatic accounting triggers...');
+
+      const dropTriggersSQL = `
+-- Execute no SQL Editor do Supabase para desabilitar triggers automáticos
+DROP TRIGGER IF EXISTS trg_invoice_provision ON invoices;
+DROP TRIGGER IF EXISTS trg_invoice_payment ON invoices;
+DROP TRIGGER IF EXISTS trg_expense_provision ON expenses;
+DROP TRIGGER IF EXISTS trg_expense_payment ON expenses;
+
+-- Limpar entries órfãos existentes
+DELETE FROM accounting_entries
+WHERE id NOT IN (
+  SELECT DISTINCT entry_id FROM accounting_entry_lines
+);
+      `.trim();
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Execute o SQL abaixo no Editor SQL do Supabase Dashboard',
+        sql: dropTriggersSQL,
+        dashboard_url: 'https://supabase.com/dashboard/project/xdtlhzysrpoinqtsglmr/sql/new'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Teste - criar um único lançamento para debug
+    if (action === 'test_single_entry') {
+      console.log('[v12] Testing single entry creation...');
+
+      try {
+        // Buscar primeira invoice para teste
+        const { data: testInvoice, error: invoiceError } = await supabaseClient
+          .from('invoices')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (invoiceError || !testInvoice) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Nenhuma invoice encontrada para teste',
+            details: invoiceError?.message
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        console.log('[v12] Test invoice:', JSON.stringify(testInvoice));
+
+        // Buscar nome do cliente
+        let clientName = null;
+        if (testInvoice.client_id) {
+          const { data: client } = await supabaseClient
+            .from('clients')
+            .select('name')
+            .eq('id', testInvoice.client_id)
+            .maybeSingle();
+          clientName = client?.name;
+        }
+
+        console.log('[v12] Client name:', clientName);
+
+        // Tentar criar lançamento
+        const entryResult = await createSmartAccountingEntry(supabaseClient, user.id, {
+          entry_type: 'receita_honorarios',
+          amount: testInvoice.amount,
+          date: testInvoice.issue_date || testInvoice.created_at,
+          description: `TESTE - ${testInvoice.description || testInvoice.invoice_number}`,
+          client_id: testInvoice.client_id,
+          client_name: clientName,
+          reference_type: 'test',
+          reference_id: testInvoice.id,
+          competence: testInvoice.competence,
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Lançamento de teste criado com sucesso!',
+          invoice: {
+            id: testInvoice.id,
+            amount: testInvoice.amount,
+            client_id: testInvoice.client_id,
+            client_name: clientName
+          },
+          entry: entryResult
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+
+      } catch (err: any) {
+        console.error('[v12] Test error:', err);
+        return new Response(JSON.stringify({
+          success: false,
+          error: err.message,
+          stack: err.stack
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // AÇÃO: Debug - verificar estado das tabelas
+    if (action === 'debug_status') {
+      console.log('[v12] Running debug_status...');
+
+      // Contar registros em cada tabela
+      const [
+        { count: openingBalanceCount },
+        { count: invoicesCount },
+        { count: entriesCount },
+        { count: entryLinesCount },
+        { count: chartCount }
+      ] = await Promise.all([
+        supabaseClient.from('client_opening_balance').select('*', { count: 'exact', head: true }),
+        supabaseClient.from('invoices').select('*', { count: 'exact', head: true }),
+        supabaseClient.from('accounting_entries').select('*', { count: 'exact', head: true }),
+        supabaseClient.from('accounting_entry_lines').select('*', { count: 'exact', head: true }),
+        supabaseClient.from('chart_of_accounts').select('*', { count: 'exact', head: true })
+      ]);
+
+      // Buscar exemplos de entries e lines para debug
+      const { data: sampleEntries } = await supabaseClient
+        .from('accounting_entries')
+        .select('id, entry_date, entry_type, description, total_debit, total_credit')
+        .limit(5);
+
+      const { data: sampleLines } = await supabaseClient
+        .from('accounting_entry_lines')
+        .select('id, entry_id, account_id, debit, credit')
+        .limit(5);
+
+      const debugInfo = {
+        counts: {
+          client_opening_balance: openingBalanceCount,
+          invoices: invoicesCount,
+          accounting_entries: entriesCount,
+          accounting_entry_lines: entryLinesCount,
+          chart_of_accounts: chartCount
+        },
+        sampleEntries,
+        sampleLines,
+        version: 'v8'
+      };
+
+      console.log('[v8] Debug status:', JSON.stringify(debugInfo, null, 2));
+
+      return new Response(JSON.stringify({ success: true, debug: debugInfo }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -350,14 +589,16 @@ async function ensureClientAccount(supabase: any, userId: string, clientId: stri
   }
 
   // Verificar se já existe conta para este cliente (por nome similar ou metadata)
-  const { data: existingByName } = await supabase
+  // Usar maybeSingle() para não lançar erro se não encontrar
+  const { data: existingByName, error: searchError } = await supabase
     .from('chart_of_accounts')
     .select('*')
     .like('code', '1.1.2.01.%')
     .ilike('name', `%${name}%`)
-    .single();
+    .maybeSingle();
 
-  if (existingByName) {
+  if (existingByName && !searchError) {
+    console.log(`[v12] Found existing client account: ${existingByName.code} - ${existingByName.name}`);
     return existingByName;
   }
 
@@ -596,28 +837,56 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
   }
 
   // Criar linhas do lançamento
-  const { error: linesError } = await supabase
+  console.log(`[v11] Creating entry lines for entry ${entry.id}: debitAccountId=${debitAccountId}, creditAccountId=${creditAccountId}, amount=${amount}`);
+
+  // Validar que temos IDs de contas válidos
+  if (!debitAccountId) {
+    console.error('[v11] ERROR: debitAccountId is null/undefined');
+    // Deletar o entry órfão criado
+    await supabase.from('accounting_entries').delete().eq('id', entry.id);
+    throw new Error('Conta de débito não encontrada');
+  }
+  if (!creditAccountId) {
+    console.error('[v11] ERROR: creditAccountId is null/undefined');
+    // Deletar o entry órfão criado
+    await supabase.from('accounting_entries').delete().eq('id', entry.id);
+    throw new Error('Conta de crédito não encontrada');
+  }
+
+  const linesToInsert = [
+    {
+      entry_id: entry.id,
+      account_id: debitAccountId,
+      description: `D - ${entryDescription}`,
+      debit: amount,
+      credit: 0,
+    },
+    {
+      entry_id: entry.id,
+      account_id: creditAccountId,
+      description: `C - ${entryDescription}`,
+      debit: 0,
+      credit: amount,
+    },
+  ];
+
+  console.log(`[v11] Lines to insert:`, JSON.stringify(linesToInsert));
+
+  const { data: insertedLines, error: linesError } = await supabase
     .from('accounting_entry_lines')
-    .insert([
-      {
-        entry_id: entry.id,
-        account_id: debitAccountId,
-        description: `D - ${entryDescription}`,
-        debit: amount,
-        credit: 0,
-      },
-      {
-        entry_id: entry.id,
-        account_id: creditAccountId,
-        description: `C - ${entryDescription}`,
-        debit: 0,
-        credit: amount,
-      },
-    ]);
+    .insert(linesToInsert)
+    .select();
 
   if (linesError) {
+    console.error(`[v11] Error inserting lines:`, linesError);
+    console.error(`[v11] Error details:`, JSON.stringify(linesError));
+    // Deletar o entry órfão criado
+    console.log(`[v11] Deleting orphan entry ${entry.id} due to line insertion error`);
+    await supabase.from('accounting_entries').delete().eq('id', entry.id);
     throw new Error(`Erro ao criar linhas: ${linesError.message}`);
   }
+
+  console.log(`[v11] Lines inserted successfully:`, insertedLines?.length || 0);
 
   // Criar lançamento no razão do cliente (se for receita/recebimento)
   if (client_id && ['receita_honorarios', 'saldo_abertura', 'recebimento'].includes(entry_type)) {
@@ -666,7 +935,7 @@ function mapExpenseCategoryToAccount(category: string): { code: string; name: st
 }
 
 // Gerar lançamentos retroativos para registros existentes
-// v2 - 2024-11-29 05:35
+// v3 - 2024-11-29 - Corrigido uso de maybeSingle() para verificação de existência
 async function generateRetroactiveEntries(supabase: any, userId: string, params: any) {
   const { table } = params;
   const results = { created: 0, skipped: 0, errors: [] as string[] };
@@ -675,21 +944,33 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
   if (table === 'client_opening_balance') {
     // Buscar saldos de abertura sem lançamento contábil
+    console.log('[v9] Fetching client_opening_balance...');
+
+    // Primeiro, verificar quantos registros existem no total
+    const { count: totalCount, error: countError } = await supabase
+      .from('client_opening_balance')
+      .select('*', { count: 'exact', head: true });
+
+    console.log(`[v9] Total records in client_opening_balance: ${totalCount}, error: ${countError?.message || 'none'}`);
+
+    // IMPORTANTE: Buscar SEM join para evitar filtrar registros sem cliente
     const { data: balances, error } = await supabase
       .from('client_opening_balance')
-      .select(`
-        *,
-        clients(id, name)
-      `)
+      .select('*')
       .order('created_at')
-      .limit(100); // Limitar para evitar timeout
+      .limit(50);
 
     if (error) {
-      console.error('Error fetching client_opening_balance:', error);
+      console.error('[v9] Error fetching client_opening_balance:', error);
       throw error;
     }
 
-    console.log(`Found ${balances?.length || 0} opening balances to process`);
+    console.log(`[v9] Found ${balances?.length || 0} opening balances to process`);
+    if (balances && balances.length > 0) {
+      console.log('[v9] First balance:', JSON.stringify(balances[0]));
+    } else {
+      console.log('[v9] No balances found in client_opening_balance table');
+    }
 
     // Retornar rápido se não há dados
     if (!balances || balances.length === 0) {
@@ -704,31 +985,62 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
     for (const balance of balances) {
       try {
-        // Verificar se já existe lançamento
-        const { data: existingEntry } = await supabase
+        // Verificar se já existe lançamento - usar maybeSingle() para evitar erro quando não encontra
+        const { data: existingEntry, error: checkError } = await supabase
           .from('accounting_entries')
           .select('id')
           .eq('reference_type', 'opening_balance')
           .eq('reference_id', balance.id)
-          .single();
+          .maybeSingle();
 
-        if (existingEntry) {
-          results.skipped++;
-          continue;
+        // Se encontrou um lançamento existente, verificar se tem linhas
+        if (existingEntry && !checkError) {
+          // Verificar se este entry tem linhas
+          const { count: linesCount } = await supabase
+            .from('accounting_entry_lines')
+            .select('*', { count: 'exact', head: true })
+            .eq('entry_id', existingEntry.id);
+
+          if (linesCount && linesCount > 0) {
+            // Entry existe E tem linhas - pular
+            console.log(`[v10] Skipping balance ${balance.id} - entry ${existingEntry.id} already exists with ${linesCount} lines`);
+            results.skipped++;
+            continue;
+          } else {
+            // Entry existe mas SEM linhas (órfão) - deletar e recriar
+            console.log(`[v10] Deleting orphan entry ${existingEntry.id} for balance ${balance.id} (0 lines)`);
+            await supabase
+              .from('accounting_entries')
+              .delete()
+              .eq('id', existingEntry.id);
+          }
+        }
+
+        // Buscar nome do cliente separadamente se necessário
+        let clientName = null;
+        if (balance.client_id) {
+          const { data: client } = await supabase
+            .from('clients')
+            .select('name')
+            .eq('id', balance.client_id)
+            .maybeSingle();
+          clientName = client?.name;
         }
 
         // Criar lançamento
-        await createSmartAccountingEntry(supabase, userId, {
+        console.log(`[v9] Creating entry for balance ${balance.id}: amount=${balance.amount}, competence=${balance.competence}, client=${clientName}`);
+        const entryResult = await createSmartAccountingEntry(supabase, userId, {
           entry_type: 'saldo_abertura',
           amount: balance.amount,
           date: balance.due_date,
           description: balance.description || `Honorários de ${balance.competence}`,
           client_id: balance.client_id,
-          client_name: balance.clients?.name,
+          client_name: clientName,
           reference_type: 'opening_balance',
           reference_id: balance.id,
           competence: balance.competence,
         });
+        console.log(`[v9] Entry created for balance ${balance.id}:`, entryResult);
 
         results.created++;
       } catch (err: any) {
@@ -740,18 +1052,33 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
     console.log(`client_opening_balance completed: ${results.created} created, ${results.skipped} skipped`);
   } else if (table === 'invoices') {
     // Buscar faturas sem lançamento contábil
+    console.log('[v9] Fetching invoices...');
+
+    // Primeiro, verificar quantos registros existem no total
+    const { count: totalCount, error: countError } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true });
+
+    console.log(`[v9] Total records in invoices: ${totalCount}, error: ${countError?.message || 'none'}`);
+
+    // IMPORTANTE: Buscar SEM join para evitar filtrar registros sem cliente
     const { data: invoices, error } = await supabase
       .from('invoices')
-      .select(`
-        *,
-        clients(id, name)
-      `)
+      .select('*')
       .order('created_at')
-      .limit(100); // Limitar para evitar timeout
+      .limit(50);
 
-    if (error) throw error;
+    if (error) {
+      console.error('[v9] Error fetching invoices:', error);
+      throw error;
+    }
 
-    console.log(`Found ${invoices?.length || 0} invoices to process`);
+    console.log(`[v9] Found ${invoices?.length || 0} invoices to process`);
+    if (invoices && invoices.length > 0) {
+      console.log('[v9] First invoice:', JSON.stringify(invoices[0]));
+    } else {
+      console.log('[v9] No invoices found in invoices table');
+    }
 
     // Retornar rápido se não há dados
     if (!invoices || invoices.length === 0) {
@@ -766,32 +1093,63 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
     for (const invoice of invoices) {
       try {
-        // Verificar se já existe lançamento de provisionamento
-        const { data: existingEntry } = await supabase
+        // Verificar se já existe lançamento de provisionamento - usar maybeSingle()
+        const { data: existingEntry, error: checkError } = await supabase
           .from('accounting_entries')
           .select('id')
           .eq('reference_type', 'invoice')
           .eq('reference_id', invoice.id)
           .eq('entry_type', 'receita_honorarios')
-          .single();
+          .maybeSingle();
 
-        if (existingEntry) {
-          results.skipped++;
-          continue;
+        // Se encontrou um lançamento existente, verificar se tem linhas
+        if (existingEntry && !checkError) {
+          // Verificar se este entry tem linhas
+          const { count: linesCount } = await supabase
+            .from('accounting_entry_lines')
+            .select('*', { count: 'exact', head: true })
+            .eq('entry_id', existingEntry.id);
+
+          if (linesCount && linesCount > 0) {
+            // Entry existe E tem linhas - pular
+            console.log(`[v10] Skipping invoice ${invoice.id} - entry ${existingEntry.id} already exists with ${linesCount} lines`);
+            results.skipped++;
+            continue;
+          } else {
+            // Entry existe mas SEM linhas (órfão) - deletar e recriar
+            console.log(`[v10] Deleting orphan entry ${existingEntry.id} for invoice ${invoice.id} (0 lines)`);
+            await supabase
+              .from('accounting_entries')
+              .delete()
+              .eq('id', existingEntry.id);
+          }
+        }
+
+        // Buscar nome do cliente separadamente se necessário
+        let clientName = null;
+        if (invoice.client_id) {
+          const { data: client } = await supabase
+            .from('clients')
+            .select('name')
+            .eq('id', invoice.client_id)
+            .maybeSingle();
+          clientName = client?.name;
         }
 
         // Criar lançamento de provisionamento
-        await createSmartAccountingEntry(supabase, userId, {
+        console.log(`[v9] Creating entry for invoice ${invoice.id}: amount=${invoice.amount}, competence=${invoice.competence}, client=${clientName}`);
+        const entryResult = await createSmartAccountingEntry(supabase, userId, {
           entry_type: 'receita_honorarios',
           amount: invoice.amount,
           date: invoice.issue_date || invoice.created_at,
           description: invoice.description || `Fatura ${invoice.invoice_number}`,
           client_id: invoice.client_id,
-          client_name: invoice.clients?.name,
+          client_name: clientName,
           reference_type: 'invoice',
           reference_id: invoice.id,
           competence: invoice.competence,
         });
+        console.log(`[v9] Entry created for invoice ${invoice.id}:`, entryResult);
 
         results.created++;
 
@@ -803,7 +1161,7 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
             date: invoice.payment_date,
             description: `Recebimento Fatura ${invoice.invoice_number}`,
             client_id: invoice.client_id,
-            client_name: invoice.clients?.name,
+            client_name: clientName,
             reference_type: 'invoice_payment',
             reference_id: invoice.id,
           });
@@ -841,16 +1199,18 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
     for (const expense of expenses) {
       try {
-        // Verificar se já existe lançamento
-        const { data: existingEntry } = await supabase
+        // Verificar se já existe lançamento - usar maybeSingle()
+        const { data: existingEntry, error: checkError } = await supabase
           .from('accounting_entries')
           .select('id')
           .eq('reference_type', tableName)
           .eq('reference_id', expense.id)
           .eq('entry_type', 'despesa')
-          .single();
+          .maybeSingle();
 
-        if (existingEntry) {
+        // Se encontrou um lançamento existente (não é null e não teve erro), pular
+        if (existingEntry && !checkError) {
+          console.log(`Skipping expense ${expense.id} - entry already exists: ${existingEntry.id}`);
           results.skipped++;
           continue;
         }

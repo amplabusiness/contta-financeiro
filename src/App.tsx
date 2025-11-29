@@ -80,6 +80,7 @@ import SmartAccounting from "./pages/SmartAccounting";
 import SuperConciliador from "./pages/SuperConciliador";
 import FeeAdjustment from "./pages/FeeAdjustment";
 import DebtNegotiation from "./pages/DebtNegotiation";
+import InitialLoad from "./pages/InitialLoad";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -166,6 +167,7 @@ const App = () => (
           <Route path="/bank-folder-import" element={<BankFolderImport />} />
           <Route path="/smart-accounting" element={<SmartAccounting />} />
           <Route path="/super-conciliador" element={<SuperConciliador />} />
+          <Route path="/initial-load" element={<InitialLoad />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -14,8 +14,14 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Suporte a múltiplas APIs de IA - prioriza Gemini
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
+
+    console.log(`🎯 AI Invoice Classifier started (using ${AI_PROVIDER})`);
 
     const { invoiceIds } = await req.json();
 
@@ -127,106 +133,148 @@ Classifique o risco de inadimplência desta fatura considerando:
 5. Dias até o vencimento
 `;
 
-        const aiResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${lovableApiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "Você é um especialista em análise de crédito e previsão de inadimplência. Analise os dados fornecidos e classifique o risco com base em evidências concretas.",
-                },
-                { role: "user", content: context },
-              ],
-              tools: [
-                {
-                  type: "function",
-                  function: {
-                    name: "classify_default_risk",
-                    description: "Classifica risco de inadimplência de fatura",
-                    parameters: {
-                      type: "object",
-                      properties: {
-                        risk_score: {
-                          type: "number",
-                          minimum: 0,
-                          maximum: 100,
-                          description: "Score de risco (0=baixo, 100=alto)",
+        let classification: any = null;
+        const systemPrompt = "Você é um especialista em análise de crédito e previsão de inadimplência. Analise os dados fornecidos e classifique o risco com base em evidências concretas.";
+
+        if (AI_PROVIDER === 'gemini') {
+          // Chamar Gemini diretamente
+          const geminiPrompt = `${systemPrompt}
+
+${context}
+
+Responda APENAS com JSON no formato:
+{
+  "risk_score": número de 0 a 100 (0=baixo, 100=alto),
+  "risk_level": "low" | "medium" | "high" | "critical",
+  "probability_of_default": número de 0 a 100 (%),
+  "predicted_payment_date": "YYYY-MM-DD",
+  "risk_factors": ["fator1", "fator2"],
+  "positive_factors": ["fator1", "fator2"],
+  "recommended_actions": ["ação1", "ação2"],
+  "reasoning": "justificativa"
+}`;
+
+          const aiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: geminiPrompt }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 1000 }
+              })
+            }
+          );
+
+          if (!aiResponse.ok) {
+            throw new Error(`Gemini API error: ${aiResponse.status}`);
+          }
+
+          const result = await aiResponse.json();
+          const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            classification = JSON.parse(jsonMatch[0]);
+          }
+        } else {
+          // Chamar via Lovable Gateway
+          const aiResponse = await fetch(
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                messages: [
+                  { role: "system", content: systemPrompt },
+                  { role: "user", content: context },
+                ],
+                tools: [
+                  {
+                    type: "function",
+                    function: {
+                      name: "classify_default_risk",
+                      description: "Classifica risco de inadimplência de fatura",
+                      parameters: {
+                        type: "object",
+                        properties: {
+                          risk_score: {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 100,
+                            description: "Score de risco (0=baixo, 100=alto)",
+                          },
+                          risk_level: {
+                            type: "string",
+                            enum: ["low", "medium", "high", "critical"],
+                            description: "Classificação do risco",
+                          },
+                          probability_of_default: {
+                            type: "number",
+                            minimum: 0,
+                            maximum: 100,
+                            description: "Probabilidade de inadimplência (%)",
+                          },
+                          predicted_payment_date: {
+                            type: "string",
+                            description: "Data prevista de pagamento (YYYY-MM-DD)",
+                          },
+                          risk_factors: {
+                            type: "array",
+                            items: { type: "string" },
+                            description: "Principais fatores de risco identificados",
+                          },
+                          positive_factors: {
+                            type: "array",
+                            items: { type: "string" },
+                            description: "Fatores positivos identificados",
+                          },
+                          recommended_actions: {
+                            type: "array",
+                            items: { type: "string" },
+                            description: "Ações recomendadas",
+                          },
+                          reasoning: {
+                            type: "string",
+                            description: "Justificativa da classificação",
+                          },
                         },
-                        risk_level: {
-                          type: "string",
-                          enum: ["low", "medium", "high", "critical"],
-                          description: "Classificação do risco",
-                        },
-                        probability_of_default: {
-                          type: "number",
-                          minimum: 0,
-                          maximum: 100,
-                          description: "Probabilidade de inadimplência (%)",
-                        },
-                        predicted_payment_date: {
-                          type: "string",
-                          description: "Data prevista de pagamento (YYYY-MM-DD)",
-                        },
-                        risk_factors: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "Principais fatores de risco identificados",
-                        },
-                        positive_factors: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "Fatores positivos identificados",
-                        },
-                        recommended_actions: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "Ações recomendadas",
-                        },
-                        reasoning: {
-                          type: "string",
-                          description: "Justificativa da classificação",
-                        },
+                        required: [
+                          "risk_score",
+                          "risk_level",
+                          "probability_of_default",
+                          "predicted_payment_date",
+                          "risk_factors",
+                          "positive_factors",
+                          "recommended_actions",
+                          "reasoning",
+                        ],
+                        additionalProperties: false,
                       },
-                      required: [
-                        "risk_score",
-                        "risk_level",
-                        "probability_of_default",
-                        "predicted_payment_date",
-                        "risk_factors",
-                        "positive_factors",
-                        "recommended_actions",
-                        "reasoning",
-                      ],
-                      additionalProperties: false,
                     },
                   },
+                ],
+                tool_choice: {
+                  type: "function",
+                  function: { name: "classify_default_risk" },
                 },
-              ],
-              tool_choice: {
-                type: "function",
-                function: { name: "classify_default_risk" },
-              },
-            }),
+              }),
+            }
+          );
+
+          if (!aiResponse.ok) {
+            throw new Error(`Lovable AI error: ${aiResponse.status}`);
           }
-        );
 
-        if (!aiResponse.ok) {
-          throw new Error(`Lovable AI error: ${aiResponse.status}`);
+          const aiData = await aiResponse.json();
+          const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+          classification = toolCall?.function?.arguments
+            ? JSON.parse(toolCall.function.arguments)
+            : null;
         }
-
-        const aiData = await aiResponse.json();
-        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-        const classification = toolCall?.function?.arguments
-          ? JSON.parse(toolCall.function.arguments)
-          : null;
 
         if (!classification) {
           results.push({

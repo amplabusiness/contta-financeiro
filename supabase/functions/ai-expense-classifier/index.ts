@@ -15,9 +15,12 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    // Suporte a múltiplas APIs de IA - prioriza Gemini
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
 
-    console.log('🏷️ AI Expense Classifier started');
+    console.log(`🏷️ AI Expense Classifier started (using ${AI_PROVIDER})`);
 
     // Buscar despesas sem classificação ou com conta não definida
     const { data: unclassifiedExpenses, error: expError } = await supabase
@@ -68,63 +71,80 @@ Responda APENAS com JSON:
   "reasoning": "breve justificativa"
 }`;
 
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { role: 'system', content: 'Você é um contador expert em classificação de despesas.' },
-              { role: 'user', content: prompt }
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "classify_expense",
-                  description: "Classifica uma despesa no plano de contas adequado",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      account_code: {
-                        type: "string",
-                        description: "Código da conta contábil (ex: 4.1.1)"
+        let classification: any = null;
+
+        if (AI_PROVIDER === 'gemini') {
+          // Chamar Gemini diretamente
+          const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
+            })
+          });
+
+          if (!aiResponse.ok) {
+            throw new Error(`Gemini API error: ${aiResponse.status}`);
+          }
+
+          const result = await aiResponse.json();
+          const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          // Extrair JSON da resposta
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            classification = JSON.parse(jsonMatch[0]);
+          }
+        } else {
+          // Chamar via Lovable Gateway
+          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [
+                { role: 'system', content: 'Você é um contador expert em classificação de despesas.' },
+                { role: 'user', content: prompt }
+              ],
+              tools: [
+                {
+                  type: "function",
+                  function: {
+                    name: "classify_expense",
+                    description: "Classifica uma despesa no plano de contas adequado",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        account_code: { type: "string", description: "Código da conta contábil (ex: 4.1.1)" },
+                        category: { type: "string", description: "Nome da categoria" },
+                        confidence: { type: "number", description: "Nível de confiança de 0 a 1", minimum: 0, maximum: 1 },
+                        reasoning: { type: "string", description: "Breve justificativa da classificação" }
                       },
-                      category: {
-                        type: "string",
-                        description: "Nome da categoria"
-                      },
-                      confidence: {
-                        type: "number",
-                        description: "Nível de confiança de 0 a 1",
-                        minimum: 0,
-                        maximum: 1
-                      },
-                      reasoning: {
-                        type: "string",
-                        description: "Breve justificativa da classificação"
-                      }
-                    },
-                    required: ["account_code", "category", "confidence", "reasoning"],
-                    additionalProperties: false
+                      required: ["account_code", "category", "confidence", "reasoning"],
+                      additionalProperties: false
+                    }
                   }
                 }
-              }
-            ],
-            tool_choice: { type: "function", function: { name: "classify_expense" } }
-          }),
-        });
+              ],
+              tool_choice: { type: "function", function: { name: "classify_expense" } }
+            }),
+          });
 
-        const aiData = await aiResponse.json();
-        
-        if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
-          throw new Error('AI não retornou classificação válida');
+          const aiData = await aiResponse.json();
+
+          if (!aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
+            throw new Error('AI não retornou classificação válida');
+          }
+
+          classification = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
         }
-        
-        const classification = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
+
+        if (!classification) {
+          throw new Error('Não foi possível extrair classificação da resposta da IA');
+        }
 
         console.log(`🎯 AI Classification for expense ${expense.id}:`, classification);
 

@@ -17,7 +17,10 @@ interface ChartAccount {
   id: string;
   code: string;
   name: string;
-  type: string;
+  account_type: string;
+  nature: string;
+  level: number;
+  is_analytical: boolean;
   parent_id: string | null;
   is_active: boolean;
 }
@@ -32,7 +35,8 @@ const ChartOfAccounts = () => {
   const [formData, setFormData] = useState({
     code: "",
     name: "",
-    type: "despesa",
+    account_type: "DESPESA",
+    nature: "DEVEDORA",
     parent_id: "",
   });
 
@@ -64,10 +68,18 @@ const ChartOfAccounts = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // Determinar natureza baseada no tipo
+      const nature = ['ATIVO', 'DESPESA'].includes(formData.account_type) ? 'DEVEDORA' : 'CREDORA';
+      // Determinar nível pelo código
+      const level = formData.code.split('.').length;
+
       const accountData = {
         code: formData.code,
         name: formData.name,
-        type: formData.type,
+        account_type: formData.account_type,
+        nature: nature,
+        level: level,
+        is_analytical: level >= 4, // Contas de nível 4+ são analíticas
         parent_id: formData.parent_id || null,
         created_by: user.id,
       };
@@ -136,7 +148,8 @@ const ChartOfAccounts = () => {
     setFormData({
       code: "",
       name: "",
-      type: "despesa",
+      account_type: "DESPESA",
+      nature: "DEVEDORA",
       parent_id: "",
     });
   };
@@ -146,7 +159,8 @@ const ChartOfAccounts = () => {
     setFormData({
       code: account.code,
       name: account.name,
-      type: account.type,
+      account_type: account.account_type || 'DESPESA',
+      nature: account.nature || 'DEVEDORA',
       parent_id: account.parent_id || "",
     });
     setOpen(true);
@@ -205,19 +219,19 @@ const ChartOfAccounts = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="type">Tipo *</Label>
+                  <Label htmlFor="account_type">Tipo *</Label>
                   <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData({ ...formData, type: value })}
+                    value={formData.account_type}
+                    onValueChange={(value) => setFormData({ ...formData, account_type: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="passivo">Passivo</SelectItem>
-                      <SelectItem value="receita">Receita</SelectItem>
-                      <SelectItem value="despesa">Despesa</SelectItem>
+                      <SelectItem value="ATIVO">Ativo</SelectItem>
+                      <SelectItem value="PASSIVO">Passivo</SelectItem>
+                      <SelectItem value="RECEITA">Receita</SelectItem>
+                      <SelectItem value="DESPESA">Despesa</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -277,13 +291,13 @@ const ChartOfAccounts = () => {
                       <TableCell>{account.name}</TableCell>
                       <TableCell>
                         <Badge variant={
-                          account.type === "despesa" ? "destructive" :
-                          account.type === "receita" ? "default" :
-                          account.type === "ativo" ? "secondary" : "outline"
+                          account.account_type === "DESPESA" ? "destructive" :
+                          account.account_type === "RECEITA" ? "default" :
+                          account.account_type === "ATIVO" ? "secondary" : "outline"
                         }>
-                          {account.type === "despesa" ? "Despesa" : 
-                           account.type === "receita" ? "Receita" :
-                           account.type === "ativo" ? "Ativo" : "Passivo"}
+                          {account.account_type === "DESPESA" ? "Despesa" :
+                           account.account_type === "RECEITA" ? "Receita" :
+                           account.account_type === "ATIVO" ? "Ativo" : "Passivo"}
                         </Badge>
                       </TableCell>
                       <TableCell>

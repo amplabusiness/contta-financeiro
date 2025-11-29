@@ -16,10 +16,12 @@ import { formatCurrency } from "@/data/expensesData";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
+import { useAccounting } from "@/hooks/useAccounting";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
+  const { registrarDespesa, registrarPagamentoDespesa } = useAccounting({ showToasts: false });
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,26 +144,21 @@ const Expenses = () => {
 
         if (expenseError) throw expenseError;
 
-        // Criar provisionamento contábil automaticamente se tiver conta contábil
-        if (formData.account_id) {
-          try {
-            await supabase.functions.invoke('create-accounting-entry', {
-              body: {
-                type: 'expense',
-                operation: 'provision',
-                referenceId: newExpense.id,
-                amount: parseFloat(formData.amount),
-                date: formData.due_date,
-                description: formData.description || 'Despesa',
-              },
-            });
-            toast.success("Despesa cadastrada e provisionamento criado!");
-          } catch (provisionError) {
-            console.error('Erro ao provisionar:', provisionError);
-            toast.warning("Despesa cadastrada, mas erro ao criar provisionamento");
-          }
+        // ✅ CONTABILIDADE INTEGRADA: Criar lançamento contábil automaticamente
+        const accountingResult = await registrarDespesa({
+          expenseId: newExpense.id,
+          amount: parseFloat(formData.amount),
+          expenseDate: formData.due_date,
+          category: formData.category,
+          description: formData.description || 'Despesa',
+          competence: formData.competence,
+        });
+
+        if (accountingResult.success) {
+          toast.success("Despesa cadastrada com lançamento contábil!");
         } else {
-          toast.success("Despesa cadastrada! (sem provisionamento - conta não definida)");
+          console.error('Erro ao criar lançamento contábil:', accountingResult.error);
+          toast.warning("Despesa cadastrada, mas erro no lançamento contábil");
         }
       }
 
@@ -179,7 +176,7 @@ const Expenses = () => {
   const handleMarkAsPaid = async (expense: any) => {
     try {
       const paymentDate = new Date().toISOString().split("T")[0];
-      
+
       // Atualizar status da despesa
       const { error } = await supabase
         .from("expenses")
@@ -188,7 +185,22 @@ const Expenses = () => {
 
       if (error) throw error;
 
-      toast.success("Despesa marcada como paga!");
+      // ✅ CONTABILIDADE INTEGRADA: Registrar pagamento automaticamente
+      const accountingResult = await registrarPagamentoDespesa({
+        paymentId: `${expense.id}_payment`,
+        expenseId: expense.id,
+        amount: Number(expense.amount),
+        paymentDate: paymentDate,
+        description: expense.description || 'Despesa',
+      });
+
+      if (accountingResult.success) {
+        toast.success("Despesa paga com lançamento contábil!");
+      } else {
+        console.error('Erro ao criar lançamento de pagamento:', accountingResult.error);
+        toast.warning("Despesa paga, mas erro no lançamento contábil");
+      }
+
       loadExpenses();
     } catch (error: any) {
       toast.error("Erro ao atualizar despesa");
