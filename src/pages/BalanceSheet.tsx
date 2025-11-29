@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, FileDown, AlertCircle } from "lucide-react";
+import { RefreshCw, FileDown, AlertCircle, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AccountBalance {
   code: string;
@@ -23,36 +25,50 @@ const BalanceSheet = () => {
   const [loading, setLoading] = useState(false);
   const [activeAccounts, setActiveAccounts] = useState<AccountBalance[]>([]);
   const [passiveAccounts, setPassiveAccounts] = useState<AccountBalance[]>([]);
+  const [plAccounts, setPlAccounts] = useState<AccountBalance[]>([]);
   const [totalActive, setTotalActive] = useState(0);
   const [totalPassive, setTotalPassive] = useState(0);
+  const [totalPL, setTotalPL] = useState(0);
+  const [endDate, setEndDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
 
-  useEffect(() => {
-    loadBalances();
-  }, []);
-
-  const loadBalances = async () => {
+  const loadBalances = useCallback(async () => {
     setLoading(true);
     try {
-      // Buscar todas as contas ativas
+      // Buscar todas as contas ativas (1=Ativo, 2=Passivo, 5=PL)
       const { data: accounts, error: accountsError } = await supabase
         .from("chart_of_accounts")
-        .select("*")
+        .select("id, code, name, type, is_synthetic")
         .eq("is_active", true)
+        .or('code.like.1%,code.like.2%,code.like.5%')
         .order("code");
 
       if (accountsError) throw accountsError;
 
-      // Buscar todos os lançamentos
-      const { data: entries, error: entriesError } = await supabase
-        .from("accounting_entry_lines" as any)
-        .select("account_id, debit, credit");
+      // Buscar todos os lançamentos até a data selecionada
+      let entriesQuery = supabase
+        .from("accounting_entry_lines")
+        .select(`
+          account_id,
+          debit,
+          credit,
+          entry_id!inner(entry_date)
+        `);
+
+      if (endDate) {
+        entriesQuery = entriesQuery.lte('entry_id.entry_date', endDate);
+      }
+
+      const { data: entries, error: entriesError } = await entriesQuery;
 
       if (entriesError) throw entriesError;
 
       // Calcular saldos por conta
       const accountBalances: Record<string, { debit: number; credit: number }> = {};
-      
-      (entries as any)?.forEach((entry: any) => {
+
+      entries?.forEach((entry: any) => {
         if (!accountBalances[entry.account_id]) {
           accountBalances[entry.account_id] = { debit: 0, credit: 0 };
         }
@@ -60,80 +76,111 @@ const BalanceSheet = () => {
         accountBalances[entry.account_id].credit += parseFloat(entry.credit?.toString() || "0");
       });
 
-      // Separar contas de ATIVO e PASSIVO
+      // Separar contas por tipo baseado no CÓDIGO
       const activeList: AccountBalance[] = [];
       const passiveList: AccountBalance[] = [];
+      const plList: AccountBalance[] = [];
       let sumActive = 0;
       let sumPassive = 0;
+      let sumPL = 0;
 
       accounts?.forEach(account => {
-        const accountData = account as any;
-        const balance = accountBalances[accountData.id] || { debit: 0, credit: 0 };
-        
-        // Para ATIVO: saldo = débito - crédito
-        // Para PASSIVO: saldo = crédito - débito
-        const netBalance = accountData.type === 'ativo' 
-          ? balance.debit - balance.credit 
+        const primeiroDigito = account.code.charAt(0);
+        const balance = accountBalances[account.id] || { debit: 0, credit: 0 };
+
+        // Calcular saldo baseado na natureza da conta pelo CÓDIGO:
+        // 1 = Ativo (natureza devedora): saldo = débito - crédito
+        // 2 = Passivo (natureza credora): saldo = crédito - débito
+        // 5 = PL (natureza credora): saldo = crédito - débito
+        const isDevedora = primeiroDigito === '1';
+        let netBalance = isDevedora
+          ? balance.debit - balance.credit
           : balance.credit - balance.debit;
 
-        // Calcular saldos das contas sintéticas somando as filhas
-        let finalBalance = netBalance;
-        
-        if (accountData.is_synthetic) {
-          const children = accounts.filter(a => {
-            const aData = a as any;
-            return aData.code.startsWith(accountData.code + ".") && 
-              aData.code !== accountData.code;
-          });
-          
-          finalBalance = children.reduce((sum, child) => {
-            const childData = child as any;
-            const childBalance = accountBalances[childData.id] || { debit: 0, credit: 0 };
-            const childNet = childData.type === 'ativo' 
-              ? childBalance.debit - childBalance.credit 
+        // Para contas sintéticas, somar os saldos das contas filhas analíticas
+        if (account.is_synthetic) {
+          const childAccounts = accounts.filter(a =>
+            a.code.startsWith(account.code + '.') && !a.is_synthetic
+          );
+
+          netBalance = childAccounts.reduce((sum, child) => {
+            const childBalance = accountBalances[child.id] || { debit: 0, credit: 0 };
+            const childIsDevedora = child.code.charAt(0) === '1';
+            const childNet = childIsDevedora
+              ? childBalance.debit - childBalance.credit
               : childBalance.credit - childBalance.debit;
             return sum + childNet;
           }, 0);
         }
 
+        // Inferir tipo baseado no código
+        const tipoInferido = (() => {
+          switch (primeiroDigito) {
+            case '1': return 'ATIVO';
+            case '2': return 'PASSIVO';
+            case '5': return 'PATRIMONIO_LIQUIDO';
+            default: return 'OUTROS';
+          }
+        })();
+
         const accountBalance: AccountBalance = {
-          code: accountData.code,
-          name: accountData.name,
-          type: accountData.type,
-          is_synthetic: accountData.is_synthetic,
+          code: account.code,
+          name: account.name,
+          type: tipoInferido,
+          is_synthetic: account.is_synthetic,
           debit: balance.debit,
           credit: balance.credit,
-          balance: finalBalance,
-          level: accountData.code.split(".").length,
+          balance: netBalance,
+          level: account.code.split(".").length,
         };
 
-        if (accountData.code.startsWith('1')) {
+        // Separar por grupo baseado no código
+        if (primeiroDigito === '1') {
           activeList.push(accountBalance);
-          if (!accountData.is_synthetic && finalBalance > 0) {
-            sumActive += finalBalance;
+          // Somar apenas contas analíticas com saldo positivo para totais
+          if (!account.is_synthetic && netBalance > 0) {
+            sumActive += netBalance;
           }
-        } else if (accountData.code.startsWith('2')) {
+        } else if (primeiroDigito === '2') {
           passiveList.push(accountBalance);
-          if (!accountData.is_synthetic && finalBalance > 0) {
-            sumPassive += finalBalance;
+          if (!account.is_synthetic && netBalance > 0) {
+            sumPassive += netBalance;
+          }
+        } else if (primeiroDigito === '5') {
+          plList.push(accountBalance);
+          if (!account.is_synthetic && netBalance > 0) {
+            sumPL += netBalance;
           }
         }
       });
 
       setActiveAccounts(activeList);
       setPassiveAccounts(passiveList);
+      setPlAccounts(plList);
       setTotalActive(sumActive);
       setTotalPassive(sumPassive);
-      
-      if (Math.abs(sumActive - sumPassive) > 0.01) {
+      setTotalPL(sumPL);
+
+      const totalPassivoPL = sumPassive + sumPL;
+      if (Math.abs(sumActive - totalPassivoPL) > 0.01) {
         toast.warning("Atenção: Balanço desbalanceado!");
+      } else {
+        toast.success("Balanço patrimonial balanceado!");
       }
     } catch (error: any) {
       toast.error("Erro ao carregar balanço: " + error.message);
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [endDate]);
+
+  useEffect(() => {
+    loadBalances();
+  }, [loadBalances]);
+
+  const totalPassivoPL = totalPassive + totalPL;
+  const isBalanced = Math.abs(totalActive - totalPassivoPL) < 0.01;
 
   const getRowStyle = (account: AccountBalance) => {
     if (account.level === 1) {
@@ -148,7 +195,7 @@ const BalanceSheet = () => {
     return "pl-8 text-sm";
   };
 
-  const renderAccountsTable = (accounts: AccountBalance[], title: string) => (
+  const renderAccountsTable = (accounts: AccountBalance[], title: string, total: number, colorClass: string) => (
     <div>
       <h3 className="text-lg font-bold mb-3 text-primary">{title}</h3>
       <table className="w-full">
@@ -160,19 +207,27 @@ const BalanceSheet = () => {
           </tr>
         </thead>
         <tbody>
-          {accounts.map((account) => (
-            <tr key={account.code} className={`border-b ${getRowStyle(account)}`}>
-              <td className="p-2">{account.code}</td>
-              <td className="p-2">{account.name}</td>
-              <td className="p-2 text-right font-medium">
-                {account.balance !== 0 ? formatCurrency(account.balance) : "-"}
+          {accounts.length === 0 ? (
+            <tr>
+              <td colSpan={3} className="p-4 text-center text-muted-foreground">
+                Nenhuma conta encontrada
               </td>
             </tr>
-          ))}
+          ) : (
+            accounts.map((account) => (
+              <tr key={account.code} className={`border-b ${getRowStyle(account)}`}>
+                <td className="p-2 font-mono text-sm">{account.code}</td>
+                <td className="p-2">{account.name}</td>
+                <td className="p-2 text-right font-medium">
+                  {account.balance !== 0 ? formatCurrency(Math.abs(account.balance)) : "-"}
+                </td>
+              </tr>
+            ))
+          )}
           <tr className="border-t-2 border-t-primary font-bold bg-primary/5">
             <td colSpan={2} className="p-2">TOTAL {title.toUpperCase()}</td>
-            <td className="p-2 text-right text-primary">
-              {formatCurrency(title === "ATIVO" ? totalActive : totalPassive)}
+            <td className={`p-2 text-right ${colorClass}`}>
+              {formatCurrency(total)}
             </td>
           </tr>
         </tbody>
@@ -187,7 +242,7 @@ const BalanceSheet = () => {
           <div>
             <h1 className="text-3xl font-bold">Balanço Patrimonial</h1>
             <p className="text-muted-foreground">
-              Posição patrimonial da empresa
+              Posição patrimonial da empresa (dados contábeis)
             </p>
           </div>
           <div className="flex gap-2">
@@ -202,18 +257,56 @@ const BalanceSheet = () => {
           </div>
         </div>
 
-        {/* Alerta sobre balanço */}
-        {Math.abs(totalActive - totalPassive) > 0.01 && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              O balanço está desbalanceado. Diferença: {formatCurrency(Math.abs(totalActive - totalPassive))}
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Filtro de Data */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Período</CardTitle>
+            <CardDescription>Posição patrimonial até a data selecionada</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-4">
+              <div>
+                <Label htmlFor="endDate">Data Base</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <Button onClick={loadBalances} disabled={loading}>
+                Aplicar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Status do Balanço */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {isBalanced ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  Balanço Equilibrado
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  Balanço Desbalanceado
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {isBalanced
+                ? "Ativo = Passivo + Patrimônio Líquido"
+                : `Diferença: ${formatCurrency(Math.abs(totalActive - totalPassivoPL))}`}
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Total Ativo</CardTitle>
@@ -222,23 +315,32 @@ const BalanceSheet = () => {
               <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalActive)}</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Total Passivo + PL</CardTitle>
+              <CardTitle className="text-sm">Total Passivo</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-purple-600">{formatCurrency(totalPassive)}</p>
+              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalPassive)}</p>
             </CardContent>
           </Card>
-          
-          <Card className={Math.abs(totalActive - totalPassive) < 0.01 ? "border-green-500" : "border-red-500"}>
+
+          <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Diferença</CardTitle>
+              <CardTitle className="text-sm">Patrimônio Líquido</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className={`text-2xl font-bold ${Math.abs(totalActive - totalPassive) < 0.01 ? "text-green-600" : "text-red-600"}`}>
-                {formatCurrency(Math.abs(totalActive - totalPassive))}
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPL)}</p>
+            </CardContent>
+          </Card>
+
+          <Card className={isBalanced ? "border-green-500" : "border-red-500"}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Passivo + PL</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-2xl font-bold ${isBalanced ? "text-purple-600" : "text-red-600"}`}>
+                {formatCurrency(totalPassivoPL)}
               </p>
             </CardContent>
           </Card>
@@ -248,24 +350,35 @@ const BalanceSheet = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardContent className="pt-6">
-              {renderAccountsTable(activeAccounts, "ATIVO")}
+              {renderAccountsTable(activeAccounts, "ATIVO", totalActive, "text-blue-600")}
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
-              {renderAccountsTable(passiveAccounts, "PASSIVO + PATRIMÔNIO LÍQUIDO")}
+            <CardContent className="pt-6 space-y-6">
+              {renderAccountsTable(passiveAccounts, "PASSIVO", totalPassive, "text-red-600")}
+
+              <div className="border-t pt-4">
+                {renderAccountsTable(plAccounts, "PATRIMÔNIO LÍQUIDO", totalPL, "text-green-600")}
+              </div>
+
+              {/* Total Passivo + PL */}
+              <div className="border-t-2 border-primary pt-4">
+                <div className="flex justify-between items-center font-bold text-lg bg-primary/10 p-3 rounded">
+                  <span>TOTAL PASSIVO + PL</span>
+                  <span className="text-purple-600">{formatCurrency(totalPassivoPL)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Observação sobre lançamentos */}
+        {/* Observação */}
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Nota:</strong> Os valores refletem os lançamentos contábeis registrados no sistema. 
-            Certifique-se de que todas as receitas estão sendo lançadas nas contas adequadas (contas 3.x) 
-            e não apenas como movimentação de ativo.
+            <strong>Nota:</strong> Os valores refletem os lançamentos contábeis até {new Date(endDate).toLocaleDateString('pt-BR')}.
+            Equação fundamental: <strong>Ativo = Passivo + Patrimônio Líquido</strong>
           </AlertDescription>
         </Alert>
       </div>
