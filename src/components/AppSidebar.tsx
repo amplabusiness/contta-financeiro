@@ -42,7 +42,6 @@ import {
   Clipboard,
   LineChart,
   Heart,
-  Network,
   Calculator,
   Handshake,
 } from "lucide-react";
