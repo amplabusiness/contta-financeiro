@@ -46,9 +46,10 @@ const BalanceSheet = () => {
 
       if (accountsError) throw accountsError;
 
-      // Filtrar contas de Ativo (1.x), Passivo (2.x) e PL (5.x) em JavaScript
+      // Filtrar contas de Ativo (1.x), Passivo (2.x), Receita (3.x), Despesa (4.x) e PL (5.x) em JavaScript
       const accounts = allAccounts?.filter(acc =>
-        acc.code.startsWith('1') || acc.code.startsWith('2') || acc.code.startsWith('5')
+        acc.code.startsWith('1') || acc.code.startsWith('2') ||
+        acc.code.startsWith('3') || acc.code.startsWith('4') || acc.code.startsWith('5')
       ) || [];
 
       // Buscar TODOS os lançamentos contábeis (sem filtro de data na query)
@@ -91,6 +92,8 @@ const BalanceSheet = () => {
       let sumActive = 0;
       let sumPassive = 0;
       let sumPL = 0;
+      let sumReceita = 0;  // Para calcular Resultado do Exercício
+      let sumDespesa = 0;  // Para calcular Resultado do Exercício
 
       accounts?.forEach(account => {
         const primeiroDigito = account.code.charAt(0);
@@ -159,22 +162,55 @@ const BalanceSheet = () => {
           if (!account.is_synthetic && netBalance > 0) {
             sumPL += netBalance;
           }
+        } else if (primeiroDigito === '3') {
+          // Receitas (natureza credora): crédito - débito
+          if (!account.is_synthetic) {
+            sumReceita += balance.credit - balance.debit;
+          }
+        } else if (primeiroDigito === '4') {
+          // Despesas (natureza devedora): débito - crédito
+          if (!account.is_synthetic) {
+            sumDespesa += balance.debit - balance.credit;
+          }
         }
       });
+
+      // Calcular Resultado do Exercício (Receitas - Despesas)
+      const resultadoExercicio = sumReceita - sumDespesa;
+
+      // Adicionar Resultado do Exercício à lista de PL
+      if (resultadoExercicio !== 0) {
+        plList.push({
+          code: '5.1.1',
+          name: 'Resultado do Exercício',
+          type: 'PATRIMONIO_LIQUIDO',
+          is_synthetic: false,
+          debit: 0,
+          credit: resultadoExercicio,
+          balance: resultadoExercicio,
+          level: 3,
+        });
+      }
+
+      // Total de PL inclui Resultado do Exercício
+      const totalPLComResultado = sumPL + resultadoExercicio;
 
       setActiveAccounts(activeList);
       setPassiveAccounts(passiveList);
       setPlAccounts(plList);
       setTotalActive(sumActive);
       setTotalPassive(sumPassive);
-      setTotalPL(sumPL);
+      setTotalPL(totalPLComResultado);
 
-      const totalPassivoPL = sumPassive + sumPL;
+      const totalPassivoPL = sumPassive + totalPLComResultado;
       if (Math.abs(sumActive - totalPassivoPL) > 0.01) {
         toast.warning("Atenção: Balanço desbalanceado!");
       } else {
         toast.success("Balanço patrimonial balanceado!");
       }
+
+      console.log('Resultado do Exercício:', resultadoExercicio);
+      console.log('Total PL com Resultado:', totalPLComResultado);
     } catch (error: any) {
       toast.error("Erro ao carregar balanço: " + error.message);
       console.error(error);
