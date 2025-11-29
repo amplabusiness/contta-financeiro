@@ -1,114 +1,215 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { Button } from "@/components/ui/button";
 
-interface AccountBalance {
+interface DREAccount {
   account_code: string;
   account_name: string;
   total: number;
-  parent_id: string | null;
+  isSynthetic: boolean;
+}
+
+interface DREData {
+  revenueAccounts: DREAccount[];
+  expenseAccounts: DREAccount[];
+  totalRevenue: number;
+  totalExpenses: number;
 }
 
 const DRE = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
-  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [dreData, setDreData] = useState<DREData>({
+    revenueAccounts: [],
+    expenseAccounts: [],
+    totalRevenue: 0,
+    totalExpenses: 0
+  });
 
-  useEffect(() => {
-    loadDREData();
-  }, [selectedYear, selectedMonth]);
-
-  const loadDREData = async () => {
+  const loadDREData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Carregar receitas (honorários pagos)
-      let revenueQuery = supabase
-        .from("invoices")
-        .select("amount")
-        .eq("status", "paid");
 
-      if (selectedYear && selectedMonth) {
-        const monthStr = selectedMonth.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
-        revenueQuery = revenueQuery.eq("competence", competence);
-      } else if (selectedYear) {
-        revenueQuery = revenueQuery.like("competence", `%/${selectedYear}`);
+      // ALERTA PARA DEBUG - REMOVER DEPOIS
+      alert("DRE: Iniciando carregamento - se você vê isso, o código novo está rodando!");
+
+      toast.info("Carregando DRE...");
+
+      // Buscar TODAS as contas ativas (filtrar em JS para evitar problemas com .or())
+      const { data: allAccounts, error: accountsError } = await supabase
+        .from('chart_of_accounts')
+        .select('id, code, name, type, is_synthetic')
+        .eq('is_active', true)
+        .order('code');
+
+      if (accountsError) {
+        toast.error("Erro ao carregar contas: " + accountsError.message);
+        throw accountsError;
       }
 
-      const { data: invoices, error: invoicesError } = await revenueQuery;
-      if (invoicesError) throw invoicesError;
+      toast.info(`Total de contas carregadas: ${allAccounts?.length || 0}`);
 
-      const revenue = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      setTotalRevenue(revenue);
+      // Filtrar contas de receita (3.x) e despesa (4.x) em JavaScript
+      const accounts = allAccounts?.filter(acc =>
+        acc.code.startsWith('3') || acc.code.startsWith('4')
+      ) || [];
 
-      // Carregar despesas com plano de contas - FILTRAR APENAS CONTAS QUE COMEÇAM COM 4 (DESPESAS)
-      let expensesQuery = supabase
-        .from("expenses")
+      toast.info(`Contas 3.x e 4.x: ${accounts.length}`);
+      console.log('DRE - Contas 3.x e 4.x:', accounts);
+
+      if (accounts.length === 0) {
+        toast.warning("Nenhuma conta de receita/despesa encontrada no plano de contas");
+        setDreData({
+          revenueAccounts: [],
+          expenseAccounts: [],
+          totalRevenue: 0,
+          totalExpenses: 0
+        });
+        return;
+      }
+
+      // Construir filtro de data baseado no período selecionado
+      let startDate: string | null = null;
+      let endDate: string | null = null;
+
+      if (selectedYear && selectedMonth) {
+        // Período específico (mês/ano)
+        const year = selectedYear;
+        const month = selectedMonth;
+        startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+        // Último dia do mês
+        const lastDay = new Date(year, month, 0).getDate();
+        endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
+      } else if (selectedYear) {
+        // Ano inteiro
+        startDate = `${selectedYear}-01-01`;
+        endDate = `${selectedYear}-12-31`;
+      }
+
+      toast.info(`Período: ${startDate} a ${endDate}`);
+
+      // Buscar TODOS os lançamentos contábeis (sem filtro na query)
+      const { data: allLines, error: linesError } = await supabase
+        .from('accounting_entry_lines')
         .select(`
-          amount,
+          debit,
+          credit,
           account_id,
-          chart_of_accounts!inner (
-            code,
-            name,
-            parent_id,
-            type
-          )
-        `)
-        .eq("status", "paid");
+          entry_id(entry_date, competence_date)
+        `);
 
-      if (selectedYear && selectedMonth) {
-        const monthStr = selectedMonth.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
-        expensesQuery = expensesQuery.eq("competence", competence);
-      } else if (selectedYear) {
-        expensesQuery = expensesQuery.like("competence", `%/${selectedYear}`);
+      if (linesError) {
+        toast.error("Erro ao carregar lançamentos: " + linesError.message);
+        throw linesError;
       }
 
-      const { data: expenses, error: expensesError } = await expensesQuery;
-      if (expensesError) throw expensesError;
+      toast.info(`Total de linhas: ${allLines?.length || 0}`);
 
-      // Organizar despesas por conta - Filtrar apenas contas que começam com 3 ou 4
-      const balanceMap = new Map<string, AccountBalance>();
-      
-      expenses?.forEach((expense: any) => {
-        if (expense.chart_of_accounts) {
-          const code = expense.chart_of_accounts.code;
-          // Filtrar apenas contas que começam com 3 (receita) ou 4 (despesa)
-          if (code.startsWith('3') || code.startsWith('4')) {
-            const key = code;
-            const existing = balanceMap.get(key);
-            
-            if (existing) {
-              existing.total += Number(expense.amount);
-            } else {
-              balanceMap.set(key, {
-                account_code: code,
-                account_name: expense.chart_of_accounts.name,
-                total: Number(expense.amount),
-                parent_id: expense.chart_of_accounts.parent_id,
-              });
-            }
-          }
-        }
+      // Filtrar por data em JavaScript (usar competence_date se disponível, senão entry_date)
+      const filteredLines = allLines?.filter((line: any) => {
+        if (!startDate || !endDate) return true;
+
+        // Usar competence_date se disponível, senão entry_date
+        const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+        if (!lineDate) return true; // Incluir se não tiver data
+
+        return lineDate >= startDate && lineDate <= endDate;
+      }) || [];
+
+      toast.info(`Linhas no período: ${filteredLines.length}`);
+
+      // Criar mapa de saldos por conta usando linhas filtradas
+      const accountTotals = new Map<string, { debit: number; credit: number }>();
+
+      filteredLines.forEach((line: any) => {
+        const current = accountTotals.get(line.account_id) || { debit: 0, credit: 0 };
+        current.debit += line.debit || 0;
+        current.credit += line.credit || 0;
+        accountTotals.set(line.account_id, current);
       });
 
-      const balances = Array.from(balanceMap.values()).sort((a, b) => 
-        a.account_code.localeCompare(b.account_code)
-      );
+      toast.info(`Contas com movimento: ${accountTotals.size}`);
+      console.log('DRE - Account IDs com movimento:', Array.from(accountTotals.keys()));
+      console.log('DRE - Account IDs das contas 3.x/4.x:', accounts.map(a => a.id));
 
-      setAccountBalances(balances);
-      
-      const totalExp = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-      setTotalExpenses(totalExp);
+      // Processar contas
+      const revenueAccounts: DREAccount[] = [];
+      const expenseAccounts: DREAccount[] = [];
+
+      for (const account of accounts) {
+        let totalDebito = 0;
+        let totalCredito = 0;
+
+        if (account.is_synthetic) {
+          // Para contas sintéticas, somar os valores das contas filhas
+          const childAccounts = accounts.filter(a =>
+            a.code.startsWith(account.code + '.') && !a.is_synthetic
+          );
+
+          childAccounts.forEach(child => {
+            const childTotals = accountTotals.get(child.id);
+            if (childTotals) {
+              totalDebito += childTotals.debit;
+              totalCredito += childTotals.credit;
+            }
+          });
+        } else {
+          // Para contas analíticas, usar os valores diretos
+          const accountTotal = accountTotals.get(account.id);
+          if (accountTotal) {
+            totalDebito = accountTotal.debit;
+            totalCredito = accountTotal.credit;
+          }
+        }
+
+        // Pular contas sem movimento
+        if (totalDebito === 0 && totalCredito === 0) {
+          continue;
+        }
+
+        const isRevenue = account.code.startsWith('3');
+
+        // Para DRE:
+        // Receita (3.x): natureza credora - valor = crédito - débito
+        // Despesa (4.x): natureza devedora - valor = débito - crédito
+        const total = isRevenue
+          ? totalCredito - totalDebito  // Receita: crédito aumenta, débito diminui
+          : totalDebito - totalCredito; // Despesa: débito aumenta, crédito diminui
+
+        const dreAccount: DREAccount = {
+          account_code: account.code,
+          account_name: account.name,
+          total: Math.abs(total), // Sempre positivo para exibição
+          isSynthetic: account.is_synthetic
+        };
+
+        if (isRevenue) {
+          revenueAccounts.push(dreAccount);
+        } else {
+          expenseAccounts.push(dreAccount);
+        }
+      }
+
+      // Calcular totais usando apenas contas analíticas
+      const analyticalRevenue = revenueAccounts.filter(a => !a.isSynthetic);
+      const analyticalExpenses = expenseAccounts.filter(a => !a.isSynthetic);
+
+      const totalRevenue = analyticalRevenue.reduce((sum, acc) => sum + acc.total, 0);
+      const totalExpenses = analyticalExpenses.reduce((sum, acc) => sum + acc.total, 0);
+
+      setDreData({
+        revenueAccounts,
+        expenseAccounts,
+        totalRevenue,
+        totalExpenses
+      });
 
     } catch (error: any) {
       toast.error("Erro ao carregar dados da DRE");
@@ -116,27 +217,73 @@ const DRE = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth]);
 
-  const netResult = totalRevenue - totalExpenses;
+  useEffect(() => {
+    loadDREData();
+  }, [loadDREData]);
+
+  const netResult = dreData.totalRevenue - dreData.totalExpenses;
   const isProfit = netResult >= 0;
 
   const getIndentLevel = (code: string) => {
     return code.split('.').length - 1;
   };
 
+  const renderAccountList = (accounts: DREAccount[], isExpense: boolean) => {
+    if (accounts.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-8">
+          Nenhum lançamento no período selecionado
+        </p>
+      );
+    }
+
+    return (
+      <>
+        {accounts.map((account) => {
+          const indent = getIndentLevel(account.account_code);
+          const isParent = account.isSynthetic;
+
+          return (
+            <div
+              key={account.account_code}
+              className={`flex justify-between items-center py-2 ${
+                isParent ? 'font-semibold bg-muted/50 px-3 rounded mt-2' : 'pl-3'
+              }`}
+              style={{ paddingLeft: `${indent * 1.5 + 0.75}rem` }}
+            >
+              <span className={isParent ? 'text-base' : 'text-sm'}>
+                {account.account_code} - {account.account_name}
+              </span>
+              <span className={`${isParent ? 'font-bold' : 'font-medium'} ${isExpense ? 'text-destructive' : 'text-success'}`}>
+                {formatCurrency(account.total)}
+              </span>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">DRE - Demonstração do Resultado do Exercício</h1>
-          <p className="text-muted-foreground">Análise de receitas, despesas e resultado líquido</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">DRE - Demonstração do Resultado do Exercício</h1>
+            <p className="text-muted-foreground">Análise de receitas, despesas e resultado líquido (dados contábeis)</p>
+          </div>
+          <Button onClick={loadDREData} disabled={loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Filtros</CardTitle>
-            <CardDescription>Selecione o período para análise</CardDescription>
+            <CardDescription>Selecione o período para análise (baseado em competence_date)</CardDescription>
           </CardHeader>
           <CardContent>
             <PeriodFilter />
@@ -155,13 +302,13 @@ const DRE = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-                  <span className="font-semibold text-lg">Receitas Totais (Honorários)</span>
-                  <span className="text-xl font-bold text-success">{formatCurrency(totalRevenue)}</span>
+                  <span className="font-semibold text-lg">Receitas Totais</span>
+                  <span className="text-xl font-bold text-success">{formatCurrency(dreData.totalRevenue)}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
                   <span className="font-semibold text-lg">Despesas Totais</span>
-                  <span className="text-xl font-bold text-destructive">({formatCurrency(totalExpenses)})</span>
+                  <span className="text-xl font-bold text-destructive">({formatCurrency(dreData.totalExpenses)})</span>
                 </div>
 
                 <div className={`flex justify-between items-center p-6 rounded-lg ${isProfit ? 'bg-success/10' : 'bg-destructive/10'}`}>
@@ -174,7 +321,7 @@ const DRE = () => {
                     <span className="font-bold text-xl">Resultado Líquido</span>
                   </div>
                   <span className={`text-2xl font-bold ${isProfit ? 'text-success' : 'text-destructive'}`}>
-                    {formatCurrency(Math.abs(netResult))}
+                    {isProfit ? '' : '-'}{formatCurrency(Math.abs(netResult))}
                   </span>
                 </div>
               </CardContent>
@@ -183,16 +330,14 @@ const DRE = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Detalhamento de Receitas</CardTitle>
+                <CardDescription>Contas do grupo 3 - Receitas</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center py-3 border-b">
-                    <span className="font-medium">Honorários de Clientes</span>
-                    <span className="font-bold text-success">{formatCurrency(totalRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 font-bold bg-success/5 px-4 rounded">
+                <div className="space-y-1">
+                  {renderAccountList(dreData.revenueAccounts, false)}
+                  <div className="flex justify-between items-center py-3 mt-4 font-bold bg-success/5 px-4 rounded">
                     <span>Total de Receitas</span>
-                    <span className="text-success">{formatCurrency(totalRevenue)}</span>
+                    <span className="text-success">{formatCurrency(dreData.totalRevenue)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -201,43 +346,15 @@ const DRE = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Detalhamento de Despesas</CardTitle>
-                <CardDescription>Organizadas por plano de contas</CardDescription>
+                <CardDescription>Contas do grupo 4 - Despesas</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  {accountBalances.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhuma despesa no período selecionado
-                    </p>
-                  ) : (
-                    <>
-                      {accountBalances.map((balance) => {
-                        const indent = getIndentLevel(balance.account_code);
-                        const isParent = balance.account_code.split('.').length <= 2;
-                        
-                        return (
-                          <div
-                            key={balance.account_code}
-                            className={`flex justify-between items-center py-2 ${
-                              isParent ? 'font-semibold bg-muted/50 px-3 rounded mt-2' : 'pl-3'
-                            }`}
-                            style={{ paddingLeft: `${indent * 1.5 + 0.75}rem` }}
-                          >
-                            <span className={isParent ? 'text-base' : 'text-sm'}>
-                              {balance.account_code} - {balance.account_name}
-                            </span>
-                            <span className={`${isParent ? 'font-bold' : 'font-medium'} text-destructive`}>
-                              {formatCurrency(balance.total)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                      <div className="flex justify-between items-center py-3 mt-4 font-bold bg-destructive/5 px-4 rounded">
-                        <span>Total de Despesas</span>
-                        <span className="text-destructive">({formatCurrency(totalExpenses)})</span>
-                      </div>
-                    </>
-                  )}
+                  {renderAccountList(dreData.expenseAccounts, true)}
+                  <div className="flex justify-between items-center py-3 mt-4 font-bold bg-destructive/5 px-4 rounded">
+                    <span>Total de Despesas</span>
+                    <span className="text-destructive">({formatCurrency(dreData.totalExpenses)})</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -262,11 +379,11 @@ const DRE = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-lg">
                     <span>Receitas Totais</span>
-                    <span className="text-success font-semibold">{formatCurrency(totalRevenue)}</span>
+                    <span className="text-success font-semibold">{formatCurrency(dreData.totalRevenue)}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg">
                     <span>(-) Despesas Totais</span>
-                    <span className="text-destructive font-semibold">({formatCurrency(totalExpenses)})</span>
+                    <span className="text-destructive font-semibold">({formatCurrency(dreData.totalExpenses)})</span>
                   </div>
                   <div className="border-t-2 pt-3 mt-3">
                     <div className="flex justify-between items-center">

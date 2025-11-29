@@ -111,9 +111,21 @@ const Balancete = () => {
         }
 
         // Determinar natureza baseada no CÓDIGO da conta (não no tipo)
-        // 1 = Ativo (devedora), 2 = Passivo (credora), 3 = Receita (credora), 4 = Despesa (devedora)
+        // 1 = Ativo (devedora), 2 = Passivo (credora), 3 = Receita (credora), 4 = Despesa (devedora), 5 = PL
         const primeiroDigito = account.code.charAt(0)
         const isDevedora = ['1', '4'].includes(primeiroDigito) // Ativo e Despesa
+
+        // Inferir tipo da conta baseado no código se não estiver definido
+        const tipoInferido = account.type || (() => {
+          switch (primeiroDigito) {
+            case '1': return 'ATIVO'
+            case '2': return 'PASSIVO'
+            case '3': return 'RECEITA'
+            case '4': return 'DESPESA'
+            case '5': return 'PATRIMONIO_LIQUIDO'
+            default: return 'OUTROS'
+          }
+        })()
 
         // Saldo é sempre débito - crédito
         // Para contas devedoras: positivo = saldo devedor
@@ -123,7 +135,7 @@ const Balancete = () => {
         balanceteData.push({
           codigo_conta: account.code,
           nome_conta: account.name,
-          tipo_conta: account.type,
+          tipo_conta: tipoInferido,
           total_debito: totalDebito,
           total_credito: totalCredito,
           saldo: saldo,

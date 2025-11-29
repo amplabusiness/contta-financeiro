@@ -39,9 +39,10 @@ const LivroRazao = () => {
 
   useEffect(() => {
     loadAccounts()
+    // Usar o ano inteiro por padrão
     const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
   }, [])
@@ -323,7 +324,13 @@ const LivroRazao = () => {
             <CardDescription>{entries.length} movimento(s) no período</CardDescription>
           </CardHeader>
           <CardContent>
-            {entries.length > 0 ? (
+            {!selectedAccount ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Book className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">Selecione uma conta contábil</p>
+                <p className="text-sm">Use o filtro acima para escolher a conta que deseja visualizar</p>
+              </div>
+            ) : entries.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -339,7 +346,7 @@ const LivroRazao = () => {
                   {entries.map((entry, idx) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        {entry.numero_lancamento !== '-' 
+                        {entry.numero_lancamento !== '-'
                           ? new Date(entry.data_lancamento).toLocaleDateString('pt-BR')
                           : '-'}
                       </TableCell>

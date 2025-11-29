@@ -1,15 +1,33 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-29 (Sessão 3 - Fix Triggers Contábeis)
+2025-11-29 (Sessão 4 - Fix Balancete + Context7 MCP)
 
 ## ✅ Trabalho Concluído Nesta Sessão
 
-### 1. Fix Triggers Contábeis Automáticos
+### 1. Fix Cálculo do Balancete (Saldo Devedor/Credor)
+- [x] Identificado problema: Total Saldo Devedor somava débito + crédito (R$ 209.566,44 ao invés de R$ 104.783,22)
+- [x] Adicionado campo `isSynthetic` para identificar contas sintéticas
+- [x] Corrigido cálculo: `saldo = totalDebito - totalCredito` (sempre)
+- [x] Filtrado totais para usar apenas contas analíticas (evita duplicação)
+- [x] Adicionada inferência de tipo por prefixo do código (1=Ativo, 2=Passivo, 3=Receita, 4=Despesa, 5=PL)
+- [x] Corrigido agrupamento que mostrava "null" ao invés do tipo da conta
+
+### 2. Configuração Context7 MCP
+- [x] Configurado MCP server Context7 em `/root/.claude/settings.json`
+- [x] Criado `.env` com CONTEXT7_API_KEY
+- [x] API Key: `ctx7sk-1830c450-44b8-4e4a-b92c-883bac1ee356`
+
+### 3. Fix Triggers Contábeis Automáticos (sessão anterior)
 - [x] Identificado problema: triggers criavam entries sem linhas débito/crédito
 - [x] Criada migration `20251129000000_remove_automatic_accounting_triggers.sql`
 - [x] Migration remove 4 triggers problemáticos e limpa entries órfãos
 - [x] Documentado problema e solução em MEMORY.md
+
+### 4. Problema DRE Identificado (pendente)
+- [ ] DRE mostra R$ 0,00 porque usa `invoices.status='paid'`
+- [ ] Balancete usa `accounting_entry_lines` (fonte correta)
+- [ ] DRE precisa ser refatorado para usar dados contábeis
 
 ### Sessão Anterior - Configuração de Ambiente
 - [x] Verificado `.gitignore` - `.env` está protegido
@@ -68,14 +86,19 @@
 4. Adicionar `tenant_id` nas tabelas existentes
 5. Criar tenant padrão para dados existentes
 
-## Arquivos Modificados Nesta Sessão
+## Arquivos Modificados Nesta Sessão (Sessão 4)
+- `src/pages/Balancete.tsx` (fix cálculo saldo devedor/credor)
+- `/root/.claude/settings.json` (Context7 MCP config)
+- `.env` (CONTEXT7_API_KEY)
+- `.claude/CONTEXT.md` (atualizado)
+- `.claude/MEMORY.md` (atualizado)
+
+### Sessões Anteriores
+- `supabase/migrations/20251129000000_remove_automatic_accounting_triggers.sql` (criado)
 - `supabase/migrations/20251128_saas_architecture_foundation.sql` (corrigido)
 - `supabase/migrations/20251128000000_add_clients_notes_column.sql` (corrigido)
 - `supabase/migrations/20251120000200_grant_rpc_permissions.sql` (renomeado)
 - `supabase/migrations/20251120000300_create_super_conciliador_functions.sql` (renomeado)
-- `.claude/ROADMAP.md` (atualizado)
-- `.claude/CONTEXT.md` (atualizado)
-- `.claude/MEMORY.md` (atualizado)
 
 ## Comandos Úteis
 ```bash
