@@ -50,6 +50,16 @@ const DEFAULT_CHART_STRUCTURE = {
   '4.1.3': { name: 'Despesas Financeiras', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
   '4.1.3.01': { name: 'Juros e Multas', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
   '4.1.3.02': { name: 'Tarifas Bancárias', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+
+  // PATRIMÔNIO LÍQUIDO
+  '5': { name: 'PATRIMÔNIO LÍQUIDO', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 1, is_analytical: false },
+  '5.1': { name: 'CAPITAL SOCIAL', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 2, is_analytical: false },
+  '5.1.1': { name: 'Capital Integralizado', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 3, is_analytical: false },
+  '5.1.1.01': { name: 'Capital Social', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
+  '5.2': { name: 'LUCROS OU PREJUÍZOS ACUMULADOS', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 2, is_analytical: false },
+  '5.2.1': { name: 'Resultados Acumulados', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 3, is_analytical: false },
+  '5.2.1.01': { name: 'Lucros Acumulados', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
+  '5.2.1.02': { name: 'Saldos de Abertura', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
 };
 
 serve(async (req) => {
@@ -642,8 +652,7 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
   let entryDescription: string;
 
   switch (entry_type) {
-    case 'receita_honorarios':
-    case 'saldo_abertura': {
+    case 'receita_honorarios': {
       // Débito: Conta do Cliente (Clientes a Receber)
       // Crédito: Receita de Honorários
 
@@ -662,9 +671,32 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
         throw new Error('Conta de receita não encontrada');
       }
       creditAccountId = revenueAccount.id;
-      entryDescription = entry_type === 'saldo_abertura'
-        ? `Saldo de Abertura: ${description}`
-        : `Provisionamento: ${description}`;
+      entryDescription = `Provisionamento: ${description}`;
+      break;
+    }
+
+    case 'saldo_abertura': {
+      // Saldo de Abertura: NÃO é receita do período atual!
+      // Débito: Conta do Cliente (Clientes a Receber) - Ativo
+      // Crédito: Saldos de Abertura (5.2.1.02) - Patrimônio Líquido
+      // Isso representa um ativo que já existia, cuja receita foi reconhecida em período anterior
+
+      // Criar/buscar conta específica do cliente
+      const clientAccountOB = await ensureClientAccount(supabase, userId, client_id, client_name);
+      debitAccountId = clientAccountOB.id;
+
+      // Garantir que a conta de Saldos de Abertura existe
+      const openingBalanceAccount = await ensureAccountExists(
+        supabase,
+        userId,
+        '5.2.1.02',
+        'Saldos de Abertura',
+        'PATRIMONIO_LIQUIDO',
+        true,
+        '5.2.1'
+      );
+      creditAccountId = openingBalanceAccount.id;
+      entryDescription = `Saldo de Abertura: ${description}`;
       break;
     }
 

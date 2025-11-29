@@ -64,6 +64,8 @@ import ImportHonorarios from "./pages/ImportHonorarios";
 import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import AIAccountant from "./pages/AIAccountant";
+import BusinessManager from "./pages/BusinessManager";
+import AINetwork from "./pages/AINetwork";
 import GenerateRecurringInvoices from "./pages/GenerateRecurringInvoices";
 import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
@@ -76,7 +78,6 @@ import ClientComparisonVerification from "./pages/ClientComparisonVerification";
 import ClientSpreadsheetVerification from "./pages/ClientSpreadsheetVerification";
 import ClientOpeningBalance from "./pages/ClientOpeningBalance";
 import BankFolderImport from "./pages/BankFolderImport";
-import SmartAccounting from "./pages/SmartAccounting";
 import SuperConciliador from "./pages/SuperConciliador";
 import FeeAdjustment from "./pages/FeeAdjustment";
 import DebtNegotiation from "./pages/DebtNegotiation";
@@ -155,6 +156,8 @@ const App = () => (
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/ai-accountant" element={<AIAccountant />} />
+            <Route path="/business-manager" element={<BusinessManager />} />
+            <Route path="/ai-network" element={<AINetwork />} />
             <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
             <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
             <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
@@ -165,7 +168,6 @@ const App = () => (
           <Route path="/client-spreadsheet-verification" element={<ClientSpreadsheetVerification />} />
           <Route path="/client-opening-balance" element={<ClientOpeningBalance />} />
           <Route path="/bank-folder-import" element={<BankFolderImport />} />
-          <Route path="/smart-accounting" element={<SmartAccounting />} />
           <Route path="/super-conciliador" element={<SuperConciliador />} />
           <Route path="/initial-load" element={<InitialLoad />} />
             <Route path="/settings" element={<Settings />} />

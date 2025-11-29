@@ -91,6 +91,22 @@ supabase/
 3. Sistema cria reconciliação e lançamentos contábeis
 4. Atualiza status dos honorários para 'paid'
 
+### 6. Automação Contábil (Contabilidade-First)
+**Filosofia**: Tudo nasce na contabilidade e distribui para as telas
+**Fluxo Contábil**: Diário → Razão → Balancete → DRE → Balanço Patrimonial
+
+**Trigger automático para faturas**:
+- Trigger: `trg_auto_accounting_invoice` (AFTER INSERT on invoices)
+- Função: `create_invoice_accounting_entry()`
+- Cria automaticamente:
+  1. Lançamento em `accounting_entries`
+  2. Linhas em `accounting_entry_lines` (D: Cliente, C: Receita)
+  3. Entrada em `client_ledger`
+- Skip automático para `source='opening_balance'` (usa conta PL 5.2.1.02)
+
+**Função para processar faturas existentes**:
+- `process_invoices_without_accounting()` - processa em lotes de 500
+
 ## Edge Functions Principais
 
 | Função | Propósito |
@@ -98,8 +114,146 @@ supabase/
 | `smart-reconciliation` | Sugestões de match com IA |
 | `smart-accounting` | Lançamentos contábeis inteligentes |
 | `create-accounting-entry` | Criação de lançamentos |
-| `ai-accountant` | IA para consultas contábeis |
 | `client-enrichment` | Enriquecimento via ReceitaWS |
+
+## Ecossistema de IA (21 Edge Functions)
+
+### Agentes Contábeis
+| Função | Propósito |
+|--------|-----------|
+| `ai-accountant-agent` | Agente contador para análises contábeis |
+| `ai-accountant-background` | Validação automática de lançamentos em background |
+| `ai-accounting-validator` | Validação de conformidade contábil |
+| `ai-expense-classifier` | Classificação automática de despesas |
+| `ai-invoice-classifier` | Classificação de faturas |
+
+### Agentes Financeiros
+| Função | Propósito |
+|--------|-----------|
+| `ai-financial-analyst` | Análise financeira avançada |
+| `ai-cash-flow-analyst` | Análise e projeção de fluxo de caixa |
+| `ai-revenue-predictor` | Previsão de receitas |
+| `ai-pricing-optimizer` | Otimização de precificação |
+
+### Agentes de Cobrança e Clientes
+| Função | Propósito |
+|--------|-----------|
+| `ai-collection-agent` | Automação de cobrança |
+| `ai-churn-predictor` | Previsão de cancelamento de clientes |
+| `ai-client-segmenter` | Segmentação inteligente de clientes |
+| `ai-partner-analyzer` | Análise de parceiros |
+
+### Agentes de Conciliação
+| Função | Propósito |
+|--------|-----------|
+| `ai-reconciliation-agent` | Conciliação bancária automática |
+| `ai-pix-reconciliation` | Conciliação específica de PIX |
+
+### Agentes de Segurança
+| Função | Propósito |
+|--------|-----------|
+| `ai-fraud-detector` | Detecção de fraudes |
+| `ai-fraud-analyzer` | Análise aprofundada de fraudes |
+
+### Agentes de Comunicação
+| Função | Propósito |
+|--------|-----------|
+| `ai-chatbot` | Chatbot para atendimento |
+| `ai-email-composer` | Composição de e-mails |
+| `ai-contract-generator` | Geração de contratos |
+
+### Gestão Empresarial
+| Função | Propósito |
+|--------|-----------|
+| `ai-business-manager` | **Gestor Empresarial IA** - análises MBA, benchmarks, anomalias |
+
+## Páginas de IA
+
+| Página | Rota | Descrição |
+|--------|------|-----------|
+| `AIAccountant.tsx` | `/ai-accountant` | Contador IA interativo |
+| `AIAgents.tsx` | `/ai-agents` | Painel de agentes de IA |
+| `AIInsights.tsx` | `/ai-insights` | Insights automáticos da IA |
+| `BusinessManager.tsx` | `/business-manager` | Gestor Empresarial IA (MBA) |
+
+## Sistema de IA Autônoma
+
+### Contador IA Automático (Background)
+**Filosofia**: "O humano só vê a magia acontecer"
+
+**Componentes**:
+1. **Tabela `ai_validation_queue`** - Fila de lançamentos para validação
+2. **Tabela `ai_accountant_activity`** - Log de atividades do Contador IA
+3. **Colunas em `accounting_entries`**:
+   - `ai_validated` - Se foi validado
+   - `ai_validation_status` - pending/validating/approved/warning/rejected
+   - `ai_validation_score` - Score 0-100
+   - `ai_confidence` - Nível de confiança (0.0-1.0)
+   - `ai_model` - Modelo usado (gemini-2.5-flash)
+   - `ai_generated` - Se foi gerado pela IA
+
+**Funções PostgreSQL**:
+- `queue_entry_for_ai_validation(entry_id, priority)` - Adiciona na fila
+- `get_next_validation_item()` - Pega próximo item (SKIP LOCKED)
+- `complete_ai_validation(queue_id, status, score, confidence, message, model)` - Completa validação
+- `fail_ai_validation(queue_id, error_message)` - Marca como falha
+- `log_ai_accountant_activity(...)` - Registra atividade
+
+**Trigger automático**: `trg_queue_new_entry` - Adiciona novos lançamentos na fila automaticamente
+
+**Widget React**: `AIAccountantWidget.tsx` - Mostra atividade em tempo real no dashboard
+
+### Gestor Empresarial IA (MBA-Trained)
+**Formação de Elite**:
+- MBA Harvard Business School (Finance)
+- MBA Wharton School (Operations)
+- Certificação INSEAD (Strategy)
+- CFA Level III (Investment Analysis)
+- Six Sigma Black Belt
+
+**Metodologias**:
+- Balanced Scorecard (Kaplan & Norton)
+- OKRs (Objectives and Key Results)
+- Zero-Based Budgeting (ZBB)
+- Six Sigma DMAIC
+- Lean Management
+- Porter's Five Forces
+- BCG Matrix
+
+**Benchmarks do Setor Contábil**:
+| Categoria | % Receita | Limite Crítico |
+|-----------|-----------|----------------|
+| Folha de pagamento | 40-50% | >55% = ALERTA |
+| Aluguel | 5-10% | >12% = ALERTA |
+| Material de consumo | 1-2% | >3% = ALERTA |
+| Software/TI | 3-5% | >7% = ALERTA |
+| Marketing | 2-5% | >8% = ALERTA |
+| Energia | 1-2% | >2.5% = ALERTA |
+
+**Detecção de Anomalias**:
+- Café: máx 0.5kg/funcionário/mês (20kg para 3 funcionários = ANOMALIA)
+- Papel A4: máx 1 resma/funcionário/mês (sem impressora = ANOMALIA)
+- Energia: pico 20% > média = investigar
+
+**Gestão de Inadimplência**:
+| Atraso | Ação | Canal |
+|--------|------|-------|
+| D+1 | Lembrete | E-mail |
+| D+7 | Cobrança amigável | WhatsApp |
+| D+15 | Contato telefônico | Telefone |
+| D+30 | Negociação | Reunião |
+| D+60 | Suspensão + Jurídico | Formal |
+
+**Ações disponíveis**:
+- `analyze_receivables` - Análise de inadimplência
+- `analyze_payables` - Análise de fluxo de pagamentos
+- `expense_anomaly` - Detecção de anomalias em despesas
+- `reduce_delinquency` - Estratégias para reduzir inadimplência
+- `full_diagnostic` - Diagnóstico empresarial completo
+- `calculate_indicators` - Indicadores de performance
+- `closing_analysis` - Análise de fechamento contábil
+
+**Página React**: `BusinessManager.tsx` - Interface do Gestor Empresarial com cards de análises
 
 ## Views Materializadas (CQRS)
 
@@ -224,12 +378,100 @@ serve(async (req) => {
 3. Totais filtram apenas contas analíticas: `entries.filter(entry => !entry.isSynthetic)`
 4. Inferência de tipo por prefixo: 1=ATIVO, 2=PASSIVO, 3=RECEITA, 4=DESPESA, 5=PL
 
-#### 4.8 DRE mostrando R$ 0,00 (29/11/2025 - PENDENTE)
-**Causa**: DRE usa `invoices.status='paid'` para receitas, mas os honorários não estão marcados como pagos
+#### 4.8 DRE mostrando R$ 0,00 (29/11/2025 - RESOLVIDO)
+**Causa**: DRE usava `invoices.status='paid'` para receitas, mas os honorários não estavam marcados como pagos
 **Diferença**:
 - Balancete usa `accounting_entry_lines` (fonte correta - dados contábeis)
-- DRE usa `invoices` (fonte incorreta - dados operacionais)
-**Solução pendente**: Refatorar DRE para usar `accounting_entry_lines` como fonte de dados
+- DRE usava `invoices` (fonte incorreta - dados operacionais)
+**Solução implementada**: Refatorado DRE para usar `accounting_entry_lines` como fonte de dados
+- Buscar todas as contas e filtrar 3.x/4.x em JavaScript
+- Buscar todos os lançamentos e filtrar por data em JavaScript
+- DRE agora mostra corretamente R$ 79.188,97 em receitas
+
+#### 4.9 Supabase `.or()` e `!inner` não funcionam corretamente (29/11/2025)
+**Problema identificado**: Filtros Supabase não retornavam resultados esperados
+**Exemplos que falharam**:
+```javascript
+// NÃO FUNCIONA corretamente:
+.or('code.like.3%,code.like.4%')
+.select('entry_id!inner(entry_date, competence_date)')
+.gte('entry_id.competence_date', startDate)
+```
+**Solução definitiva**: Buscar TODOS os dados e filtrar em JavaScript
+```javascript
+// FUNCIONA corretamente:
+const { data: allAccounts } = await supabase.from('chart_of_accounts').select('*');
+const accounts = allAccounts?.filter(acc =>
+  acc.code.startsWith('3') || acc.code.startsWith('4')
+) || [];
+
+const { data: allLines } = await supabase.from('accounting_entry_lines').select('*');
+const filteredLines = allLines?.filter(line => {
+  const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+  return lineDate >= startDate && lineDate <= endDate;
+}) || [];
+```
+**Arquivos afetados**: DRE.tsx, BalanceSheet.tsx
+**Lição**: Para filtros complexos (OR, datas em joins, nulls), preferir filtrar em JavaScript
+
+#### 4.10 Saldo de Abertura aparecendo na DRE (29/11/2025 - RESOLVIDO)
+**Causa**: `smart-accounting` tratava `saldo_abertura` igual a `receita_honorarios`, creditando Receita (3.1.1.01)
+**Problema contábil**:
+- Saldo de abertura representa um ATIVO que já existia de período anterior
+- A receita já foi reconhecida no período anterior
+- Creditar Receita novamente = duplicação de receita na DRE
+
+**Lançamento ERRADO (antes)**:
+| | Conta | Valor |
+|---|---|---|
+| D | Clientes a Receber (1.1.2.01.xxx) | R$ X |
+| C | Honorários Contábeis (3.1.1.01) | R$ X | ← ERRADO!
+
+**Lançamento CORRETO (agora)**:
+| | Conta | Valor |
+|---|---|---|
+| D | Clientes a Receber (1.1.2.01.xxx) | R$ X |
+| C | Saldos de Abertura (5.2.1.02) | R$ X | ← PL, não Receita!
+
+**Solução implementada**:
+1. Adicionadas contas de Patrimônio Líquido (5.x) ao plano de contas padrão
+2. Separado case `saldo_abertura` de `receita_honorarios` na edge function
+3. Criada migration `20251129100000_fix_opening_balance_to_pl.sql` para corrigir entries existentes
+
+**Arquivos afetados**:
+- `supabase/functions/smart-accounting/index.ts`
+- `supabase/migrations/20251129100000_fix_opening_balance_to_pl.sql`
+
+**Lição**: Saldo de abertura é um ATIVO pré-existente, não receita do período atual
+
+#### 4.11 Balanço Patrimonial desbalanceado (29/11/2025 - RESOLVIDO)
+**Causa**: Balanço não incluía "Resultado do Exercício" na seção de Patrimônio Líquido
+**Problema**: Ativo = R$ X, Passivo + PL = R$ Y (diferença de R$ 130.563,90)
+**Solução**: Adicionada seção "Resultado do Exercício" no PL que busca da DRE
+**Arquivo afetado**: `src/pages/BalanceSheet.tsx`
+**Lição**: Resultado do Exercício (Receitas - Despesas) faz parte do PL até ser distribuído
+
+## Novas Funcionalidades (29/11/2025)
+
+### Contador IA Automático
+**Migrations**:
+- `20251129120000_ai_accountant_automation.sql` - Base do sistema
+- `20251129130000_ai_validation_queue.sql` - Sistema de fila
+
+**Edge Functions**:
+- `ai-accountant-background/index.ts` - Processamento em background
+
+**Componentes**:
+- `AIAccountantWidget.tsx` - Widget no dashboard
+
+### Gestor Empresarial IA (MBA)
+**Edge Functions**:
+- `ai-business-manager/index.ts` - Análises empresariais
+
+**Páginas**:
+- `BusinessManager.tsx` - Interface do Gestor
+
+**Rotas**: `/business-manager` (menu: Gestor IA)
 
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md

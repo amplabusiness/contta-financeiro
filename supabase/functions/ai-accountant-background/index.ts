@@ -1,382 +1,331 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * AI Accountant Background Processor
- *
- * Esta Edge Function processa lançamentos contábeis em background:
- * - Valida lançamentos na fila de validação
- * - Processa faturas sem contabilização
- * - Executa validações em lote
- *
- * Actions:
- * - process_validation_queue: Processa N itens da fila de validação
- * - validate_batch: Valida lançamentos específicos
- * - process_invoices: Processa faturas sem contabilidade
- * - stats: Retorna estatísticas de validação
- */
+// Regras contábeis para o Contador IA
+const ACCOUNTING_RULES = `
+REGRAS CONTÁBEIS BRASILEIRAS (NBC/CFC):
 
-interface BackgroundRequest {
-  action: 'process_validation_queue' | 'validate_batch' | 'process_invoices' | 'stats' | 'health';
-  batch_size?: number;
-  entry_ids?: string[];
-  competence?: string; // formato YYYY-MM para process_invoices
+1. SALDO DE ABERTURA (início do exercício):
+   - Débito: Clientes a Receber (1.1.2.x)
+   - Crédito: Patrimônio Líquido (5.x)
+   - Depois zera contas de resultado (fecha 3.x e 4.x para PL)
+
+2. PROVISIONAMENTO DE RECEITA (lançamentos mensais):
+   - Débito: Clientes a Receber (1.1.2.x)
+   - Crédito: Receita de Honorários (3.1.1.x)
+   - Regime de competência - reconhece quando ganha
+
+3. DESPESAS RECORRENTES PROVISIONADAS:
+   - Débito: Despesas (4.x)
+   - Crédito: Contas a Pagar / Passivo (2.x)
+   - Reconhece quando incorre, não quando paga
+
+4. PARTIDAS DOBRADAS:
+   - Total Débito DEVE SER IGUAL Total Crédito
+   - Cada lançamento afeta no mínimo 2 contas
+
+5. NATUREZA DAS CONTAS:
+   - Ativo (1.x): Natureza devedora - aumenta com débito
+   - Passivo (2.x): Natureza credora - aumenta com crédito
+   - Receita (3.x): Natureza credora - aumenta com crédito
+   - Despesa (4.x): Natureza devedora - aumenta com débito
+   - PL (5.x): Natureza credora - aumenta com crédito
+
+6. EQUAÇÃO PATRIMONIAL:
+   Ativo = Passivo + Patrimônio Líquido + Resultado do Exercício
+`;
+
+interface AccountingEntry {
+  id: string;
+  entry_date: string;
+  description: string;
+  entry_type: string;
+  lines: Array<{
+    account_code: string;
+    account_name: string;
+    debit_amount: number;
+    credit_amount: number;
+  }>;
 }
 
-// NBC Knowledge para validação
-const NBC_VALIDATION_PROMPT = `Você é um auditor contábil CRC brasileiro especialista em NBC.
-
-## VALIDAÇÕES OBRIGATÓRIAS:
-
-1. **PARTIDAS DOBRADAS** - CRÍTICO
-   - SOMA DÉBITOS = SOMA CRÉDITOS (obrigatório)
-   - Cada linha tem APENAS débito OU crédito (nunca ambos)
-   - Mínimo 2 linhas por lançamento
-
-2. **CONTAS ANALÍTICAS**
-   - Lançamentos APENAS em contas analíticas (folha)
-   - Contas sintéticas (grupos) NÃO recebem lançamentos
-
-3. **REGIME DE COMPETÊNCIA**
-   - Receitas e despesas reconhecidas no período de ocorrência
-   - Independente de recebimento/pagamento
-
-4. **CLASSIFICAÇÃO CONTÁBIL**
-   - Débito: aumenta Ativo/Despesa, diminui Passivo/PL/Receita
-   - Crédito: aumenta Passivo/PL/Receita, diminui Ativo/Despesa
-
-5. **HISTÓRICO**
-   - Deve ser claro, objetivo e identificar a operação
-
-Retorne JSON com:
-{
-  "result": "valid" | "invalid" | "warning",
-  "confidence": 0.0-1.0,
-  "issues": ["lista de problemas encontrados"],
-  "suggestions": ["sugestões de correção"],
-  "nbc_references": ["NBC aplicáveis"]
-}`;
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const startTime = Date.now();
-
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY not configured');
+    console.log("🤖 Contador IA Background - Iniciando validação automática...");
+
+    // Buscar lançamentos pendentes
+    const { data: pendingEntries, error: fetchError } = await supabase
+      .from("accounting_entries")
+      .select(`
+        id,
+        entry_date,
+        description,
+        entry_type,
+        accounting_entry_lines (
+          id,
+          account_id,
+          debit_amount,
+          credit_amount,
+          chart_of_accounts (
+            code,
+            name,
+            type
+          )
+        )
+      `)
+      .eq("ai_validation_status", "pending")
+      .limit(5); // Processar 5 por vez para não sobrecarregar
+
+    if (fetchError) {
+      throw new Error(`Erro ao buscar lançamentos: ${fetchError.message}`);
     }
 
-    // Usar service role para background processing
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (!pendingEntries || pendingEntries.length === 0) {
+      console.log("✅ Nenhum lançamento pendente de validação");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Nenhum lançamento pendente",
+          validated: 0
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const { action, batch_size = 10, entry_ids, competence } = await req.json() as BackgroundRequest;
+    console.log(`📋 Encontrados ${pendingEntries.length} lançamentos para validar`);
 
-    console.log(`[AI-Background] Action: ${action}, batch_size: ${batch_size}`);
+    // Buscar plano de contas para contexto
+    const { data: accounts } = await supabase
+      .from("chart_of_accounts")
+      .select("code, name, type")
+      .eq("is_active", true)
+      .order("code");
 
-    let result: any;
+    const results = [];
 
-    switch (action) {
-      case 'health':
-        result = {
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          gemini_configured: !!geminiApiKey
-        };
-        break;
+    for (const entry of pendingEntries) {
+      try {
+        // Marcar como validando
+        await supabase
+          .from("accounting_entries")
+          .update({ ai_validation_status: "validating" })
+          .eq("id", entry.id);
 
-      case 'stats':
-        const { data: stats, error: statsError } = await supabase
-          .from('v_ai_validation_stats')
-          .select('*')
-          .single();
+        // Preparar dados do lançamento
+        const lines = entry.accounting_entry_lines?.map((line: any) => ({
+          account_code: line.chart_of_accounts?.code || "??",
+          account_name: line.chart_of_accounts?.name || "??",
+          account_type: line.chart_of_accounts?.type || "??",
+          debit: line.debit_amount || 0,
+          credit: line.credit_amount || 0,
+        })) || [];
 
-        if (statsError) throw statsError;
+        const totalDebit = lines.reduce((sum: number, l: any) => sum + l.debit, 0);
+        const totalCredit = lines.reduce((sum: number, l: any) => sum + l.credit, 0);
+        const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
-        const { data: queueStats } = await supabase
-          .from('ai_validation_queue')
-          .select('status', { count: 'exact' });
+        // Contexto para o Contador IA
+        const context = `
+${ACCOUNTING_RULES}
 
-        result = {
-          entries: stats,
-          queue: {
-            pending: queueStats?.filter(q => q.status === 'pending').length || 0,
-            processing: queueStats?.filter(q => q.status === 'processing').length || 0,
-            failed: queueStats?.filter(q => q.status === 'failed').length || 0
+LANÇAMENTO A VALIDAR:
+- ID: ${entry.id}
+- Data: ${entry.entry_date}
+- Tipo: ${entry.entry_type || 'regular'}
+- Descrição: ${entry.description}
+
+PARTIDAS:
+${lines.map((l: any, idx: number) =>
+  `${idx + 1}. ${l.account_code} - ${l.account_name} (${l.account_type})
+     Débito: R$ ${l.debit.toFixed(2)} | Crédito: R$ ${l.credit.toFixed(2)}`
+).join('\n')}
+
+TOTALIZAÇÃO:
+- Total Débito: R$ ${totalDebit.toFixed(2)}
+- Total Crédito: R$ ${totalCredit.toFixed(2)}
+- Balanceado: ${isBalanced ? 'SIM ✓' : 'NÃO ✗'}
+
+PLANO DE CONTAS DISPONÍVEL:
+${accounts?.slice(0, 30).map((a: any) => `${a.code} - ${a.name}`).join('\n')}
+
+VALIDAR E RETORNAR ANÁLISE ESTRUTURADA.
+`;
+
+        // Chamar Gemini para validação
+        const aiResponse = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${lovableApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: `Você é o Contador IA da Ampla Contabilidade. Valide lançamentos contábeis automaticamente seguindo as normas NBC/CFC brasileiras. Seja objetivo e técnico.`,
+                },
+                { role: "user", content: context },
+              ],
+              tools: [
+                {
+                  type: "function",
+                  function: {
+                    name: "validate_entry",
+                    description: "Retorna resultado da validação do lançamento contábil",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        approved: {
+                          type: "boolean",
+                          description: "Se o lançamento está correto e pode ser aprovado",
+                        },
+                        score: {
+                          type: "number",
+                          minimum: 0,
+                          maximum: 100,
+                          description: "Score de qualidade do lançamento (0-100)",
+                        },
+                        status: {
+                          type: "string",
+                          enum: ["approved", "warning", "rejected"],
+                          description: "Status da validação",
+                        },
+                        message: {
+                          type: "string",
+                          description: "Mensagem resumida da validação (max 200 caracteres)",
+                        },
+                        issues: {
+                          type: "array",
+                          items: { type: "string" },
+                          description: "Lista de problemas encontrados",
+                        },
+                      },
+                      required: ["approved", "score", "status", "message"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+              ],
+              tool_choice: {
+                type: "function",
+                function: { name: "validate_entry" },
+              },
+              temperature: 0.2,
+              max_tokens: 500,
+            }),
           }
-        };
-        break;
+        );
 
-      case 'process_validation_queue':
-        result = await processValidationQueue(supabase, geminiApiKey, batch_size);
-        break;
-
-      case 'validate_batch':
-        if (!entry_ids || entry_ids.length === 0) {
-          throw new Error('entry_ids required for validate_batch');
+        if (!aiResponse.ok) {
+          throw new Error(`AI Gateway error: ${aiResponse.status}`);
         }
-        result = await validateBatch(supabase, geminiApiKey, entry_ids);
-        break;
 
-      case 'process_invoices':
-        result = await processInvoicesWithoutAccounting(supabase, competence);
-        break;
+        const aiData = await aiResponse.json();
+        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+        const validation = toolCall?.function?.arguments
+          ? JSON.parse(toolCall.function.arguments)
+          : null;
 
-      default:
-        throw new Error(`Unknown action: ${action}`);
+        if (!validation) {
+          throw new Error("IA não retornou validação");
+        }
+
+        // Atualizar status no banco
+        await supabase
+          .from("accounting_entries")
+          .update({
+            ai_validated: validation.approved,
+            ai_validation_status: validation.status,
+            ai_validation_score: validation.score,
+            ai_validation_message: validation.message,
+            ai_validated_at: new Date().toISOString(),
+          })
+          .eq("id", entry.id);
+
+        // Registrar atividade
+        await supabase.from("ai_accountant_activity").insert({
+          entry_id: entry.id,
+          action_type: "validation",
+          status: validation.status === "approved" ? "success" :
+                  validation.status === "warning" ? "warning" : "error",
+          score: validation.score,
+          message: validation.message,
+          details: {
+            issues: validation.issues || [],
+            total_debit: totalDebit,
+            total_credit: totalCredit,
+            is_balanced: isBalanced,
+          },
+        });
+
+        console.log(`✅ Lançamento ${entry.id.substring(0, 8)}... validado: ${validation.status} (${validation.score})`);
+
+        results.push({
+          entry_id: entry.id,
+          status: validation.status,
+          score: validation.score,
+          message: validation.message,
+        });
+
+      } catch (entryError) {
+        console.error(`❌ Erro ao validar ${entry.id}:`, entryError);
+
+        // Marcar como erro
+        await supabase
+          .from("accounting_entries")
+          .update({
+            ai_validation_status: "pending", // Volta para pendente para tentar novamente
+            ai_validation_message: `Erro na validação: ${entryError instanceof Error ? entryError.message : 'Erro desconhecido'}`,
+          })
+          .eq("id", entry.id);
+
+        results.push({
+          entry_id: entry.id,
+          status: "error",
+          error: entryError instanceof Error ? entryError.message : "Erro desconhecido",
+        });
+      }
     }
 
-    const duration = Date.now() - startTime;
-    console.log(`[AI-Background] Completed in ${duration}ms`);
+    console.log(`🤖 Contador IA Background - Finalizado: ${results.length} lançamentos processados`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        action,
-        result,
-        duration_ms: duration
+        message: `Validação automática concluída`,
+        validated: results.length,
+        results,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error('[AI-Background] Error:', error);
+    console.error("❌ Erro no Contador IA Background:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Erro desconhecido",
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
 });
-
-/**
- * Processa itens da fila de validação
- */
-async function processValidationQueue(
-  supabase: any,
-  geminiApiKey: string,
-  batchSize: number
-): Promise<{ processed: number; errors: number; results: any[] }> {
-  const results: any[] = [];
-  let processed = 0;
-  let errors = 0;
-
-  for (let i = 0; i < batchSize; i++) {
-    // Pegar próximo item da fila
-    const { data: items, error } = await supabase.rpc('get_next_validation_item');
-
-    if (error || !items || items.length === 0) {
-      console.log('[AI-Background] No more items in queue');
-      break;
-    }
-
-    const item = items[0];
-    console.log(`[AI-Background] Processing queue item ${item.queue_id}`);
-
-    try {
-      // Validar com IA
-      const validation = await validateEntryWithAI(geminiApiKey, item.entry_data);
-
-      // Marcar como concluído
-      await supabase.rpc('complete_ai_validation', {
-        p_queue_id: item.queue_id,
-        p_result: validation.result,
-        p_message: validation.message,
-        p_confidence: validation.confidence,
-        p_model: 'gemini-2.0-flash'
-      });
-
-      results.push({
-        entry_id: item.entry_id,
-        result: validation.result,
-        confidence: validation.confidence
-      });
-
-      processed++;
-    } catch (err) {
-      console.error(`[AI-Background] Failed to validate ${item.entry_id}:`, err);
-
-      await supabase.rpc('fail_ai_validation', {
-        p_queue_id: item.queue_id,
-        p_error: err instanceof Error ? err.message : 'Unknown error'
-      });
-
-      errors++;
-    }
-  }
-
-  return { processed, errors, results };
-}
-
-/**
- * Valida um lote específico de entries
- */
-async function validateBatch(
-  supabase: any,
-  geminiApiKey: string,
-  entryIds: string[]
-): Promise<{ processed: number; results: any[] }> {
-  const results: any[] = [];
-
-  for (const entryId of entryIds) {
-    // Buscar entry com linhas
-    const { data: entry, error } = await supabase
-      .from('accounting_entries')
-      .select(`
-        *,
-        lines:accounting_entry_lines(
-          *,
-          account:chart_of_accounts(code, name, type, is_synthetic)
-        )
-      `)
-      .eq('id', entryId)
-      .single();
-
-    if (error || !entry) {
-      results.push({ entry_id: entryId, error: 'Entry not found' });
-      continue;
-    }
-
-    try {
-      const validation = await validateEntryWithAI(geminiApiKey, entry);
-
-      // Atualizar entry
-      await supabase
-        .from('accounting_entries')
-        .update({
-          ai_validated: true,
-          ai_validated_at: new Date().toISOString(),
-          ai_validation_result: validation.result,
-          ai_validation_message: validation.message,
-          ai_confidence: validation.confidence,
-          ai_model: 'gemini-2.0-flash'
-        })
-        .eq('id', entryId);
-
-      results.push({
-        entry_id: entryId,
-        result: validation.result,
-        confidence: validation.confidence
-      });
-    } catch (err) {
-      results.push({
-        entry_id: entryId,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      });
-    }
-  }
-
-  return { processed: results.filter(r => !r.error).length, results };
-}
-
-/**
- * Processa faturas sem contabilização
- */
-async function processInvoicesWithoutAccounting(
-  supabase: any,
-  competence?: string
-): Promise<{ processed: number; errors: number; created_entries: string[] }> {
-  // Chamar função do banco que processa faturas
-  const { data, error } = await supabase.rpc('process_invoices_without_accounting', {
-    p_limit: 100
-  });
-
-  if (error) throw error;
-
-  return {
-    processed: data?.[0]?.processed_count || 0,
-    errors: data?.[0]?.error_count || 0,
-    created_entries: []
-  };
-}
-
-/**
- * Valida um lançamento usando a API Gemini
- */
-async function validateEntryWithAI(
-  geminiApiKey: string,
-  entryData: any
-): Promise<{ result: string; message: string; confidence: number }> {
-  const prompt = `${NBC_VALIDATION_PROMPT}
-
-Valide este lançamento contábil:
-
-${JSON.stringify(entryData, null, 2)}
-
-Retorne APENAS o JSON de resultado, sem markdown ou explicações adicionais.`;
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1000
-        }
-      })
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-
-  const result = await response.json();
-  const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-  // Parse JSON da resposta
-  let parsed;
-  try {
-    // Remove possíveis marcadores de código
-    const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    parsed = JSON.parse(jsonStr);
-  } catch {
-    // Se não conseguir parsear, assumir válido com baixa confiança
-    console.warn('[AI-Background] Could not parse AI response:', text);
-    return {
-      result: 'warning',
-      message: 'Não foi possível validar automaticamente. Revisão manual recomendada.',
-      confidence: 0.5
-    };
-  }
-
-  // Construir mensagem
-  let message = '';
-  if (parsed.issues && parsed.issues.length > 0) {
-    message += 'Problemas: ' + parsed.issues.join('; ');
-  }
-  if (parsed.suggestions && parsed.suggestions.length > 0) {
-    message += (message ? ' | ' : '') + 'Sugestões: ' + parsed.suggestions.join('; ');
-  }
-  if (parsed.nbc_references && parsed.nbc_references.length > 0) {
-    message += (message ? ' | ' : '') + 'NBC: ' + parsed.nbc_references.join(', ');
-  }
-
-  return {
-    result: parsed.result || 'warning',
-    message: message || 'Validação concluída sem observações.',
-    confidence: parsed.confidence || 0.8
-  };
-}

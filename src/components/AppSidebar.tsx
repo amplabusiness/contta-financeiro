@@ -24,6 +24,7 @@ import {
   Brain,
   Target,
   Activity,
+  Network,
   FileInput,
   FileWarning,
   AlertTriangle,
@@ -148,8 +149,7 @@ export function AppSidebar() {
     {
       label: "Contabilidade",
       items: [
-        { title: "Carga Inicial", url: "/initial-load", icon: Database },
-        { title: "Contabilidade Inteligente", url: "/smart-accounting", icon: Zap },
+        { title: "Carga Inicial", url: "/client-opening-balance", icon: Database },
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },
@@ -172,6 +172,8 @@ export function AppSidebar() {
       label: "Ferramentas",
       items: [
         { title: "IA Contador", url: "/ai-accountant", icon: Bot },
+        { title: "IA Gestor", url: "/business-manager", icon: Brain },
+        { title: "Rede Neural IA", url: "/ai-network", icon: Network },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
         { title: "Configurações", url: "/settings", icon: Settings },
