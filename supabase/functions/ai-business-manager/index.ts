@@ -193,7 +193,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { action, period, context } = await req.json() as ManagerRequest;
@@ -948,33 +948,38 @@ Seja DIRETO, use NÚMEROS e TABELAS. Este é um relatório para tomada de decis�
         throw new Error(`Ação não reconhecida: ${action}`);
     }
 
-    // Chamar Gemini para análise
+    // Chamar Gemini diretamente
     const aiResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: MANAGER_PROFILE },
-            { role: "user", content: userPrompt },
+          contents: [
+            {
+              parts: [
+                { text: MANAGER_PROFILE + "\n\n" + userPrompt }
+              ]
+            }
           ],
-          temperature: 0.4,
-          max_tokens: 2000,
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 2000,
+          },
         }),
       }
     );
 
     if (!aiResponse.ok) {
-      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+      const errorText = await aiResponse.text();
+      console.error("Gemini API error:", errorText);
+      throw new Error(`Gemini API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const analysis = aiData.choices?.[0]?.message?.content || "Não foi possível gerar análise.";
+    const analysis = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível gerar análise.";
 
     console.log(`✅ Gestor Empresarial IA - Análise concluída`);
 

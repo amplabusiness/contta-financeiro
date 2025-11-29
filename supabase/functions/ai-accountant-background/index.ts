@@ -61,7 +61,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log("🤖 Contador IA Background - Iniciando validação automática...");
@@ -164,86 +164,71 @@ ${accounts?.slice(0, 30).map((a: any) => `${a.code} - ${a.name}`).join('\n')}
 VALIDAR E RETORNAR ANÁLISE ESTRUTURADA.
 `;
 
-        // Chamar Gemini para validação
+        // Chamar Gemini diretamente para validação
+        const systemPrompt = `Você é o Contador IA da Ampla Contabilidade. Valide lançamentos contábeis automaticamente seguindo as normas NBC/CFC brasileiras. Seja objetivo e técnico.
+
+IMPORTANTE: Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem texto adicional):
+{
+  "approved": true ou false,
+  "score": número de 0 a 100,
+  "status": "approved" ou "warning" ou "rejected",
+  "message": "mensagem resumida da validação (max 200 caracteres)",
+  "issues": ["lista", "de", "problemas"] ou []
+}`;
+
         const aiResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${lovableApiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
-              messages: [
+              contents: [
                 {
-                  role: "system",
-                  content: `Você é o Contador IA da Ampla Contabilidade. Valide lançamentos contábeis automaticamente seguindo as normas NBC/CFC brasileiras. Seja objetivo e técnico.`,
-                },
-                { role: "user", content: context },
+                  parts: [
+                    { text: systemPrompt + "\n\n" + context }
+                  ]
+                }
               ],
-              tools: [
-                {
-                  type: "function",
-                  function: {
-                    name: "validate_entry",
-                    description: "Retorna resultado da validação do lançamento contábil",
-                    parameters: {
-                      type: "object",
-                      properties: {
-                        approved: {
-                          type: "boolean",
-                          description: "Se o lançamento está correto e pode ser aprovado",
-                        },
-                        score: {
-                          type: "number",
-                          minimum: 0,
-                          maximum: 100,
-                          description: "Score de qualidade do lançamento (0-100)",
-                        },
-                        status: {
-                          type: "string",
-                          enum: ["approved", "warning", "rejected"],
-                          description: "Status da validação",
-                        },
-                        message: {
-                          type: "string",
-                          description: "Mensagem resumida da validação (max 200 caracteres)",
-                        },
-                        issues: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "Lista de problemas encontrados",
-                        },
-                      },
-                      required: ["approved", "score", "status", "message"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-              ],
-              tool_choice: {
-                type: "function",
-                function: { name: "validate_entry" },
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 500,
               },
-              temperature: 0.2,
-              max_tokens: 500,
             }),
           }
         );
 
         if (!aiResponse.ok) {
-          throw new Error(`AI Gateway error: ${aiResponse.status}`);
+          const errorText = await aiResponse.text();
+          console.error("Gemini API error:", errorText);
+          throw new Error(`Gemini API error: ${aiResponse.status}`);
         }
 
         const aiData = await aiResponse.json();
-        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-        const validation = toolCall?.function?.arguments
-          ? JSON.parse(toolCall.function.arguments)
-          : null;
+        const responseText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+        // Limpar resposta e extrair JSON
+        let validation = null;
+        try {
+          // Tentar extrair JSON da resposta
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            validation = JSON.parse(jsonMatch[0]);
+          }
+        } catch (parseError) {
+          console.error("Erro ao parsear resposta da IA:", responseText);
+        }
 
         if (!validation) {
-          throw new Error("IA não retornou validação");
+          // Fallback: validação básica sem IA
+          validation = {
+            approved: isBalanced,
+            score: isBalanced ? 70 : 30,
+            status: isBalanced ? "approved" : "rejected",
+            message: isBalanced ? "Lançamento balanceado (validação automática)" : "Lançamento não balanceado",
+            issues: isBalanced ? [] : ["Débitos e créditos não conferem"]
+          };
         }
 
         // Atualizar status no banco
