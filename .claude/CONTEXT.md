@@ -32,6 +32,13 @@
 - [x] Removidos alert() e toast.info() de diagnóstico da DRE
 - [x] Removidos console.log de debug
 
+### 6. Fix Saldo de Abertura (Erro Contábil Crítico)
+- [x] Identificado erro: saldo_abertura creditava Receita (3.1.1.01) ao invés de PL
+- [x] Adicionadas contas de Patrimônio Líquido (5.x) ao plano de contas
+- [x] Separado case `saldo_abertura` de `receita_honorarios` na edge function
+- [x] Criada migration para corrigir entries existentes
+- [x] Agora credita corretamente: Saldos de Abertura (5.2.1.02)
+
 ### Sessão 4 - Trabalho Anterior (completado)
 - [x] Fix Cálculo do Balancete (saldo devedor/credor)
 - [x] Configuração Context7 MCP
@@ -99,6 +106,8 @@
 - `src/pages/BalanceSheet.tsx` (fix filtros JavaScript + PL 5.x)
 - `src/pages/LivroDiario.tsx` (fix período padrão ano inteiro)
 - `src/pages/LivroRazao.tsx` (fix período padrão + UX)
+- `supabase/functions/smart-accounting/index.ts` (fix saldo_abertura → PL)
+- `supabase/migrations/20251129100000_fix_opening_balance_to_pl.sql` (criado)
 - `.claude/CONTEXT.md` (atualizado)
 - `.claude/MEMORY.md` (atualizado)
 

@@ -260,6 +260,36 @@ const filteredLines = allLines?.filter(line => {
 **Arquivos afetados**: DRE.tsx, BalanceSheet.tsx
 **Lição**: Para filtros complexos (OR, datas em joins, nulls), preferir filtrar em JavaScript
 
+#### 4.10 Saldo de Abertura aparecendo na DRE (29/11/2025 - RESOLVIDO)
+**Causa**: `smart-accounting` tratava `saldo_abertura` igual a `receita_honorarios`, creditando Receita (3.1.1.01)
+**Problema contábil**:
+- Saldo de abertura representa um ATIVO que já existia de período anterior
+- A receita já foi reconhecida no período anterior
+- Creditar Receita novamente = duplicação de receita na DRE
+
+**Lançamento ERRADO (antes)**:
+| | Conta | Valor |
+|---|---|---|
+| D | Clientes a Receber (1.1.2.01.xxx) | R$ X |
+| C | Honorários Contábeis (3.1.1.01) | R$ X | ← ERRADO!
+
+**Lançamento CORRETO (agora)**:
+| | Conta | Valor |
+|---|---|---|
+| D | Clientes a Receber (1.1.2.01.xxx) | R$ X |
+| C | Saldos de Abertura (5.2.1.02) | R$ X | ← PL, não Receita!
+
+**Solução implementada**:
+1. Adicionadas contas de Patrimônio Líquido (5.x) ao plano de contas padrão
+2. Separado case `saldo_abertura` de `receita_honorarios` na edge function
+3. Criada migration `20251129100000_fix_opening_balance_to_pl.sql` para corrigir entries existentes
+
+**Arquivos afetados**:
+- `supabase/functions/smart-accounting/index.ts`
+- `supabase/migrations/20251129100000_fix_opening_balance_to_pl.sql`
+
+**Lição**: Saldo de abertura é um ATIVO pré-existente, não receita do período atual
+
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
 
