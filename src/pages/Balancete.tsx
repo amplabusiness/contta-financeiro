@@ -17,6 +17,7 @@ interface BalanceteEntry {
   total_debito: number
   total_credito: number
   saldo: number
+  isDevedora: boolean // true = natureza devedora (Ativo, Despesa), false = credora (Passivo, PL, Receita)
 }
 
 const Balancete = () => {
@@ -112,9 +113,11 @@ const Balancete = () => {
         // 1 = Ativo (devedora), 2 = Passivo (credora), 3 = Receita (credora), 4 = Despesa (devedora)
         const primeiroDigito = account.code.charAt(0)
         const isDevedora = ['1', '4'].includes(primeiroDigito) // Ativo e Despesa
-        const saldo = isDevedora
-          ? totalDebito - totalCredito
-          : totalCredito - totalDebito
+
+        // Saldo é sempre débito - crédito
+        // Para contas devedoras: positivo = saldo devedor
+        // Para contas credoras: negativo = saldo credor (mostrar como positivo com indicador C)
+        const saldo = totalDebito - totalCredito
 
         balanceteData.push({
           codigo_conta: account.code,
@@ -122,7 +125,8 @@ const Balancete = () => {
           tipo_conta: account.type,
           total_debito: totalDebito,
           total_credito: totalCredito,
-          saldo: saldo
+          saldo: saldo,
+          isDevedora: isDevedora
         })
       }
 
@@ -157,9 +161,14 @@ const Balancete = () => {
   // Calcular totais
   const totalDebito = entries.reduce((sum, entry) => sum + entry.total_debito, 0)
   const totalCredito = entries.reduce((sum, entry) => sum + entry.total_credito, 0)
+
+  // Saldo devedor: quando débito > crédito (saldo positivo)
+  // Saldo credor: quando crédito > débito (saldo negativo)
   const totalSaldoDevedor = entries.reduce((sum, entry) => sum + (entry.saldo > 0 ? entry.saldo : 0), 0)
   const totalSaldoCredor = entries.reduce((sum, entry) => sum + (entry.saldo < 0 ? Math.abs(entry.saldo) : 0), 0)
-  const isBalanced = Math.abs(totalDebito - totalCredito) < 0.01
+
+  // Balancete está fechado quando saldo devedor = saldo credor
+  const isBalanced = Math.abs(totalSaldoDevedor - totalSaldoCredor) < 0.01
 
   // Agrupar por tipo de conta
   const groupedByType = entries.reduce((acc, entry) => {
@@ -262,8 +271,8 @@ const Balancete = () => {
             </CardTitle>
             <CardDescription>
               {isBalanced
-                ? "Débitos e créditos estão balanceados"
-                : `Diferença: ${formatCurrency(Math.abs(totalDebito - totalCredito))}`}
+                ? "Saldos devedores e credores estão balanceados"
+                : `Diferença: ${formatCurrency(Math.abs(totalSaldoDevedor - totalSaldoCredor))}`}
             </CardDescription>
           </CardHeader>
         </Card>
