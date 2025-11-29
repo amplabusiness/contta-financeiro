@@ -66,9 +66,17 @@ const SmartAccounting = () => {
       setCurrentOperation(operationName);
       addStatusMessage(operationName, 'info');
 
+      // Adicionar timeout de 30 segundos para evitar travamento
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
       const { data, error } = await supabase.functions.invoke('smart-accounting', {
         body: { action, ...params }
       });
+
+      clearTimeout(timeoutId);
+
+      console.log('SmartAccounting response:', { action, data, error });
 
       if (!skipLoadingReset) {
         setProgress(100);
@@ -78,23 +86,35 @@ const SmartAccounting = () => {
         throw new Error(error.message);
       }
 
+      if (!data) {
+        throw new Error('Resposta vazia da função');
+      }
+
       setResults(prev => ({ ...prev, [action]: data }));
 
       if (data.success) {
         const successMsg = data.message || 'Operação concluída com sucesso!';
         addStatusMessage(`✓ ${successMsg}`, 'success');
-        toast.success(successMsg);
+        if (!skipLoadingReset) {
+          toast.success(successMsg);
+        }
       } else {
         addStatusMessage(`✗ ${data.error || 'Erro na operação'}`, 'error');
-        toast.error(data.error || 'Erro na operação');
+        if (!skipLoadingReset) {
+          toast.error(data.error || 'Erro na operação');
+        }
       }
 
       return data;
     } catch (error: any) {
       console.error('Erro:', error);
       addStatusMessage(`✗ Erro: ${error.message}`, 'error');
-      toast.error(`Erro: ${error.message}`);
+      if (!skipLoadingReset) {
+        toast.error(`Erro: ${error.message}`);
+      }
       setResults(prev => ({ ...prev, [action]: { success: false, message: error.message } }));
+      // Retornar resultado de erro em vez de undefined
+      return { success: false, error: error.message };
     } finally {
       if (!skipLoadingReset) {
         setLoading(null);
@@ -135,29 +155,38 @@ const SmartAccounting = () => {
       { progress: 90, name: 'Processando contas a pagar', action: 'generate_retroactive', params: { table: 'accounts_payable' } },
     ];
 
-    try {
-      for (const step of steps) {
-        setProgress(step.progress);
-        setCurrentOperation(step.name + '...');
-        addStatusMessage(`➤ ${step.name}...`, 'info');
+    let hasErrors = false;
 
-        await invokeSmartAccounting(step.action, step.params, true);
+    for (const step of steps) {
+      setProgress(step.progress);
+      setCurrentOperation(step.name + '...');
+      addStatusMessage(`➤ ${step.name}...`, 'info');
+
+      const result = await invokeSmartAccounting(step.action, step.params, true);
+
+      if (!result?.success) {
+        hasErrors = true;
+        // Continuar mesmo com erro para processar todos os passos
       }
+    }
 
-      setProgress(100);
+    setProgress(100);
+
+    if (hasErrors) {
+      setCurrentOperation('Concluído com erros');
+      addStatusMessage('⚠ Algumas operações tiveram erros. Verifique os logs.', 'error');
+      toast.warning('Algumas operações tiveram erros');
+    } else {
       setCurrentOperation('Concluído!');
       addStatusMessage('✓ Todas as operações concluídas com sucesso!', 'success');
       toast.success('Todas as operações concluídas!');
-    } catch (error: any) {
-      addStatusMessage(`✗ Erro: ${error.message}`, 'error');
-      toast.error(`Erro: ${error.message}`);
-    } finally {
-      setLoading(null);
-      setTimeout(() => {
-        setProgress(0);
-        setCurrentOperation('');
-      }, 2000);
     }
+
+    setLoading(null);
+    setTimeout(() => {
+      setProgress(0);
+      setCurrentOperation('');
+    }, 3000);
   };
 
   const TaskCard = ({
