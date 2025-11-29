@@ -102,7 +102,7 @@ BEGIN
   -- Update the credit lines for opening_balance entries
   UPDATE accounting_entry_lines ael
   SET account_id = v_pl_account_id,
-      description = REPLACE(description, 'C - Saldo de Abertura', 'C - Saldo de Abertura (PL)')
+      description = REPLACE(ael.description, 'C - Saldo de Abertura', 'C - Saldo de Abertura (PL)')
   FROM accounting_entries ae
   WHERE ael.entry_id = ae.id
     AND ae.reference_type = 'opening_balance'
