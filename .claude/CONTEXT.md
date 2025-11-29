@@ -1,33 +1,41 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-29 (Sessão 4 - Fix Balancete + Context7 MCP)
+2025-11-29 (Sessão 5 - Fix DRE + Relatórios Contábeis)
 
 ## ✅ Trabalho Concluído Nesta Sessão
 
-### 1. Fix Cálculo do Balancete (Saldo Devedor/Credor)
-- [x] Identificado problema: Total Saldo Devedor somava débito + crédito (R$ 209.566,44 ao invés de R$ 104.783,22)
-- [x] Adicionado campo `isSynthetic` para identificar contas sintéticas
-- [x] Corrigido cálculo: `saldo = totalDebito - totalCredito` (sempre)
-- [x] Filtrado totais para usar apenas contas analíticas (evita duplicação)
-- [x] Adicionada inferência de tipo por prefixo do código (1=Ativo, 2=Passivo, 3=Receita, 4=Despesa, 5=PL)
-- [x] Corrigido agrupamento que mostrava "null" ao invés do tipo da conta
+### 1. Refatoração DRE (Demonstração do Resultado do Exercício)
+- [x] Refatorado DRE para usar `accounting_entry_lines` (fonte contábil correta)
+- [x] Removido uso de `invoices.status='paid'` (fonte operacional incorreta)
+- [x] Implementado filtro JavaScript para contas 3.x (Receita) e 4.x (Despesa)
+- [x] Implementado filtro de data em JavaScript (resolve problemas do Supabase)
+- [x] DRE agora mostra corretamente: R$ 79.188,97 em receitas
 
-### 2. Configuração Context7 MCP
-- [x] Configurado MCP server Context7 em `/root/.claude/settings.json`
-- [x] Criado `.env` com CONTEXT7_API_KEY
-- [x] API Key: `ctx7sk-1830c450-44b8-4e4a-b92c-883bac1ee356`
+### 2. Fix Filtros Supabase (Problema Crítico Descoberto)
+- [x] Supabase `.or()` não estava funcionando corretamente
+- [x] Supabase `!inner` join excluía registros com `competence_date` null
+- [x] **Solução**: Buscar TODOS os dados e filtrar em JavaScript
+- [x] Padrão aplicado em: DRE.tsx, BalanceSheet.tsx
 
-### 3. Fix Triggers Contábeis Automáticos (sessão anterior)
-- [x] Identificado problema: triggers criavam entries sem linhas débito/crédito
-- [x] Criada migration `20251129000000_remove_automatic_accounting_triggers.sql`
-- [x] Migration remove 4 triggers problemáticos e limpa entries órfãos
-- [x] Documentado problema e solução em MEMORY.md
+### 3. Fix Livro Diário e Livro Razão
+- [x] Alterado período padrão de "mês atual" para "ano inteiro"
+- [x] LivroDiario: Jan-Dez como período inicial
+- [x] LivroRazao: Jan-Dez como período inicial + mensagem "selecione conta"
 
-### 4. Problema DRE Identificado (pendente)
-- [ ] DRE mostra R$ 0,00 porque usa `invoices.status='paid'`
-- [ ] Balancete usa `accounting_entry_lines` (fonte correta)
-- [ ] DRE precisa ser refatorado para usar dados contábeis
+### 4. Fix Balanço Patrimonial
+- [x] Adicionado suporte a contas de Patrimônio Líquido (5.x)
+- [x] Corrigido filtro `.or()` para usar JavaScript
+- [x] Separação correta: Ativo (1.x), Passivo (2.x), PL (5.x)
+
+### 5. Limpeza de Código Debug
+- [x] Removidos alert() e toast.info() de diagnóstico da DRE
+- [x] Removidos console.log de debug
+
+### Sessão 4 - Trabalho Anterior (completado)
+- [x] Fix Cálculo do Balancete (saldo devedor/credor)
+- [x] Configuração Context7 MCP
+- [x] Fix Triggers Contábeis Automáticos
 
 ### Sessão Anterior - Configuração de Ambiente
 - [x] Verificado `.gitignore` - `.env` está protegido
@@ -86,12 +94,18 @@
 4. Adicionar `tenant_id` nas tabelas existentes
 5. Criar tenant padrão para dados existentes
 
-## Arquivos Modificados Nesta Sessão (Sessão 4)
+## Arquivos Modificados Nesta Sessão (Sessão 5)
+- `src/pages/DRE.tsx` (refatoração completa - usa accounting_entry_lines)
+- `src/pages/BalanceSheet.tsx` (fix filtros JavaScript + PL 5.x)
+- `src/pages/LivroDiario.tsx` (fix período padrão ano inteiro)
+- `src/pages/LivroRazao.tsx` (fix período padrão + UX)
+- `.claude/CONTEXT.md` (atualizado)
+- `.claude/MEMORY.md` (atualizado)
+
+### Sessão 4
 - `src/pages/Balancete.tsx` (fix cálculo saldo devedor/credor)
 - `/root/.claude/settings.json` (Context7 MCP config)
 - `.env` (CONTEXT7_API_KEY)
-- `.claude/CONTEXT.md` (atualizado)
-- `.claude/MEMORY.md` (atualizado)
 
 ### Sessões Anteriores
 - `supabase/migrations/20251129000000_remove_automatic_accounting_triggers.sql` (criado)

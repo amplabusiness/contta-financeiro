@@ -224,12 +224,41 @@ serve(async (req) => {
 3. Totais filtram apenas contas analíticas: `entries.filter(entry => !entry.isSynthetic)`
 4. Inferência de tipo por prefixo: 1=ATIVO, 2=PASSIVO, 3=RECEITA, 4=DESPESA, 5=PL
 
-#### 4.8 DRE mostrando R$ 0,00 (29/11/2025 - PENDENTE)
-**Causa**: DRE usa `invoices.status='paid'` para receitas, mas os honorários não estão marcados como pagos
+#### 4.8 DRE mostrando R$ 0,00 (29/11/2025 - RESOLVIDO)
+**Causa**: DRE usava `invoices.status='paid'` para receitas, mas os honorários não estavam marcados como pagos
 **Diferença**:
 - Balancete usa `accounting_entry_lines` (fonte correta - dados contábeis)
-- DRE usa `invoices` (fonte incorreta - dados operacionais)
-**Solução pendente**: Refatorar DRE para usar `accounting_entry_lines` como fonte de dados
+- DRE usava `invoices` (fonte incorreta - dados operacionais)
+**Solução implementada**: Refatorado DRE para usar `accounting_entry_lines` como fonte de dados
+- Buscar todas as contas e filtrar 3.x/4.x em JavaScript
+- Buscar todos os lançamentos e filtrar por data em JavaScript
+- DRE agora mostra corretamente R$ 79.188,97 em receitas
+
+#### 4.9 Supabase `.or()` e `!inner` não funcionam corretamente (29/11/2025)
+**Problema identificado**: Filtros Supabase não retornavam resultados esperados
+**Exemplos que falharam**:
+```javascript
+// NÃO FUNCIONA corretamente:
+.or('code.like.3%,code.like.4%')
+.select('entry_id!inner(entry_date, competence_date)')
+.gte('entry_id.competence_date', startDate)
+```
+**Solução definitiva**: Buscar TODOS os dados e filtrar em JavaScript
+```javascript
+// FUNCIONA corretamente:
+const { data: allAccounts } = await supabase.from('chart_of_accounts').select('*');
+const accounts = allAccounts?.filter(acc =>
+  acc.code.startsWith('3') || acc.code.startsWith('4')
+) || [];
+
+const { data: allLines } = await supabase.from('accounting_entry_lines').select('*');
+const filteredLines = allLines?.filter(line => {
+  const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+  return lineDate >= startDate && lineDate <= endDate;
+}) || [];
+```
+**Arquivos afetados**: DRE.tsx, BalanceSheet.tsx
+**Lição**: Para filtros complexos (OR, datas em joins, nulls), preferir filtrar em JavaScript
 
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
