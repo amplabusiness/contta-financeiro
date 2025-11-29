@@ -37,44 +37,52 @@ const BalanceSheet = () => {
   const loadBalances = useCallback(async () => {
     setLoading(true);
     try {
-      // Buscar todas as contas ativas (1=Ativo, 2=Passivo, 5=PL)
-      const { data: accounts, error: accountsError } = await supabase
+      // Buscar TODAS as contas ativas (sem filtro de código - filtrar depois em JS)
+      const { data: allAccounts, error: accountsError } = await supabase
         .from("chart_of_accounts")
         .select("id, code, name, type, is_synthetic")
         .eq("is_active", true)
-        .or('code.like.1%,code.like.2%,code.like.5%')
         .order("code");
 
       if (accountsError) throw accountsError;
 
-      // Buscar todos os lançamentos até a data selecionada
-      let entriesQuery = supabase
+      // Filtrar contas de Ativo (1.x), Passivo (2.x) e PL (5.x) em JavaScript
+      const accounts = allAccounts?.filter(acc =>
+        acc.code.startsWith('1') || acc.code.startsWith('2') || acc.code.startsWith('5')
+      ) || [];
+
+      // Buscar TODOS os lançamentos contábeis (sem filtro de data na query)
+      const { data: entries, error: entriesError } = await supabase
         .from("accounting_entry_lines")
         .select(`
           account_id,
           debit,
           credit,
-          entry_id!inner(entry_date)
+          entry_id(entry_date)
         `);
-
-      if (endDate) {
-        entriesQuery = entriesQuery.lte('entry_id.entry_date', endDate);
-      }
-
-      const { data: entries, error: entriesError } = await entriesQuery;
 
       if (entriesError) throw entriesError;
 
-      // Calcular saldos por conta
+      // Filtrar por data em JavaScript (mais confiável)
+      const filteredEntries = entries?.filter((entry: any) => {
+        if (!endDate || !entry.entry_id?.entry_date) return true;
+        return entry.entry_id.entry_date <= endDate;
+      }) || [];
+
+      // Calcular saldos por conta usando os lançamentos filtrados
       const accountBalances: Record<string, { debit: number; credit: number }> = {};
 
-      entries?.forEach((entry: any) => {
+      filteredEntries.forEach((entry: any) => {
         if (!accountBalances[entry.account_id]) {
           accountBalances[entry.account_id] = { debit: 0, credit: 0 };
         }
         accountBalances[entry.account_id].debit += parseFloat(entry.debit?.toString() || "0");
         accountBalances[entry.account_id].credit += parseFloat(entry.credit?.toString() || "0");
       });
+
+      console.log('Accounts loaded:', accounts?.length);
+      console.log('Entries loaded:', filteredEntries.length);
+      console.log('Account balances:', Object.keys(accountBalances).length);
 
       // Separar contas por tipo baseado no CÓDIGO
       const activeList: AccountBalance[] = [];
