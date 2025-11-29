@@ -212,6 +212,25 @@ serve(async (req) => {
 3. Usar "Processar Tudo" na Contabilidade Inteligente para recriar lançamentos
 **Migration**: `20251129000000_remove_automatic_accounting_triggers.sql`
 
+#### 4.7 Balancete com cálculo de saldo incorreto (29/11/2025)
+**Causa**: Total Saldo Devedor mostrava R$ 209.566,44 (somando débito + crédito) ao invés de R$ 104.783,22
+**Problemas identificados**:
+1. Totais incluíam contas sintéticas (duplicando valores das contas filhas)
+2. Agrupamento mostrava "null" porque contas dinâmicas não tinham campo `type`
+3. Receita mostrava "D" ao invés de "C"
+**Solução em `src/pages/Balancete.tsx`**:
+1. Adicionado campo `isSynthetic` na interface `BalanceteEntry`
+2. Cálculo único: `saldo = totalDebito - totalCredito` (positivo = D, negativo = C)
+3. Totais filtram apenas contas analíticas: `entries.filter(entry => !entry.isSynthetic)`
+4. Inferência de tipo por prefixo: 1=ATIVO, 2=PASSIVO, 3=RECEITA, 4=DESPESA, 5=PL
+
+#### 4.8 DRE mostrando R$ 0,00 (29/11/2025 - PENDENTE)
+**Causa**: DRE usa `invoices.status='paid'` para receitas, mas os honorários não estão marcados como pagos
+**Diferença**:
+- Balancete usa `accounting_entry_lines` (fonte correta - dados contábeis)
+- DRE usa `invoices` (fonte incorreta - dados operacionais)
+**Solução pendente**: Refatorar DRE para usar `accounting_entry_lines` como fonte de dados
+
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
 
@@ -221,6 +240,11 @@ Ver arquivo ROADMAP.md
 - **Project ID**: xdtlhzysrpoinqtsglmr
 - **URL**: https://xdtlhzysrpoinqtsglmr.supabase.co
 - **CLI**: v2.58.5 instalado
+
+### Context7 MCP (Claude Code)
+- **Config**: `/root/.claude/settings.json`
+- **API Key**: `ctx7sk-1830c450-44b8-4e4a-b92c-883bac1ee356`
+- **URL**: `https://mcp.context7.com/mcp`
 
 ### GitHub
 - **Repo**: amplabusiness/data-bling-sheets-3122699b
