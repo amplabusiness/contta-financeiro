@@ -171,6 +171,7 @@ export function AppSidebar() {
       label: "Ferramentas",
       items: [
         { title: "IA Contador", url: "/ai-accountant", icon: Bot },
+        { title: "IA Gestor", url: "/business-manager", icon: Brain },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
         { title: "Configurações", url: "/settings", icon: Settings },

@@ -2,6 +2,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { ExpensesChart } from "@/components/ExpensesChart";
 import { DistributionChart } from "@/components/DistributionChart";
 import { ExpensesTable } from "@/components/ExpensesTable";
+import { AIAccountantWidget } from "@/components/AIAccountantWidget";
 import { expensesData, formatCurrency } from "@/data/expensesData";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, Building, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -166,13 +167,14 @@ const Index = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid gap-6 md:grid-cols-3">
           <ExpensesChart data={comparisonData} />
           <DistributionChart
             data={decemberDistribution}
             title="Distribuição de Gastos Ampla"
             description="Dezembro 2024"
           />
+          <AIAccountantWidget />
         </div>
       </div>
     </div>
