@@ -390,10 +390,9 @@ const BusinessManager = () => {
                           "Executar Análise"
                         )}
                       </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
