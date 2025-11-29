@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useClient } from "@/contexts/ClientContext";
 
 interface ClientDefault {
   clientId: string;
@@ -49,6 +50,7 @@ interface ClientDefault {
 }
 
 export default function DefaultAnalysis() {
+  const { selectedClientId, selectedClientName } = useClient();
   const [clients, setClients] = useState<ClientDefault[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"amount" | "days" | "count">("amount");
@@ -63,15 +65,17 @@ export default function DefaultAnalysis() {
 
   useEffect(() => {
     loadDefaultData();
-  }, []);
+  }, [selectedClientId]); // Recarregar quando mudar cliente
 
   const loadDefaultData = async () => {
     try {
       setLoading(true);
 
-      // Get all overdue invoices
+      // Get all overdue invoices AND opening balances
       const today = new Date().toISOString().split("T")[0];
-      const { data: invoices, error } = await supabase
+
+      // Construir queries base
+      let invoicesQuery = supabase
         .from("invoices")
         .select(
           `
@@ -87,20 +91,56 @@ export default function DefaultAnalysis() {
           )
         `
         )
-        .eq("status", "pending")
-        .lt("due_date", today)
+        .or(`status.eq.overdue,and(status.eq.pending,due_date.lt.${today})`)
         .order("due_date", { ascending: true });
 
-      if (error) throw error;
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select(
+          `
+          id,
+          client_id,
+          amount,
+          paid_amount,
+          due_date,
+          competence,
+          status,
+          clients (
+            id,
+            name
+          )
+        `
+        )
+        .in("status", ["pending", "partial", "overdue"])
+        .order("due_date", { ascending: true });
+
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+      }
+
+      const [invoicesRes, openingBalanceRes] = await Promise.all([
+        invoicesQuery,
+        openingBalanceQuery,
+      ]);
+
+      if (invoicesRes.error) throw invoicesRes.error;
+      if (openingBalanceRes.error) throw openingBalanceRes.error;
+
+      const invoices = invoicesRes.data || [];
+      const openingBalances = openingBalanceRes.data || [];
 
       // Group by client
       const clientMap = new Map<string, ClientDefault>();
 
-      for (const invoice of invoices || []) {
+      // Processar faturas
+      for (const invoice of invoices) {
         const client = invoice.clients as any;
         if (!client) continue;
 
         const daysLate = differenceInDays(new Date(), parseISO(invoice.due_date));
+        if (daysLate <= 0) continue; // Ignorar não vencidas
 
         if (!clientMap.has(client.id)) {
           clientMap.set(client.id, {
@@ -128,6 +168,47 @@ export default function DefaultAnalysis() {
         if (daysLate > clientData.daysOverdue) {
           clientData.daysOverdue = daysLate;
           clientData.oldestOverdue = invoice.due_date;
+        }
+      }
+
+      // Processar saldos de abertura vencidos
+      for (const ob of openingBalances) {
+        const client = ob.clients as any;
+        if (!client) continue;
+        if (!ob.due_date) continue;
+
+        const daysLate = differenceInDays(new Date(), parseISO(ob.due_date));
+        if (daysLate <= 0 && ob.status !== "overdue") continue; // Ignorar não vencidas (exceto status overdue)
+
+        const remainingAmount = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        if (remainingAmount <= 0) continue; // Já pago
+
+        if (!clientMap.has(client.id)) {
+          clientMap.set(client.id, {
+            clientId: client.id,
+            clientName: client.name,
+            totalOverdue: 0,
+            overdueCount: 0,
+            oldestOverdue: ob.due_date,
+            daysOverdue: Math.max(daysLate, 0),
+            invoices: [],
+          });
+        }
+
+        const clientData = clientMap.get(client.id)!;
+        clientData.totalOverdue += remainingAmount;
+        clientData.overdueCount++;
+        clientData.invoices.push({
+          id: ob.id,
+          amount: remainingAmount,
+          dueDate: ob.due_date,
+          competence: `SA ${ob.competence || ""}`, // SA = Saldo de Abertura
+          daysLate: Math.max(daysLate, 0),
+        });
+
+        if (daysLate > clientData.daysOverdue) {
+          clientData.daysOverdue = daysLate;
+          clientData.oldestOverdue = ob.due_date;
         }
       }
 
@@ -234,9 +315,14 @@ export default function DefaultAnalysis() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Análise de Inadimplência</h1>
+          <h1 className="text-3xl font-bold">
+            {selectedClientId ? `Inadimplência - ${selectedClientName}` : "Análise de Inadimplência"}
+          </h1>
           <p className="text-muted-foreground mt-2">
-            Visão completa dos clientes inadimplentes e indicadores de cobrança
+            {selectedClientId
+              ? "Inadimplência do cliente selecionado"
+              : "Visão completa dos clientes inadimplentes e indicadores de cobrança"
+            }
           </p>
         </div>
 

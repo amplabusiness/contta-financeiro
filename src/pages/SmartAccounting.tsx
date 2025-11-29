@@ -32,21 +32,47 @@ interface TaskResult {
   message?: string;
 }
 
+interface StatusMessage {
+  text: string;
+  type: 'info' | 'success' | 'error';
+  timestamp: Date;
+}
+
 const SmartAccounting = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TaskResult>>({});
   const [progress, setProgress] = useState(0);
+  const [statusMessages, setStatusMessages] = useState<StatusMessage[]>([]);
+  const [currentOperation, setCurrentOperation] = useState<string>('');
 
-  const invokeSmartAccounting = async (action: string, params: any = {}) => {
+  const addStatusMessage = (text: string, type: 'info' | 'success' | 'error' = 'info') => {
+    setStatusMessages(prev => [...prev.slice(-9), { text, type, timestamp: new Date() }]);
+  };
+
+  const invokeSmartAccounting = async (action: string, params: any = {}, skipLoadingReset = false) => {
     try {
-      setLoading(action);
-      setProgress(10);
+      if (!skipLoadingReset) {
+        setLoading(action);
+        setProgress(10);
+        setStatusMessages([]);
+      }
+
+      const actionNames: Record<string, string> = {
+        'init_chart': 'Inicializando plano de contas...',
+        'generate_retroactive': `Processando ${params.table || 'dados'}...`,
+      };
+
+      const operationName = actionNames[action] || `Executando ${action}...`;
+      setCurrentOperation(operationName);
+      addStatusMessage(operationName, 'info');
 
       const { data, error } = await supabase.functions.invoke('smart-accounting', {
         body: { action, ...params }
       });
 
-      setProgress(100);
+      if (!skipLoadingReset) {
+        setProgress(100);
+      }
 
       if (error) {
         throw new Error(error.message);
@@ -55,19 +81,26 @@ const SmartAccounting = () => {
       setResults(prev => ({ ...prev, [action]: data }));
 
       if (data.success) {
-        toast.success(data.message || 'Operação concluída com sucesso!');
+        const successMsg = data.message || 'Operação concluída com sucesso!';
+        addStatusMessage(`✓ ${successMsg}`, 'success');
+        toast.success(successMsg);
       } else {
+        addStatusMessage(`✗ ${data.error || 'Erro na operação'}`, 'error');
         toast.error(data.error || 'Erro na operação');
       }
 
       return data;
     } catch (error: any) {
       console.error('Erro:', error);
+      addStatusMessage(`✗ Erro: ${error.message}`, 'error');
       toast.error(`Erro: ${error.message}`);
       setResults(prev => ({ ...prev, [action]: { success: false, message: error.message } }));
     } finally {
-      setLoading(null);
-      setProgress(0);
+      if (!skipLoadingReset) {
+        setLoading(null);
+        setProgress(0);
+        setCurrentOperation('');
+      }
     }
   };
 
@@ -92,40 +125,38 @@ const SmartAccounting = () => {
   const handleRunAll = async () => {
     setLoading('all');
     setProgress(0);
+    setStatusMessages([]);
+
+    const steps = [
+      { progress: 10, name: 'Inicializando plano de contas', action: 'init_chart', params: {} },
+      { progress: 30, name: 'Processando saldos de abertura', action: 'generate_retroactive', params: { table: 'client_opening_balance' } },
+      { progress: 50, name: 'Processando faturas', action: 'generate_retroactive', params: { table: 'invoices' } },
+      { progress: 70, name: 'Processando despesas', action: 'generate_retroactive', params: { table: 'expenses' } },
+      { progress: 90, name: 'Processando contas a pagar', action: 'generate_retroactive', params: { table: 'accounts_payable' } },
+    ];
 
     try {
-      // 1. Inicializar plano de contas
-      setProgress(10);
-      toast.info('Inicializando plano de contas...');
-      await invokeSmartAccounting('init_chart');
+      for (const step of steps) {
+        setProgress(step.progress);
+        setCurrentOperation(step.name + '...');
+        addStatusMessage(`➤ ${step.name}...`, 'info');
 
-      // 2. Saldos de abertura
-      setProgress(30);
-      toast.info('Processando saldos de abertura...');
-      await invokeSmartAccounting('generate_retroactive', { table: 'client_opening_balance' });
-
-      // 3. Faturas
-      setProgress(50);
-      toast.info('Processando faturas...');
-      await invokeSmartAccounting('generate_retroactive', { table: 'invoices' });
-
-      // 4. Despesas
-      setProgress(70);
-      toast.info('Processando despesas...');
-      await invokeSmartAccounting('generate_retroactive', { table: 'expenses' });
-
-      // 5. Contas a pagar
-      setProgress(90);
-      toast.info('Processando contas a pagar...');
-      await invokeSmartAccounting('generate_retroactive', { table: 'accounts_payable' });
+        await invokeSmartAccounting(step.action, step.params, true);
+      }
 
       setProgress(100);
+      setCurrentOperation('Concluído!');
+      addStatusMessage('✓ Todas as operações concluídas com sucesso!', 'success');
       toast.success('Todas as operações concluídas!');
     } catch (error: any) {
+      addStatusMessage(`✗ Erro: ${error.message}`, 'error');
       toast.error(`Erro: ${error.message}`);
     } finally {
       setLoading(null);
-      setProgress(0);
+      setTimeout(() => {
+        setProgress(0);
+        setCurrentOperation('');
+      }, 2000);
     }
   };
 
@@ -234,11 +265,35 @@ const SmartAccounting = () => {
         </div>
 
         {loading && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm font-medium">{currentOperation || 'Processando...'}</span>
+              <span className="text-sm text-muted-foreground ml-auto">{progress}%</span>
+            </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground text-center">
-              Processando... {progress}%
-            </p>
+
+            {statusMessages.length > 0 && (
+              <div className="bg-muted/50 rounded-lg p-3 max-h-40 overflow-y-auto">
+                <div className="space-y-1 text-sm font-mono">
+                  {statusMessages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-start gap-2 ${
+                        msg.type === 'success' ? 'text-green-600' :
+                        msg.type === 'error' ? 'text-red-600' :
+                        'text-muted-foreground'
+                      }`}
+                    >
+                      <span className="text-xs opacity-50">
+                        {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                      <span>{msg.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

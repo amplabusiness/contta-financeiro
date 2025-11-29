@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
+import { useClient } from "@/contexts/ClientContext";
 
 interface BankAccount {
   id: string;
@@ -34,11 +35,13 @@ interface CashFlowProjection {
 }
 
 const CashFlow = () => {
+  const { selectedClientId, selectedClientName } = useClient();
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [openingBalances, setOpeningBalances] = useState<any[]>([]);
   const [cashFlowTransactions, setCashFlowTransactions] = useState<any[]>([]);
   const [projection, setProjection] = useState<CashFlowProjection[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -67,7 +70,7 @@ const CashFlow = () => {
 
   useEffect(() => {
     loadCashFlowData();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, selectedClientId]);
 
   const syncCashFlow = async () => {
     setSyncing(true);
@@ -145,21 +148,33 @@ const CashFlow = () => {
       setBankAccounts(accountsData || []);
 
       // Buscar contas a pagar pendentes
-      const { data: payablesData, error: payablesError } = await supabase
+      let payablesQuery = supabase
         .from("accounts_payable")
         .select("*")
         .in("status", ["pending", "approved"])
         .order("due_date", { ascending: true });
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        payablesQuery = payablesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: payablesData, error: payablesError } = await payablesQuery;
       if (payablesError) throw payablesError;
 
       // Buscar despesas pendentes (sem duplicar com accounts_payable)
-      const { data: expensesData, error: expensesError } = await supabase
+      let expensesQuery = supabase
         .from("expenses")
         .select("*")
         .eq("status", "pending")
         .order("due_date", { ascending: true });
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        expensesQuery = expensesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: expensesData, error: expensesError } = await expensesQuery;
       if (expensesError) throw expensesError;
 
       // Normalizar despesas para a estrutura de contas a pagar
@@ -173,14 +188,35 @@ const CashFlow = () => {
       setAccountsPayable(combinedPayables);
 
       // Buscar faturas pendentes e vencidas (a receber)
-      const { data: invoicesData, error: invoicesError } = await supabase
+      let invoicesQuery = supabase
         .from("invoices")
         .select("*, clients(name)")
         .in("status", ["pending", "overdue"])
         .order("due_date", { ascending: true });
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: invoicesData, error: invoicesError } = await invoicesQuery;
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData || []);
+
+      // Buscar saldos de abertura pendentes (a receber)
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select("*, clients(name)")
+        .in("status", ["pending", "partial", "overdue"]);
+
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
+      if (openingBalanceError) throw openingBalanceError;
+      setOpeningBalances(openingBalanceData || []);
 
       // Buscar transações de fluxo de caixa
       const { data: transactionsData, error: transactionsError } = await supabase
@@ -191,8 +227,17 @@ const CashFlow = () => {
       if (transactionsError) throw transactionsError;
       setCashFlowTransactions(transactionsData || []);
 
+      // Combinar faturas com saldos de abertura para cálculos
+      const normalizedOpeningBalances = (openingBalanceData || []).map((ob) => ({
+        ...ob,
+        amount: Number(ob.amount || 0) - Number(ob.paid_amount || 0), // Valor restante
+        due_date: ob.due_date || format(new Date(), "yyyy-MM-dd"),
+      }));
+
+      const combinedReceivables = [...(invoicesData || []), ...normalizedOpeningBalances];
+
       // Calcular projeção
-      calculateProjection(accountsData || [], combinedPayables || [], invoicesData || [], transactionsData || []);
+      calculateProjection(accountsData || [], combinedPayables || [], combinedReceivables, transactionsData || []);
     } catch (error: any) {
       console.error("Erro ao carregar fluxo de caixa:", error);
       toast.error("Erro ao carregar dados do fluxo de caixa");
@@ -320,7 +365,21 @@ const CashFlow = () => {
   };
 
   const getTotalReceivables = () => {
-    return invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    // Soma faturas pendentes
+    const invoicesTotal = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    // Soma saldos de abertura pendentes (valor restante)
+    const openingBalanceTotal = openingBalances.reduce((sum, ob) => {
+      const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+      return sum + remaining;
+    }, 0);
+    return invoicesTotal + openingBalanceTotal;
+  };
+
+  const getTotalOpeningBalance = () => {
+    return openingBalances.reduce((sum, ob) => {
+      const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+      return sum + remaining;
+    }, 0);
   };
 
   const getProjectedBalance = () => {
@@ -362,7 +421,9 @@ const CashFlow = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Fluxo de Caixa</h1>
+            <h1 className="text-3xl font-bold">
+              {selectedClientId ? `Fluxo de Caixa - ${selectedClientName}` : "Fluxo de Caixa"}
+            </h1>
             <p className="text-muted-foreground">
               Gestão inteligente com projeções e alertas automáticos
             </p>
@@ -552,9 +613,14 @@ const CashFlow = () => {
               <div className="text-2xl font-bold text-green-500">
                 {formatCurrency(getTotalReceivables())}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {invoices.length} fatura{invoices.length !== 1 ? 's' : ''} pendente{invoices.length !== 1 ? 's' : ''}
-              </p>
+              <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                <p>{invoices.length} fatura{invoices.length !== 1 ? 's' : ''} pendente{invoices.length !== 1 ? 's' : ''}</p>
+                {openingBalances.length > 0 && (
+                  <p className="text-orange-600">
+                    + {openingBalances.length} saldo{openingBalances.length !== 1 ? 's' : ''} de abertura ({formatCurrency(getTotalOpeningBalance())})
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 

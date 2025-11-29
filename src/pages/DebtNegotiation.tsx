@@ -190,128 +190,147 @@ const DebtNegotiation = () => {
   };
 
   const loadClientsForNegotiation = async () => {
-    // Como a view pode não existir ainda, fazer a query manualmente
-    const { data: clientsData, error } = await supabase
-      .from("clients")
-      .select(`
-        id,
-        name,
-        cnpj,
-        cpf,
-        email,
-        phone,
-        uf,
-        municipio
-      `)
-      .eq("is_active", true)
-      .order("name");
+    try {
+      // Como a view pode não existir ainda, fazer a query manualmente
+      const { data: clientsData, error } = await supabase
+        .from("clients")
+        .select(`
+          id,
+          name,
+          cnpj,
+          cpf,
+          email,
+          phone,
+          uf,
+          municipio
+        `)
+        .eq("is_active", true)
+        .order("name");
 
-    if (error) {
-      console.error("Erro ao carregar clientes:", error);
-      return;
-    }
-
-    // Para cada cliente, calcular a dívida
-    const clientsWithDebt: ClientForNegotiation[] = [];
-
-    for (const client of clientsData || []) {
-      // Buscar faturas pendentes
-      const { data: invoices } = await supabase
-        .from("invoices")
-        .select("amount, due_date")
-        .eq("client_id", client.id)
-        .in("status", ["pending", "overdue"]);
-
-      // Buscar saldos de abertura pendentes
-      const { data: openingBalances } = await supabase
-        .from("client_opening_balance")
-        .select("amount, paid_amount")
-        .eq("client_id", client.id)
-        .in("status", ["pending", "partial"]);
-
-      // Buscar contatos
-      const { data: contacts } = await supabase
-        .from("client_contacts")
-        .select("id, contact_type, contact_value, contact_name, is_primary, is_whatsapp")
-        .eq("client_id", client.id)
-        .eq("is_valid", true);
-
-      const invoiceTotal = invoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
-      const openingTotal = openingBalances?.reduce((sum, ob) => sum + ((ob.amount || 0) - (ob.paid_amount || 0)), 0) || 0;
-      const totalDebt = invoiceTotal + openingTotal;
-
-      if (totalDebt > 0) {
-        const overdueInvoices = invoices?.filter(inv => new Date(inv.due_date) < new Date()) || [];
-        const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-        const oldestDue = overdueInvoices.length > 0
-          ? overdueInvoices.reduce((oldest, inv) => inv.due_date < oldest ? inv.due_date : oldest, overdueInvoices[0].due_date)
-          : null;
-        const overdueDays = oldestDue ? Math.floor((new Date().getTime() - new Date(oldestDue).getTime()) / (1000 * 60 * 60 * 24)) : 0;
-
-        clientsWithDebt.push({
-          client_id: client.id,
-          client_name: client.name,
-          cnpj: client.cnpj,
-          cpf: client.cpf,
-          email: client.email,
-          phone: client.phone,
-          uf: client.uf,
-          municipio: client.municipio,
-          total_debt: totalDebt,
-          overdue_amount: overdueAmount,
-          overdue_days: overdueDays,
-          oldest_due_date: oldestDue,
-          pending_invoices: invoices?.length || 0,
-          pending_opening_balance: openingBalances?.length || 0,
-          contact_count: contacts?.length || 0,
-          contacts: contacts || [],
-          last_contact_at: null,
-          active_negotiations: 0
-        });
+      if (error) {
+        console.error("Erro ao carregar clientes:", error);
+        return;
       }
+
+      // Para cada cliente, calcular a dívida
+      const clientsWithDebt: ClientForNegotiation[] = [];
+
+      for (const client of clientsData || []) {
+        // Buscar faturas pendentes
+        const { data: invoices } = await supabase
+          .from("invoices")
+          .select("amount, due_date")
+          .eq("client_id", client.id)
+          .in("status", ["pending", "overdue"]);
+
+        // Buscar saldos de abertura pendentes
+        const { data: openingBalances } = await supabase
+          .from("client_opening_balance")
+          .select("amount, paid_amount")
+          .eq("client_id", client.id)
+          .in("status", ["pending", "partial"]);
+
+        // Buscar contatos - pode não existir, então ignora erros
+        let contacts: any[] = [];
+        try {
+          const { data: contactsData } = await supabase
+            .from("client_contacts")
+            .select("id, contact_type, contact_value, contact_name, is_primary, is_whatsapp")
+            .eq("client_id", client.id)
+            .eq("is_valid", true);
+          contacts = contactsData || [];
+        } catch {
+          // Tabela pode não existir
+        }
+
+        const invoiceTotal = invoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
+        const openingTotal = openingBalances?.reduce((sum, ob) => sum + ((ob.amount || 0) - (ob.paid_amount || 0)), 0) || 0;
+        const totalDebt = invoiceTotal + openingTotal;
+
+        if (totalDebt > 0) {
+          const overdueInvoices = invoices?.filter(inv => new Date(inv.due_date) < new Date()) || [];
+          const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+          const oldestDue = overdueInvoices.length > 0
+            ? overdueInvoices.reduce((oldest, inv) => inv.due_date < oldest ? inv.due_date : oldest, overdueInvoices[0].due_date)
+            : null;
+          const overdueDays = oldestDue ? Math.floor((new Date().getTime() - new Date(oldestDue).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+          clientsWithDebt.push({
+            client_id: client.id,
+            client_name: client.name,
+            cnpj: client.cnpj,
+            cpf: client.cpf,
+            email: client.email,
+            phone: client.phone,
+            uf: client.uf,
+            municipio: client.municipio,
+            total_debt: totalDebt,
+            overdue_amount: overdueAmount,
+            overdue_days: overdueDays,
+            oldest_due_date: oldestDue,
+            pending_invoices: invoices?.length || 0,
+            pending_opening_balance: openingBalances?.length || 0,
+            contact_count: contacts.length,
+            contacts: contacts,
+            last_contact_at: null,
+            active_negotiations: 0
+          });
+        }
+      }
+
+      // Ordenar por dias em atraso
+      clientsWithDebt.sort((a, b) => b.overdue_days - a.overdue_days);
+
+      setClients(clientsWithDebt);
+
+      // Calcular estatísticas
+      setStats({
+        totalClients: clientsWithDebt.length,
+        totalDebt: clientsWithDebt.reduce((sum, c) => sum + c.total_debt, 0),
+        overdueDebt: clientsWithDebt.reduce((sum, c) => sum + c.overdue_amount, 0),
+        activeNegotiations: 0,
+        pendingApproval: 0
+      });
+    } catch (err) {
+      console.error("Erro inesperado ao carregar clientes:", err);
     }
-
-    // Ordenar por dias em atraso
-    clientsWithDebt.sort((a, b) => b.overdue_days - a.overdue_days);
-
-    setClients(clientsWithDebt);
-
-    // Calcular estatísticas
-    setStats({
-      totalClients: clientsWithDebt.length,
-      totalDebt: clientsWithDebt.reduce((sum, c) => sum + c.total_debt, 0),
-      overdueDebt: clientsWithDebt.reduce((sum, c) => sum + c.overdue_amount, 0),
-      activeNegotiations: 0,
-      pendingApproval: 0
-    });
   };
 
   const loadNegotiations = async () => {
-    const { data, error } = await supabase
-      .from("debt_negotiations")
-      .select(`
-        *,
-        clients:client_id (name)
-      `)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    try {
+      const { data, error } = await supabase
+        .from("debt_negotiations")
+        .select(`
+          *,
+          clients:client_id (name)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-    if (error) {
-      console.error("Erro ao carregar negociações:", error);
-      return;
+      if (error) {
+        // Se a tabela não existe, apenas log e continue
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          console.warn("Tabela debt_negotiations não existe ainda:", error);
+        } else {
+          console.error("Erro ao carregar negociações:", error);
+        }
+        return;
+      }
+
+      setNegotiations(data || []);
+
+      // Atualizar estatísticas
+      const active = data?.filter(n => n.status === 'active').length || 0;
+      const pending = data?.filter(n => n.status === 'pending_approval').length || 0;
+
+      setStats(prev => ({
+        ...prev,
+        activeNegotiations: active,
+        pendingApproval: pending
+      }));
+    } catch (err) {
+      console.error("Erro inesperado ao carregar negociações:", err);
     }
-
-    setNegotiations(data || []);
-
-    // Atualizar estatísticas
-    const active = data?.filter(n => n.status === 'active').length || 0;
-    const pending = data?.filter(n => n.status === 'pending_approval').length || 0;
-
-    setStats(prev => ({
-      ...prev,
-      activeNegotiations: active,
-      pendingApproval: pending
-    }));
   };
 
   const loadClientDetails = async (client: ClientForNegotiation) => {

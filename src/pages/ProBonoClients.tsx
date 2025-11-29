@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Loader2, Calendar, FileText, Edit, DollarSign, Trash2, Eye } from "lucide-react";
+import { Heart, Loader2, Calendar, FileText, Edit, DollarSign, Trash2, Eye, AlertCircle, GitMerge, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,18 +21,26 @@ import { useClient } from "@/contexts/ClientContext";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 import { formatDocument } from "@/lib/formatters";
 import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
+import { useNavigate } from "react-router-dom";
 
 const ProBonoClients = () => {
+  const navigate = useNavigate();
   const { selectedClientId } = useClient();
   const [clients, setClients] = useState<any[]>([]);
+  const [clientsWithoutFee, setClientsWithoutFee] = useState<any[]>([]);
   const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
+  const [groupMemberships, setGroupMemberships] = useState<Map<string, { groupName: string; mainPayerName: string; isMainPayer: boolean }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
+  const [viewMode, setViewMode] = useState<"pro_bono" | "without_fee">("pro_bono");
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
-    totalWaived: 0
+    totalWaived: 0,
+    withoutFee: 0,
+    inGroups: 0,
+    needsAction: 0
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -56,15 +64,15 @@ const ProBonoClients = () => {
   const loadProBonoClients = async () => {
     try {
       setLoading(true);
-      
+
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
         toast.error("Usuário não autenticado");
         return;
       }
 
-      // Buscar clientes Pro-Bono ATIVOS
-      let query = supabase
+      // Buscar clientes Pro-Bono (marcados explicitamente)
+      let proBonoQuery = supabase
         .from("clients")
         .select(`
           *,
@@ -75,17 +83,34 @@ const ProBonoClients = () => {
             status
           )
         `)
-        .eq('is_pro_bono', true)
-        .eq('is_active', true);
+        .eq('is_pro_bono', true);
 
-      // Aplicar filtro de status (somente se quiser ver ativos + inativos no futuro)
+      // Aplicar filtro de status
       if (statusFilter !== "all") {
-        query = query.eq('is_active', statusFilter === 'active');
+        proBonoQuery = proBonoQuery.eq('is_active', statusFilter === 'active');
       }
 
-      const { data: clientsData, error: clientsError } = await query.order("name");
+      const { data: proBonoData, error: proBonoError } = await proBonoQuery.order("name");
+      if (proBonoError) throw proBonoError;
 
-      if (clientsError) throw clientsError;
+      // Buscar clientes SEM honorário definido (monthly_fee = 0 ou NULL) que NÃO são Pro-Bono
+      const { data: withoutFeeData, error: withoutFeeError } = await supabase
+        .from("clients")
+        .select(`
+          *,
+          invoices (
+            id,
+            amount,
+            due_date,
+            status
+          )
+        `)
+        .eq('is_active', true)
+        .neq('is_pro_bono', true)
+        .or('monthly_fee.is.null,monthly_fee.eq.0')
+        .order("name");
+
+      if (withoutFeeError) throw withoutFeeError;
 
       // Buscar TODOS os clientes para identificação de grupos econômicos
       const { data: allClientsData, error: allClientsError } = await supabase
@@ -96,12 +121,39 @@ const ProBonoClients = () => {
       if (allClientsError) throw allClientsError;
       setAllClientsForGroups(allClientsData || []);
 
-      // Calcular estatísticas
-      const enrichedClients = (clientsData || []).map((client: any) => {
+      // Buscar membros de grupos financeiros para identificar quem pertence a grupos
+      const { data: groupMembersData } = await supabase
+        .from('economic_group_members')
+        .select(`
+          client_id,
+          economic_groups!inner (
+            id,
+            name,
+            main_payer_client_id,
+            clients!economic_groups_main_payer_client_id_fkey (
+              name
+            )
+          )
+        `);
+
+      // Criar mapa de membros de grupos
+      const memberships = new Map<string, { groupName: string; mainPayerName: string; isMainPayer: boolean }>();
+      (groupMembersData || []).forEach((member: any) => {
+        const group = member.economic_groups;
+        memberships.set(member.client_id, {
+          groupName: group.name,
+          mainPayerName: group.clients?.name || 'Desconhecido',
+          isMainPayer: group.main_payer_client_id === member.client_id
+        });
+      });
+      setGroupMemberships(memberships);
+
+      // Enriquecer clientes Pro-Bono
+      const enrichedProBono = (proBonoData || []).map((client: any) => {
         const invoices = client.invoices || [];
         const totalInvoices = invoices.length;
         const totalWaived = client.monthly_fee * totalInvoices;
-        
+
         return {
           ...client,
           totalInvoices,
@@ -109,15 +161,33 @@ const ProBonoClients = () => {
         };
       });
 
-      setClients(enrichedClients);
+      // Enriquecer clientes sem honorário
+      const enrichedWithoutFee = (withoutFeeData || []).map((client: any) => {
+        const invoices = client.invoices || [];
+        const totalInvoices = invoices.length;
+
+        return {
+          ...client,
+          totalInvoices,
+          totalWaived: 0
+        };
+      });
+
+      setClients(enrichedProBono);
+      setClientsWithoutFee(enrichedWithoutFee);
 
       // Calcular estatísticas gerais
-      const total = enrichedClients.length;
-      const active = enrichedClients.filter((c: any) => c.is_active === true).length;
-      const inactive = enrichedClients.filter((c: any) => c.is_active === false).length;
-      const totalWaived = enrichedClients.reduce((sum: number, c: any) => sum + c.totalWaived, 0);
+      const total = enrichedProBono.length;
+      const active = enrichedProBono.filter((c: any) => c.is_active === true).length;
+      const inactive = enrichedProBono.filter((c: any) => c.is_active === false).length;
+      const totalWaived = enrichedProBono.reduce((sum: number, c: any) => sum + c.totalWaived, 0);
+      const withoutFee = enrichedWithoutFee.length;
 
-      setStats({ total, active, inactive, totalWaived });
+      // Contar quantos clientes sem honorário pertencem a grupos
+      const inGroups = enrichedWithoutFee.filter((c: any) => memberships.has(c.id)).length;
+      const needsAction = withoutFee - inGroups;
+
+      setStats({ total, active, inactive, totalWaived, withoutFee, inGroups, needsAction });
     } catch (error: any) {
       console.error("Erro ao carregar clientes pro-bono:", error);
       toast.error("Erro ao carregar clientes pro-bono");
@@ -261,7 +331,7 @@ const ProBonoClients = () => {
           if (error.code === '23503') { // Foreign key violation
             const { error: updateError } = await supabase
               .from('clients')
-              .update({ is_active: false })
+              .update({ is_active: false } as any)
               .eq('id', deletingClient.id);
 
             if (updateError) throw updateError;
@@ -314,25 +384,48 @@ const ProBonoClients = () => {
           </div>
         </div>
 
-        {/* Filtro de Status */}
-        <div className="flex items-center gap-3">
-          <Label htmlFor="status-filter" className="text-sm font-medium">
-            Filtrar por status:
-          </Label>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
-            <SelectTrigger id="status-filter" className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos ({stats.total})</SelectItem>
-              <SelectItem value="active">Ativos ({stats.active})</SelectItem>
-              <SelectItem value="inactive">Inativos ({stats.inactive})</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Abas de visualização */}
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "pro_bono" ? "default" : "outline"}
+              onClick={() => setViewMode("pro_bono")}
+              className="gap-2"
+            >
+              <Heart className="h-4 w-4" />
+              Pro-Bono ({stats.total})
+            </Button>
+            <Button
+              variant={viewMode === "without_fee" ? "default" : "outline"}
+              onClick={() => setViewMode("without_fee")}
+              className="gap-2"
+            >
+              <AlertCircle className="h-4 w-4" />
+              Sem Honorário ({stats.withoutFee})
+            </Button>
+          </div>
+
+          {viewMode === "pro_bono" && (
+            <div className="flex items-center gap-3 ml-auto">
+              <Label htmlFor="status-filter" className="text-sm font-medium">
+                Filtrar por status:
+              </Label>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
+                <SelectTrigger id="status-filter" className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos ({stats.total})</SelectItem>
+                  <SelectItem value="active">Ativos ({stats.active})</SelectItem>
+                  <SelectItem value="inactive">Inativos ({stats.inactive})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {/* Cards de Estatísticas */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -364,36 +457,75 @@ const ProBonoClients = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Taxa de Pro-Bono
+                Sem Honorário Definido
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {((stats.total / Math.max(1, stats.total)) * 100).toFixed(1)}%
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{stats.withoutFee}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Do total de clientes
+                {stats.inGroups > 0 ? (
+                  <span>
+                    <span className="text-blue-600">{stats.inGroups} em grupos</span>
+                    {stats.needsAction > 0 && (
+                      <> • <span className="text-orange-600">{stats.needsAction} a definir</span></>
+                    )}
+                  </span>
+                ) : (
+                  "Clientes a classificar"
+                )}
               </p>
             </CardContent>
           </Card>
+
+          {stats.inGroups > 0 && (
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-blue-700">
+                  Em Grupos Financeiros
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{stats.inGroups}</div>
+                <p className="text-xs text-blue-600/80 mt-1">
+                  Pagos pela empresa matriz
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Tabela de Clientes Pro-Bono */}
+        {/* Tabela de Clientes */}
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Clientes Pro-Bono</CardTitle>
+            <CardTitle>
+              {viewMode === "pro_bono" ? "Lista de Clientes Pro-Bono" : "Clientes sem Honorário Definido"}
+            </CardTitle>
             <CardDescription>
-              {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} encontrado{filteredClients.length !== 1 ? 's' : ''}
-              {selectedClientId && ` (filtrado)`}
+              {viewMode === "pro_bono" ? (
+                <>
+                  {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''} Pro-Bono encontrado{filteredClients.length !== 1 ? 's' : ''}
+                  {selectedClientId && ` (filtrado)`}
+                </>
+              ) : (
+                <>
+                  {clientsWithoutFee.length} cliente{clientsWithoutFee.length !== 1 ? 's' : ''} sem honorário definido.
+                  <span className="text-orange-600 font-medium ml-1">Defina um valor ou marque como Pro-Bono.</span>
+                </>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {filteredClients.length === 0 ? (
+            {viewMode === "pro_bono" && filteredClients.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Heart className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhum cliente pro-bono cadastrado</p>
               </div>
-            ) : (
+            ) : viewMode === "without_fee" && clientsWithoutFee.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50 text-green-500" />
+                <p className="text-green-600 font-medium">Todos os clientes têm honorário definido!</p>
+              </div>
+            ) : viewMode === "pro_bono" ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -489,6 +621,105 @@ const ProBonoClients = () => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              // Tabela de Clientes sem Honorário
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>CPF/CNPJ</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Honorário Atual</TableHead>
+                      <TableHead>Grupo Econômico</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clientsWithoutFee.map((client) => (
+                      <TableRow key={client.id} className={groupMemberships.has(client.id) ? "bg-blue-50/50" : "bg-orange-50/50"}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <FinancialGroupBadge clientId={client.id} />
+                            {groupMemberships.has(client.id) ? (
+                              <GitMerge className="h-4 w-4 text-blue-500" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-orange-500" />
+                            )}
+                            {client.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {(client.cnpj || client.cpf) ? formatDocument(client.cnpj || client.cpf || "") : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={client.is_active ? "default" : "secondary"}>
+                            {client.is_active ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {groupMemberships.has(client.id) ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="gap-1 border-blue-400 text-blue-700 bg-blue-50">
+                                <GitMerge className="h-3 w-3" />
+                                Em Grupo
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                Pago por: {groupMemberships.get(client.id)?.mainPayerName}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-orange-600 font-medium">
+                              {client.monthly_fee === 0 ? "R$ 0,00" : "Não definido"}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <EconomicGroupIndicator client={client} allClients={allClientsForGroups} />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setViewingClient(client);
+                                setViewDialogOpen(true);
+                              }}
+                              title="Ver Dados da Empresa"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {groupMemberships.has(client.id) ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate('/economic-groups')}
+                                title="Ver Grupo Financeiro"
+                                className="gap-1 text-blue-600 border-blue-300 hover:bg-blue-50"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                                Ver Grupo
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditClick(client)}
+                                title="Definir honorário ou marcar como Pro-Bono"
+                                className="gap-1 text-orange-600 border-orange-300 hover:bg-orange-50"
+                              >
+                                <Edit className="h-4 w-4" />
+                                Definir
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

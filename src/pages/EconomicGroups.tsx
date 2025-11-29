@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, AlertTriangle, DollarSign, FileCheck } from "lucide-react";
+import { Building2, Users, AlertTriangle, DollarSign, FileCheck, Plus, Search, X, Crown, Trash2, Edit } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,11 @@ import { formatDocument } from '@/lib/formatters';
 import * as XLSX from "xlsx";
 import { FinancialGroupImporter } from "@/components/FinancialGroupImporter";
 import { FinancialGroupAudit } from "@/components/FinancialGroupAudit";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EconomicGroup {
   id: string;
@@ -35,6 +40,21 @@ interface GroupMember {
   is_main_payer: boolean;
 }
 
+interface ClientOption {
+  id: string;
+  name: string;
+  document: string;
+  monthly_fee: number;
+}
+
+interface SelectedClient {
+  id: string;
+  name: string;
+  document: string;
+  monthly_fee: number;
+  isMainPayer: boolean;
+}
+
 export default function EconomicGroups() {
   const [groups, setGroups] = useState<EconomicGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +63,19 @@ export default function EconomicGroups() {
   const [importPreview, setImportPreview] = useState<any[][] | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Estado para criação manual de grupo
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [paymentDay, setPaymentDay] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<ClientOption[]>([]);
+  const [selectedClients, setSelectedClients] = useState<SelectedClient[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Estado para edição de grupo
+  const [editingGroup, setEditingGroup] = useState<EconomicGroup | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -165,6 +198,235 @@ export default function EconomicGroups() {
     // Agora o botão apenas abre o seletor de arquivos, não cria grupos automaticamente
     fileInputRef.current?.click();
   };
+
+  // Buscar clientes por nome ou CNPJ
+  const searchClients = async (term: string) => {
+    if (term.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearching(true);
+      const searchPattern = `%${term}%`;
+
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name, cnpj, cpf, monthly_fee')
+        .eq('is_active', true)
+        .or(`name.ilike.${searchPattern},cnpj.ilike.${searchPattern},cpf.ilike.${searchPattern}`)
+        .order('name')
+        .limit(20);
+
+      if (error) throw error;
+
+      // Filtrar clientes já selecionados
+      const selectedIds = new Set(selectedClients.map(c => c.id));
+      const filteredResults = (data || [])
+        .filter(c => !selectedIds.has(c.id))
+        .map(c => ({
+          id: c.id,
+          name: c.name,
+          document: c.cnpj || c.cpf || '',
+          monthly_fee: c.monthly_fee || 0
+        }));
+
+      setSearchResults(filteredResults);
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Adicionar cliente à lista de selecionados
+  const addClient = (client: ClientOption) => {
+    const isFirst = selectedClients.length === 0;
+    setSelectedClients(prev => [
+      ...prev,
+      { ...client, isMainPayer: isFirst }
+    ]);
+    setSearchTerm('');
+    setSearchResults([]);
+  };
+
+  // Remover cliente da lista
+  const removeClient = (clientId: string) => {
+    setSelectedClients(prev => {
+      const filtered = prev.filter(c => c.id !== clientId);
+      // Se removeu o pagador principal, define o primeiro como novo pagador
+      if (filtered.length > 0 && !filtered.some(c => c.isMainPayer)) {
+        filtered[0].isMainPayer = true;
+      }
+      return filtered;
+    });
+  };
+
+  // Definir como empresa pagadora
+  const setAsMainPayer = (clientId: string) => {
+    setSelectedClients(prev =>
+      prev.map(c => ({ ...c, isMainPayer: c.id === clientId }))
+    );
+  };
+
+  // Resetar formulário
+  const resetForm = () => {
+    setGroupName('');
+    setPaymentDay(10);
+    setSearchTerm('');
+    setSearchResults([]);
+    setSelectedClients([]);
+    setEditingGroup(null);
+  };
+
+  // Salvar grupo
+  const saveGroup = async () => {
+    if (!groupName.trim()) {
+      toast.error('Digite um nome para o grupo');
+      return;
+    }
+    if (selectedClients.length < 2) {
+      toast.error('Selecione pelo menos 2 empresas para o grupo');
+      return;
+    }
+    const mainPayer = selectedClients.find(c => c.isMainPayer);
+    if (!mainPayer) {
+      toast.error('Selecione a empresa pagadora');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const totalFee = selectedClients.reduce((sum, c) => sum + c.monthly_fee, 0);
+
+      if (editingGroup) {
+        // Atualizar grupo existente
+        const { error: updateError } = await supabase
+          .from('economic_groups')
+          .update({
+            name: groupName.trim(),
+            main_payer_client_id: mainPayer.id,
+            total_monthly_fee: totalFee,
+            payment_day: paymentDay
+          })
+          .eq('id', editingGroup.id);
+
+        if (updateError) throw updateError;
+
+        // Remover membros antigos
+        await supabase
+          .from('economic_group_members')
+          .delete()
+          .eq('economic_group_id', editingGroup.id);
+
+        // Inserir novos membros
+        const members = selectedClients.map(c => ({
+          economic_group_id: editingGroup.id,
+          client_id: c.id,
+          individual_fee: c.monthly_fee
+        }));
+
+        const { error: membersError } = await supabase
+          .from('economic_group_members')
+          .insert(members);
+
+        if (membersError) throw membersError;
+
+        toast.success('Grupo atualizado com sucesso!');
+      } else {
+        // Criar novo grupo
+        const { data: newGroup, error: createError } = await supabase
+          .from('economic_groups')
+          .insert({
+            name: groupName.trim(),
+            main_payer_client_id: mainPayer.id,
+            total_monthly_fee: totalFee,
+            payment_day: paymentDay,
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        // Inserir membros
+        const members = selectedClients.map(c => ({
+          economic_group_id: newGroup.id,
+          client_id: c.id,
+          individual_fee: c.monthly_fee
+        }));
+
+        const { error: membersError } = await supabase
+          .from('economic_group_members')
+          .insert(members);
+
+        if (membersError) throw membersError;
+
+        toast.success('Grupo criado com sucesso!');
+      }
+
+      setShowCreateDialog(false);
+      resetForm();
+      loadGroups();
+    } catch (error) {
+      console.error('Erro ao salvar grupo:', error);
+      toast.error('Erro ao salvar grupo');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Editar grupo existente
+  const handleEditGroup = (group: EconomicGroup) => {
+    setEditingGroup(group);
+    setGroupName(group.name);
+    setPaymentDay(group.payment_day);
+    setSelectedClients(group.members.map(m => ({
+      id: m.client_id,
+      name: m.client_name,
+      document: m.client_document || '',
+      monthly_fee: m.individual_fee,
+      isMainPayer: m.is_main_payer
+    })));
+    setShowCreateDialog(true);
+  };
+
+  // Excluir grupo
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este grupo?')) return;
+
+    try {
+      // Primeiro remove os membros
+      await supabase
+        .from('economic_group_members')
+        .delete()
+        .eq('economic_group_id', groupId);
+
+      // Depois desativa o grupo
+      const { error } = await supabase
+        .from('economic_groups')
+        .update({ is_active: false })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      toast.success('Grupo excluído com sucesso');
+      loadGroups();
+    } catch (error) {
+      console.error('Erro ao excluir grupo:', error);
+      toast.error('Erro ao excluir grupo');
+    }
+  };
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm) {
+        searchClients(searchTerm);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
@@ -207,6 +469,7 @@ export default function EconomicGroups() {
           ref={fileInputRef}
           className="hidden"
           onChange={handleFileSelected}
+          aria-label="Selecionar arquivo de planilha"
         />
 
         {importPreview ? (
@@ -243,13 +506,22 @@ export default function EconomicGroups() {
                   Empresas relacionadas com pagamento consolidado
                 </p>
               </div>
-              <Button 
-                onClick={handleImportGroups} 
-                disabled={importing}
-                size="lg"
-              >
-                {importing ? 'Lendo planilha...' : totalGroups > 0 ? 'Reimportar Grupos' : 'Importar Grupos'}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => { resetForm(); setShowCreateDialog(true); }}
+                  size="lg"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Grupo
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleImportGroups}
+                  disabled={importing}
+                >
+                  {importing ? 'Lendo planilha...' : 'Importar Planilha'}
+                </Button>
+              </div>
             </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -294,9 +566,13 @@ export default function EconomicGroups() {
           <Card className="p-8 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum grupo financeiro encontrado</h3>
-            <p className="text-muted-foreground mb-2">
-              Clique no botão acima para importar a planilha de grupos financeiros.
+            <p className="text-muted-foreground mb-4">
+              Crie grupos financeiros para consolidar pagamentos de empresas relacionadas.
             </p>
+            <Button onClick={() => { resetForm(); setShowCreateDialog(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Primeiro Grupo
+            </Button>
           </Card>
         ) : (
           <>
@@ -360,6 +636,24 @@ export default function EconomicGroups() {
                           {formatCurrency(group.total_monthly_fee)}
                         </p>
                       </div>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditGroup(group)}
+                          title="Editar grupo"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteGroup(group.id)}
+                          title="Excluir grupo"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                       <ChevronDown
                         className={`h-5 w-5 transition-transform ${
                           expandedGroups.has(group.id) ? 'transform rotate-180' : ''
@@ -417,6 +711,157 @@ export default function EconomicGroups() {
         )}
           </>
         )}
+
+        {/* Dialog de Criação/Edição de Grupo */}
+        <Dialog open={showCreateDialog} onOpenChange={(open) => { if (!open) { resetForm(); } setShowCreateDialog(open); }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>{editingGroup ? 'Editar Grupo Financeiro' : 'Criar Novo Grupo Financeiro'}</DialogTitle>
+              <DialogDescription>
+                {editingGroup
+                  ? 'Altere os dados do grupo financeiro.'
+                  : 'Busque e selecione as empresas que farão parte deste grupo. A empresa pagadora receberá o boleto consolidado.'
+                }
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+              {/* Nome do Grupo e Dia de Pagamento */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="groupName">Nome do Grupo</Label>
+                  <Input
+                    id="groupName"
+                    placeholder="Ex: Grupo Familia Silva"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentDay">Dia de Vencimento</Label>
+                  <Input
+                    id="paymentDay"
+                    type="number"
+                    min={1}
+                    max={28}
+                    value={paymentDay}
+                    onChange={(e) => setPaymentDay(parseInt(e.target.value) || 10)}
+                  />
+                </div>
+              </div>
+
+              {/* Campo de Busca */}
+              <div className="space-y-2">
+                <Label>Buscar Empresas</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Digite o nome ou CNPJ da empresa..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Resultados da busca */}
+                {searchResults.length > 0 && (
+                  <Card className="p-0 max-h-48 overflow-auto">
+                    {searchResults.map((client) => (
+                      <div
+                        key={client.id}
+                        className="p-3 hover:bg-accent cursor-pointer border-b last:border-0 flex items-center justify-between"
+                        onClick={() => addClient(client)}
+                      >
+                        <div>
+                          <p className="font-medium">{client.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDocument(client.document)} | {formatCurrency(client.monthly_fee)}/mês
+                          </p>
+                        </div>
+                        <Plus className="h-4 w-4 text-primary" />
+                      </div>
+                    ))}
+                  </Card>
+                )}
+
+                {searching && (
+                  <p className="text-sm text-muted-foreground">Buscando...</p>
+                )}
+              </div>
+
+              {/* Lista de Empresas Selecionadas */}
+              <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
+                <div className="flex items-center justify-between">
+                  <Label>Empresas Selecionadas ({selectedClients.length})</Label>
+                  {selectedClients.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      Total: {formatCurrency(selectedClients.reduce((sum, c) => sum + c.monthly_fee, 0))}
+                    </span>
+                  )}
+                </div>
+
+                <ScrollArea className="flex-1 border rounded-lg min-h-0">
+                  <div className="p-2 space-y-2">
+                    {selectedClients.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        Nenhuma empresa selecionada. Use o campo acima para buscar e adicionar empresas.
+                      </p>
+                    ) : (
+                      selectedClients.map((client) => (
+                        <div
+                          key={client.id}
+                          className={`p-3 rounded-lg border flex items-center justify-between ${
+                            client.isMainPayer ? 'bg-primary/5 border-primary' : 'bg-accent/20'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`main-${client.id}`}
+                                checked={client.isMainPayer}
+                                onCheckedChange={() => setAsMainPayer(client.id)}
+                              />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{client.name}</p>
+                                {client.isMainPayer && (
+                                  <Badge variant="default" className="text-xs flex items-center gap-1">
+                                    <Crown className="h-3 w-3" />
+                                    Pagadora
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDocument(client.document)} | {formatCurrency(client.monthly_fee)}/mês
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeClient(client.id)}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { resetForm(); setShowCreateDialog(false); }}>
+                Cancelar
+              </Button>
+              <Button onClick={saveGroup} disabled={saving || selectedClients.length < 2}>
+                {saving ? 'Salvando...' : editingGroup ? 'Salvar Alterações' : 'Criar Grupo'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

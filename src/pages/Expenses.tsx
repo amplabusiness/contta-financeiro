@@ -15,9 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useClient } from "@/contexts/ClientContext";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
+  const { selectedClientId, selectedClientName } = useClient();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ const Expenses = () => {
   useEffect(() => {
     loadExpenses();
     loadAccounts();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, selectedClientId]); // Recarregar quando mudar cliente
 
   const loadAccounts = async () => {
     try {
@@ -80,6 +82,11 @@ const Expenses = () => {
   const loadExpenses = async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
+
+      // Filtrar por cliente se selecionado
+      if (selectedClientId) {
+        query = query.eq("client_id", selectedClientId);
+      }
 
       // Filtrar por competência se ano ou mês estiverem selecionados
       if (selectedYear && selectedMonth) {
@@ -262,8 +269,15 @@ const Expenses = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Despesas</h1>
-          <p className="text-muted-foreground">Controle de contas a pagar</p>
+          <h1 className="text-3xl font-bold">
+            {selectedClientId ? `Despesas - ${selectedClientName}` : "Despesas"}
+          </h1>
+          <p className="text-muted-foreground">
+            {selectedClientId
+              ? "Despesas do cliente selecionado"
+              : "Controle de contas a pagar - selecione um cliente para filtrar"
+            }
+          </p>
         </div>
 
         <Card>

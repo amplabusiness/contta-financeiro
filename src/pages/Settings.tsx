@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -9,13 +9,127 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save, Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Interface para dados da empresa via Brasil API
+interface CompanyData {
+  razao_social: string;
+  nome_fantasia: string;
+  cnpj: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  municipio: string;
+  uf: string;
+  cep: string;
+  email: string;
+  ddd_telefone_1: string;
+}
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingCnpj, setIsLoadingCnpj] = useState(false);
+
+  // Estados para os campos da empresa
+  const [companyForm, setCompanyForm] = useState({
+    cnpj: "",
+    razaoSocial: "Ampla Contabilidade Ltda",
+    nomeFantasia: "Ampla Business",
+    crc: "",
+    website: "www.amplabusiness.com.br",
+    email: "",
+    phone: "",
+    address: "",
+    number: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
+
+  // Formatar CNPJ enquanto digita
+  const formatCnpj = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    return numbers
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .slice(0, 18);
+  };
+
+  // Buscar dados do CNPJ na Brasil API
+  const fetchCnpjData = async (cnpj: string) => {
+    const cleanCnpj = cnpj.replace(/\D/g, "");
+    if (cleanCnpj.length !== 14) return;
+
+    setIsLoadingCnpj(true);
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+
+      if (!response.ok) {
+        throw new Error("CNPJ não encontrado");
+      }
+
+      const data: CompanyData = await response.json();
+
+      // Formatar telefone
+      let phone = "";
+      if (data.ddd_telefone_1) {
+        const phoneClean = data.ddd_telefone_1.replace(/\D/g, "");
+        if (phoneClean.length >= 10) {
+          phone = `(${phoneClean.slice(0, 2)}) ${phoneClean.slice(2, 6)}-${phoneClean.slice(6, 10)}`;
+        }
+      }
+
+      // Atualizar formulário com dados da API
+      setCompanyForm(prev => ({
+        ...prev,
+        razaoSocial: data.razao_social || prev.razaoSocial,
+        nomeFantasia: data.nome_fantasia || data.razao_social || prev.nomeFantasia,
+        email: data.email || prev.email,
+        phone: phone || prev.phone,
+        address: data.logradouro || prev.address,
+        number: data.numero || prev.number,
+        city: data.municipio || prev.city,
+        state: data.uf || prev.state,
+        zip: data.cep ? data.cep.replace(/(\d{5})(\d{3})/, "$1-$2") : prev.zip,
+      }));
+
+      toast({
+        title: "Dados carregados",
+        description: `Dados de ${data.razao_social} preenchidos automaticamente.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao buscar CNPJ",
+        description: "Não foi possível encontrar dados para este CNPJ. Verifique e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCnpj(false);
+    }
+  };
+
+  // Handler para mudança do CNPJ
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCnpj(e.target.value);
+    setCompanyForm(prev => ({ ...prev, cnpj: formatted }));
+
+    // Buscar automaticamente quando CNPJ estiver completo
+    const cleanCnpj = formatted.replace(/\D/g, "");
+    if (cleanCnpj.length === 14) {
+      fetchCnpjData(formatted);
+    }
+  };
+
+  // Handler genérico para outros campos
+  const handleFieldChange = (field: keyof typeof companyForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCompanyForm(prev => ({ ...prev, [field]: e.target.value }));
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -84,33 +198,57 @@ const Settings = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* CNPJ com busca automática */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="companyName">Razão Social</Label>
-                        <Input
-                          id="companyName"
-                          placeholder="Ampla Contabilidade Ltda"
-                          defaultValue="Ampla Contabilidade Ltda"
-                        />
+                        <Label htmlFor="cnpj">CNPJ do Escritório</Label>
+                        <div className="relative">
+                          <Input
+                            id="cnpj"
+                            placeholder="00.000.000/0000-00"
+                            value={companyForm.cnpj}
+                            onChange={handleCnpjChange}
+                            className={isLoadingCnpj ? "pr-10" : ""}
+                          />
+                          {isLoadingCnpj && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Digite o CNPJ para preencher automaticamente os dados
+                        </p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="tradeName">Nome Fantasia</Label>
+                        <Label htmlFor="crc">CRC (Registro no CFC)</Label>
                         <Input
-                          id="tradeName"
-                          placeholder="Ampla Business"
-                          defaultValue="Ampla Business"
+                          id="crc"
+                          placeholder="CRC/XX 000000"
+                          value={companyForm.crc}
+                          onChange={handleFieldChange("crc")}
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="cnpj">CNPJ</Label>
-                        <Input id="cnpj" placeholder="00.000.000/0000-00" />
+                        <Label htmlFor="companyName">Razão Social</Label>
+                        <Input
+                          id="companyName"
+                          placeholder="Razão Social da Empresa"
+                          value={companyForm.razaoSocial}
+                          onChange={handleFieldChange("razaoSocial")}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="crc">CRC (Registro no CFC)</Label>
-                        <Input id="crc" placeholder="CRC/XX 000000" />
+                        <Label htmlFor="tradeName">Nome Fantasia</Label>
+                        <Input
+                          id="tradeName"
+                          placeholder="Nome Fantasia"
+                          value={companyForm.nomeFantasia}
+                          onChange={handleFieldChange("nomeFantasia")}
+                        />
                       </div>
                     </div>
 
@@ -118,19 +256,31 @@ const Settings = () => {
                       <Label htmlFor="website">Website</Label>
                       <Input
                         id="website"
-                        placeholder="www.amplabusiness.com.br"
-                        defaultValue="www.amplabusiness.com.br"
+                        placeholder="www.seusite.com.br"
+                        value={companyForm.website}
+                        onChange={handleFieldChange("website")}
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="email">E-mail</Label>
-                        <Input id="email" type="email" placeholder="contato@amplabusiness.com.br" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="contato@empresa.com.br"
+                          value={companyForm.email}
+                          onChange={handleFieldChange("email")}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Telefone</Label>
-                        <Input id="phone" placeholder="(00) 0000-0000" />
+                        <Input
+                          id="phone"
+                          placeholder="(00) 0000-0000"
+                          value={companyForm.phone}
+                          onChange={handleFieldChange("phone")}
+                        />
                       </div>
                     </div>
                   </CardContent>
@@ -139,31 +289,60 @@ const Settings = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Endereço</CardTitle>
+                    <CardDescription>
+                      Preenchido automaticamente ao digitar o CNPJ
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-2 space-y-2">
                         <Label htmlFor="address">Logradouro</Label>
-                        <Input id="address" placeholder="Rua, Avenida..." />
+                        <Input
+                          id="address"
+                          placeholder="Rua, Avenida..."
+                          value={companyForm.address}
+                          onChange={handleFieldChange("address")}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="number">Número</Label>
-                        <Input id="number" placeholder="000" />
+                        <Input
+                          id="number"
+                          placeholder="000"
+                          value={companyForm.number}
+                          onChange={handleFieldChange("number")}
+                        />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="city">Cidade</Label>
-                        <Input id="city" placeholder="Cidade" />
+                        <Input
+                          id="city"
+                          placeholder="Cidade"
+                          value={companyForm.city}
+                          onChange={handleFieldChange("city")}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="state">Estado</Label>
-                        <Input id="state" placeholder="UF" maxLength={2} />
+                        <Input
+                          id="state"
+                          placeholder="UF"
+                          maxLength={2}
+                          value={companyForm.state}
+                          onChange={handleFieldChange("state")}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="zip">CEP</Label>
-                        <Input id="zip" placeholder="00000-000" />
+                        <Input
+                          id="zip"
+                          placeholder="00000-000"
+                          value={companyForm.zip}
+                          onChange={handleFieldChange("zip")}
+                        />
                       </div>
                     </div>
                   </CardContent>

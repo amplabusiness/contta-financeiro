@@ -17,18 +17,32 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Users, AlertTriangle, TrendingDown, Building2, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Users, AlertTriangle, TrendingDown, Building2, ChevronDown, ChevronUp, DollarSign, Info } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { formatDocument } from "@/lib/formatters";
+
+interface Partner {
+  nome: string;
+  qual: string; // qualificação (sócio, administrador, etc)
+}
+
+interface ClientWithPartners {
+  id: string;
+  name: string;
+  cnpj: string;
+  qsa: Partner[];
+  monthly_fee: number;
+  total_paid: number;
+}
 
 interface EconomicGroup {
   group_key: string;
   partner_names: string[];
   company_count: number;
-  company_names: string[];
-  company_ids: string[];
+  companies: ClientWithPartners[];
   total_revenue: number;
   percentage_of_total: number;
   risk_level: 'high' | 'medium' | 'low';
@@ -42,8 +56,7 @@ interface GroupStats {
 }
 
 const EconomicGroupAnalysis = () => {
-  const { toast } = useToast();
-  const { selectedYear } = usePeriod();
+  const { selectedYear, selectedMonth } = usePeriod();
   const [isLoading, setIsLoading] = useState(true);
   const [groups, setGroups] = useState<EconomicGroup[]>([]);
   const [stats, setStats] = useState<GroupStats>({
@@ -53,129 +66,205 @@ const EconomicGroupAnalysis = () => {
     averageConcentration: 0,
   });
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     loadEconomicGroups();
-  }, [selectedYear]);
+  }, [selectedYear, selectedMonth]);
 
   const loadEconomicGroups = async () => {
     setIsLoading(true);
     try {
-      // Call the Supabase RPC function to get economic group impact
       const year = selectedYear || new Date().getFullYear();
+      const month = selectedMonth || new Date().getMonth() + 1;
 
-      const { data, error } = await supabase.rpc('get_economic_group_impact', {
-        p_year: year
+      // Definir período
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
+
+      // Buscar clientes ativos com QSA
+      // @ts-ignore - Supabase type recursion issue
+      const clientsResult = await supabase
+        .from('clients')
+        .select('id, name, cnpj, qsa, monthly_fee')
+        .eq('is_active', true);
+
+      if (clientsResult.error) throw clientsResult.error;
+      const clientsData = (clientsResult.data || []) as Array<{
+        id: string;
+        name: string;
+        cnpj: string | null;
+        qsa: any;
+        monthly_fee: number | null;
+      }>;
+
+      // Buscar faturas pagas no período para calcular receita
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('client_id, amount')
+        .eq('status', 'paid')
+        .gte('paid_date', startDate.toISOString())
+        .lte('paid_date', endDate.toISOString());
+
+      if (invoicesError) throw invoicesError;
+
+      // Calcular receita total do período
+      const totalRev = (invoicesData || []).reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+      setTotalRevenue(totalRev);
+
+      // Criar mapa de receita por cliente
+      const revenueByClient = new Map<string, number>();
+      (invoicesData || []).forEach(inv => {
+        const current = revenueByClient.get(inv.client_id) || 0;
+        revenueByClient.set(inv.client_id, current + Number(inv.amount || 0));
       });
 
-      if (error) {
-        // Extract error message safely to avoid serialization issues
-        let errorMsg = 'Unknown error';
-
-        try {
-          // Try to get error message from various properties
-          if (error && typeof error === 'object') {
-            if (error.message) {
-              errorMsg = String(error.message);
-            } else if (error.details) {
-              errorMsg = String(error.details);
-            } else if (error.hint) {
-              errorMsg = String(error.hint);
-            }
-          } else if (typeof error === 'string') {
-            errorMsg = error;
+      // Processar clientes e extrair sócios
+      const clientsWithPartners: ClientWithPartners[] = (clientsData || [])
+        .filter(client => {
+          // Verificar se qsa é um array válido com pelo menos um sócio
+          if (!client.qsa) return false;
+          try {
+            const qsa = typeof client.qsa === 'string' ? JSON.parse(client.qsa) : client.qsa;
+            return Array.isArray(qsa) && qsa.length > 0;
+          } catch {
+            return false;
           }
-        } catch (e) {
-          // If extraction fails, use default message
-          errorMsg = 'Erro ao processar resposta do servidor';
+        })
+        .map(client => {
+          let qsa: Partner[] = [];
+          try {
+            qsa = typeof client.qsa === 'string' ? JSON.parse(client.qsa) : client.qsa;
+          } catch {
+            qsa = [];
+          }
+          return {
+            id: client.id,
+            name: client.name,
+            cnpj: client.cnpj || '',
+            qsa: qsa,
+            monthly_fee: client.monthly_fee || 0,
+            total_paid: revenueByClient.get(client.id) || 0,
+          };
+        });
+
+      // Criar mapa de sócio -> empresas
+      const partnerToCompanies = new Map<string, Set<string>>();
+
+      clientsWithPartners.forEach(client => {
+        client.qsa.forEach(partner => {
+          if (partner.nome) {
+            const normalizedName = partner.nome.trim().toUpperCase();
+            if (!partnerToCompanies.has(normalizedName)) {
+              partnerToCompanies.set(normalizedName, new Set());
+            }
+            partnerToCompanies.get(normalizedName)!.add(client.id);
+          }
+        });
+      });
+
+      // Encontrar grupos de empresas conectadas por sócios
+      const clientIdToGroup = new Map<string, string>();
+      const groupMembers = new Map<string, Set<string>>();
+      const groupPartners = new Map<string, Set<string>>();
+
+      // Union-Find para agrupar empresas conectadas
+      const findRoot = (id: string): string => {
+        if (!clientIdToGroup.has(id)) {
+          clientIdToGroup.set(id, id);
         }
-
-        console.error('RPC Error:', errorMsg);
-
-        if (errorMsg.toLowerCase().includes('body stream already read')) {
-          errorMsg = 'Falha ao processar a resposta do Supabase. Reaplique a função get_economic_group_impact com a última migração em supabase/migrations/20251120_fix_economic_group_return_types.sql.';
+        if (clientIdToGroup.get(id) !== id) {
+          clientIdToGroup.set(id, findRoot(clientIdToGroup.get(id)!));
         }
+        return clientIdToGroup.get(id)!;
+      };
 
-        // Check if it's a "function not found" error
-        const isNotFound =
-          (error?.code && String(error.code).includes('PGRST116')) ||
-          (error?.code && String(error.code).includes('42883')) ||
-          errorMsg.toLowerCase().includes('function') ||
-          errorMsg.toLowerCase().includes('does not exist') ||
-          errorMsg.toLowerCase().includes('undefined function');
+      const union = (id1: string, id2: string) => {
+        const root1 = findRoot(id1);
+        const root2 = findRoot(id2);
+        if (root1 !== root2) {
+          clientIdToGroup.set(root2, root1);
+        }
+      };
 
-        if (isNotFound) {
-          console.warn('RPC function not found - database migrations may not be applied');
-          setGroups([]);
-          setStats({
-            totalGroups: 0,
-            totalCompanies: 0,
-            highRiskGroups: 0,
-            averageConcentration: 0,
+      // Unir empresas que compartilham sócios
+      partnerToCompanies.forEach((companies) => {
+        const companyArray = Array.from(companies);
+        if (companyArray.length > 1) {
+          for (let i = 1; i < companyArray.length; i++) {
+            union(companyArray[0], companyArray[i]);
+          }
+        }
+      });
+
+      // Agrupar empresas por grupo
+      const clientMap = new Map(clientsWithPartners.map(c => [c.id, c]));
+
+      clientsWithPartners.forEach(client => {
+        const root = findRoot(client.id);
+        if (!groupMembers.has(root)) {
+          groupMembers.set(root, new Set());
+          groupPartners.set(root, new Set());
+        }
+        groupMembers.get(root)!.add(client.id);
+
+        // Adicionar sócios do cliente ao grupo
+        client.qsa.forEach(partner => {
+          if (partner.nome) {
+            groupPartners.get(root)!.add(partner.nome.trim().toUpperCase());
+          }
+        });
+      });
+
+      // Criar grupos econômicos (apenas grupos com 2+ empresas)
+      const economicGroups: EconomicGroup[] = [];
+
+      groupMembers.forEach((memberIds, groupKey) => {
+        if (memberIds.size >= 2) {
+          const companies = Array.from(memberIds).map(id => clientMap.get(id)!).filter(Boolean);
+          const groupRevenue = companies.reduce((sum, c) => sum + c.total_paid, 0);
+          const percentage = totalRev > 0 ? (groupRevenue / totalRev) * 100 : 0;
+
+          let riskLevel: 'high' | 'medium' | 'low' = 'low';
+          if (percentage >= 20) riskLevel = 'high';
+          else if (percentage >= 10) riskLevel = 'medium';
+
+          const partners = Array.from(groupPartners.get(groupKey) || []);
+
+          economicGroups.push({
+            group_key: groupKey,
+            partner_names: partners,
+            company_count: companies.length,
+            companies: companies,
+            total_revenue: groupRevenue,
+            percentage_of_total: percentage,
+            risk_level: riskLevel,
           });
-          toast({
-            title: "Análise de Grupos Econômicos",
-            description: "Funcionalidade não configurada. As migrações do banco de dados precisam ser aplicadas.",
-            variant: "destructive",
-          });
-          return;
         }
+      });
 
-        throw new Error(errorMsg);
-      }
+      // Ordenar por receita (maior primeiro)
+      economicGroups.sort((a, b) => b.total_revenue - a.total_revenue);
 
-      const groupData = (data || []) as EconomicGroup[];
-      setGroups(groupData);
+      setGroups(economicGroups);
 
       // Calculate stats
-      const totalCompanies = groupData.reduce((sum, g) => sum + g.company_count, 0);
-      const highRisk = groupData.filter(g => g.risk_level === 'high').length;
-      const avgConcentration = groupData.length > 0
-        ? groupData.reduce((sum, g) => sum + g.percentage_of_total, 0) / groupData.length
+      const totalCompanies = economicGroups.reduce((sum, g) => sum + g.company_count, 0);
+      const highRisk = economicGroups.filter(g => g.risk_level === 'high').length;
+      const avgConcentration = economicGroups.length > 0
+        ? economicGroups.reduce((sum, g) => sum + g.percentage_of_total, 0) / economicGroups.length
         : 0;
 
       setStats({
-        totalGroups: groupData.length,
+        totalGroups: economicGroups.length,
         totalCompanies,
         highRiskGroups: highRisk,
         averageConcentration: avgConcentration,
       });
 
-    } catch (error) {
-      // Catch any errors including "body stream already read"
-      let errorMessage = 'Erro ao carregar grupos econômicos';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === 'object') {
-        try {
-          // Try to get message property if it exists
-          const err = error as any;
-          errorMessage = err.message || String(error).substring(0, 200) || errorMessage;
-        } catch (e) {
-          // Fallback if anything goes wrong
-          errorMessage = 'Erro desconhecido ao carregar dados';
-        }
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      if (errorMessage.toLowerCase().includes('body stream already read')) {
-        errorMessage = 'Falha ao interpretar a resposta do Supabase. Aplique a migração 20251120_fix_economic_group_return_types.sql para atualizar a função get_economic_group_impact.';
-      }
-
-      console.error('Error loading economic groups:', errorMessage);
-
-      // Truncate if too long
-      if (errorMessage && errorMessage.length > 200) {
-        errorMessage = errorMessage.substring(0, 197) + '...';
-      }
-
-      toast({
-        title: "Erro ao carregar grupos econômicos",
-        description: errorMessage || 'Erro desconhecido',
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      console.error('Error loading economic groups:', error);
+      toast.error('Erro ao carregar grupos econômicos');
     } finally {
       setIsLoading(false);
     }
@@ -211,7 +300,7 @@ const EconomicGroupAnalysis = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
         </div>
       </Layout>
@@ -222,8 +311,10 @@ const EconomicGroupAnalysis = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Análise de Grupos Econômicos</h1>
-          <p className="text-muted-foreground">Identificação e análise de grupos empresariais relacionados</p>
+          <h1 className="text-3xl font-bold tracking-tight">Análise por Sócios</h1>
+          <p className="text-muted-foreground">
+            Identificação automática de grupos empresariais por sócios em comum
+          </p>
         </div>
 
         <PeriodFilter />
@@ -250,7 +341,7 @@ const EconomicGroupAnalysis = () => {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalGroups}</div>
               <p className="text-xs text-muted-foreground">
-                Grupos com empresas relacionadas
+                Grupos com sócios em comum
               </p>
             </CardContent>
           </Card>
@@ -301,19 +392,30 @@ const EconomicGroupAnalysis = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Grupos Econômicos Identificados</CardTitle>
-            <CardDescription>
-              Empresas agrupadas por sócios/administradores em comum
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {groups.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum grupo econômico identificado no período selecionado.
-              </div>
-            ) : (
+        {groups.length === 0 && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Nenhum grupo identificado</AlertTitle>
+            <AlertDescription>
+              <p className="mb-2">
+                Para identificar grupos econômicos automaticamente, os clientes precisam ter o campo QSA (Quadro de Sócios e Administradores) preenchido.
+              </p>
+              <p>
+                Use a função de <strong>Enriquecimento de Clientes</strong> no menu Ferramentas para buscar automaticamente os dados de sócios da Receita Federal.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {groups.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Grupos Econômicos por Sócios</CardTitle>
+              <CardDescription>
+                Empresas agrupadas automaticamente por sócios/administradores em comum • Receita no período: {formatCurrency(totalRevenue)}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-2">
                 {groups.map((group) => (
                   <Collapsible
@@ -361,7 +463,7 @@ const EconomicGroupAnalysis = () => {
                         <CardContent className="pt-0">
                           <div className="space-y-4">
                             <div>
-                              <h4 className="font-semibold mb-2">Sócios/Administradores</h4>
+                              <h4 className="font-semibold mb-2">Sócios/Administradores em Comum</h4>
                               <div className="flex flex-wrap gap-2">
                                 {group.partner_names.map((partner, idx) => (
                                   <Badge key={idx} variant="outline">
@@ -376,12 +478,24 @@ const EconomicGroupAnalysis = () => {
                                 <TableHeader>
                                   <TableRow>
                                     <TableHead>Empresa</TableHead>
+                                    <TableHead>CNPJ</TableHead>
+                                    <TableHead className="text-right">Honorário Mensal</TableHead>
+                                    <TableHead className="text-right">Pago no Período</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {group.company_names.map((company, idx) => (
-                                    <TableRow key={idx}>
-                                      <TableCell>{company}</TableCell>
+                                  {group.companies.map((company) => (
+                                    <TableRow key={company.id}>
+                                      <TableCell className="font-medium">{company.name}</TableCell>
+                                      <TableCell className="font-mono text-sm">
+                                        {company.cnpj ? formatDocument(company.cnpj) : '-'}
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        {formatCurrency(company.monthly_fee)}
+                                      </TableCell>
+                                      <TableCell className="text-right font-medium">
+                                        {formatCurrency(company.total_paid)}
+                                      </TableCell>
                                     </TableRow>
                                   ))}
                                 </TableBody>
@@ -394,9 +508,9 @@ const EconomicGroupAnalysis = () => {
                   </Collapsible>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -410,9 +524,10 @@ const EconomicGroupAnalysis = () => {
               <div className="flex items-start gap-2">
                 <Badge variant="outline">1</Badge>
                 <div>
-                  <p className="font-medium">Sócios em Comum</p>
+                  <p className="font-medium">Sócios em Comum (QSA)</p>
                   <p className="text-sm text-muted-foreground">
-                    Empresas que compartilham os mesmos sócios/administradores são agrupadas automaticamente
+                    Empresas que compartilham os mesmos sócios/administradores são agrupadas automaticamente.
+                    O QSA é obtido através do enriquecimento de dados da Receita Federal.
                   </p>
                 </div>
               </div>
@@ -421,7 +536,7 @@ const EconomicGroupAnalysis = () => {
                 <div>
                   <p className="font-medium">Análise de Receita</p>
                   <p className="text-sm text-muted-foreground">
-                    Consolidaç��o da receita paga de todas as empresas do grupo no período selecionado
+                    Consolidação da receita paga de todas as empresas do grupo no período selecionado
                   </p>
                 </div>
               </div>

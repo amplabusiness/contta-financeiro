@@ -44,6 +44,7 @@ interface Client {
   name: string;
   cnpj: string;
   is_pro_bono: boolean;
+  monthly_fee: number | null;
 }
 
 interface Invoice {
@@ -67,6 +68,9 @@ interface MonthlyStats {
   paidCount: number;
   pendingCount: number;
   overdueCount: number;
+  overdueAmount: number;
+  openingBalanceCount: number;
+  openingBalanceAmount: number;
 }
 
 interface OverdueSegmentation {
@@ -98,6 +102,9 @@ const FeesAnalysis = () => {
     paidCount: 0,
     pendingCount: 0,
     overdueCount: 0,
+    overdueAmount: 0,
+    openingBalanceCount: 0,
+    openingBalanceAmount: 0,
   });
   const [overdueSegmentation, setOverdueSegmentation] = useState<OverdueSegmentation>({
     oneMonth: { count: 0, amount: 0, clients: [] },
@@ -106,6 +113,8 @@ const FeesAnalysis = () => {
   });
   const [missingBillings, setMissingBillings] = useState<Client[]>([]);
   const [proBonoClients, setProBonoClients] = useState<Client[]>([]);
+  const [groupMemberIds, setGroupMemberIds] = useState<Set<string>>(new Set());
+  const [mainPayerIds, setMainPayerIds] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -123,6 +132,33 @@ const FeesAnalysis = () => {
       // Identify pro bono clients
       const proBono = (clientsData || []).filter((c) => c.is_pro_bono);
       setProBonoClients(proBono);
+
+      // Fetch economic group members (clients whose billing is handled by main payer)
+      const { data: groupMembersData } = await supabase
+        .from('economic_group_members')
+        .select(`
+          client_id,
+          economic_groups!inner (
+            id,
+            main_payer_client_id,
+            is_active
+          )
+        `);
+
+      // Build sets: all group members and main payers
+      const memberIds = new Set<string>();
+      const payerIds = new Set<string>();
+
+      (groupMembersData || []).forEach((member: any) => {
+        const group = member.economic_groups;
+        if (group && group.is_active) {
+          memberIds.add(member.client_id);
+          payerIds.add(group.main_payer_client_id);
+        }
+      });
+
+      setGroupMemberIds(memberIds);
+      setMainPayerIds(payerIds);
 
       // Fetch invoices based on filters
       let query = supabase
@@ -159,11 +195,41 @@ const FeesAnalysis = () => {
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData || []);
 
-      // Calculate statistics
-      calculateStatistics(invoicesData || [], clientsData || []);
+      // Fetch opening balances (saldo de abertura) - competence before 01/2025 is overdue
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select(`
+          id,
+          client_id,
+          amount,
+          paid_amount,
+          due_date,
+          competence,
+          status,
+          clients (
+            id,
+            name
+          )
+        `)
+        .in("status", ["pending", "partial"])
+        .order("competence", { ascending: true });
 
-      // Check for missing billings
-      checkMissingBillings(clientsData || [], invoicesData || []);
+      // Filter by client if selected
+      if (selectedClient !== "all") {
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClient);
+      }
+
+      const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
+
+      if (openingBalanceError) {
+        console.warn("Error fetching opening balance:", openingBalanceError);
+      }
+
+      // Calculate statistics with opening balance
+      calculateStatistics(invoicesData || [], clientsData || [], openingBalanceData || []);
+
+      // Check for missing billings (pass group member info)
+      checkMissingBillings(clientsData || [], invoicesData || [], memberIds, payerIds);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -180,18 +246,46 @@ const FeesAnalysis = () => {
     fetchData();
   }, [fetchData]);
 
-  const calculateStatistics = (invoicesData: Invoice[], clientsData: Client[]) => {
+  interface OpeningBalance {
+    id: string;
+    client_id: string;
+    amount: number;
+    paid_amount: number;
+    due_date: string | null;
+    competence: string;
+    status: string;
+    clients: { id: string; name: string } | null;
+  }
+
+  const calculateStatistics = (
+    invoicesData: Invoice[],
+    clientsData: Client[],
+    openingBalanceData: OpeningBalance[] = []
+  ) => {
     const totalBilled = invoicesData.reduce((sum, inv) => sum + Number(inv.amount), 0);
     const paidInvoices = invoicesData.filter((inv) => inv.status === "paid");
     const totalReceived = paidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
     const pendingInvoices = invoicesData.filter((inv) => inv.status === "pending");
     const totalPending = pendingInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
     const overdueInvoices = invoicesData.filter((inv) => inv.status === "overdue");
+    const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
 
     const receivedPercentage = totalBilled > 0 ? (totalReceived / totalBilled) * 100 : 0;
 
     // Get unique clients
     const uniqueClients = new Set(invoicesData.map((inv) => inv.client_id));
+
+    // Calculate opening balance totals (saldo de abertura)
+    // All opening balances with pending/partial status are considered overdue
+    // since competence is before 01/2025
+    const pendingOpeningBalances = openingBalanceData.filter(
+      (ob) => ob.status === "pending" || ob.status === "partial"
+    );
+    const openingBalanceCount = pendingOpeningBalances.length;
+    const openingBalanceAmount = pendingOpeningBalances.reduce(
+      (sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)),
+      0
+    );
 
     setMonthlyStats({
       totalBilled,
@@ -202,13 +296,19 @@ const FeesAnalysis = () => {
       paidCount: paidInvoices.length,
       pendingCount: pendingInvoices.length,
       overdueCount: overdueInvoices.length,
+      overdueAmount,
+      openingBalanceCount,
+      openingBalanceAmount,
     });
 
-    // Calculate overdue segmentation
-    calculateOverdueSegmentation(overdueInvoices);
+    // Calculate overdue segmentation with opening balances
+    calculateOverdueSegmentation(overdueInvoices, pendingOpeningBalances);
   };
 
-  const calculateOverdueSegmentation = (overdueInvoices: Invoice[]) => {
+  const calculateOverdueSegmentation = (
+    overdueInvoices: Invoice[],
+    openingBalances: OpeningBalance[] = []
+  ) => {
     const today = new Date();
     const oneMonth: { count: number; amount: number; clients: string[] } = {
       count: 0,
@@ -226,6 +326,7 @@ const FeesAnalysis = () => {
       clients: [],
     };
 
+    // Process overdue invoices
     overdueInvoices.forEach((invoice) => {
       const dueDate = new Date(invoice.due_date);
       const daysDiff = Math.floor(
@@ -256,21 +357,93 @@ const FeesAnalysis = () => {
       }
     });
 
+    // Process opening balances (saldo de abertura)
+    // All opening balances are considered 3+ months overdue since they're before 01/2025
+    openingBalances.forEach((ob) => {
+      const remainingAmount = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+      if (remainingAmount <= 0) return;
+
+      const clientName = ob.clients?.name || "Desconhecido";
+
+      // Calculate months since competence
+      // competence format is MM/YYYY, e.g., "12/2024"
+      if (ob.competence) {
+        const [month, year] = ob.competence.split("/").map(Number);
+        const competenceDate = new Date(year, month - 1, 1);
+        const monthsDiff = Math.floor(
+          (today.getTime() - competenceDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+
+        if (monthsDiff >= 3) {
+          threeMonths.count++;
+          threeMonths.amount += remainingAmount;
+          if (!threeMonths.clients.includes(clientName + " (SA)")) {
+            threeMonths.clients.push(clientName + " (SA)");
+          }
+        } else if (monthsDiff >= 2) {
+          twoMonths.count++;
+          twoMonths.amount += remainingAmount;
+          if (!twoMonths.clients.includes(clientName + " (SA)")) {
+            twoMonths.clients.push(clientName + " (SA)");
+          }
+        } else if (monthsDiff >= 1) {
+          oneMonth.count++;
+          oneMonth.amount += remainingAmount;
+          if (!oneMonth.clients.includes(clientName + " (SA)")) {
+            oneMonth.clients.push(clientName + " (SA)");
+          }
+        }
+      } else {
+        // If no competence date, consider 3+ months
+        threeMonths.count++;
+        threeMonths.amount += remainingAmount;
+        if (!threeMonths.clients.includes(clientName + " (SA)")) {
+          threeMonths.clients.push(clientName + " (SA)");
+        }
+      }
+    });
+
     setOverdueSegmentation({ oneMonth, twoMonths, threeMonths });
   };
 
-  const checkMissingBillings = (clientsData: Client[], invoicesData: Invoice[]) => {
-    if (viewMode !== "month") return;
+  const checkMissingBillings = (
+    clientsData: Client[],
+    invoicesData: Invoice[],
+    memberIds: Set<string>,
+    payerIds: Set<string>
+  ) => {
+    if (viewMode !== "month") {
+      setMissingBillings([]);
+      return;
+    }
 
-    // Get clients that should have invoices but don't (excluding pro bono)
-    const activeClients = clientsData.filter((c) => !c.is_pro_bono);
     const [year, month] = selectedMonth.split("-");
     const competence = `${month}/${year}`;
 
+    // Get clients that already have invoices for this competence
     const clientsWithInvoices = new Set(
       invoicesData.filter((inv) => inv.competence === competence).map((inv) => inv.client_id)
     );
 
+    // Filter clients that SHOULD have invoices:
+    // 1. NOT Pro-Bono
+    // 2. Have monthly_fee > 0
+    // 3. Either NOT in a group OR is the main payer of a group
+    const activeClients = clientsData.filter((c) => {
+      // Exclude Pro-Bono clients
+      if (c.is_pro_bono) return false;
+
+      // Exclude clients with no monthly fee defined or zero
+      if (!c.monthly_fee || c.monthly_fee <= 0) return false;
+
+      // If client is a group member but NOT the main payer, exclude them
+      // (their billing is handled by the main payer)
+      if (memberIds.has(c.id) && !payerIds.has(c.id)) return false;
+
+      return true;
+    });
+
+    // Find clients missing invoices
     const missing = activeClients.filter((client) => !clientsWithInvoices.has(client.id));
     setMissingBillings(missing);
   };
@@ -488,9 +661,11 @@ const FeesAnalysis = () => {
                     <AlertTriangle className="w-8 h-8 text-red-600" />
                     <div>
                       <p className="text-2xl font-bold text-red-600">
-                        {monthlyStats.overdueCount}
+                        {formatCurrency(monthlyStats.overdueAmount + monthlyStats.openingBalanceAmount)}
                       </p>
-                      <p className="text-xs text-muted-foreground">faturas atrasadas</p>
+                      <p className="text-xs text-muted-foreground">
+                        {monthlyStats.overdueCount} faturas + {monthlyStats.openingBalanceCount} saldo abertura
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -498,7 +673,7 @@ const FeesAnalysis = () => {
             </div>
 
             {/* Overdue Segmentation */}
-            {monthlyStats.overdueCount > 0 && (
+            {(monthlyStats.overdueCount > 0 || monthlyStats.openingBalanceCount > 0) && (
               <Card className="mb-6 border-red-200 bg-red-50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-red-800">
@@ -573,11 +748,15 @@ const FeesAnalysis = () => {
                       ⚠️ Auditoria: {missingBillings.length} Cliente(s) Sem Boleto
                     </AlertTitle>
                     <AlertDescription className="text-orange-700">
-                      Os seguintes clientes não tiveram honorários emitidos para{" "}
-                      {selectedMonth}:
-                      <br />
+                      <p className="mb-2">
+                        Clientes ativos com honorário definido que não tiveram boleto emitido para{" "}
+                        {selectedMonth.split("-").reverse().join("/")}:
+                      </p>
                       <strong>{missingBillings.map((c) => c.name).join(", ")}</strong>
                       <br />
+                      <p className="text-xs mt-2 text-orange-600">
+                        * Não inclui: Pro-Bono, sem honorário definido, ou membros de grupos financeiros
+                      </p>
                       <Button
                         size="sm"
                         variant="outline"
@@ -586,6 +765,18 @@ const FeesAnalysis = () => {
                       >
                         Ir para Honorários
                       </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {missingBillings.length === 0 && invoices.length > 0 && (
+                  <Alert className="mb-6 border-green-300 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800">
+                      ✓ Todos os clientes com boleto emitido
+                    </AlertTitle>
+                    <AlertDescription className="text-green-700">
+                      Todos os clientes ativos com honorário definido têm boleto para este período.
                     </AlertDescription>
                   </Alert>
                 )}

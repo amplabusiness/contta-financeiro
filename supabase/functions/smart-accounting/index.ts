@@ -7,48 +7,49 @@ const corsHeaders = {
 };
 
 // Estrutura padrão do plano de contas
+// Nota: Usando is_analytical (false = sintética, true = analítica) e account_type conforme tabela do banco
 const DEFAULT_CHART_STRUCTURE = {
   // ATIVO
-  '1': { name: 'ATIVO', type: 'ativo', is_synthetic: true },
-  '1.1': { name: 'ATIVO CIRCULANTE', type: 'ativo', is_synthetic: true },
-  '1.1.1': { name: 'Caixa e Equivalentes', type: 'ativo', is_synthetic: true },
-  '1.1.1.01': { name: 'Caixa Geral', type: 'ativo', is_synthetic: false },
-  '1.1.1.02': { name: 'Bancos Conta Movimento', type: 'ativo', is_synthetic: false },
-  '1.1.2': { name: 'Créditos a Receber', type: 'ativo', is_synthetic: true },
-  '1.1.2.01': { name: 'Clientes a Receber', type: 'ativo', is_synthetic: true }, // Conta sintética para clientes
+  '1': { name: 'ATIVO', account_type: 'ATIVO', nature: 'DEVEDORA', level: 1, is_analytical: false },
+  '1.1': { name: 'ATIVO CIRCULANTE', account_type: 'ATIVO', nature: 'DEVEDORA', level: 2, is_analytical: false },
+  '1.1.1': { name: 'Caixa e Equivalentes', account_type: 'ATIVO', nature: 'DEVEDORA', level: 3, is_analytical: false },
+  '1.1.1.01': { name: 'Caixa Geral', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '1.1.1.02': { name: 'Bancos Conta Movimento', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '1.1.2': { name: 'Créditos a Receber', account_type: 'ATIVO', nature: 'DEVEDORA', level: 3, is_analytical: false },
+  '1.1.2.01': { name: 'Clientes a Receber', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: false }, // Conta sintética para subcontas de clientes
 
   // PASSIVO
-  '2': { name: 'PASSIVO', type: 'passivo', is_synthetic: true },
-  '2.1': { name: 'PASSIVO CIRCULANTE', type: 'passivo', is_synthetic: true },
-  '2.1.1': { name: 'Fornecedores', type: 'passivo', is_synthetic: true },
-  '2.1.1.01': { name: 'Fornecedores a Pagar', type: 'passivo', is_synthetic: false },
-  '2.1.2': { name: 'Obrigações Trabalhistas', type: 'passivo', is_synthetic: true },
-  '2.1.3': { name: 'Obrigações Tributárias', type: 'passivo', is_synthetic: true },
+  '2': { name: 'PASSIVO', account_type: 'PASSIVO', nature: 'CREDORA', level: 1, is_analytical: false },
+  '2.1': { name: 'PASSIVO CIRCULANTE', account_type: 'PASSIVO', nature: 'CREDORA', level: 2, is_analytical: false },
+  '2.1.1': { name: 'Fornecedores', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
+  '2.1.1.01': { name: 'Fornecedores a Pagar', account_type: 'PASSIVO', nature: 'CREDORA', level: 4, is_analytical: true },
+  '2.1.2': { name: 'Obrigações Trabalhistas', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
+  '2.1.3': { name: 'Obrigações Tributárias', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
 
   // RECEITAS
-  '3': { name: 'RECEITAS', type: 'receita', is_synthetic: true },
-  '3.1': { name: 'RECEITAS OPERACIONAIS', type: 'receita', is_synthetic: true },
-  '3.1.1': { name: 'Receita de Honorários', type: 'receita', is_synthetic: true },
-  '3.1.1.01': { name: 'Honorários Contábeis', type: 'receita', is_synthetic: false },
-  '3.1.1.02': { name: 'Honorários Fiscais', type: 'receita', is_synthetic: false },
-  '3.1.1.03': { name: 'Honorários Trabalhistas', type: 'receita', is_synthetic: false },
-  '3.1.2': { name: 'Outras Receitas', type: 'receita', is_synthetic: true },
+  '3': { name: 'RECEITAS', account_type: 'RECEITA', nature: 'CREDORA', level: 1, is_analytical: false },
+  '3.1': { name: 'RECEITAS OPERACIONAIS', account_type: 'RECEITA', nature: 'CREDORA', level: 2, is_analytical: false },
+  '3.1.1': { name: 'Receita de Honorários', account_type: 'RECEITA', nature: 'CREDORA', level: 3, is_analytical: false },
+  '3.1.1.01': { name: 'Honorários Contábeis', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+  '3.1.1.02': { name: 'Honorários Fiscais', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+  '3.1.1.03': { name: 'Honorários Trabalhistas', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+  '3.1.2': { name: 'Outras Receitas', account_type: 'RECEITA', nature: 'CREDORA', level: 3, is_analytical: false },
 
   // DESPESAS
-  '4': { name: 'DESPESAS', type: 'despesa', is_synthetic: true },
-  '4.1': { name: 'DESPESAS OPERACIONAIS', type: 'despesa', is_synthetic: true },
-  '4.1.1': { name: 'Despesas com Pessoal', type: 'despesa', is_synthetic: true },
-  '4.1.1.01': { name: 'Salários e Ordenados', type: 'despesa', is_synthetic: false },
-  '4.1.1.02': { name: 'Encargos Sociais', type: 'despesa', is_synthetic: false },
-  '4.1.2': { name: 'Despesas Administrativas', type: 'despesa', is_synthetic: true },
-  '4.1.2.01': { name: 'Aluguel', type: 'despesa', is_synthetic: false },
-  '4.1.2.02': { name: 'Energia Elétrica', type: 'despesa', is_synthetic: false },
-  '4.1.2.03': { name: 'Telefone e Internet', type: 'despesa', is_synthetic: false },
-  '4.1.2.04': { name: 'Material de Escritório', type: 'despesa', is_synthetic: false },
-  '4.1.2.05': { name: 'Serviços de Terceiros', type: 'despesa', is_synthetic: false },
-  '4.1.3': { name: 'Despesas Financeiras', type: 'despesa', is_synthetic: true },
-  '4.1.3.01': { name: 'Juros e Multas', type: 'despesa', is_synthetic: false },
-  '4.1.3.02': { name: 'Tarifas Bancárias', type: 'despesa', is_synthetic: false },
+  '4': { name: 'DESPESAS', account_type: 'DESPESA', nature: 'DEVEDORA', level: 1, is_analytical: false },
+  '4.1': { name: 'DESPESAS OPERACIONAIS', account_type: 'DESPESA', nature: 'DEVEDORA', level: 2, is_analytical: false },
+  '4.1.1': { name: 'Despesas com Pessoal', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+  '4.1.1.01': { name: 'Salários e Ordenados', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.1.02': { name: 'Encargos Sociais', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.2': { name: 'Despesas Administrativas', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+  '4.1.2.01': { name: 'Aluguel', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.2.02': { name: 'Energia Elétrica', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.2.03': { name: 'Telefone e Internet', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.2.04': { name: 'Material de Escritório', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.2.05': { name: 'Serviços de Terceiros', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.3': { name: 'Despesas Financeiras', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+  '4.1.3.01': { name: 'Juros e Multas', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+  '4.1.3.02': { name: 'Tarifas Bancárias', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
 };
 
 serve(async (req) => {
@@ -90,8 +91,11 @@ serve(async (req) => {
 
     // AÇÃO: Garantir que conta existe (ou criar)
     if (action === 'ensure_account') {
-      const { code, name, type, is_synthetic, parent_code } = body;
-      const account = await ensureAccountExists(supabaseClient, user.id, code, name, type, is_synthetic, parent_code);
+      const { code, name, account_type, is_analytical, parent_code } = body;
+      // Suporta parâmetros antigos (type, is_synthetic) para compatibilidade
+      const accountType = account_type || body.type || 'ATIVO';
+      const isAnalytical = is_analytical !== undefined ? is_analytical : (body.is_synthetic === undefined ? true : !body.is_synthetic);
+      const account = await ensureAccountExists(supabaseClient, user.id, code, name, accountType, isAnalytical, parent_code);
       return new Response(JSON.stringify({ success: true, account }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -149,49 +153,87 @@ serve(async (req) => {
 async function initializeChartOfAccounts(supabase: any, userId: string) {
   const created: string[] = [];
   const existing: string[] = [];
+  const errors: string[] = [];
 
-  for (const [code, config] of Object.entries(DEFAULT_CHART_STRUCTURE)) {
-    const { data: existingAccount } = await supabase
-      .from('chart_of_accounts')
-      .select('id')
-      .eq('code', code)
-      .single();
+  // Ordenar as contas por nível (1, 2, 3, 4) para garantir que pais sejam criados antes dos filhos
+  const sortedCodes = Object.keys(DEFAULT_CHART_STRUCTURE).sort((a, b) => {
+    const levelA = DEFAULT_CHART_STRUCTURE[a as keyof typeof DEFAULT_CHART_STRUCTURE].level;
+    const levelB = DEFAULT_CHART_STRUCTURE[b as keyof typeof DEFAULT_CHART_STRUCTURE].level;
+    if (levelA !== levelB) return levelA - levelB;
+    return a.localeCompare(b);
+  });
 
-    if (!existingAccount) {
-      // Encontrar parent_id
-      const parentCode = code.split('.').slice(0, -1).join('.');
-      let parentId = null;
+  console.log('Creating accounts in order:', sortedCodes.join(', '));
 
-      if (parentCode) {
-        const { data: parent } = await supabase
-          .from('chart_of_accounts')
-          .select('id')
-          .eq('code', parentCode)
-          .single();
-        parentId = parent?.id || null;
-      }
+  for (const code of sortedCodes) {
+    const config = DEFAULT_CHART_STRUCTURE[code as keyof typeof DEFAULT_CHART_STRUCTURE];
 
-      const { error } = await supabase
+    try {
+      const { data: existingAccount } = await supabase
         .from('chart_of_accounts')
-        .insert({
-          code,
-          name: config.name,
-          type: config.type,
-          is_synthetic: config.is_synthetic,
-          parent_id: parentId,
-          is_active: true,
-          created_by: userId,
-        });
+        .select('id')
+        .eq('code', code)
+        .single();
 
-      if (!error) {
-        created.push(code);
+      if (!existingAccount) {
+        // Encontrar parent_id - apenas para contas que têm pai (nível > 1)
+        const parentCode = code.split('.').slice(0, -1).join('.');
+        let parentId = null;
+
+        // Apenas buscar parent_id se o código tiver um pai (não for conta nível 1)
+        if (parentCode && parentCode.length > 0) {
+          const { data: parent } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', parentCode)
+            .single();
+          parentId = parent?.id || null;
+
+          // Se não encontrar o pai e deveria ter um, logar o erro
+          if (!parentId && config.level > 1) {
+            console.error(`Parent ${parentCode} not found for ${code}`);
+            errors.push(`${code}: Conta pai ${parentCode} não encontrada`);
+            continue;
+          }
+        }
+
+        console.log(`Creating account ${code} (level ${config.level}, parent: ${parentCode || 'none'})`);
+
+        const { error } = await supabase
+          .from('chart_of_accounts')
+          .insert({
+            code,
+            name: config.name,
+            account_type: config.account_type,
+            nature: config.nature,
+            level: config.level,
+            is_analytical: config.is_analytical,
+            parent_id: parentId,
+            is_active: true,
+          });
+
+        if (!error) {
+          created.push(code);
+        } else {
+          console.error(`Error creating account ${code}:`, error);
+          errors.push(`${code}: ${error.message}`);
+        }
+      } else {
+        existing.push(code);
       }
-    } else {
-      existing.push(code);
+    } catch (err: any) {
+      console.error(`Exception for account ${code}:`, err);
+      errors.push(`${code}: ${err.message}`);
     }
   }
 
-  return { success: true, created, existing, message: `Criadas ${created.length} contas, ${existing.length} já existiam` };
+  return {
+    success: errors.length === 0,
+    created,
+    existing,
+    errors,
+    message: `Criadas ${created.length} contas, ${existing.length} já existiam${errors.length > 0 ? `, ${errors.length} erros` : ''}`
+  };
 }
 
 // Garantir que uma conta existe, criando se necessário
@@ -200,8 +242,8 @@ async function ensureAccountExists(
   userId: string,
   code: string,
   name: string,
-  type: string,
-  is_synthetic: boolean = false,
+  accountType: string, // ATIVO, PASSIVO, RECEITA, DESPESA
+  is_analytical: boolean = true,
   parentCode?: string
 ) {
   // Verificar se existe
@@ -237,17 +279,22 @@ async function ensureAccountExists(
     }
   }
 
+  // Determinar natureza baseada no tipo de conta
+  const nature = ['ATIVO', 'DESPESA'].includes(accountType.toUpperCase()) ? 'DEVEDORA' : 'CREDORA';
+  const level = code.split('.').length;
+
   // Criar conta
   const { data: newAccount, error } = await supabase
     .from('chart_of_accounts')
     .insert({
       code,
       name,
-      type,
-      is_synthetic,
+      account_type: accountType.toUpperCase(),
+      nature,
+      level,
+      is_analytical,
       parent_id: parentId,
       is_active: true,
-      created_by: userId,
     })
     .select()
     .single();
@@ -272,8 +319,8 @@ async function ensureClientAccount(supabase: any, userId: string, clientId: stri
     name = client?.name || 'Cliente';
   }
 
-  // Garantir que a conta sintética "Clientes a Receber" existe
-  await ensureAccountExists(supabase, userId, '1.1.2.01', 'Clientes a Receber', 'ativo', true, '1.1.2');
+  // Garantir que a conta sintética "Clientes a Receber" existe (is_analytical=false = sintética)
+  await ensureAccountExists(supabase, userId, '1.1.2.01', 'Clientes a Receber', 'ATIVO', false, '1.1.2');
 
   // Buscar próximo código disponível para cliente
   const { data: existingClientAccounts } = await supabase
@@ -301,14 +348,14 @@ async function ensureClientAccount(supabase: any, userId: string, clientId: stri
     return existingByName;
   }
 
-  // Criar conta analítica para o cliente
+  // Criar conta analítica para o cliente (is_analytical=true = analítica)
   const account = await ensureAccountExists(
     supabase,
     userId,
     nextCode,
     `Cliente: ${name}`,
-    'ativo',
-    false,
+    'ATIVO',
+    true,
     '1.1.2.01'
   );
 
@@ -332,9 +379,9 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
 
   console.log('Creating smart entry:', { entry_type, amount, date, description, client_id });
 
-  // Garantir estrutura básica do plano de contas
-  await ensureAccountExists(supabase, userId, '1.1.1.01', 'Caixa Geral', 'ativo', false, '1.1.1');
-  await ensureAccountExists(supabase, userId, '3.1.1.01', 'Honorários Contábeis', 'receita', false, '3.1.1');
+  // Garantir estrutura básica do plano de contas (is_analytical=true = conta analítica)
+  await ensureAccountExists(supabase, userId, '1.1.1.01', 'Caixa Geral', 'ATIVO', true, '1.1.1');
+  await ensureAccountExists(supabase, userId, '3.1.1.01', 'Honorários Contábeis', 'RECEITA', true, '3.1.1');
 
   let debitAccountId: string;
   let creditAccountId: string;
@@ -400,8 +447,8 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
         userId,
         expenseCode.code,
         expenseCode.name,
-        'despesa',
-        false,
+        'DESPESA',
+        true, // is_analytical = true (conta analítica)
         expenseCode.parent
       );
       debitAccountId = expenseAccount.id;
@@ -412,8 +459,8 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
         userId,
         '2.1.1.01',
         'Fornecedores a Pagar',
-        'passivo',
-        false,
+        'PASSIVO',
+        true, // is_analytical = true (conta analítica)
         '2.1.1'
       );
       creditAccountId = payableAccount.id;
@@ -555,8 +602,10 @@ function mapExpenseCategoryToAccount(category: string): { code: string; name: st
 
 // Gerar lançamentos retroativos para registros existentes
 async function generateRetroactiveEntries(supabase: any, userId: string, params: any) {
-  const { table, filters } = params;
+  const { table } = params;
   const results = { created: 0, skipped: 0, errors: [] as string[] };
+
+  console.log(`generateRetroactiveEntries started for table: ${table}`);
 
   if (table === 'client_opening_balance') {
     // Buscar saldos de abertura sem lançamento contábil
@@ -568,7 +617,12 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
       `)
       .order('created_at');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching client_opening_balance:', error);
+      throw error;
+    }
+
+    console.log(`Found ${balances?.length || 0} opening balances to process`);
 
     for (const balance of balances || []) {
       try {
@@ -600,12 +654,13 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
         results.created++;
       } catch (err: any) {
+        console.error(`Error processing balance ${balance.id}:`, err);
         results.errors.push(`Balance ${balance.id}: ${err.message}`);
       }
     }
-  }
 
-  if (table === 'invoices') {
+    console.log(`client_opening_balance completed: ${results.created} created, ${results.skipped} skipped`);
+  } else if (table === 'invoices') {
     // Buscar faturas sem lançamento contábil
     const { data: invoices, error } = await supabase
       .from('invoices')
@@ -663,12 +718,13 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
           results.created++;
         }
       } catch (err: any) {
+        console.error(`Error processing invoice ${invoice.id}:`, err);
         results.errors.push(`Invoice ${invoice.id}: ${err.message}`);
       }
     }
-  }
 
-  if (table === 'expenses' || table === 'accounts_payable') {
+    console.log(`invoices completed: ${results.created} created, ${results.skipped} skipped`);
+  } else if (table === 'expenses' || table === 'accounts_payable') {
     const tableName = table;
     const { data: expenses, error } = await supabase
       .from(tableName)
@@ -719,10 +775,15 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
           results.created++;
         }
       } catch (err: any) {
+        console.error(`Error processing expense ${expense.id}:`, err);
         results.errors.push(`Expense ${expense.id}: ${err.message}`);
       }
     }
+
+    console.log(`${tableName} completed: ${results.created} created, ${results.skipped} skipped`);
   }
+
+  console.log(`generateRetroactiveEntries finished for ${table}:`, results);
 
   return {
     success: true,
@@ -735,11 +796,11 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 async function aiAnalyzeTransaction(supabase: any, params: any) {
   const { description, amount, type } = params;
 
-  // Buscar contas existentes para sugestão
+  // Buscar contas analíticas existentes para sugestão
   const { data: accounts } = await supabase
     .from('chart_of_accounts')
-    .select('code, name, type')
-    .eq('is_synthetic', false)
+    .select('code, name, account_type')
+    .eq('is_analytical', true)
     .eq('is_active', true);
 
   // Lógica simples de matching (pode ser expandida com IA real)
@@ -764,9 +825,18 @@ async function aiAnalyzeTransaction(supabase: any, params: any) {
 
   const suggestedAccount = accounts?.find((a: any) => a.code === suggestedCode);
 
+  // Mapear tipo para account_type
+  const accountTypeMap: Record<string, string> = {
+    'despesa': 'DESPESA',
+    'receita': 'RECEITA',
+    'ativo': 'ATIVO',
+    'passivo': 'PASSIVO',
+  };
+  const accountType = accountTypeMap[type?.toLowerCase()] || type?.toUpperCase();
+
   return {
     suggested_account: suggestedAccount || null,
     confidence: suggestedAccount ? 0.8 : 0.3,
-    alternatives: accounts?.filter((a: any) => a.type === type).slice(0, 5) || [],
+    alternatives: accounts?.filter((a: any) => a.account_type === accountType).slice(0, 5) || [],
   };
 }

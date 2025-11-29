@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, Zap, Bot } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, Zap, Bot, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -17,14 +18,22 @@ import { AIInvoiceClassifier } from "@/components/ai/AIInvoiceClassifier";
 import { AICollectionAgent } from "@/components/ai/AICollectionAgent";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useClient } from "@/contexts/ClientContext";
 
 const Invoices = () => {
   const { selectedYear, selectedMonth } = usePeriod();
+  const { selectedClientId, selectedClientName } = useClient();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
+
+  // Estados para geração de honorários com progresso
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState("");
+
   const [formData, setFormData] = useState({
     client_id: "",
     amount: "",
@@ -37,11 +46,16 @@ const Invoices = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, selectedClientId]); // Recarregar quando mudar cliente
 
   const loadData = async () => {
     try {
       let query = supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false });
+
+      // Filtrar por cliente se selecionado
+      if (selectedClientId) {
+        query = query.eq("client_id", selectedClientId);
+      }
 
       // Filtrar por competência se ano ou mês estiverem selecionados
       if (selectedYear && selectedMonth) {
@@ -92,41 +106,67 @@ const Invoices = () => {
       return;
     }
 
-    setLoading(true);
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus("Buscando clientes...");
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { data: activeClients } = await supabase
+      // Buscar clientes ativos com honorário > 0 e que não são pro-bono
+      const { data: activeClients, error: clientsError } = await supabase
         .from("clients")
         .select("*")
         .eq("is_active", true)
-        .gt("monthly_fee", 0);
+        .gt("monthly_fee", 0)
+        .or("is_pro_bono.is.null,is_pro_bono.eq.false");
 
-      if (!activeClients || activeClients.length === 0) {
-        toast.warning("Nenhum cliente ativo com honorário mensal definido");
-        setLoading(false);
+      if (clientsError) {
+        console.error("Erro ao buscar clientes:", clientsError);
+        toast.error("Erro ao buscar clientes: " + clientsError.message);
+        setIsGenerating(false);
         return;
       }
 
-      const monthStr = selectedMonth.toString().padStart(2, '0');
+      if (!activeClients || activeClients.length === 0) {
+        toast.warning("Nenhum cliente ativo com honorário mensal definido. Verifique se os clientes têm o campo 'Honorário Mensal' preenchido na página de Clientes.");
+        setIsGenerating(false);
+        return;
+      }
+
+      const totalClients = activeClients.length;
+      setGenerationStatus(`Encontrados ${totalClients} clientes`);
+      setGenerationProgress(5);
+
       const competence = `${monthStr}/${selectedYear}`;
-      const dueDate = `${selectedYear}-${monthStr}-${activeClients[0].payment_day || "10"}`;
 
       let created = 0;
       let skipped = 0;
+      let processed = 0;
+
+      let errors: string[] = [];
 
       for (const client of activeClients) {
+        processed++;
+        const progress = Math.round(5 + (processed / totalClients) * 90);
+        setGenerationProgress(progress);
+        setGenerationStatus(`Processando ${client.name}... (${processed}/${totalClients})`);
+
         // Verificar se já existe fatura para esse cliente nessa competência
-        const { data: existing } = await supabase
+        const { data: existingList, error: checkError } = await supabase
           .from("invoices")
           .select("id")
           .eq("client_id", client.id)
-          .eq("competence", competence)
-          .single();
+          .eq("competence", competence);
 
-        if (existing) {
+        if (checkError) {
+          console.error(`Erro ao verificar existência para ${client.name}:`, checkError);
+          errors.push(`${client.name}: erro ao verificar`);
+          continue;
+        }
+
+        if (existingList && existingList.length > 0) {
           skipped++;
           continue;
         }
@@ -134,44 +174,70 @@ const Invoices = () => {
         const paymentDay = client.payment_day || 10;
         const clientDueDate = `${selectedYear}-${monthStr}-${paymentDay.toString().padStart(2, "0")}`;
 
+        console.log(`Criando honorário para ${client.name}: R$ ${client.monthly_fee}, venc: ${clientDueDate}, comp: ${competence}`);
+
         const { data: newInvoice, error } = await supabase.from("invoices").insert({
           client_id: client.id,
           amount: client.monthly_fee,
           due_date: clientDueDate,
           status: "pending",
           competence: competence,
-          description: `Honorário mensal - ${competence}`,
           created_by: user.id,
         }).select().single();
 
-        if (!error && newInvoice) {
+        if (error) {
+          console.error(`Erro ao criar fatura para ${client.name}:`, error);
+          errors.push(`${client.name}: ${error.message}`);
+        } else if (newInvoice) {
           created++;
-          
-          // Criar provisionamento contábil automaticamente
-          try {
-            await supabase.functions.invoke('create-accounting-entry', {
-              body: {
-                type: 'invoice',
-                operation: 'provision',
-                referenceId: newInvoice.id,
-                amount: Number(client.monthly_fee),
-                date: clientDueDate,
-                description: `Honorário mensal - ${competence} - ${client.name}`,
-                clientId: client.id,
-              },
-            });
-          } catch (provisionError) {
+          console.log(`Honorário criado com sucesso para ${client.name}, ID: ${newInvoice.id}`);
+
+          // Criar provisionamento contábil automaticamente (não bloqueia)
+          supabase.functions.invoke('create-accounting-entry', {
+            body: {
+              type: 'invoice',
+              operation: 'provision',
+              referenceId: newInvoice.id,
+              amount: Number(client.monthly_fee),
+              date: clientDueDate,
+              clientId: client.id,
+            },
+          }).catch(provisionError => {
             console.error('Erro ao provisionar:', provisionError);
-          }
+          });
+        } else {
+          console.warn(`Insert retornou null para ${client.name}`);
+          errors.push(`${client.name}: insert retornou vazio`);
         }
       }
 
-      toast.success(`${created} honorários gerados! ${skipped > 0 ? `${skipped} já existiam.` : ""}`);
-      loadData();
+      // Log final de debug
+      console.log(`Geração concluída: ${created} criados, ${skipped} pulados, ${errors.length} erros`);
+      if (errors.length > 0) {
+        console.error('Erros encontrados:', errors);
+      }
+
+      setGenerationProgress(100);
+      setGenerationStatus("Concluído!");
+
+      if (created > 0) {
+        toast.success(`${created} honorário${created > 1 ? 's' : ''} gerado${created > 1 ? 's' : ''} para ${competence}! ${skipped > 0 ? `(${skipped} já existia${skipped > 1 ? 'm' : ''})` : ""}`);
+      } else if (skipped > 0) {
+        toast.info(`Todos os ${skipped} honorários para ${competence} já existem.`);
+      } else if (errors.length > 0) {
+        toast.error(`${errors.length} erros ao gerar honorários. Verifique o console (F12) para detalhes.`);
+      } else {
+        toast.warning("Nenhum honorário foi gerado. Verifique o console (F12) para mais detalhes.");
+      }
+
+      // Pequeno delay para mostrar 100% antes de fechar
+      setTimeout(() => {
+        setIsGenerating(false);
+        loadData();
+      }, 1000);
     } catch (error: any) {
       toast.error("Erro ao gerar honorários: " + error.message);
-    } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -319,10 +385,41 @@ const Invoices = () => {
 
   return (
     <Layout>
+      {/* Overlay de progresso durante geração de honorários */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-[400px] mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                Gerando Honorários
+              </CardTitle>
+              <CardDescription>
+                Por favor, aguarde enquanto os honorários são gerados...
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Progress value={generationProgress} className="h-3" />
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{generationStatus}</span>
+                <span className="font-medium">{generationProgress}%</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Honorários</h1>
-          <p className="text-muted-foreground">Controle de recebimentos</p>
+          <h1 className="text-3xl font-bold">
+            {selectedClientId ? `Honorários - ${selectedClientName}` : "Honorários"}
+          </h1>
+          <p className="text-muted-foreground">
+            {selectedClientId
+              ? "Honorários do cliente selecionado"
+              : "Controle de recebimentos - selecione um cliente para filtrar"
+            }
+          </p>
         </div>
 
         <Card>
@@ -333,9 +430,13 @@ const Invoices = () => {
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
               <PeriodFilter />
-              <Button onClick={generateMonthlyInvoices} disabled={loading || !selectedYear || !selectedMonth} variant="outline">
-                <Zap className="w-4 h-4 mr-2" />
-                Gerar Honorários do Mês
+              <Button onClick={generateMonthlyInvoices} disabled={loading || isGenerating || !selectedYear || !selectedMonth} variant="outline">
+                {isGenerating ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Zap className="w-4 h-4 mr-2" />
+                )}
+                {isGenerating ? "Gerando..." : "Gerar Honorários do Mês"}
               </Button>
             </div>
           </CardContent>

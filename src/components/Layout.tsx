@@ -67,24 +67,10 @@ export function Layout({ children }: LayoutProps) {
       setSelectedClient(client.id, client.name);
       setOpen(false);
       setSearchTerm("");
-      
-      // Verifica se o cliente é pro-bono ou não
-      const isProBono = client.monthly_fee === 0;
-      const isOnClientsPage = location.pathname === "/clients";
-      const isOnProBonoPage = location.pathname === "/pro-bono-clients";
-      
-      // Se estiver na página de clientes mas o cliente é pro-bono, vai para pro-bono
-      if (isOnClientsPage && isProBono) {
-        navigate("/pro-bono-clients");
-      }
-      // Se estiver na página de pro-bono mas o cliente não é pro-bono, vai para clientes
-      else if (isOnProBonoPage && !isProBono) {
-        navigate("/clients");
-      }
-      // Só navega para client-dashboard se não estiver em páginas que devem manter o filtro
-      else if (!isOnClientsPage && !isOnProBonoPage) {
-        navigate("/client-dashboard");
-      }
+      // Não redireciona - mantém o usuário na página atual com os dados filtrados
+      toast.success(`Cliente selecionado: ${client.name}`, {
+        description: "Todos os dados serão filtrados para este cliente"
+      });
     }
   };
 
@@ -102,10 +88,10 @@ export function Layout({ children }: LayoutProps) {
 
   const handleClearClient = () => {
     clearSelectedClient();
-    // Só redireciona para o dashboard se não estiver em páginas que devem manter o filtro
-    if (location.pathname !== "/clients" && location.pathname !== "/pro-bono-clients") {
-      navigate("/dashboard");
-    }
+    // Não redireciona - mantém o usuário na página atual mostrando dados gerais
+    toast.info("Filtro de cliente removido", {
+      description: "Mostrando dados de todos os clientes"
+    });
   };
 
   const handleSignOut = async () => {

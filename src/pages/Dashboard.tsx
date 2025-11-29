@@ -16,7 +16,7 @@ import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { clearSelectedClient, setSelectedClient } = useClient();
+  const { selectedClientId, selectedClientName, setSelectedClient } = useClient();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -45,24 +45,40 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    // Limpar seleção de cliente ao acessar o Dashboard Geral
-    clearSelectedClient();
     loadDashboardData();
-  }, []);
+  }, [selectedClientId]); // Recarregar quando mudar o cliente selecionado
 
   const loadDashboardData = async () => {
     try {
-      const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes] = await Promise.all([
-        supabase
-          .from("clients")
-          .select("*", { count: "exact" })
-          .eq("is_active", true)
-          .not("is_pro_bono", "eq", true)
-          .not("monthly_fee", "eq", 0)
-          .order("name"),
-        supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10),
-        supabase.from("expenses").select("*"),
-        supabase.from("invoices").select("*"),
+      // Construir queries com filtro de cliente se selecionado
+      let clientsQuery = supabase
+        .from("clients")
+        .select("*", { count: "exact" })
+        .eq("is_active", true)
+        .not("is_pro_bono", "eq", true)
+        .not("monthly_fee", "eq", 0)
+        .order("name");
+
+      let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
+      let expensesQuery = supabase.from("expenses").select("*");
+      let allInvoicesQuery = supabase.from("invoices").select("*");
+      let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
+
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        clientsQuery = clientsQuery.eq("id", selectedClientId);
+        recentInvoicesQuery = recentInvoicesQuery.eq("client_id", selectedClientId);
+        expensesQuery = expensesQuery.eq("client_id", selectedClientId);
+        allInvoicesQuery = allInvoicesQuery.eq("client_id", selectedClientId);
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+      }
+
+      const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes, openingBalanceRes] = await Promise.all([
+        clientsQuery,
+        recentInvoicesQuery,
+        expensesQuery,
+        allInvoicesQuery,
+        openingBalanceQuery,
       ]);
 
       const totalClients = clientsRes.count || 0;
@@ -70,48 +86,85 @@ const Dashboard = () => {
       const expenses = expensesRes.data || [];
       const clientsList = clientsRes.data || [];
       const allInvoices = allInvoicesRes.data || [];
+      const openingBalances = openingBalanceRes.data || [];
 
-      // CORRIGIDO: Calcular KPIs com TODAS as invoices, não apenas as 10 recentes
+      // CORRIGIDO: Calcular KPIs com TODAS as invoices + saldos de abertura
       // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
       const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
       const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
       const pendingExpenses = expenses.filter((e) => e.status === "pending");
 
+      // Calcular saldos de abertura pendentes
+      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
+      const openingBalanceOverdue = openingBalances.filter(ob => {
+        // Considerar vencido se data de vencimento já passou
+        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+        const isOverdue = dueDate && dueDate < new Date();
+        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+      });
+
+      // Total de saldo de abertura pendente (valor - valor pago)
+      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
+      // Total de saldo de abertura vencido
+      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
       setStats({
         totalClients,
-        pendingInvoices: pendingInvoices.length,
-        overdueInvoices: overdueInvoices.length,
-        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0),
-        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0),
+        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
+        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
+        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
+        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
         pendingExpenses: pendingExpenses.length,
         totalExpenses: pendingExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
       });
 
-      // Calcular saúde financeira de cada cliente
+      // Calcular saúde financeira de cada cliente (incluindo saldo de abertura)
       const healthData: Record<string, any> = {};
       clientsList.forEach((client) => {
         const clientInvoices = allInvoices.filter((inv) => inv.client_id === client.id);
+        const clientOpeningBalances = openingBalances.filter((ob) => ob.client_id === client.id);
+
         const overdue = clientInvoices.filter((inv) => inv.status === "overdue");
         const pending = clientInvoices.filter((inv) => inv.status === "pending");
         const paid = clientInvoices.filter((inv) => inv.status === "paid");
-        
-        const totalOverdue = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0);
-        const totalPending = pending.reduce((sum, inv) => sum + Number(inv.amount), 0);
-        
+
+        // Saldos de abertura vencidos
+        const obOverdue = clientOpeningBalances.filter(ob => {
+          const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+          const isOverdue = dueDate && dueDate < new Date();
+          return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+        });
+        const obPending = clientOpeningBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
+
+        const totalOverdue = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+          obOverdue.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
+        const totalPending = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+          obPending.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
+
         // Última movimentação (última fatura paga ou criada)
-        const sortedInvoices = clientInvoices.sort((a, b) => 
+        const sortedInvoices = clientInvoices.sort((a, b) =>
           new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
         );
         const lastActivity = sortedInvoices[0];
 
+        const totalOverdueCount = overdue.length + obOverdue.length;
+        const totalPendingCount = pending.length + obPending.length;
+
         healthData[client.id] = {
-          overdueCount: overdue.length,
+          overdueCount: totalOverdueCount,
           overdueAmount: totalOverdue,
-          pendingCount: pending.length,
+          pendingCount: totalPendingCount,
           pendingAmount: totalPending,
           paidCount: paid.length,
           lastActivity: lastActivity ? new Date(lastActivity.updated_at || lastActivity.created_at) : null,
-          healthStatus: overdue.length > 0 ? "critical" : pending.length > 2 ? "warning" : "healthy",
+          healthStatus: totalOverdueCount > 0 ? "critical" : totalPendingCount > 2 ? "warning" : "healthy",
         };
       });
 
@@ -135,49 +188,114 @@ const Dashboard = () => {
       if (type === "clients") {
         setDetailDialog({
           open: true,
-          title: "Clientes Ativos",
-          description: `Total de ${clients.length} clientes ativos no sistema`,
+          title: selectedClientId ? "Cliente Selecionado" : "Clientes Ativos",
+          description: selectedClientId
+            ? `Dados do cliente: ${selectedClientName}`
+            : `Total de ${clients.length} clientes ativos no sistema`,
           data: clients,
           type: "clients",
         });
       } else if (type === "pending") {
-        const { data } = await supabase
+        // Buscar faturas pendentes
+        let invoicesQuery = supabase
           .from("invoices")
           .select("*, clients(name)")
           .in("status", ["pending", "overdue"])
           .order("due_date", { ascending: true });
-        
+
+        let openingBalanceQuery = supabase
+          .from("client_opening_balance")
+          .select("*, clients(name)")
+          .in("status", ["pending", "partial", "overdue"]);
+
+        if (selectedClientId) {
+          invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
+          openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+        }
+
+        const [{ data: invoicesData }, { data: openingBalanceData }] = await Promise.all([
+          invoicesQuery,
+          openingBalanceQuery,
+        ]);
+
+        // Transformar saldos de abertura para formato similar às faturas
+        const openingBalanceItems = (openingBalanceData || []).map(ob => ({
+          ...ob,
+          amount: Number(ob.amount || 0) - Number(ob.paid_amount || 0),
+          isOpeningBalance: true,
+          description: `Saldo de Abertura - ${ob.competence}`,
+        }));
+
+        const allItems = [...(invoicesData || []), ...openingBalanceItems];
+
         setDetailDialog({
           open: true,
-          title: "Honorários Pendentes",
-          description: `${data?.length || 0} faturas aguardando pagamento`,
-          data: data || [],
+          title: selectedClientId ? `Honorários Pendentes - ${selectedClientName}` : "Honorários Pendentes",
+          description: `${allItems.length} itens aguardando pagamento (faturas + saldo de abertura)`,
+          data: allItems,
           type: "invoices",
         });
       } else if (type === "overdue") {
-        const { data } = await supabase
+        // Buscar faturas vencidas
+        let invoicesQuery = supabase
           .from("invoices")
           .select("*, clients(name)")
           .eq("status", "overdue")
           .order("due_date", { ascending: true });
-        
+
+        let openingBalanceQuery = supabase
+          .from("client_opening_balance")
+          .select("*, clients(name)")
+          .in("status", ["pending", "partial", "overdue"]);
+
+        if (selectedClientId) {
+          invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
+          openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+        }
+
+        const [{ data: invoicesData }, { data: openingBalanceData }] = await Promise.all([
+          invoicesQuery,
+          openingBalanceQuery,
+        ]);
+
+        // Filtrar saldos de abertura vencidos
+        const now = new Date();
+        const overdueOpeningBalances = (openingBalanceData || []).filter(ob => {
+          const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+          return ob.status === "overdue" || (dueDate && dueDate < now && (ob.status === "pending" || ob.status === "partial"));
+        }).map(ob => ({
+          ...ob,
+          amount: Number(ob.amount || 0) - Number(ob.paid_amount || 0),
+          status: "overdue",
+          isOpeningBalance: true,
+          description: `Saldo de Abertura - ${ob.competence}`,
+        }));
+
+        const allItems = [...(invoicesData || []), ...overdueOpeningBalances];
+
         setDetailDialog({
           open: true,
-          title: "Inadimplência",
-          description: `${data?.length || 0} faturas vencidas`,
-          data: data || [],
+          title: selectedClientId ? `Inadimplência - ${selectedClientName}` : "Inadimplência",
+          description: `${allItems.length} itens vencidos (faturas + saldo de abertura)`,
+          data: allItems,
           type: "invoices",
         });
       } else if (type === "expenses") {
-        const { data } = await supabase
+        let expensesQuery = supabase
           .from("expenses")
           .select("*")
           .eq("status", "pending")
           .order("due_date", { ascending: true });
-        
+
+        if (selectedClientId) {
+          expensesQuery = expensesQuery.eq("client_id", selectedClientId);
+        }
+
+        const { data } = await expensesQuery;
+
         setDetailDialog({
           open: true,
-          title: "Despesas Pendentes",
+          title: selectedClientId ? `Despesas Pendentes - ${selectedClientName}` : "Despesas Pendentes",
           description: `${data?.length || 0} despesas aguardando pagamento`,
           data: data || [],
           type: "expenses",
@@ -218,8 +336,15 @@ const Dashboard = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral do sistema financeiro</p>
+          <h1 className="text-3xl font-bold">
+            {selectedClientId ? `Dashboard - ${selectedClientName}` : "Dashboard Geral"}
+          </h1>
+          <p className="text-muted-foreground">
+            {selectedClientId
+              ? "Visão financeira do cliente selecionado"
+              : "Visão geral do sistema financeiro - selecione um cliente para filtrar"
+            }
+          </p>
         </div>
 
         <PeriodFilter />

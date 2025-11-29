@@ -8,6 +8,7 @@ import { formatCurrency } from "@/data/expensesData";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useClient } from "@/contexts/ClientContext";
 
 interface MonthlyData {
   month: string;
@@ -19,6 +20,7 @@ interface MonthlyData {
 
 const ExecutiveDashboard = () => {
   const { selectedYear, selectedMonth } = usePeriod();
+  const { selectedClientId, selectedClientName } = useClient();
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -28,7 +30,7 @@ const ExecutiveDashboard = () => {
 
   useEffect(() => {
     loadExecutiveData();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, selectedClientId]);
 
   const loadExecutiveData = async () => {
     setLoading(true);
@@ -40,38 +42,77 @@ const ExecutiveDashboard = () => {
       const endDate = new Date(year, month, 0, 23, 59, 59);
 
       // Buscar faturamento (invoices pagas no período)
-      const { data: paidInvoices, error: invoicesError } = await supabase
+      let paidInvoicesQuery = supabase
         .from("invoices")
-        .select("amount, payment_date")
+        .select("amount, paid_date, client_id")
         .eq("status", "paid")
-        .gte("payment_date", startDate.toISOString())
-        .lte("payment_date", endDate.toISOString());
+        .gte("paid_date", startDate.toISOString())
+        .lte("paid_date", endDate.toISOString());
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        paidInvoicesQuery = paidInvoicesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: paidInvoices, error: invoicesError } = await paidInvoicesQuery;
       if (invoicesError) throw invoicesError;
 
       // Buscar despesas (pagas no período)
-      const { data: paidExpenses, error: expensesError } = await supabase
+      let paidExpensesQuery = supabase
         .from("expenses")
-        .select("amount, payment_date")
+        .select("amount, payment_date, client_id")
         .eq("status", "paid")
         .gte("payment_date", startDate.toISOString())
         .lte("payment_date", endDate.toISOString());
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        paidExpensesQuery = paidExpensesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: paidExpenses, error: expensesError } = await paidExpensesQuery;
       if (expensesError) throw expensesError;
 
-      // Buscar inadimplência (pendentes e atrasadas até a data final do período)
-      const { data: overdueInvoices, error: overdueError } = await supabase
+      // Buscar inadimplência de faturas (pendentes e atrasadas até a data final do período)
+      let overdueInvoicesQuery = supabase
         .from("invoices")
-        .select("amount, due_date")
+        .select("amount, due_date, client_id")
         .in("status", ["pending", "overdue"])
         .lte("due_date", endDate.toISOString());
 
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        overdueInvoicesQuery = overdueInvoicesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: overdueInvoices, error: overdueError } = await overdueInvoicesQuery;
       if (overdueError) throw overdueError;
+
+      // Buscar saldo de abertura pendente (inadimplência)
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select("amount, paid_amount, due_date, client_id")
+        .in("status", ["pending", "partial", "overdue"]);
+
+      // Aplicar filtro de cliente se selecionado
+      if (selectedClientId) {
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: openingBalances, error: openingBalanceError } = await openingBalanceQuery;
+      if (openingBalanceError) throw openingBalanceError;
+
+      // Calcular total de saldo de abertura pendente
+      const openingBalanceDefault = (openingBalances || []).reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + remaining;
+      }, 0);
 
       // Calcular totais
       const revenue = paidInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
       const expenses = paidExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-      const defaultAmount = overdueInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+      const invoiceDefault = overdueInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+      const defaultAmount = invoiceDefault + openingBalanceDefault;
       const margin = revenue > 0 ? ((revenue - expenses) / revenue) * 100 : 0;
 
       setTotalRevenue(revenue);
@@ -82,12 +123,12 @@ const ExecutiveDashboard = () => {
       // Calcular dados mensais (últimos 12 meses a partir do mês/ano selecionado)
       const monthlyMap = new Map<string, MonthlyData>();
       const selectedDate = new Date(year, month - 1, 1);
-      
+
       for (let i = 11; i >= 0; i--) {
         const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - i, 1);
         const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
         const monthLabel = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-        
+
         monthlyMap.set(monthKey, {
           month: monthLabel,
           faturamento: 0,
@@ -99,8 +140,8 @@ const ExecutiveDashboard = () => {
 
       // Agrupar faturamento por mês
       paidInvoices?.forEach((invoice) => {
-        if (invoice.payment_date) {
-          const date = new Date(invoice.payment_date);
+        if (invoice.paid_date) {
+          const date = new Date(invoice.paid_date);
           const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
           if (monthlyMap.has(monthKey)) {
             const data = monthlyMap.get(monthKey)!;
@@ -121,11 +162,17 @@ const ExecutiveDashboard = () => {
         }
       });
 
-      // Buscar inadimplência por mês (baseado em due_date)
-      const { data: allOverdueInvoices } = await supabase
+      // Buscar inadimplência por mês (baseado em due_date) - faturas
+      let allOverdueInvoicesQuery = supabase
         .from("invoices")
-        .select("amount, due_date")
+        .select("amount, due_date, client_id")
         .in("status", ["pending", "overdue"]);
+
+      if (selectedClientId) {
+        allOverdueInvoicesQuery = allOverdueInvoicesQuery.eq("client_id", selectedClientId);
+      }
+
+      const { data: allOverdueInvoices } = await allOverdueInvoicesQuery;
 
       allOverdueInvoices?.forEach((invoice) => {
         if (invoice.due_date) {
@@ -135,6 +182,17 @@ const ExecutiveDashboard = () => {
             const data = monthlyMap.get(monthKey)!;
             data.inadimplencia += Number(invoice.amount);
           }
+        }
+      });
+
+      // Adicionar saldo de abertura à inadimplência mensal (usando due_date ou data atual)
+      openingBalances?.forEach((ob) => {
+        const dueDate = ob.due_date ? new Date(ob.due_date) : new Date();
+        const monthKey = `${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`;
+        if (monthlyMap.has(monthKey)) {
+          const data = monthlyMap.get(monthKey)!;
+          const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+          data.inadimplencia += remaining;
         }
       });
 
@@ -166,9 +224,13 @@ const ExecutiveDashboard = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
+          <h1 className="text-3xl font-bold">
+            {selectedClientId ? `Dashboard Executivo - ${selectedClientName}` : "Dashboard Executivo"}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Visão estratégica dos principais indicadores financeiros
+            {selectedClientId
+              ? "Visão estratégica do cliente selecionado"
+              : "Visão estratégica dos principais indicadores financeiros"}
           </p>
         </div>
 

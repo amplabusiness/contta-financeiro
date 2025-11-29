@@ -22,7 +22,12 @@ import {
   Play,
   DollarSign,
   Cloud,
-  Download
+  Download,
+  Wallet,
+  Users,
+  Target,
+  BarChart3,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
@@ -79,7 +84,14 @@ const FeeAdjustment = () => {
     pendingAdjustment: 0,
     neverAdjusted: 0,
     upToDate: 0,
-    totalDifference: 0
+    totalDifference: 0,
+    // KPIs analíticos
+    totalMonthlyRevenue: 0,
+    totalMinimumWages: 0,
+    averageFeeInMinWages: 0,
+    clientsWithMinWageConfig: 0,
+    minFeeInMinWages: 0,
+    maxFeeInMinWages: 0
   });
 
   // Modal states
@@ -97,6 +109,8 @@ const FeeAdjustment = () => {
   const [referenceDate, setReferenceDate] = useState("");
   const [applyingBatch, setApplyingBatch] = useState(false);
   const [syncingMinWage, setSyncingMinWage] = useState(false);
+  const [initializingAll, setInitializingAll] = useState(false);
+  const [initAllDialogOpen, setInitAllDialogOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -153,7 +167,32 @@ const FeeAdjustment = () => {
     const upToDate = clients.filter(c => c.adjustment_status === 'ATUALIZADO').length;
     const totalDifference = clients.reduce((sum, c) => sum + (c.fee_difference || 0), 0);
 
-    setStats({ totalClients, pendingAdjustment, neverAdjusted, upToDate, totalDifference });
+    // KPIs analíticos
+    const totalMonthlyRevenue = clients.reduce((sum, c) => sum + (c.current_fee || 0), 0);
+    const clientsWithMinWageConfig = clients.filter(c => c.fee_in_minimum_wages && c.fee_in_minimum_wages > 0).length;
+    const totalMinimumWages = clients.reduce((sum, c) => sum + (c.fee_in_minimum_wages || 0), 0);
+    const averageFeeInMinWages = clientsWithMinWageConfig > 0 ? totalMinimumWages / clientsWithMinWageConfig : 0;
+
+    // Min/Max
+    const feesInMinWages = clients
+      .filter(c => c.fee_in_minimum_wages && c.fee_in_minimum_wages > 0)
+      .map(c => c.fee_in_minimum_wages as number);
+    const minFeeInMinWages = feesInMinWages.length > 0 ? Math.min(...feesInMinWages) : 0;
+    const maxFeeInMinWages = feesInMinWages.length > 0 ? Math.max(...feesInMinWages) : 0;
+
+    setStats({
+      totalClients,
+      pendingAdjustment,
+      neverAdjusted,
+      upToDate,
+      totalDifference,
+      totalMonthlyRevenue,
+      totalMinimumWages,
+      averageFeeInMinWages,
+      clientsWithMinWageConfig,
+      minFeeInMinWages,
+      maxFeeInMinWages
+    });
   };
 
   const loadAdjustmentHistory = async () => {
@@ -289,6 +328,62 @@ const FeeAdjustment = () => {
     }
   };
 
+  const handleInitializeAll = async () => {
+    try {
+      setInitializingAll(true);
+      const clientsToInit = pendingClients.filter(c => c.adjustment_status === 'NUNCA_AJUSTADO');
+
+      if (clientsToInit.length === 0) {
+        toast.info("Não há clientes para inicializar");
+        return;
+      }
+
+      toast.info(`Inicializando ${clientsToInit.length} clientes...`);
+
+      let success = 0;
+      let failed = 0;
+
+      for (const client of clientsToInit) {
+        try {
+          const { data, error } = await supabase
+            .rpc("init_client_minimum_wage_fee", {
+              p_client_id: client.id,
+              p_reference_date: null
+            });
+
+          if (error) {
+            console.error(`Erro ao inicializar ${client.name}:`, error);
+            failed++;
+          } else {
+            const result = data?.[0];
+            if (result?.success) {
+              success++;
+            } else {
+              failed++;
+            }
+          }
+        } catch (err) {
+          console.error(`Erro ao inicializar ${client.name}:`, err);
+          failed++;
+        }
+      }
+
+      if (success > 0) {
+        toast.success(`${success} clientes inicializados com sucesso!${failed > 0 ? ` (${failed} falharam)` : ''}`);
+        loadData();
+      } else {
+        toast.error(`Falha ao inicializar clientes. ${failed} erros.`);
+      }
+
+      setInitAllDialogOpen(false);
+    } catch (error: any) {
+      console.error("Erro ao inicializar todos:", error);
+      toast.error(error.message || "Erro ao inicializar clientes");
+    } finally {
+      setInitializingAll(false);
+    }
+  };
+
   const handleSyncMinimumWage = async () => {
     try {
       setSyncingMinWage(true);
@@ -360,6 +455,16 @@ const FeeAdjustment = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            {stats.neverAdjusted > 0 && (
+              <Button
+                variant="default"
+                onClick={() => setInitAllDialogOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Inicializar Todos ({stats.neverAdjusted})
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={handleSyncMinimumWage}
@@ -383,7 +488,7 @@ const FeeAdjustment = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Status */}
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="pb-2">
@@ -440,6 +545,85 @@ const FeeAdjustment = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* KPIs Analíticos - Receita em Salários Mínimos */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <BarChart3 className="h-5 w-5" />
+              Análise de Receita em Salários Mínimos
+            </CardTitle>
+            <CardDescription>
+              Visão consolidada da receita mensal expressa em salários mínimos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-4">
+              {/* Total Receita Mensal */}
+              <div className="p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-muted-foreground">Receita Mensal Total</span>
+                </div>
+                <p className="text-2xl font-bold text-blue-700">{formatCurrency(stats.totalMonthlyRevenue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.totalClients} clientes ativos
+                </p>
+              </div>
+
+              {/* Total em Salários Mínimos */}
+              <div className="p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-5 w-5 text-indigo-600" />
+                  <span className="text-sm font-medium text-muted-foreground">Total em SM</span>
+                </div>
+                <p className="text-2xl font-bold text-indigo-700">{stats.totalMinimumWages.toFixed(2)} SM</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  = {formatCurrency(stats.totalMinimumWages * currentMinWage)}
+                </p>
+              </div>
+
+              {/* Média por Cliente */}
+              <div className="p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span className="text-sm font-medium text-muted-foreground">Média por Cliente</span>
+                </div>
+                <p className="text-2xl font-bold text-purple-700">{stats.averageFeeInMinWages.toFixed(2)} SM</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  = {formatCurrency(stats.averageFeeInMinWages * currentMinWage)}/cliente
+                </p>
+              </div>
+
+              {/* Range Min/Max */}
+              <div className="p-4 bg-white rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-muted-foreground">Faixa de Valores</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-lg font-bold text-green-700">{stats.minFeeInMinWages.toFixed(2)}</p>
+                  <span className="text-muted-foreground">a</span>
+                  <p className="text-lg font-bold text-green-700">{stats.maxFeeInMinWages.toFixed(2)} SM</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.clientsWithMinWageConfig} clientes configurados
+                </p>
+              </div>
+            </div>
+
+            {/* Projeção */}
+            {stats.totalMinimumWages > 0 && currentMinWage > 0 && (
+              <div className="mt-4 p-4 bg-blue-100 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Projeção Anual:</strong> Se o SM for reajustado em 5%, sua receita mensal aumentará em{" "}
+                  <strong>{formatCurrency(stats.totalMinimumWages * currentMinWage * 0.05)}</strong>,
+                  totalizando <strong>{formatCurrency(stats.totalMinimumWages * currentMinWage * 1.05)}</strong>/mês.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Diferença Total */}
         {stats.totalDifference > 0 && (
@@ -830,6 +1014,62 @@ const FeeAdjustment = () => {
               >
                 {applyingBatch ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Aplicar Reajustes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Dialog: Inicializar Todos */}
+        <AlertDialog open={initAllDialogOpen} onOpenChange={setInitAllDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-indigo-600" />
+                Inicializar Todos os Clientes
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <div className="space-y-4">
+                  <p>
+                    Esta ação irá calcular automaticamente o valor em salários mínimos para{" "}
+                    <strong>{stats.neverAdjusted} clientes</strong> que nunca foram ajustados.
+                  </p>
+                  <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <p className="text-sm text-indigo-800 mb-2">
+                      <strong>Como funciona:</strong>
+                    </p>
+                    <ul className="text-sm text-indigo-700 list-disc list-inside space-y-1">
+                      <li>Cada honorário será dividido pelo SM atual ({formatCurrency(currentMinWage)})</li>
+                      <li>O resultado será salvo como quantidade de SM</li>
+                      <li>Exemplo: R$ 1.518,00 ÷ {formatCurrency(currentMinWage)} = 1,00 SM</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-sm text-green-800">
+                      <strong>Projeção:</strong> Com base na receita total de {formatCurrency(stats.totalMonthlyRevenue)},
+                      serão aproximadamente <strong>{(stats.totalMonthlyRevenue / currentMinWage).toFixed(2)} SM</strong> no total.
+                    </p>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={initializingAll}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleInitializeAll}
+                disabled={initializingAll}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {initializingAll ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Inicializando...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Inicializar Todos
+                  </>
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

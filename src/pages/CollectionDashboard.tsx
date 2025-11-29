@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
 import {
   Table,
   TableBody,
@@ -62,25 +63,48 @@ interface CollectionAlert {
   months_overdue: number;
   oldest_due_date: string;
   severity: "critical" | "high" | "medium";
+  opening_balance_count: number;
+  opening_balance_amount: number;
+}
+
+interface OpeningBalance {
+  id: string;
+  client_id: string;
+  amount: number;
+  paid_amount: number;
+  due_date: string | null;
+  competence: string;
+  status: string;
+  clients: Client | null;
 }
 
 const CollectionDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { selectedMonth, selectedYear } = usePeriod();
   const [isLoading, setIsLoading] = useState(true);
   const [overdueInvoices, setOverdueInvoices] = useState<OverdueInvoice[]>([]);
+  const [openingBalances, setOpeningBalances] = useState<OpeningBalance[]>([]);
   const [collectionAlerts, setCollectionAlerts] = useState<CollectionAlert[]>([]);
   const [stats, setStats] = useState({
     totalOverdue: 0,
     totalClients: 0,
     criticalAlerts: 0,
     avgDaysOverdue: 0,
+    openingBalanceTotal: 0,
+    openingBalanceCount: 0,
   });
 
   const fetchCollectionData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Calculate date range for selected period
+      // We want to show overdue items as of the END of the selected period
+      const periodEndDate = new Date(selectedYear, selectedMonth, 0); // Last day of selected month
+      const periodEndStr = periodEndDate.toISOString().split('T')[0];
+
       // Fetch overdue invoices with client information
+      // Filter by due_date <= end of selected period (overdue as of that date)
       const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select(`
@@ -94,22 +118,69 @@ const CollectionDashboard = () => {
           )
         `)
         .eq("status", "overdue")
+        .lte("due_date", periodEndStr)
         .order("due_date", { ascending: true });
 
       if (invoicesError) throw invoicesError;
 
-      // Calculate days overdue for each invoice
+      // Build the competence string for comparison (MM/YYYY format)
+      // Opening balances with competence up to the previous month are considered overdue
+      const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+      const previousYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+
+      // Fetch opening balances (saldo de abertura) - filter by competence
+      const { data: openingBalanceData, error: openingBalanceError } = await supabase
+        .from("client_opening_balance")
+        .select(`
+          id,
+          client_id,
+          amount,
+          paid_amount,
+          due_date,
+          competence,
+          status,
+          clients (
+            id,
+            name,
+            cnpj,
+            email,
+            phone
+          )
+        `)
+        .in("status", ["pending", "partial"])
+        .order("competence", { ascending: true });
+
+      // Filter opening balances client-side by competence (MM/YYYY format comparison)
+      // Opening balance should only include competencies BEFORE the selected period
+      // Example: If January/2025 is selected, show opening balances from December/2024 and earlier
+      const filteredOpeningBalances = (openingBalanceData || []).filter(ob => {
+        if (!ob.competence) return true; // Include if no competence
+        const [month, year] = ob.competence.split('/').map(Number);
+        // Include if competence is strictly before selected period (not including it)
+        if (year < selectedYear) return true;
+        if (year === selectedYear && month < selectedMonth) return true;
+        return false;
+      });
+
+      if (openingBalanceError) {
+        console.warn("Error fetching opening balance:", openingBalanceError);
+      }
+
+      const openingBalancesData = filteredOpeningBalances as OpeningBalance[];
+      setOpeningBalances(openingBalancesData);
+
+      // Calculate days overdue for each invoice (relative to end of selected period)
       const invoicesWithDays = (invoicesData || []).map((invoice) => ({
         ...invoice,
         days_overdue: Math.floor(
-          (new Date().getTime() - new Date(invoice.due_date).getTime()) /
+          (periodEndDate.getTime() - new Date(invoice.due_date).getTime()) /
             (1000 * 60 * 60 * 24)
         ),
       }));
 
       setOverdueInvoices(invoicesWithDays);
 
-      // Group by client and calculate alerts
+      // Group invoices by client
       const clientGroups = new Map<string, OverdueInvoice[]>();
       invoicesWithDays.forEach((invoice) => {
         const clientId = invoice.client_id;
@@ -119,46 +190,120 @@ const CollectionDashboard = () => {
         clientGroups.get(clientId)!.push(invoice);
       });
 
-      // Create collection alerts
+      // Group opening balances by client
+      const openingBalanceByClient = new Map<string, OpeningBalance[]>();
+      openingBalancesData.forEach((ob) => {
+        const clientId = ob.client_id;
+        if (!openingBalanceByClient.has(clientId)) {
+          openingBalanceByClient.set(clientId, []);
+        }
+        openingBalanceByClient.get(clientId)!.push(ob);
+      });
+
+      // Get all unique client IDs from both invoices and opening balances
+      const allClientIds = new Set([
+        ...clientGroups.keys(),
+        ...openingBalanceByClient.keys()
+      ]);
+
+      // Create collection alerts including opening balances
       const alerts: CollectionAlert[] = [];
-      clientGroups.forEach((invoices, clientId) => {
-        const client = invoices[0].clients;
+      allClientIds.forEach((clientId) => {
+        const invoices = clientGroups.get(clientId) || [];
+        const clientOpeningBalances = openingBalanceByClient.get(clientId) || [];
+
+        // Get client info from invoices or opening balances
+        let client: Client | null = null;
+        if (invoices.length > 0) {
+          client = invoices[0].clients;
+        } else if (clientOpeningBalances.length > 0 && clientOpeningBalances[0].clients) {
+          client = clientOpeningBalances[0].clients;
+        }
+
+        if (!client) return;
+
         const overdue_count = invoices.length;
         const overdue_amount = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-        const oldest_invoice = invoices.sort(
-          (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-        )[0];
-        const months_overdue = Math.floor(oldest_invoice.days_overdue / 30);
+
+        // Calculate opening balance amounts
+        const opening_balance_count = clientOpeningBalances.length;
+        const opening_balance_amount = clientOpeningBalances.reduce(
+          (sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)),
+          0
+        );
+
+        // Calculate months overdue from oldest invoice or opening balance
+        let oldest_due_date = "";
+        let months_overdue = 0;
+
+        if (invoices.length > 0) {
+          const oldest_invoice = invoices.sort(
+            (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+          )[0];
+          oldest_due_date = oldest_invoice.due_date;
+          months_overdue = Math.floor(oldest_invoice.days_overdue / 30);
+        }
+
+        // Check if opening balance has older date (relative to selected period)
+        if (clientOpeningBalances.length > 0) {
+          clientOpeningBalances.forEach((ob) => {
+            if (ob.competence) {
+              const [month, year] = ob.competence.split("/").map(Number);
+              const competenceDate = new Date(year, month - 1, 1);
+              const obMonthsOverdue = Math.floor(
+                (periodEndDate.getTime() - competenceDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+              );
+              if (obMonthsOverdue > months_overdue) {
+                months_overdue = obMonthsOverdue;
+                oldest_due_date = ob.due_date || `${year}-${String(month).padStart(2, '0')}-01`;
+              }
+            }
+          });
+        }
 
         let severity: "critical" | "high" | "medium" = "medium";
         if (months_overdue >= 3) severity = "critical";
         else if (months_overdue >= 2) severity = "high";
 
-        alerts.push({
-          client,
-          overdue_count,
-          overdue_amount,
-          months_overdue,
-          oldest_due_date: oldest_invoice.due_date,
-          severity,
-        });
+        const totalAmount = overdue_amount + opening_balance_amount;
+        if (totalAmount > 0) {
+          alerts.push({
+            client,
+            overdue_count,
+            overdue_amount,
+            months_overdue,
+            oldest_due_date,
+            severity,
+            opening_balance_count,
+            opening_balance_amount,
+          });
+        }
       });
 
-      // Sort by severity
+      // Sort by severity then by total amount
       alerts.sort((a, b) => {
         const severityOrder = { critical: 3, high: 2, medium: 1 };
-        return severityOrder[b.severity] - severityOrder[a.severity];
+        const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
+        if (severityDiff !== 0) return severityDiff;
+        return (b.overdue_amount + b.opening_balance_amount) - (a.overdue_amount + a.opening_balance_amount);
       });
 
       setCollectionAlerts(alerts);
 
-      // Calculate stats
-      const totalOverdue = invoicesWithDays.reduce(
+      // Calculate stats including opening balances
+      const totalOverdueInvoices = invoicesWithDays.reduce(
         (sum, inv) => sum + Number(inv.amount),
         0
       );
-      const totalClients = clientGroups.size;
+      const totalOpeningBalance = openingBalancesData.reduce(
+        (sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)),
+        0
+      );
+      const totalOverdue = totalOverdueInvoices + totalOpeningBalance;
+      const totalClients = allClientIds.size;
       const criticalAlerts = alerts.filter((a) => a.severity === "critical").length;
+
+      // Calculate average days overdue (only for invoices, as opening balances use competence)
       const avgDaysOverdue =
         invoicesWithDays.length > 0
           ? invoicesWithDays.reduce((sum, inv) => sum + inv.days_overdue, 0) /
@@ -170,6 +315,8 @@ const CollectionDashboard = () => {
         totalClients,
         criticalAlerts,
         avgDaysOverdue: Math.round(avgDaysOverdue),
+        openingBalanceTotal: totalOpeningBalance,
+        openingBalanceCount: openingBalancesData.length,
       });
     } catch (error) {
       console.error("Error fetching collection data:", error);
@@ -181,7 +328,7 @@ const CollectionDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchCollectionData();
@@ -283,6 +430,11 @@ const CollectionDashboard = () => {
                       <p className="text-2xl font-bold text-red-600">
                         {formatCurrency(stats.totalOverdue)}
                       </p>
+                      {stats.openingBalanceTotal > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Inclui {formatCurrency(stats.openingBalanceTotal)} de saldo abertura
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -300,7 +452,7 @@ const CollectionDashboard = () => {
                     <div>
                       <p className="text-2xl font-bold">{stats.totalClients}</p>
                       <p className="text-xs text-muted-foreground">
-                        {overdueInvoices.length} faturas
+                        {overdueInvoices.length} faturas{stats.openingBalanceCount > 0 ? ` + ${stats.openingBalanceCount} SA` : ''}
                       </p>
                     </div>
                   </div>
@@ -429,15 +581,23 @@ const CollectionDashboard = () => {
                               </Badge>
                             </div>
 
-                            <div className="grid grid-cols-4 gap-4 mb-4">
+                            <div className="grid grid-cols-5 gap-4 mb-4">
                               <div>
                                 <p className="text-xs opacity-70">Faturas em Atraso</p>
                                 <p className="text-lg font-bold">{alert.overdue_count}</p>
                               </div>
                               <div>
+                                <p className="text-xs opacity-70">Saldo Abertura</p>
+                                <p className="text-lg font-bold">
+                                  {alert.opening_balance_count > 0
+                                    ? `${alert.opening_balance_count} (${formatCurrency(alert.opening_balance_amount)})`
+                                    : '-'}
+                                </p>
+                              </div>
+                              <div>
                                 <p className="text-xs opacity-70">Valor Total</p>
                                 <p className="text-lg font-bold">
-                                  {formatCurrency(alert.overdue_amount)}
+                                  {formatCurrency(alert.overdue_amount + alert.opening_balance_amount)}
                                 </p>
                               </div>
                               <div>
@@ -447,7 +607,7 @@ const CollectionDashboard = () => {
                               <div>
                                 <p className="text-xs opacity-70">Vencimento Mais Antigo</p>
                                 <p className="text-sm font-semibold">
-                                  {formatDate(alert.oldest_due_date)}
+                                  {alert.oldest_due_date ? formatDate(alert.oldest_due_date) : '-'}
                                 </p>
                               </div>
                             </div>

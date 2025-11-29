@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, Calendar, DollarSign, Loader2, FileText, CheckCir
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useClient } from "@/contexts/ClientContext";
 
 interface Client {
   id: string;
@@ -59,6 +60,7 @@ const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 const ClientOpeningBalance = () => {
+  const { selectedClientId: globalClientId, selectedClientName: globalClientName } = useClient();
   const [clients, setClients] = useState<Client[]>([]);
   const [balances, setBalances] = useState<OpeningBalance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ const ClientOpeningBalance = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [editingBalance, setEditingBalance] = useState<OpeningBalance | null>(null);
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [filterClientId, setFilterClientId] = useState<string>("");
 
   // Form para lançamento individual
   const [formData, setFormData] = useState({
@@ -94,7 +96,7 @@ const ClientOpeningBalance = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [globalClientId]); // Recarregar quando mudar cliente global
 
   // Função para criar honorário (invoice) + lançamento contábil + razão do cliente
   const createInvoiceAndAccountingEntry = async (
@@ -228,8 +230,10 @@ const ClientOpeningBalance = () => {
         `)
         .order("competence", { ascending: false });
 
-      if (clientId) {
-        query = query.eq("client_id", clientId);
+      // Prioridade: clientId passado > cliente global > filtro local
+      const effectiveClientId = clientId || globalClientId || filterClientId;
+      if (effectiveClientId) {
+        query = query.eq("client_id", effectiveClientId);
       }
 
       const { data, error } = await query;
@@ -499,7 +503,7 @@ const ClientOpeningBalance = () => {
   };
 
   const handleClientFilter = (clientId: string) => {
-    setSelectedClientId(clientId);
+    setFilterClientId(clientId === "all" ? "" : clientId);
     if (clientId === "all") {
       loadBalances();
     } else {
@@ -739,9 +743,14 @@ const ClientOpeningBalance = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Saldo de Abertura</h1>
+            <h1 className="text-3xl font-bold">
+              {globalClientId ? `Saldo de Abertura - ${globalClientName}` : "Saldo de Abertura"}
+            </h1>
             <p className="text-muted-foreground">
-              Gerencie honorários não pagos de competências anteriores
+              {globalClientId
+                ? "Honorários não pagos deste cliente"
+                : "Gerencie honorários não pagos de competências anteriores - selecione um cliente para filtrar"
+              }
             </p>
           </div>
           <div className="flex gap-2">
@@ -1239,24 +1248,27 @@ const ClientOpeningBalance = () => {
                   Histórico detalhado por competência
                 </CardDescription>
               </div>
-              <div className="w-64">
-                <Select
-                  value={selectedClientId || "all"}
-                  onValueChange={handleClientFilter}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os clientes</SelectItem>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Só mostrar filtro local se não tiver cliente global selecionado */}
+              {!globalClientId && (
+                <div className="w-64">
+                  <Select
+                    value={filterClientId || "all"}
+                    onValueChange={handleClientFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filtrar por cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os clientes</SelectItem>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -1266,7 +1278,7 @@ const ClientOpeningBalance = () => {
               </div>
             ) : balances.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                {selectedClientId && selectedClientId !== "all"
+                {(globalClientId || filterClientId)
                   ? "Nenhuma competência cadastrada para este cliente"
                   : "Nenhuma competência cadastrada ainda"}
               </p>
