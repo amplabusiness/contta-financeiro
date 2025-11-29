@@ -204,6 +204,14 @@ serve(async (req) => {
 **Causa**: Múltiplas migrations com mesmo timestamp base (20251120)
 **Solução**: Usar timestamps com precisão de segundos (20251120000200)
 
+#### 4.6 Triggers automáticos criando entries órfãos (29/11/2025)
+**Causa**: Triggers `trg_invoice_provision`, `trg_invoice_payment`, `trg_expense_provision`, `trg_expense_payment` buscavam contas por códigos específicos (`1.1.2.02`, `4.1.1`, `1.1.1.02`, `2.1.1.08`) que não existiam no plano de contas, resultando em `accounting_entries` sem linhas de débito/crédito.
+**Solução**:
+1. Remover os 4 triggers automáticos
+2. Limpar entries órfãos: `DELETE FROM accounting_entries WHERE id NOT IN (SELECT DISTINCT entry_id FROM accounting_entry_lines)`
+3. Usar "Processar Tudo" na Contabilidade Inteligente para recriar lançamentos
+**Migration**: `20251129000000_remove_automatic_accounting_triggers.sql`
+
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
 

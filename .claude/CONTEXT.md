@@ -1,11 +1,17 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-28 (Sessão 2 - Migrações e Documentação)
+2025-11-29 (Sessão 3 - Fix Triggers Contábeis)
 
 ## ✅ Trabalho Concluído Nesta Sessão
 
-### 1. Configuração de Ambiente
+### 1. Fix Triggers Contábeis Automáticos
+- [x] Identificado problema: triggers criavam entries sem linhas débito/crédito
+- [x] Criada migration `20251129000000_remove_automatic_accounting_triggers.sql`
+- [x] Migration remove 4 triggers problemáticos e limpa entries órfãos
+- [x] Documentado problema e solução em MEMORY.md
+
+### Sessão Anterior - Configuração de Ambiente
 - [x] Verificado `.gitignore` - `.env` está protegido
 - [x] Criado `.env.example` como template seguro
 - [x] Criado `vercel.json` para deploy
