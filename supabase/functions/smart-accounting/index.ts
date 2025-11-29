@@ -615,7 +615,8 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
         *,
         clients(id, name)
       `)
-      .order('created_at');
+      .order('created_at')
+      .limit(100); // Limitar para evitar timeout
 
     if (error) {
       console.error('Error fetching client_opening_balance:', error);
@@ -624,7 +625,18 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
 
     console.log(`Found ${balances?.length || 0} opening balances to process`);
 
-    for (const balance of balances || []) {
+    // Retornar rápido se não há dados
+    if (!balances || balances.length === 0) {
+      return {
+        success: true,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        message: 'Nenhum saldo de abertura para processar'
+      };
+    }
+
+    for (const balance of balances) {
       try {
         // Verificar se já existe lançamento
         const { data: existingEntry } = await supabase
@@ -668,11 +680,25 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
         *,
         clients(id, name)
       `)
-      .order('created_at');
+      .order('created_at')
+      .limit(100); // Limitar para evitar timeout
 
     if (error) throw error;
 
-    for (const invoice of invoices || []) {
+    console.log(`Found ${invoices?.length || 0} invoices to process`);
+
+    // Retornar rápido se não há dados
+    if (!invoices || invoices.length === 0) {
+      return {
+        success: true,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        message: 'Nenhuma fatura para processar'
+      };
+    }
+
+    for (const invoice of invoices) {
       try {
         // Verificar se já existe lançamento de provisionamento
         const { data: existingEntry } = await supabase
@@ -729,11 +755,25 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
     const { data: expenses, error } = await supabase
       .from(tableName)
       .select('*')
-      .order('created_at');
+      .order('created_at')
+      .limit(100); // Limitar para evitar timeout
 
     if (error) throw error;
 
-    for (const expense of expenses || []) {
+    console.log(`Found ${expenses?.length || 0} ${tableName} to process`);
+
+    // Retornar rápido se não há dados
+    if (!expenses || expenses.length === 0) {
+      return {
+        success: true,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        message: `Nenhum registro em ${tableName} para processar`
+      };
+    }
+
+    for (const expense of expenses) {
       try {
         // Verificar se já existe lançamento
         const { data: existingEntry } = await supabase
