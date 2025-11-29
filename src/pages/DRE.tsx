@@ -36,6 +36,7 @@ const DRE = () => {
   const loadDREData = useCallback(async () => {
     try {
       setLoading(true);
+      toast.info("Carregando DRE...");
 
       // Buscar TODAS as contas ativas (filtrar em JS para evitar problemas com .or())
       const { data: allAccounts, error: accountsError } = await supabase
@@ -44,17 +45,23 @@ const DRE = () => {
         .eq('is_active', true)
         .order('code');
 
-      if (accountsError) throw accountsError;
+      if (accountsError) {
+        toast.error("Erro ao carregar contas: " + accountsError.message);
+        throw accountsError;
+      }
+
+      toast.info(`Total de contas carregadas: ${allAccounts?.length || 0}`);
 
       // Filtrar contas de receita (3.x) e despesa (4.x) em JavaScript
       const accounts = allAccounts?.filter(acc =>
         acc.code.startsWith('3') || acc.code.startsWith('4')
       ) || [];
 
-      console.log('DRE - Contas 3.x e 4.x encontradas:', accounts.length);
+      toast.info(`Contas 3.x e 4.x: ${accounts.length}`);
+      console.log('DRE - Contas 3.x e 4.x:', accounts);
 
       if (accounts.length === 0) {
-        console.log('DRE - Nenhuma conta de receita/despesa encontrada');
+        toast.warning("Nenhuma conta de receita/despesa encontrada no plano de contas");
         setDreData({
           revenueAccounts: [],
           expenseAccounts: [],
@@ -82,7 +89,7 @@ const DRE = () => {
         endDate = `${selectedYear}-12-31`;
       }
 
-      console.log('DRE - Período:', startDate, 'a', endDate);
+      toast.info(`Período: ${startDate} a ${endDate}`);
 
       // Buscar TODOS os lançamentos contábeis (sem filtro na query)
       const { data: allLines, error: linesError } = await supabase
@@ -94,9 +101,12 @@ const DRE = () => {
           entry_id(entry_date, competence_date)
         `);
 
-      if (linesError) throw linesError;
+      if (linesError) {
+        toast.error("Erro ao carregar lançamentos: " + linesError.message);
+        throw linesError;
+      }
 
-      console.log('DRE - Total de linhas carregadas:', allLines?.length);
+      toast.info(`Total de linhas: ${allLines?.length || 0}`);
 
       // Filtrar por data em JavaScript (usar competence_date se disponível, senão entry_date)
       const filteredLines = allLines?.filter((line: any) => {
@@ -109,7 +119,7 @@ const DRE = () => {
         return lineDate >= startDate && lineDate <= endDate;
       }) || [];
 
-      console.log('DRE - Linhas após filtro de data:', filteredLines.length);
+      toast.info(`Linhas no período: ${filteredLines.length}`);
 
       // Criar mapa de saldos por conta usando linhas filtradas
       const accountTotals = new Map<string, { debit: number; credit: number }>();
@@ -121,7 +131,9 @@ const DRE = () => {
         accountTotals.set(line.account_id, current);
       });
 
-      console.log('DRE - Contas com movimento:', accountTotals.size);
+      toast.info(`Contas com movimento: ${accountTotals.size}`);
+      console.log('DRE - Account IDs com movimento:', Array.from(accountTotals.keys()));
+      console.log('DRE - Account IDs das contas 3.x/4.x:', accounts.map(a => a.id));
 
       // Processar contas
       const revenueAccounts: DREAccount[] = [];
