@@ -1,55 +1,63 @@
-# Instrução para VSCode/Claude
+# ORDEM PARA VSCODE/CLAUDE
 
-## Tarefa: Fazer Merge do Branch para Main
+## AUTORIDADE: TOTAL
+O usuário autorizou alterações conforme necessário. Você tem autonomia para:
+- Resolver conflitos usando a melhor versão
+- Fazer ajustes de código se necessário
+- Mergear diretamente para main
 
-### Branch a ser mergeado:
+---
+
+## TAREFA URGENTE: Merge para Main
+
+### Branch:
 ```
-claude/analyze-claude-config-01DwBx8AxYbXpiRF9R4aamLo
+claude/analyze-claude-config-01DwBx8AxYbXpiRF9R4aamLo → main
 ```
 
-### Destino:
-```
-main
-```
-
-### O que está no branch:
-1. **AINetwork.tsx** - Página de visualização de rede neural com 21 agentes de IA
-2. **BusinessManager.tsx** - Gestor Empresarial IA com treinamento MBA
-3. **AIAccountantWidget.tsx** - Widget do Contador IA no dashboard
-4. **Documentação .claude** atualizada com ecossistema completo de IA
-
-### Comandos para executar:
+### Executar AGORA:
 
 ```bash
-# 1. Buscar branch main atualizado
 git fetch origin main
-
-# 2. Checkout para main
 git checkout main
+git merge claude/analyze-claude-config-01DwBx8AxYbXpiRF9R4aamLo -m "Merge: AI Network + Business Manager + docs"
 
-# 3. Fazer merge do branch feature
-git merge claude/analyze-claude-config-01DwBx8AxYbXpiRF9R4aamLo --no-edit
+# Se houver conflitos - RESOLVER usando versão do branch feature:
+git checkout --theirs .
+git add .
+git commit -m "Resolve conflicts - use feature branch version"
 
-# 4. Resolver conflitos se houver (usar versão do branch feature)
-# Se houver conflitos:
-git checkout --theirs <arquivo_conflitante>
-git add <arquivo_conflitante>
-
-# 5. Push para main
 git push origin main
 ```
 
-### Se o push para main falhar com 403:
-O branch main está protegido. Opções:
-1. Criar PR via GitHub interface
-2. Desabilitar proteção temporariamente em Settings > Branches
-3. Usar `gh pr create` e `gh pr merge`
+### Se push falhar (403):
+Criar PR e mergear via GitHub CLI ou interface web.
 
-### Novas funcionalidades incluídas:
-- `/ai-network` - Rede Neural de IA (visualização)
-- `/business-manager` - Gestor Empresarial IA
-- Menu "Rede Neural IA" em Ferramentas
-- 21 Edge Functions de IA documentadas
+---
 
-### Prioridade: ALTA
-O usuário quer ver essas mudanças em produção.
+## FUNCIONALIDADES INCLUÍDAS:
+
+### 1. Rede Neural de IA (`/ai-network`)
+- Visualização de 21 agentes de IA como rede neural
+- Animações de conexões e status em tempo real
+- Agrupamento por categoria (Contábil, Financeiro, Cobrança, etc.)
+- Painel de detalhes ao clicar em cada agente
+
+### 2. Gestor Empresarial IA (`/business-manager`)
+- Treinamento MBA (Harvard, Wharton, INSEAD)
+- Benchmarks do setor contábil
+- Detecção de anomalias
+- Gestão de inadimplência
+
+### 3. Documentação .claude
+- MEMORY.md com 21 Edge Functions documentadas
+- ROADMAP.md atualizado
+- CONTEXT.md com sessão atual
+
+### 4. Menu atualizado
+- "Rede Neural IA" em Ferramentas
+
+---
+
+## PRIORIDADE: MÁXIMA
+Usuário aguardando ver em produção.
