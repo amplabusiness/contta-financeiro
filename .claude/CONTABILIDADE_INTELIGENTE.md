@@ -354,9 +354,114 @@ Para continuar este trabalho, a IA deve:
 3. Testar o processamento com botão "Testar 1"
 4. Verificar logs no Supabase Dashboard
 
-### Migrations Criadas (precisam ser aplicadas)
+### Migrations Criadas
 
 | Migration | Propósito | Status |
 |-----------|-----------|--------|
-| `20251129170000_disable_auto_accounting_triggers.sql` | Desabilita triggers de invoice/expense | Aplicar |
-| `20251129200000_disable_entry_lines_trigger.sql` | Desabilita `check_balance_after_line_change` | Aplicar |
+| `20251129210000_disable_auto_accounting_triggers.sql` | Desabilita triggers de invoice/expense | Aplicar |
+| `20251129220000_disable_entry_lines_trigger.sql` | Desabilita `check_balance_after_line_change` | Aplicar |
+| `20251129230000_auto_accounting_for_invoices.sql` | Auto-contabilidade para faturas | Aplicar |
+| `20251129240000_ai_validation_columns.sql` | Colunas de validação IA + fila | Aplicar |
+
+### Edge Functions Deployadas
+
+| Function | Propósito | Status |
+|----------|-----------|--------|
+| `smart-accounting` | Contabilidade inteligente | Deployed |
+| `ai-accountant-background` | Validação em background | Deployed |
+| `ai-accountant-agent` | Análise contábil com IA | Deployed |
+
+---
+
+## SQL para Aplicar Migrations (Execute no SQL Editor)
+
+Acesse: https://supabase.com/dashboard/project/xdtlhzysrpoinqtsglmr/sql/new
+
+### Migration 1: Validação IA
+
+```sql
+-- Colunas de validação IA na tabela accounting_entries
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_validated') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_validated BOOLEAN DEFAULT false;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_validated_at') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_validated_at TIMESTAMPTZ;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_validation_result') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_validation_result TEXT CHECK (ai_validation_result IN ('valid', 'invalid', 'warning', 'pending'));
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_validation_message') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_validation_message TEXT;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_confidence') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_confidence DECIMAL(3,2);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_generated') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_generated BOOLEAN DEFAULT false;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'accounting_entries' AND column_name = 'ai_model') THEN
+    ALTER TABLE accounting_entries ADD COLUMN ai_model TEXT;
+  END IF;
+END $$;
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_ai_validated
+  ON accounting_entries(ai_validated)
+  WHERE ai_validated = false;
+
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_ai_result
+  ON accounting_entries(ai_validation_result);
+```
+
+### Migration 2: Fila de Validação
+
+```sql
+-- Tabela de fila
+CREATE TABLE IF NOT EXISTS ai_validation_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entry_id UUID NOT NULL REFERENCES accounting_entries(id) ON DELETE CASCADE,
+  priority INTEGER DEFAULT 5 CHECK (priority BETWEEN 1 AND 10),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'retry')),
+  attempts INTEGER DEFAULT 0,
+  max_attempts INTEGER DEFAULT 3,
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  UNIQUE(entry_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_validation_queue_status
+  ON ai_validation_queue(status, priority)
+  WHERE status IN ('pending', 'retry');
+
+-- RLS
+ALTER TABLE ai_validation_queue ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for authenticated" ON ai_validation_queue
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON ai_validation_queue
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+```
+
+### Processar Faturas Sem Contabilidade
+
+Após aplicar as migrations, execute:
+
+```sql
+SELECT * FROM process_invoices_without_accounting(500);
+```
