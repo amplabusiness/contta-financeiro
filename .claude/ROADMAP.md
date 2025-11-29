@@ -53,14 +53,27 @@
 **Timeline**: 2-3 meses após Fase 1
 **Objetivo**: Diferenciação competitiva
 
-### 2.1 IA Contábil Avançada
-- [ ] Classificação automática de lançamentos
-- [ ] Detecção de anomalias
-- [ ] Previsão de inadimplência
+### 2.1 IA Contábil Avançada 🔄 (60% Concluído)
+- [x] **Contador IA Automático** - Valida lançamentos em background
+  - Tabela `ai_validation_queue` para fila
+  - Tabela `ai_accountant_activity` para log
+  - Edge Function `ai-accountant-background`
+  - Widget `AIAccountantWidget` no dashboard
+- [x] **Gestor Empresarial IA (MBA)** - Análises empresariais
+  - Perfil MBA (Harvard, Wharton, INSEAD, CFA)
+  - Metodologias: Balanced Scorecard, OKRs, ZBB, Six Sigma
+  - Detecção de anomalias em despesas
+  - Gestão de inadimplência (régua de cobrança)
+  - Edge Function `ai-business-manager`
+  - Página `BusinessManager.tsx`
+- [x] Detecção de anomalias (benchmark por setor)
+- [ ] Previsão de inadimplência (machine learning)
 - [ ] Sugestões de otimização fiscal
 - [ ] Chat com documentos (OCR + RAG)
 
-### 2.2 Automação Total
+### 2.2 Automação Total 🔄 (40% Concluído)
+- [x] Validação automática de lançamentos (Contador IA)
+- [x] Lançamentos contábeis automáticos para faturas (triggers)
 - [ ] Conciliação 100% automática
 - [ ] Fechamento contábil automatizado
 - [ ] Geração automática de relatórios
@@ -248,6 +261,11 @@
 
 | Data | Migration | Descrição |
 |------|-----------|-----------|
+| 2025-11-29 | `20251129130000_ai_validation_queue.sql` | Sistema de fila para validação IA |
+| 2025-11-29 | `20251129120000_ai_accountant_automation.sql` | Contador IA automático |
+| 2025-11-29 | `20251129110000_auto_accounting_for_invoices.sql` | Lançamentos automáticos faturas |
+| 2025-11-29 | `20251129100000_fix_opening_balance_to_pl.sql` | Fix saldo abertura → PL |
+| 2025-11-29 | `20251129000000_remove_automatic_accounting_triggers.sql` | Remove triggers órfãos |
 | 2025-11-28 | `20251128_saas_architecture_foundation.sql` | Arquitetura SaaS completa |
 | 2025-11-28 | `20251128000000_add_clients_notes_column.sql` | Coluna notes em clients |
 | 2025-11-20 | `20251120000200_grant_rpc_permissions.sql` | Permissões RPC |

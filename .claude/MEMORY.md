@@ -115,7 +115,88 @@ supabase/
 | `smart-accounting` | Lançamentos contábeis inteligentes |
 | `create-accounting-entry` | Criação de lançamentos |
 | `ai-accountant` | IA para consultas contábeis |
+| `ai-accountant-background` | **Contador IA automático** - valida lançamentos em background |
+| `ai-business-manager` | **Gestor Empresarial IA** - análises MBA para gestão |
 | `client-enrichment` | Enriquecimento via ReceitaWS |
+
+## Sistema de IA Autônoma
+
+### Contador IA Automático (Background)
+**Filosofia**: "O humano só vê a magia acontecer"
+
+**Componentes**:
+1. **Tabela `ai_validation_queue`** - Fila de lançamentos para validação
+2. **Tabela `ai_accountant_activity`** - Log de atividades do Contador IA
+3. **Colunas em `accounting_entries`**:
+   - `ai_validated` - Se foi validado
+   - `ai_validation_status` - pending/validating/approved/warning/rejected
+   - `ai_validation_score` - Score 0-100
+   - `ai_confidence` - Nível de confiança (0.0-1.0)
+   - `ai_model` - Modelo usado (gemini-2.5-flash)
+   - `ai_generated` - Se foi gerado pela IA
+
+**Funções PostgreSQL**:
+- `queue_entry_for_ai_validation(entry_id, priority)` - Adiciona na fila
+- `get_next_validation_item()` - Pega próximo item (SKIP LOCKED)
+- `complete_ai_validation(queue_id, status, score, confidence, message, model)` - Completa validação
+- `fail_ai_validation(queue_id, error_message)` - Marca como falha
+- `log_ai_accountant_activity(...)` - Registra atividade
+
+**Trigger automático**: `trg_queue_new_entry` - Adiciona novos lançamentos na fila automaticamente
+
+**Widget React**: `AIAccountantWidget.tsx` - Mostra atividade em tempo real no dashboard
+
+### Gestor Empresarial IA (MBA-Trained)
+**Formação de Elite**:
+- MBA Harvard Business School (Finance)
+- MBA Wharton School (Operations)
+- Certificação INSEAD (Strategy)
+- CFA Level III (Investment Analysis)
+- Six Sigma Black Belt
+
+**Metodologias**:
+- Balanced Scorecard (Kaplan & Norton)
+- OKRs (Objectives and Key Results)
+- Zero-Based Budgeting (ZBB)
+- Six Sigma DMAIC
+- Lean Management
+- Porter's Five Forces
+- BCG Matrix
+
+**Benchmarks do Setor Contábil**:
+| Categoria | % Receita | Limite Crítico |
+|-----------|-----------|----------------|
+| Folha de pagamento | 40-50% | >55% = ALERTA |
+| Aluguel | 5-10% | >12% = ALERTA |
+| Material de consumo | 1-2% | >3% = ALERTA |
+| Software/TI | 3-5% | >7% = ALERTA |
+| Marketing | 2-5% | >8% = ALERTA |
+| Energia | 1-2% | >2.5% = ALERTA |
+
+**Detecção de Anomalias**:
+- Café: máx 0.5kg/funcionário/mês (20kg para 3 funcionários = ANOMALIA)
+- Papel A4: máx 1 resma/funcionário/mês (sem impressora = ANOMALIA)
+- Energia: pico 20% > média = investigar
+
+**Gestão de Inadimplência**:
+| Atraso | Ação | Canal |
+|--------|------|-------|
+| D+1 | Lembrete | E-mail |
+| D+7 | Cobrança amigável | WhatsApp |
+| D+15 | Contato telefônico | Telefone |
+| D+30 | Negociação | Reunião |
+| D+60 | Suspensão + Jurídico | Formal |
+
+**Ações disponíveis**:
+- `analyze_receivables` - Análise de inadimplência
+- `analyze_payables` - Análise de fluxo de pagamentos
+- `expense_anomaly` - Detecção de anomalias em despesas
+- `reduce_delinquency` - Estratégias para reduzir inadimplência
+- `full_diagnostic` - Diagnóstico empresarial completo
+- `calculate_indicators` - Indicadores de performance
+- `closing_analysis` - Análise de fechamento contábil
+
+**Página React**: `BusinessManager.tsx` - Interface do Gestor Empresarial com cards de análises
 
 ## Views Materializadas (CQRS)
 
@@ -305,6 +386,35 @@ const filteredLines = allLines?.filter(line => {
 - `supabase/migrations/20251129100000_fix_opening_balance_to_pl.sql`
 
 **Lição**: Saldo de abertura é um ATIVO pré-existente, não receita do período atual
+
+#### 4.11 Balanço Patrimonial desbalanceado (29/11/2025 - RESOLVIDO)
+**Causa**: Balanço não incluía "Resultado do Exercício" na seção de Patrimônio Líquido
+**Problema**: Ativo = R$ X, Passivo + PL = R$ Y (diferença de R$ 130.563,90)
+**Solução**: Adicionada seção "Resultado do Exercício" no PL que busca da DRE
+**Arquivo afetado**: `src/pages/BalanceSheet.tsx`
+**Lição**: Resultado do Exercício (Receitas - Despesas) faz parte do PL até ser distribuído
+
+## Novas Funcionalidades (29/11/2025)
+
+### Contador IA Automático
+**Migrations**:
+- `20251129120000_ai_accountant_automation.sql` - Base do sistema
+- `20251129130000_ai_validation_queue.sql` - Sistema de fila
+
+**Edge Functions**:
+- `ai-accountant-background/index.ts` - Processamento em background
+
+**Componentes**:
+- `AIAccountantWidget.tsx` - Widget no dashboard
+
+### Gestor Empresarial IA (MBA)
+**Edge Functions**:
+- `ai-business-manager/index.ts` - Análises empresariais
+
+**Páginas**:
+- `BusinessManager.tsx` - Interface do Gestor
+
+**Rotas**: `/business-manager` (menu: Gestor IA)
 
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
