@@ -47,8 +47,8 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     // Suporte a múltiplas APIs de IA
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    const aiApiKey = geminiApiKey || lovableApiKey; // Prioriza Gemini
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const aiApiKey = geminiApiKey || geminiApiKey; // Prioriza Gemini
 
     // Usar service role para operações automatizadas
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -434,14 +434,14 @@ async function callAI(apiKey: string, provider: 'gemini' | 'lovable', systemProm
     return result.candidates?.[0]?.content?.parts?.[0]?.text || '';
   } else {
     // Chamar via Lovable Gateway
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        // model moved to URL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }

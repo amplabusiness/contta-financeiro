@@ -35,9 +35,9 @@ serve(async (req) => {
 
     // Suporte a múltiplas APIs de IA
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
-    const AI_KEY = GEMINI_API_KEY || LOVABLE_API_KEY;
+    const AI_KEY = GEMINI_API_KEY || GEMINI_API_KEY;
 
     log(`🚀 AI Initial Load started (using ${AI_PROVIDER})`);
     log(`📅 Processing initial load for January 2025`);

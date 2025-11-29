@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     // Suporte a múltiplas APIs de IA - prioriza Gemini
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
 
     console.log(`🏷️ AI Expense Classifier started (using ${AI_PROVIDER})`);
@@ -97,14 +97,14 @@ Responda APENAS com JSON:
           }
         } else {
           // Chamar via Lovable Gateway
-          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const aiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Authorization': `Bearer ${GEMINI_API_KEY}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              // model moved to URL,
               messages: [
                 { role: 'system', content: 'Você é um contador expert em classificação de despesas.' },
                 { role: 'user', content: prompt }

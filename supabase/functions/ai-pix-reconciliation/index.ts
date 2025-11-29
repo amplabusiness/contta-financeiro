@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -96,14 +96,14 @@ ${clients?.map(c => `- ID: ${c.id}, Nome: ${c.name}, CNPJ: ${c.cnpj || 'N/A'}`).
 
 Retorne apenas o ID do cliente mais provável ou "NONE" se não houver correspondência clara.`;
 
-          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const aiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
+              'Authorization': `Bearer ${geminiApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
+              // model moved to URL,
               messages: [
                 { role: 'system', content: 'Você é um especialista em reconciliação financeira. Retorne apenas o ID do cliente ou NONE.' },
                 { role: 'user', content: prompt }
@@ -180,14 +180,14 @@ Retorne no formato JSON:
   "reason": "explicação breve"
 }`;
 
-        const matchResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const matchResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
+            'Authorization': `Bearer ${geminiApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            // model moved to URL,
             messages: [
               { role: 'system', content: 'Você é um especialista em reconciliação financeira. Retorne apenas JSON válido.' },
               { role: 'user', content: matchPrompt }

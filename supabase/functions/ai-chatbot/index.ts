@@ -1,9 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
+import { callGemini } from '../_shared/gemini.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -77,28 +75,14 @@ ${JSON.stringify(context, null, 2)}`
       }
     ]
 
-    // Call Lovable AI (Gemini)
-    const response = await fetch(LOVABLE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gemini-2.5-flash',
-        messages,
-        temperature: 0.7,
-        max_tokens: 500
-      })
+    // Call Gemini API directly
+    const aiResult = await callGemini(messages, {
+      model: 'gemini-2.0-flash',
+      temperature: 0.7,
+      maxOutputTokens: 500
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`AI API error: ${error}`)
-    }
-
-    const aiResult = await response.json()
-    const botMessage = aiResult.choices[0].message.content
+    const botMessage = aiResult.text
 
     // Log conversation
     await supabase.from('ai_executions').insert({
@@ -107,7 +91,7 @@ ${JSON.stringify(context, null, 2)}`
       input_data: { message, context },
       output_data: { response: botMessage },
       status: 'completed',
-      tokens_used: aiResult.usage?.total_tokens,
+      tokens_used: aiResult.tokensUsed,
       executed_at: new Date().toISOString()
     })
 

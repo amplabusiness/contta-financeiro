@@ -28,12 +28,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     // Suporte a múltiplas APIs de IA - prioriza Gemini
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     const aiProvider = geminiApiKey ? 'gemini' : 'lovable';
-    const aiKey = geminiApiKey || lovableApiKey;
+    const aiKey = geminiApiKey || geminiApiKey;
 
     if (!aiKey) {
-      throw new Error('AI API key not configured (GEMINI_API_KEY or LOVABLE_API_KEY)');
+      throw new Error('AI API key not configured (GEMINI_API_KEY or GEMINI_API_KEY)');
     }
 
     console.log(`[AI-Accountant] Using ${aiProvider} provider`);
@@ -297,14 +297,14 @@ Valide o lançamento contábil seguindo rigorosamente as normas brasileiras.`;
       analysis = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
     } else {
       // Chamar via Lovable Gateway
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const aiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
+          'Authorization': `Bearer ${geminiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          // model moved to URL,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }

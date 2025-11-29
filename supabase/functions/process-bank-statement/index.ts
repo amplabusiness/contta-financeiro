@@ -428,14 +428,14 @@ async function matchTransactionWithAI(
     }
 
     // Se não houver match automático, usar IA
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+        Authorization: `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        // model moved to URL,
         messages: [
           {
             role: 'system',

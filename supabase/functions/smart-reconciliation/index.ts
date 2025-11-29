@@ -36,9 +36,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     // Suporte a múltiplas APIs de IA - prioriza Gemini
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
-    const AI_KEY = GEMINI_API_KEY || LOVABLE_API_KEY;
+    const AI_KEY = GEMINI_API_KEY || GEMINI_API_KEY;
 
     const { action, transaction, filters } = await req.json();
 
@@ -289,14 +289,14 @@ ${suggestions.slice(0, 15).map((s, i) => `${i+1}. ID: ${s.id} | ${s.description}
             }
           } else {
             // Chamar via Lovable Gateway
-            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            const aiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Authorization': `Bearer ${GEMINI_API_KEY}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
+                // model moved to URL,
                 messages: [
                   { role: 'system', content: systemPrompt },
                   { role: 'user', content: userPrompt }
