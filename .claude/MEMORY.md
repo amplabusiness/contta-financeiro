@@ -91,6 +91,22 @@ supabase/
 3. Sistema cria reconciliação e lançamentos contábeis
 4. Atualiza status dos honorários para 'paid'
 
+### 6. Automação Contábil (Contabilidade-First)
+**Filosofia**: Tudo nasce na contabilidade e distribui para as telas
+**Fluxo Contábil**: Diário → Razão → Balancete → DRE → Balanço Patrimonial
+
+**Trigger automático para faturas**:
+- Trigger: `trg_auto_accounting_invoice` (AFTER INSERT on invoices)
+- Função: `create_invoice_accounting_entry()`
+- Cria automaticamente:
+  1. Lançamento em `accounting_entries`
+  2. Linhas em `accounting_entry_lines` (D: Cliente, C: Receita)
+  3. Entrada em `client_ledger`
+- Skip automático para `source='opening_balance'` (usa conta PL 5.2.1.02)
+
+**Função para processar faturas existentes**:
+- `process_invoices_without_accounting()` - processa em lotes de 500
+
 ## Edge Functions Principais
 
 | Função | Propósito |

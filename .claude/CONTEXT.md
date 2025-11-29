@@ -1,11 +1,25 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-29 (Sessão 5 - Fix DRE + Relatórios Contábeis)
+2025-11-29 (Sessão 6 - Automação Contábil)
 
 ## ✅ Trabalho Concluído Nesta Sessão
 
-### 1. Refatoração DRE (Demonstração do Resultado do Exercício)
+### 1. Automação de Lançamentos Contábeis
+- [x] Criado trigger automático para faturas: `trg_auto_accounting_invoice`
+- [x] Função `create_invoice_accounting_entry()` cria lançamento ao inserir fatura
+- [x] Função `process_invoices_without_accounting()` para processar faturas existentes
+- [x] Segue princípio contábil: Diário → Razão → Balancete → DRE → Balanço
+- [x] Skip automático para `source='opening_balance'` (usa conta PL)
+
+### 2. Filosofia Arquitetural Definida
+- **Contabilidade-First**: Tudo nasce na contabilidade e distribui para as telas
+- **Fluxo Contábil**: Diário → Razão → Balancete → DRE → Balanço Patrimonial
+- **Fonte da Verdade**: `accounting_entries` + `accounting_entry_lines`
+
+### Sessão 5 - Trabalho Anterior (completado)
+
+#### 1. Refatoração DRE (Demonstração do Resultado do Exercício)
 - [x] Refatorado DRE para usar `accounting_entry_lines` (fonte contábil correta)
 - [x] Removido uso de `invoices.status='paid'` (fonte operacional incorreta)
 - [x] Implementado filtro JavaScript para contas 3.x (Receita) e 4.x (Despesa)
@@ -101,15 +115,18 @@
 4. Adicionar `tenant_id` nas tabelas existentes
 5. Criar tenant padrão para dados existentes
 
-## Arquivos Modificados Nesta Sessão (Sessão 5)
+## Arquivos Modificados Nesta Sessão (Sessão 6)
+- `supabase/migrations/20251129110000_auto_accounting_for_invoices.sql` (criado)
+- `.claude/CONTEXT.md` (atualizado)
+- `.claude/MEMORY.md` (atualizado)
+
+### Sessão 5
 - `src/pages/DRE.tsx` (refatoração completa - usa accounting_entry_lines)
 - `src/pages/BalanceSheet.tsx` (fix filtros JavaScript + PL 5.x)
 - `src/pages/LivroDiario.tsx` (fix período padrão ano inteiro)
 - `src/pages/LivroRazao.tsx` (fix período padrão + UX)
 - `supabase/functions/smart-accounting/index.ts` (fix saldo_abertura → PL)
 - `supabase/migrations/20251129100000_fix_opening_balance_to_pl.sql` (criado)
-- `.claude/CONTEXT.md` (atualizado)
-- `.claude/MEMORY.md` (atualizado)
 
 ### Sessão 4
 - `src/pages/Balancete.tsx` (fix cálculo saldo devedor/credor)
