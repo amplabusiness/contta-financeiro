@@ -6,7 +6,7 @@ Sistema de gestão financeira e contábil para escritório de contabilidade, em 
 ## Stack Tecnológico
 - **Frontend**: React + TypeScript + Vite + TailwindCSS + shadcn/ui
 - **Backend**: Supabase (PostgreSQL + Edge Functions + Auth + Storage)
-- **AI**: Lovable API Gateway (Gemini 2.5 Flash)
+- **AI**: Google Gemini API direta (gemini-2.0-flash) - migrado de Lovable em 29/11/2025
 - **Deploy**: Vercel (planejado)
 
 ## Arquitetura Atual
@@ -450,6 +450,41 @@ const filteredLines = allLines?.filter(line => {
 **Solução**: Adicionada seção "Resultado do Exercício" no PL que busca da DRE
 **Arquivo afetado**: `src/pages/BalanceSheet.tsx`
 **Lição**: Resultado do Exercício (Receitas - Despesas) faz parte do PL até ser distribuído
+
+## Migração Lovable → Gemini (29/11/2025)
+
+### Contexto
+O projeto Lovable foi descontinuado. Todas as Edge Functions que usavam o `ai.gateway.lovable.dev` foram migradas para usar a API do **Google Gemini diretamente**.
+
+### Mudanças Principais
+1. **Variáveis de ambiente**: `LOVABLE_API_KEY` → `GEMINI_API_KEY`
+2. **URL da API**: `ai.gateway.lovable.dev` → `generativelanguage.googleapis.com`
+3. **Formato da requisição**: OpenAI-compatible → Gemini native format
+4. **Modelo**: `google/gemini-2.5-flash` → `gemini-2.0-flash`
+
+### Helper Gemini Criado
+Arquivo `supabase/functions/_shared/gemini.ts` com funções:
+- `callGemini(messages, config)` - Chamada com mensagens
+- `askGemini(prompt, systemPrompt)` - Chamada simples
+- `askGeminiJSON<T>(prompt)` - Para respostas JSON estruturadas
+
+### Funções Totalmente Migradas
+- `ai-business-manager` - Gestor Empresarial IA
+- `ai-accountant-background` - Contador IA Background
+- `ai-chatbot` - Chatbot de atendimento
+
+### Funções Parcialmente Migradas (22)
+Variáveis de ambiente atualizadas, mas formato de requisição pode precisar ajuste:
+- `ai-accountant-agent`, `ai-accounting-engine`, `ai-accounting-validator`
+- `ai-automation-agent`, `ai-cash-flow-analyst`, `ai-churn-predictor`
+- `ai-client-segmenter`, `ai-collection-agent`, `ai-contract-generator`
+- `ai-email-composer`, `ai-expense-classifier`, `ai-financial-analyst`
+- `ai-fraud-analyzer`, `ai-fraud-detector`, `ai-invoice-classifier`
+- `ai-orchestrator`, `ai-partner-analyzer`, `ai-pix-reconciliation`
+- `ai-pricing-optimizer`, `ai-reconciliation-agent`, `ai-revenue-predictor`
+- `process-bank-statement`, `smart-reconciliation`
+
+---
 
 ## Novas Funcionalidades (29/11/2025)
 
