@@ -37,10 +37,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_SUPABASE_PROJECT_ID": "@supabase-project-id",
-    "VITE_SUPABASE_PUBLISHABLE_KEY": "@supabase-anon-key",
-    "VITE_SUPABASE_URL": "@supabase-url"
-  }
+  ]
 }
