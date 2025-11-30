@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+type LogFunction = (msg: string) => void;
+
 /**
  * AI BANK TRANSACTION PROCESSOR
  *
@@ -184,7 +186,7 @@ async function processTransactions(
   bankAccountId: string,
   importId: string,
   openingDate: string,
-  log: Function
+  log: LogFunction
 ) {
   log(`🔄 Processing ${transactions.length} transactions...`);
 
@@ -380,7 +382,7 @@ async function classifySingleTransaction(
   supabase: any,
   apiKey: string,
   transaction: any,
-  log: Function
+  log: LogFunction
 ) {
   log(`🔍 Classifying single transaction: ${transaction.description}`);
 
@@ -429,7 +431,7 @@ async function processUnclassifiedTransactions(
   supabase: any,
   apiKey: string,
   bankAccountId: string,
-  log: Function
+  log: LogFunction
 ) {
   log(`🔄 Processing unclassified transactions for account ${bankAccountId}`);
 
