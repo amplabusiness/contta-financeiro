@@ -1,33 +1,70 @@
 ﻿# Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-30 (Sessão 12  CI/CD Completo em Produção )
+2025-11-30 (Sessão 12 – CI/CD em Produção + Branding Ampla 🚀)
 
 ### Resumo rápido desta sessão
--  **CI/CD FUNCIONANDO EM PRODUÇÃO!** Pipeline "Deploy Ampla Sistema" executado com sucesso total.
--  Configurados secrets no environment `production` do GitHub: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
--  Workflow `.github/workflows/deploy.yml` ajustado para usar `environment: production` nos jobs que precisam dos secrets.
--  Corrigido `vercel.json`: substituído `routes` por `rewrites` (Vercel não aceita misturar com `headers`).
--  Removidas referências a secrets inexistentes do Vercel (`@supabase-project-id`, etc.).
+- ✅ **CI/CD FUNCIONANDO EM PRODUÇÃO!** Pipeline "Deploy Ampla Sistema" executado com sucesso total.
+- ✅ Configurados secrets no environment `production` do GitHub: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- ✅ Workflow `.github/workflows/deploy.yml` ajustado para usar `environment: production`.
+- ✅ Corrigido `vercel.json`: substituído `routes` por `rewrites` (Vercel não aceita misturar com `headers`).
+- ✅ Removidas referências a secrets inexistentes do Vercel.
+- ✅ **Branding Ampla completo**: Logo atualizada em toda a aplicação.
+- ✅ **Tela de login redesenhada**: Layout proporcional e profissional.
 
 ### Resultado do Pipeline (Run #19804824040)
 | Job | Status | Tempo |
 |-----|--------|-------|
-|  Qualidade do Código | Sucesso | 30s |
-|  Deploy Supabase | Sucesso | 1m35s |
-|  Deploy Vercel | Sucesso | 1m0s |
-|  Notificar Deploy | Sucesso | 2s |
+| ✅ Qualidade do Código | Sucesso | 30s |
+| ✅ Deploy Supabase | Sucesso | 1m35s |
+| ✅ Deploy Vercel | Sucesso | 1m0s |
+| ✅ Notificar Deploy | Sucesso | 2s |
 
 ### Correções aplicadas no CI/CD
-1. **Erro "mix routing props"**: Vercel não permite `routes` junto com `headers`  substituído por `rewrites`.
+1. **Erro "mix routing props"**: Vercel não permite `routes` junto com `headers` → substituído por `rewrites`.
 2. **Erro "Secret does not exist"**: Removida seção `env` do `vercel.json` que referenciava secrets inexistentes.
 3. **Erro "access token not provided"**: Adicionado `environment: production` no workflow para que os jobs acessem os secrets.
 
-### Urgências pós-sessão
-1. ~~Configurar secrets do GitHub~~  FEITO
-2. ~~Rodar pipeline CI/CD~~  FEITO
-3. Executar `scripts/import_recurring_expenses.py` em modo real para importar despesas recorrentes.
-4. Validar UI de Contabilidade Inteligente (botões "Testar 1/Processar Tudo").
+### Branding Ampla Implementado
+| Local | Atualização |
+|-------|-------------|
+| `index.html` | Título, favicon, meta tags OG/Twitter |
+| `AppSidebar.tsx` | Logo real no menu lateral |
+| `Auth.tsx` | Logo no desktop e mobile + layout redesenhado |
+| Aba do navegador | Favicon da Ampla |
+
+### Melhorias na Tela de Login
+- Proporção 55/45 (mais espaço para branding)
+- Logo maior + nome da empresa ao lado
+- Missão em formato blockquote elegante
+- Diferenciais e serviços com hover effects
+- Footer com site, localização e experiência
+- Responsivo melhorado para mobile
+
+### Secrets Supabase Validados
+| Secret | Status |
+|--------|--------|
+| ✅ SUPABASE_URL | Configurado |
+| ✅ SUPABASE_ANON_KEY | Configurado |
+| ✅ SUPABASE_SERVICE_ROLE_KEY | Configurado |
+| ✅ SUPABASE_DB_URL | Configurado |
+| ✅ OPENAI_API_KEY | Configurado |
+| ✅ GEMINI_API_KEY | Configurado |
+| ✅ CNPJA_API_KEY | Configurado |
+| ✅ CNPJA_BASE_URL | Configurado |
+
+### Secrets Opcionais (para futuro)
+- CORA_CLIENT_ID/SECRET - Integração banco Cora
+- SENDGRID_API_KEY - Envio de emails
+- EVOLUTION_API_* - WhatsApp
+- TWILIO_* - SMS/WhatsApp
+- PLUGGY_* - Open Banking
+
+### Urgências para Segunda-feira (01/12)
+1. Executar `scripts/import_recurring_expenses.py` em modo real para importar despesas recorrentes.
+2. Validar UI de Contabilidade Inteligente (botões "Testar 1/Processar Tudo").
+3. Testar fluxo completo do sistema em produção.
+
 ### Próximas entregas sugeridas
 | Prioridade | Item | Responsável sugerido |
 |------------|------|----------------------|
@@ -40,7 +77,35 @@
 
 > Conteúdo completo da sessão anterior (Sessão 10 – Contabilidade Inteligente + CI/CD) permanece registrado na seção “Histórico” para referência.
 
-## ✅ Trabalho Concluído Nesta Sessão (Sessão 11)
+## ✅ Trabalho Concluído Nesta Sessão (Sessão 12)
+
+### 1. CI/CD Pipeline Completo
+- Configurados secrets no environment `production` do GitHub Actions
+- Workflow deploy.yml usando `environment: production` para acessar secrets
+- Corrigido vercel.json (routes → rewrites)
+- Pipeline testado e funcionando: Lint → Supabase → Vercel → Notificação
+
+### 2. Branding Ampla Contabilidade
+- Copiada logo `banco/logo/logo ampla cinza png (3).png` → `public/logo-ampla.png`
+- `AppSidebar.tsx` - Logo real substituiu ícone Building2
+- `Auth.tsx` - Logo com filtro branco no fundo azul
+- `index.html` - Título, favicon, meta tags OG/Twitter atualizadas
+
+### 3. Redesign da Tela de Login
+- Layout 55/45 split (mais espaço para branding)
+- Logo + nome da empresa lado a lado
+- Missão em blockquote elegante com borda azul
+- Cards de diferenciais mais compactos
+- Serviços com hover effects
+- Footer com site, localização e experiência
+- Cores refinadas (slate + blue gradient)
+- Mobile responsivo melhorado
+
+### 4. Validação de Secrets Supabase
+- Listados todos os secrets configurados
+- Identificados secrets opcionais para integrações futuras (Cora, SendGrid, etc.)
+
+## ✅ Trabalho Concluído – Sessão 11 (Histórico)
 
 ### 1. Limpeza de PRs e workflows do Copilot
 - Script Powershell rodando `gh pr list --json number,author` + `gh pr close` fechou 27 PRs/drafts `app/copilot-swe-agent` de forma segura, removendo também branches remotos.
@@ -127,7 +192,24 @@ Funcionário → request_improvement() → IA analisa → Gerente aprova → Imp
 ### "Nada sem IA"
 Cada tela tem um agente responsável. Cada decisão é orientada por IA especializada.
 
-## Arquivos Criados/Modificados Nesta Sessão
+## Arquivos Criados/Modificados Nesta Sessão (Sessão 12)
+
+### Configuração
+- `.github/workflows/deploy.yml` (modificado - environment: production)
+- `vercel.json` (modificado - routes → rewrites, removido env)
+- `index.html` (modificado - branding Ampla completo)
+
+### Assets
+- `public/logo-ampla.png` (criado - logo da Ampla)
+
+### Componentes UI
+- `src/components/AppSidebar.tsx` (modificado - logo real)
+- `src/pages/Auth.tsx` (modificado - redesign completo)
+
+### Documentação
+- `.claude/CONTEXT.md` (atualizado)
+
+## Arquivos Criados/Modificados – Sessões Anteriores
 
 ### Migrations
 - `supabase/migrations/20251130130000_openai_sora2_video_generation.sql` (criado)
@@ -160,18 +242,22 @@ Cada tela tem um agente responsável. Cada decisão é orientada por IA especial
 - `SUPABASE_SERVICE_ROLE_KEY` - Chave de serviço
 - `SUPABASE_URL` - URL do projeto
 
-### GitHub Actions (pendente configurar)
-- `SUPABASE_ACCESS_TOKEN` - Token para deploy migrations
-- `VERCEL_TOKEN` - Token para deploy frontend
-- `VERCEL_ORG_ID` - ID da organização Vercel
-- `VERCEL_PROJECT_ID` - ID do projeto Vercel
+### GitHub Actions (configurados no environment production)
+- `SUPABASE_ACCESS_TOKEN` - Token para deploy migrations ✅
+- `SUPABASE_PROJECT_ID` - ID do projeto Supabase ✅
+- `VERCEL_TOKEN` - Token para deploy frontend ✅
+- `VERCEL_ORG_ID` - ID da organização Vercel ✅
+- `VERCEL_PROJECT_ID` - ID do projeto Vercel ✅
 
 ## Próximas Tarefas
 
-### Prioridade Imediata (Segunda-feira)
-1. Executar `scripts/setup-cicd.ps1` para configurar secrets do GitHub
-2. Fazer push para main e testar CI/CD
-3. Verificar deploy no Vercel (ampla.app.br)
+### Prioridade Imediata (Segunda-feira 01/12)
+1. ~~Configurar secrets do GitHub~~ ✅ FEITO
+2. ~~Testar CI/CD~~ ✅ FEITO  
+3. ~~Branding Ampla~~ ✅ FEITO
+4. Executar `scripts/import_recurring_expenses.py` em modo real
+5. Validar Contabilidade Inteligente (Testar 1 / Processar Tudo)
+6. Testar fluxo completo do sistema em produção
 
 ### Interfaces Pendentes
 1. Tela para funcionário preencher entidades pendentes
