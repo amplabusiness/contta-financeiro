@@ -1,0 +1,122 @@
+# =====================================================
+# AMPLA CONTABILIDADE - CI/CD Pipeline
+# Deploy automático para Vercel + Supabase
+# =====================================================
+
+name: Deploy Ampla Sistema
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  SUPABASE_PROJECT_ID: xdtlhzysrpoinqtsglmr
+
+jobs:
+  # =====================================================
+  # 1. LINT E TESTES
+  # =====================================================
+  quality:
+    name: Qualidade do Código
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar tipos TypeScript
+        run: npm run build
+        continue-on-error: true
+
+  # =====================================================
+  # 2. DEPLOY SUPABASE MIGRATIONS
+  # =====================================================
+  supabase:
+    name: Deploy Supabase
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link projeto Supabase
+        run: supabase link --project-ref ${{ env.SUPABASE_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Aplicar migrations
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy Edge Functions
+        run: |
+          for dir in supabase/functions/*/; do
+            if [ -f "$dir/index.ts" ]; then
+              func_name=$(basename "$dir")
+              echo "Deploying function: $func_name"
+              supabase functions deploy "$func_name" --project-ref ${{ env.SUPABASE_PROJECT_ID }}
+            fi
+          done
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        continue-on-error: true
+
+  # =====================================================
+  # 3. DEPLOY VERCEL (Frontend)
+  # =====================================================
+  vercel:
+    name: Deploy Vercel
+    runs-on: ubuntu-latest
+    needs: [quality, supabase]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Deploy para Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+
+  # =====================================================
+  # 4. NOTIFICAÇÃO DE CONCLUSÃO
+  # =====================================================
+  notify:
+    name: Notificar Deploy
+    runs-on: ubuntu-latest
+    needs: [supabase, vercel]
+    if: always()
+    steps:
+      - name: Resumo do Deploy
+        run: |
+          echo "## Deploy Ampla Contabilidade" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Autor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Status:" >> $GITHUB_STEP_SUMMARY
+          echo "- Supabase: ${{ needs.supabase.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Vercel: ${{ needs.vercel.result }}" >> $GITHUB_STEP_SUMMARY

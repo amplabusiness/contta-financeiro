@@ -44,6 +44,11 @@ import {
   Heart,
   Calculator,
   Handshake,
+  Lightbulb,
+  Package,
+  Banknote,
+  Gavel,
+  Tv,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -56,7 +61,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { AITeamBadge } from "@/components/AITeamBadge";
 
 const SCROLL_POSITION_KEY = "sidebar-scroll-position";
 
@@ -162,12 +169,21 @@ export function AppSidebar() {
       ],
     },
     {
-      label: "Importações",
+      label: "Importacoes",
       items: [
         { title: "Clientes", url: "/import", icon: Users },
-        { title: "Honorários", url: "/import-honorarios", icon: FileInput },
+        { title: "Honorarios", url: "/import-honorarios", icon: FileInput },
         { title: "Despesas", url: "/import-expenses-spreadsheet", icon: FileSpreadsheet },
-        { title: "Upload Automático", url: "/automated-upload", icon: Zap },
+        { title: "Upload Automatico", url: "/automated-upload", icon: Zap },
+      ],
+    },
+    {
+      label: "Administrativo",
+      items: [
+        { title: "Estoque e Compras", url: "/inventory", icon: Package },
+        { title: "Folha de Pagamento", url: "/payroll", icon: Banknote },
+        { title: "Consultoria Trabalhista", url: "/labor-advisory", icon: Gavel },
+        { title: "Videos e TVs", url: "/video-content", icon: Tv },
       ],
     },
     {
@@ -176,8 +192,9 @@ export function AppSidebar() {
         { title: "Contador IA", url: "/ai-accountant", icon: Bot },
         { title: "Gestor IA", url: "/business-manager", icon: Brain },
         { title: "Rede Neural", url: "/ai-network", icon: Network },
+        { title: "Evolucao Continua", url: "/feature-requests", icon: Lightbulb },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
-        { title: "Configurações", url: "/settings", icon: Settings },
+        { title: "Configuracoes", url: "/settings", icon: Settings },
       ],
     },
   ];
@@ -238,6 +255,13 @@ export function AppSidebar() {
           ))}
         </div>
       </SidebarContent>
+      <SidebarFooter className="border-t p-2">
+        {collapsed ? (
+          <AITeamBadge variant="minimal" className="justify-center" />
+        ) : (
+          <AITeamBadge variant="compact" />
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }

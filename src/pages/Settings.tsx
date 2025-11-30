@@ -9,8 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save, Loader2, Search } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save, Loader2, Search,
+  Users, UserPlus, Home, Car, AlertTriangle, Brain, Plus, Edit, Trash2, Heart
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { AITeamBadge } from "@/components/AITeamBadge";
 
 // Interface para dados da empresa via Brasil API
 interface CompanyData {

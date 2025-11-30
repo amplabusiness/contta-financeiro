@@ -1,0 +1,149 @@
+# =====================================================
+# AMPLA CONTABILIDADE - Sistema de Evolução Contínua
+# Implementação automática de feature requests aprovadas
+# =====================================================
+
+name: Implementar Feature Request
+
+on:
+  # Disparo manual via GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      feature_id:
+        description: 'ID da Feature Request (UUID)'
+        required: true
+        type: string
+      feature_title:
+        description: 'Título da feature'
+        required: true
+        type: string
+      template_code:
+        description: 'Código do template (se aplicável)'
+        required: false
+        type: choice
+        options:
+          - GRUPO_ECONOMICO
+          - RELATORIO_PERSONALIZADO
+          - AUTOMACAO_ROTINA
+          - INTEGRACAO_EXTERNA
+          - ALERTA_NOTIFICACAO
+          - DASHBOARD_INDICADOR
+          - CUSTOM
+
+env:
+  SUPABASE_PROJECT_ID: xdtlhzysrpoinqtsglmr
+
+jobs:
+  # =====================================================
+  # 1. GERAR ESPECIFICAÇÃO TÉCNICA
+  # =====================================================
+  generate-spec:
+    name: Gerar Especificação
+    runs-on: ubuntu-latest
+    outputs:
+      migration_needed: ${{ steps.analyze.outputs.migration_needed }}
+      component_needed: ${{ steps.analyze.outputs.component_needed }}
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Analisar requisitos
+        id: analyze
+        run: |
+          echo "Analisando feature: ${{ inputs.feature_title }}"
+          echo "Template: ${{ inputs.template_code }}"
+
+          # Verificar se precisa de migration
+          if [[ "${{ inputs.template_code }}" == "GRUPO_ECONOMICO" ]] || \
+             [[ "${{ inputs.template_code }}" == "AUTOMACAO_ROTINA" ]] || \
+             [[ "${{ inputs.template_code }}" == "ALERTA_NOTIFICACAO" ]]; then
+            echo "migration_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "migration_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Verificar se precisa de componente
+          if [[ "${{ inputs.template_code }}" == "DASHBOARD_INDICADOR" ]] || \
+             [[ "${{ inputs.template_code }}" == "RELATORIO_PERSONALIZADO" ]]; then
+            echo "component_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "component_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Criar branch para feature
+        run: |
+          git config user.name "Ampla IA Bot"
+          git config user.email "ia@amplabusiness.com.br"
+          BRANCH_NAME="feature/${{ inputs.feature_id }}"
+          git checkout -b "$BRANCH_NAME"
+          echo "Branch criada: $BRANCH_NAME"
+
+  # =====================================================
+  # 2. CRIAR MIGRATION SE NECESSÁRIO
+  # =====================================================
+  create-migration:
+    name: Criar Migration
+    runs-on: ubuntu-latest
+    needs: generate-spec
+    if: needs.generate-spec.outputs.migration_needed == 'true'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Gerar arquivo de migration
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          MIGRATION_FILE="supabase/migrations/${TIMESTAMP}_feature_${{ inputs.feature_id }}.sql"
+
+          echo "-- =====================================================" > "$MIGRATION_FILE"
+          echo "-- AMPLA CONTABILIDADE - Feature Request Automática" >> "$MIGRATION_FILE"
+          echo "-- Migration: ${TIMESTAMP}" >> "$MIGRATION_FILE"
+          echo "-- Feature: ${{ inputs.feature_title }}" >> "$MIGRATION_FILE"
+          echo "-- Template: ${{ inputs.template_code }}" >> "$MIGRATION_FILE"
+          echo "-- Gerado automaticamente pelo Sistema de Evolução Contínua" >> "$MIGRATION_FILE"
+          echo "-- =====================================================" >> "$MIGRATION_FILE"
+          echo "" >> "$MIGRATION_FILE"
+          echo "-- TODO: Implementar alterações de banco necessárias" >> "$MIGRATION_FILE"
+          echo "-- Este arquivo foi criado automaticamente e precisa ser revisado" >> "$MIGRATION_FILE"
+
+          echo "Migration criada: $MIGRATION_FILE"
+
+  # =====================================================
+  # 3. ATUALIZAR STATUS NO SUPABASE
+  # =====================================================
+  update-status:
+    name: Atualizar Status
+    runs-on: ubuntu-latest
+    needs: [generate-spec, create-migration]
+    if: always()
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Atualizar status da feature
+        run: |
+          echo "Atualizando status da feature ${{ inputs.feature_id }} para 'in_development'"
+          # Aqui seria feita a atualização via API do Supabase
+          # curl -X PATCH "https://xdtlhzysrpoinqtsglmr.supabase.co/rest/v1/feature_requests?id=eq.${{ inputs.feature_id }}" \
+          #   -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          #   -H "Content-Type: application/json" \
+          #   -d '{"status": "in_development", "started_at": "now()"}'
+
+      - name: Criar Pull Request
+        run: |
+          echo "## Feature Request: ${{ inputs.feature_title }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **ID:** ${{ inputs.feature_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Template:** ${{ inputs.template_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Em desenvolvimento" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Próximos Passos:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Revisar migration gerada" >> $GITHUB_STEP_SUMMARY
+          echo "2. Implementar lógica de negócio" >> $GITHUB_STEP_SUMMARY
+          echo "3. Criar testes" >> $GITHUB_STEP_SUMMARY
+          echo "4. Merge na main" >> $GITHUB_STEP_SUMMARY

@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { AIClassificationDialog } from "@/components/AIClassificationDialog";
+import { AITeamBadge } from "@/components/AITeamBadge";
+import { AIAssistantChat } from "@/components/AIAssistantChat";
 
 interface BankAccount {
   id: string;
@@ -452,14 +454,17 @@ const BankImport = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Upload className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Importar Extrato Bancário</h1>
-            <p className="text-muted-foreground">
-              Importe arquivos OFX do seu banco (Sicredi, Banco do Brasil, etc.)
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Upload className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Importar Extrato Bancário</h1>
+              <p className="text-muted-foreground">
+                Importe arquivos OFX do seu banco (Sicredi, Banco do Brasil, etc.)
+              </p>
+            </div>
           </div>
+          <AITeamBadge variant="compact" />
         </div>
 
         {/* Import Form */}
@@ -532,6 +537,14 @@ const BankImport = () => {
                 <span>Processando arquivo...</span>
               </div>
             )}
+
+            {/* Chat Assistente IA */}
+            <AIAssistantChat
+              context="bank_import"
+              contextId={selectedAccount || undefined}
+              compact
+              className="mt-4"
+            />
           </CardContent>
         </Card>
 

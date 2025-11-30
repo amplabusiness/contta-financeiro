@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <!-- Icon background -->
+  <rect x="2" y="5" width="50" height="50" rx="10" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)"/>
+  <!-- Stylized A -->
+  <path d="M27 45L15 15h8l4 12 4-12h8L27 45z" fill="white"/>
+  <path d="M19 28h16" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <!-- Company name -->
+  <text x="62" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="white">AMPLA</text>
+  <text x="62" y="48" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="rgba(255,255,255,0.7)" letter-spacing="0.5">CONTABILIDADE</text>
+</svg>

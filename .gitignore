@@ -1,10 +1,25 @@
-# Environment variables
+# Environment variables - NUNCA COMMITAR SECRETS!
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+
+# Arquivos sensíveis
+*.pem
+*.key
+credentials*.json
+secrets*.json
 
 # Lovable
 lovable/
+
+# Vercel local config
+.vercel/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
 
 # Logs
 logs

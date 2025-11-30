@@ -82,6 +82,11 @@ import SuperConciliador from "./pages/SuperConciliador";
 import FeeAdjustment from "./pages/FeeAdjustment";
 import DebtNegotiation from "./pages/DebtNegotiation";
 import InitialLoad from "./pages/InitialLoad";
+import FeatureRequests from "./pages/FeatureRequests";
+import Inventory from "./pages/Inventory";
+import Payroll from "./pages/Payroll";
+import LaborAdvisory from "./pages/LaborAdvisory";
+import VideoContent from "./pages/VideoContent";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -170,6 +175,11 @@ const App = () => (
           <Route path="/bank-folder-import" element={<BankFolderImport />} />
           <Route path="/super-conciliador" element={<SuperConciliador />} />
           <Route path="/initial-load" element={<InitialLoad />} />
+            <Route path="/feature-requests" element={<FeatureRequests />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/labor-advisory" element={<LaborAdvisory />} />
+            <Route path="/video-content" element={<VideoContent />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
