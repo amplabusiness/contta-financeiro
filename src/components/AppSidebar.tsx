@@ -99,7 +99,7 @@ export function AppSidebar() {
     }
   }, []);
 
-  // Unified menu structure - more organized and no redundancy
+  // Menu organizado por fluxo de trabalho financeiro
   const menuGroups = [
     {
       label: "Principal",
@@ -111,10 +111,38 @@ export function AppSidebar() {
       ],
     },
     {
+      label: "Banco",
+      items: [
+        { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
+        { title: "Importar Extrato", url: "/bank-import", icon: Upload },
+        { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
+        { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
+      ],
+    },
+    {
+      label: "Contas a Receber",
+      items: [
+        { title: "Honorários", url: "/invoices", icon: CreditCard },
+        { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
+        { title: "Análise", url: "/fees-analysis", icon: TrendingUp },
+        { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
+        { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
+        { title: "Cobrança", url: "/collection-dashboard", icon: FileText },
+        { title: "Negociação", url: "/debt-negotiation", icon: Handshake },
+      ],
+    },
+    {
+      label: "Contas a Pagar",
+      items: [
+        { title: "Despesas", url: "/expenses", icon: Wallet },
+        { title: "Fornecedores", url: "/accounts-payable", icon: CreditCard },
+        { title: "Despesas Recorrentes", url: "/recurring-expenses", icon: RefreshCw },
+      ],
+    },
+    {
       label: "Clientes",
       items: [
         { title: "Clientes", url: "/clients", icon: Users },
-        { title: "Saldo de Abertura", url: "/client-opening-balance", icon: Calendar },
         { title: "Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Grupos Financeiros", url: "/economic-groups", icon: GitMerge },
         { title: "Análise por Sócios", url: "/economic-group-analysis", icon: Network },
@@ -122,34 +150,10 @@ export function AppSidebar() {
       ],
     },
     {
-      label: "Financeiro",
-      items: [
-        { title: "Honorários", url: "/invoices", icon: CreditCard },
-        { title: "Análise de Honorários", url: "/fees-analysis", icon: TrendingUp },
-        { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
-        { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
-        { title: "Cobrança", url: "/collection-dashboard", icon: FileText },
-        { title: "Negociação", url: "/debt-negotiation", icon: Handshake },
-        { title: "Despesas", url: "/expenses", icon: Wallet },
-        { title: "Contas a Pagar", url: "/accounts-payable", icon: CreditCard },
-      ],
-    },
-    {
-      label: "Conciliação Bancária",
-      items: [
-        { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
-        { title: "Pasta Banco", url: "/bank-folder-import", icon: FolderTree },
-        { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
-        { title: "PIX", url: "/pix-reconciliation", icon: Zap },
-        { title: "Dashboard", url: "/reconciliation-dashboard", icon: Activity },
-        { title: "PIX sem Cliente", url: "/unmatched-pix-report", icon: ShieldAlert },
-      ],
-    },
-    {
       label: "Contabilidade",
       items: [
-        { title: "Carga Inicial", url: "/client-opening-balance", icon: Database },
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+        { title: "Saldo de Abertura", url: "/client-opening-balance", icon: Database },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },
         { title: "Balanço Patrimonial", url: "/balance-sheet", icon: Scale },
@@ -160,20 +164,18 @@ export function AppSidebar() {
     {
       label: "Importações",
       items: [
-        { title: "Upload Automático", url: "/automated-upload", icon: Zap },
         { title: "Clientes", url: "/import", icon: Users },
         { title: "Honorários", url: "/import-honorarios", icon: FileInput },
         { title: "Despesas", url: "/import-expenses-spreadsheet", icon: FileSpreadsheet },
-        { title: "Extratos OFX/CNAB", url: "/import-boleto-report", icon: Upload },
+        { title: "Upload Automático", url: "/automated-upload", icon: Zap },
       ],
     },
     {
-      label: "Ferramentas",
+      label: "Ferramentas IA",
       items: [
-        { title: "IA Contador", url: "/ai-accountant", icon: Bot },
-        { title: "IA Gestor", url: "/business-manager", icon: Brain },
-        { title: "Rede Neural IA", url: "/ai-network", icon: Network },
-        { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
+        { title: "Contador IA", url: "/ai-accountant", icon: Bot },
+        { title: "Gestor IA", url: "/business-manager", icon: Brain },
+        { title: "Rede Neural", url: "/ai-network", icon: Network },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
         { title: "Configurações", url: "/settings", icon: Settings },
       ],
