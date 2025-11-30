@@ -164,17 +164,15 @@ const Auth = () => {
         <div className="relative z-10 flex-1 flex flex-col">
           {/* Logo + Nome */}
           <div className="flex items-center gap-4 mb-8">
-            <img
-              src="/logo-ampla.png"
-              alt="Ampla Contabilidade"
-              className="h-20 xl:h-24 w-auto brightness-0 invert"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="hidden w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl items-center justify-center border border-white/30">
-              <Building2 className="w-10 h-10 text-white" />
+            <div className="bg-white rounded-2xl p-3 shadow-lg">
+              <img
+                src="/logo-ampla-color.png"
+                alt="Ampla Contabilidade"
+                className="h-16 xl:h-20 w-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </div>
             <div>
               <h1 className="text-2xl xl:text-3xl font-bold">{AMPLA_INFO.nome}</h1>
@@ -243,19 +241,10 @@ const Auth = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden flex flex-col items-center mb-6">
             <img
-              src="/logo-ampla.png"
+              src="/logo-ampla-color.png"
               alt="Ampla Contabilidade"
-              className="h-16 w-auto mb-3"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
+              className="h-20 w-auto mb-3"
             />
-            <div className="hidden items-center gap-3">
-              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-7 h-7 text-white" />
-              </div>
-            </div>
             <h1 className="text-xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
             <p className="text-sm text-gray-500">{AMPLA_INFO.slogan}</p>
           </div>
