@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+type LogFn = (message: string) => void;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -184,7 +186,7 @@ async function processTransactions(
   bankAccountId: string,
   importId: string,
   openingDate: string,
-  log: Function
+  log: LogFn
 ) {
   log(`🔄 Processing ${transactions.length} transactions...`);
 
@@ -380,7 +382,7 @@ async function classifySingleTransaction(
   supabase: any,
   apiKey: string,
   transaction: any,
-  log: Function
+  log: LogFn
 ) {
   log(`🔍 Classifying single transaction: ${transaction.description}`);
 
@@ -429,7 +431,7 @@ async function processUnclassifiedTransactions(
   supabase: any,
   apiKey: string,
   bankAccountId: string,
-  log: Function
+  log: LogFn
 ) {
   log(`🔄 Processing unclassified transactions for account ${bankAccountId}`);
 
