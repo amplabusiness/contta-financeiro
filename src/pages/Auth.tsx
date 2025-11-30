@@ -22,27 +22,32 @@ import {
   Briefcase,
   Award,
   Globe,
+  Phone,
+  Mail,
+  MapPin,
 } from "lucide-react";
 
 // Conhecimento da Ampla
 const AMPLA_INFO = {
   nome: "Ampla Contabilidade",
-  slogan: "Mais de 30 anos transformando negocios",
-  missao: "Fornecer informacoes e diferenciais competitivos, visando o desenvolvimento maximo de seus clientes.",
-  historia: "30+ anos de experiencia no mercado goiano",
+  slogan: "Transformando negócios há mais de 30 anos",
+  missao: "Fornecer informações e diferenciais competitivos para o desenvolvimento máximo de nossos clientes.",
+  historia: "30+ anos no mercado goiano",
   site: "www.amplabusiness.com.br",
-  localizacao: "Goiania - GO",
+  telefone: "(62) 3941-3060",
+  email: "contato@amplabusiness.com.br",
+  localizacao: "Goiânia - GO",
   diferenciais: [
-    { icon: Clock, texto: "30+ anos de experiencia" },
+    { icon: Clock, texto: "30+ anos de experiência" },
     { icon: Users, texto: "Equipe multidisciplinar" },
-    { icon: Scale, texto: "Assessoria juridica integrada" },
-    { icon: TrendingUp, texto: "Consultoria estrategica" },
+    { icon: Scale, texto: "Assessoria jurídica" },
+    { icon: TrendingUp, texto: "Consultoria estratégica" },
   ],
   servicos: [
-    { icon: Calculator, nome: "Contabilidade", desc: "Fiscal, DP e Societario" },
-    { icon: Scale, nome: "Juridico", desc: "Civil, Trabalhista e Tributario" },
+    { icon: Calculator, nome: "Contabilidade", desc: "Fiscal, DP e Societário" },
+    { icon: Scale, nome: "Jurídico", desc: "Civil, Trabalhista e Tributário" },
     { icon: Briefcase, nome: "BPO Financeiro", desc: "Tesouraria e Controladoria" },
-    { icon: FileText, nome: "Consultoria", desc: "Planejamento Estrategico" },
+    { icon: FileText, nome: "Consultoria", desc: "Planejamento Estratégico" },
   ],
 };
 
@@ -148,60 +153,63 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-8 xl:p-12 flex-col justify-between relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-white rounded-full translate-x-1/3 translate-y-1/3" />
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-white rounded-full translate-x-1/3 translate-y-1/3" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center gap-4 mb-12">
+        <div className="relative z-10 flex-1 flex flex-col">
+          {/* Logo + Nome */}
+          <div className="flex items-center gap-4 mb-8">
             <img
               src="/logo-ampla.png"
               alt="Ampla Contabilidade"
-              className="h-16 w-auto brightness-0 invert"
+              className="h-20 xl:h-24 w-auto brightness-0 invert"
               onError={(e) => {
-                // Fallback para icone se logo nao carregar
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <div className="hidden w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl items-center justify-center border border-white/30">
-              <Building2 className="w-8 h-8 text-white" />
+            <div className="hidden w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl items-center justify-center border border-white/30">
+              <Building2 className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl xl:text-3xl font-bold">{AMPLA_INFO.nome}</h1>
+              <p className="text-blue-200 text-sm xl:text-base">{AMPLA_INFO.slogan}</p>
             </div>
           </div>
 
           {/* Mission */}
-          <div className="mb-12">
-            <p className="text-xl text-blue-100 leading-relaxed max-w-md">
+          <div className="mb-8 xl:mb-10">
+            <blockquote className="text-lg xl:text-xl text-blue-100 leading-relaxed border-l-4 border-blue-400 pl-4 italic">
               "{AMPLA_INFO.missao}"
-            </p>
+            </blockquote>
           </div>
 
-          {/* Diferenciais */}
-          <div className="grid grid-cols-2 gap-4 mb-12">
+          {/* Diferenciais - Grid mais compacto */}
+          <div className="grid grid-cols-2 gap-3 mb-8 xl:mb-10">
             {AMPLA_INFO.diferenciais.map((dif, idx) => (
-              <div key={idx} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                <dif.icon className="w-5 h-5 text-blue-200" />
+              <div key={idx} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <dif.icon className="w-4 h-4 xl:w-5 xl:h-5 text-blue-300 flex-shrink-0" />
                 <span className="text-sm text-blue-100">{dif.texto}</span>
               </div>
             ))}
           </div>
 
-          {/* Servicos */}
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-blue-300 mb-4">Nossos Servicos</h3>
-            <div className="grid grid-cols-2 gap-3">
+          {/* Servicos - Layout melhorado */}
+          <div className="flex-1">
+            <h3 className="text-xs uppercase tracking-widest text-blue-400 mb-4 font-semibold">Nossos Serviços</h3>
+            <div className="grid grid-cols-2 gap-4">
               {AMPLA_INFO.servicos.map((srv, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <srv.icon className="w-5 h-5 text-blue-200" />
+                <div key={idx} className="flex items-center gap-3 group">
+                  <div className="w-10 h-10 xl:w-12 xl:h-12 bg-white/10 group-hover:bg-white/20 transition-colors rounded-xl flex items-center justify-center flex-shrink-0 border border-white/10">
+                    <srv.icon className="w-5 h-5 xl:w-6 xl:h-6 text-blue-200" />
                   </div>
                   <div>
-                    <p className="font-medium text-white">{srv.nome}</p>
+                    <p className="font-semibold text-white text-sm xl:text-base">{srv.nome}</p>
                     <p className="text-xs text-blue-300">{srv.desc}</p>
                   </div>
                 </div>
@@ -210,48 +218,52 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="relative z-10 flex items-center justify-between text-sm text-blue-300">
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4" />
-            <span>{AMPLA_INFO.site}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award className="w-4 h-4" />
-            <span>{AMPLA_INFO.historia}</span>
+        {/* Footer com contatos */}
+        <div className="relative z-10 pt-6 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-blue-200">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              <span>{AMPLA_INFO.site}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              <span>{AMPLA_INFO.localizacao}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              <span>{AMPLA_INFO.historia}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center mb-8">
+          <div className="lg:hidden flex flex-col items-center mb-6">
             <img
               src="/logo-ampla.png"
               alt="Ampla Contabilidade"
-              className="h-14 w-auto"
+              className="h-16 w-auto mb-3"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
             <div className="hidden items-center gap-3">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
-                <p className="text-xs text-gray-500">{AMPLA_INFO.slogan}</p>
+              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
+                <Building2 className="w-7 h-7 text-white" />
               </div>
             </div>
+            <h1 className="text-xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
+            <p className="text-sm text-gray-500">{AMPLA_INFO.slogan}</p>
           </div>
 
-          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl text-gray-900">Bem-vindo</CardTitle>
-              <CardDescription>Sistema de Gestao Financeira</CardDescription>
+          <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+            <CardHeader className="text-center pb-2 pt-6">
+              <CardTitle className="text-2xl font-bold text-gray-900">Bem-vindo</CardTitle>
+              <CardDescription className="text-gray-500">Sistema de Gestão Financeira</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="signin" className="w-full">
@@ -389,14 +401,15 @@ const Auth = () => {
               </Tabs>
 
               {/* Trust Badges */}
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Shield className="w-4 h-4" />
+              <div className="mt-6 pt-5 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-green-500" />
                     <span>Dados Seguros</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Award className="w-4 h-4" />
+                  <div className="w-px h-4 bg-gray-200" />
+                  <div className="flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-blue-500" />
                     <span>30+ Anos</span>
                   </div>
                 </div>
