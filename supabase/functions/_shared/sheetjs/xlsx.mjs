@@ -7730,9 +7730,9 @@ function parse_TxO(blob, length, opts) {
 try {
 	blob.l += 4;
 	var ot = (opts.lastobj||{cmo:[0,0]}).cmo[1];
-	var controlInfo; // eslint-disable-line no-unused-vars
+	var controlInfo;  
 	if([0,5,7,11,12,14].indexOf(ot) == -1) blob.l += 6;
-	else controlInfo = parse_ControlInfo(blob, 6, opts); // eslint-disable-line no-unused-vars
+	else controlInfo = parse_ControlInfo(blob, 6, opts);  
 	var cchText = blob.read_shift(2);
 	/*var cbRuns = */blob.read_shift(2);
 	/*var ifntEmpty = */parseuint16(blob, 2);
@@ -9673,10 +9673,10 @@ var WK_ = /*#__PURE__*/(function() {
 		// 0x70 V
 	};
 	var BinOpTab = [
-		  "",   "",   "",   "",   "",   "",   "",   "", // eslint-disable-line no-mixed-spaces-and-tabs
-		  "",  "+",  "-",  "*",  "/",  "^",  "=", "<>", // eslint-disable-line no-mixed-spaces-and-tabs
-		"<=", ">=",  "<",  ">",   "",   "",   "",   "", // eslint-disable-line no-mixed-spaces-and-tabs
-		 "&",   "",   "",   "",   "",   "",   "",   ""  // eslint-disable-line no-mixed-spaces-and-tabs
+		  "",   "",   "",   "",   "",   "",   "",   "",  
+		  "",  "+",  "-",  "*",  "/",  "^",  "=", "<>",  
+		"<=", ">=",  "<",  ">",   "",   "",   "",   "",  
+		 "&",   "",   "",   "",   "",   "",   "",   ""   
 	];
 
 	function wk1_fmla_to_csf(blob, o) {
@@ -13994,7 +13994,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgRef3d': /* [MS-XLS] 2.5.198.85 */
 				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
 				sname = get_ixti(supbooks, ixti, opts);
-				var w = sname; /* IE9 fails on defined names */ // eslint-disable-line no-unused-vars
+				var w = sname; /* IE9 fails on defined names */  
 				stack.push(sname + "!" + encode_cell_xls(c, biff));
 				break;
 
@@ -18768,7 +18768,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var sheets = {}, sheetnames/*:Array<string>*/ = [], cursheet/*:Worksheet*/ = ({}), sheetname = ""; if(opts.dense) cursheet["!data"] = [];
-	var cell = ({}/*:any*/), row = {};// eslint-disable-line no-unused-vars
+	var cell = ({}/*:any*/), row = {}; 
 	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
 	var c = 0, r = 0;
 	var refguess/*:Range*/ = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
@@ -27327,7 +27327,7 @@ function write_zip_denouement(z/*:any*/, o/*:?WriteOpts*/)/*:any*/ {
 		}
 	}
 /*jshint -W083 */
-	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o); // eslint-disable-line no-undef
+	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o);  
 /*jshint +W083 */
 	if(o.type === "file") return write_dl(o.file, out);
 	return o.type == "string" ? utf8read(/*::(*/out/*:: :any)*/) : out;

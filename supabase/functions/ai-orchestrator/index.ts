@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Type for the logging function
+type LogFunction = (message: string) => void;
+
 /**
  * AI ORCHESTRATOR - Agente Orquestrador de IA
  *
@@ -134,7 +137,7 @@ serve(async (req) => {
 /**
  * FULL HEALTH CHECK - Verifica e corrige problemas automaticamente
  */
-async function fullHealthCheck(supabase: any, aiKey: string | undefined, log: Function) {
+async function fullHealthCheck(supabase: any, aiKey: string | undefined, log: LogFunction) {
   const issues: string[] = [];
   const fixes: string[] = [];
 
@@ -197,7 +200,7 @@ async function fullHealthCheck(supabase: any, aiKey: string | undefined, log: Fu
 /**
  * CLEANUP ORPHAN ENTRIES - Remove entries sem lines
  */
-async function cleanupOrphanEntries(supabase: any, log: Function) {
+async function cleanupOrphanEntries(supabase: any, log: LogFunction) {
   // Buscar entries com lines
   const { data: entriesWithLines } = await supabase
     .from('accounting_entry_lines')
@@ -243,7 +246,7 @@ async function cleanupOrphanEntries(supabase: any, log: Function) {
 /**
  * PROCESS PENDING ENTRIES - Cria lançamentos para dados existentes
  */
-async function processPendingEntries(supabase: any, log: Function) {
+async function processPendingEntries(supabase: any, log: LogFunction) {
   let pending = 0;
   let processed = 0;
   const errors: string[] = [];
@@ -341,7 +344,7 @@ async function processPendingEntries(supabase: any, log: Function) {
 /**
  * CHECK BALANCE CONSISTENCY - Verifica se débitos = créditos
  */
-async function checkBalanceConsistency(supabase: any, log: Function) {
+async function checkBalanceConsistency(supabase: any, log: LogFunction) {
   const issues: string[] = [];
 
   // Verificar se cada entry tem débito = crédito
@@ -375,7 +378,7 @@ async function checkBalanceConsistency(supabase: any, log: Function) {
 /**
  * RECONCILE DATA - Sincroniza dados entre tabelas
  */
-async function reconcileData(supabase: any, log: Function) {
+async function reconcileData(supabase: any, log: LogFunction) {
   const changes: string[] = [];
 
   // Atualizar status de invoices baseado em pagamentos
@@ -463,7 +466,7 @@ async function callAI(apiKey: string, provider: 'gemini' | 'lovable', systemProm
 /**
  * GENERATE INSIGHTS - Usa IA para gerar insights
  */
-async function generateInsights(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: Function) {
+async function generateInsights(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: LogFunction) {
   if (!aiKey) {
     return { success: false, error: 'AI key not configured' };
   }
@@ -525,7 +528,7 @@ async function generateInsights(supabase: any, aiKey: string | undefined, provid
 /**
  * AUTO CATEGORIZE - Categoriza transações automaticamente
  */
-async function autoCategorize(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: Function) {
+async function autoCategorize(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: LogFunction) {
   if (!aiKey) {
     return { success: false, error: 'AI key not configured' };
   }
@@ -587,7 +590,7 @@ async function autoCategorize(supabase: any, aiKey: string | undefined, provider
 /**
  * PREDICT CASH FLOW - Prevê fluxo de caixa
  */
-async function predictCashFlow(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: Function) {
+async function predictCashFlow(supabase: any, aiKey: string | undefined, provider: 'gemini' | 'lovable', log: LogFunction) {
   if (!aiKey) {
     return { success: false, error: 'AI key not configured' };
   }
