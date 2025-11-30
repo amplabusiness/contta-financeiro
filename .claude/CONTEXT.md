@@ -1,7 +1,32 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-30 (Sessão 8 - Preparação para Produção + Sistemas Avançados)
+2025-11-30 (Sessão 10 – Contabilidade Inteligente + Preparação CI/CD)
+
+### Resumo rápido desta sessão
+- ✅ Script `supabase/sql/cleanup_accounting_entries.sql` executado em produção (contagens finais: entries 178 / lines 356; sem triggers problemáticos).
+- ✅ Documentação `.claude/CONTABILIDADE_INTELIGENTE.md` atualizada com o status pós-cleanup e próximos passos reais (Testar 1 → Processar Tudo → CI/CD).
+- ⚠️ Aguardando execução dos botões **"Testar 1"/"Processar Tudo"** na UI para validar o Smart Accounting end-to-end.
+- ⚠️ Secrets do CI/CD (Supabase/Vercel) ainda não configurados; workflows permanecem aguardando credenciais.
+- 📁 Novo arquivo de referência criado em `supabase/sql/cleanup_accounting_entries.sql` para reaplicar o procedimento, caso necessário.
+
+### Urgências pós-sessão
+1. **Executar `scripts/setup-cicd.ps1`** e cadastrar secrets (SUPABASE_ACCESS_TOKEN, VERCEL_TOKEN/ORG_ID/PROJECT_ID) para o workflow `deploy.yml`.
+2. **UI Contabilidade Inteligente**: rodar "Testar 1" e "Processar Tudo" para confirmar que o Edge Function cria lançamentos com linhas.
+3. **Garantir tabelas novas em produção**: migrations desta leva (payroll, inventory, consultoria trabalhista, incentivos/PLR, Sora 2, evolução contínua) precisam ser aplicadas via Supabase CLI/CI.
+4. **Confirmar deploy frontend** em `ampla.app.br` assim que o CI/CD estiver operando.
+
+### Próximas entregas sugeridas
+| Prioridade | Item | Responsável sugerido |
+|------------|------|----------------------|
+| Alta | Tela de entidades pendentes + Configurações (Settings.tsx) | UI/Frontend |
+| Alta | Interfaces faltantes: Consultoria Trabalhista, Incentivos/PLR, Feature Requests CRUD | UI/Frontend |
+| Alta | Multi-tenancy: propagar `tenant_id`, políticas RLS, seletor de tenant | Backend |
+| Média | Edge Functions novas (Sora 2, análise de feature requests) + automações CI | Backend |
+| Média | Importar extratos Janeiro/2025 (183 transações) e planilha de despesas do Sergio | Financeiro/Operações |
+| Média | Conciliação bancária 100% automática e reprocessar saldos de abertura | Contabilidade |
+
+> **Status anterior (Sessão 8) permanece válido**: integrações Sora 2, sistema de evolução contínua, redesenho do Auth, CRUDs Payroll/Inventory/VideoContent e reorganização do menu já estão incorporados. Este contexto apenas registra que tudo foi commitado, publicado e que a documentação `.claude` foi revisada integralmente.
 
 ## ✅ Trabalho Concluído Nesta Sessão
 
@@ -55,6 +80,11 @@
   - Script de configuração
   - Tarefas pendentes organizadas
 
+### 7. Contabilidade Inteligente – Cleanup Consolidado
+- [x] Criado `supabase/sql/cleanup_accounting_entries.sql` contendo drop dos triggers, limpeza de entries órfãos e consultas de auditoria.
+- [x] Script executado diretamente no Supabase (resultado: `entries = 178`, `lines = 356`, zero triggers remanescentes).
+- [x] `.claude/CONTABILIDADE_INTELIGENTE.md` atualizado para refletir a nova rotina e orientar próximos passos (Testar 1 → Processar Tudo → CI/CD).
+
 ## Filosofia Estabelecida
 
 ### "Lovable.dev Interno"
@@ -85,6 +115,10 @@ Cada tela tem um agente responsável. Cada decisão é orientada por IA especial
 ### Documentação
 - `.claude/INSTRUCAO_VSCODE.md` (atualizado)
 - `.claude/CONTEXT.md` (atualizado)
+- `.claude/CONTABILIDADE_INTELIGENTE.md` (atualizado)
+
+### SQL utilitário
+- `supabase/sql/cleanup_accounting_entries.sql` (criado)
 
 ## Secrets Configurados
 

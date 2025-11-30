@@ -169,12 +169,25 @@ WHERE tgname IN (
 -- Resultado esperado: 0 linhas
 ```
 
-### Depois de Executar o SQL
+### Status dos Triggers e Cleanup (ATUALIZADO)
 
-1. Volte para **Contabilidade Inteligente**
-2. Clique em **"Testar 1"** primeiro para validar que um único lançamento é criado
-3. Se funcionar, clique em **"Processar Tudo"**
-4. O sistema deve criar os lançamentos corretamente agora
+A rotina de limpeza com triggers foi consolidada no arquivo `supabase/sql/cleanup_accounting_entries.sql` e já executa automaticamente todos os passos abaixo:
+
+1. Drop permanente do trigger `check_balance_after_line_change` em `accounting_entry_lines`.
+2. Drop dos quatro triggers legados em `invoices/expenses`.
+3. Remoção dos `accounting_entries` órfãos.
+4. Queries de verificação (contagem e lista de triggers) para evidência.
+
+> Resultado da última execução (30/11/2025): `entries = 178`, `lines = 356` e **nenhum** dos triggers problemáticos permanece cadastrado.
+
+Como essa rotina virou redundante, **não precisa ser reexecutada** a cada sessão; basta rodar o script se novos triggers forem criados no futuro ou se surgirem entries sem linhas.
+
+### Próximos Passos após o Cleanup
+
+1. Voltar para **Contabilidade Inteligente** e clicar em **"Testar 1"** para validar um único lançamento.
+2. Se o teste for bem-sucedido (entry com duas linhas), clicar em **"Processar Tudo"**.
+3. Registrar os resultados (logs/toasts) e atualizar o CONTEXT.
+4. Prosseguir com o bloco de **CI/CD + migrations** descrito em `.github/SETUP_CI_CD.md` e na seção de Migrations abaixo.
 
 ---
 
