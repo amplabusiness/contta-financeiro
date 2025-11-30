@@ -184,7 +184,7 @@ async function processTransactions(
   bankAccountId: string,
   importId: string,
   openingDate: string,
-  log: Function
+  log: (msg: string) => void
 ) {
   log(`🔄 Processing ${transactions.length} transactions...`);
 
@@ -380,7 +380,7 @@ async function classifySingleTransaction(
   supabase: any,
   apiKey: string,
   transaction: any,
-  log: Function
+  log: (msg: string) => void
 ) {
   log(`🔍 Classifying single transaction: ${transaction.description}`);
 
@@ -429,7 +429,7 @@ async function processUnclassifiedTransactions(
   supabase: any,
   apiKey: string,
   bankAccountId: string,
-  log: Function
+  log: (msg: string) => void
 ) {
   log(`🔄 Processing unclassified transactions for account ${bankAccountId}`);
 
