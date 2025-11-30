@@ -508,6 +508,182 @@ Variáveis de ambiente atualizadas, mas formato de requisição pode precisar aj
 
 **Rotas**: `/business-manager` (menu: Gestor IA)
 
+---
+
+## Novas Funcionalidades (30/11/2025) - VSCode Session
+
+### Equipe de 8 Agentes IA
+
+A Ampla Contabilidade agora possui uma equipe completa de agentes IA:
+
+| Agente | Nome | Função | Especialidades |
+|--------|------|--------|----------------|
+| 🧮 | **Dr. Cícero** | Contador IA | Lançamentos, Plano de Contas, NBC/CFC, Balanço, DRE |
+| 🧠 | **Prof. Milton** | MBA Finanças | Fluxo de Caixa, Custos, KPIs, Projeções, Orçamentos |
+| 🤖 | **Dra. Helena** | Gestora IA | Metas, Indicadores, Processos, Estratégia |
+| 🌐 | **Atlas** | Rede Neural | Aprendizado, Padrões, Classificação, Automação |
+| ⚖️ | **Dr. Advocato** | Advogado Trabalhista | CLT, Jurisprudência TST/TRT, Riscos, Contratos |
+| 🏢 | **Sr. Empresário** | Estrategista | Sociedades, Holdings, Terceirização, MEI/ME |
+| 📈 | **Sr. Vendedor** | Comercial IA | Vendas, Prospecção, Retenção, Indicações |
+| 📢 | **Sra. Marketing** | Marketing IA | Incentivos, PLR, Vídeos, Campanhas |
+
+### Componentes de Interface IA
+
+| Componente | Arquivo | Descrição |
+|------------|---------|-----------|
+| `AITeamBadge` | `src/components/AITeamBadge.tsx` | Badge da equipe IA (compact/minimal/full) |
+| `AIAssistantChat` | `src/components/AIAssistantChat.tsx` | Chat IA-Humano para formulários |
+| `AIClassificationDialog` | `src/components/AIClassificationDialog.tsx` | Diálogo de classificação de transações |
+
+### Sistema de Diálogo IA-Humano
+
+**Conceito**: A IA aprende com o humano nos primeiros momentos.
+
+**Exemplo**:
+- Transação: "PAGAMENTO PIX - SERGIO CARNEIRO LEAO"
+- IA pergunta: "Quem é Sérgio Carneiro Leão?"
+- Humano responde: "É um sócio da empresa"
+- IA salva o padrão e usa nas próximas classificações
+
+**Tabelas de Aprendizado** (Migration `20251129280000`):
+- `ai_known_entities` - Entidades conhecidas (pessoas, empresas)
+- `ai_classification_patterns` - Padrões de classificação aprendidos
+- `ai_classification_history` - Histórico para treinamento
+- `ai_pending_questions` - Perguntas da IA aguardando resposta
+
+### Novas Páginas Criadas
+
+| Página | Rota | Descrição |
+|--------|------|-----------|
+| `Payroll.tsx` | `/payroll` | Folha de Pagamento com CRUD completo |
+| `Inventory.tsx` | `/inventory` | Estoque e Compras com CRUD |
+| `VideoContent.tsx` | `/video-content` | Vídeos e TVs com aba IA |
+| `LaborAdvisory.tsx` | `/labor-advisory` | Consultoria Trabalhista IA |
+| `FeatureRequests.tsx` | `/feature-requests` | Solicitações de Melhoria |
+| `AINetwork.tsx` | `/ai-network` | Visualização Rede Neural (21 agentes) |
+
+### Sistema de Folha de Pagamento (eSocial)
+
+**Conceito**: Ao cadastrar funcionário, especifica:
+- Quanto recebe **dentro da carteira** (oficial)
+- Quanto recebe **por fora** (não registrado)
+- A IA já sabe e gera a folha automaticamente
+
+**Tabelas** (Migration `20251130070000`):
+- `esocial_rubricas` - Códigos de eventos eSocial (32 rubricas)
+- `payroll` - Folha de pagamento mensal
+- `payroll_events` - Eventos/lançamentos da folha
+- `tabela_inss` - Alíquotas INSS progressivo 2024
+- `tabela_irrf` - Alíquotas IRRF 2024
+
+**Rubricas eSocial**:
+- 1xxx: Proventos oficiais (salário, hora extra, férias)
+- 2xxx: Descontos oficiais (INSS, IRRF, VT)
+- 9xxx: Pagamentos "por fora" (complemento, bonificação)
+
+### Sistema de Estoque e Compras
+
+**Tabelas** (Migration `20251130050000`):
+- `office_products` - 36 produtos cadastrados
+- `product_purchases` - Histórico de compras
+- `product_consumption` - Registro de consumo
+- `purchase_lists` - Listas de compras
+- `suppliers` - Fornecedores (Atacadão, Bretas, Kalunga)
+
+**Responsável**: Lilian (Faxineira) - registra consumo e informa estoque baixo
+
+### Sistema de Consultoria Trabalhista
+
+**Agentes Especializados**:
+- **Dr. Advocato**: CLT, jurisprudência TST/TRT, riscos
+- **Sr. Empresário**: Estruturação societária, holdings, MEI
+
+**Estratégias de Solução**:
+| Código | Nome | Eficácia |
+|--------|------|----------|
+| `MEI_FORMALIZATION` | Formalização como MEI | 9/10 |
+| `CLT_REGULARIZATION` | Regularização via CLT | 10/10 |
+| `PARTNER_INTEGRATION` | Integração Societária | 7/10 |
+| `SERVICE_COMPANY` | Empresa Prestadora | 8/10 |
+| `DIARISTA_CONTRACT` | Contrato Diarista | 9/10 |
+| `STRUCTURED_OUTSOURCING` | Terceirização | 7/10 |
+
+### Sistema de PLR e Incentivos
+
+**Políticas para Funcionários**:
+- `referral_bonus` - 15% do 1º honorário (máx R$ 1.000)
+- `sales_commission` - 5% do valor
+- `performance_bonus` - 10% sobre avaliação
+- `retention_bonus` - 3% do honorário anual
+
+**Pré-requisito**: Maturidade empresarial mínima de 70+ (score)
+
+### Integração OpenAI Sora 2
+
+**Capacidades**:
+- Geração de vídeos de alta qualidade
+- Áudio sincronizado automaticamente
+- Duração: 5-60 segundos
+- Resolução: até 4K
+
+**Templates de Vídeo**:
+| Template | Duração | Uso |
+|----------|---------|-----|
+| `VIDEO_INDICACAO` | 30s | Motivar funcionários |
+| `VIDEO_TREINAMENTO_VENDAS` | 2 min | Ensinar técnicas |
+| `VIDEO_INSTITUCIONAL` | 60s | Apresentar empresa |
+| `VIDEO_PLR` | 45s | Explicar programa |
+
+**Playlist por TV**:
+- Recepção: Institucional, Dicas para clientes
+- DP: Programa de indicações, Treinamentos
+- Fiscal: Dicas fiscais, Atualizações legais
+- RH: PLR, Incentivos, Treinamentos
+- Diretoria: Resultados, KPIs, Estratégia
+
+### CI/CD GitHub Actions
+
+**Arquivos criados**:
+- `.github/workflows/deploy.yml` - Deploy automático
+- `.github/workflows/feature-implementation.yml` - Feature requests
+- `.github/SETUP_CI_CD.md` - Documentação
+- `scripts/setup-cicd.ps1` - Script de configuração
+
+**Fluxo**:
+```
+Commit → GitHub → Actions → Supabase (migrations) + Vercel (frontend)
+```
+
+### Tela de Login Redesenhada
+
+**Auth.tsx** com layout split:
+- Lado esquerdo: Gradiente azul, diferenciais, serviços, missão
+- Lado direito: Formulário de login/cadastro
+- Logos SVG: `/public/logo-ampla.svg` e `/public/logo-ampla-white.svg`
+- Mobile responsive com fallback
+
+### Migrations Aplicadas (30/11/2025)
+
+| Migration | Descrição |
+|-----------|-----------|
+| `20251130000000` | Limpeza contas bancárias duplicadas |
+| `20251130010000` | Reset transações Janeiro |
+| `20251130020000` | Contas e centros de custo sócios |
+| `20251130030000` | Categorias despesas Sergio |
+| `20251130040000` | Perfil empresa, funcionários |
+| `20251130050000` | Sistema estoque e compras |
+| `20251130060000` | Consultoria trabalhista IA |
+| `20251130070000` | Folha pagamento eSocial |
+| `20251130080000` | Governança IA, reuniões |
+| `20251130090000` | Soluções de negócios |
+| `20251130100000` | Incentivos, PLR |
+| `20251130110000` | Geração conteúdo IA |
+| `20251130120000` | Análise maturidade empresarial |
+| `20251130130000` | OpenAI Sora 2 vídeos |
+| `20251130140000` | Sistema evolução contínua |
+
+---
+
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
 
