@@ -12,17 +12,53 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 ## STATUS ATUAL (30/11/2025)
 
 ### Concluído Hoje:
-1. **Sistema de Diálogo IA-Humano** - Classificação interativa de transações
-2. **Componente AIClassificationDialog** - Modal para treinar a IA
-3. **Tabelas de Aprendizado** - Entidades, padrões e histórico
-4. **Integração BankImport** - Botões de classificação manual e revisão
+1. **Reorganização do Menu** - Estrutura por fluxo financeiro
+2. **Sistema de Diálogo IA-Humano** - Classificação interativa de transações
+3. **Componente AIClassificationDialog** - Modal para treinar a IA
+4. **Tabelas de Aprendizado** - Entidades, padrões e histórico
+5. **Unificação de Importação** - BankImport como único ponto de entrada
 
 ### Concluído Anteriormente (29/11):
 1. **Sistema Contábil Completo** - Plano de contas conforme NBC/CFC
 2. **Conta Bancária Sicredi** - Cadastrada com saldo de abertura R$ 90.725,10
 3. **Lançamento de Abertura** - Registrado em 31/12/2024
 4. **Importação OFX com IA** - Classificação automática implementada
-5. **Edge Function** - `ai-bank-transaction-processor` para classificação
+
+---
+
+## ESTRUTURA DO MENU (AppSidebar.tsx)
+
+Menu reorganizado por fluxo de trabalho financeiro:
+
+### Principal
+- Dashboard, Executivo, Fluxo de Caixa
+
+### Banco
+- **Contas Bancárias** (`/bank-accounts`) - Cadastro de contas
+- **Importar Extrato** (`/bank-import`) - ÚNICO ponto de importação OFX
+- **Conciliação** (`/bank-reconciliation`)
+- **Super Conciliador** (`/super-conciliador`)
+
+### Contas a Receber
+- Honorários, Gerar Honorários, Análise
+- Reajuste por SM, Inadimplência, Cobrança, Negociação
+
+### Contas a Pagar
+- **Despesas** (`/expenses`) - Gastos operacionais do escritório
+- **Fornecedores** (`/accounts-payable`) - Obrigações com terceiros
+- **Despesas Recorrentes** (`/recurring-expenses`)
+
+### Clientes
+- Clientes, Pro-Bono, Grupos Financeiros, Análise por Sócios, Contratos
+
+### Contabilidade
+- Plano de Contas, Saldo de Abertura, Balancete, DRE, Balanço, Livros
+
+### Importações
+- Clientes, Honorários, Despesas, Upload Automático
+
+### Ferramentas IA
+- Contador IA, Gestor IA, Rede Neural, Enriquecimento, Configurações
 
 ---
 
@@ -42,7 +78,6 @@ A IA aprende com o humano nos primeiros momentos. Exemplo:
 - Tabs: Classificação | Quem é?
 - Mostra sugestão da IA com nível de confiança
 - Permite salvar entidade e padrão para uso futuro
-- Progresso visual (X de Y transações)
 
 #### 2. Tabelas de Aprendizado (Migration `20251129280000`)
 
@@ -67,16 +102,8 @@ RETURNS TABLE (pattern_id, category, debit_account, credit_account, entity_name,
 ### Fluxo na BankImport:
 
 1. **Preview do OFX** → Botão "Classificar Manualmente"
-   - Abre diálogo para treinar IA antes de importar
-
 2. **Após importar com IA** → Botão "Revisar Classificações (X pendentes)"
-   - Aparece se houver transações com confiança < 70%
-   - Permite corrigir classificações da IA
-
-3. **O aprendizado é salvo**:
-   - Entidade nova → `ai_known_entities`
-   - Padrão de classificação → `ai_classification_patterns`
-   - Histórico → `ai_classification_history`
+3. **Aprendizado salvo** → Entidades, padrões e histórico
 
 ---
 
@@ -126,23 +153,12 @@ RETURNS TABLE (pattern_id, category, debit_account, credit_account, entity_name,
 
 ### Deploy de Edge Functions
 ```bash
-# Uma função
 npx supabase functions deploy ai-bank-transaction-processor --project-ref xdtlhzysrpoinqtsglmr
-
-# Múltiplas funções
-npx supabase functions deploy ai-business-manager ai-accountant-background --project-ref xdtlhzysrpoinqtsglmr
-
-# Listar funções
-npx supabase functions list --project-ref xdtlhzysrpoinqtsglmr
 ```
 
 ### Migrações
 ```bash
-# Aplicar migrações
 npx supabase db push --linked
-
-# Reparar migração com erro
-npx supabase migration repair <timestamp> --status reverted --linked
 ```
 
 ### Git
@@ -152,25 +168,18 @@ git add . && git commit -m "mensagem" && git push origin main
 
 ---
 
-## HELPER GEMINI
+## ARQUIVOS PRINCIPAIS
 
-Arquivo `supabase/functions/_shared/gemini.ts`:
+### Menu e Navegação:
+- `src/components/AppSidebar.tsx` - Menu lateral reorganizado
 
-```typescript
-import { callGemini, askGemini, askGeminiJSON } from '../_shared/gemini.ts'
+### Componentes de IA:
+- `src/components/AIClassificationDialog.tsx` - Diálogo de classificação
+- `src/pages/BankImport.tsx` - Importação com IA integrada
 
-// Uso simples
-const response = await askGemini("Pergunta aqui", "System prompt");
-
-// Com mensagens
-const result = await callGemini([
-  { role: 'system', content: 'Você é...' },
-  { role: 'user', content: 'Pergunta' }
-], { temperature: 0.7, maxOutputTokens: 1000 });
-
-// Para resposta JSON estruturada
-const data = await askGeminiJSON<MeuTipo>("Pergunta", "System prompt");
-```
+### Edge Functions:
+- `supabase/functions/ai-bank-transaction-processor/index.ts`
+- `supabase/functions/_shared/gemini.ts`
 
 ---
 
@@ -185,22 +194,10 @@ const data = await askGeminiJSON<MeuTipo>("Pergunta", "System prompt");
 
 ---
 
-## ARQUIVOS PRINCIPAIS
-
-### Componentes de IA:
-- `src/components/AIClassificationDialog.tsx` - Diálogo de classificação
-- `src/pages/BankImport.tsx` - Importação com IA integrada
-
-### Edge Functions:
-- `supabase/functions/ai-bank-transaction-processor/index.ts`
-- `supabase/functions/_shared/gemini.ts`
-
----
-
 ## PRÓXIMAS TAREFAS
 
 1. ~~Sistema de diálogo IA-Humano~~ ✅
-2. Aplicar migração `20251129280000` no banco remoto
-3. Testar fluxo completo com extrato real
-4. Implementar conciliação bancária automática
-5. Dashboard de acompanhamento contábil
+2. ~~Reorganização do menu~~ ✅
+3. Aplicar migração `20251129280000` no banco remoto
+4. Testar fluxo completo com extrato real
+5. Implementar conciliação bancária automática
