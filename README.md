@@ -75,6 +75,13 @@ Sistema SaaS profissional para escritórios de contabilidade gerenciarem honorá
 | **XML NFe/NFSe** | Notas fiscais eletrônicas | ✅ Implementado |
 | **CSV** | Importação genérica | 🚧 Em desenvolvimento |
 
+### 🧰 Scripts de apoio
+
+- `scripts/import_recurring_expenses.py`: lê a planilha `banco/Controle Despesas-1.xlsx` usando **pandas** e cadastra as despesas recorrentes diretamente na tabela `accounts_payable` via REST do Supabase. Requisitos mínimos: `pip install pandas openpyxl requests`.
+  - Simular importação: `python scripts/import_recurring_expenses.py --dry-run`
+  - Executar importação real (exemplo): `SUPABASE_SERVICE_ROLE_KEY=... python scripts/import_recurring_expenses.py --due-date 2025-12-10 --recurrence-day 12 --created-by <uuid>`
+  - O script aceita parâmetros para aba (`--sheet`), frequência (`--frequency`) e lote (`--batch-size`).
+
 ### 🤖 Inteligência Artificial
 
 4 AI Agents powered by **Google Gemini 2.5 Flash**:

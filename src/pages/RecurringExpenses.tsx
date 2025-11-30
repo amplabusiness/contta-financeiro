@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, PauseCircle, PlayCircle, FileSpreadsheet, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
@@ -54,6 +54,7 @@ export default function RecurringExpenses() {
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<RecurringExpense | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [clearing, setClearing] = useState(false);
   
   const [formData, setFormData] = useState({
     supplier_name: "",
@@ -258,6 +259,45 @@ export default function RecurringExpenses() {
     "Pessoal",
   ];
 
+  const clearAllRecurringExpenses = async () => {
+    if (expenses.length === 0) {
+      toast({
+        title: "Nada para remover",
+        description: "Nenhuma despesa recorrente cadastrada.",
+      });
+      return;
+    }
+
+    if (!confirm("Tem certeza que deseja remover todas as despesas recorrentes cadastradas?")) {
+      return;
+    }
+
+    setClearing(true);
+    try {
+      const { error } = await supabase
+        .from("accounts_payable")
+        .delete()
+        .eq("is_recurring", true);
+
+      if (error) throw error;
+
+      toast({
+        title: "Despesas removidas",
+        description: "Todas as despesas recorrentes foram excluídas.",
+      });
+      loadExpenses();
+    } catch (error) {
+      console.error("Error clearing recurring expenses:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover as despesas recorrentes.",
+        variant: "destructive",
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-6 space-y-6">
@@ -269,6 +309,14 @@ export default function RecurringExpenses() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              onClick={clearAllRecurringExpenses}
+              disabled={clearing || generating || loading}
+            >
+              <Trash2 className={`h-4 w-4 mr-2 ${clearing ? "animate-spin" : ""}`} />
+              {clearing ? "Removendo..." : "Apagar Todas"}
+            </Button>
             <Button onClick={generateNextMonth} disabled={generating} variant="outline">
               <RefreshCw className={`h-4 w-4 mr-2 ${generating ? 'animate-spin' : ''}`} />
               Gerar Próximo Mês

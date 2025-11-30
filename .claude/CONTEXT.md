@@ -1,34 +1,53 @@
 # Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-30 (Sessão 10 – Contabilidade Inteligente + Preparação CI/CD)
+2025-11-30 (Sessão 11 – Limpeza de PRs + Importador de Despesas Recorrentes)
 
 ### Resumo rápido desta sessão
-- ✅ Script `supabase/sql/cleanup_accounting_entries.sql` executado em produção (contagens finais: entries 178 / lines 356; sem triggers problemáticos).
-- ✅ Documentação `.claude/CONTABILIDADE_INTELIGENTE.md` atualizada com o status pós-cleanup e próximos passos reais (Testar 1 → Processar Tudo → CI/CD).
-- ⚠️ Aguardando execução dos botões **"Testar 1"/"Processar Tudo"** na UI para validar o Smart Accounting end-to-end.
-- ⚠️ Secrets do CI/CD (Supabase/Vercel) ainda não configurados; workflows permanecem aguardando credenciais.
-- 📁 Novo arquivo de referência criado em `supabase/sql/cleanup_accounting_entries.sql` para reaplicar o procedimento, caso necessário.
+- ✅ Fechado em lote os 27 PRs/drafts criados pelo Copilot (via `gh pr list/close`) e canceladas as execuções pendentes dos workflows “Copilot coding agent” e “Deploy Ampla Sistema”.
+- ✅ Página `src/pages/RecurringExpenses.tsx` ganhou o botão **“Apagar Todas”** (deleção `is_recurring = true`) para facilitar o reset da base durante o treinamento do agente.
+- ✅ Criado `scripts/import_recurring_expenses.py` em Python, agora usando **pandas + requests + openpyxl** para transformar a planilha `banco/Controle Despesas-1.xlsx` em lançamentos recorrentes (`accounts_payable`).
+- ✅ README documentado com o passo a passo do script e ambiente virtual configurado (`.venv` + `pip install pandas requests openpyxl`); `--dry-run` retorna 57 itens, confirmando parsing correto.
+- ⚠️ Falta rodar o script em modo real (sem `--dry-run`) com `SUPABASE_SERVICE_ROLE_KEY` para consolidar as despesas recorrentes na base.
 
 ### Urgências pós-sessão
-1. **Executar `scripts/setup-cicd.ps1`** e cadastrar secrets (SUPABASE_ACCESS_TOKEN, VERCEL_TOKEN/ORG_ID/PROJECT_ID) para o workflow `deploy.yml`.
-2. **UI Contabilidade Inteligente**: rodar "Testar 1" e "Processar Tudo" para confirmar que o Edge Function cria lançamentos com linhas.
-3. **Garantir tabelas novas em produção**: migrations desta leva (payroll, inventory, consultoria trabalhista, incentivos/PLR, Sora 2, evolução contínua) precisam ser aplicadas via Supabase CLI/CI.
-4. **Confirmar deploy frontend** em `ampla.app.br` assim que o CI/CD estiver operando.
+1. Executar `scripts/import_recurring_expenses.py` apontando para `banco/Controle Despesas-1.xlsx` com `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` para gravar os lançamentos na tabela `accounts_payable`.
+2. Após a importação, validar a UI de Despesas Recorrentes (botão “Apagar Todas” desabilitado quando em uso) e assegurar que o RPC `generate_recurring_expenses` continua funcionando.
+3. Manter vigilância sobre novos PRs automáticos dos agentes Copilot; se reaparecerem, repetir o script de fechamento e considerar desabilitar o workflow correspondente.
+4. Pendências da Sessão 10 (CI/CD + testes Smart Accounting) continuam válidas – ver seção “Histórico” abaixo para detalhes.
 
 ### Próximas entregas sugeridas
 | Prioridade | Item | Responsável sugerido |
 |------------|------|----------------------|
-| Alta | Tela de entidades pendentes + Configurações (Settings.tsx) | UI/Frontend |
-| Alta | Interfaces faltantes: Consultoria Trabalhista, Incentivos/PLR, Feature Requests CRUD | UI/Frontend |
-| Alta | Multi-tenancy: propagar `tenant_id`, políticas RLS, seletor de tenant | Backend |
-| Média | Edge Functions novas (Sora 2, análise de feature requests) + automações CI | Backend |
-| Média | Importar extratos Janeiro/2025 (183 transações) e planilha de despesas do Sergio | Financeiro/Operações |
-| Média | Conciliação bancária 100% automática e reprocessar saldos de abertura | Contabilidade |
+| Alta | Rodar importador Python em produção e validar recorrências | Financeiro/TI |
+| Alta | Executar `scripts/setup-cicd.ps1` e concluir configuração de secrets para o workflow `deploy.yml` | DevOps |
+| Alta | UI Contabilidade Inteligente – botões “Testar 1/Processar Tudo” | Backend/UI |
+| Média | Interfaces pendentes (Consultoria Trabalhista, Incentivos/PLR, Feature Requests CRUD) | UI/Frontend |
+| Média | Multi-tenancy completo (`tenant_id` + RLS) | Backend |
+| Média | Conciliação automática + importação de extratos Jan/2025 | Contabilidade |
 
-> **Status anterior (Sessão 8) permanece válido**: integrações Sora 2, sistema de evolução contínua, redesenho do Auth, CRUDs Payroll/Inventory/VideoContent e reorganização do menu já estão incorporados. Este contexto apenas registra que tudo foi commitado, publicado e que a documentação `.claude` foi revisada integralmente.
+> Conteúdo completo da sessão anterior (Sessão 10 – Contabilidade Inteligente + CI/CD) permanece registrado na seção “Histórico” para referência.
 
-## ✅ Trabalho Concluído Nesta Sessão
+## ✅ Trabalho Concluído Nesta Sessão (Sessão 11)
+
+### 1. Limpeza de PRs e workflows do Copilot
+- Script Powershell rodando `gh pr list --json number,author` + `gh pr close` fechou 27 PRs/drafts `app/copilot-swe-agent` de forma segura, removendo também branches remotos.
+- `gh run list --json ...` confirmou o cancelamento dos jobs "Copilot coding agent" e ausência de novos workflows ativos.
+
+### 2. Reset operativo da UI de Despesas Recorrentes
+- `src/pages/RecurringExpenses.tsx` passou a oferecer o botão destrutivo **Apagar Todas**, que chama `supabase.from('accounts_payable').delete().eq('is_recurring', true)` com feedback visual (`clearing` state, spinner no ícone `Trash2`).
+- Garante fluxo controlado para zerar lançamentos antes de treinar novamente o agente/importação.
+
+### 3. Importador Python com pandas
+- Novo arquivo `scripts/import_recurring_expenses.py` (CLI) lê `banco/Controle Despesas-1.xlsx` com `pandas.read_excel`, detecta cabeçalhos/categorias e monta payload para `accounts_payable`.
+- Suporta `--dry-run`, `--sheet`, `--frequency`, `--batch-size` e injeta `created_by`/`recurrence_day`. Usa `requests` + `Prefer: return=representation` para inserir em lote.
+- Ajuste em `validate_args` evita exigir `SUPABASE_URL` quando apenas simulando a importação.
+
+### 4. Documentação + ambiente Python
+- README ganhou seção "Scripts de apoio" com instruções de uso do importador e dependências (`pip install pandas openpyxl requests`).
+- `.venv` configurado (Python 3.14) e pacotes instalados/validados (`pip show pandas`); execução `--dry-run` retornou 57 registros, provando parsing correto.
+
+## ✅ Trabalho Concluído – Sessão 10 (Histórico)
 
 ### 1. Integração OpenAI Sora 2 para Vídeos
 - [x] Criada migration `20251130130000_openai_sora2_video_generation.sql`:
