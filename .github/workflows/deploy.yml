@@ -46,6 +46,8 @@ jobs:
   supabase:
     name: Deploy Supabase
     runs-on: ubuntu-latest
+    environment:
+      name: production
     needs: quality
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
@@ -86,6 +88,8 @@ jobs:
   vercel:
     name: Deploy Vercel
     runs-on: ubuntu-latest
+    environment:
+      name: production
     needs: [quality, supabase]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
