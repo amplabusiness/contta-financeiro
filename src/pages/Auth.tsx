@@ -160,9 +160,9 @@ const Auth = () => {
           {/* Logo */}
           <div className="flex items-center gap-4 mb-12">
             <img
-              src="/logo-ampla-white.svg"
+              src="/logo-ampla.png"
               alt="Ampla Contabilidade"
-              className="h-14 w-auto"
+              className="h-16 w-auto brightness-0 invert"
               onError={(e) => {
                 // Fallback para icone se logo nao carregar
                 e.currentTarget.style.display = 'none';
@@ -229,9 +229,9 @@ const Auth = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center mb-8">
             <img
-              src="/logo-ampla.svg"
+              src="/logo-ampla.png"
               alt="Ampla Contabilidade"
-              className="h-12 w-auto"
+              className="h-14 w-auto"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
