@@ -9,45 +9,90 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 
 ---
 
-## STATUS ATUAL (29/11/2025)
+## STATUS ATUAL (30/11/2025)
 
 ### Concluído Hoje:
+1. **Sistema de Diálogo IA-Humano** - Classificação interativa de transações
+2. **Componente AIClassificationDialog** - Modal para treinar a IA
+3. **Tabelas de Aprendizado** - Entidades, padrões e histórico
+4. **Integração BankImport** - Botões de classificação manual e revisão
+
+### Concluído Anteriormente (29/11):
 1. **Sistema Contábil Completo** - Plano de contas conforme NBC/CFC
 2. **Conta Bancária Sicredi** - Cadastrada com saldo de abertura R$ 90.725,10
 3. **Lançamento de Abertura** - Registrado em 31/12/2024
 4. **Importação OFX com IA** - Classificação automática implementada
-5. **Nova Edge Function** - `ai-bank-transaction-processor` para classificação
+5. **Edge Function** - `ai-bank-transaction-processor` para classificação
 
-### Estrutura Contábil Implementada:
+---
+
+## SISTEMA DE DIÁLOGO IA-HUMANO
+
+### Conceito:
+A IA aprende com o humano nos primeiros momentos. Exemplo:
+- Transação: "PAGAMENTO PIX - SERGIO CARNEIRO LEAO"
+- IA pergunta: "Quem é Sérgio Carneiro Leão?"
+- Humano responde: "É um sócio da empresa"
+- IA salva o padrão e usa nas próximas classificações
+
+### Componentes:
+
+#### 1. AIClassificationDialog (`src/components/AIClassificationDialog.tsx`)
+- Modal interativo para classificar transações
+- Tabs: Classificação | Quem é?
+- Mostra sugestão da IA com nível de confiança
+- Permite salvar entidade e padrão para uso futuro
+- Progresso visual (X de Y transações)
+
+#### 2. Tabelas de Aprendizado (Migration `20251129280000`)
+
+| Tabela | Descrição |
+|--------|-----------|
+| `ai_known_entities` | Entidades conhecidas (pessoas, empresas) |
+| `ai_classification_patterns` | Padrões de classificação aprendidos |
+| `ai_classification_history` | Histórico para treinamento |
+| `ai_pending_questions` | Perguntas da IA aguardando resposta |
+
+#### 3. Funções SQL
+
+```sql
+-- Normaliza texto para matching
+normalize_for_matching(input_text TEXT) RETURNS TEXT
+
+-- Busca padrão conhecido
+find_known_pattern(description TEXT, txn_type TEXT, amount DECIMAL)
+RETURNS TABLE (pattern_id, category, debit_account, credit_account, entity_name, confidence)
+```
+
+### Fluxo na BankImport:
+
+1. **Preview do OFX** → Botão "Classificar Manualmente"
+   - Abre diálogo para treinar IA antes de importar
+
+2. **Após importar com IA** → Botão "Revisar Classificações (X pendentes)"
+   - Aparece se houver transações com confiança < 70%
+   - Permite corrigir classificações da IA
+
+3. **O aprendizado é salvo**:
+   - Entidade nova → `ai_known_entities`
+   - Padrão de classificação → `ai_classification_patterns`
+   - Histórico → `ai_classification_history`
+
+---
+
+## ESTRUTURA CONTÁBIL
+
 | Grupo | Descrição | Contas Especiais |
 |-------|-----------|------------------|
 | 1 | ATIVO | 1.1.1.02 Banco Sicredi |
 | 2 | PASSIVO | 2.1.1.01 Fornecedores |
 | 3 | RECEITAS | 3.1.1.01 Honorários |
 | 4 | DESPESAS | 4.1.x a 4.9.x |
-| 5 | PATRIMÔNIO LÍQUIDO | 5.3.02.01 Saldo de Abertura, 5.3.03.01 Ajustes de Exercícios Anteriores |
+| 5 | PATRIMÔNIO LÍQUIDO | 5.3.02.01 Saldo de Abertura, 5.3.03.01 Ajustes |
 
 ### Tratamento de Recebimentos:
-- **Recebimentos do período atual**: D-Banco C-Receita
-- **Recebimentos de períodos anteriores (ex: dezembro em janeiro)**: D-Banco C-5.3.03.01 (Ajustes Positivos de Exercícios Anteriores)
-
----
-
-## IMPORTAÇÃO DE EXTRATO OFX
-
-### Fluxo Implementado:
-1. Upload do arquivo OFX
-2. Parsing com `ofxParser.ts`
-3. **Com IA habilitada**:
-   - Chama `ai-bank-transaction-processor`
-   - Contador IA e Agente Financeiro classificam cada transação
-   - Gera lançamentos contábeis automaticamente
-   - Define contas de débito e crédito
-
-### Página: `/bank-import`
-- Switch para habilitar/desabilitar IA
-- Barra de progresso durante processamento
-- Exibe classificações com confiança da IA
+- **Período atual**: D-Banco C-Receita
+- **Períodos anteriores**: D-Banco C-5.3.03.01 (Ajustes Positivos)
 
 ---
 
@@ -55,12 +100,11 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 
 | Função | Descrição | Status |
 |--------|-----------|--------|
-| `ai-bank-transaction-processor` | Processa transações bancárias e gera lançamentos | ✅ Deployado |
+| `ai-bank-transaction-processor` | Processa transações e gera lançamentos | ✅ Deployado |
 | `ai-business-manager` | Gestor empresarial | ✅ Migrado Gemini |
 | `ai-accountant-background` | Validador contábil | ✅ Migrado Gemini |
-| `ai-accounting-engine` | Motor contábil (balancete, encerramento) | ✅ Ativo |
+| `ai-accounting-engine` | Motor contábil | ✅ Ativo |
 | `ai-expense-classifier` | Classificador de despesas | ✅ Ativo |
-| Outras 20+ funções | Diversos agentes | ✅ Parcialmente migrados |
 
 ---
 
@@ -70,7 +114,7 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 - **Project ID**: `xdtlhzysrpoinqtsglmr`
 - **URL**: `https://xdtlhzysrpoinqtsglmr.supabase.co`
 
-### Secrets configurados no Supabase:
+### Secrets configurados:
 - `GEMINI_API_KEY` - API do Google Gemini
 - `CNPJA_API_KEY` - API CNPJA
 - `SUPABASE_SERVICE_ROLE_KEY` - Chave de serviço
@@ -86,9 +130,9 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 npx supabase functions deploy ai-bank-transaction-processor --project-ref xdtlhzysrpoinqtsglmr
 
 # Múltiplas funções
-npx supabase functions deploy ai-business-manager ai-accountant-background ai-chatbot --project-ref xdtlhzysrpoinqtsglmr
+npx supabase functions deploy ai-business-manager ai-accountant-background --project-ref xdtlhzysrpoinqtsglmr
 
-# Listar funções deployadas
+# Listar funções
 npx supabase functions list --project-ref xdtlhzysrpoinqtsglmr
 ```
 
@@ -103,7 +147,6 @@ npx supabase migration repair <timestamp> --status reverted --linked
 
 ### Git
 ```bash
-# Push para main
 git add . && git commit -m "mensagem" && git push origin main
 ```
 
@@ -111,7 +154,7 @@ git add . && git commit -m "mensagem" && git push origin main
 
 ## HELPER GEMINI
 
-Criado o arquivo `supabase/functions/_shared/gemini.ts` com funções helper:
+Arquivo `supabase/functions/_shared/gemini.ts`:
 
 ```typescript
 import { callGemini, askGemini, askGeminiJSON } from '../_shared/gemini.ts'
@@ -131,19 +174,33 @@ const data = await askGeminiJSON<MeuTipo>("Pergunta", "System prompt");
 
 ---
 
-## MIGRATIONS APLICADAS HOJE
+## MIGRATIONS APLICADAS
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `20251129250000_complete_chart_of_accounts.sql` | Plano de contas completo (5 grupos) |
+| `20251129250000_complete_chart_of_accounts.sql` | Plano de contas completo |
 | `20251129260000_register_sicredi_account.sql` | Conta Sicredi + saldo inicial |
 | `20251129270000_opening_balance_entry.sql` | Lançamento de abertura 31/12/2024 |
+| `20251129280000_ai_transaction_learning.sql` | Sistema de aprendizado IA |
+
+---
+
+## ARQUIVOS PRINCIPAIS
+
+### Componentes de IA:
+- `src/components/AIClassificationDialog.tsx` - Diálogo de classificação
+- `src/pages/BankImport.tsx` - Importação com IA integrada
+
+### Edge Functions:
+- `supabase/functions/ai-bank-transaction-processor/index.ts`
+- `supabase/functions/_shared/gemini.ts`
 
 ---
 
 ## PRÓXIMAS TAREFAS
 
-1. ~~Testar importação do extrato janeiro/2025~~ (Pronto para usar)
-2. Ajustar regras de classificação baseado no uso real
-3. Implementar conciliação bancária automática
-4. Dashboard de acompanhamento contábil
+1. ~~Sistema de diálogo IA-Humano~~ ✅
+2. Aplicar migração `20251129280000` no banco remoto
+3. Testar fluxo completo com extrato real
+4. Implementar conciliação bancária automática
+5. Dashboard de acompanhamento contábil
