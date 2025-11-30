@@ -12,13 +12,50 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save, Loader2, Search,
-  Users, UserPlus, Home, Car, AlertTriangle, Brain, Plus, Edit, Trash2, Heart
+  Users, UserPlus, Home, Car, AlertTriangle, Brain, Plus, Edit, Trash2, Heart, MoreHorizontal,
+  CheckCircle2, Briefcase
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AITeamBadge } from "@/components/AITeamBadge";
+
+interface Employee {
+  id: string;
+  name: string;
+  cpf: string | null;
+  phone: string | null;
+  email: string | null;
+  department: string;
+  role: string;
+  hire_date: string | null;
+  contract_type: string | null;
+  official_salary: number | null;
+  is_active: boolean;
+}
+
+const DEPARTMENTS = [
+  { value: "contabil", label: "Contabil" },
+  { value: "fiscal", label: "Fiscal" },
+  { value: "dp", label: "Departamento Pessoal" },
+  { value: "legalizacao", label: "Legalizacao" },
+  { value: "administrativo", label: "Administrativo" },
+  { value: "financeiro", label: "Financeiro" },
+  { value: "ti", label: "TI" },
+];
+
+const CONTRACT_TYPES = [
+  { value: "clt", label: "CLT" },
+  { value: "pj", label: "PJ / MEI" },
+  { value: "autonomo", label: "Autonomo" },
+  { value: "estagio", label: "Estagiario" },
+  { value: "freelancer", label: "Freelancer" },
+];
 
 // Interface para dados da empresa via Brasil API
 interface CompanyData {
@@ -41,6 +78,235 @@ const Settings = () => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingCnpj, setIsLoadingCnpj] = useState(false);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Employee states
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
+  const [employeeForm, setEmployeeForm] = useState({
+    name: "",
+    cpf: "",
+    phone: "",
+    email: "",
+    department: "contabil",
+    role: "",
+    hire_date: "",
+    contract_type: "clt",
+    official_salary: "",
+  });
+
+  useEffect(() => {
+    loadEmployees();
+  }, [showInactive]);
+
+  const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      let query = supabase
+        .from("employees")
+        .select("*")
+        .order("name");
+
+      if (!showInactive) {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error: any) {
+      console.error("Error loading employees:", error);
+      toast({
+        title: "Erro ao carregar funcionarios",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  const resetEmployeeForm = () => {
+    setEmployeeForm({
+      name: "",
+      cpf: "",
+      phone: "",
+      email: "",
+      department: "contabil",
+      role: "",
+      hire_date: "",
+      contract_type: "clt",
+      official_salary: "",
+    });
+    setEditingEmployee(null);
+  };
+
+  const openCreateEmployee = () => {
+    resetEmployeeForm();
+    setShowEmployeeDialog(true);
+  };
+
+  const openEditEmployee = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setEmployeeForm({
+      name: employee.name,
+      cpf: employee.cpf || "",
+      phone: employee.phone || "",
+      email: employee.email || "",
+      department: employee.department,
+      role: employee.role,
+      hire_date: employee.hire_date || "",
+      contract_type: employee.contract_type || "clt",
+      official_salary: employee.official_salary?.toString() || "",
+    });
+    setShowEmployeeDialog(true);
+  };
+
+  const handleSaveEmployee = async () => {
+    if (!employeeForm.name.trim() || !employeeForm.department || !employeeForm.role) {
+      toast({
+        title: "Campos obrigatorios",
+        description: "Preencha nome, departamento e cargo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const employeeData = {
+        name: employeeForm.name,
+        cpf: employeeForm.cpf || null,
+        phone: employeeForm.phone || null,
+        email: employeeForm.email || null,
+        department: employeeForm.department,
+        role: employeeForm.role,
+        hire_date: employeeForm.hire_date || null,
+        contract_type: employeeForm.contract_type,
+        official_salary: employeeForm.official_salary ? parseFloat(employeeForm.official_salary) : null,
+      };
+
+      if (editingEmployee) {
+        const { error } = await supabase
+          .from("employees")
+          .update(employeeData)
+          .eq("id", editingEmployee.id);
+
+        if (error) throw error;
+        toast({
+          title: "Funcionario atualizado!",
+        });
+      } else {
+        const { error } = await supabase
+          .from("employees")
+          .insert({ ...employeeData, is_active: true });
+
+        if (error) throw error;
+        toast({
+          title: "Funcionario cadastrado!",
+        });
+      }
+
+      setShowEmployeeDialog(false);
+      resetEmployeeForm();
+      loadEmployees();
+    } catch (error: any) {
+      console.error("Error saving employee:", error);
+      toast({
+        title: "Erro ao salvar funcionario",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    setEmployeeToDelete(employee);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteEmployee = async () => {
+    if (!employeeToDelete) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .update({ is_active: false })
+        .eq("id", employeeToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Funcionario desativado!",
+      });
+      setShowDeleteDialog(false);
+      setEmployeeToDelete(null);
+      loadEmployees();
+    } catch (error: any) {
+      console.error("Error deactivating employee:", error);
+      toast({
+        title: "Erro ao desativar funcionario",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleEmployeeStatus = async (employee: Employee) => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .update({ is_active: !employee.is_active })
+        .eq("id", employee.id);
+
+      if (error) throw error;
+
+      toast({
+        title: employee.is_active ? "Funcionario desativado!" : "Funcionario reativado!",
+      });
+      loadEmployees();
+    } catch (error: any) {
+      console.error("Error toggling employee:", error);
+      toast({
+        title: "Erro ao alterar status",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getDepartmentLabel = (value: string) => {
+    const dept = DEPARTMENTS.find(d => d.value === value);
+    return dept?.label || value;
+  };
+
+  const getContractTypeLabel = (value: string | null) => {
+    if (!value) return "-";
+    const type = CONTRACT_TYPES.find(t => t.value === value);
+    return type?.label || value;
+  };
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "-";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
 
   // Estados para os campos da empresa
   const [companyForm, setCompanyForm] = useState({
@@ -173,26 +439,30 @@ const Settings = () => {
             </div>
 
             <Tabs defaultValue="company" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="company">
                   <Building2 className="w-4 h-4 mr-2" />
                   Empresa
                 </TabsTrigger>
+                <TabsTrigger value="employees">
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Funcionarios
+                </TabsTrigger>
                 <TabsTrigger value="users">
                   <User className="w-4 h-4 mr-2" />
-                  Usuários
+                  Usuarios
                 </TabsTrigger>
                 <TabsTrigger value="notifications">
                   <Bell className="w-4 h-4 mr-2" />
-                  Notificações
+                  Notificacoes
                 </TabsTrigger>
                 <TabsTrigger value="integrations">
                   <Mail className="w-4 h-4 mr-2" />
-                  Integrações
+                  Integracoes
                 </TabsTrigger>
                 <TabsTrigger value="security">
                   <Shield className="w-4 h-4 mr-2" />
-                  Segurança
+                  Seguranca
                 </TabsTrigger>
               </TabsList>
 
@@ -353,6 +623,127 @@ const Settings = () => {
                         />
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Employees Settings */}
+              <TabsContent value="employees" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Funcionarios</CardTitle>
+                        <CardDescription>
+                          Cadastre e gerencie os funcionarios da empresa
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={showInactive ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setShowInactive(!showInactive)}
+                        >
+                          {showInactive ? "Ver Ativos" : "Ver Inativos"}
+                        </Button>
+                        <Button onClick={openCreateEmployee}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Novo Funcionario
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingEmployees ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : employees.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Briefcase className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Nenhum funcionario cadastrado</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Cadastre funcionarios para usar o sistema de incentivos e PLR
+                        </p>
+                        <Button onClick={openCreateEmployee}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Cadastrar Funcionario
+                        </Button>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Departamento</TableHead>
+                            <TableHead>Cargo</TableHead>
+                            <TableHead>Contrato</TableHead>
+                            <TableHead>Salario</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Acoes</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {employees.map((employee) => (
+                            <TableRow key={employee.id} className={!employee.is_active ? "opacity-50" : ""}>
+                              <TableCell>
+                                <div className="font-medium">{employee.name}</div>
+                                {employee.email && (
+                                  <div className="text-xs text-muted-foreground">{employee.email}</div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{getDepartmentLabel(employee.department)}</Badge>
+                              </TableCell>
+                              <TableCell>{employee.role}</TableCell>
+                              <TableCell>{getContractTypeLabel(employee.contract_type)}</TableCell>
+                              <TableCell>{formatCurrency(employee.official_salary)}</TableCell>
+                              <TableCell>
+                                <Badge variant={employee.is_active ? "default" : "secondary"}>
+                                  {employee.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEditEmployee(employee)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => toggleEmployeeStatus(employee)}>
+                                      {employee.is_active ? (
+                                        <>
+                                          <AlertTriangle className="h-4 w-4 mr-2" />
+                                          Desativar
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                                          Reativar
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteEmployee(employee)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Excluir
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -587,12 +978,192 @@ const Settings = () => {
               </Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "Salvando..." : "Salvar Configurações"}
+                {isSaving ? "Salvando..." : "Salvar Configuracoes"}
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Employee Dialog */}
+      <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEmployee ? "Editar Funcionario" : "Novo Funcionario"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingEmployee ? "Atualize as informacoes do funcionario" : "Cadastre um novo funcionario"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="emp-name">Nome Completo *</Label>
+                <Input
+                  id="emp-name"
+                  value={employeeForm.name}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Rose Maria Silva"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emp-cpf">CPF</Label>
+                <Input
+                  id="emp-cpf"
+                  value={employeeForm.cpf}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, cpf: e.target.value }))}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="emp-phone">Telefone</Label>
+                <Input
+                  id="emp-phone"
+                  value={employeeForm.phone}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(62) 99999-9999"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emp-email">E-mail</Label>
+                <Input
+                  id="emp-email"
+                  type="email"
+                  value={employeeForm.email}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@empresa.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Departamento *</Label>
+                <Select
+                  value={employeeForm.department}
+                  onValueChange={(value) => setEmployeeForm(prev => ({ ...prev, department: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map(dept => (
+                      <SelectItem key={dept.value} value={dept.value}>
+                        {dept.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emp-role">Cargo *</Label>
+                <Input
+                  id="emp-role"
+                  value={employeeForm.role}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, role: e.target.value }))}
+                  placeholder="Ex: Assistente Contabil"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo de Contrato</Label>
+                <Select
+                  value={employeeForm.contract_type}
+                  onValueChange={(value) => setEmployeeForm(prev => ({ ...prev, contract_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTRACT_TYPES.map(type => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emp-hire-date">Data de Admissao</Label>
+                <Input
+                  id="emp-hire-date"
+                  type="date"
+                  value={employeeForm.hire_date}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, hire_date: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emp-salary">Salario (R$)</Label>
+                <Input
+                  id="emp-salary"
+                  type="number"
+                  step="0.01"
+                  value={employeeForm.official_salary}
+                  onChange={(e) => setEmployeeForm(prev => ({ ...prev, official_salary: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEmployeeDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEmployee} disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  {editingEmployee ? "Salvar" : "Cadastrar"}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Employee AlertDialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar Funcionario</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desativar o funcionario "{employeeToDelete?.name}"?
+              O funcionario nao sera excluido permanentemente e pode ser reativado depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteEmployee}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Desativar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
