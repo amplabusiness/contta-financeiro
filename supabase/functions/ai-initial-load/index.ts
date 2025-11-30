@@ -102,7 +102,7 @@ serve(async (req) => {
 /**
  * CARGA INICIAL COMPLETA
  */
-async function fullInitialLoad(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function fullInitialLoad(supabase: any, aiKey: string | undefined, provider: string, log: (...args: unknown[]) => void) {
   log('🔄 Starting full initial load for January 2025...');
 
   const results: any = {};
@@ -137,7 +137,7 @@ async function fullInitialLoad(supabase: any, aiKey: string | undefined, provide
 /**
  * CONFIGURAR PLANO DE CONTAS COMPLETO
  */
-async function setupChartOfAccounts(supabase: any, log: Function) {
+async function setupChartOfAccounts(supabase: any, log: (...args: unknown[]) => void) {
   log('Setting up complete chart of accounts...');
 
   // Plano de contas completo para escritório contábil
@@ -291,7 +291,7 @@ async function setupChartOfAccounts(supabase: any, log: Function) {
 /**
  * PROCESSAR SALDOS DE ABERTURA
  */
-async function processOpeningBalances(supabase: any, log: Function) {
+async function processOpeningBalances(supabase: any, log: (...args: unknown[]) => void) {
   log('Processing opening balances...');
 
   // Buscar saldos de abertura de clientes
@@ -421,7 +421,7 @@ async function processOpeningBalances(supabase: any, log: Function) {
 /**
  * PROCESSAR BOLETOS DE JANEIRO/2025
  */
-async function processJanuaryInvoices(supabase: any, log: Function) {
+async function processJanuaryInvoices(supabase: any, log: (...args: unknown[]) => void) {
   log('Processing January 2025 invoices...');
 
   // Buscar faturas de janeiro/2025
@@ -555,7 +555,7 @@ async function processJanuaryInvoices(supabase: any, log: Function) {
 /**
  * PROCESSAR EXTRATO BANCÁRIO
  */
-async function processBankStatement(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function processBankStatement(supabase: any, aiKey: string | undefined, provider: string, log: (...args: unknown[]) => void) {
   log('Processing bank statement for January 2025...');
 
   // Buscar transações bancárias de janeiro/2025
@@ -763,7 +763,7 @@ async function processBankStatement(supabase: any, aiKey: string | undefined, pr
 /**
  * GERAR RELATÓRIOS DE ABERTURA
  */
-async function generateOpeningReports(supabase: any, log: Function) {
+async function generateOpeningReports(supabase: any, log: (...args: unknown[]) => void) {
   log('Generating opening reports...');
 
   // Atualizar razão contábil
@@ -923,7 +923,7 @@ async function generateOpeningReports(supabase: any, log: Function) {
  * Compara o saldo contábil com o saldo do extrato bancário
  * para garantir que os lançamentos estão corretos
  */
-async function validateBankBalance(supabase: any, log: Function) {
+async function validateBankBalance(supabase: any, log: (...args: unknown[]) => void) {
   log('Validating bank balance against statement...');
 
   // 1. Buscar saldo contábil do banco (soma de todos os lançamentos)
