@@ -1,21 +1,33 @@
-# Contexto da Sessão Atual
+﻿# Contexto da Sessão Atual
 
 ## Última Atualização
-2025-11-30 (Sessão 11 – Limpeza de PRs + Importador de Despesas Recorrentes)
+2025-11-30 (Sessão 12  CI/CD Completo em Produção )
 
 ### Resumo rápido desta sessão
-- ✅ Fechado em lote os 27 PRs/drafts criados pelo Copilot (via `gh pr list/close`) e canceladas as execuções pendentes dos workflows “Copilot coding agent” e “Deploy Ampla Sistema”.
-- ✅ Página `src/pages/RecurringExpenses.tsx` ganhou o botão **“Apagar Todas”** (deleção `is_recurring = true`) para facilitar o reset da base durante o treinamento do agente.
-- ✅ Criado `scripts/import_recurring_expenses.py` em Python, agora usando **pandas + requests + openpyxl** para transformar a planilha `banco/Controle Despesas-1.xlsx` em lançamentos recorrentes (`accounts_payable`).
-- ✅ README documentado com o passo a passo do script e ambiente virtual configurado (`.venv` + `pip install pandas requests openpyxl`); `--dry-run` retorna 57 itens, confirmando parsing correto.
-- ⚠️ Falta rodar o script em modo real (sem `--dry-run`) com `SUPABASE_SERVICE_ROLE_KEY` para consolidar as despesas recorrentes na base.
+-  **CI/CD FUNCIONANDO EM PRODUÇÃO!** Pipeline "Deploy Ampla Sistema" executado com sucesso total.
+-  Configurados secrets no environment `production` do GitHub: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+-  Workflow `.github/workflows/deploy.yml` ajustado para usar `environment: production` nos jobs que precisam dos secrets.
+-  Corrigido `vercel.json`: substituído `routes` por `rewrites` (Vercel não aceita misturar com `headers`).
+-  Removidas referências a secrets inexistentes do Vercel (`@supabase-project-id`, etc.).
+
+### Resultado do Pipeline (Run #19804824040)
+| Job | Status | Tempo |
+|-----|--------|-------|
+|  Qualidade do Código | Sucesso | 30s |
+|  Deploy Supabase | Sucesso | 1m35s |
+|  Deploy Vercel | Sucesso | 1m0s |
+|  Notificar Deploy | Sucesso | 2s |
+
+### Correções aplicadas no CI/CD
+1. **Erro "mix routing props"**: Vercel não permite `routes` junto com `headers`  substituído por `rewrites`.
+2. **Erro "Secret does not exist"**: Removida seção `env` do `vercel.json` que referenciava secrets inexistentes.
+3. **Erro "access token not provided"**: Adicionado `environment: production` no workflow para que os jobs acessem os secrets.
 
 ### Urgências pós-sessão
-1. Executar `scripts/import_recurring_expenses.py` apontando para `banco/Controle Despesas-1.xlsx` com `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` para gravar os lançamentos na tabela `accounts_payable`.
-2. Após a importação, validar a UI de Despesas Recorrentes (botão “Apagar Todas” desabilitado quando em uso) e assegurar que o RPC `generate_recurring_expenses` continua funcionando.
-3. Manter vigilância sobre novos PRs automáticos dos agentes Copilot; se reaparecerem, repetir o script de fechamento e considerar desabilitar o workflow correspondente.
-4. Pendências da Sessão 10 (CI/CD + testes Smart Accounting) continuam válidas – ver seção “Histórico” abaixo para detalhes.
-
+1. ~~Configurar secrets do GitHub~~  FEITO
+2. ~~Rodar pipeline CI/CD~~  FEITO
+3. Executar `scripts/import_recurring_expenses.py` em modo real para importar despesas recorrentes.
+4. Validar UI de Contabilidade Inteligente (botões "Testar 1/Processar Tudo").
 ### Próximas entregas sugeridas
 | Prioridade | Item | Responsável sugerido |
 |------------|------|----------------------|
@@ -224,3 +236,4 @@ git add . && git commit -m "mensagem" && git push origin main
 - **GitHub Actions:** https://github.com/amplabusiness/data-bling-sheets-3122699b/actions
 - **Site Ampla:** https://www.amplabusiness.com.br
 - **Instagram:** https://instagram.com/amplacontabilidade
+
