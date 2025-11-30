@@ -11,40 +11,56 @@ O usuário autorizou alterações conforme necessário. Você tem autonomia para
 
 ## STATUS ATUAL (29/11/2025)
 
-### Concluído:
-- Merge do branch `claude/analyze-claude-config-01DwBx8AxYbXpiRF9R4aamLo` para main
-- Migração de Edge Functions de Lovable para Gemini API
-- Deploy das funções principais: `ai-business-manager`, `ai-accountant-background`, `ai-chatbot`
+### Concluído Hoje:
+1. **Sistema Contábil Completo** - Plano de contas conforme NBC/CFC
+2. **Conta Bancária Sicredi** - Cadastrada com saldo de abertura R$ 90.725,10
+3. **Lançamento de Abertura** - Registrado em 31/12/2024
+4. **Importação OFX com IA** - Classificação automática implementada
+5. **Nova Edge Function** - `ai-bank-transaction-processor` para classificação
 
-### Mudança Importante - Lovable Descontinuado:
-O projeto não usa mais o Lovable. Todas as Edge Functions foram migradas para usar **Gemini API diretamente**.
+### Estrutura Contábil Implementada:
+| Grupo | Descrição | Contas Especiais |
+|-------|-----------|------------------|
+| 1 | ATIVO | 1.1.1.02 Banco Sicredi |
+| 2 | PASSIVO | 2.1.1.01 Fornecedores |
+| 3 | RECEITAS | 3.1.1.01 Honorários |
+| 4 | DESPESAS | 4.1.x a 4.9.x |
+| 5 | PATRIMÔNIO LÍQUIDO | 5.3.02.01 Saldo de Abertura, 5.3.03.01 Ajustes de Exercícios Anteriores |
 
-**Antes (Lovable)**:
-```typescript
-const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-  headers: { Authorization: `Bearer ${lovableApiKey}` },
-  body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [...] })
-});
-```
+### Tratamento de Recebimentos:
+- **Recebimentos do período atual**: D-Banco C-Receita
+- **Recebimentos de períodos anteriores (ex: dezembro em janeiro)**: D-Banco C-5.3.03.01 (Ajustes Positivos de Exercícios Anteriores)
 
-**Agora (Gemini direto)**:
-```typescript
-const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
-const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 2000 }
-    })
-  }
-);
-const data = await response.json();
-const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-```
+---
+
+## IMPORTAÇÃO DE EXTRATO OFX
+
+### Fluxo Implementado:
+1. Upload do arquivo OFX
+2. Parsing com `ofxParser.ts`
+3. **Com IA habilitada**:
+   - Chama `ai-bank-transaction-processor`
+   - Contador IA e Agente Financeiro classificam cada transação
+   - Gera lançamentos contábeis automaticamente
+   - Define contas de débito e crédito
+
+### Página: `/bank-import`
+- Switch para habilitar/desabilitar IA
+- Barra de progresso durante processamento
+- Exibe classificações com confiança da IA
+
+---
+
+## EDGE FUNCTIONS DE IA
+
+| Função | Descrição | Status |
+|--------|-----------|--------|
+| `ai-bank-transaction-processor` | Processa transações bancárias e gera lançamentos | ✅ Deployado |
+| `ai-business-manager` | Gestor empresarial | ✅ Migrado Gemini |
+| `ai-accountant-background` | Validador contábil | ✅ Migrado Gemini |
+| `ai-accounting-engine` | Motor contábil (balancete, encerramento) | ✅ Ativo |
+| `ai-expense-classifier` | Classificador de despesas | ✅ Ativo |
+| Outras 20+ funções | Diversos agentes | ✅ Parcialmente migrados |
 
 ---
 
@@ -67,7 +83,7 @@ const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 ### Deploy de Edge Functions
 ```bash
 # Uma função
-npx supabase functions deploy ai-business-manager --project-ref xdtlhzysrpoinqtsglmr
+npx supabase functions deploy ai-bank-transaction-processor --project-ref xdtlhzysrpoinqtsglmr
 
 # Múltiplas funções
 npx supabase functions deploy ai-business-manager ai-accountant-background ai-chatbot --project-ref xdtlhzysrpoinqtsglmr
@@ -115,19 +131,19 @@ const data = await askGeminiJSON<MeuTipo>("Pergunta", "System prompt");
 
 ---
 
-## FUNÇÕES JÁ MIGRADAS PARA GEMINI
+## MIGRATIONS APLICADAS HOJE
 
-| Função | Status |
-|--------|--------|
-| `ai-business-manager` | Totalmente migrado |
-| `ai-accountant-background` | Totalmente migrado |
-| `ai-chatbot` | Totalmente migrado |
-| Outras 22 funções | Parcialmente migradas (variáveis OK, URL precisa ajuste fino) |
+| Arquivo | Descrição |
+|---------|-----------|
+| `20251129250000_complete_chart_of_accounts.sql` | Plano de contas completo (5 grupos) |
+| `20251129260000_register_sicredi_account.sql` | Conta Sicredi + saldo inicial |
+| `20251129270000_opening_balance_entry.sql` | Lançamento de abertura 31/12/2024 |
 
 ---
 
 ## PRÓXIMAS TAREFAS
 
-1. Testar `/business-manager` no navegador
-2. Ajustar funções restantes que usam function calling (tools)
-3. Verificar se todas as funções de IA estão funcionando
+1. ~~Testar importação do extrato janeiro/2025~~ (Pronto para usar)
+2. Ajustar regras de classificação baseado no uso real
+3. Implementar conciliação bancária automática
+4. Dashboard de acompanhamento contábil

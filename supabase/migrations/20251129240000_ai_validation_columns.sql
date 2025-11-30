@@ -265,9 +265,11 @@ FROM accounting_entries;
 -- =====================================================
 ALTER TABLE ai_validation_queue ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all for authenticated" ON ai_validation_queue;
 CREATE POLICY "Allow all for authenticated" ON ai_validation_queue
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role full access" ON ai_validation_queue;
 CREATE POLICY "Service role full access" ON ai_validation_queue
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 

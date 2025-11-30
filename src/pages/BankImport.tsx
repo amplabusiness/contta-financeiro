@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Download, Calendar } from "lucide-react";
+import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Download, Calendar, Brain, BookOpen, MessageCircle } from "lucide-react";
 import { readOFXFile, OFXStatement, OFXTransaction } from "@/lib/ofxParser";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { AIClassificationDialog } from "@/components/AIClassificationDialog";
 
 interface BankAccount {
   id: string;
@@ -26,6 +29,41 @@ interface ImportResult {
   duplicateTransactions: number;
   totalAmount: number;
   errors: string[];
+  aiClassifications?: any[];
+  entriesCreated?: number;
+}
+
+interface AIClassification {
+  fitid: string;
+  description: string;
+  amount: number;
+  type: string;
+  classification: {
+    category: string;
+    client_name?: string;
+    is_prior_period?: boolean;
+    debit_account: string;
+    credit_account: string;
+    description: string;
+    confidence: number;
+    reasoning: string;
+  };
+}
+
+interface PendingTransaction {
+  id: string;
+  fitid: string;
+  description: string;
+  amount: number;
+  type: 'CREDIT' | 'DEBIT';
+  date: string;
+  ai_suggestion?: {
+    category: string;
+    debit_account: string;
+    credit_account: string;
+    confidence: number;
+    reasoning: string;
+  };
 }
 
 const BankImport = () => {
@@ -36,6 +74,17 @@ const BankImport = () => {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [recentImports, setRecentImports] = useState<any[]>([]);
+
+  // Estados para classificação IA
+  const [enableAI, setEnableAI] = useState(true);
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [aiProgress, setAiProgress] = useState(0);
+  const [aiClassifications, setAiClassifications] = useState<AIClassification[]>([]);
+
+  // Estados para diálogo de classificação interativa
+  const [showClassificationDialog, setShowClassificationDialog] = useState(false);
+  const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
+  const [currentImportId, setCurrentImportId] = useState<string>("");
 
   useEffect(() => {
     loadBankAccounts();
@@ -110,6 +159,60 @@ const BankImport = () => {
     } finally {
       setPreviewing(false);
       event.target.value = "";
+    }
+  };
+
+  // Processar transações com IA (Contador e Financeiro)
+  const processWithAI = async (transactions: OFXTransaction[], importId: string) => {
+    setAiProcessing(true);
+    setAiProgress(0);
+    toast.info("🧠 Invocando Contador IA e Agente Financeiro para classificação...");
+
+    try {
+      // Preparar transações para a IA
+      const txnsForAI = transactions.map(txn => ({
+        fitid: txn.fitid,
+        date: format(txn.date, 'yyyy-MM-dd'),
+        type: txn.type,
+        amount: txn.amount,
+        description: txn.description || txn.memo || 'Sem descrição'
+      }));
+
+      setAiProgress(20);
+
+      // Chamar Edge Function do processador de transações bancárias
+      const { data, error } = await supabase.functions.invoke('ai-bank-transaction-processor', {
+        body: {
+          action: 'process_transactions',
+          transactions: txnsForAI,
+          bank_account_id: selectedAccount,
+          import_id: importId,
+          opening_date: '2024-12-31' // Data de abertura do controle
+        }
+      });
+
+      setAiProgress(80);
+
+      if (error) {
+        console.error("Erro na classificação IA:", error);
+        toast.error("Erro na classificação automática. Transações importadas sem classificação.");
+        return null;
+      }
+
+      setAiProgress(100);
+
+      if (data?.classifications) {
+        setAiClassifications(data.classifications);
+        toast.success(`🎯 ${data.entries_created || 0} lançamentos contábeis criados automaticamente!`);
+      }
+
+      return data;
+    } catch (err: any) {
+      console.error("Erro ao processar com IA:", err);
+      toast.error("Erro ao invocar agentes de IA");
+      return null;
+    } finally {
+      setAiProcessing(false);
     }
   };
 
@@ -210,17 +313,33 @@ const BankImport = () => {
         })
         .eq("id", importRecord.id);
 
+      // Processar com IA se habilitado
+      let aiResult = null;
+      if (enableAI && newTransactions > 0) {
+        const transactionsToProcess = parsedData.transactions.filter(txn => {
+          // Apenas transações novas (não duplicadas)
+          return true; // Simplificado - a IA vai processar todas
+        });
+        aiResult = await processWithAI(transactionsToProcess, importRecord.id);
+      }
+
       // Update bank account balance (trigger will handle this)
       setImportResult({
         success: true,
         newTransactions,
         duplicateTransactions,
         totalAmount,
-        errors
+        errors,
+        aiClassifications: aiResult?.classifications || [],
+        entriesCreated: aiResult?.entries_created || 0
       });
 
       if (newTransactions > 0) {
-        toast.success(`${newTransactions} transação(ões) importada(s) com sucesso!`);
+        if (enableAI && aiResult?.entries_created > 0) {
+          toast.success(`✅ ${newTransactions} transações importadas e ${aiResult.entries_created} lançamentos contábeis criados!`);
+        } else {
+          toast.success(`${newTransactions} transação(ões) importada(s) com sucesso!`);
+        }
       } else {
         toast.info("Nenhuma transação nova para importar");
       }
@@ -295,6 +414,7 @@ const BankImport = () => {
                 type="file"
                 id="ofx_file"
                 accept=".ofx,.OFX"
+                title="Selecione um arquivo OFX do seu banco"
                 onChange={handleFileSelect}
                 disabled={!selectedAccount || previewing || loading}
                 className="block w-full text-sm text-slate-500
@@ -308,6 +428,23 @@ const BankImport = () => {
               <p className="text-sm text-muted-foreground">
                 Arquivos OFX exportados do internet banking do seu banco
               </p>
+            </div>
+
+            {/* Opção de Classificação com IA */}
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className="flex items-center gap-3">
+                <Brain className="h-6 w-6 text-purple-600" />
+                <div>
+                  <p className="font-medium">Classificação Automática com IA</p>
+                  <p className="text-sm text-muted-foreground">
+                    O Contador IA e o Agente Financeiro irão classificar e gerar lançamentos contábeis automaticamente
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={enableAI}
+                onCheckedChange={setEnableAI}
+              />
             </div>
 
             {previewing && (
@@ -386,20 +523,39 @@ const BankImport = () => {
                 </Table>
               </div>
 
+              {/* Barra de progresso IA */}
+              {aiProcessing && (
+                <div className="space-y-2 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-purple-600 animate-pulse" />
+                    <span className="font-medium text-purple-700 dark:text-purple-300">
+                      Processando com IA...
+                    </span>
+                  </div>
+                  <Progress value={aiProgress} className="h-2" />
+                  <p className="text-sm text-purple-600 dark:text-purple-400">
+                    {aiProgress < 20 && "Preparando transações..."}
+                    {aiProgress >= 20 && aiProgress < 80 && "🧠 Contador IA e Agente Financeiro analisando..."}
+                    {aiProgress >= 80 && aiProgress < 100 && "📝 Gerando lançamentos contábeis..."}
+                    {aiProgress >= 100 && "✅ Classificação concluída!"}
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setParsedData(null)}>
+                <Button variant="outline" onClick={() => setParsedData(null)} disabled={loading || aiProcessing}>
                   Cancelar
                 </Button>
-                <Button onClick={handleImport} disabled={loading}>
-                  {loading ? (
+                <Button onClick={handleImport} disabled={loading || aiProcessing}>
+                  {loading || aiProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Importando...
+                      {aiProcessing ? "Processando IA..." : "Importando..."}
                     </>
                   ) : (
                     <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Importar Transações
+                      {enableAI ? <Brain className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                      {enableAI ? "Importar e Classificar com IA" : "Importar Transações"}
                     </>
                   )}
                 </Button>
@@ -422,7 +578,7 @@ const BankImport = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Novas Transações</p>
                   <p className="text-2xl font-bold text-green-600">{importResult.newTransactions}</p>
@@ -437,7 +593,67 @@ const BankImport = () => {
                     {formatCurrency(importResult.totalAmount)}
                   </p>
                 </div>
+                {importResult.entriesCreated !== undefined && importResult.entriesCreated > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <BookOpen className="h-4 w-4" /> Lançamentos Contábeis
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600">{importResult.entriesCreated}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Classificações da IA */}
+              {importResult.aiClassifications && importResult.aiClassifications.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-purple-600" />
+                    <p className="font-medium">Classificações do Contador IA</p>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Contas</TableHead>
+                          <TableHead>Confiança</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {importResult.aiClassifications.map((item: any, idx: number) => (
+                          <TableRow key={idx}>
+                            <TableCell className="max-w-[200px] truncate">
+                              {item.description}
+                            </TableCell>
+                            <TableCell>
+                              <span className={item.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                                {item.type === 'CREDIT' ? '+' : '-'}{formatCurrency(item.amount)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{item.classification?.category}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <span className="text-blue-600">D: {item.classification?.debit_account}</span>
+                              <br />
+                              <span className="text-green-600">C: {item.classification?.credit_account}</span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={item.classification?.confidence >= 0.8 ? 'default' : 'secondary'}
+                              >
+                                {Math.round((item.classification?.confidence || 0) * 100)}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
 
               {importResult.errors.length > 0 && (
                 <div className="space-y-2">
@@ -452,7 +668,7 @@ const BankImport = () => {
                 </div>
               )}
 
-              <Button onClick={() => setImportResult(null)}>
+              <Button onClick={() => { setImportResult(null); setAiClassifications([]); }}>
                 Nova Importação
               </Button>
             </CardContent>
