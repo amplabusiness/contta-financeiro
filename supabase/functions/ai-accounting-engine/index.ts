@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+type LogFunction = (msg: string) => void;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -85,7 +87,7 @@ serve(async (req) => {
         result = { success: true, message: 'Ledger refreshed' };
         break;
 
-      case 'full_accounting_cycle':
+      case 'full_accounting_cycle': {
         // Ciclo completo de contabilização
         const pending = await processAllPending(supabase, AI_KEY, AI_PROVIDER, log);
         const currentDate = new Date();
@@ -112,6 +114,7 @@ serve(async (req) => {
           yearClose
         };
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -280,7 +283,7 @@ async function createJournalEntry(
     }>;
     ai_generated?: boolean;
   },
-  log: Function
+  log: LogFunction
 ) {
   const fiscalYear = new Date(data.entry_date).getFullYear();
   const competence = data.entry_date.slice(0, 7);
@@ -384,7 +387,7 @@ async function createJournalEntry(
 /**
  * PROCESSAR TODOS OS PENDENTES
  */
-async function processAllPending(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function processAllPending(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   log('🔄 Processing all pending entries...');
 
   const results = {
@@ -408,7 +411,7 @@ async function processAllPending(supabase: any, aiKey: string | undefined, provi
 /**
  * PROCESSAR FATURAS (Receitas)
  */
-async function processInvoices(supabase: any, log: Function) {
+async function processInvoices(supabase: any, log: LogFunction) {
   log('💰 Processing invoices...');
 
   // Buscar faturas sem lançamento contábil
@@ -474,7 +477,7 @@ async function processInvoices(supabase: any, log: Function) {
 /**
  * PROCESSAR DESPESAS
  */
-async function processExpenses(supabase: any, log: Function) {
+async function processExpenses(supabase: any, log: LogFunction) {
   log('💸 Processing expenses...');
 
   // Buscar despesas sem lançamento contábil
@@ -567,7 +570,7 @@ async function processExpenses(supabase: any, log: Function) {
 /**
  * PROCESSAR CONTRATOS
  */
-async function processContracts(supabase: any, log: Function) {
+async function processContracts(supabase: any, log: LogFunction) {
   log('📄 Processing contracts...');
 
   // Buscar contratos sem lançamento
@@ -616,7 +619,7 @@ async function processContracts(supabase: any, log: Function) {
 /**
  * PROCESSAR PAGAMENTOS RECEBIDOS
  */
-async function processPayments(supabase: any, log: Function) {
+async function processPayments(supabase: any, log: LogFunction) {
   log('💳 Processing payments...');
 
   // Buscar faturas pagas sem lançamento de recebimento
@@ -681,7 +684,7 @@ async function processPayments(supabase: any, log: Function) {
 /**
  * PROVISIONAR HONORÁRIOS MENSAIS
  */
-async function provisionMonthlyFees(supabase: any, competence: string | undefined, log: Function) {
+async function provisionMonthlyFees(supabase: any, competence: string | undefined, log: LogFunction) {
   const comp = competence || new Date().toISOString().slice(0, 7);
   log(`📋 Provisioning monthly fees for ${comp}...`);
 
@@ -763,7 +766,7 @@ async function provisionMonthlyFees(supabase: any, competence: string | undefine
 /**
  * GERAR BALANCETE
  */
-async function generateTrialBalance(supabase: any, periodType: string, competence: string, log: Function) {
+async function generateTrialBalance(supabase: any, periodType: string, competence: string, log: LogFunction) {
   log(`📊 Generating ${periodType} trial balance for ${competence}...`);
 
   // Determinar período
@@ -775,12 +778,13 @@ async function generateTrialBalance(supabase: any, periodType: string, competenc
       periodStart = `${competence}-01`;
       periodEnd = `${competence}-${new Date(year, month, 0).getDate()}`;
       break;
-    case 'quarterly':
+    case 'quarterly': {
       const quarter = Math.ceil(month / 3);
       const quarterStart = (quarter - 1) * 3 + 1;
       periodStart = `${year}-${String(quarterStart).padStart(2, '0')}-01`;
       periodEnd = `${year}-${String(quarterStart + 2).padStart(2, '0')}-${new Date(year, quarterStart + 2, 0).getDate()}`;
       break;
+    }
     case 'annual':
       periodStart = `${year}-01-01`;
       periodEnd = `${year}-12-31`;
@@ -896,7 +900,7 @@ async function generateTrialBalance(supabase: any, periodType: string, competenc
 /**
  * FECHAR EXERCÍCIO FISCAL (Apuração de Resultado)
  */
-async function closeFiscalYear(supabase: any, fiscalYear: number, aiKey: string | undefined, provider: string, log: Function) {
+async function closeFiscalYear(supabase: any, fiscalYear: number, aiKey: string | undefined, provider: string, log: LogFunction) {
   log(`📅 Closing fiscal year ${fiscalYear}...`);
 
   // Verificar se já foi fechado
@@ -1050,7 +1054,7 @@ async function closeFiscalYear(supabase: any, fiscalYear: number, aiKey: string 
 /**
  * GERAR BALANÇO PATRIMONIAL
  */
-async function generateBalanceSheet(supabase: any, fiscalYear: number, log: Function) {
+async function generateBalanceSheet(supabase: any, fiscalYear: number, log: LogFunction) {
   log(`📋 Generating balance sheet for ${fiscalYear}...`);
 
   const referenceDate = `${fiscalYear}-12-31`;
