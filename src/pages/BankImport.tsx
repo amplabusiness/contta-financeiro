@@ -370,6 +370,85 @@ const BankImport = () => {
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
+  // Abrir diálogo de classificação para transações com baixa confiança
+  const openClassificationDialog = (classifications: AIClassification[], importId: string) => {
+    // Filtrar transações com baixa confiança (< 70%) ou sem classificação
+    const lowConfidenceTxns = classifications
+      .filter(c => !c.classification?.confidence || c.classification.confidence < 0.7)
+      .map(c => ({
+        id: c.fitid,
+        fitid: c.fitid,
+        description: c.description,
+        amount: c.amount,
+        type: c.type as 'CREDIT' | 'DEBIT',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        ai_suggestion: c.classification ? {
+          category: c.classification.category,
+          debit_account: c.classification.debit_account,
+          credit_account: c.classification.credit_account,
+          confidence: c.classification.confidence,
+          reasoning: c.classification.reasoning
+        } : undefined
+      }));
+
+    if (lowConfidenceTxns.length > 0) {
+      setPendingTransactions(lowConfidenceTxns);
+      setCurrentImportId(importId);
+      setShowClassificationDialog(true);
+    }
+  };
+
+  // Callback quando o diálogo de classificação é concluído
+  const handleClassificationComplete = async (results: any[]) => {
+    try {
+      toast.success(`${results.length} transações classificadas manualmente!`);
+
+      // Criar lançamentos contábeis para as classificações manuais
+      for (const result of results) {
+        const { data: userData } = await supabase.auth.getUser();
+
+        // Criar lançamento contábil
+        const { error } = await supabase
+          .from('accounting_entries')
+          .insert({
+            entry_date: new Date().toISOString().split('T')[0],
+            description: `Classificação manual: ${result.notes || 'Transação bancária'}`,
+            entry_type: 'manual',
+            status: 'posted',
+            created_by: userData?.user?.id
+          });
+
+        if (error) {
+          console.error('Erro ao criar lançamento:', error);
+        }
+      }
+
+      // Recarregar importações
+      loadRecentImports();
+    } catch (error) {
+      console.error('Erro ao processar classificações:', error);
+      toast.error('Erro ao salvar classificações');
+    }
+  };
+
+  // Função para abrir classificação manual de todas as transações do preview
+  const openManualClassification = () => {
+    if (!parsedData) return;
+
+    const txns = parsedData.transactions.map(txn => ({
+      id: txn.fitid,
+      fitid: txn.fitid,
+      description: txn.description || txn.memo || 'Sem descrição',
+      amount: txn.amount,
+      type: txn.type as 'CREDIT' | 'DEBIT',
+      date: format(txn.date, 'yyyy-MM-dd')
+    }));
+
+    setPendingTransactions(txns);
+    setCurrentImportId('manual');
+    setShowClassificationDialog(true);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -546,6 +625,10 @@ const BankImport = () => {
                 <Button variant="outline" onClick={() => setParsedData(null)} disabled={loading || aiProcessing}>
                   Cancelar
                 </Button>
+                <Button variant="secondary" onClick={openManualClassification} disabled={loading || aiProcessing}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Classificar Manualmente
+                </Button>
                 <Button onClick={handleImport} disabled={loading || aiProcessing}>
                   {loading || aiProcessing ? (
                     <>
@@ -668,9 +751,24 @@ const BankImport = () => {
                 </div>
               )}
 
-              <Button onClick={() => { setImportResult(null); setAiClassifications([]); }}>
-                Nova Importação
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => { setImportResult(null); setAiClassifications([]); }}>
+                  Nova Importação
+                </Button>
+                {importResult.aiClassifications && importResult.aiClassifications.some((c: any) =>
+                  !c.classification?.confidence || c.classification.confidence < 0.7
+                ) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => openClassificationDialog(importResult.aiClassifications as AIClassification[], currentImportId)}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Revisar Classificações ({importResult.aiClassifications.filter((c: any) =>
+                      !c.classification?.confidence || c.classification.confidence < 0.7
+                    ).length} pendentes)
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -736,6 +834,16 @@ const BankImport = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Diálogo de Classificação Interativa IA-Humano */}
+      <AIClassificationDialog
+        open={showClassificationDialog}
+        onOpenChange={setShowClassificationDialog}
+        transactions={pendingTransactions}
+        bankAccountId={selectedAccount}
+        importId={currentImportId}
+        onComplete={handleClassificationComplete}
+      />
     </Layout>
   );
 };
