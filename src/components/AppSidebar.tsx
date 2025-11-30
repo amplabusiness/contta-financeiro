@@ -49,6 +49,7 @@ import {
   Banknote,
   Gavel,
   Tv,
+  Gift,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -182,6 +183,7 @@ export function AppSidebar() {
       items: [
         { title: "Estoque e Compras", url: "/inventory", icon: Package },
         { title: "Folha de Pagamento", url: "/payroll", icon: Banknote },
+        { title: "Incentivos e PLR", url: "/incentives", icon: Gift },
         { title: "Consultoria Trabalhista", url: "/labor-advisory", icon: Gavel },
         { title: "Videos e TVs", url: "/video-content", icon: Tv },
       ],
@@ -191,6 +193,7 @@ export function AppSidebar() {
       items: [
         { title: "Contador IA", url: "/ai-accountant", icon: Bot },
         { title: "Gestor IA", url: "/business-manager", icon: Brain },
+        { title: "Treinar IA", url: "/pending-entities", icon: Target },
         { title: "Rede Neural", url: "/ai-network", icon: Network },
         { title: "Evolucao Continua", url: "/feature-requests", icon: Lightbulb },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },

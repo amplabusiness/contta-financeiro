@@ -87,6 +87,8 @@ import Inventory from "./pages/Inventory";
 import Payroll from "./pages/Payroll";
 import LaborAdvisory from "./pages/LaborAdvisory";
 import VideoContent from "./pages/VideoContent";
+import PendingEntities from "./pages/PendingEntities";
+import Incentives from "./pages/Incentives";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -180,6 +182,8 @@ const App = () => (
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/labor-advisory" element={<LaborAdvisory />} />
             <Route path="/video-content" element={<VideoContent />} />
+            <Route path="/pending-entities" element={<PendingEntities />} />
+            <Route path="/incentives" element={<Incentives />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
