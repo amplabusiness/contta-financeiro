@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTableRealtime } from "@/hooks/useRealtimeSubscription";
 import {
   Table,
   TableBody,
@@ -29,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, PauseCircle, PlayCircle, RefreshCw, Radio } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
@@ -55,6 +56,7 @@ export default function RecurringExpenses() {
   const [selectedExpense, setSelectedExpense] = useState<RecurringExpense | null>(null);
   const [generating, setGenerating] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   
   const [formData, setFormData] = useState({
     supplier_name: "",
@@ -67,11 +69,7 @@ export default function RecurringExpenses() {
 
   const [suspendReason, setSuspendReason] = useState("");
 
-  useEffect(() => {
-    loadExpenses();
-  }, []);
-
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("accounts_payable")
@@ -91,7 +89,23 @@ export default function RecurringExpenses() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  // 🔴 REALTIME: Atualização automática quando dados mudam
+  useTableRealtime("accounts_payable", () => {
+    console.log("[Realtime] Despesas atualizadas!");
+    loadExpenses();
+    toast({
+      title: "📡 Atualização em tempo real",
+      description: "Novos dados recebidos",
+      duration: 2000,
+    });
+    setIsRealtimeConnected(true);
+  });
+
+  useEffect(() => {
+    loadExpenses();
+  }, [loadExpenses]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,7 +317,14 @@ export default function RecurringExpenses() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Despesas Recorrentes</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Despesas Recorrentes</h1>
+              {/* Indicador de Realtime */}
+              <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
+                <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
+                {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
+              </Badge>
+            </div>
             <p className="text-muted-foreground">
               Gerencie suas despesas mensais recorrentes
             </p>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Loader2, ShieldAlert, CheckCircle, AlertTriangle, Ban, Eye, Bot } from "lucide-react";
+import { useTableRealtime } from "@/hooks/useRealtimeSubscription";
+import { Plus, Pencil, Trash2, Loader2, ShieldAlert, CheckCircle, AlertTriangle, Ban, Eye, Bot, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -52,6 +53,7 @@ const AccountsPayable = () => {
   const [editingAccount, setEditingAccount] = useState<AccountPayable | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [filterTab, setFilterTab] = useState("all");
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   const [formData, setFormData] = useState({
     supplier_name: "",
@@ -68,11 +70,7 @@ const AccountsPayable = () => {
     notes: "",
   });
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -82,13 +80,25 @@ const AccountsPayable = () => {
 
       if (error) throw error;
       setAccounts(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar contas a pagar:", error);
       toast.error("Erro ao carregar contas a pagar");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 🔴 REALTIME: Atualização automática quando dados mudam
+  useTableRealtime("accounts_payable", () => {
+    console.log("[Realtime] Contas a pagar atualizadas!");
+    loadAccounts();
+    toast.info("📡 Dados atualizados em tempo real", { duration: 2000 });
+    setIsRealtimeConnected(true);
+  });
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,7 +398,14 @@ const AccountsPayable = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Contas a Pagar</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Contas a Pagar</h1>
+              {/* Indicador de Realtime */}
+              <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
+                <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
+                {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
+              </Badge>
+            </div>
             <p className="text-muted-foreground">
               Gestão inteligente com análise de fraudes por IA
             </p>

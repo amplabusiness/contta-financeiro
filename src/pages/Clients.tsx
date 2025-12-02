@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users, Eye, Building2 } from "lucide-react";
+import { useTableRealtime } from "@/hooks/useRealtimeSubscription";
+import { Plus, Pencil, Trash2, Upload, Ban, CheckCircle, Loader2, Heart, Users, Eye, Building2, Radio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ const Clients = () => {
   const [loadingClientDetails, setLoadingClientDetails] = useState(false);
   const [importingGroups, setImportingGroups] = useState(false);
   const [financialGroupsDialogOpen, setFinancialGroupsDialogOpen] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -77,12 +79,7 @@ const Clients = () => {
     qsa: [] as any[]
   });
 
-
-  useEffect(() => {
-    loadClients();
-  }, []);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       // Buscar TODOS os clientes ativos (independente do honorário mensal)
       const { data: clientsData, error: clientsError } = await supabase
@@ -134,12 +131,24 @@ const Clients = () => {
       });
       
       setClients(enrichedClients);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Erro ao carregar clientes");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 🔴 REALTIME: Atualização automática quando dados mudam
+  useTableRealtime("clients", () => {
+    console.log("[Realtime] Clientes atualizados!");
+    loadClients();
+    toast.info("📡 Dados de clientes atualizados", { duration: 2000 });
+    setIsRealtimeConnected(true);
+  });
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -564,7 +573,14 @@ const Clients = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Clientes</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Clientes</h1>
+              {/* Indicador de Realtime */}
+              <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
+                <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
+                {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
+              </Badge>
+            </div>
             <p className="text-muted-foreground">Gerencie o cadastro de clientes</p>
           </div>
           <div className="flex gap-2">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, Zap, Bot, Loader2 } from "lucide-react";
+import { useTableRealtime } from "@/hooks/useRealtimeSubscription";
+import { Plus, Pencil, Trash2, CheckCircle, Zap, Bot, Loader2, Radio } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const Invoices = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   // Estados para geração de honorários com progresso
   const [isGenerating, setIsGenerating] = useState(false);
@@ -46,11 +48,7 @@ const Invoices = () => {
     competence: "",
   });
 
-  useEffect(() => {
-    loadData();
-  }, [selectedYear, selectedMonth, selectedClientId]); // Recarregar quando mudar cliente
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       let query = supabase.from("invoices").select("*, clients(name)").order("due_date", { ascending: false });
 
@@ -75,12 +73,24 @@ const Invoices = () => {
 
       setInvoices(invoicesRes.data || []);
       setClients(clientsRes.data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth, selectedClientId]);
+
+  // 🔴 REALTIME: Atualização automática quando dados mudam
+  useTableRealtime("invoices", () => {
+    console.log("[Realtime] Faturas atualizadas!");
+    loadData();
+    toast.info("📡 Faturas atualizadas em tempo real", { duration: 2000 });
+    setIsRealtimeConnected(true);
+  });
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const generateMonthlyInvoices = async () => {
     if (!selectedYear || !selectedMonth) {
@@ -431,9 +441,16 @@ const Invoices = () => {
 
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">
-            {selectedClientId ? `Honorários - ${selectedClientName}` : "Honorários"}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">
+              {selectedClientId ? `Honorários - ${selectedClientName}` : "Honorários"}
+            </h1>
+            {/* Indicador de Realtime */}
+            <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
+              <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
+              {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
+            </Badge>
+          </div>
           <p className="text-muted-foreground">
             {selectedClientId
               ? "Honorários do cliente selecionado"
