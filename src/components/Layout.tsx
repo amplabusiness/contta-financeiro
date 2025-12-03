@@ -35,7 +35,7 @@ export function Layout({ children }: LayoutProps) {
       .eq("status", "active")
       .order("name");
     setClients(data || []);
-  }, []);
+  }, [setClients]);
 
   const handleSessionError = useCallback(
     async (message?: string) => {
