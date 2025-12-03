@@ -320,17 +320,8 @@ const Expenses = () => {
         .eq("id", expense.id);
 
       if (response.error) {
-        let errorMsg = "Erro ao marcar despesa como paga";
-        try {
-          const err = response.error as any;
-          if (err.message && typeof err.message === "string") {
-            errorMsg = err.message;
-          } else if (err.code && typeof err.code === "string") {
-            errorMsg = `Código: ${err.code}`;
-          }
-        } catch {}
-        console.error("Erro ao marcar como pago:", response.error);
-        throw new Error(errorMsg);
+        console.error("Erro ao marcar como pago");
+        throw new Error("Erro ao marcar despesa como paga");
       }
 
       const accountingResult = await registrarPagamentoDespesa({
