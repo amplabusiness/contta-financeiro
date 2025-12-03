@@ -711,11 +711,14 @@ const CashFlow = () => {
                   {bankAccounts.map((account) => (
                     <TableRow key={account.id}>
                       <TableCell className="font-medium">{account.account_name}</TableCell>
-                      <TableCell>{(account as any).bank_name || "-"}</TableCell>
+                      <TableCell>{account.bank_name || "-"}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {(account as any).account_type === 'checking' ? 'Corrente' :
-                           (account as any).account_type === 'savings' ? 'Poupança' : 'Investimento'}
+                          {account.account_type === 'checking'
+                            ? 'Corrente'
+                            : account.account_type === 'savings'
+                              ? 'Poupança'
+                              : 'Investimento'}
                         </Badge>
                       </TableCell>
                       <TableCell className={`text-right font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
