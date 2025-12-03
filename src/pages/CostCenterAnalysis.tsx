@@ -116,7 +116,8 @@ const CostCenterAnalysis = () => {
       if (error) throw error;
 
       // Buscar também saldos de abertura (lançamentos contábeis de abertura) com valores
-      const { data: openingBalances } = await supabase
+      // Buscar tanto 'saldo_abertura' quanto 'opening_balance'
+      const { data: openingBalancesType1 } = await supabase
         .from("accounting_entries")
         .select(`
           id,
@@ -126,6 +127,19 @@ const CostCenterAnalysis = () => {
         `)
         .eq("entry_type", "saldo_abertura")
         .lte("entry_date", `${selectedYear}-12-31`);
+
+      const { data: openingBalancesType2 } = await supabase
+        .from("accounting_entries")
+        .select(`
+          id,
+          description,
+          entry_date,
+          accounting_entry_lines(debit, credit)
+        `)
+        .eq("entry_type", "opening_balance")
+        .lte("entry_date", `${selectedYear}-12-31`);
+
+      const openingBalances = [...(openingBalancesType1 || []), ...(openingBalancesType2 || [])];
 
       // Agrupar por centro de custo (usando code + name)
       const costCenterMap = new Map<string, { total: number; code: string; account: string }>();
