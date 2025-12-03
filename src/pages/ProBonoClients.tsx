@@ -304,7 +304,7 @@ const ProBonoClients = () => {
         .eq('client_id', deletingClient.id)
         .limit(1);
 
-      if (invoicesError) throw invoicesError;
+      if (invoicesError) throw new Error(getErrorMessage(invoicesError));
 
       // Se houver faturas, apenas inativar o cliente
       if (invoices && invoices.length > 0) {
