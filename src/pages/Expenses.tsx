@@ -58,6 +58,7 @@ const Expenses = () => {
   useEffect(() => {
     loadExpenses();
     loadAccounts();
+    loadCategories();
   }, [selectedYear, selectedMonth, selectedClientId]);
 
   const loadAccounts = async () => {
