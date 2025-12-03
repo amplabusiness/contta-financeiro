@@ -54,128 +54,252 @@ const EconomicGroupAnalysis = () => {
   });
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
+  const applyGroupData = (groupData: EconomicGroup[]) => {
+    const totalCompanies = groupData.reduce((sum, g) => sum + g.company_count, 0);
+    const highRisk = groupData.filter((g) => g.risk_level === 'high').length;
+    const avgConcentration = groupData.length > 0
+      ? groupData.reduce((sum, g) => sum + g.percentage_of_total, 0) / groupData.length
+      : 0;
+
+    setGroups(groupData);
+    setStats({
+      totalGroups: groupData.length,
+      totalCompanies,
+      highRiskGroups: highRisk,
+      averageConcentration: avgConcentration,
+    });
+    setExpandedGroups(new Set());
+  };
+
+  const buildErrorMessage = (error: unknown) => {
+    if (!error) return 'Erro desconhecido';
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+
+    try {
+      const err = error as any;
+      return err.message || err.details || err.hint || JSON.stringify(err);
+    } catch {
+      return 'Erro ao processar resposta do servidor';
+    }
+  };
+
+  const shouldAttemptFallback = (message: string) => {
+    if (!message) return false;
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes('body stream already read') ||
+      normalized.includes('function') ||
+      normalized.includes('does not exist') ||
+      normalized.includes('undefined')
+    );
+  };
+
+  const computeRiskLevel = (percentage: number): EconomicGroup['risk_level'] => {
+    if (percentage >= 20) return 'high';
+    if (percentage >= 10) return 'medium';
+    return 'low';
+  };
+
+  const handleLoadError = (message: string) => {
+    let finalMessage = message || 'Erro ao carregar grupos econômicos';
+
+    if (finalMessage.toLowerCase().includes('body stream already read')) {
+      finalMessage = 'Falha ao interpretar a resposta do Supabase. Reaplique a função get_economic_group_impact usando a migração supabase/migrations/20251120_fix_economic_group_return_types.sql.';
+    }
+
+    if (finalMessage.length > 200) {
+      finalMessage = `${finalMessage.substring(0, 197)}...`;
+    }
+
+    console.error('Error loading economic groups:', finalMessage);
+
+    toast({
+      title: "Erro ao carregar grupos econômicos",
+      description: finalMessage,
+      variant: "destructive",
+    });
+
+    setGroups([]);
+    setStats({
+      totalGroups: 0,
+      totalCompanies: 0,
+      highRiskGroups: 0,
+      averageConcentration: 0,
+    });
+  };
+
+  const fetchEconomicGroupsViaRPC = async (year: number) => {
+    const { data, error } = await supabase.rpc('get_economic_group_impact', {
+      p_year: year,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []) as EconomicGroup[];
+  };
+
+  const loadEconomicGroupsFallback = async (year: number): Promise<EconomicGroup[]> => {
+    const startDate = `${year}-01-01`;
+    const endDate = `${year}-12-31`;
+
+    const [{ data: partners, error: partnersError }, { data: invoices, error: invoicesError }] = await Promise.all([
+      supabase.from('client_partners').select('client_id, cpf, name'),
+      supabase
+        .from('invoices')
+        .select('client_id, amount, payment_date')
+        .eq('status', 'paid')
+        .gte('payment_date', startDate)
+        .lte('payment_date', endDate),
+    ]);
+
+    if (partnersError) throw partnersError;
+    if (invoicesError) throw invoicesError;
+
+    const partnersByClient = new Map<string, string[]>();
+
+    (partners || []).forEach((partner) => {
+      const identifier = partner?.cpf?.trim() || partner?.name?.trim();
+      if (!identifier) {
+        return;
+      }
+
+      const existing = partnersByClient.get(partner.client_id) || [];
+      if (!existing.includes(identifier)) {
+        partnersByClient.set(partner.client_id, [...existing, identifier]);
+      }
+    });
+
+    const groupsMap = new Map<string, { partners: string[]; companyIds: string[] }>();
+
+    partnersByClient.forEach((partnerList, clientId) => {
+      if (!partnerList.length) {
+        return;
+      }
+
+      const uniquePartners = Array.from(new Set(partnerList)).sort((a, b) =>
+        a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+      );
+      const groupKey = uniquePartners.join('|');
+      const entry = groupsMap.get(groupKey);
+
+      if (entry) {
+        entry.companyIds.push(clientId);
+      } else {
+        groupsMap.set(groupKey, {
+          partners: uniquePartners,
+          companyIds: [clientId],
+        });
+      }
+    });
+
+    const groupedEntries = Array.from(groupsMap.entries()).filter(([, value]) => value.companyIds.length > 1);
+
+    if (!groupedEntries.length) {
+      return [];
+    }
+
+    const invoicesList = invoices || [];
+    let totalYearRevenue = invoicesList.reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+
+    if (!totalYearRevenue || totalYearRevenue <= 0) {
+      totalYearRevenue = 1;
+    }
+
+    const revenueByClient = new Map<string, number>();
+    invoicesList.forEach((invoice) => {
+      const amount = Number(invoice.amount || 0);
+      if (!invoice.client_id) return;
+      const current = revenueByClient.get(invoice.client_id) || 0;
+      revenueByClient.set(invoice.client_id, current + amount);
+    });
+
+    const clientIds = new Set<string>();
+    groupedEntries.forEach(([, value]) => {
+      value.companyIds.forEach((id) => clientIds.add(id));
+    });
+
+    let clientNameMap = new Map<string, string>();
+
+    if (clientIds.size > 0) {
+      const { data: clientRows, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, name')
+        .in('id', Array.from(clientIds));
+
+      if (clientsError) throw clientsError;
+
+      clientNameMap = new Map(
+        (clientRows || []).map((client) => [client.id, client.name || 'Empresa sem nome'])
+      );
+    }
+
+    const fallbackGroups: EconomicGroup[] = groupedEntries
+      .map(([groupKey, value]) => {
+        const companyIds = value.companyIds;
+        const totalRevenue = companyIds.reduce((sum, id) => sum + (revenueByClient.get(id) || 0), 0);
+
+        if (totalRevenue <= 0) {
+          return null;
+        }
+
+        const percentage = Number(((totalRevenue / totalYearRevenue) * 100).toFixed(2));
+
+        return {
+          group_key: groupKey,
+          partner_names: value.partners,
+          company_count: companyIds.length,
+          company_names: companyIds.map((id) => clientNameMap.get(id) || 'Empresa sem nome'),
+          company_ids: companyIds,
+          total_revenue: totalRevenue,
+          percentage_of_total: percentage,
+          risk_level: computeRiskLevel(percentage),
+        };
+      })
+      .filter((group): group is EconomicGroup => Boolean(group))
+      .sort((a, b) => b.total_revenue - a.total_revenue);
+
+    return fallbackGroups;
+  };
+
   useEffect(() => {
     loadEconomicGroups();
   }, [selectedYear]);
 
   const loadEconomicGroups = async () => {
     setIsLoading(true);
+    const year = selectedYear || new Date().getFullYear();
+
     try {
-      // Call the Supabase RPC function to get economic group impact
-      const year = selectedYear || new Date().getFullYear();
+      const rpcGroups = await fetchEconomicGroupsViaRPC(year);
+      applyGroupData(rpcGroups);
+    } catch (error) {
+      const errorMessage = buildErrorMessage(error);
+      const recoverable = shouldAttemptFallback(errorMessage);
 
-      const { data, error } = await supabase.rpc('get_economic_group_impact', {
-        p_year: year
-      });
-
-      if (error) {
-        // Extract error message safely to avoid serialization issues
-        let errorMsg = 'Unknown error';
-
+      if (recoverable) {
         try {
-          // Try to get error message from various properties
-          if (error && typeof error === 'object') {
-            if (error.message) {
-              errorMsg = String(error.message);
-            } else if (error.details) {
-              errorMsg = String(error.details);
-            } else if (error.hint) {
-              errorMsg = String(error.hint);
-            }
-          } else if (typeof error === 'string') {
-            errorMsg = error;
+          const fallbackGroups = await loadEconomicGroupsFallback(year);
+          applyGroupData(fallbackGroups);
+
+          if (fallbackGroups.length > 0) {
+            toast({
+              title: "Modo alternativo aplicado",
+              description: "Carregamos os grupos diretamente das tabelas porque a função RPC apresentou erro. Reaplique a migração para restabelecer o modo otimizado.",
+            });
           }
-        } catch (e) {
-          // If extraction fails, use default message
-          errorMsg = 'Erro ao processar resposta do servidor';
-        }
 
-        console.error('RPC Error:', errorMsg);
-
-        if (errorMsg.toLowerCase().includes('body stream already read')) {
-          errorMsg = 'Falha ao processar a resposta do Supabase. Reaplique a função get_economic_group_impact com a última migração em supabase/migrations/20251120_fix_economic_group_return_types.sql.';
-        }
-
-        // Check if it's a "function not found" error
-        const isNotFound =
-          (error?.code && String(error.code).includes('PGRST116')) ||
-          (error?.code && String(error.code).includes('42883')) ||
-          errorMsg.toLowerCase().includes('function') ||
-          errorMsg.toLowerCase().includes('does not exist') ||
-          errorMsg.toLowerCase().includes('undefined function');
-
-        if (isNotFound) {
-          console.warn('RPC function not found - database migrations may not be applied');
-          setGroups([]);
-          setStats({
-            totalGroups: 0,
-            totalCompanies: 0,
-            highRiskGroups: 0,
-            averageConcentration: 0,
-          });
-          toast({
-            title: "Análise de Grupos Econômicos",
-            description: "Funcionalidade não configurada. As migrações do banco de dados precisam ser aplicadas.",
-            variant: "destructive",
-          });
+          return;
+        } catch (fallbackError) {
+          const fallbackMessage = buildErrorMessage(fallbackError);
+          handleLoadError(fallbackMessage);
           return;
         }
-
-        throw new Error(errorMsg);
       }
 
-      const groupData = (data || []) as EconomicGroup[];
-      setGroups(groupData);
-
-      // Calculate stats
-      const totalCompanies = groupData.reduce((sum, g) => sum + g.company_count, 0);
-      const highRisk = groupData.filter(g => g.risk_level === 'high').length;
-      const avgConcentration = groupData.length > 0
-        ? groupData.reduce((sum, g) => sum + g.percentage_of_total, 0) / groupData.length
-        : 0;
-
-      setStats({
-        totalGroups: groupData.length,
-        totalCompanies,
-        highRiskGroups: highRisk,
-        averageConcentration: avgConcentration,
-      });
-
-    } catch (error) {
-      // Catch any errors including "body stream already read"
-      let errorMessage = 'Erro ao carregar grupos econômicos';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === 'object') {
-        try {
-          // Try to get message property if it exists
-          const err = error as any;
-          errorMessage = err.message || String(error).substring(0, 200) || errorMessage;
-        } catch (e) {
-          // Fallback if anything goes wrong
-          errorMessage = 'Erro desconhecido ao carregar dados';
-        }
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      if (errorMessage.toLowerCase().includes('body stream already read')) {
-        errorMessage = 'Falha ao interpretar a resposta do Supabase. Aplique a migração 20251120_fix_economic_group_return_types.sql para atualizar a função get_economic_group_impact.';
-      }
-
-      console.error('Error loading economic groups:', errorMessage);
-
-      // Truncate if too long
-      if (errorMessage && errorMessage.length > 200) {
-        errorMessage = errorMessage.substring(0, 197) + '...';
-      }
-
-      toast({
-        title: "Erro ao carregar grupos econômicos",
-        description: errorMessage || 'Erro desconhecido',
-        variant: "destructive",
-      });
+      handleLoadError(errorMessage);
     } finally {
       setIsLoading(false);
     }
