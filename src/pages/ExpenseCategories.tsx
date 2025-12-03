@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/utils";
 
 interface Category {
