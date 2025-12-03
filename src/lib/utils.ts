@@ -22,6 +22,11 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === "object") {
     const errorObj = error as Record<string, any>;
 
+    // Skip if it's a Response object (can't be serialized)
+    if (errorObj instanceof Response || errorObj?.constructor?.name === "Response") {
+      return "Erro na comunicação com o servidor";
+    }
+
     // Try common error message properties
     if (errorObj.message && typeof errorObj.message === "string") {
       return errorObj.message;
@@ -48,9 +53,28 @@ export function getErrorMessage(error: unknown): string {
       return errorObj.hint;
     }
 
-    // Fallback: try to stringify, but only if it's a reasonable object
+    // Check for code property (error code)
+    if (errorObj.code && typeof errorObj.code === "string") {
+      return errorObj.code;
+    }
+
+    // Fallback: try to stringify, but only safe properties
     try {
-      const stringified = JSON.stringify(error);
+      // Create a safe copy without non-serializable properties
+      const safeObj: Record<string, any> = {};
+      for (const [key, value] of Object.entries(errorObj)) {
+        // Skip properties that can't be serialized
+        if (
+          typeof value !== "object" ||
+          value === null ||
+          (value instanceof Response === false &&
+            !(value instanceof Error))
+        ) {
+          safeObj[key] = value;
+        }
+      }
+
+      const stringified = JSON.stringify(safeObj);
       // Avoid returning empty objects or "[object Object]"
       if (stringified && stringified !== "{}" && stringified !== "[object Object]") {
         return stringified;
