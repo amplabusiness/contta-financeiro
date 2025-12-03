@@ -406,17 +406,8 @@ const Expenses = () => {
         .single();
 
       if (response.error) {
-        let errorMsg = "Erro ao criar categoria";
-        try {
-          const err = response.error as any;
-          if (err.message && typeof err.message === "string") {
-            errorMsg = err.message;
-          } else if (err.code && typeof err.code === "string") {
-            errorMsg = `Código: ${err.code}`;
-          }
-        } catch {}
-        console.error("Erro ao criar categoria:", response.error);
-        throw new Error(errorMsg);
+        console.error("Erro ao criar categoria");
+        throw new Error("Erro ao criar categoria");
       }
 
       toast.success("Categoria criada com sucesso!");
