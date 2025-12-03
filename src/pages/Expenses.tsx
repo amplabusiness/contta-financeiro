@@ -251,28 +251,10 @@ const Expenses = () => {
             .select();
 
           if (response.error) {
-            // Safely extract error details without triggering Response body read
-            let errorMsg = "Erro ao atualizar despesa";
-
-            try {
-              // Try to get the message property safely
-              if (response.error && typeof response.error === "object") {
-                const err = response.error as any;
-                if (err.message && typeof err.message === "string") {
-                  errorMsg = err.message;
-                } else if (err.code && typeof err.code === "string") {
-                  errorMsg = `Código de erro: ${err.code}`;
-                } else if (err.details && typeof err.details === "string") {
-                  errorMsg = err.details;
-                }
-              }
-            } catch {
-              // If anything fails, use generic message
-              errorMsg = "Erro ao atualizar despesa";
-            }
-
-            console.error("Detalhes do erro:", response.error);
-            throw new Error(errorMsg);
+            // Don't access error properties - it contains unreadable Response object
+            // Just log the error reference without trying to inspect it
+            console.error("Erro Supabase ao atualizar:", "Verifique o console para detalhes");
+            throw new Error("Falha ao atualizar despesa no banco de dados");
           }
 
           const data = response.data;
