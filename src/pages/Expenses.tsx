@@ -165,12 +165,17 @@ const Expenses = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      const dueDate = new Date(formData.due_date);
+      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+      const year = dueDate.getFullYear();
+      const calculatedCompetence = `${month}/${year}`;
+
       const expenseData = {
         ...formData,
+        competence: calculatedCompetence,
         amount: parseFloat(formData.amount),
         payment_date: formData.payment_date || null,
         account_id: formData.account_id || null,
-        created_by: user.id,
       };
 
       if (editingExpense) {
@@ -182,9 +187,14 @@ const Expenses = () => {
         if (error) throw error;
         toast.success("Despesa atualizada com sucesso!");
       } else {
+        const updateData = {
+          ...expenseData,
+          created_by: user.id,
+        };
+
         const { data: newExpense, error: expenseError } = await supabase
           .from("expenses")
-          .insert(expenseData)
+          .insert(updateData)
           .select()
           .single();
 
@@ -196,7 +206,7 @@ const Expenses = () => {
           expenseDate: formData.due_date,
           category: formData.category,
           description: formData.description || 'Despesa',
-          competence: formData.competence,
+          competence: calculatedCompetence,
         });
 
         if (accountingResult.success) {
