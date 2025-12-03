@@ -44,6 +44,17 @@ const CostCenterAnalysis = () => {
     });
   }, [selectedYear, selectedMonth_]);
 
+  // Calcular centros sem movimentação
+  useEffect(() => {
+    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
+      const centrosComDados = new Set(costCenterData.map(c => c.code));
+      const centersSemDados = allCostCenters.filter(
+        center => !centrosComDados.has(center.code)
+      );
+      setCostCenterWithoutData(centersSemDados);
+    }
+  }, [allCostCenters, costCenterData]);
+
   const loadAllCostCenters = async () => {
     try {
       const { data, error } = await supabase
