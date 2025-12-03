@@ -153,7 +153,7 @@ const CostCenterAnalysis = () => {
         .from("vw_expenses_with_accounts")
         .select("*")
         .eq("status", "paid")
-        .like("competence", `%/${selectedYear}`);
+        .like("competence", `%/${selectedYear}`)
 
       if (error) throw error;
 
