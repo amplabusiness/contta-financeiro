@@ -323,7 +323,9 @@ const Expenses = () => {
 
       loadExpenses();
     } catch (error: any) {
-      toast.error("Erro ao atualizar despesa: " + getErrorMessage(error));
+      const errorMessage = getErrorMessage(error) || "Erro desconhecido";
+      console.error("Erro capturado no mark as paid:", errorMessage, error);
+      toast.error("Erro ao marcar despesa como paga: " + errorMessage);
     }
   };
 
