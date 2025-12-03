@@ -30,6 +30,11 @@ const Expenses = () => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  const [newCategoryData, setNewCategoryData] = useState({
+    name: "",
+    description: "",
+  });
   const [formData, setFormData] = useState({
     category: "",
     description: "",
