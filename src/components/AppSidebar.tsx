@@ -50,6 +50,7 @@ import {
   Gavel,
   Tv,
   Gift,
+  Tags,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
