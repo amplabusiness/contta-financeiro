@@ -26,6 +26,7 @@ const Expenses = () => {
   const { registrarDespesa, registrarPagamentoDespesa } = useAccounting({ showToasts: false });
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
@@ -43,16 +44,6 @@ const Expenses = () => {
     is_recurring: false,
     recurrence_day: 10,
   });
-
-  const categories = [
-    "Contas Fixas",
-    "Impostos",
-    "Folha de Pagamento",
-    "Serviços Terceiros",
-    "Material de Consumo",
-    "Contas Variáveis",
-    "Outros",
-  ];
 
   const costCenters = [
     "Administrativo",
