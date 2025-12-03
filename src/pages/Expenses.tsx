@@ -226,27 +226,22 @@ const Expenses = () => {
             .eq("id", editingExpense.id)
             .select();
 
-          // Extract error and data without re-processing them
-          const error = response.error;
-          const data = response.data;
-
-          if (error) {
-            const errorMessage = getErrorMessage(error);
-            throw new Error(errorMessage || "Erro ao atualizar despesa");
+          // Don't access error object properties - it may contain unreadable Response
+          if (response.error) {
+            throw new Error("Erro ao atualizar despesa no servidor");
           }
 
+          const data = response.data;
           console.log("Despesa atualizada:", data);
           toast.success("Despesa atualizada com sucesso!");
         } catch (updateError: any) {
-          // Only call getErrorMessage on the caught error, not the original Supabase error
+          // Only extract message from actual Error instances
           let errorMsg = "Erro ao atualizar despesa";
 
           if (updateError instanceof Error) {
             errorMsg = updateError.message;
           } else if (typeof updateError === "string") {
             errorMsg = updateError;
-          } else {
-            errorMsg = getErrorMessage(updateError);
           }
 
           console.error("Erro na atualização:", errorMsg);
