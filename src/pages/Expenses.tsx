@@ -216,6 +216,33 @@ const Expenses = () => {
         throw new Error("Data de vencimento é obrigatória");
       }
 
+      if (!formData.cost_center_id) {
+        throw new Error("Centro de custo é obrigatório");
+      }
+
+      let accountId = formData.account_id;
+
+      // Se não houver account_id, tentar mapear automaticamente usando o serviço
+      if (!accountId && formData.cost_center_id) {
+        try {
+          const mapping = await CostCenterMappingService.mapExpenseToAccounting(
+            formData.description,
+            // Buscar o código do centro selecionado
+            costCenters.find(cc => cc.id === formData.cost_center_id)?.code
+          );
+          if (mapping) {
+            accountId = mapping.chartAccountId;
+          }
+        } catch (error) {
+          console.warn("Erro ao mapear conta automaticamente:", error);
+          // Continua com account_id vazio se o mapeamento falhar
+        }
+      }
+
+      if (!accountId) {
+        throw new Error("Conta contábil é obrigatória ou não pôde ser mapeada automaticamente");
+      }
+
       const [year, month, day] = formData.due_date.split('-');
       const calculatedCompetence = `${month}/${year}`;
 
@@ -231,9 +258,8 @@ const Expenses = () => {
         status: formData.status,
         competence: calculatedCompetence,
         notes: formData.notes || null,
-        account_id: formData.account_id || null,
-        cost_center: formData.cost_center || null,
-        // Don't include is_recurring and recurrence_day - they don't exist in the database
+        account_id: accountId,
+        cost_center_id: formData.cost_center_id,
       };
 
       if (editingExpense) {
