@@ -685,18 +685,18 @@ const Expenses = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cost_center">Centro de Custo</Label>
+                    <Label htmlFor="cost_center_id">Centro de Custo *</Label>
                     <Select
-                      value={formData.cost_center}
-                      onValueChange={(value) => setFormData({ ...formData, cost_center: value })}
+                      value={formData.cost_center_id}
+                      onValueChange={(value) => setFormData({ ...formData, cost_center_id: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um departamento" />
+                        <SelectValue placeholder="Selecione um centro de custo" />
                       </SelectTrigger>
                       <SelectContent>
                         {costCenters.map((center) => (
-                          <SelectItem key={center} value={center}>
-                            {center}
+                          <SelectItem key={center.id} value={center.id}>
+                            {center.code} - {center.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
