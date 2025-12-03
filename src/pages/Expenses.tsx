@@ -322,14 +322,13 @@ const Expenses = () => {
     try {
       const paymentDate = new Date().toISOString().split("T")[0];
 
-      const { error } = await supabase
+      const response = await supabase
         .from("expenses")
         .update({ status: "paid", payment_date: paymentDate })
         .eq("id", expense.id);
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao marcar como pago:", errorMessage, error);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
         throw new Error(errorMessage || "Erro ao marcar despesa como paga");
       }
 
