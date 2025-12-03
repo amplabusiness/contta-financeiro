@@ -32,6 +32,19 @@ const ExecutiveDashboard = () => {
     loadExecutiveData();
   }, [selectedYear, selectedMonth]);
 
+  const buildErrorMessage = (error: unknown) => {
+    if (!error) return "Erro desconhecido";
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+
+    try {
+      const err = error as any;
+      return err.message || err.details || err.hint || JSON.stringify(err);
+    } catch {
+      return "Erro ao processar resposta";
+    }
+  };
+
   const loadExecutiveData = async () => {
     setLoading(true);
     try {
