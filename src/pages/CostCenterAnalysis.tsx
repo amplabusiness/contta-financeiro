@@ -106,7 +106,7 @@ const CostCenterAnalysis = () => {
   const loadMonthlyComparison = async () => {
     try {
       const { data: expenses, error } = await supabase
-        .from("expenses")
+        .from("vw_expenses_with_accounts")
         .select("*")
         .eq("status", "paid")
         .like("competence", `%/${selectedYear}`);
@@ -120,7 +120,9 @@ const CostCenterAnalysis = () => {
         const month = expense.competence?.split("/")[0];
         if (!month) return;
 
-        const costCenter = (expense as any).cost_center || "Não Classificado";
+        const costCenterName = (expense as any).cost_center_name || "Não Classificado";
+        const costCenterCode = (expense as any).cost_center_code || "";
+        const costCenter = `${costCenterCode} - ${costCenterName}`;
         const amount = Number(expense.amount);
 
         if (!monthlyMap.has(month)) {
