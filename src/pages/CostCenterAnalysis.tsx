@@ -511,103 +511,35 @@ const CostCenterAnalysis = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {(() => {
-                // Organizar centros por hierarquia (pai-filho)
-                const centersByParent = new Map<string | null, any[]>();
+              <ul className="space-y-3">
+                {costCenterWithoutData.map((center, index) => {
+                  const nivelProfundidade = (center.code?.match(/\./g) || []).length;
+                  const indent = nivelProfundidade > 0 ? '  '.repeat(nivelProfundidade) : '';
 
-                costCenterWithoutData.forEach((center) => {
-                  // Encontrar o centro pai baseado no padrão do código
-                  let parentCode: string | null = null;
-
-                  // Se tem ponto, o pai é tudo antes do último ponto
-                  if (center.code?.includes('.')) {
-                    const parts = center.code.split('.');
-                    parts.pop(); // Remove o último nível
-                    const potentialParentCode = parts.join('.');
-
-                    // Verificar se existe um centro com esse código
-                    const hasParent = costCenterWithoutData.some(c =>
-                      c.code?.trim() === potentialParentCode.trim()
-                    );
-
-                    if (hasParent) {
-                      parentCode = potentialParentCode;
-                    }
-                  }
-
-                  if (!centersByParent.has(parentCode)) {
-                    centersByParent.set(parentCode, []);
-                  }
-                  centersByParent.get(parentCode)?.push(center);
-                });
-
-                // Renderizar acordeão com centros principais e seus filhos
-                const mainCenters = centersByParent.get(null) || [];
-
-                return (
-                  <Accordion type="multiple" className="w-full">
-                    {mainCenters.map((mainCenter, mainIndex) => {
-                      const childCenters = centersByParent.get(mainCenter.code) || [];
-
-                      return (
-                        <AccordionItem key={mainCenter.id} value={`main-${mainIndex}`}>
-                          <AccordionTrigger className="hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30 px-4 py-3 rounded-lg">
-                            <div className="flex items-center gap-3 flex-1 text-left">
-                              <div className="font-mono font-bold text-yellow-700 dark:text-yellow-400">
-                                {mainCenter.code}
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-900 dark:text-gray-100">
-                                  {mainCenter.name}
-                                </div>
-                                {mainCenter.description && (
-                                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                                    {mainCenter.description}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="bg-white dark:bg-gray-900/50 px-4 py-3">
-                            {mainCenter.accountName && (
-                              <div className="mb-3">
-                                <Badge variant="outline" className="font-mono text-xs">
-                                  {mainCenter.accountName}
-                                </Badge>
-                              </div>
-                            )}
-
-                            {childCenters.length > 0 && (
-                              <div className="space-y-2 mt-2 border-t pt-3">
-                                {childCenters.map((child) => (
-                                  <div key={child.id} className="pl-4 py-2 border-l-2 border-yellow-200 dark:border-yellow-900">
-                                    <div className="font-mono font-semibold text-sm text-yellow-700 dark:text-yellow-400">
-                                      {child.code}
-                                    </div>
-                                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mt-1">
-                                      {child.name}
-                                    </div>
-                                    {child.description && (
-                                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                        {child.description}
-                                      </div>
-                                    )}
-                                    {child.accountName && (
-                                      <Badge variant="outline" className="font-mono text-xs mt-2">
-                                        {child.accountName}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
-                      );
-                    })}
-                  </Accordion>
-                );
-              })()}
+                  return (
+                    <li key={center.id} className="flex items-start gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                      <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 min-w-fit">
+                        {center.code}
+                      </span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {center.name}
+                        </div>
+                        {center.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {center.description}
+                          </div>
+                        )}
+                        {center.accountName && (
+                          <Badge variant="outline" className="font-mono text-xs mt-2">
+                            {center.accountName}
+                          </Badge>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </CardContent>
           </Card>
         )}
