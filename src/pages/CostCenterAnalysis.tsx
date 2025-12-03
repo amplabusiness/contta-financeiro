@@ -123,7 +123,7 @@ const CostCenterAnalysis = () => {
           entry_date,
           accounting_entry_lines(debit, credit)
         `)
-        .eq("entry_type", "opening_balance")
+        .eq("entry_type", "saldo_abertura")
         .lte("entry_date", `${selectedYear}-12-31`);
 
       // Agrupar por centro de custo (usando code + name)
@@ -151,8 +151,14 @@ const CostCenterAnalysis = () => {
       if (openingBalances && allCostCenters.length > 0) {
         openingBalances.forEach((entry: any) => {
           const description = entry.description || "";
-          // Procurar por padrão como "Saldo de Abertura - NOME"
-          const match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+          // Procurar por padrão como "Saldo de Abertura - NOME" ou "Saldo de Abertura: NOME"
+          // Tenta ambos os formatos (com hífen ou com dois-pontos)
+          let match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+          if (!match) {
+            // Tenta formato com dois-pontos
+            match = description.match(/Saldo de Abertura\s*:\s*(.+?)(?:\s*\(|$)/);
+          }
+
           if (match) {
             const centerName = match[1].trim();
             // Procurar o centro correspondente (flexível para maiúsculas/minúsculas)
@@ -182,6 +188,8 @@ const CostCenterAnalysis = () => {
               console.log(`Centro não encontrado: "${centerName}"`);
               console.log(`Centros disponíveis:`, allCostCenters.map(c => c.name));
             }
+          } else {
+            console.log(`Descrição não correspondeu ao padrão esperado: "${description}"`);
           }
         });
       }
