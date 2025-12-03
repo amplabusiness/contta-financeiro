@@ -123,7 +123,11 @@ const Expenses = () => {
 
       const { data, error } = await query;
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao carregar despesas:", errorMessage, error);
+        throw new Error(errorMessage);
+      }
 
       let filteredData = data || [];
 
@@ -144,7 +148,8 @@ const Expenses = () => {
 
       setExpenses(filteredData);
     } catch (error: any) {
-      toast.error("Erro ao carregar despesas");
+      const errorMessage = getErrorMessage(error);
+      toast.error("Erro ao carregar despesas: " + errorMessage);
     } finally {
       setLoading(false);
     }
