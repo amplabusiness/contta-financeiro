@@ -718,7 +718,9 @@ const CashFlow = () => {
                             ? 'Corrente'
                             : account.account_type === 'savings'
                               ? 'Poupança'
-                              : 'Investimento'}
+                              : account.account_type === 'investment'
+                                ? 'Investimento'
+                                : 'Não informado'}
                         </Badge>
                       </TableCell>
                       <TableCell className={`text-right font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
