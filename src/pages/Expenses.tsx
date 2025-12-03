@@ -185,9 +185,8 @@ const Expenses = () => {
         competence: nextCompetence,
         notes: expense.notes,
         account_id: expense.account_id,
-        cost_center: expense.cost_center,
+        cost_center_id: expense.cost_center_id,
         created_by: expense.created_by,
-        // Don't include is_recurring and recurrence_day - they don't exist in the database
       };
 
       const { error } = await supabase
