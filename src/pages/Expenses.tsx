@@ -147,8 +147,8 @@ const Expenses = () => {
 
       setExpenses(filteredData);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      toast.error("Erro ao carregar despesas: " + errorMessage);
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar despesas";
+      toast.error("Erro ao carregar despesas: " + errorMsg);
     } finally {
       setLoading(false);
     }
