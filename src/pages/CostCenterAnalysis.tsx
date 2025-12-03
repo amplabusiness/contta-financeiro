@@ -247,7 +247,7 @@ const CostCenterAnalysis = () => {
                   <label className="text-sm font-medium">Mês (Opcional)</label>
                   <select
                     value={selectedMonth_ || ''}
-                    onChange={(e) => setSelectedMonth_(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) => setSelectedMonth_(e.target.value || null)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"
                   >
                     <option value="">Todos os meses</option>
