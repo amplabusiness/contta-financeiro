@@ -89,27 +89,27 @@ const Expenses = () => {
 
   const loadCategories = async () => {
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from("expense_categories")
         .select("*")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao carregar categorias:", errorMessage, error);
-        throw new Error(errorMessage);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
+        console.error("Erro ao carregar categorias:", errorMessage);
+        throw new Error(errorMessage || "Erro ao carregar categorias");
       }
 
       // Deduplicate by name to prevent render key issues
       const uniqueCategories = Array.from(
-        new Map((data || []).map(cat => [cat.name, cat])).values()
+        new Map((response.data || []).map(cat => [cat.name, cat])).values()
       );
 
       setCategories(uniqueCategories);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      console.error("Erro ao carregar categorias:", errorMessage, error);
+      const errorMessage = getErrorMessage(error) || "Erro ao carregar categorias";
+      console.error("Erro ao carregar categorias:", errorMessage);
     }
   };
 
