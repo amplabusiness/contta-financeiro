@@ -118,8 +118,9 @@ const ExpenseCategories = () => {
       resetForm();
       loadCategories();
     } catch (error: any) {
-      console.error("Erro ao salvar categoria:", error);
-      toast.error("Erro ao salvar categoria: " + getErrorMessage(error));
+      const errorMessage = getErrorMessage(error);
+      console.error("Erro ao salvar categoria:", errorMessage, error);
+      toast.error("Erro ao salvar categoria: " + errorMessage);
     } finally {
       setLoading(false);
     }
