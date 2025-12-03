@@ -139,24 +139,6 @@ const ExpenseCategories = () => {
     }
   };
 
-  const handleToggleActive = async (category: Category) => {
-    try {
-      const { error } = await supabase
-        .from("expense_categories")
-        .update({ is_active: !category.is_active })
-        .eq("id", category.id);
-
-      if (error) throw new Error(getErrorMessage(error));
-      toast.success(
-        `Categoria ${!category.is_active ? "ativada" : "desativada"} com sucesso!`
-      );
-      loadCategories();
-    } catch (error: any) {
-      console.error("Erro ao atualizar status:", error);
-      toast.error("Erro ao atualizar status: " + getErrorMessage(error));
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       code: "",
