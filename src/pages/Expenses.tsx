@@ -177,12 +177,18 @@ const Expenses = () => {
       };
 
       if (editingExpense) {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("expenses")
           .update(expenseData)
-          .eq("id", editingExpense.id);
+          .eq("id", editingExpense.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar:", error);
+          throw error;
+        }
+
+        console.log("Despesa atualizada:", data);
         toast.success("Despesa atualizada com sucesso!");
       } else {
         const updateData = {
