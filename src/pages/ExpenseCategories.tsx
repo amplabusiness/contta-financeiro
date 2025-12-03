@@ -98,7 +98,7 @@ const ExpenseCategories = () => {
         if (error) {
           const errorMessage = getErrorMessage(error);
           console.error("Erro ao atualizar categoria:", errorMessage, error);
-          throw new Error(errorMessage);
+          throw new Error(errorMessage || "Erro ao atualizar categoria");
         }
         toast.success("Categoria atualizada com sucesso!");
       } else {
