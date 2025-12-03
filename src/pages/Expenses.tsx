@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -38,6 +39,8 @@ const Expenses = () => {
     notes: "",
     account_id: "",
     cost_center: "",
+    is_recurring: false,
+    recurrence_day: 10,
   });
 
   const categories = [
@@ -63,7 +66,7 @@ const Expenses = () => {
   useEffect(() => {
     loadExpenses();
     loadAccounts();
-  }, [selectedYear, selectedMonth, selectedClientId]); // Recarregar quando mudar cliente
+  }, [selectedYear, selectedMonth, selectedClientId]);
 
   const loadAccounts = async () => {
     try {
@@ -85,12 +88,10 @@ const Expenses = () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
 
-      // Filtrar por cliente se selecionado
       if (selectedClientId) {
         query = query.eq("client_id", selectedClientId);
       }
 
-      // Filtrar por competência se ano ou mês estiverem selecionados
       if (selectedYear && selectedMonth) {
         const monthStr = selectedMonth.toString().padStart(2, '0');
         const competence = `${monthStr}/${selectedYear}`;
@@ -107,6 +108,42 @@ const Expenses = () => {
       toast.error("Erro ao carregar despesas");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateRecurringExpense = async (expense: any) => {
+    try {
+      const dueDate = new Date(expense.due_date);
+      const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, expense.recurrence_day);
+      const nextCompetence = `${String(nextMonth.getMonth() + 1).padStart(2, '0')}/${nextMonth.getFullYear()}`;
+
+      const newExpenseData = {
+        category: expense.category,
+        description: expense.description,
+        amount: expense.amount,
+        due_date: nextMonth.toISOString().split('T')[0],
+        payment_date: null,
+        status: "pending",
+        competence: nextCompetence,
+        notes: expense.notes,
+        account_id: expense.account_id,
+        cost_center: expense.cost_center,
+        created_by: expense.created_by,
+        is_recurring: true,
+        recurrence_day: expense.recurrence_day,
+      };
+
+      const { error } = await supabase
+        .from("expenses")
+        .insert(newExpenseData);
+
+      if (error) throw error;
+      
+      toast.success("Despesa recorrente do próximo mês gerada!");
+      loadExpenses();
+    } catch (error: any) {
+      toast.error("Erro ao gerar despesa recorrente");
+      console.error("Erro:", error);
     }
   };
 
@@ -135,7 +172,6 @@ const Expenses = () => {
         if (error) throw error;
         toast.success("Despesa atualizada com sucesso!");
       } else {
-        // Inserir a despesa
         const { data: newExpense, error: expenseError } = await supabase
           .from("expenses")
           .insert(expenseData)
@@ -144,7 +180,6 @@ const Expenses = () => {
 
         if (expenseError) throw expenseError;
 
-        // ✅ CONTABILIDADE INTEGRADA: Criar lançamento contábil automaticamente
         const accountingResult = await registrarDespesa({
           expenseId: newExpense.id,
           amount: parseFloat(formData.amount),
@@ -177,7 +212,6 @@ const Expenses = () => {
     try {
       const paymentDate = new Date().toISOString().split("T")[0];
 
-      // Atualizar status da despesa
       const { error } = await supabase
         .from("expenses")
         .update({ status: "paid", payment_date: paymentDate })
@@ -185,7 +219,6 @@ const Expenses = () => {
 
       if (error) throw error;
 
-      // ✅ CONTABILIDADE INTEGRADA: Registrar pagamento automaticamente
       const accountingResult = await registrarPagamentoDespesa({
         paymentId: `${expense.id}_payment`,
         expenseId: expense.id,
@@ -233,6 +266,8 @@ const Expenses = () => {
       notes: "",
       account_id: "",
       cost_center: "",
+      is_recurring: false,
+      recurrence_day: 10,
     });
   };
 
@@ -249,6 +284,8 @@ const Expenses = () => {
       notes: expense.notes || "",
       account_id: expense.account_id || "",
       cost_center: expense.cost_center || "",
+      is_recurring: expense.is_recurring || false,
+      recurrence_day: expense.recurrence_day || 10,
     });
     setOpen(true);
   };
@@ -317,7 +354,7 @@ const Expenses = () => {
                 Nova Despesa
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingExpense ? "Editar Despesa" : "Nova Despesa"}</DialogTitle>
                 <DialogDescription>
@@ -455,6 +492,45 @@ const Expenses = () => {
                       rows={2}
                     />
                   </div>
+                  <div className="col-span-2 space-y-3 border-t pt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_recurring"
+                        checked={formData.is_recurring}
+                        onCheckedChange={(checked) => 
+                          setFormData({ ...formData, is_recurring: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="is_recurring" className="font-medium cursor-pointer">
+                        É uma despesa recorrente?
+                      </Label>
+                    </div>
+                    {formData.is_recurring && (
+                      <div className="space-y-2 ml-6">
+                        <Label htmlFor="recurrence_day">
+                          Dia do mês para recorrência (1-31) *
+                        </Label>
+                        <Select
+                          value={formData.recurrence_day.toString()}
+                          onValueChange={(value) => setFormData({ ...formData, recurrence_day: parseInt(value) })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                              <SelectItem key={day} value={day.toString()}>
+                                Dia {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          A despesa será duplicada automaticamente neste dia a cada mês
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={loading}>
@@ -508,6 +584,7 @@ const Expenses = () => {
                     <TableHead>Vencimento</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Recorrente</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -519,7 +596,24 @@ const Expenses = () => {
                       <TableCell>{new Date(expense.due_date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{formatCurrency(Number(expense.amount))}</TableCell>
                       <TableCell>{getStatusBadge(expense.status)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
+                        {expense.is_recurring && (
+                          <Badge variant="outline" className="bg-blue-50">
+                            Mês {expense.recurrence_day}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        {expense.is_recurring && expense.status !== "canceled" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => generateRecurringExpense(expense)}
+                            title="Gerar próxima recorrência"
+                          >
+                            <RefreshCw className="w-4 h-4 text-blue-600" />
+                          </Button>
+                        )}
                         {expense.status === "pending" && (
                           <Button
                             variant="ghost"
