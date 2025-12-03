@@ -61,7 +61,6 @@ import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
 import ImportDefaultReport from "./pages/ImportDefaultReport";
 import ImportHonorarios from "./pages/ImportHonorarios";
-import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportExpensesSpreadsheet from "./pages/ImportExpensesSpreadsheet";
 import AIAccountant from "./pages/AIAccountant";
 import BusinessManager from "./pages/BusinessManager";
@@ -155,7 +154,6 @@ const App = () => (
             <Route path="/bank-accounts" element={<BankAccounts />} />
             <Route path="/bank-import" element={<BankImport />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
-            <Route path="/recurring-expenses" element={<RecurringExpenses />} />
             <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
