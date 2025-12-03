@@ -361,19 +361,25 @@ const Expenses = () => {
     if (!confirm("Tem certeza que deseja excluir esta despesa?")) return;
 
     try {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      const response = await supabase.from("expenses").delete().eq("id", id);
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir despesa:", errorMessage, error);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
         throw new Error(errorMessage || "Erro ao excluir despesa");
       }
       toast.success("Despesa excluída com sucesso!");
       loadExpenses();
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro desconhecido ao excluir";
-      console.error("Erro capturado na exclusão:", errorMessage, error);
-      toast.error("Erro ao excluir despesa: " + errorMessage);
+      let errorMsg = "Erro ao excluir despesa";
+
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else {
+        errorMsg = getErrorMessage(error);
+      }
+
+      console.error("Erro capturado na exclusão:", errorMsg);
+      toast.error("Erro ao excluir despesa: " + errorMsg);
     }
   };
 
