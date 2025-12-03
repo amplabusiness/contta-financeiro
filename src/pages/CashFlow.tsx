@@ -21,8 +21,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 interface BankAccount {
   id: string;
   account_name: string;
+  bank_name: string | null;
+  account_type: string | null;
   balance: number;
-  balance_date: string;
+  balance_date: string | null;
 }
 
 interface CashFlowProjection {
