@@ -305,15 +305,22 @@ const Expenses = () => {
     setEditingExpense(expense);
     const formatDateForInput = (dateStr: string) => {
       if (!dateStr) return "";
-      const date = new Date(dateStr);
-      return date.toISOString().split('T')[0];
+      // Handle ISO strings and date-only strings correctly
+      if (dateStr.includes('T')) {
+        return dateStr.split('T')[0];
+      }
+      return dateStr;
     };
+
+    console.log("Editando despesa - due_date original:", expense.due_date);
+    const formattedDate = formatDateForInput(expense.due_date);
+    console.log("Editando despesa - due_date formatado:", formattedDate);
 
     setFormData({
       category: expense.category,
       description: expense.description,
       amount: expense.amount.toString(),
-      due_date: formatDateForInput(expense.due_date),
+      due_date: formattedDate,
       payment_date: formatDateForInput(expense.payment_date),
       status: expense.status,
       competence: expense.competence || "",
