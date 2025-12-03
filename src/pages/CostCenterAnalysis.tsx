@@ -114,13 +114,14 @@ const CostCenterAnalysis = () => {
 
       if (error) throw error;
 
-      // Buscar também saldos de abertura (lançamentos contábeis de abertura)
+      // Buscar também saldos de abertura (lançamentos contábeis de abertura) com valores
       const { data: openingBalances } = await supabase
         .from("accounting_entries")
         .select(`
           id,
           description,
-          entry_date
+          entry_date,
+          accounting_entry_lines(debit, credit)
         `)
         .eq("entry_type", "opening_balance")
         .lte("entry_date", `${selectedYear}-12-31`);
@@ -154,19 +155,24 @@ const CostCenterAnalysis = () => {
         if (match) {
           const centerName = match[1].trim();
           // Procurar o centro correspondente
-          const centerCode = allCostCenters.find(c => c.name === centerName)?.code || "";
-          if (centerCode) {
+          const center = allCostCenters.find(c => c.name === centerName);
+          if (center) {
+            const centerCode = center.code || "";
             const accountCode = "";
             const key = `${centerCode} - ${centerName}`;
-            // Buscar o valor do débito
-            const debitValue = 25000; // Você pode extrair isso do entry_date se necessário
-            const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
-            costCenterMap.set(key, {
-              total: existing.total + debitValue,
-              code: centerCode,
-              account: accountCode
-            });
-            total += debitValue;
+            // Extrair o valor do débito
+            const lines = entry.accounting_entry_lines || [];
+            const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+
+            if (debitValue > 0) {
+              const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
+              costCenterMap.set(key, {
+                total: existing.total + debitValue,
+                code: centerCode,
+                account: accountCode
+              });
+              total += debitValue;
+            }
           }
         }
       });
