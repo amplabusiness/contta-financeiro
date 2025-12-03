@@ -43,26 +43,26 @@ const ExpenseCategories = () => {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const response = await supabase
         .from("expense_categories")
         .select("*")
         .order("display_order", { ascending: true });
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao carregar categorias:", errorMessage, error);
-        throw new Error(errorMessage);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
+        console.error("Erro ao carregar categorias:", errorMessage);
+        throw new Error(errorMessage || "Erro ao carregar categorias");
       }
 
       // Deduplicate by name to prevent render key issues
       const uniqueCategories = Array.from(
-        new Map((data || []).map(cat => [cat.name, cat])).values()
+        new Map((response.data || []).map(cat => [cat.name, cat])).values()
       );
 
       setCategories(uniqueCategories);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      console.error("Erro ao carregar categorias:", errorMessage, error);
+      const errorMessage = getErrorMessage(error) || "Erro ao carregar categorias";
+      console.error("Erro ao carregar categorias:", errorMessage);
       toast.error("Erro ao carregar categorias: " + errorMessage);
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ const ExpenseCategories = () => {
       }
 
       if (editingCategory) {
-        const { error } = await supabase
+        const response = await supabase
           .from("expense_categories")
           .update({
             code: formData.code || editingCategory.code,
@@ -95,14 +95,13 @@ const ExpenseCategories = () => {
           })
           .eq("id", editingCategory.id);
 
-        if (error) {
-          const errorMessage = getErrorMessage(error);
-          console.error("Erro ao atualizar categoria:", errorMessage, error);
+        if (response.error) {
+          const errorMessage = getErrorMessage(response.error);
           throw new Error(errorMessage || "Erro ao atualizar categoria");
         }
         toast.success("Categoria atualizada com sucesso!");
       } else {
-        const { error } = await supabase
+        const response = await supabase
           .from("expense_categories")
           .insert({
             code: formData.code || `CAT_${Date.now()}`,
@@ -114,8 +113,8 @@ const ExpenseCategories = () => {
             display_order: (categories.length) + 1,
           });
 
-        if (error) {
-          const errorMessage = getErrorMessage(error);
+        if (response.error) {
+          const errorMessage = getErrorMessage(response.error);
           throw new Error(errorMessage || "Erro ao criar categoria");
         }
         toast.success("Categoria criada com sucesso!");
@@ -137,33 +136,32 @@ const ExpenseCategories = () => {
   const handleDelete = async (category: Category) => {
     try {
       // Check if there are any expenses linked to this category
-      const { data: linkedExpenses, error: checkError } = await supabase
+      const checkResponse = await supabase
         .from("expenses")
         .select("id")
         .eq("category", category.name)
         .limit(1);
 
-      if (checkError) {
-        const errorMessage = getErrorMessage(checkError);
-        console.error("Erro ao verificar despesas:", errorMessage, checkError);
-        throw new Error(errorMessage);
+      if (checkResponse.error) {
+        const errorMessage = getErrorMessage(checkResponse.error);
+        console.error("Erro ao verificar despesas:", errorMessage);
+        throw new Error(errorMessage || "Erro ao verificar despesas");
       }
 
-      if (linkedExpenses && linkedExpenses.length > 0) {
+      if (checkResponse.data && checkResponse.data.length > 0) {
         toast.error(
           `Não é possível excluir a categoria "${category.name}" porque existem despesas vinculadas a ela. Delete as despesas primeiro.`
         );
         return;
       }
 
-      const { error } = await supabase
+      const deleteResponse = await supabase
         .from("expense_categories")
         .delete()
         .eq("id", category.id);
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir categoria:", errorMessage, error);
+      if (deleteResponse.error) {
+        const errorMessage = getErrorMessage(deleteResponse.error);
         throw new Error(errorMessage || "Erro ao excluir categoria");
       }
       toast.success("Categoria excluída com sucesso!");
@@ -171,9 +169,16 @@ const ExpenseCategories = () => {
       setDeletingCategory(null);
       loadCategories();
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro desconhecido ao excluir";
-      console.error("Erro capturado na exclusão:", errorMessage, error);
-      toast.error("Erro ao excluir categoria: " + errorMessage);
+      let errorMsg = "Erro ao excluir categoria";
+
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else {
+        errorMsg = getErrorMessage(error);
+      }
+
+      console.error("Erro capturado na exclusão:", errorMsg);
+      toast.error("Erro ao excluir categoria: " + errorMsg);
     }
   };
 
