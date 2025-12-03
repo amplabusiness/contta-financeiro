@@ -18,6 +18,7 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
+import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
 import CostCenterMappingService from "@/services/CostCenterMappingService";
 
