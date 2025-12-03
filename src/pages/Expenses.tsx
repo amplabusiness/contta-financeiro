@@ -261,15 +261,11 @@ const Expenses = () => {
             .select()
             .single();
 
-          const expenseError = response.error;
-          const insertedExpense = response.data;
-
-          if (expenseError) {
-            const errorMessage = getErrorMessage(expenseError);
-            throw new Error(errorMessage || "Erro ao criar despesa");
+          if (response.error) {
+            throw new Error("Erro ao criar despesa no servidor");
           }
 
-          newExpense = insertedExpense;
+          newExpense = response.data;
         } catch (insertError: any) {
           let errorMsg = "Erro ao criar despesa";
 
@@ -277,8 +273,6 @@ const Expenses = () => {
             errorMsg = insertError.message;
           } else if (typeof insertError === "string") {
             errorMsg = insertError;
-          } else {
-            errorMsg = getErrorMessage(insertError);
           }
 
           console.error("Erro ao inserir despesa:", errorMsg);
