@@ -444,7 +444,7 @@ const Expenses = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
+                          <SelectItem key={`${cat.id}-${cat.code}`} value={cat.name}>
                             {cat.name}
                           </SelectItem>
                         ))}
