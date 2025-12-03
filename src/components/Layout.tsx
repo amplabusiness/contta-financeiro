@@ -154,7 +154,10 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const handleSignOut = async () => {
+    clearSupabaseAuthState();
     await supabase.auth.signOut();
+    setSession(null);
+    setLoading(false);
     toast.success("Logout realizado com sucesso");
     navigate("/auth");
   };
