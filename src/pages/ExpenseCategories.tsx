@@ -133,6 +133,26 @@ const ExpenseCategories = () => {
 
   const handleDelete = async (category: Category) => {
     try {
+      // Check if there are any expenses linked to this category
+      const { data: linkedExpenses, error: checkError } = await supabase
+        .from("expenses")
+        .select("id")
+        .eq("category", category.name)
+        .limit(1);
+
+      if (checkError) {
+        const errorMessage = getErrorMessage(checkError);
+        console.error("Erro ao verificar despesas:", errorMessage, checkError);
+        throw new Error(errorMessage);
+      }
+
+      if (linkedExpenses && linkedExpenses.length > 0) {
+        toast.error(
+          `Não é possível excluir a categoria "${category.name}" porque existem despesas vinculadas a ela. Delete as despesas primeiro.`
+        );
+        return;
+      }
+
       const { error } = await supabase
         .from("expense_categories")
         .delete()
