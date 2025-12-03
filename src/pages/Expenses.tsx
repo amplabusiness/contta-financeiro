@@ -92,18 +92,28 @@ const Expenses = () => {
         query = query.eq("client_id", selectedClientId);
       }
 
-      if (selectedYear && selectedMonth) {
-        const monthStr = selectedMonth.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
-        query = query.eq("competence", competence);
-      } else if (selectedYear) {
-        query = query.like("competence", `%/${selectedYear}`);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
-      setExpenses(data || []);
+
+      let filteredData = data || [];
+
+      if (selectedYear && selectedMonth) {
+        filteredData = filteredData.filter((expense) => {
+          const dueDate = new Date(expense.due_date);
+          return (
+            dueDate.getFullYear() === selectedYear &&
+            dueDate.getMonth() + 1 === selectedMonth
+          );
+        });
+      } else if (selectedYear) {
+        filteredData = filteredData.filter((expense) => {
+          const dueDate = new Date(expense.due_date);
+          return dueDate.getFullYear() === selectedYear;
+        });
+      }
+
+      setExpenses(filteredData);
     } catch (error: any) {
       toast.error("Erro ao carregar despesas");
     } finally {
