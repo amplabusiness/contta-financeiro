@@ -86,17 +86,6 @@ const EconomicGroupAnalysis = () => {
     }
   };
 
-  const shouldAttemptFallback = (message: string) => {
-    if (!message) return false;
-    const normalized = message.toLowerCase();
-    return (
-      normalized.includes('body stream already read') ||
-      normalized.includes('function') ||
-      normalized.includes('does not exist') ||
-      normalized.includes('undefined')
-    );
-  };
-
   const computeRiskLevel = (percentage: number): EconomicGroup['risk_level'] => {
     if (percentage >= 20) return 'high';
     if (percentage >= 10) return 'medium';
