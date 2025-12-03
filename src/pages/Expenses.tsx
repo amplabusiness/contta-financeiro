@@ -75,10 +75,15 @@ const Expenses = () => {
         .eq("is_active", true)
         .order("code");
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao carregar contas:", errorMessage, error);
+        throw new Error(errorMessage);
+      }
       setAccounts(data || []);
     } catch (error: any) {
-      console.error("Erro ao carregar contas:", error);
+      const errorMessage = getErrorMessage(error);
+      console.error("Erro ao carregar contas:", errorMessage, error);
     }
   };
 
