@@ -183,15 +183,9 @@ const CashFlow = () => {
     try {
       setLoading(true);
 
-      // Buscar contas bancárias
-      const { data: accountsData, error: accountsError } = await supabase
-        .from("bank_balance")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-
-      if (accountsError) throw accountsError;
-      setBankAccounts(accountsData || []);
+      // Buscar contas bancárias (nova tabela ou legado)
+      const accountsList = await fetchBankAccounts();
+      setBankAccounts(accountsList);
 
       // Buscar contas a pagar pendentes
       const { data: payablesData, error: payablesError } = await supabase
