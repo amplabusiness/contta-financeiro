@@ -419,6 +419,43 @@ const CostCenterAnalysis = () => {
           </Card>
         )}
 
+        {costCenterWithoutData.length > 0 && (
+          <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900">
+            <CardHeader>
+              <CardTitle className="text-yellow-800 dark:text-yellow-200">Centros de Custo sem Movimentação</CardTitle>
+              <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                {costCenterWithoutData.length} centro(s) cadastrado(s) sem despesas ou saldo registrado
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {costCenterWithoutData.map((center) => {
+                  const nivelProfundidade = (center.code?.match(/\./g) || []).length;
+                  const indent = '  '.repeat(nivelProfundidade);
+                  return (
+                    <div key={center.id} className="p-4 border rounded-lg bg-white dark:bg-gray-900">
+                      <div className="space-y-2">
+                        <div className="font-mono text-sm font-bold text-yellow-700 dark:text-yellow-400">
+                          {indent}{center.code}
+                        </div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{center.name}</div>
+                        {center.description && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400">{center.description}</div>
+                        )}
+                        {center.accountName && (
+                          <Badge variant="outline" className="font-mono text-xs mt-2">
+                            {center.accountName}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Centros de Custo Cadastrados</CardTitle>
