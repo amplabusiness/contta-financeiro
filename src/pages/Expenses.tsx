@@ -217,20 +217,26 @@ const Expenses = () => {
       };
 
       if (editingExpense) {
-        const { error, data } = await supabase
-          .from("expenses")
-          .update(expenseData)
-          .eq("id", editingExpense.id)
-          .select();
+        try {
+          const { error, data } = await supabase
+            .from("expenses")
+            .update(expenseData)
+            .eq("id", editingExpense.id)
+            .select();
 
-        if (error) {
-          const errorMessage = getErrorMessage(error);
-          console.error("Erro ao atualizar despesa:", errorMessage, error);
-          throw new Error(errorMessage);
+          if (error) {
+            const errorMessage = getErrorMessage(error);
+            console.error("Erro ao atualizar despesa:", errorMessage, error);
+            throw new Error(errorMessage || "Erro ao atualizar despesa");
+          }
+
+          console.log("Despesa atualizada:", data);
+          toast.success("Despesa atualizada com sucesso!");
+        } catch (updateError: any) {
+          const errorMessage = getErrorMessage(updateError);
+          console.error("Erro na atualização:", errorMessage, updateError);
+          throw new Error(errorMessage || "Erro ao atualizar despesa");
         }
-
-        console.log("Despesa atualizada:", data);
-        toast.success("Despesa atualizada com sucesso!");
       } else {
         const updateData = {
           ...expenseData,
