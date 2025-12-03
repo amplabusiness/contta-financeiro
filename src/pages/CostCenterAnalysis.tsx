@@ -15,6 +15,7 @@ const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3
 const CostCenterAnalysis = () => {
   const [loading, setLoading] = useState(true);
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
+  const [costCenterWithoutData, setCostCenterWithoutData] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [allCostCenters, setAllCostCenters] = useState<any[]>([]);
