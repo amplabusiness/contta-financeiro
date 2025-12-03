@@ -10,6 +10,7 @@ import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import Clients from "./pages/Clients";
 import Invoices from "./pages/Invoices";
 import Expenses from "./pages/Expenses";
+import ExpenseCategories from "./pages/ExpenseCategories";
 import Import from "./pages/Import";
 import ImportBoletos from "./pages/ImportBoletos";
 import AuditLogs from "./pages/AuditLogs";
