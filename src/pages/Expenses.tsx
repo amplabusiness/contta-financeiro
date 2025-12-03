@@ -26,6 +26,7 @@ const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
   const { registrarDespesa, registrarPagamentoDespesa } = useAccounting({ showToasts: false });
+  const { notifyExpenseChange } = useExpenseUpdate();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
