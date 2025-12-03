@@ -293,12 +293,18 @@ const Expenses = () => {
 
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
+    const formatDateForInput = (dateStr: string) => {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      return date.toISOString().split('T')[0];
+    };
+
     setFormData({
       category: expense.category,
       description: expense.description,
       amount: expense.amount.toString(),
-      due_date: expense.due_date,
-      payment_date: expense.payment_date || "",
+      due_date: formatDateForInput(expense.due_date),
+      payment_date: formatDateForInput(expense.payment_date),
       status: expense.status,
       competence: expense.competence || "",
       notes: expense.notes || "",
