@@ -218,14 +218,57 @@ const CostCenterAnalysis = () => {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-            <CardDescription>Filtrar análise por período</CardDescription>
+        <Card className="bg-blue-50 dark:bg-blue-950/20">
+          <CardHeader className="cursor-pointer" onClick={() => setShowFilters(!showFilters)}>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <ChevronDown className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                  Filtros Opcionais
+                </CardTitle>
+                <CardDescription>
+                  {selectedMonth_ ? `${months.find(m => m.value === selectedMonth_.toString().padStart(2, '0'))?.label}/${selectedYear}` : `Exibindo: Ano inteiro (${selectedYear})`}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <PeriodFilter />
-          </CardContent>
+          {showFilters && (
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Ano</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Mês (Opcional)</label>
+                  <select
+                    value={selectedMonth_ || ''}
+                    onChange={(e) => setSelectedMonth_(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="">Todos os meses</option>
+                    {months.map(month => (
+                      <option key={month.value} value={month.value}>{month.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setSelectedYear(new Date().getFullYear());
+                  setSelectedMonth_(null);
+                }}>
+                  Resetar Filtros
+                </Button>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
