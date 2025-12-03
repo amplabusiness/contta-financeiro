@@ -463,7 +463,7 @@ const CostCenterAnalysis = () => {
           </CardContent>
         </Card>
 
-        {monthlyComparison.length > 0 && (
+        {false && monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Evolução Mensal por Centro de Custo</CardTitle>
