@@ -68,22 +68,22 @@ const Expenses = () => {
 
   const loadAccounts = async () => {
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from("chart_of_accounts")
         .select("*")
         .eq("type", "despesa")
         .eq("is_active", true)
         .order("code");
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao carregar contas:", errorMessage, error);
-        throw new Error(errorMessage);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
+        console.error("Erro ao carregar contas:", errorMessage);
+        throw new Error(errorMessage || "Erro ao carregar contas");
       }
-      setAccounts(data || []);
+      setAccounts(response.data || []);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      console.error("Erro ao carregar contas:", errorMessage, error);
+      const errorMessage = getErrorMessage(error) || "Erro ao carregar contas";
+      console.error("Erro ao carregar contas:", errorMessage);
     }
   };
 
