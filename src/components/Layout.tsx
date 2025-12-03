@@ -1,4 +1,3 @@
-import { ReactNode, useEffect, useState } from "react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase, clearSupabaseAuthState } from "@/integrations/supabase/client";
