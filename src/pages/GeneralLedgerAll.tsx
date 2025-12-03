@@ -16,7 +16,7 @@ interface AccountSummary {
   id: string
   codigo: string
   nome: string
-  tipo: string
+  tipo: string | null
   is_synthetic: boolean
   total_debito: number
   total_credito: number
@@ -125,7 +125,7 @@ const GeneralLedgerAll = () => {
           id: account.id,
           codigo: account.code,
           nome: account.name,
-          tipo: account.type,
+          tipo: account.type?.trim() || null,
           is_synthetic: account.is_synthetic,
           total_debito: totalDebito,
           total_credito: totalCredito,
@@ -163,24 +163,43 @@ const GeneralLedgerAll = () => {
     loadAllAccounts(startDate, endDate)
   }
 
-  const filteredAccounts = accounts.filter(acc => 
+  const filteredAccounts = accounts.filter(acc =>
     acc.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     acc.nome.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const getAccountTypeColor = (type: string) => {
-    const typeUpper = type.toUpperCase()
+  const normalizeAccountType = (type?: string | null) => {
+    if (!type) return ''
+    return type
+      .normalize('NFD')
+      .replace(/[^\p{L}\s]/gu, ' ')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase()
+  }
+
+  const getAccountTypeColor = (type?: string | null) => {
+    const typeUpper = normalizeAccountType(type)
+    if (!typeUpper) {
+      return 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+    }
     switch (typeUpper) {
       case 'ATIVO': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
       case 'PASSIVO': return 'bg-red-500/10 text-red-700 dark:text-red-400'
       case 'RECEITA': return 'bg-green-500/10 text-green-700 dark:text-green-400'
       case 'DESPESA': return 'bg-orange-500/10 text-orange-700 dark:text-orange-400'
-      case 'PATRIMÔNIO LÍQUIDO': 
-      case 'PATRIMONIO': 
-      case 'PATRIMONIO LIQUIDO': 
+      case 'PATRIMÔNIO LÍQUIDO':
+      case 'PATRIMONIO':
+      case 'PATRIMONIO LIQUIDO':
         return 'bg-purple-500/10 text-purple-700 dark:text-purple-400'
       default: return 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
     }
+  }
+
+  const getAccountTypeLabel = (type?: string | null) => {
+    const label = type?.trim()
+    return label && label.length > 0 ? label : 'Não classificado'
   }
 
   const getRowStyle = (codigo: string, isSynthetic: boolean) => {
@@ -310,7 +329,7 @@ const GeneralLedgerAll = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={getAccountTypeColor(account.tipo)}>
-                            {account.tipo}
+                            {getAccountTypeLabel(account.tipo)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
