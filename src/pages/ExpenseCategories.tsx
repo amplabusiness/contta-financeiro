@@ -50,7 +50,13 @@ const ExpenseCategories = () => {
         .order("display_order", { ascending: true });
 
       if (error) throw new Error(getErrorMessage(error));
-      setCategories(data || []);
+
+      // Deduplicate by name to prevent render key issues
+      const uniqueCategories = Array.from(
+        new Map((data || []).map(cat => [cat.name, cat])).values()
+      );
+
+      setCategories(uniqueCategories);
     } catch (error: any) {
       console.error("Erro ao carregar categorias:", error);
       toast.error("Erro ao carregar categorias: " + getErrorMessage(error));
