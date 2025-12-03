@@ -112,6 +112,22 @@ const CostCenterAnalysis = () => {
 
       const { data: expenses, error } = await query;
 
+      // Buscar também saldos de abertura (lançamentos contábeis de abertura)
+      const { data: openingBalances } = await supabase
+        .from("accounting_entries")
+        .select(`
+          id,
+          description,
+          entry_date,
+          accounting_entry_lines(
+            debit,
+            credit,
+            account_id
+          )
+        `)
+        .eq("entry_type", "opening_balance")
+        .lte("entry_date", `${selectedYear}-12-31`);
+
       if (error) throw error;
 
       // Agrupar por centro de custo (usando code + name)
