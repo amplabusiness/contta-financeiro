@@ -365,6 +365,53 @@ const CostCenterAnalysis = () => {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Centros de Custo Cadastrados</CardTitle>
+            <CardDescription>Lista completa de todos os centros de custo ativos no sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allCostCenters.length > 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Conta Padrão</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allCostCenters.map((center) => (
+                      <TableRow key={center.id}>
+                        <TableCell className="font-mono font-medium">
+                          {center.code}
+                        </TableCell>
+                        <TableCell className="font-medium">{center.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {center.description || "-"}
+                        </TableCell>
+                        <TableCell>
+                          {center.accountName ? (
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {center.accountName}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Sem conta padrão</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Nenhum centro de custo cadastrado</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
