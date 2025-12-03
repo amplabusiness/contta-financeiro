@@ -48,7 +48,11 @@ const ExpenseCategories = () => {
         .select("*")
         .order("display_order", { ascending: true });
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao carregar categorias:", errorMessage, error);
+        throw new Error(errorMessage);
+      }
 
       // Deduplicate by name to prevent render key issues
       const uniqueCategories = Array.from(
@@ -57,8 +61,9 @@ const ExpenseCategories = () => {
 
       setCategories(uniqueCategories);
     } catch (error: any) {
-      console.error("Erro ao carregar categorias:", error);
-      toast.error("Erro ao carregar categorias: " + getErrorMessage(error));
+      const errorMessage = getErrorMessage(error);
+      console.error("Erro ao carregar categorias:", errorMessage, error);
+      toast.error("Erro ao carregar categorias: " + errorMessage);
     } finally {
       setLoading(false);
     }
