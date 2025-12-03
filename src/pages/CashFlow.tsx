@@ -722,7 +722,7 @@ const CashFlow = () => {
                         {formatCurrency(account.balance)}
                       </TableCell>
                       <TableCell>
-                        {format(parseISO(account.balance_date), "dd/MM/yyyy")}
+                        {formatBalanceDate(account.balance_date)}
                       </TableCell>
                     </TableRow>
                   ))}
