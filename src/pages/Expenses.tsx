@@ -320,6 +320,45 @@ const Expenses = () => {
     });
   };
 
+  const handleCreateNewCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newCategoryData.name.trim()) {
+      toast.error("Nome da categoria é obrigatório");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .insert({
+          code: `CAT_${Date.now()}`,
+          name: newCategoryData.name,
+          description: newCategoryData.description || null,
+          is_active: true,
+          display_order: (categories.length) + 1,
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error(getErrorMessage(error));
+
+      toast.success("Categoria criada com sucesso!");
+
+      setFormData({ ...formData, category: data.name });
+      setNewCategoryData({ name: "", description: "" });
+      setNewCategoryDialogOpen(false);
+
+      await loadCategories();
+    } catch (error: any) {
+      console.error("Erro ao criar categoria:", error);
+      toast.error("Erro ao criar categoria: " + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
     const formatDateForInput = (dateStr: string) => {
