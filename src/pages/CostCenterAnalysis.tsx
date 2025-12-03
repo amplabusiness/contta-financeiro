@@ -88,8 +88,7 @@ const CostCenterAnalysis = () => {
 
       if (selectedMonth_) {
         // Se houver filtro de mês específico
-        const monthStr = selectedMonth_.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
+        const competence = `${selectedMonth_}/${selectedYear}`;
         query = query.eq("competence", competence);
       } else {
         // Por padrão, mostrar todo o ano
