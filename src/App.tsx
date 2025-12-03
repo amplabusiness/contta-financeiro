@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ClientProvider } from "@/contexts/ClientContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
+import { ExpenseUpdateProvider } from "@/contexts/ExpenseUpdateContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
