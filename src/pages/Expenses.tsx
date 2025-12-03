@@ -483,7 +483,67 @@ const Expenses = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category">Categoria *</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="category">Categoria *</Label>
+                      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-blue-600"
+                          >
+                            + Nova Categoria
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[400px]">
+                          <DialogHeader>
+                            <DialogTitle>Criar Nova Categoria</DialogTitle>
+                            <DialogDescription>
+                              Crie uma nova categoria de despesas
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleCreateNewCategory} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="new_category_name">Nome da Categoria *</Label>
+                              <Input
+                                id="new_category_name"
+                                placeholder="ex: Aluguel, Serviços, etc"
+                                value={newCategoryData.name}
+                                onChange={(e) =>
+                                  setNewCategoryData({ ...newCategoryData, name: e.target.value })
+                                }
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="new_category_description">Descrição</Label>
+                              <Textarea
+                                id="new_category_description"
+                                placeholder="Descrição da categoria (opcional)"
+                                value={newCategoryData.description}
+                                onChange={(e) =>
+                                  setNewCategoryData({ ...newCategoryData, description: e.target.value })
+                                }
+                                rows={2}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setNewCategoryDialogOpen(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button type="submit" disabled={loading}>
+                                {loading ? "Criando..." : "Criar"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <Select
                       value={formData.category}
                       onValueChange={(value) => setFormData({ ...formData, category: value })}
