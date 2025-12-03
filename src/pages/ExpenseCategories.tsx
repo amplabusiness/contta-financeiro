@@ -49,17 +49,8 @@ const ExpenseCategories = () => {
         .order("display_order", { ascending: true });
 
       if (response.error) {
-        let errorMsg = "Erro ao carregar categorias";
-        try {
-          const err = response.error as any;
-          if (err.message && typeof err.message === "string") {
-            errorMsg = err.message;
-          } else if (err.code && typeof err.code === "string") {
-            errorMsg = `Código: ${err.code}`;
-          }
-        } catch {}
-        console.error("Erro ao carregar categorias:", response.error);
-        throw new Error(errorMsg);
+        console.error("Erro ao carregar categorias");
+        throw new Error("Erro ao carregar categorias");
       }
 
       // Deduplicate by name to prevent render key issues
@@ -104,17 +95,8 @@ const ExpenseCategories = () => {
           .eq("id", editingCategory.id);
 
         if (response.error) {
-          let errorMsg = "Erro ao atualizar categoria";
-          try {
-            const err = response.error as any;
-            if (err.message && typeof err.message === "string") {
-              errorMsg = err.message;
-            } else if (err.code && typeof err.code === "string") {
-              errorMsg = `Código: ${err.code}`;
-            }
-          } catch {}
-          console.error("Erro ao atualizar categoria:", response.error);
-          throw new Error(errorMsg);
+          console.error("Erro ao atualizar categoria");
+          throw new Error("Erro ao atualizar categoria");
         }
         toast.success("Categoria atualizada com sucesso!");
       } else {
@@ -131,17 +113,8 @@ const ExpenseCategories = () => {
           });
 
         if (response.error) {
-          let errorMsg = "Erro ao criar categoria";
-          try {
-            const err = response.error as any;
-            if (err.message && typeof err.message === "string") {
-              errorMsg = err.message;
-            } else if (err.code && typeof err.code === "string") {
-              errorMsg = `Código: ${err.code}`;
-            }
-          } catch {}
-          console.error("Erro ao criar categoria:", response.error);
-          throw new Error(errorMsg);
+          console.error("Erro ao criar categoria");
+          throw new Error("Erro ao criar categoria");
         }
         toast.success("Categoria criada com sucesso!");
       }
@@ -169,17 +142,8 @@ const ExpenseCategories = () => {
         .limit(1);
 
       if (checkResponse.error) {
-        let errorMsg = "Erro ao verificar despesas";
-        try {
-          const err = checkResponse.error as any;
-          if (err.message && typeof err.message === "string") {
-            errorMsg = err.message;
-          } else if (err.code && typeof err.code === "string") {
-            errorMsg = `Código: ${err.code}`;
-          }
-        } catch {}
-        console.error("Erro ao verificar despesas:", checkResponse.error);
-        throw new Error(errorMsg);
+        console.error("Erro ao verificar despesas");
+        throw new Error("Não é possível excluir. Verifique se há despesas associadas.");
       }
 
       if (checkResponse.data && checkResponse.data.length > 0) {
@@ -195,17 +159,8 @@ const ExpenseCategories = () => {
         .eq("id", category.id);
 
       if (deleteResponse.error) {
-        let errorMsg = "Erro ao excluir categoria";
-        try {
-          const err = deleteResponse.error as any;
-          if (err.message && typeof err.message === "string") {
-            errorMsg = err.message;
-          } else if (err.code && typeof err.code === "string") {
-            errorMsg = `Código: ${err.code}`;
-          }
-        } catch {}
-        console.error("Erro ao excluir categoria:", deleteResponse.error);
-        throw new Error(errorMsg);
+        console.error("Erro ao excluir categoria");
+        throw new Error("Erro ao excluir categoria");
       }
       toast.success("Categoria excluída com sucesso!");
       setDeleteDialogOpen(false);
