@@ -1,20 +1,23 @@
 # Ampla Contabilidade - Memória do Projeto
 
+**Última Atualização**: 2025-06-09 (Sessão 13)
+
 ## Visão Geral
 Sistema de gestão financeira e contábil para escritório de contabilidade, em evolução para SaaS multi-tenant.
 
 ## Stack Tecnológico
-- **Frontend**: React + TypeScript + Vite + TailwindCSS + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + Edge Functions + Auth + Storage)
+- **Frontend**: React 18.3.1 + TypeScript 5.8.3 + Vite 5.4.21 + TailwindCSS + shadcn/ui
+- **Backend**: Supabase (PostgreSQL + Edge Functions + Auth + Storage + **Realtime**)
 - **AI**: Google Gemini API direta (gemini-2.0-flash) - migrado de Lovable em 29/11/2025
-- **Deploy**: Vercel (planejado)
+- **Deploy**: Vercel (ampla.vercel.app) - CI/CD via GitHub Actions
+- **Scripts**: Python 3.14 (pandas, openpyxl, supabase-py) para importação de dados
 
 ## Arquitetura Atual
 ```
 src/
 ├── components/     # Componentes UI reutilizáveis
 ├── contexts/       # React Context (ClientContext, PeriodContext)
-├── hooks/          # Custom hooks
+├── hooks/          # Custom hooks (incluindo useRealtimeSubscription)
 ├── integrations/   # Supabase client
 ├── pages/          # Páginas da aplicação
 └── lib/            # Utilitários
@@ -22,6 +25,15 @@ src/
 supabase/
 ├── functions/      # Edge Functions (Deno)
 └── migrations/     # Migrações SQL
+
+scripts/
+├── import_jan2025.py          # Importação despesas Janeiro 2025
+├── import_expenses_from_excel.py  # Importação despesas (genérico)
+└── ...outros scripts
+
+banco/
+├── Controle Despesas-1.xlsx   # Planilha de despesas recorrentes
+└── ...outros arquivos
 ```
 
 ## Módulos Principais
@@ -684,6 +696,115 @@ Commit → GitHub → Actions → Supabase (migrations) + Vercel (frontend)
 
 ---
 
+## Novas Funcionalidades (09/06/2025) - Sessão 13
+
+### Sistema de Realtime (Supabase Realtime)
+
+**Conceito**: Atualizações em tempo real no frontend quando dados mudam no banco.
+
+**Hook Criado**: `src/hooks/useRealtimeSubscription.ts`
+
+```typescript
+// Para múltiplas tabelas
+export function useRealtimeSubscription(
+  tables: Array<{ table: string; events?: ('INSERT' | 'UPDATE' | 'DELETE')[]; }>,
+  onDataChange: (payload: any, table: string) => void
+): void
+
+// Para uma tabela única (mais simples)
+export function useTableRealtime(
+  table: string,
+  onDataChange: (payload: any) => void,
+  events?: ('INSERT' | 'UPDATE' | 'DELETE')[]
+): void
+```
+
+**Uso nos componentes**:
+```typescript
+import { useTableRealtime } from '@/hooks/useRealtimeSubscription';
+
+// Dentro do componente
+useTableRealtime('accounts_payable', () => {
+  refetch(); // Recarrega dados quando há mudanças
+});
+```
+
+**Páginas com Realtime Ativo**:
+| Página | Tabela | Indicador Visual |
+|--------|--------|------------------|
+| `RecurringExpenses.tsx` | `accounts_payable` | Badge "Ao vivo 🟢" |
+| `AccountsPayable.tsx` | `accounts_payable` | Badge "Ao vivo 🟢" |
+| `Clients.tsx` | `clients` | Badge "Ao vivo 🟢" |
+| `Invoices.tsx` | `invoices` | Badge "Ao vivo 🟢" |
+
+**Nota Técnica**: O Supabase client TypeScript tem tipagem estrita. Usamos `(channel as any).on()` para bypass quando necessário.
+
+### Importação de Despesas (Janeiro 2025)
+
+**Script**: `scripts/import_jan2025.py`
+
+**Características**:
+- Usa `SUPABASE_SERVICE_ROLE_KEY` para bypass de RLS
+- Busca user_id via `s.auth.admin.list_users()`
+- Processa planilha Excel com múltiplas categorias
+
+**Resultado da Importação**:
+| Categoria | Qtd | Valor Total |
+|-----------|-----|-------------|
+| SERGIO (pessoais) | 12 | R$ 12.845,55 |
+| AMPLA - CONTAS FIXAS | 4 | R$ 10.628,33 |
+| AMPLA - IMPOSTOS | 9 | R$ 24.655,44 |
+| AMPLA - CONTAS VARIÁVEIS | 3 | R$ 3.218,62 |
+| AMPLA - SERVIÇO TERCEIROS | 7 | R$ 52.300,00 |
+| AMPLA - FOLHA PAGAMENTO | 7 | R$ 58.276,55 |
+| AMPLA - MATERIAL DE CONSUMO | 4 | R$ 4.232,88 |
+| **TOTAL** | **46** | **R$ 166.157,37** |
+
+**User ID para Importações**: `e3a168e5-4339-4c7c-a8e2-dd2ee84daae9`
+
+### Limpeza do Repositório GitHub
+
+**Branches removidos**: 42 branches do Copilot coding agent
+- Formato: `copilot/fix-*`
+- Comando: `gh api -X DELETE repos/amplabusiness/data-bling-sheets-3122699b/git/refs/heads/BRANCH_NAME`
+
+**Status do Deploy**:
+- Deploy #78 bem-sucedido no Vercel
+- Build passa em ~10.81s
+- URL: https://ampla.vercel.app
+
+### Commits da Sessão 13
+
+| Commit | Descrição |
+|--------|-----------|
+| `e2b3152` | feat: add realtime subscriptions to main data pages |
+| `5dbd1e8` | feat: add January 2025 expense import script |
+
+---
+
+## Variáveis de Ambiente Críticas
+
+### .env (Local e Produção)
+```env
+# Supabase
+VITE_SUPABASE_URL=https://xdtlhzysrpoinqtsglmr.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbG...  # Anon key (pública)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG...  # Service role (NUNCA expor no frontend!)
+
+# Google Gemini
+GEMINI_API_KEY=AIza...
+
+# API Brasil (enriquecimento de dados)
+API_BRASIL_TOKEN=...
+
+# Vercel (gerado automaticamente)
+VERCEL_TOKEN=...
+```
+
+**Importante**: `SUPABASE_SERVICE_ROLE_KEY` só deve ser usado em scripts backend e Edge Functions!
+
+---
+
 ## Próximos Passos (Roadmap)
 Ver arquivo ROADMAP.md
 
@@ -741,3 +862,89 @@ supabase functions deploy
 # Migrations (Supabase)
 supabase db push
 ```
+
+---
+
+## Guia Rápido para Novos Agentes IA
+
+### ⚡ Início Rápido
+
+1. **Leia este arquivo primeiro** - Contém toda a arquitetura e decisões importantes
+2. **Leia `.claude/ROADMAP.md`** - Para entender o que está planejado
+3. **Leia `IMPLEMENTACAO_HONORARIOS.md`** - Documentação técnica detalhada do sistema de honorários
+
+### 📁 Arquivos Mais Importantes
+
+| Arquivo | Por quê? |
+|---------|----------|
+| `src/App.tsx` | Todas as rotas da aplicação |
+| `src/components/AppSidebar.tsx` | Menu de navegação |
+| `src/integrations/supabase/client.ts` | Cliente Supabase |
+| `src/hooks/useRealtimeSubscription.ts` | Realtime subscriptions |
+| `.env` | Variáveis de ambiente (não commitado) |
+
+### 🗄️ Tabelas Principais do Supabase
+
+| Tabela | Propósito |
+|--------|-----------|
+| `clients` | Clientes do escritório |
+| `invoices` | Faturas/honorários |
+| `accounts_payable` | Despesas a pagar |
+| `accounting_entries` | Lançamentos contábeis |
+| `accounting_entry_lines` | Linhas de débito/crédito |
+| `chart_of_accounts` | Plano de contas |
+| `bank_transactions` | Transações bancárias |
+
+### 🔧 Comandos Úteis
+
+```bash
+# Rodar frontend local
+npm run dev
+
+# Build para verificar erros
+npm run build
+
+# Importar dados com Python
+python scripts/import_jan2025.py
+
+# Deploy frontend
+vercel --prod
+
+# Deploy Edge Functions
+supabase functions deploy
+
+# Ver logs do Supabase
+supabase functions logs FUNCTION_NAME
+```
+
+### 🚫 O que NÃO fazer
+
+1. **Nunca commitar `.env`** - Tem credenciais sensíveis
+2. **Nunca usar `anon_key` para bypass de RLS** - Use `service_role_key` em scripts
+3. **Nunca modificar views materializadas diretamente** - Use as funções de refresh
+4. **Nunca criar triggers que buscam contas por código fixo** - Contas podem não existir
+
+### ✅ Padrões a Seguir
+
+1. **Realtime**: Use `useTableRealtime()` para atualizar dados em tempo real
+2. **Filtros complexos**: Busque todos os dados e filtre em JavaScript (Supabase `.or()` tem limitações)
+3. **Imports de dados**: Use Python com `service_role_key` e especifique `created_by`
+4. **Lançamentos contábeis**: Sempre use `smart-accounting` Edge Function
+
+### 📊 Sessões Anteriores (Resumo)
+
+| Sessão | Data | Principais Entregas |
+|--------|------|---------------------|
+| 1-10 | Nov/2025 | Base do sistema, migrações, equipe IA |
+| 11 | 30/11/2025 | CI/CD, folha de pagamento, estoque |
+| 12 | 30/11/2025 | Correção de logo, deploy #78 |
+| 13 | 09/06/2025 | Realtime, import Jan/2025, limpeza GitHub |
+
+### 🎯 Próximas Prioridades
+
+1. Completar RLS por tenant (Multi-tenancy)
+2. Criar interfaces pendentes (Estoque, Folha, etc.)
+3. Implementar conciliação 100% automática
+4. Fechamento contábil automatizado
+
+**Para mais detalhes**: Ver `.claude/ROADMAP.md`
