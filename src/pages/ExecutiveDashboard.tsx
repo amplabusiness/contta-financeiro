@@ -19,6 +19,7 @@ interface MonthlyData {
 }
 
 const ExecutiveDashboard = () => {
+  const { toast } = useToast();
   const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
