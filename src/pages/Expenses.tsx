@@ -493,7 +493,7 @@ const Expenses = () => {
       competence: expense.competence || "",
       notes: expense.notes || "",
       account_id: expense.account_id || "",
-      cost_center: expense.cost_center || "",
+      cost_center_id: expense.cost_center_id || "",
       is_recurring: expense.is_recurring || false,
       recurrence_day: expense.recurrence_day || 10,
     });
