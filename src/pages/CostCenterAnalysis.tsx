@@ -134,6 +134,13 @@ const CostCenterAnalysis = () => {
       setCostCenterData(costCenterArray);
       setTotalExpenses(total);
 
+      // Identificar centros sem movimentação
+      const centrosComDados = new Set(costCenterArray.map(c => c.code));
+      const centersSemDados = allCostCenters.filter(
+        center => !centrosComDados.has(center.code)
+      );
+      setCostCenterWithoutData(centersSemDados);
+
       // Carregar comparação mensal (últimos 6 meses)
       await loadMonthlyComparison();
     } catch (error: any) {
