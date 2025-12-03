@@ -144,7 +144,6 @@ export function AppSidebar() {
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
         { title: "Fornecedores", url: "/accounts-payable", icon: CreditCard },
-        { title: "Despesas Recorrentes", url: "/recurring-expenses", icon: RefreshCw },
       ],
     },
     {
