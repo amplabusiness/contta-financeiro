@@ -77,6 +77,21 @@ const Expenses = () => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw new Error(getErrorMessage(error));
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar categorias:", error);
+    }
+  };
+
   const loadExpenses = async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
