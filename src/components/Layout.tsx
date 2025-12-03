@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, clearSupabaseAuthState } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, X, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
