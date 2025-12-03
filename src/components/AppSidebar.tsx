@@ -143,6 +143,7 @@ export function AppSidebar() {
       label: "Contas a Pagar",
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
+        { title: "Categorias", url: "/expense-categories", icon: FolderTree },
         { title: "Fornecedores", url: "/accounts-payable", icon: CreditCard },
       ],
     },
