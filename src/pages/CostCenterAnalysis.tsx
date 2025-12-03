@@ -148,34 +148,43 @@ const CostCenterAnalysis = () => {
       });
 
       // Processar saldos de abertura (extrair centro de custo da descrição)
-      openingBalances?.forEach((entry: any) => {
-        const description = entry.description || "";
-        // Procurar por padrão como "Saldo de Abertura - NOME"
-        const match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
-        if (match) {
-          const centerName = match[1].trim();
-          // Procurar o centro correspondente
-          const center = allCostCenters.find(c => c.name === centerName);
-          if (center) {
-            const centerCode = center.code || "";
-            const accountCode = "";
-            const key = `${centerCode} - ${centerName}`;
-            // Extrair o valor do débito
-            const lines = entry.accounting_entry_lines || [];
-            const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+      if (openingBalances && allCostCenters.length > 0) {
+        openingBalances.forEach((entry: any) => {
+          const description = entry.description || "";
+          // Procurar por padrão como "Saldo de Abertura - NOME"
+          const match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+          if (match) {
+            const centerName = match[1].trim();
+            // Procurar o centro correspondente (flexível para maiúsculas/minúsculas)
+            const center = allCostCenters.find(c =>
+              c.name.toLowerCase() === centerName.toLowerCase()
+            );
+            if (center) {
+              const centerCode = center.code || "";
+              const accountCode = center.accountName || "";
+              const key = `${centerCode} - ${center.name}`;
+              // Extrair o valor do débito
+              const lines = entry.accounting_entry_lines || [];
+              const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
 
-            if (debitValue > 0) {
-              const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
-              costCenterMap.set(key, {
-                total: existing.total + debitValue,
-                code: centerCode,
-                account: accountCode
-              });
-              total += debitValue;
+              console.log(`Saldo encontrado: ${centerCode} = R$ ${debitValue}`);
+
+              if (debitValue > 0) {
+                const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
+                costCenterMap.set(key, {
+                  total: existing.total + debitValue,
+                  code: centerCode,
+                  account: accountCode
+                });
+                total += debitValue;
+              }
+            } else {
+              console.log(`Centro não encontrado: "${centerName}"`);
+              console.log(`Centros disponíveis:`, allCostCenters.map(c => c.name));
             }
           }
-        }
-      });
+        });
+      }
 
       // Converter para array e calcular percentuais
       const costCenterArray = Array.from(costCenterMap.entries())
