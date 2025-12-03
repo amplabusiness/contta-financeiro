@@ -969,7 +969,7 @@ function mapExpenseCategoryToAccount(category: string): { code: string; name: st
 // Gerar lançamentos retroativos para registros existentes
 // v3 - 2024-11-29 - Corrigido uso de maybeSingle() para verificação de existência
 async function generateRetroactiveEntries(supabase: any, userId: string, params: any) {
-  const { table } = params;
+  const { table, start_date, end_date, status, limit } = params;
   const results = { created: 0, skipped: 0, errors: [] as string[] };
 
   console.log(`[v2] generateRetroactiveEntries started for table: ${table}`);
@@ -1208,15 +1208,38 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
     console.log(`invoices completed: ${results.created} created, ${results.skipped} skipped`);
   } else if (table === 'expenses' || table === 'accounts_payable') {
     const tableName = table;
-    const { data: expenses, error } = await supabase
+
+    let expenseQuery = supabase
       .from(tableName)
       .select('*')
-      .order('created_at')
-      .limit(100); // Limitar para evitar timeout
+      .order('due_date', { ascending: true });
+
+    if (start_date) {
+      expenseQuery = expenseQuery.gte('due_date', start_date);
+    }
+
+    if (end_date) {
+      expenseQuery = expenseQuery.lte('due_date', end_date);
+    }
+
+    if (status) {
+      expenseQuery = expenseQuery.eq('status', status);
+    }
+
+    if (limit) {
+      expenseQuery = expenseQuery.limit(limit);
+    }
+
+    const { data: expenses, error } = await expenseQuery;
 
     if (error) throw error;
 
-    console.log(`Found ${expenses?.length || 0} ${tableName} to process`);
+    console.log(`Found ${expenses?.length || 0} ${tableName} to process`, {
+      start_date,
+      end_date,
+      status,
+      limit
+    });
 
     // Retornar rápido se não há dados
     if (!expenses || expenses.length === 0) {
@@ -1225,7 +1248,7 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
         created: 0,
         skipped: 0,
         errors: [],
-        message: `Nenhum registro em ${tableName} para processar`
+        message: `Nenhum registro em ${tableName} para processar no período informado`
       };
     }
 
