@@ -15,12 +15,15 @@ import { Button } from "@/components/ui/button";
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 const CostCenterAnalysis = () => {
-  const { selectedYear, selectedMonth } = usePeriod();
+  const { selectedYear: contextYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [allCostCenters, setAllCostCenters] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth_, setSelectedMonth_] = useState<number | null>(null);
 
   const months = [
     { value: "01", label: "Janeiro" },
