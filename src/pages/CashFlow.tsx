@@ -235,7 +235,7 @@ const CashFlow = () => {
       setCashFlowTransactions(transactionsData || []);
 
       // Calcular projeção
-      calculateProjection(accountsData || [], combinedPayables || [], invoicesData || [], transactionsData || []);
+      calculateProjection(accountsList, combinedPayables || [], invoicesData || [], transactionsData || []);
     } catch (error: any) {
       console.error("Erro ao carregar fluxo de caixa:", error);
       toast.error("Erro ao carregar dados do fluxo de caixa");
