@@ -285,7 +285,9 @@ const Expenses = () => {
       resetForm();
       loadExpenses();
     } catch (error: any) {
-      toast.error(getErrorMessage(error) || "Erro ao salvar despesa");
+      const errorMessage = getErrorMessage(error) || "Erro ao salvar despesa";
+      console.error("Erro capturado no handleSubmit:", errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
