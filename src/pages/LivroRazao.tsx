@@ -140,21 +140,29 @@ const LivroRazao = () => {
           credit,
           description,
           account_id,
-          entry_id!inner(id, entry_date, description)
+          entry_id(id, entry_date, description)
         `)
         .in('account_id', accountIds)
-        .order('entry_id.entry_date', { ascending: true })
+        .order('entry_id(entry_date)', { ascending: true })
 
       if (start) query = query.gte('entry_id.entry_date', start)
       if (end) query = query.lte('entry_id.entry_date', end)
 
       const { data, error } = await query
-      if (error) throw error
+      if (error) {
+        console.error('Erro na query Supabase:', error)
+        throw new Error(`Erro ao carregar lançamentos: ${error.message}`)
+      }
+
+      if (!data) {
+        setEntries([])
+        return
+      }
 
       // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
       const primeiroDigito = account.code.charAt(0)
       const isDevedora = ['1', '4'].includes(primeiroDigito)
-      
+
       let saldoAcumulado = saldoInicial
       const razaoEntries: RazaoEntry[] = []
 
@@ -169,13 +177,18 @@ const LivroRazao = () => {
         })
       }
 
-      data?.forEach((line: any) => {
+      data.forEach((line: any) => {
+        if (!line.entry_id) {
+          console.warn('Linha sem entry_id associado:', line)
+          return
+        }
+
         const debito = line.debit || 0
         const credito = line.credit || 0
         saldoAcumulado += isDevedora ? debito - credito : credito - debito
 
         // Se for conta sintética, incluir o código da conta filha na descrição
-        let descricao = line.description || line.entry_id.description
+        let descricao = line.description || line.entry_id.description || 'Sem descrição'
         if (account.is_synthetic) {
           const childAccount = accounts.find(a => a.id === line.account_id)
           if (childAccount) {
@@ -194,8 +207,9 @@ const LivroRazao = () => {
       })
 
       setEntries(razaoEntries)
-    } catch (error) {
-      console.error('Erro ao carregar razão:', error)
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error) || 'Erro desconhecido ao carregar razão'
+      console.error('Erro ao carregar razão:', errorMessage)
       setEntries([])
     } finally {
       setLoading(false)
