@@ -223,8 +223,8 @@ const CostCenterAnalysis = () => {
       setCostCenterData(costCenterArray);
       setTotalExpenses(total);
 
-      // Carregar comparação mensal (últimos 6 meses)
-      await loadMonthlyComparison();
+      // Carregar comparação mensal (últimos 6 meses) - desabilitado pois a seção está oculta
+      // await loadMonthlyComparison();
     } catch (error: any) {
       toast.error("Erro ao carregar dados de centro de custos");
       console.error(error);
