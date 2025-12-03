@@ -224,9 +224,20 @@ const Expenses = () => {
             .select();
 
           if (response.error) {
-            // Don't access error properties - it contains unreadable Response object
-            // Just log the error reference without trying to inspect it
-            console.error("Erro Supabase ao atualizar:", "Verifique o console para detalhes");
+            // Log the raw error for debugging
+            console.error("Erro Supabase completo:", response.error);
+            console.error("Tipo do erro:", typeof response.error);
+            console.error("Constructor:", response.error?.constructor?.name);
+
+            // Try to convert to string safely
+            let errorDetails = "";
+            try {
+              errorDetails = String(response.error);
+            } catch (e) {
+              errorDetails = "Erro ao converter detalhes";
+            }
+            console.error("Erro como string:", errorDetails);
+
             throw new Error("Falha ao atualizar despesa no banco de dados");
           }
 
