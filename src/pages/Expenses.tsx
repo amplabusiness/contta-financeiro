@@ -303,7 +303,7 @@ const Expenses = () => {
       if (error) {
         const errorMessage = getErrorMessage(error);
         console.error("Erro ao marcar como pago:", errorMessage, error);
-        throw new Error(errorMessage);
+        throw new Error(errorMessage || "Erro ao marcar despesa como paga");
       }
 
       const accountingResult = await registrarPagamentoDespesa({
