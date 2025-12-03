@@ -20,7 +20,7 @@ const CostCenterAnalysis = () => {
   const [allCostCenters, setAllCostCenters] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth_, setSelectedMonth_] = useState<number | null>(null);
+  const [selectedMonth_, setSelectedMonth_] = useState<string | null>(null);
 
   const months = [
     { value: "01", label: "Janeiro" },
