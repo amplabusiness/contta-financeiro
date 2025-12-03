@@ -362,43 +362,17 @@ const ExpenseCategories = () => {
                     <TableRow>
                       <TableHead>Código</TableHead>
                       <TableHead>Nome</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Cor</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {categories.map((category) => (
+                    {categories.map((category, index) => (
                       <TableRow key={category.id}>
                         <TableCell className="font-mono text-sm">
-                          {category.code}
+                          {index + 1}
                         </TableCell>
                         <TableCell className="font-medium">
                           {category.name}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {category.description || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded border border-gray-300"
-                              style={{ backgroundColor: category.color || "#3B82F6" }}
-                            />
-                            <span className="text-xs font-mono">
-                              {category.color}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={category.is_active ? "default" : "secondary"}
-                            className="cursor-pointer"
-                            onClick={() => handleToggleActive(category)}
-                          >
-                            {category.is_active ? "Ativa" : "Inativa"}
-                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
