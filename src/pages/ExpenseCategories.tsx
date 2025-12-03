@@ -49,9 +49,8 @@ const ExpenseCategories = () => {
         .order("display_order", { ascending: true });
 
       if (response.error) {
-        const errorMessage = getErrorMessage(response.error);
-        console.error("Erro ao carregar categorias:", errorMessage);
-        throw new Error(errorMessage || "Erro ao carregar categorias");
+        console.error("Erro ao carregar categorias");
+        throw new Error("Erro ao carregar categorias");
       }
 
       // Deduplicate by name to prevent render key issues
@@ -61,9 +60,9 @@ const ExpenseCategories = () => {
 
       setCategories(uniqueCategories);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro ao carregar categorias";
-      console.error("Erro ao carregar categorias:", errorMessage);
-      toast.error("Erro ao carregar categorias: " + errorMessage);
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar categorias";
+      console.error("Erro ao carregar categorias:", errorMsg);
+      toast.error("Erro ao carregar categorias: " + errorMsg);
     } finally {
       setLoading(false);
     }
@@ -96,8 +95,7 @@ const ExpenseCategories = () => {
           .eq("id", editingCategory.id);
 
         if (response.error) {
-          const errorMessage = getErrorMessage(response.error);
-          throw new Error(errorMessage || "Erro ao atualizar categoria");
+          throw new Error("Erro ao atualizar categoria");
         }
         toast.success("Categoria atualizada com sucesso!");
       } else {
@@ -114,8 +112,7 @@ const ExpenseCategories = () => {
           });
 
         if (response.error) {
-          const errorMessage = getErrorMessage(response.error);
-          throw new Error(errorMessage || "Erro ao criar categoria");
+          throw new Error("Erro ao criar categoria");
         }
         toast.success("Categoria criada com sucesso!");
       }
@@ -143,9 +140,8 @@ const ExpenseCategories = () => {
         .limit(1);
 
       if (checkResponse.error) {
-        const errorMessage = getErrorMessage(checkResponse.error);
-        console.error("Erro ao verificar despesas:", errorMessage);
-        throw new Error(errorMessage || "Erro ao verificar despesas");
+        console.error("Erro ao verificar despesas");
+        throw new Error("Erro ao verificar despesas");
       }
 
       if (checkResponse.data && checkResponse.data.length > 0) {
@@ -161,22 +157,14 @@ const ExpenseCategories = () => {
         .eq("id", category.id);
 
       if (deleteResponse.error) {
-        const errorMessage = getErrorMessage(deleteResponse.error);
-        throw new Error(errorMessage || "Erro ao excluir categoria");
+        throw new Error("Erro ao excluir categoria");
       }
       toast.success("Categoria excluída com sucesso!");
       setDeleteDialogOpen(false);
       setDeletingCategory(null);
       loadCategories();
     } catch (error: any) {
-      let errorMsg = "Erro ao excluir categoria";
-
-      if (error instanceof Error) {
-        errorMsg = error.message;
-      } else {
-        errorMsg = getErrorMessage(error);
-      }
-
+      const errorMsg = error instanceof Error ? error.message : "Erro ao excluir categoria";
       console.error("Erro capturado na exclusão:", errorMsg);
       toast.error("Erro ao excluir categoria: " + errorMsg);
     }
