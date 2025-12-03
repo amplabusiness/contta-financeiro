@@ -432,6 +432,20 @@ const Expenses = () => {
     return <Badge variant={variants[status]}>{labels[status]}</Badge>;
   };
 
+  const getCategoryName = (expenseCategory: string) => {
+    // If the category is empty or null, return default text
+    if (!expenseCategory) return "Sem categoria";
+
+    // Check if the stored category matches any of the loaded categories by name
+    const matchedCategory = categories.find(
+      cat => cat.name.toLowerCase() === expenseCategory.toLowerCase()
+    );
+
+    // Return the matched category name, or return the stored value as-is if no match
+    // This ensures we display what's actually stored in the database
+    return matchedCategory ? matchedCategory.name : expenseCategory;
+  };
+
   const totalPending = expenses
     .filter((e) => e.status === "pending" || e.status === "overdue")
     .reduce((sum, e) => sum + Number(e.amount), 0);
