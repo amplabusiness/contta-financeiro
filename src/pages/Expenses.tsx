@@ -160,6 +160,7 @@ const Expenses = () => {
       const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, expense.recurrence_day);
       const nextCompetence = `${String(nextMonth.getMonth() + 1).padStart(2, '0')}/${nextMonth.getFullYear()}`;
 
+      // Only send fields that exist in the database schema
       const newExpenseData = {
         category: expense.category,
         description: expense.description,
@@ -172,8 +173,7 @@ const Expenses = () => {
         account_id: expense.account_id,
         cost_center: expense.cost_center,
         created_by: expense.created_by,
-        is_recurring: true,
-        recurrence_day: expense.recurrence_day,
+        // Don't include is_recurring and recurrence_day - they don't exist in the database
       };
 
       const { error } = await supabase
