@@ -404,7 +404,7 @@ const Expenses = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const response = await supabase
         .from("expense_categories")
         .insert({
           code: `CAT_${Date.now()}`,
@@ -416,22 +416,29 @@ const Expenses = () => {
         .select()
         .single();
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
         throw new Error(errorMessage || "Erro ao criar categoria");
       }
 
       toast.success("Categoria criada com sucesso!");
 
-      setFormData({ ...formData, category: data.name });
+      setFormData({ ...formData, category: response.data.name });
       setNewCategoryData({ name: "", description: "" });
       setNewCategoryDialogOpen(false);
 
       await loadCategories();
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro desconhecido ao criar categoria";
-      console.error("Erro ao criar categoria:", errorMessage, error);
-      toast.error("Erro ao criar categoria: " + errorMessage);
+      let errorMsg = "Erro ao criar categoria";
+
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else {
+        errorMsg = getErrorMessage(error);
+      }
+
+      console.error("Erro ao criar categoria:", errorMsg);
+      toast.error("Erro ao criar categoria: " + errorMsg);
     } finally {
       setLoading(false);
     }
