@@ -28,39 +28,83 @@ export function Layout({ children }: LayoutProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-      if (!session) {
-        navigate("/auth");
-      } else {
-        loadClients();
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) {
-        navigate("/auth");
-      } else {
-        loadClients();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     const { data } = await supabase
       .from("clients")
       .select("*")
       .eq("status", "active")
       .order("name");
     setClients(data || []);
-  };
+  }, []);
+
+  const handleSessionError = useCallback(
+    async (message?: string) => {
+      clearSupabaseAuthState();
+      setSession(null);
+      setLoading(false);
+      toast.error(message ?? "Não foi possível validar sua sessão. Faça login novamente.");
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // Sessão já pode estar inválida
+      }
+      navigate("/auth", { replace: true });
+    },
+    [navigate]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
+      if (error) {
+        const errorMessage = error.message?.toLowerCase().includes("refresh token")
+          ? "Sua sessão expirou. Faça login novamente."
+          : "Não foi possível validar sua sessão. Faça login novamente.";
+        await handleSessionError(errorMessage);
+        return;
+      }
+
+      const currentSession = data.session;
+      setSession(currentSession);
+      setLoading(false);
+
+      if (!currentSession) {
+        navigate("/auth");
+      } else {
+        void loadClients();
+      }
+    };
+
+    void initializeSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+
+      const eventName = event as string;
+      if (eventName === "TOKEN_REFRESH_FAILED") {
+        await handleSessionError("Sua sessão expirou. Faça login novamente.");
+        return;
+      }
+
+      setSession(session);
+      if (!session) {
+        navigate("/auth");
+      } else {
+        void loadClients();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, loadClients, handleSessionError]);
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);
