@@ -67,6 +67,53 @@ const CashFlow = () => {
     status: "projected",
   });
 
+  const normalizeBankAccountRecord = (account: any): BankAccount => {
+    const rawBalance = typeof account.balance === "number"
+      ? account.balance
+      : typeof account.current_balance === "number"
+        ? account.current_balance
+        : 0;
+
+    const balanceDate = account.balance_date || account.updated_at || account.created_at || null;
+
+    return {
+      id: account.id,
+      account_name: account.account_name ?? account.name ?? "Conta sem nome",
+      bank_name: account.bank_name ?? null,
+      account_type: account.account_type ?? null,
+      balance: Number.isFinite(rawBalance) ? Number(rawBalance) : 0,
+      balance_date: balanceDate,
+    };
+  };
+
+  const fetchBankAccounts = async (): Promise<BankAccount[]> => {
+    try {
+      const { data, error } = await supabase
+        .from("bank_accounts")
+        .select("*")
+        .or("is_active.is.null,is_active.eq.true")
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        return data.map(normalizeBankAccountRecord);
+      }
+    } catch (error) {
+      console.warn("Falha ao carregar bank_accounts, tentando tabela bank_balance.", error);
+    }
+
+    const { data: legacyData, error: legacyError } = await supabase
+      .from("bank_balance")
+      .select("*")
+      .or("is_active.is.null,is_active.eq.true")
+      .order("created_at", { ascending: false });
+
+    if (legacyError) throw legacyError;
+
+    return (legacyData || []).map(normalizeBankAccountRecord);
+  };
+
   useEffect(() => {
     loadCashFlowData();
   }, [selectedPeriod]);
