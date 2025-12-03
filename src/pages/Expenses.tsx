@@ -95,9 +95,8 @@ const Expenses = () => {
         .order("display_order", { ascending: true });
 
       if (response.error) {
-        const errorMessage = getErrorMessage(response.error);
-        console.error("Erro ao carregar categorias:", errorMessage);
-        throw new Error(errorMessage || "Erro ao carregar categorias");
+        console.error("Erro ao carregar categorias");
+        throw new Error("Erro ao carregar categorias");
       }
 
       // Deduplicate by name to prevent render key issues
@@ -107,8 +106,8 @@ const Expenses = () => {
 
       setCategories(uniqueCategories);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro ao carregar categorias";
-      console.error("Erro ao carregar categorias:", errorMessage);
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar categorias";
+      console.error("Erro ao carregar categorias:", errorMsg);
     }
   };
 
