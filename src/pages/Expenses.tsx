@@ -775,9 +775,11 @@ const Expenses = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses.map((expense) => (
+                  {expenses.map((expense) => {
+                    const categoryName = expense.category || "Sem categoria";
+                    return (
                     <TableRow key={expense.id}>
-                      <TableCell className="font-medium">{expense.category}</TableCell>
+                      <TableCell className="font-medium">{categoryName}</TableCell>
                       <TableCell>{expense.description}</TableCell>
                       <TableCell>{new Date(expense.due_date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{formatCurrency(Number(expense.amount))}</TableCell>
@@ -826,7 +828,8 @@ const Expenses = () => {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
