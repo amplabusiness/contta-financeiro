@@ -248,21 +248,20 @@ const Expenses = () => {
           created_by: user.id,
         };
 
-        let newExpense;
+        let newExpense: any = null;
         try {
-          const response = await supabase
+          const { data, error } = await supabase
             .from("expenses")
             .insert(updateData)
-            .select()
+            .select("id")
             .single();
 
-          if (response.error) {
-            // Don't access error properties - it contains unreadable Response object
-            console.error("Erro Supabase ao criar despesa:", "Verifique o console para detalhes");
+          if (error) {
+            console.error("Erro ao criar despesa:", error);
             throw new Error("Falha ao criar despesa no banco de dados");
           }
 
-          newExpense = response.data;
+          newExpense = data;
         } catch (insertError: any) {
           let errorMsg = "Erro ao criar despesa";
 
