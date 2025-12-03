@@ -50,7 +50,7 @@ const CostCenterAnalysis = () => {
         .from("cost_centers")
         .select("id, code, name, description, default_chart_account_id, is_active, parent_id")
         .eq("is_active", true)
-        .order("code");
+        .order("order_index, code");
 
       if (error) throw error;
 
@@ -72,9 +72,11 @@ const CostCenterAnalysis = () => {
       );
 
       setAllCostCenters(enriched);
+      return enriched;
     } catch (error: any) {
       console.error("Erro ao carregar centros de custo:", error);
       toast.error("Erro ao carregar centros de custo");
+      return [];
     }
   };
 
