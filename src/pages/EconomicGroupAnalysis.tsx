@@ -289,30 +289,11 @@ const EconomicGroupAnalysis = () => {
     const year = selectedYear || new Date().getFullYear();
 
     try {
-      const rpcGroups = await fetchEconomicGroupsViaRPC(year);
-      applyGroupData(rpcGroups);
+      const fallbackGroups = await loadEconomicGroupsFallback(year);
+      applyGroupData(fallbackGroups);
+      void syncWithRPC(year);
     } catch (error) {
       const errorMessage = buildErrorMessage(error);
-      const recoverable = shouldAttemptFallback(errorMessage);
-
-      if (recoverable) {
-        try {
-          const fallbackGroups = await loadEconomicGroupsFallback(year);
-          applyGroupData(fallbackGroups);
-
-          toast({
-            title: "Modo alternativo aplicado",
-            description: "Carregamos os grupos diretamente das tabelas porque a função RPC apresentou erro. Reaplique a migração para restabelecer o modo otimizado.",
-          });
-
-          return;
-        } catch (fallbackError) {
-          const fallbackMessage = buildErrorMessage(fallbackError);
-          handleLoadError(fallbackMessage);
-          return;
-        }
-      }
-
       handleLoadError(errorMessage);
     } finally {
       setIsLoading(false);
