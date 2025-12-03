@@ -39,11 +39,24 @@ const CostCenterAnalysis = () => {
     { value: "12", label: "Dezembro" },
   ];
 
+  const { subscribeToExpenseChanges } = useExpenseUpdate();
+
   useEffect(() => {
     loadAllCostCenters().then((centers) => {
       loadCostCenterData(centers);
     });
   }, [selectedYear, selectedMonth_]);
+
+  // Subscribe to expense changes and reload data automatically
+  useEffect(() => {
+    const unsubscribe = subscribeToExpenseChanges(() => {
+      loadAllCostCenters().then((centers) => {
+        loadCostCenterData(centers);
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_]);
 
   // Calcular centros sem movimentação
   useEffect(() => {
