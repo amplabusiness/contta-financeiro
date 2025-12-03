@@ -38,7 +38,42 @@ const CostCenterAnalysis = () => {
 
   useEffect(() => {
     loadCostCenterData();
+    loadAllCostCenters();
   }, [selectedYear, selectedMonth]);
+
+  const loadAllCostCenters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cost_centers")
+        .select("id, code, name, description, default_chart_account_id, is_active, parent_id")
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+
+      // Enriquecer com nomes das contas padrão
+      const enriched = await Promise.all(
+        (data || []).map(async (center) => {
+          let accountName = "";
+          if (center.default_chart_account_id) {
+            const { data: account } = await supabase
+              .from("chart_of_accounts")
+              .select("code, name")
+              .eq("id", center.default_chart_account_id)
+              .limit(1)
+              .single();
+            accountName = account ? `${account.code} - ${account.name}` : "";
+          }
+          return { ...center, accountName };
+        })
+      );
+
+      setAllCostCenters(enriched);
+    } catch (error: any) {
+      console.error("Erro ao carregar centros de custo:", error);
+      toast.error("Erro ao carregar centros de custo");
+    }
+  };
 
   const loadCostCenterData = async () => {
     try {
