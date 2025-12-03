@@ -277,6 +277,7 @@ const Expenses = () => {
 
           console.log("Despesa atualizada com sucesso");
           toast.success("Despesa atualizada com sucesso!");
+          notifyExpenseChange();
         } catch (updateError: any) {
           // Only extract message from actual Error instances
           let errorMsg = "Erro ao atualizar despesa";
@@ -334,6 +335,7 @@ const Expenses = () => {
 
         if (accountingResult.success) {
           toast.success("Despesa cadastrada com lançamento contábil!");
+          notifyExpenseChange();
         } else {
           console.error('Erro ao criar lançamento contábil:', accountingResult.error);
           toast.warning("Despesa cadastrada, mas erro no lançamento contábil");
@@ -377,6 +379,7 @@ const Expenses = () => {
 
       if (accountingResult.success) {
         toast.success("Despesa paga com lançamento contábil!");
+        notifyExpenseChange();
       } else {
         console.error('Erro ao criar lançamento de pagamento:', accountingResult.error);
         toast.warning("Despesa paga, mas erro no lançamento contábil");
@@ -401,6 +404,7 @@ const Expenses = () => {
         throw new Error("Erro ao excluir despesa");
       }
       toast.success("Despesa excluída com sucesso!");
+      notifyExpenseChange();
       loadExpenses();
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : "Erro ao excluir despesa";
