@@ -388,6 +388,15 @@ const CashFlow = () => {
     }
   };
 
+  const formatBalanceDate = (value: string | null) => {
+    if (!value) return "-";
+    try {
+      return format(parseISO(value), "dd/MM/yyyy");
+    } catch {
+      return "-";
+    }
+  };
+
   const chartData = projection.filter((_, index) => index % Math.ceil(projection.length / 30) === 0);
 
   if (loading && bankAccounts.length === 0) {
