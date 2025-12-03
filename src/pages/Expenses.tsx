@@ -209,8 +209,9 @@ const Expenses = () => {
           .select();
 
         if (error) {
-          console.error("Erro ao atualizar:", error);
-          throw new Error(getErrorMessage(error));
+          const errorMessage = getErrorMessage(error);
+          console.error("Erro ao atualizar despesa:", errorMessage, error);
+          throw new Error(errorMessage);
         }
 
         console.log("Despesa atualizada:", data);
