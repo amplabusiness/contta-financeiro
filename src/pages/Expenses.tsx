@@ -207,12 +207,19 @@ const Expenses = () => {
 
       console.log("Salvando com due_date:", formData.due_date, "competence:", calculatedCompetence);
 
+      // Only send fields that exist in the database schema
       const expenseData = {
-        ...formData,
-        competence: calculatedCompetence,
+        category: formData.category,
+        description: formData.description,
         amount: parseFloat(formData.amount),
+        due_date: formData.due_date,
         payment_date: formData.payment_date || null,
+        status: formData.status,
+        competence: calculatedCompetence,
+        notes: formData.notes || null,
         account_id: formData.account_id || null,
+        cost_center: formData.cost_center || null,
+        // Don't include is_recurring and recurrence_day - they don't exist in the database
       };
 
       if (editingExpense) {
