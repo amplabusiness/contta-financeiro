@@ -267,7 +267,11 @@ const Expenses = () => {
         .update({ status: "paid", payment_date: paymentDate })
         .eq("id", expense.id);
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao marcar como pago:", errorMessage, error);
+        throw new Error(errorMessage);
+      }
 
       const accountingResult = await registrarPagamentoDespesa({
         paymentId: `${expense.id}_payment`,
