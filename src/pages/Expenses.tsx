@@ -140,8 +140,17 @@ const Expenses = () => {
       const response = await query;
 
       if (response.error) {
-        console.error("Erro ao carregar despesas");
-        throw new Error("Erro ao carregar despesas");
+        let errorMsg = "Erro ao carregar despesas";
+        try {
+          const err = response.error as any;
+          if (err.message && typeof err.message === "string") {
+            errorMsg = err.message;
+          } else if (err.code && typeof err.code === "string") {
+            errorMsg = `Código: ${err.code}`;
+          }
+        } catch {}
+        console.error("Erro ao carregar despesas:", response.error);
+        throw new Error(errorMsg);
       }
 
       const data = response.data;
