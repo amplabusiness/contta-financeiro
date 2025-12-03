@@ -386,7 +386,10 @@ const Expenses = () => {
         .select()
         .single();
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        throw new Error(errorMessage || "Erro ao criar categoria");
+      }
 
       toast.success("Categoria criada com sucesso!");
 
@@ -396,8 +399,9 @@ const Expenses = () => {
 
       await loadCategories();
     } catch (error: any) {
-      console.error("Erro ao criar categoria:", error);
-      toast.error("Erro ao criar categoria: " + getErrorMessage(error));
+      const errorMessage = getErrorMessage(error) || "Erro desconhecido ao criar categoria";
+      console.error("Erro ao criar categoria:", errorMessage, error);
+      toast.error("Erro ao criar categoria: " + errorMessage);
     } finally {
       setLoading(false);
     }
