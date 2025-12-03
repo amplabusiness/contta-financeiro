@@ -19,6 +19,7 @@ import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
 import { getErrorMessage } from "@/lib/utils";
+import CostCenterMappingService from "@/services/CostCenterMappingService";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
@@ -27,6 +28,7 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [costCenters, setCostCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
@@ -45,25 +47,16 @@ const Expenses = () => {
     competence: "",
     notes: "",
     account_id: "",
-    cost_center: "",
+    cost_center_id: "",
     is_recurring: false,
     recurrence_day: 10,
   });
-
-  const costCenters = [
-    "Administrativo",
-    "Financeiro",
-    "Tecnologia",
-    "Comercial",
-    "Recursos Humanos",
-    "Operacional",
-    "Marketing",
-  ];
 
   useEffect(() => {
     loadExpenses();
     loadAccounts();
     loadCategories();
+    loadCostCenters();
   }, [selectedYear, selectedMonth, selectedClientId]);
 
   const loadAccounts = async () => {
