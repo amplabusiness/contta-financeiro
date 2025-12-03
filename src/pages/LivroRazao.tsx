@@ -110,15 +110,21 @@ const LivroRazao = () => {
       // Calcular saldo inicial
       let saldoInicial = 0
       if (start && accountIds.length > 0) {
-        const { data: saldoData } = await supabase
+        const { data: saldoData, error: saldoError } = await supabase
           .from('accounting_entry_lines')
-          .select('debit, credit, entry_id!inner(entry_date)')
+          .select('debit, credit, entry_id(entry_date)')
           .in('account_id', accountIds)
-          .lt('entry_id.entry_date', start)
+
+        if (saldoError) throw saldoError
 
         if (saldoData) {
-          const totalDebito = saldoData.reduce((sum, line) => sum + (line.debit || 0), 0)
-          const totalCredito = saldoData.reduce((sum, line) => sum + (line.credit || 0), 0)
+          // Filtrar apenas lançamentos anterior à data inicial
+          const saldoFiltrado = saldoData.filter((line: any) => {
+            return line.entry_id && line.entry_id.entry_date < start
+          })
+
+          const totalDebito = saldoFiltrado.reduce((sum, line) => sum + (line.debit || 0), 0)
+          const totalCredito = saldoFiltrado.reduce((sum, line) => sum + (line.credit || 0), 0)
           // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
           const primeiroDigito = account.code.charAt(0)
           const isDevedora = ['1', '4'].includes(primeiroDigito)
