@@ -165,8 +165,14 @@ const Expenses = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      if (!formData.due_date) {
+        throw new Error("Data de vencimento é obrigatória");
+      }
+
       const [year, month, day] = formData.due_date.split('-');
       const calculatedCompetence = `${month}/${year}`;
+
+      console.log("Salvando com due_date:", formData.due_date, "competence:", calculatedCompetence);
 
       const expenseData = {
         ...formData,
