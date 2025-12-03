@@ -90,7 +90,11 @@ const ExpenseCategories = () => {
           })
           .eq("id", editingCategory.id);
 
-        if (error) throw new Error(getErrorMessage(error));
+        if (error) {
+          const errorMessage = getErrorMessage(error);
+          console.error("Erro ao atualizar categoria:", errorMessage, error);
+          throw new Error(errorMessage);
+        }
         toast.success("Categoria atualizada com sucesso!");
       } else {
         const { error } = await supabase
