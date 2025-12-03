@@ -18,6 +18,7 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
+import { getErrorMessage } from "@/lib/utils";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
@@ -77,7 +78,7 @@ const Expenses = () => {
         .eq("is_active", true)
         .order("code");
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       setAccounts(data || []);
     } catch (error: any) {
       console.error("Erro ao carregar contas:", error);
@@ -94,7 +95,7 @@ const Expenses = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
 
       let filteredData = data || [];
 
@@ -147,8 +148,8 @@ const Expenses = () => {
         .from("expenses")
         .insert(newExpenseData);
 
-      if (error) throw error;
-      
+      if (error) throw new Error(getErrorMessage(error));
+
       toast.success("Despesa recorrente do próximo mês gerada!");
       loadExpenses();
     } catch (error: any) {
@@ -191,7 +192,7 @@ const Expenses = () => {
 
         if (error) {
           console.error("Erro ao atualizar:", error);
-          throw error;
+          throw new Error(getErrorMessage(error));
         }
 
         console.log("Despesa atualizada:", data);
@@ -208,7 +209,7 @@ const Expenses = () => {
           .select()
           .single();
 
-        if (expenseError) throw expenseError;
+        if (expenseError) throw new Error(getErrorMessage(expenseError));
 
         const accountingResult = await registrarDespesa({
           expenseId: newExpense.id,
@@ -232,7 +233,7 @@ const Expenses = () => {
       resetForm();
       loadExpenses();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar despesa");
+      toast.error(getErrorMessage(error) || "Erro ao salvar despesa");
     } finally {
       setLoading(false);
     }
@@ -247,7 +248,7 @@ const Expenses = () => {
         .update({ status: "paid", payment_date: paymentDate })
         .eq("id", expense.id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
 
       const accountingResult = await registrarPagamentoDespesa({
         paymentId: `${expense.id}_payment`,
@@ -266,7 +267,7 @@ const Expenses = () => {
 
       loadExpenses();
     } catch (error: any) {
-      toast.error("Erro ao atualizar despesa");
+      toast.error("Erro ao atualizar despesa: " + getErrorMessage(error));
     }
   };
 
@@ -276,11 +277,11 @@ const Expenses = () => {
     try {
       const { error } = await supabase.from("expenses").delete().eq("id", id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       toast.success("Despesa excluída com sucesso!");
       loadExpenses();
     } catch (error: any) {
-      toast.error("Erro ao excluir despesa");
+      toast.error("Erro ao excluir despesa: " + getErrorMessage(error));
     }
   };
 
