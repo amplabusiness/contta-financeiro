@@ -223,9 +223,29 @@ const Expenses = () => {
             .eq("id", editingExpense.id)
             .select();
 
-          // Don't access error object properties - it may contain unreadable Response
           if (response.error) {
-            throw new Error("Erro ao atualizar despesa no servidor");
+            // Safely extract error details without triggering Response body read
+            let errorMsg = "Erro ao atualizar despesa";
+
+            try {
+              // Try to get the message property safely
+              if (response.error && typeof response.error === "object") {
+                const err = response.error as any;
+                if (err.message && typeof err.message === "string") {
+                  errorMsg = err.message;
+                } else if (err.code && typeof err.code === "string") {
+                  errorMsg = `Código de erro: ${err.code}`;
+                } else if (err.details && typeof err.details === "string") {
+                  errorMsg = err.details;
+                }
+              }
+            } catch {
+              // If anything fails, use generic message
+              errorMsg = "Erro ao atualizar despesa";
+            }
+
+            console.error("Detalhes do erro:", response.error);
+            throw new Error(errorMsg);
           }
 
           const data = response.data;
