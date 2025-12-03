@@ -336,12 +336,13 @@ const Expenses = () => {
       if (error) {
         const errorMessage = getErrorMessage(error);
         console.error("Erro ao excluir despesa:", errorMessage, error);
-        throw new Error(errorMessage);
+        throw new Error(errorMessage || "Erro ao excluir despesa");
       }
       toast.success("Despesa excluída com sucesso!");
       loadExpenses();
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
+      const errorMessage = getErrorMessage(error) || "Erro desconhecido ao excluir";
+      console.error("Erro capturado na exclusão:", errorMessage, error);
       toast.error("Erro ao excluir despesa: " + errorMessage);
     }
   };
