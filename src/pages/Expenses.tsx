@@ -790,7 +790,7 @@ const Expenses = () => {
                 </TableHeader>
                 <TableBody>
                   {expenses.map((expense) => {
-                    const categoryName = expense.category || "Sem categoria";
+                    const categoryName = getCategoryName(expense.category);
                     return (
                     <TableRow key={expense.id}>
                       <TableCell className="font-medium">{categoryName}</TableCell>
