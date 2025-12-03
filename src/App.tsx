@@ -95,9 +95,10 @@ import NotFound from "./pages/NotFound";
 const App = () => (
   <TooltipProvider>
     <ClientProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
+      <ExpenseUpdateProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -189,6 +190,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </ExpenseUpdateProvider>
         </ClientProvider>
       </TooltipProvider>
 );
