@@ -104,6 +104,27 @@ const Expenses = () => {
     }
   };
 
+  const loadCostCenters = async () => {
+    try {
+      const response = await supabase
+        .from("cost_centers")
+        .select("id, code, name")
+        .eq("is_active", true)
+        .order("code");
+
+      if (response.error) {
+        console.error("Erro ao carregar centros de custo");
+        throw new Error("Erro ao carregar centros de custo");
+      }
+
+      setCostCenters(response.data || []);
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar centros de custo";
+      console.error("Erro ao carregar centros de custo:", errorMsg);
+      toast.error(errorMsg);
+    }
+  };
+
   const loadExpenses = async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
