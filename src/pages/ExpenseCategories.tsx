@@ -114,7 +114,10 @@ const ExpenseCategories = () => {
             display_order: (categories.length) + 1,
           });
 
-        if (error) throw new Error(getErrorMessage(error));
+        if (error) {
+          const errorMessage = getErrorMessage(error);
+          throw new Error(errorMessage || "Erro ao criar categoria");
+        }
         toast.success("Categoria criada com sucesso!");
       }
 
