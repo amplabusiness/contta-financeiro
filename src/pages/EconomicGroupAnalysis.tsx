@@ -132,6 +132,31 @@ const EconomicGroupAnalysis = () => {
     return (data || []) as EconomicGroup[];
   };
 
+  const syncWithRPC = async (year: number) => {
+    try {
+      const rpcGroups = await fetchEconomicGroupsViaRPC(year);
+      applyGroupData(rpcGroups);
+
+      if (!rpcRecoveredNoticeShown.current) {
+        rpcRecoveredNoticeShown.current = true;
+        toast({
+          title: "Função otimizada restaurada",
+          description: "Voltamos a usar a função get_economic_group_impact diretamente do banco.",
+        });
+      }
+    } catch (error) {
+      if (!fallbackNoticeShown.current) {
+        fallbackNoticeShown.current = true;
+        toast({
+          title: "Função otimizada indisponível",
+          description: "Estamos calculando os grupos diretamente das tabelas. Reaplique a migração 20251120_fix_economic_group_return_types.sql para restaurar a função get_economic_group_impact.",
+        });
+      }
+
+      console.warn('RPC indisponível, utilizando fallback.', error);
+    }
+  };
+
   const loadEconomicGroupsFallback = async (year: number): Promise<EconomicGroup[]> => {
     const startDate = `${year}-01-01`;
     const endDate = `${year}-12-31`;
