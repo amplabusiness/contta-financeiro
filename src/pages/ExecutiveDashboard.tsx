@@ -161,7 +161,18 @@ const ExecutiveDashboard = () => {
 
       setMonthlyData(monthlyArray);
     } catch (error) {
+      const message = buildErrorMessage(error);
       console.error("Erro ao carregar dados executivos:", error);
+      setTotalRevenue(0);
+      setTotalExpenses(0);
+      setTotalDefault(0);
+      setNetMargin(0);
+      setMonthlyData([]);
+      toast({
+        title: "Erro ao carregar dados executivos",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
