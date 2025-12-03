@@ -76,14 +76,13 @@ const Expenses = () => {
         .order("code");
 
       if (response.error) {
-        const errorMessage = getErrorMessage(response.error);
-        console.error("Erro ao carregar contas:", errorMessage);
-        throw new Error(errorMessage || "Erro ao carregar contas");
+        console.error("Erro ao carregar contas");
+        throw new Error("Erro ao carregar contas");
       }
       setAccounts(response.data || []);
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error) || "Erro ao carregar contas";
-      console.error("Erro ao carregar contas:", errorMessage);
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
+      console.error("Erro ao carregar contas:", errorMsg);
     }
   };
 
