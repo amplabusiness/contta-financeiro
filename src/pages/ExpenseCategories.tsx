@@ -132,14 +132,18 @@ const ExpenseCategories = () => {
         .delete()
         .eq("id", category.id);
 
-      if (error) throw new Error(getErrorMessage(error));
+      if (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao excluir categoria:", errorMessage, error);
+        throw new Error(errorMessage);
+      }
       toast.success("Categoria excluída com sucesso!");
       setDeleteDialogOpen(false);
       setDeletingCategory(null);
       loadCategories();
     } catch (error: any) {
-      console.error("Erro ao excluir categoria:", error);
-      toast.error("Erro ao excluir categoria: " + getErrorMessage(error));
+      const errorMessage = getErrorMessage(error);
+      toast.error("Erro ao excluir categoria: " + errorMessage);
     }
   };
 
