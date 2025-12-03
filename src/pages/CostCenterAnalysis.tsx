@@ -510,34 +510,17 @@ const CostCenterAnalysis = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3">
-                {costCenterWithoutData.map((center, index) => {
-                  const nivelProfundidade = (center.code?.match(/\./g) || []).length;
-                  const indent = nivelProfundidade > 0 ? '  '.repeat(nivelProfundidade) : '';
-
-                  return (
-                    <li key={center.id} className="flex items-start gap-3 pb-3 border-b last:border-b-0 last:pb-0">
-                      <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 min-w-fit">
-                        {center.code}
-                      </span>
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
-                          {center.name}
-                        </div>
-                        {center.description && (
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            {center.description}
-                          </div>
-                        )}
-                        {center.accountName && (
-                          <Badge variant="outline" className="font-mono text-xs mt-2">
-                            {center.accountName}
-                          </Badge>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+              <ul className="space-y-2">
+                {costCenterWithoutData.map((center) => (
+                  <li key={center.id} className="flex items-center gap-3 py-2 border-b last:border-b-0">
+                    <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 min-w-fit">
+                      {center.code}
+                    </span>
+                    <span className="text-gray-900 dark:text-gray-100">
+                      {center.name}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
