@@ -40,10 +40,10 @@ const CostCenterAnalysis = () => {
   const loadCostCenterData = async () => {
     try {
       setLoading(true);
-      
-      // Buscar despesas pagas
+
+      // Buscar despesas pagas com centros de custo
       let query = supabase
-        .from("expenses")
+        .from("vw_expenses_with_accounts")
         .select("*")
         .eq("status", "paid");
 
@@ -59,23 +59,34 @@ const CostCenterAnalysis = () => {
 
       if (error) throw error;
 
-      // Agrupar por centro de custo
-      const costCenterMap = new Map<string, number>();
+      // Agrupar por centro de custo (usando code + name)
+      const costCenterMap = new Map<string, { total: number; code: string; account: string }>();
       let total = 0;
 
       expenses?.forEach((expense) => {
-        const costCenter = (expense as any).cost_center || "Não Classificado";
+        const costCenterName = (expense as any).cost_center_name || "Não Classificado";
+        const costCenterCode = (expense as any).cost_center_code || "";
+        const accountCode = (expense as any).account_code || "";
         const amount = Number(expense.amount);
-        costCenterMap.set(costCenter, (costCenterMap.get(costCenter) || 0) + amount);
+
+        const key = `${costCenterCode} - ${costCenterName}`;
+        const existing = costCenterMap.get(key) || { total: 0, code: costCenterCode, account: accountCode };
+        costCenterMap.set(key, {
+          total: existing.total + amount,
+          code: costCenterCode,
+          account: accountCode
+        });
         total += amount;
       });
 
       // Converter para array e calcular percentuais
       const costCenterArray = Array.from(costCenterMap.entries())
-        .map(([name, value]) => ({
+        .map(([name, data]) => ({
           name,
-          value,
-          percentage: ((value / total) * 100).toFixed(2),
+          value: data.total,
+          code: data.code,
+          account: data.account,
+          percentage: ((data.total / total) * 100).toFixed(2),
         }))
         .sort((a, b) => b.value - a.value);
 
