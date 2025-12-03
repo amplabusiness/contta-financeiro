@@ -39,8 +39,8 @@ const CostCenterAnalysis = () => {
   ];
 
   useEffect(() => {
-    loadAllCostCenters().then(() => {
-      loadCostCenterData();
+    loadAllCostCenters().then((centers) => {
+      loadCostCenterData(centers);
     });
   }, [selectedYear, selectedMonth_]);
 
@@ -91,7 +91,8 @@ const CostCenterAnalysis = () => {
     }
   };
 
-  const loadCostCenterData = async () => {
+  const loadCostCenterData = async (centersParam?: any[]) => {
+    const costCentersToUse = centersParam || allCostCenters;
     try {
       setLoading(true);
 
@@ -148,7 +149,7 @@ const CostCenterAnalysis = () => {
       });
 
       // Processar saldos de abertura (extrair centro de custo da descrição)
-      if (openingBalances && allCostCenters.length > 0) {
+      if (openingBalances && costCentersToUse.length > 0) {
         openingBalances.forEach((entry: any) => {
           const description = entry.description || "";
           // Procurar por padrão como "Saldo de Abertura - NOME" ou "Saldo de Abertura: NOME"
@@ -162,7 +163,7 @@ const CostCenterAnalysis = () => {
           if (match) {
             const centerName = match[1].trim();
             // Procurar o centro correspondente (flexível para maiúsculas/minúsculas)
-            const center = allCostCenters.find(c =>
+            const center = costCentersToUse.find(c =>
               c.name.toLowerCase() === centerName.toLowerCase()
             );
             if (center) {
@@ -186,7 +187,7 @@ const CostCenterAnalysis = () => {
               }
             } else {
               console.log(`Centro não encontrado: "${centerName}"`);
-              console.log(`Centros disponíveis:`, allCostCenters.map(c => c.name));
+              console.log(`Centros disponíveis:`, costCentersToUse.map(c => c.name));
             }
           } else {
             console.log(`Descrição não correspondeu ao padrão esperado: "${description}"`);
