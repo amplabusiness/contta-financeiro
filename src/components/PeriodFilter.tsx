@@ -41,7 +41,7 @@ export const PeriodFilter = () => {
             <SelectTrigger className="w-[140px] bg-background">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-background z-50">
+            <SelectContent className="bg-background z-50 max-h-[400px]">
               {months.map((month) => (
                 <SelectItem key={month.value} value={month.value.toString()}>
                   {month.label}
