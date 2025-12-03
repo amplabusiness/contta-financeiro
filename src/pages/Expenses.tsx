@@ -243,13 +243,25 @@ const Expenses = () => {
           created_by: user.id,
         };
 
-        const { data: newExpense, error: expenseError } = await supabase
-          .from("expenses")
-          .insert(updateData)
-          .select()
-          .single();
+        let newExpense;
+        try {
+          const { data: insertedExpense, error: expenseError } = await supabase
+            .from("expenses")
+            .insert(updateData)
+            .select()
+            .single();
 
-        if (expenseError) throw new Error(getErrorMessage(expenseError));
+          if (expenseError) {
+            const errorMessage = getErrorMessage(expenseError);
+            throw new Error(errorMessage || "Erro ao criar despesa");
+          }
+
+          newExpense = insertedExpense;
+        } catch (insertError: any) {
+          const errorMessage = getErrorMessage(insertError);
+          console.error("Erro ao inserir despesa:", errorMessage, insertError);
+          throw new Error(errorMessage || "Erro ao criar despesa");
+        }
 
         const accountingResult = await registrarDespesa({
           expenseId: newExpense.id,
