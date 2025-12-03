@@ -121,13 +121,15 @@ const Expenses = () => {
         query = query.eq("client_id", selectedClientId);
       }
 
-      const { data, error } = await query;
+      const response = await query;
 
-      if (error) {
-        const errorMessage = getErrorMessage(error);
-        console.error("Erro ao carregar despesas:", errorMessage, error);
-        throw new Error(errorMessage);
+      if (response.error) {
+        const errorMessage = getErrorMessage(response.error);
+        console.error("Erro ao carregar despesas:", errorMessage);
+        throw new Error(errorMessage || "Erro ao carregar despesas");
       }
+
+      const data = response.data;
 
       let filteredData = data || [];
 
