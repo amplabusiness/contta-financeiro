@@ -165,9 +165,7 @@ const Expenses = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const dueDate = new Date(formData.due_date);
-      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
-      const year = dueDate.getFullYear();
+      const [year, month, day] = formData.due_date.split('-');
       const calculatedCompetence = `${month}/${year}`;
 
       const expenseData = {
