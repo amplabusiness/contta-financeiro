@@ -28,11 +28,22 @@ const Auth = () => {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        if (error.message?.toLowerCase().includes("refresh token")) {
+          clearSupabaseAuthState();
+          toast.error("Sua sessão expirou. Faça login novamente.");
+        }
+        return;
+      }
+
+      if (data.session) {
         navigate("/dashboard");
       }
-    });
+    };
+
+    void checkSession();
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
