@@ -223,7 +223,7 @@ const CostCenterAnalysis = () => {
                   Filtros Opcionais
                 </CardTitle>
                 <CardDescription>
-                  {selectedMonth_ ? `${months.find(m => m.value === selectedMonth_.toString().padStart(2, '0'))?.label}/${selectedYear}` : `Exibindo: Ano inteiro (${selectedYear})`}
+                  {selectedMonth_ ? `${months.find(m => m.value === selectedMonth_)?.label}/${selectedYear}` : `Exibindo: Ano inteiro (${selectedYear})`}
                 </CardDescription>
               </div>
             </div>
