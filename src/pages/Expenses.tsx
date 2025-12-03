@@ -419,7 +419,7 @@ const Expenses = () => {
       competence: "",
       notes: "",
       account_id: "",
-      cost_center: "",
+      cost_center_id: "",
       is_recurring: false,
       recurrence_day: 10,
     });
