@@ -349,20 +349,12 @@ const Expenses = () => {
       const response = await supabase.from("expenses").delete().eq("id", id);
 
       if (response.error) {
-        const errorMessage = getErrorMessage(response.error);
-        throw new Error(errorMessage || "Erro ao excluir despesa");
+        throw new Error("Erro ao excluir despesa");
       }
       toast.success("Despesa excluída com sucesso!");
       loadExpenses();
     } catch (error: any) {
-      let errorMsg = "Erro ao excluir despesa";
-
-      if (error instanceof Error) {
-        errorMsg = error.message;
-      } else {
-        errorMsg = getErrorMessage(error);
-      }
-
+      const errorMsg = error instanceof Error ? error.message : "Erro ao excluir despesa";
       console.error("Erro capturado na exclusão:", errorMsg);
       toast.error("Erro ao excluir despesa: " + errorMsg);
     }
