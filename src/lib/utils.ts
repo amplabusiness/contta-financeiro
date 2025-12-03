@@ -8,88 +8,109 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Safely extracts error message from various error types
  * Handles: Error objects, Supabase errors, strings, and plain objects
+ * IMPORTANT: Avoids accessing Response objects or triggering body stream reads
  */
 export function getErrorMessage(error: unknown): string {
-  // Handle null or undefined
-  if (!error) return "Erro desconhecido";
+  try {
+    // Handle null or undefined
+    if (!error) return "Erro desconhecido";
 
-  // Handle Error instances
-  if (error instanceof Error) {
-    return error.message || "Erro desconhecido";
-  }
-
-  // Handle Supabase error format: { message: string, code?: string, details?: string }
-  if (typeof error === "object") {
-    const errorObj = error as Record<string, any>;
-
-    // Skip if it's a Response object (can't be serialized)
-    if (errorObj instanceof Response || errorObj?.constructor?.name === "Response") {
-      return "Erro na comunicação com o servidor";
+    // Handle Error instances
+    if (error instanceof Error) {
+      return error.message || "Erro desconhecido";
     }
 
-    // Try common error message properties
-    if (errorObj.message && typeof errorObj.message === "string") {
-      return errorObj.message;
+    // Handle string errors
+    if (typeof error === "string") {
+      return error;
     }
 
-    // Supabase error might have it nested
-    if (errorObj.error && typeof errorObj.error === "object") {
-      const nestedError = errorObj.error as Record<string, any>;
-      if (nestedError.message && typeof nestedError.message === "string") {
-        return nestedError.message;
-      }
-      if (nestedError.msg && typeof nestedError.msg === "string") {
-        return nestedError.msg;
-      }
-    }
+    // Handle Supabase error format: { message: string, code?: string, details?: string }
+    if (typeof error === "object") {
+      const errorObj = error as Record<string, any>;
 
-    // Check for details property (Supabase specific)
-    if (errorObj.details && typeof errorObj.details === "string") {
-      return errorObj.details;
-    }
-
-    // Check for hint property (PostgreSQL specific)
-    if (errorObj.hint && typeof errorObj.hint === "string") {
-      return errorObj.hint;
-    }
-
-    // Check for code property (error code)
-    if (errorObj.code && typeof errorObj.code === "string") {
-      return errorObj.code;
-    }
-
-    // Fallback: try to stringify, but only safe properties
-    try {
-      // Create a safe copy without non-serializable properties
-      const safeObj: Record<string, any> = {};
-      for (const [key, value] of Object.entries(errorObj)) {
-        // Skip properties that can't be serialized
-        if (
-          typeof value !== "object" ||
-          value === null ||
-          (value instanceof Response === false &&
-            !(value instanceof Error))
-        ) {
-          safeObj[key] = value;
+      // Check constructor name without accessing Response properties
+      try {
+        const constructorName = errorObj?.constructor?.name || "";
+        if (constructorName === "Response") {
+          return "Erro na comunicação com o servidor";
         }
+      } catch {
+        // Ignore any errors accessing constructor
       }
 
-      const stringified = JSON.stringify(safeObj);
-      // Avoid returning empty objects or "[object Object]"
-      if (stringified && stringified !== "{}" && stringified !== "[object Object]") {
-        return stringified;
+      // Try message property first (most common)
+      try {
+        if (errorObj.message && typeof errorObj.message === "string") {
+          return errorObj.message;
+        }
+      } catch {
+        // Ignore access errors
       }
-    } catch {
-      // Ignore stringify errors
+
+      // Try nested error.error.message (Supabase format)
+      try {
+        if (
+          errorObj.error &&
+          typeof errorObj.error === "object" &&
+          errorObj.error.message &&
+          typeof errorObj.error.message === "string"
+        ) {
+          return errorObj.error.message;
+        }
+      } catch {
+        // Ignore access errors
+      }
+
+      // Try details property (Supabase specific)
+      try {
+        if (errorObj.details && typeof errorObj.details === "string") {
+          return errorObj.details;
+        }
+      } catch {
+        // Ignore access errors
+      }
+
+      // Try hint property (PostgreSQL specific)
+      try {
+        if (errorObj.hint && typeof errorObj.hint === "string") {
+          return errorObj.hint;
+        }
+      } catch {
+        // Ignore access errors
+      }
+
+      // Try code property (error code)
+      try {
+        if (errorObj.code && typeof errorObj.code === "string") {
+          return errorObj.code;
+        }
+      } catch {
+        // Ignore access errors
+      }
+
+      // Try status property
+      try {
+        if (errorObj.status && typeof errorObj.status === "string") {
+          return errorObj.status;
+        }
+      } catch {
+        // Ignore access errors
+      }
+
+      // Last resort: return a generic error with object type info
+      try {
+        const type = typeof errorObj;
+        return `Erro do sistema (tipo: ${type})`;
+      } catch {
+        return "Erro desconhecido";
+      }
     }
-  }
 
-  // Handle string errors
-  if (typeof error === "string") {
-    return error;
+    // Fallback for any other type
+    return "Erro desconhecido";
+  } catch {
+    // Ultimate fallback if anything goes wrong
+    return "Erro desconhecido";
   }
-
-  // Fallback for any other type
-  const stringified = String(error);
-  return stringified !== "[object Object]" ? stringified : "Erro desconhecido";
 }
