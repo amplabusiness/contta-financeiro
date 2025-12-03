@@ -220,29 +220,14 @@ const Expenses = () => {
           const response = await supabase
             .from("expenses")
             .update(expenseData)
-            .eq("id", editingExpense.id)
-            .select();
+            .eq("id", editingExpense.id);
 
           if (response.error) {
-            // Log the raw error for debugging
-            console.error("Erro Supabase completo:", response.error);
-            console.error("Tipo do erro:", typeof response.error);
-            console.error("Constructor:", response.error?.constructor?.name);
-
-            // Try to convert to string safely
-            let errorDetails = "";
-            try {
-              errorDetails = String(response.error);
-            } catch (e) {
-              errorDetails = "Erro ao converter detalhes";
-            }
-            console.error("Erro como string:", errorDetails);
-
+            console.error("Erro ao atualizar despesa:", response.error);
             throw new Error("Falha ao atualizar despesa no banco de dados");
           }
 
-          const data = response.data;
-          console.log("Despesa atualizada:", data);
+          console.log("Despesa atualizada com sucesso");
           toast.success("Despesa atualizada com sucesso!");
         } catch (updateError: any) {
           // Only extract message from actual Error instances
