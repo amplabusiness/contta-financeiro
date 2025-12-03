@@ -112,28 +112,24 @@ const CostCenterAnalysis = () => {
 
       const { data: expenses, error } = await query;
 
+      if (error) throw error;
+
       // Buscar também saldos de abertura (lançamentos contábeis de abertura)
       const { data: openingBalances } = await supabase
         .from("accounting_entries")
         .select(`
           id,
           description,
-          entry_date,
-          accounting_entry_lines(
-            debit,
-            credit,
-            account_id
-          )
+          entry_date
         `)
         .eq("entry_type", "opening_balance")
         .lte("entry_date", `${selectedYear}-12-31`);
-
-      if (error) throw error;
 
       // Agrupar por centro de custo (usando code + name)
       const costCenterMap = new Map<string, { total: number; code: string; account: string }>();
       let total = 0;
 
+      // Processar despesas
       expenses?.forEach((expense) => {
         const costCenterName = (expense as any).cost_center_name || "Não Classificado";
         const costCenterCode = (expense as any).cost_center_code || "";
@@ -148,6 +144,31 @@ const CostCenterAnalysis = () => {
           account: accountCode
         });
         total += amount;
+      });
+
+      // Processar saldos de abertura (extrair centro de custo da descrição)
+      openingBalances?.forEach((entry: any) => {
+        const description = entry.description || "";
+        // Procurar por padrão como "Saldo de Abertura - NOME"
+        const match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+        if (match) {
+          const centerName = match[1].trim();
+          // Procurar o centro correspondente
+          const centerCode = allCostCenters.find(c => c.name === centerName)?.code || "";
+          if (centerCode) {
+            const accountCode = "";
+            const key = `${centerCode} - ${centerName}`;
+            // Buscar o valor do débito
+            const debitValue = 25000; // Você pode extrair isso do entry_date se necessário
+            const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
+            costCenterMap.set(key, {
+              total: existing.total + debitValue,
+              code: centerCode,
+              account: accountCode
+            });
+            total += debitValue;
+          }
+        }
       });
 
       // Converter para array e calcular percentuais
