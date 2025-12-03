@@ -284,12 +284,10 @@ const EconomicGroupAnalysis = () => {
           const fallbackGroups = await loadEconomicGroupsFallback(year);
           applyGroupData(fallbackGroups);
 
-          if (fallbackGroups.length > 0) {
-            toast({
-              title: "Modo alternativo aplicado",
-              description: "Carregamos os grupos diretamente das tabelas porque a função RPC apresentou erro. Reaplique a migração para restabelecer o modo otimizado.",
-            });
-          }
+          toast({
+            title: "Modo alternativo aplicado",
+            description: "Carregamos os grupos diretamente das tabelas porque a função RPC apresentou erro. Reaplique a migração para restabelecer o modo otimizado.",
+          });
 
           return;
         } catch (fallbackError) {
