@@ -53,6 +53,8 @@ const EconomicGroupAnalysis = () => {
     averageConcentration: 0,
   });
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const fallbackNoticeShown = useRef(false);
+  const rpcRecoveredNoticeShown = useRef(false);
 
   const applyGroupData = (groupData: EconomicGroup[]) => {
     const totalCompanies = groupData.reduce((sum, g) => sum + g.company_count, 0);
