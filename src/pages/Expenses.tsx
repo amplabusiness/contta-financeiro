@@ -279,7 +279,26 @@ const Expenses = () => {
             .single();
 
           if (response.error) {
-            throw new Error("Erro ao criar despesa no servidor");
+            // Safely extract error details
+            let errorMsg = "Erro ao criar despesa";
+
+            try {
+              if (response.error && typeof response.error === "object") {
+                const err = response.error as any;
+                if (err.message && typeof err.message === "string") {
+                  errorMsg = err.message;
+                } else if (err.code && typeof err.code === "string") {
+                  errorMsg = `Código de erro: ${err.code}`;
+                } else if (err.details && typeof err.details === "string") {
+                  errorMsg = err.details;
+                }
+              }
+            } catch {
+              errorMsg = "Erro ao criar despesa";
+            }
+
+            console.error("Detalhes do erro:", response.error);
+            throw new Error(errorMsg);
           }
 
           newExpense = response.data;
