@@ -43,7 +43,7 @@ const CostCenterAnalysis = () => {
   useEffect(() => {
     loadCostCenterData();
     loadAllCostCenters();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth_]);
 
   const loadAllCostCenters = async () => {
     try {
