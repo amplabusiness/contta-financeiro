@@ -15,7 +15,7 @@ export function getErrorMessage(error: unknown): string {
 
   // Handle Error instances
   if (error instanceof Error) {
-    return error.message;
+    return error.message || "Erro desconhecido";
   }
 
   // Handle Supabase error format: { message: string, code?: string, details?: string }
@@ -33,13 +33,30 @@ export function getErrorMessage(error: unknown): string {
       if (nestedError.message && typeof nestedError.message === "string") {
         return nestedError.message;
       }
+      if (nestedError.msg && typeof nestedError.msg === "string") {
+        return nestedError.msg;
+      }
     }
 
-    // Fallback: try to stringify
+    // Check for details property (Supabase specific)
+    if (errorObj.details && typeof errorObj.details === "string") {
+      return errorObj.details;
+    }
+
+    // Check for hint property (PostgreSQL specific)
+    if (errorObj.hint && typeof errorObj.hint === "string") {
+      return errorObj.hint;
+    }
+
+    // Fallback: try to stringify, but only if it's a reasonable object
     try {
-      return JSON.stringify(error);
+      const stringified = JSON.stringify(error);
+      // Avoid returning empty objects or "[object Object]"
+      if (stringified && stringified !== "{}" && stringified !== "[object Object]") {
+        return stringified;
+      }
     } catch {
-      return String(error);
+      // Ignore stringify errors
     }
   }
 
@@ -49,5 +66,6 @@ export function getErrorMessage(error: unknown): string {
   }
 
   // Fallback for any other type
-  return String(error);
+  const stringified = String(error);
+  return stringified !== "[object Object]" ? stringified : "Erro desconhecido";
 }
