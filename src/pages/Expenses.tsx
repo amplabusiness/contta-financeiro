@@ -104,8 +104,17 @@ const Expenses = () => {
         .order("display_order", { ascending: true });
 
       if (response.error) {
-        console.error("Erro ao carregar categorias");
-        throw new Error("Erro ao carregar categorias");
+        let errorMsg = "Erro ao carregar categorias";
+        try {
+          const err = response.error as any;
+          if (err.message && typeof err.message === "string") {
+            errorMsg = err.message;
+          } else if (err.code && typeof err.code === "string") {
+            errorMsg = `Código: ${err.code}`;
+          }
+        } catch {}
+        console.error("Erro ao carregar categorias:", response.error);
+        throw new Error(errorMsg);
       }
 
       // Deduplicate by name to prevent render key issues
