@@ -240,18 +240,7 @@ const ExpenseCategories = () => {
     }
   };
 
-  if (loading && expenseCategories.length === 0 && revenueCategories.length === 0) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Carregando categorias...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const isInitialLoading = loading && expenseCategories.length === 0 && revenueCategories.length === 0;
 
   const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
   const tabTitle = activeTab === "expense" ? "Categorias de Despesas" : "Categorias de Receitas";
@@ -291,6 +280,19 @@ const ExpenseCategories = () => {
   const handleSuggestionSelect = (categoryName: string) => {
     setFormData((prev) => ({ ...prev, name: categoryName }));
   };
+
+  if (isInitialLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Carregando categorias...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
