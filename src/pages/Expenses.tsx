@@ -309,33 +309,40 @@ const Expenses = () => {
           throw new Error(errorMsg);
         }
       } else {
-        const updateData = {
-          ...expenseData,
-          created_by: user.id,
-        };
-
         let newExpense: any = null;
         try {
-          console.log("Dados sendo salvos:", updateData);
-          const { data, error } = await supabase
-            .from("expenses")
-            .insert(updateData)
-            .select("id")
-            .single();
+          console.log("Criando despesa via Edge Function:", expenseData);
 
-          if (error) {
-            const errorMsg = getErrorMessage(error);
-            console.error("Erro Supabase ao criar despesa:", {
-              error,
+          // Get auth token for the Edge Function
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            throw new Error("Sessão expirada. Faça login novamente.");
+          }
+
+          // Call Edge Function to create expense (bypasses RLS)
+          const { data: functionData, error: functionError } = await supabase.functions.invoke(
+            "create-expense",
+            {
+              body: {
+                ...expenseData,
+              },
+            }
+          );
+
+          if (functionError) {
+            const errorMsg = getErrorMessage(functionError);
+            console.error("Erro Edge Function ao criar despesa:", {
+              error: functionError,
               message: errorMsg,
-              details: error?.details,
-              hint: error?.hint,
-              code: error?.code,
             });
             throw new Error(`Falha ao criar despesa: ${errorMsg}`);
           }
 
-          newExpense = data;
+          if (!functionData?.id) {
+            throw new Error("Resposta inválida do servidor");
+          }
+
+          newExpense = functionData;
         } catch (insertError: any) {
           let errorMsg = "Erro ao criar despesa";
 
