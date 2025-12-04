@@ -245,6 +245,17 @@ const ExpenseCategories = () => {
   const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
   const tabTitle = activeTab === "expense" ? "Categorias de Despesas" : "Categorias de Receitas";
 
+  const getDisplayCode = (category: Category | null): string => {
+    if (!category) {
+      return "";
+    }
+    const list = activeTab === "expense" ? expenseCategories : revenueCategories;
+    const index = list.findIndex((item) => item.id === category.id);
+    return index >= 0 ? String(index + 1) : "";
+  };
+
+  const codeInputValue = editingCategory ? getDisplayCode(editingCategory) : formData.code;
+
   return (
     <Layout>
       <div className="container mx-auto py-6">
@@ -288,14 +299,17 @@ const ExpenseCategories = () => {
                   <Input
                     id="code"
                     placeholder="ex: CAT_001"
-                    value={formData.code}
+                    value={codeInputValue}
                     onChange={(e) =>
                       setFormData({ ...formData, code: e.target.value })
                     }
                     disabled={!!editingCategory}
+                    readOnly={!!editingCategory}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Auto-gerado se deixado em branco
+                    {editingCategory
+                      ? "Gerado automaticamente pela posição na lista"
+                      : "Auto-gerado se deixado em branco"}
                   </p>
                 </div>
 
