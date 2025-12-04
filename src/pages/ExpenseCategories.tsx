@@ -230,8 +230,9 @@ const ExpenseCategories = () => {
   };
 
   const resetForm = () => {
+    const categoriesList = getCategoriesByTab(activeTab);
     setFormData({
-      code: "",
+      code: getNextSequentialCodeValue(categoriesList),
       name: "",
       description: "",
       color: "",
