@@ -42,6 +42,22 @@ const ExpenseCategories = () => {
     icon: "",
   });
 
+  const getCategoriesByTab = (tab: "expense" | "revenue") =>
+    tab === "expense" ? expenseCategories : revenueCategories;
+
+  const getNextSequentialCodeValue = (categoriesList: Category[]) => {
+    if (!categoriesList.length) {
+      return "1";
+    }
+    const numericCodes = categoriesList
+      .map((category) => Number(category.code))
+      .filter((value) => Number.isFinite(value));
+    if (numericCodes.length > 0) {
+      return String(Math.max(...numericCodes) + 1);
+    }
+    return String(categoriesList.length + 1);
+  };
+
   const loadCategories = async () => {
     try {
       setLoading(true);
