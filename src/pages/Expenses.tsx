@@ -20,7 +20,6 @@ import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
-import CostCenterMappingService from "@/services/CostCenterMappingService";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
@@ -229,26 +228,9 @@ const Expenses = () => {
         throw new Error("Centro de custo é obrigatório");
       }
 
-      let accountId = formData.account_id;
+      const accountId = formData.account_id;
 
-      // Se não houver account_id, tentar mapear automaticamente usando o serviço
-      if (!accountId && formData.cost_center_id) {
-        try {
-          const mapping = await CostCenterMappingService.mapExpenseToAccounting(
-            formData.description,
-            // Buscar o código do centro selecionado
-            costCenters.find(cc => cc.id === formData.cost_center_id)?.code
-          );
-          if (mapping) {
-            accountId = mapping.chartAccountId;
-          }
-        } catch (error) {
-          console.warn("Erro ao mapear conta automaticamente:", error);
-          // Continua com account_id vazio se o mapeamento falhar
-        }
-      }
-
-      if (!accountId) {
+    if (!accountId) {
         throw new Error("Conta contábil é obrigatória ou não pôde ser mapeada automaticamente");
       }
 
