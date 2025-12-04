@@ -40,6 +40,7 @@ const Expenses = () => {
     name: "",
     description: "",
   });
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     description: "",
