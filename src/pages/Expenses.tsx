@@ -309,19 +309,24 @@ const Expenses = () => {
           throw new Error(errorMsg);
         }
       } else {
-        const updateData = {
-          ...expenseData,
-          created_by: user.id,
-        };
-
         let newExpense: any = null;
         try {
-          console.log("Dados sendo salvos:", updateData);
-          const { data, error } = await supabase
-            .from("expenses")
-            .insert(updateData)
-            .select("id")
-            .single();
+          console.log("Criando despesa via RPC:", expenseData);
+
+          // Use RPC function that bypasses RLS restrictions
+          const { data, error } = await supabase.rpc("create_expense", {
+            p_category: expenseData.category,
+            p_description: expenseData.description,
+            p_amount: expenseData.amount,
+            p_due_date: expenseData.due_date,
+            p_payment_date: expenseData.payment_date,
+            p_status: expenseData.status,
+            p_competence: expenseData.competence,
+            p_notes: expenseData.notes,
+            p_account_id: expenseData.account_id,
+            p_cost_center_id: expenseData.cost_center_id,
+            p_created_by: user.id,
+          });
 
           if (error) {
             const errorMsg = getErrorMessage(error);
@@ -335,7 +340,7 @@ const Expenses = () => {
             throw new Error(`Falha ao criar despesa: ${errorMsg}`);
           }
 
-          newExpense = data;
+          newExpense = { id: data?.[0]?.id || data };
         } catch (insertError: any) {
           let errorMsg = "Erro ao criar despesa";
 
