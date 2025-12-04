@@ -110,7 +110,7 @@ const ExpenseCategories = () => {
             code: formData.code || editingCategory.code,
             name: formData.name,
             description: formData.description || null,
-            color: formData.color,
+            color: formData.color?.trim() || null,
             icon: formData.icon || null,
           })
           .eq("id", editingCategory.id);
@@ -127,7 +127,7 @@ const ExpenseCategories = () => {
             code: formData.code || `CAT_${Date.now()}`,
             name: formData.name,
             description: formData.description || null,
-            color: formData.color,
+            color: formData.color?.trim() || null,
             icon: formData.icon || null,
             is_active: true,
             display_order: currentCategories.length + 1,
