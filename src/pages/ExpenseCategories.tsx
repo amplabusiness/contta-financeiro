@@ -138,7 +138,7 @@ const ExpenseCategories = () => {
         const response = await supabase
           .from(table)
           .update({
-            code: formData.code || editingCategory.code,
+            code: codeToUse,
             name: formData.name,
             description: formData.description || null,
             color: formData.color?.trim() || null,
@@ -155,7 +155,7 @@ const ExpenseCategories = () => {
         const response = await supabase
           .from(table)
           .insert({
-            code: formData.code || `CAT_${Date.now()}`,
+            code: codeToUse,
             name: formData.name,
             description: formData.description || null,
             color: formData.color?.trim() || null,
