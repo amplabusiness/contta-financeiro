@@ -200,11 +200,12 @@ const ExpenseCategories = () => {
   };
 
   const resetForm = () => {
+    const defaultColor = activeTab === "expense" ? "#3B82F6" : "#10B981";
     setFormData({
       code: "",
       name: "",
       description: "",
-      color: "#3B82F6",
+      color: defaultColor,
       icon: "",
     });
     setEditingCategory(null);
