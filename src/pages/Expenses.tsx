@@ -712,7 +712,10 @@ const Expenses = () => {
                         </DialogContent>
                       </Dialog>
                     </div>
-                    <Popover open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen}>
+                    <Popover open={isCategoryPickerOpen} onOpenChange={(open) => {
+                      setIsCategoryPickerOpen(open);
+                      if (!open) setCategorySearchQuery("");
+                    }}>
                       <PopoverTrigger asChild>
                         <Button
                           type="button"
@@ -726,27 +729,41 @@ const Expenses = () => {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Digite para pesquisar" />
-                          <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Digite para pesquisar"
+                            value={categorySearchQuery}
+                            onValueChange={setCategorySearchQuery}
+                          />
                           <CommandList>
-                            <CommandGroup>
-                              {categories.map((cat) => (
-                                <CommandItem
-                                  key={cat.id}
-                                  value={cat.name}
-                                  onSelect={(currentValue) => {
-                                    setFormData({ ...formData, category: currentValue });
-                                    setIsCategoryPickerOpen(false);
-                                  }}
-                                >
-                                  {cat.name}
-                                  {formData.category === cat.name && (
-                                    <Check className="ml-auto h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
+                            {categories.filter((cat) =>
+                              cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                            ).length === 0 ? (
+                              <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {categories
+                                  .filter((cat) =>
+                                    cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                                  )
+                                  .map((cat) => (
+                                    <CommandItem
+                                      key={cat.id}
+                                      value={cat.name}
+                                      onSelect={(currentValue) => {
+                                        setFormData({ ...formData, category: currentValue });
+                                        setIsCategoryPickerOpen(false);
+                                        setCategorySearchQuery("");
+                                      }}
+                                    >
+                                      {cat.name}
+                                      {formData.category === cat.name && (
+                                        <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
