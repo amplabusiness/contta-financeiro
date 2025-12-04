@@ -367,12 +367,17 @@ const Expenses = () => {
           console.error('Erro ao criar lançamento contábil:', accountingResult.error);
           toast.warning("Despesa cadastrada, mas erro no lançamento contábil");
         }
+
+        // Show warning if filters are active
+        if (selectedYear || selectedMonth || selectedClientId) {
+          toast.info("Despesa criada! Ajuste os filtros acima para visualizá-la.");
+        }
       }
 
       setOpen(false);
       setEditingExpense(null);
       resetForm();
-      loadExpenses();
+      await loadExpenses();
     } catch (error: any) {
       let errorMsg = "Erro ao salvar despesa";
 
