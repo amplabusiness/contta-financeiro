@@ -7,7 +7,6 @@ import { formatCurrency } from "@/data/expensesData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Loader2, ChevronDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 
@@ -73,31 +72,15 @@ const CostCenterAnalysis = () => {
     try {
       const { data, error } = await supabase
         .from("cost_centers")
-        .select("id, code, name, description, default_chart_account_id, is_active, parent_id")
+        .select("id, code, name, description, is_active, parent_id")
         .eq("is_active", true)
         .order("order_index, code");
 
       if (error) throw error;
 
-      // Enriquecer com nomes das contas padrão
-      const enriched = await Promise.all(
-        (data || []).map(async (center) => {
-          let accountName = "";
-          if (center.default_chart_account_id) {
-            const { data: account } = await supabase
-              .from("chart_of_accounts")
-              .select("code, name")
-              .eq("id", center.default_chart_account_id)
-              .limit(1)
-              .single();
-            accountName = account ? `${account.code} - ${account.name}` : "";
-          }
-          return { ...center, accountName };
-        })
-      );
-
-      setAllCostCenters(enriched);
-      return enriched;
+      const centers = data || [];
+      setAllCostCenters(centers);
+      return centers;
     } catch (error: any) {
       console.error("Erro ao carregar centros de custo:", error);
       toast.error("Erro ao carregar centros de custo");
@@ -156,7 +139,7 @@ const CostCenterAnalysis = () => {
       const openingBalances = [...(openingBalancesType1 || []), ...(openingBalancesType2 || [])];
 
       // Agrupar por centro de custo (usando code + name)
-      const costCenterMap = new Map<string, { total: number; code: string; account: string }>();
+      const costCenterMap = new Map<string, { total: number; code: string }>();
       let total = 0;
 
       // Processar despesas
@@ -167,11 +150,10 @@ const CostCenterAnalysis = () => {
         const amount = Number(expense.amount);
 
         const key = `${costCenterCode} - ${costCenterName}`;
-        const existing = costCenterMap.get(key) || { total: 0, code: costCenterCode, account: accountCode };
+        const existing = costCenterMap.get(key) || { total: 0, code: costCenterCode };
         costCenterMap.set(key, {
           total: existing.total + amount,
-          code: costCenterCode,
-          account: accountCode
+          code: costCenterCode
         });
         total += amount;
       });
@@ -196,7 +178,6 @@ const CostCenterAnalysis = () => {
             );
             if (center) {
               const centerCode = center.code || "";
-              const accountCode = center.accountName || "";
               const key = `${centerCode} - ${center.name}`;
               // Extrair o valor do débito
               const lines = entry.accounting_entry_lines || [];
@@ -205,11 +186,10 @@ const CostCenterAnalysis = () => {
               console.log(`Saldo encontrado: ${centerCode} = R$ ${debitValue}`);
 
               if (debitValue > 0) {
-                const existing = costCenterMap.get(key) || { total: 0, code: centerCode, account: accountCode };
+                const existing = costCenterMap.get(key) || { total: 0, code: centerCode };
                 costCenterMap.set(key, {
                   total: existing.total + debitValue,
-                  code: centerCode,
-                  account: accountCode
+                  code: centerCode
                 });
                 total += debitValue;
               }
@@ -229,7 +209,6 @@ const CostCenterAnalysis = () => {
           name,
           value: data.total,
           code: data.code,
-          account: data.account,
           percentage: ((data.total / total) * 100).toFixed(2),
         }))
         .sort((a, b) => b.value - a.value);
@@ -553,8 +532,7 @@ const CostCenterAnalysis = () => {
                     <TableRow>
                       <TableHead>Código</TableHead>
                       <TableHead>Nome</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Conta Padrão</TableHead>
+                    <TableHead>Descrição</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -566,15 +544,6 @@ const CostCenterAnalysis = () => {
                         <TableCell className="font-medium">{center.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {center.description || "-"}
-                        </TableCell>
-                        <TableCell>
-                          {center.accountName ? (
-                            <Badge variant="outline" className="font-mono text-xs">
-                              {center.accountName}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Sem conta padrão</span>
-                          )}
                         </TableCell>
                       </TableRow>
                     ))}
