@@ -76,6 +76,13 @@ const buildResponseHeaders = (rawHeaders: string): Headers => {
 };
 
 export const customFetch = async (input: SupportedRequestInfo, init?: RequestInit): Promise<Response> => {
+  if (typeof XMLHttpRequest === "undefined") {
+    if (typeof fetch !== "function") {
+      throw new Error("No fetch or XMLHttpRequest implementation available in this environment");
+    }
+    return fetch(input as RequestInfo, init);
+  }
+
   const url = getRequestUrl(input);
   const method = getRequestMethod(input, init);
   const headers = getRequestHeaders(input, init);
