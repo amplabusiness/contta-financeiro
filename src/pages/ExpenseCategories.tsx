@@ -347,11 +347,6 @@ const ExpenseCategories = () => {
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {!editingCategory && (
-                  <p className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
-                    Criando nova {activeTab === "expense" ? "categoria de despesa" : "categoria de receita"}
-                  </p>
-                )}
                 {editingCategory ? (
                   <div className="grid gap-2">
                     <Label htmlFor="code">Código</Label>
@@ -369,11 +364,7 @@ const ExpenseCategories = () => {
                       Gerado automaticamente pela posição na lista
                     </p>
                   </div>
-                ) : (
-                  <div className="rounded-md bg-muted/60 p-3 text-xs text-muted-foreground">
-                    O código será gerado automaticamente na sequência (1, 2, 3...).
-                  </div>
-                )}
+                ) : null}
 
                 <div className="grid gap-2">
                   <Label htmlFor="name">
@@ -432,22 +423,6 @@ const ExpenseCategories = () => {
                   />
                 </div>
 
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="icon">Ícone</Label>
-                    <Input
-                      id="icon"
-                      placeholder="ex: Wallet, AlertTriangle"
-                      value={formData.icon}
-                      onChange={(e) =>
-                        setFormData({ ...formData, icon: e.target.value })
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Nome do ícone Lucide
-                    </p>
-                  </div>
-                </div>
 
                 <DialogFooter>
                   <Button
