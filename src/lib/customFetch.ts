@@ -1,4 +1,4 @@
-type SupportedRequestInfo = RequestInfo | URL;
+export type SupportedRequestInfo = RequestInfo | URL;
 
 const getRequestUrl = (input: SupportedRequestInfo): string => {
   if (typeof input === "string") {
@@ -62,6 +62,47 @@ const getRequestBody = async (input: SupportedRequestInfo, init?: RequestInit): 
   return undefined;
 };
 
+const getRequestCredentials = (input: SupportedRequestInfo, init?: RequestInit): RequestCredentials | undefined => {
+  if (init?.credentials) {
+    return init.credentials;
+  }
+
+  if (typeof Request !== "undefined" && input instanceof Request) {
+    return input.credentials;
+  }
+
+  return undefined;
+};
+
+const isSameOriginRequest = (url: string): boolean => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    const resolvedUrl = new URL(url, window.location.href);
+    return resolvedUrl.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
+const shouldIncludeCredentials = (url: string, credentials?: RequestCredentials): boolean => {
+  if (!credentials) {
+    return false;
+  }
+
+  if (credentials === "include") {
+    return true;
+  }
+
+  if (credentials === "same-origin") {
+    return isSameOriginRequest(url);
+  }
+
+  return false;
+};
+
 const buildResponseHeaders = (rawHeaders: string): Headers => {
   const headers = new Headers();
   rawHeaders.trim().split(/\r?\n/).forEach((line) => {
@@ -99,13 +140,15 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
   const method = getRequestMethod(input, init);
   const headers = getRequestHeaders(input, init);
   const body = await getRequestBody(input, init);
+  const credentials = getRequestCredentials(input, init);
+  const sendCredentials = shouldIncludeCredentials(url, credentials);
 
   return new Promise<Response>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     xhr.open(method, url, true);
     xhr.responseType = "arraybuffer";
-    xhr.withCredentials = init?.credentials === "include";
+    xhr.withCredentials = sendCredentials;
 
     headers.forEach((value, key) => {
       xhr.setRequestHeader(key, value);
