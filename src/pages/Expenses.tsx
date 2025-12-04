@@ -669,22 +669,52 @@ const Expenses = () => {
                         </DialogContent>
                       </Dialog>
                     </div>
-                    <Select
+                    <Popover open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isCategoryPickerOpen}
+                          className="w-full justify-between"
+                        >
+                          {formData.category || "Selecione a categoria"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Digite para pesquisar" />
+                          <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {categories.map((cat) => (
+                                <CommandItem
+                                  key={cat.id}
+                                  value={cat.name}
+                                  onSelect={(currentValue) => {
+                                    setFormData({ ...formData, category: currentValue });
+                                    setIsCategoryPickerOpen(false);
+                                  }}
+                                >
+                                  {cat.name}
+                                  {formData.category === cat.name && (
+                                    <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <input
+                      type="text"
+                      className="sr-only"
                       value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      onChange={() => {}}
                       required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cost_center_id">Centro de Custo *</Label>
