@@ -277,6 +277,11 @@ const ExpenseCategories = () => {
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {!editingCategory && (
+                  <p className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
+                    Criando nova {activeTab === "expense" ? "categoria de despesa" : "categoria de receita"}
+                  </p>
+                )}
                 <div className="grid gap-2">
                   <Label htmlFor="code">Código</Label>
                   <Input
