@@ -117,7 +117,7 @@ const ExpenseCategories = () => {
       }
 
       const table = activeTab === "expense" ? "expense_categories" : "revenue_categories";
-      const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
+      const currentCategories = getCategoriesByTab(activeTab);
       const normalizedName = formData.name.trim().toLowerCase();
 
       if (!editingCategory) {
@@ -129,6 +129,10 @@ const ExpenseCategories = () => {
           return;
         }
       }
+
+      const codeToUse = editingCategory
+        ? editingCategory.code
+        : formData.code || getNextSequentialCodeValue(currentCategories);
 
       if (editingCategory) {
         const response = await supabase
