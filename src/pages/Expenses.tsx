@@ -41,6 +41,7 @@ const Expenses = () => {
     description: "",
   });
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const [isAccountPickerOpen, setIsAccountPickerOpen] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     description: "",
