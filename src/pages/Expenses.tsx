@@ -299,6 +299,7 @@ const Expenses = () => {
 
         let newExpense: any = null;
         try {
+          console.log("Dados sendo salvos:", updateData);
           const { data, error } = await supabase
             .from("expenses")
             .insert(updateData)
@@ -306,8 +307,15 @@ const Expenses = () => {
             .single();
 
           if (error) {
-            console.error("Erro ao criar despesa:", error);
-            throw new Error("Falha ao criar despesa no banco de dados");
+            const errorMsg = getErrorMessage(error);
+            console.error("Erro Supabase ao criar despesa:", {
+              error,
+              message: errorMsg,
+              details: error?.details,
+              hint: error?.hint,
+              code: error?.code,
+            });
+            throw new Error(`Falha ao criar despesa: ${errorMsg}`);
           }
 
           newExpense = data;
@@ -318,6 +326,8 @@ const Expenses = () => {
             errorMsg = insertError.message;
           } else if (typeof insertError === "string") {
             errorMsg = insertError;
+          } else {
+            errorMsg = getErrorMessage(insertError);
           }
 
           console.error("Erro ao inserir despesa:", errorMsg);
