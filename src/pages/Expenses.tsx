@@ -609,27 +609,41 @@ const Expenses = () => {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Digite para pesquisar" />
-                          <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Digite para pesquisar"
+                            value={accountSearchQuery}
+                            onValueChange={setAccountSearchQuery}
+                          />
                           <CommandList>
-                            <CommandGroup>
-                              {accounts.map((account) => (
-                                <CommandItem
-                                  key={account.id}
-                                  value={account.id}
-                                  onSelect={(currentValue) => {
-                                    setFormData({ ...formData, account_id: currentValue });
-                                    setIsAccountPickerOpen(false);
-                                  }}
-                                >
-                                  {account.code} - {account.name}
-                                  {formData.account_id === account.id && (
-                                    <Check className="ml-auto h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
+                            {accounts.filter((account) =>
+                              `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
+                            ).length === 0 ? (
+                              <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {accounts
+                                  .filter((account) =>
+                                    `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
+                                  )
+                                  .map((account) => (
+                                    <CommandItem
+                                      key={account.id}
+                                      value={account.id}
+                                      onSelect={(currentValue) => {
+                                        setFormData({ ...formData, account_id: currentValue });
+                                        setIsAccountPickerOpen(false);
+                                        setAccountSearchQuery("");
+                                      }}
+                                    >
+                                      {account.code} - {account.name}
+                                      {formData.account_id === account.id && (
+                                        <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
