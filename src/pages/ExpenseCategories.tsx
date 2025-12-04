@@ -412,7 +412,7 @@ const ExpenseCategories = () => {
                     {currentCategories.map((category, index) => (
                       <TableRow key={category.id}>
                         <TableCell className="font-mono text-sm">
-                          {index + 1}
+                          {category.code || `CAT_${index + 1}`}
                         </TableCell>
                         <TableCell className="font-medium">
                           {category.name}
