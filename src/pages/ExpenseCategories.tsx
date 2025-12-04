@@ -353,15 +353,44 @@ const ExpenseCategories = () => {
                   <Label htmlFor="name">
                     Nome da Categoria <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="name"
-                    placeholder="ex: Contas Fixas"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      placeholder="ex: Contas Fixas"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      required
+                      autoComplete="off"
+                      aria-autocomplete="list"
+                      aria-expanded={!editingCategory && nameSuggestions.length > 0}
+                      aria-controls="category-name-suggestions"
+                    />
+                    {!editingCategory && nameSuggestions.length > 0 && (
+                      <div
+                        id="category-name-suggestions"
+                        className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg"
+                      >
+                        {nameSuggestions.map((category) => (
+                          <button
+                            type="button"
+                            key={category.id}
+                            className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-muted"
+                            onClick={() => handleSuggestionSelect(category.name)}
+                          >
+                            <span>{category.name}</span>
+                            <span className="text-xs text-muted-foreground">Já existe</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {!editingCategory && hasExactMatch && (
+                    <p className="text-xs text-destructive">
+                      Já existe uma categoria com este nome. Considere reutilizá-la.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-2">
