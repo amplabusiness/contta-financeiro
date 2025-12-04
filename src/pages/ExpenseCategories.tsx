@@ -166,28 +166,27 @@ const ExpenseCategories = () => {
 
   const handleDelete = async (category: Category) => {
     try {
-      const table = activeTab === "expense" ? "expense_categories" : "revenue_categories";
-      const tableName = activeTab === "expense" ? "expenses" : "invoices";
-      const fieldName = activeTab === "expense" ? "category" : "category";
+      const isExpenseTab = activeTab === "expense";
+      const table = isExpenseTab ? "expense_categories" : "revenue_categories";
 
-      // Check if there are any items linked to this category
-      const checkResponse = await supabase
-        .from(tableName)
-        .select("id")
-        .eq(fieldName, category.name)
-        .limit(1);
+      if (isExpenseTab) {
+        const { data, error } = await supabase
+          .from("expenses")
+          .select("id")
+          .eq("category", category.name)
+          .limit(1);
 
-      if (checkResponse.error) {
-        console.error(`Erro ao verificar ${tableName}`);
-        throw new Error(`Não é possível excluir. Verifique se há itens associados.`);
-      }
+        if (error) {
+          console.error("Erro ao verificar despesas vinculadas", error);
+          throw new Error("Não foi possível verificar despesas associadas. Tente novamente.");
+        }
 
-      if (checkResponse.data && checkResponse.data.length > 0) {
-        const itemType = activeTab === "expense" ? "despesas" : "receitas";
-        toast.error(
-          `Não é possível excluir a categoria "${category.name}" porque existem ${itemType} vinculadas a ela. Delete os itens primeiro.`
-        );
-        return;
+        if (data && data.length > 0) {
+          toast.error(
+            `Não é possível excluir a categoria "${category.name}" porque existem despesas vinculadas a ela. Delete os itens primeiro.`
+          );
+          return;
+        }
       }
 
       const deleteResponse = await supabase
