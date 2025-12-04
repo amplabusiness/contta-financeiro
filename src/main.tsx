@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import "@/lib/patchFetchForVitePing";
 import { StrictMode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
