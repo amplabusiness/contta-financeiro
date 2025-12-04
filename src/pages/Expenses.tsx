@@ -265,27 +265,36 @@ const Expenses = () => {
 
       if (editingExpense) {
         try {
+          console.log("Atualizando despesa com dados:", expenseData);
           const response = await supabase
             .from("expenses")
             .update(expenseData)
             .eq("id", editingExpense.id);
 
           if (response.error) {
-            console.error("Erro ao atualizar despesa:", response.error);
-            throw new Error("Falha ao atualizar despesa no banco de dados");
+            const errorMsg = getErrorMessage(response.error);
+            console.error("Erro Supabase ao atualizar despesa:", {
+              error: response.error,
+              message: errorMsg,
+              details: response.error?.details,
+              hint: response.error?.hint,
+              code: response.error?.code,
+            });
+            throw new Error(`Falha ao atualizar despesa: ${errorMsg}`);
           }
 
           console.log("Despesa atualizada com sucesso");
           toast.success("Despesa atualizada com sucesso!");
           notifyExpenseChange();
         } catch (updateError: any) {
-          // Only extract message from actual Error instances
           let errorMsg = "Erro ao atualizar despesa";
 
           if (updateError instanceof Error) {
             errorMsg = updateError.message;
           } else if (typeof updateError === "string") {
             errorMsg = updateError;
+          } else {
+            errorMsg = getErrorMessage(updateError);
           }
 
           console.error("Erro na atualização:", errorMsg);
