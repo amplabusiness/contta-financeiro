@@ -600,6 +600,14 @@ const Expenses = () => {
               : "Controle de contas a pagar - selecione um cliente para filtrar"
             }
           </p>
+          {(selectedYear || selectedMonth || selectedClientId) && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
+              <span className="font-medium">⚠️ Filtros ativos:</span>
+              {selectedYear && <Badge variant="secondary">Ano: {selectedYear}</Badge>}
+              {selectedMonth && <Badge variant="secondary">Mês: {selectedMonth}</Badge>}
+              {selectedClientId && <Badge variant="secondary">Cliente: {selectedClientName}</Badge>}
+            </div>
+          )}
         </div>
 
         <Card>
