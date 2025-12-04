@@ -26,8 +26,10 @@ interface Category {
 }
 
 const ExpenseCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<Category[]>([]);
+  const [revenueCategories, setRevenueCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"expense" | "revenue">("expense");
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -43,22 +45,38 @@ const ExpenseCategories = () => {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const response = await supabase
-        .from("expense_categories")
-        .select("*")
-        .order("display_order", { ascending: true });
+      const [expenseResponse, revenueResponse] = await Promise.all([
+        supabase
+          .from("expense_categories")
+          .select("*")
+          .order("display_order", { ascending: true }),
+        supabase
+          .from("revenue_categories")
+          .select("*")
+          .order("display_order", { ascending: true })
+      ]);
 
-      if (response.error) {
-        console.error("Erro ao carregar categorias");
-        throw new Error("Erro ao carregar categorias");
+      if (expenseResponse.error) {
+        console.error("Erro ao carregar categorias de despesas");
+        throw new Error("Erro ao carregar categorias de despesas");
+      }
+
+      if (revenueResponse.error) {
+        console.error("Erro ao carregar categorias de receitas");
+        throw new Error("Erro ao carregar categorias de receitas");
       }
 
       // Deduplicate by name to prevent render key issues
-      const uniqueCategories = Array.from(
-        new Map((response.data || []).map(cat => [cat.name, cat])).values()
+      const uniqueExpenseCategories = Array.from(
+        new Map((expenseResponse.data || []).map(cat => [cat.name, cat])).values()
       );
 
-      setCategories(uniqueCategories);
+      const uniqueRevenueCategories = Array.from(
+        new Map((revenueResponse.data || []).map(cat => [cat.name, cat])).values()
+      );
+
+      setExpenseCategories(uniqueExpenseCategories);
+      setRevenueCategories(uniqueRevenueCategories);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : "Erro ao carregar categorias";
       console.error("Erro ao carregar categorias:", errorMsg);
@@ -82,9 +100,12 @@ const ExpenseCategories = () => {
         return;
       }
 
+      const table = activeTab === "expense" ? "expense_categories" : "revenue_categories";
+      const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
+
       if (editingCategory) {
         const response = await supabase
-          .from("expense_categories")
+          .from(table)
           .update({
             code: formData.code || editingCategory.code,
             name: formData.name,
@@ -101,7 +122,7 @@ const ExpenseCategories = () => {
         toast.success("Categoria atualizada com sucesso!");
       } else {
         const response = await supabase
-          .from("expense_categories")
+          .from(table)
           .insert({
             code: formData.code || `CAT_${Date.now()}`,
             name: formData.name,
@@ -109,7 +130,7 @@ const ExpenseCategories = () => {
             color: formData.color,
             icon: formData.icon || null,
             is_active: true,
-            display_order: (categories.length) + 1,
+            display_order: currentCategories.length + 1,
           });
 
         if (response.error) {
@@ -134,27 +155,32 @@ const ExpenseCategories = () => {
 
   const handleDelete = async (category: Category) => {
     try {
-      // Check if there are any expenses linked to this category
+      const table = activeTab === "expense" ? "expense_categories" : "revenue_categories";
+      const tableName = activeTab === "expense" ? "expenses" : "invoices";
+      const fieldName = activeTab === "expense" ? "category" : "category";
+
+      // Check if there are any items linked to this category
       const checkResponse = await supabase
-        .from("expenses")
+        .from(tableName)
         .select("id")
-        .eq("category", category.name)
+        .eq(fieldName, category.name)
         .limit(1);
 
       if (checkResponse.error) {
-        console.error("Erro ao verificar despesas");
-        throw new Error("Não é possível excluir. Verifique se há despesas associadas.");
+        console.error(`Erro ao verificar ${tableName}`);
+        throw new Error(`Não é possível excluir. Verifique se há itens associados.`);
       }
 
       if (checkResponse.data && checkResponse.data.length > 0) {
+        const itemType = activeTab === "expense" ? "despesas" : "receitas";
         toast.error(
-          `Não é possível excluir a categoria "${category.name}" porque existem despesas vinculadas a ela. Delete as despesas primeiro.`
+          `Não é possível excluir a categoria "${category.name}" porque existem ${itemType} vinculadas a ela. Delete os itens primeiro.`
         );
         return;
       }
 
       const deleteResponse = await supabase
-        .from("expense_categories")
+        .from(table)
         .delete()
         .eq("id", category.id);
 
@@ -203,7 +229,7 @@ const ExpenseCategories = () => {
     }
   };
 
-  if (loading && categories.length === 0) {
+  if (loading && expenseCategories.length === 0 && revenueCategories.length === 0) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -216,32 +242,36 @@ const ExpenseCategories = () => {
     );
   }
 
+  const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
+  const tabTitle = activeTab === "expense" ? "Categorias de Despesas" : "Categorias de Receitas";
+  const defaultColor = activeTab === "expense" ? "#3B82F6" : "#10B981";
+
   return (
     <Layout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Categorias de Despesas</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Gestão de Categorias</h1>
             <p className="text-muted-foreground mt-2">
-              Gerencie as categorias de despesas do seu sistema
+              Gerencie as categorias de despesas e receitas do seu sistema
             </p>
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Nova Categoria
+                {activeTab === "expense" ? "Nova Categoria de Despesa" : "Nova Categoria de Receita"}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>
-                  {editingCategory ? "Editar Categoria" : "Nova Categoria"}
+                  {editingCategory ? "Editar Categoria" : `Nova ${activeTab === "expense" ? "Categoria de Despesa" : "Categoria de Receita"}`}
                 </DialogTitle>
                 <DialogDescription>
                   {editingCategory
-                    ? "Atualize os dados da categoria"
-                    : "Crie uma nova categoria de despesas"}
+                    ? `Atualize os dados da categoria`
+                    : `Crie uma nova categoria de ${activeTab === "expense" ? "despesas" : "receitas"}`}
                 </DialogDescription>
               </DialogHeader>
 
@@ -292,28 +322,28 @@ const ExpenseCategories = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="color">Cor</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="color"
-                        type="color"
-                        value={formData.color}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: e.target.value })
-                        }
-                        className="h-10 w-20 cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={formData.color}
-                        onChange={(e) =>
-                          setFormData({ ...formData, color: e.target.value })
-                        }
-                        placeholder="#3B82F6"
-                        className="flex-1"
-                      />
-                    </div>
+                  <Label htmlFor="color">Cor</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="color"
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
+                      className="h-10 w-20 cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.color}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
+                      placeholder={defaultColor}
+                      className="flex-1"
+                    />
                   </div>
+                </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="icon">Ícone</Label>
@@ -348,15 +378,30 @@ const ExpenseCategories = () => {
           </Dialog>
         </div>
 
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={activeTab === "expense" ? "default" : "outline"}
+            onClick={() => setActiveTab("expense")}
+          >
+            Categorias de Despesas
+          </Button>
+          <Button
+            variant={activeTab === "revenue" ? "default" : "outline"}
+            onClick={() => setActiveTab("revenue")}
+          >
+            Categorias de Receitas
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Categorias</CardTitle>
+            <CardTitle>{tabTitle}</CardTitle>
             <CardDescription>
-              Total de {categories.length} categorias cadastradas
+              Total de {currentCategories.length} categorias cadastradas
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {categories.length === 0 ? (
+            {currentCategories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
@@ -381,13 +426,19 @@ const ExpenseCategories = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {categories.map((category, index) => (
+                    {currentCategories.map((category, index) => (
                       <TableRow key={category.id}>
                         <TableCell className="font-mono text-sm">
                           {index + 1}
                         </TableCell>
                         <TableCell className="font-medium">
-                          {category.name}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded"
+                              style={{ backgroundColor: category.color || defaultColor }}
+                            />
+                            {category.name}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
