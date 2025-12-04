@@ -75,6 +75,18 @@ const buildResponseHeaders = (rawHeaders: string): Headers => {
   return headers;
 };
 
+const shouldUseNullBody = (status: number): boolean => {
+  switch (status) {
+    case 101:
+    case 204:
+    case 205:
+    case 304:
+      return true;
+    default:
+      return false;
+  }
+};
+
 export const customFetch = async (input: SupportedRequestInfo, init?: RequestInit): Promise<Response> => {
   if (typeof XMLHttpRequest === "undefined") {
     if (typeof fetch !== "function") {
@@ -126,7 +138,7 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
         statusText: xhr.statusText,
         headers: responseHeaders,
       };
-      const responseBody = xhr.response ?? null;
+      const responseBody = shouldUseNullBody(xhr.status) ? null : xhr.response ?? null;
       resolve(new Response(responseBody, responseInit));
     };
 
