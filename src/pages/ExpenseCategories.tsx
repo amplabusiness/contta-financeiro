@@ -216,7 +216,7 @@ const ExpenseCategories = () => {
       code: category.code,
       name: category.name,
       description: category.description || "",
-      color: category.color || "#3B82F6",
+      color: category.color || "",
       icon: category.icon || "",
     });
     setOpen(true);
