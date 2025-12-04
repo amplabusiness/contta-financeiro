@@ -231,6 +231,10 @@ const Expenses = () => {
         throw new Error("Centro de custo é obrigatório");
       }
 
+      if (!formData.category) {
+        throw new Error("Categoria é obrigatória");
+      }
+
       const accountId = formData.account_id;
 
     if (!accountId) {
