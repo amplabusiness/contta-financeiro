@@ -712,8 +712,10 @@ const Expenses = () => {
                       type="text"
                       className="sr-only"
                       value={formData.category}
-                      onChange={() => {}}
+                      readOnly
                       required
+                      tabIndex={-1}
+                      aria-hidden="true"
                     />
                   </div>
                   <div className="space-y-2">
