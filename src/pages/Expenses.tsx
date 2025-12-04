@@ -61,20 +61,28 @@ const Expenses = () => {
     loadCostCenters();
   }, [selectedYear, selectedMonth, selectedClientId]);
 
+  const normalizeAccountType = (value?: string | null) => value?.trim().toLowerCase() ?? "";
+
   const loadAccounts = async () => {
     try {
       const response = await supabase
         .from("chart_of_accounts")
-        .select("*")
-        .eq("type", "despesa")
+        .select("id, code, name, account_type, type, is_active")
         .eq("is_active", true)
+        .or("account_type.ilike.DESPESA,type.ilike.despesa")
         .order("code");
 
       if (response.error) {
         console.error("Erro ao carregar contas");
         throw new Error("Erro ao carregar contas");
       }
-      setAccounts(response.data || []);
+
+      const filteredAccounts = (response.data || []).filter((account) =>
+        normalizeAccountType(account.account_type).includes("despesa") ||
+        normalizeAccountType(account.type) === "despesa"
+      );
+
+      setAccounts(filteredAccounts);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
       console.error("Erro ao carregar contas:", errorMsg);
