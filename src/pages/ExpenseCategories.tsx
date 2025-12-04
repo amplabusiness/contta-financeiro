@@ -352,24 +352,28 @@ const ExpenseCategories = () => {
                     Criando nova {activeTab === "expense" ? "categoria de despesa" : "categoria de receita"}
                   </p>
                 )}
-                <div className="grid gap-2">
-                  <Label htmlFor="code">Código</Label>
-                  <Input
-                    id="code"
-                    placeholder="ex: CAT_001"
-                    value={codeInputValue}
-                    onChange={(e) =>
-                      setFormData({ ...formData, code: e.target.value })
-                    }
-                    disabled={!!editingCategory}
-                    readOnly={!!editingCategory}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {editingCategory
-                      ? "Gerado automaticamente pela posição na lista"
-                      : "Auto-gerado se deixado em branco"}
-                  </p>
-                </div>
+                {editingCategory ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="code">Código</Label>
+                    <Input
+                      id="code"
+                      placeholder="ex: CAT_001"
+                      value={codeInputValue}
+                      onChange={(e) =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
+                      disabled
+                      readOnly
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Gerado automaticamente pela posição na lista
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md bg-muted/60 p-3 text-xs text-muted-foreground">
+                    O código será gerado automaticamente na sequência (1, 2, 3...).
+                  </div>
+                )}
 
                 <div className="grid gap-2">
                   <Label htmlFor="name">
