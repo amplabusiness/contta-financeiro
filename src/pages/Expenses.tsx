@@ -592,21 +592,47 @@ const Expenses = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="account_id">Plano de Contas</Label>
-                    <Select
-                      value={formData.account_id}
-                      onValueChange={(value) => setFormData({ ...formData, account_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a conta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.code} - {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={isAccountPickerOpen} onOpenChange={setIsAccountPickerOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isAccountPickerOpen}
+                          className="w-full justify-between"
+                        >
+                          {formData.account_id && accounts.find((acc) => acc.id === formData.account_id)
+                            ? `${accounts.find((acc) => acc.id === formData.account_id)?.code} - ${accounts.find((acc) => acc.id === formData.account_id)?.name}`
+                            : "Selecione a conta"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Digite para pesquisar" />
+                          <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {accounts.map((account) => (
+                                <CommandItem
+                                  key={account.id}
+                                  value={account.id}
+                                  onSelect={(currentValue) => {
+                                    setFormData({ ...formData, account_id: currentValue });
+                                    setIsAccountPickerOpen(false);
+                                  }}
+                                >
+                                  {account.code} - {account.name}
+                                  {formData.account_id === account.id && (
+                                    <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
