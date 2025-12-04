@@ -259,7 +259,10 @@ const ExpenseCategories = () => {
           </div>
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button
+                className="gap-2"
+                onClick={() => resetForm()}
+              >
                 <Plus className="h-4 w-4" />
                 {activeTab === "expense" ? "Nova Categoria de Despesa" : "Nova Categoria de Receita"}
               </Button>
