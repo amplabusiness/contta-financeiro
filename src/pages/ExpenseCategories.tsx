@@ -244,7 +244,6 @@ const ExpenseCategories = () => {
 
   const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
   const tabTitle = activeTab === "expense" ? "Categorias de Despesas" : "Categorias de Receitas";
-  const defaultColor = activeTab === "expense" ? "#3B82F6" : "#10B981";
 
   return (
     <Layout>
@@ -328,31 +327,7 @@ const ExpenseCategories = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                  <Label htmlFor="color">Cor</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="color"
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) =>
-                        setFormData({ ...formData, color: e.target.value })
-                      }
-                      className="h-10 w-20 cursor-pointer"
-                    />
-                    <Input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) =>
-                        setFormData({ ...formData, color: e.target.value })
-                      }
-                      placeholder={defaultColor}
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
+                <div className="grid gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="icon">Ícone</Label>
                     <Input
@@ -440,13 +415,7 @@ const ExpenseCategories = () => {
                           {index + 1}
                         </TableCell>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded"
-                              style={{ backgroundColor: category.color || defaultColor }}
-                            />
-                            {category.name}
-                          </div>
+                          {category.name}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
