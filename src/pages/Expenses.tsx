@@ -226,6 +226,14 @@ const Expenses = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      if (!formData.description?.trim()) {
+        throw new Error("Descrição é obrigatória");
+      }
+
+      if (!formData.amount || parseFloat(formData.amount) <= 0) {
+        throw new Error("Valor deve ser maior que zero");
+      }
+
       if (!formData.due_date) {
         throw new Error("Data de vencimento é obrigatória");
       }
@@ -240,8 +248,8 @@ const Expenses = () => {
 
       const accountId = formData.account_id;
 
-    if (!accountId) {
-        throw new Error("Conta contábil é obrigatória ou não pôde ser mapeada automaticamente");
+      if (!accountId) {
+        throw new Error("Conta contábil é obrigatória");
       }
 
       const [year, month, day] = formData.due_date.split('-');
