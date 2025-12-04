@@ -38,7 +38,7 @@ const ExpenseCategories = () => {
     code: "",
     name: "",
     description: "",
-    color: "#3B82F6",
+    color: "",
     icon: "",
   });
 
