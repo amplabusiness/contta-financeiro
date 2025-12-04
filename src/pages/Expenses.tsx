@@ -428,6 +428,8 @@ const Expenses = () => {
       is_recurring: false,
       recurrence_day: 10,
     });
+    setAccountSearchQuery("");
+    setCategorySearchQuery("");
   };
 
   const handleCreateNewCategory = async (e: React.FormEvent) => {
