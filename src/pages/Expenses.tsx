@@ -594,7 +594,10 @@ const Expenses = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="account_id">Plano de Contas</Label>
-                    <Popover open={isAccountPickerOpen} onOpenChange={setIsAccountPickerOpen}>
+                    <Popover open={isAccountPickerOpen} onOpenChange={(open) => {
+                      setIsAccountPickerOpen(open);
+                      if (!open) setAccountSearchQuery("");
+                    }}>
                       <PopoverTrigger asChild>
                         <Button
                           type="button"
