@@ -357,8 +357,18 @@ const Expenses = () => {
       resetForm();
       loadExpenses();
     } catch (error: any) {
-      const errorMsg = error instanceof Error ? error.message : "Erro ao salvar despesa";
-      console.error("Erro capturado no handleSubmit:", errorMsg);
+      let errorMsg = "Erro ao salvar despesa";
+
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else {
+        errorMsg = getErrorMessage(error);
+      }
+
+      console.error("Erro capturado no handleSubmit:", {
+        message: errorMsg,
+        error,
+      });
       toast.error(errorMsg);
     } finally {
       setLoading(false);
