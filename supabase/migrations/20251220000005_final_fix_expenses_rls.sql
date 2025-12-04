@@ -1,9 +1,7 @@
--- =====================================================
--- FINAL FIX: Simple permissive RLS policy for expenses
--- Allows authenticated users to create expenses
--- =====================================================
+-- Enable RLS on the expenses table
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
--- Drop ALL restrictive policies
+-- Drop ALL existing policies
 DROP POLICY IF EXISTS "Admins and accountants can create expenses" ON public.expenses;
 DROP POLICY IF EXISTS "Admins and accountants can view expenses" ON public.expenses;
 DROP POLICY IF EXISTS "Admins and accountants can update expenses" ON public.expenses;
@@ -21,26 +19,33 @@ DROP POLICY IF EXISTS "authenticated_update_expenses" ON public.expenses;
 DROP POLICY IF EXISTS "authenticated_delete_expenses" ON public.expenses;
 DROP POLICY IF EXISTS "authenticated_all_expenses" ON public.expenses;
 DROP POLICY IF EXISTS "authenticated_all_operations" ON public.expenses;
+DROP POLICY IF EXISTS "expenses_authenticated_insert" ON public.expenses;
+DROP POLICY IF EXISTS "expenses_authenticated_select" ON public.expenses;
+DROP POLICY IF EXISTS "expenses_authenticated_update" ON public.expenses;
+DROP POLICY IF EXISTS "expenses_authenticated_delete" ON public.expenses;
 
--- Create simple permissive policies for all authenticated users
+-- Create simple permissive policies
 CREATE POLICY "expenses_authenticated_insert"
-  ON public.expenses FOR INSERT
+  ON public.expenses
+  FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
 CREATE POLICY "expenses_authenticated_select"
-  ON public.expenses FOR SELECT
+  ON public.expenses
+  FOR SELECT
   TO authenticated
   USING (true);
 
 CREATE POLICY "expenses_authenticated_update"
-  ON public.expenses FOR UPDATE
+  ON public.expenses
+  FOR UPDATE
   TO authenticated
-  USING (true);
+  USING (true)
+  WITH CHECK (true);
 
 CREATE POLICY "expenses_authenticated_delete"
-  ON public.expenses FOR DELETE
+  ON public.expenses
+  FOR DELETE
   TO authenticated
   USING (true);
-
-RAISE NOTICE '✅ RLS policies fixed - authenticated users can now create expenses';
