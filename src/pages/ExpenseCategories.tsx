@@ -102,6 +102,17 @@ const ExpenseCategories = () => {
 
       const table = activeTab === "expense" ? "expense_categories" : "revenue_categories";
       const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
+      const normalizedName = formData.name.trim().toLowerCase();
+
+      if (!editingCategory) {
+        const duplicate = currentCategories.some(
+          (category) => category.name.trim().toLowerCase() === normalizedName
+        );
+        if (duplicate) {
+          toast.error("Já existe uma categoria com esse nome");
+          return;
+        }
+      }
 
       if (editingCategory) {
         const response = await supabase
@@ -245,6 +256,27 @@ const ExpenseCategories = () => {
   const currentCategories = activeTab === "expense" ? expenseCategories : revenueCategories;
   const tabTitle = activeTab === "expense" ? "Categorias de Despesas" : "Categorias de Receitas";
 
+  const nameSuggestions = useMemo(() => {
+    if (editingCategory) {
+      return [];
+    }
+    const query = formData.name.trim().toLowerCase();
+    if (!query) {
+      return [];
+    }
+    return currentCategories
+      .filter((category) => category.name.toLowerCase().includes(query))
+      .slice(0, 5);
+  }, [currentCategories, formData.name, editingCategory]);
+
+  const hasExactMatch = useMemo(() => {
+    if (!formData.name.trim()) return false;
+    const normalized = formData.name.trim().toLowerCase();
+    return currentCategories.some(
+      (category) => category.name.trim().toLowerCase() === normalized
+    );
+  }, [currentCategories, formData.name]);
+
   const getDisplayCode = (category: Category | null): string => {
     if (!category) {
       return "";
@@ -255,6 +287,10 @@ const ExpenseCategories = () => {
   };
 
   const codeInputValue = editingCategory ? getDisplayCode(editingCategory) : formData.code;
+
+  const handleSuggestionSelect = (categoryName: string) => {
+    setFormData((prev) => ({ ...prev, name: categoryName }));
+  };
 
   return (
     <Layout>
