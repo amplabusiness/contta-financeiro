@@ -234,7 +234,7 @@ const CostCenterAnalysis = () => {
       const { data, error } = await supabase
         .from("chart_of_accounts")
         .select("id, code, name, account_type")
-        .eq("is_analytical", true)
+        .is("parent_id", null)
         .eq("is_active", true)
         .order("code");
 
@@ -244,7 +244,7 @@ const CostCenterAnalysis = () => {
       console.error("Erro ao carregar plano de contas:", error);
       toast.error("Erro ao carregar plano de contas");
     }
-  };
+  }
 
   const handleAccountChange = async (centerId: string, accountId: string) => {
     try {
