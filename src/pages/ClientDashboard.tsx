@@ -529,52 +529,6 @@ const ClientDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Movimento do Razão</CardTitle>
-              <CardDescription>Últimos 20 lançamentos do razão</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {ledgerEntries.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum movimento no razão ainda
-                </p>
-              ) : (
-                <div className="max-h-[400px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Débito</TableHead>
-                        <TableHead>Crédito</TableHead>
-                        <TableHead>Saldo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ledgerEntries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell>{formatLocalDate(entry.transaction_date)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {entry.description}
-                          </TableCell>
-                          <TableCell className="text-destructive">
-                            {entry.debit > 0 ? formatCurrency(entry.debit) : "-"}
-                          </TableCell>
-                          <TableCell className="text-success">
-                            {entry.credit > 0 ? formatCurrency(entry.credit) : "-"}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {formatCurrency(entry.balance)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </Layout>
