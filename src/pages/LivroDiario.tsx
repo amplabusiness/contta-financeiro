@@ -95,6 +95,7 @@ const LivroDiario = () => {
             debit,
             credit,
             description,
+            chart_of_accounts_id,
             chart_of_accounts (
               code,
               name
@@ -110,11 +111,12 @@ const LivroDiario = () => {
       if (error) throw error
 
       const diarioEntries: DiarioEntry[] = []
-      
+
       data?.forEach((entry: any) => {
         entry.accounting_entry_lines?.forEach((line: any) => {
           diarioEntries.push({
             numero_lancamento: entry.id,
+            linha_id: line.id,
             data_lancamento: entry.entry_date,
             descricao: entry.description,
             tipo_lancamento: entry.entry_type,
@@ -123,7 +125,8 @@ const LivroDiario = () => {
             nome_conta: line.chart_of_accounts?.name || '',
             debito: line.debit || 0,
             credito: line.credit || 0,
-            historico: line.description || entry.description
+            historico: line.description || entry.description,
+            chart_of_accounts_id: line.chart_of_accounts_id
           })
         })
       })
