@@ -82,17 +82,17 @@ const CostCenterAudit = () => {
         registeredByCenter.set(link.cost_center_id, accounts);
       });
 
-      // 4. Get all expenses and their linked accounts
+      // 4. Get all expenses with their cost center and account relationships
       const { data: expenses, error: expError } = await supabase
-        .from("vw_expenses_with_accounts")
-        .select("cost_center_id, account_id, account_code, amount");
+        .from("expenses")
+        .select("id, cost_center_id, account_id, amount");
 
       if (expError) throw expError;
 
       // Group expenses by cost center and account
       const expensesByCenter = new Map<string, Map<string, { amount: number; count: number }>>();
 
-      expenses?.forEach(exp => {
+      expenses?.forEach((exp: any) => {
         if (!exp.cost_center_id || !exp.account_id) return;
 
         if (!expensesByCenter.has(exp.cost_center_id)) {
