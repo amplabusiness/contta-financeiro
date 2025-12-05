@@ -475,12 +475,16 @@ const CostCenterAnalysis = () => {
         <Card>
           <CardHeader>
             <CardTitle>Ranking de Gastos por Centro de Custo</CardTitle>
-            <CardDescription>Departamentos ordenados por valor de despesas</CardDescription>
+            <CardDescription>Departamentos ordenados por valor de despesas (clique para ver lançamentos)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {costCenterData.map((center, index) => (
-                <div key={center.name} className="flex items-center gap-4">
+                <div
+                  key={center.name}
+                  className="flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors"
+                  onClick={() => loadCostCenterExpenses(center)}
+                >
                   <div className="text-2xl font-bold text-muted-foreground w-8">{index + 1}</div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
