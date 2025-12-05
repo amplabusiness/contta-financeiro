@@ -267,6 +267,68 @@ const PendingReconciliations = () => {
     }
   };
 
+  const handleUndoReconciliation = async (reconciliationId: string) => {
+    const reconciliation = pending.find(r => r.id === reconciliationId);
+    if (!reconciliation || reconciliation.status !== "approved") return;
+
+    if (!confirm("Desafazer esta conciliação? A fatura voltará a ficar pendente.")) return;
+
+    setProcessingId(reconciliationId);
+
+    try {
+      // 1. Revert invoice status to pending
+      if (reconciliation.invoice_id) {
+        const { error: invoiceError } = await supabase
+          .from("invoices")
+          .update({
+            status: "pending",
+            payment_date: null,
+            cnab_reference: null,
+            reconciled_at: null,
+          })
+          .eq("id", reconciliation.invoice_id);
+
+        if (invoiceError) throw invoiceError;
+      }
+
+      // 2. Delete related accounting entries
+      const { error: deleteEntryError } = await supabase
+        .from("accounting_entries")
+        .delete()
+        .eq("invoice_id", reconciliation.invoice_id)
+        .eq("description", `Reconciliação OFX/CNAB - ${reconciliation.cnab_document}`);
+
+      if (deleteEntryError) {
+        console.error("Aviso: Erro ao deletar lançamento contábil:", deleteEntryError);
+        // Não falha aqui, continua
+      }
+
+      // 3. Revert reconciliation to pending
+      const { error: updateError } = await supabase
+        .from("pending_reconciliations")
+        .update({
+          status: "pending",
+          approved_at: null,
+          approved_by: null,
+          chart_of_accounts_id: null,
+          cost_center_id: null,
+        })
+        .eq("id", reconciliationId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Conciliação desfeita! Fatura e conciliação voltaram ao status pendente.");
+
+      // Reload pending list
+      await loadPendingReconciliations();
+    } catch (error: any) {
+      toast.error("Erro ao desfazer conciliação");
+      console.error(error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const approvedCount = pending.filter(p => p.status === "approved").length;
   const rejectedCount = pending.filter(p => p.status === "rejected").length;
 
