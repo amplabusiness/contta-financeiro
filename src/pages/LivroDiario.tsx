@@ -152,8 +152,8 @@ const LivroDiario = () => {
 
   const handleClearFilter = () => {
     const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
     setLaunchDate('')
