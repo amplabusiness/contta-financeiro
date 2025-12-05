@@ -59,12 +59,13 @@ const CostCenterAnalysis = () => {
 
       let allExpenses: any[] = [];
 
-      // Busca 1: TODAS as despesas com este centro de custo (sem filtro de status)
+      // Busca 1: Despesas com status="paid" E cost_center_name (MESMA LÓGICA DO RANKING)
       try {
         let query = supabase
           .from("vw_expenses_with_accounts")
           .select("*")
-          .eq("cost_center_code", costCenter.code);
+          .eq("status", "paid")
+          .eq("cost_center_name", costCenter.name); // USA O NOME, NÃO O CÓDIGO!
 
         if (selectedMonth_) {
           const competence = `${selectedMonth_}/${selectedYear}`;
@@ -75,7 +76,7 @@ const CostCenterAnalysis = () => {
 
         const { data: expenseData, error: expenseError } = await query.order("created_at", { ascending: false });
 
-        console.log("Despesas encontradas (sem filtro status):", expenseData?.length);
+        console.log("Despesas pagas com cost_center_name =", costCenter.name, ":", expenseData?.length);
         if (expenseData && expenseData.length > 0) {
           console.log("Primeiras 3 despesas:", expenseData.slice(0, 3).map(e => ({
             description: e.description,
