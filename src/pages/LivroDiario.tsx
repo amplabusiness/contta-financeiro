@@ -107,8 +107,15 @@ const LivroDiario = () => {
         `)
         .order(dateField, { ascending: false })
 
-      if (start) query = query.gte(dateField, start)
-      if (end) query = query.lte(dateField, end)
+      if (dateField === 'created_at') {
+        // Para created_at (timestamp), adicionar horário completo do dia
+        if (start) query = query.gte(dateField, `${start}T00:00:00`)
+        if (end) query = query.lte(dateField, `${end}T23:59:59`)
+      } else {
+        // Para entry_date (apenas data), usar filtro normal
+        if (start) query = query.gte(dateField, start)
+        if (end) query = query.lte(dateField, end)
+      }
 
       const { data, error } = await query
       if (error) throw error
