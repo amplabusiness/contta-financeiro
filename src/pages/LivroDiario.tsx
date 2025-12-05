@@ -130,7 +130,7 @@ const LivroDiario = () => {
 
       const diarioEntries: DiarioEntry[] = []
 
-      data?.forEach((entry: any) => {
+      filteredData?.forEach((entry: any) => {
         entry.accounting_entry_lines?.forEach((line: any) => {
           diarioEntries.push({
             numero_lancamento: entry.id,
