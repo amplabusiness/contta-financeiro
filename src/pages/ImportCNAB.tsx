@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 
@@ -37,6 +38,7 @@ interface MatchedInvoice {
 }
 
 const ImportCNAB = () => {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [cnabFile, setCnabFile] = useState<File | null>(null);
@@ -101,13 +103,13 @@ const ImportCNAB = () => {
       setResult(data);
 
       if (data.reconciled > 0) {
-        toast.success(`${data.reconciled} faturas reconciliadas com sucesso!`);
+        toast.success(`${data.reconciled} matches encontrados! Revise no próximo passo.`);
       }
       if (data.unmatched > 0) {
         toast.info(`${data.unmatched} transações não encontraram correspondência`);
       }
       if (data.errors.length > 0) {
-        toast.error(`${data.errors.length} erros durante a conciliação`);
+        toast.error(`${data.errors.length} erros durante o processamento`);
       }
     } catch (error: any) {
       toast.error("Erro ao processar arquivo CNAB");
@@ -211,9 +213,25 @@ const ImportCNAB = () => {
 
         {result && (
           <div className="space-y-6">
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-blue-900">Arquivo Processado com Sucesso</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-blue-800">
+                  O arquivo foi processado e {result.reconciled} match(es) foram encontrado(s).
+                  <br />
+                  Revise e aprove as conciliações sugeridas.
+                </p>
+                <Button onClick={() => navigate("/pending-reconciliations")} className="w-full">
+                  Revisar Conciliações Pendentes
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="text-green-900">Resultado da Conciliação</CardTitle>
+                <CardTitle className="text-green-900">Resumo do Processamento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
