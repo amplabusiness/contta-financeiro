@@ -430,6 +430,7 @@ const LivroDiario = () => {
                           <TableHead>Histórico</TableHead>
                           <TableHead className="text-right">Débito</TableHead>
                           <TableHead className="text-right">Crédito</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
