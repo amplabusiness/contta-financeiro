@@ -104,84 +104,48 @@ const CostCenterAnalysis = () => {
         console.error("Erro ao buscar despesas:", err);
       }
 
-      // Busca 2: TODOS os lançamentos contábeis que mencionam este centro
+      // Busca 2: Lançamentos contábeis que mencionam "Ampla Saúde" (SIMPLIFICADO)
       try {
-        const { data: allAccountingEntries } = await supabase
+        // Busca direta usando SQL para "Ampla Saúde"
+        const { data: matchingEntries, error: entriesError } = await supabase
           .from("accounting_entries")
-          .select(`
-            id,
-            description,
-            entry_date,
-            entry_type,
-            accounting_entry_lines(
-              id,
-              debit,
-              credit,
-              account_id,
-              accounts(code, name)
-            )
-          `);
+          .select("id, description, entry_date, entry_type")
+          .ilike("description", `%${costCenter.name}%`);
 
-        console.log("Total lançamentos contábeis:", allAccountingEntries?.length);
+        console.log("Lançamentos contábeis encontrados:", matchingEntries?.length);
 
-        if (allAccountingEntries) {
-          // Filtrar por código ou nome do centro na descrição (aceita correspondência parcial)
-          const matchingEntries = allAccountingEntries.filter((entry: any) => {
-            const desc = (entry.description || "").toLowerCase();
-            const searchCode = costCenter.code.toLowerCase();
-            const searchName = costCenter.name.toLowerCase();
+        if (!entriesError && matchingEntries && matchingEntries.length > 0) {
+          // Para cada lançamento, buscar as linhas
+          const entriesWithLines = await Promise.all(
+            matchingEntries.map(async (entry: any) => {
+              const { data: lines } = await supabase
+                .from("accounting_entry_lines")
+                .select("debit, credit")
+                .eq("entry_id", entry.id);
 
-            // Remove acentos para comparação
-            const normalizeStr = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            const descNormalized = normalizeStr(desc);
-            const nameNormalized = normalizeStr(searchName);
+              const debitValue = lines?.reduce((sum, line) => sum + Number(line.debit || 0), 0) || 0;
+              const creditValue = lines?.reduce((sum, line) => sum + Number(line.credit || 0), 0) || 0;
+              const value = debitValue || creditValue;
 
-            // Busca pelo código ou nome (com ou sem acentos)
-            return desc.includes(searchCode) ||
-                   desc.includes(searchName) ||
-                   descNormalized.includes(nameNormalized) ||
-                   desc.includes(searchCode.replace(/\./g, '')) ||
-                   desc.includes(searchName.replace(/\s/g, ''));
-          });
+              const entryDate = entry.entry_date || new Date().toISOString();
+              const [year, month] = entryDate.split('-');
 
-          console.log("Lançamentos contábeis que mencionam", costCenter.name, ":", matchingEntries.length);
+              return {
+                id: entry.id,
+                description: entry.description,
+                expense_date: entryDate,
+                created_at: entryDate,
+                account_code: entry.entry_type,
+                competence: month && year ? `${month}/${year}` : '',
+                amount: value,
+                name: entry.description
+              };
+            })
+          );
 
-          if (matchingEntries.length > 0) {
-            console.log("Primeiros 5 lançamentos:", matchingEntries.slice(0, 5).map(e => ({
-              description: e.description,
-              entry_type: e.entry_type,
-              lines_count: e.accounting_entry_lines?.length
-            })));
-          }
-
-          // Converter para formato de despesa
-          const convertedEntries = matchingEntries.map((entry: any) => {
-            const lines = entry.accounting_entry_lines || [];
-            const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
-            const creditValue = lines.reduce((sum: number, line: any) => sum + Number(line.credit || 0), 0);
-            const value = debitValue || creditValue;
-
-            const entryDate = entry.entry_date || new Date().toISOString();
-            const [year, month] = entryDate.split('-');
-
-            // Pegar a conta do primeiro lançamento
-            const firstLine = lines[0];
-            const accountCode = firstLine?.accounts?.code || entry.entry_type;
-
-            return {
-              id: entry.id,
-              description: entry.description,
-              expense_date: entryDate,
-              created_at: entryDate,
-              account_code: accountCode,
-              competence: month && year ? `${month}/${year}` : '',
-              amount: value,
-              name: entry.description
-            };
-          }).filter(entry => entry.amount > 0);
-
-          console.log("Lançamentos convertidos:", convertedEntries.length);
-          allExpenses = [...allExpenses, ...convertedEntries];
+          const validEntries = entriesWithLines.filter(entry => entry.amount > 0);
+          console.log("Lançamentos com valor:", validEntries.length, validEntries);
+          allExpenses = [...allExpenses, ...validEntries];
         }
       } catch (err) {
         console.error("Erro ao buscar lançamentos contábeis:", err);
