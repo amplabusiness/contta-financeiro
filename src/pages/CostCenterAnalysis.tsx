@@ -81,25 +81,8 @@ const CostCenterAnalysis = () => {
 
       let allExpenses = expenseData || [];
 
-      // Busca 2: Buscar despesas diretas (sem filtro de status)
+      // Busca 2: Buscar em accounting_entries
       if (costCenter.code) {
-        try {
-          // Tenta buscar TODAS as despesas deste centro (independente de status)
-          const { data: allCenterExpenses, error: allCenterError } = await supabase
-            .from("expenses")
-            .select("*")
-            .eq("cost_center_id", costCenter.id || costCenter.code);
-
-          console.log("Despesas diretas encontradas:", allCenterExpenses?.length, allCenterExpenses);
-
-          if (!allCenterError && allCenterExpenses) {
-            allExpenses = [...allExpenses, ...allCenterExpenses];
-          }
-        } catch (err) {
-          console.error("Erro ao buscar despesas diretas:", err);
-        }
-
-        // Busca 3: Tenta buscar por nome do centro em accounting_entries
         try {
           const { data: accountingData, error: accountingError } = await supabase
             .from("accounting_entries")
@@ -112,24 +95,48 @@ const CostCenterAnalysis = () => {
               accounting_entry_lines(debit, credit)
             `);
 
-          console.log("Lançamentos contábeis encontrados:", accountingData?.length);
+          console.log("Total lançamentos contábeis no sistema:", accountingData?.length);
 
           if (!accountingError && accountingData) {
-            // Filtrar os que mencionam o nome do centro, código, ou tem cost_center_id
-            const matchingEntries = accountingData.filter((entry: any) => {
-              const desc = entry.description?.toLowerCase() || "";
-              const codeLower = costCenter.code.toLowerCase().replace(/\./g, '');
-              const nameLower = costCenter.name.toLowerCase();
-
-              const byDescription = desc.includes(nameLower) ||
-                                   desc.includes(codeLower) ||
-                                   desc.includes(costCenter.code.toLowerCase());
-              const byId = entry.cost_center_id === costCenter.id;
-
-              return byDescription || byId;
+            console.log("Procurando por centro:", {
+              code: costCenter.code,
+              name: costCenter.name,
+              id: costCenter.id
             });
 
-            console.log("Lançamentos que correspondem ao centro:", matchingEntries.length, matchingEntries);
+            // Filtrar com várias estratégias
+            const matchingEntries = accountingData.filter((entry: any) => {
+              const desc = entry.description?.toLowerCase() || "";
+
+              // Estratégia 1: Busca exata pelo código
+              if (desc.includes(costCenter.code.toLowerCase())) {
+                console.log("Match por código:", entry.description);
+                return true;
+              }
+
+              // Estratégia 2: Busca pelo nome
+              if (desc.includes(costCenter.name.toLowerCase())) {
+                console.log("Match por nome:", entry.description);
+                return true;
+              }
+
+              // Estratégia 3: Busca por ID
+              if (entry.cost_center_id === costCenter.id) {
+                console.log("Match por ID:", entry.description);
+                return true;
+              }
+
+              // Estratégia 4: Busca por componentes do código (ex: AMPLA, SAUDE)
+              const parts = costCenter.code.toLowerCase().split('.');
+              if (parts.some(part => desc.includes(part))) {
+                console.log("Match por componente:", entry.description, "partes:", parts);
+                return true;
+              }
+
+              return false;
+            });
+
+            console.log("Lançamentos encontrados:", matchingEntries.length);
 
             // Converter accounting entries para formato compatível
             const convertedEntries = matchingEntries.map((entry: any) => {
@@ -153,7 +160,7 @@ const CostCenterAnalysis = () => {
               };
             }).filter(entry => entry.amount > 0);
 
-            console.log("Lançamentos contábeis convertidos:", convertedEntries.length);
+            console.log("Lançamentos convertidos e filtrados:", convertedEntries.length, convertedEntries);
             allExpenses = [...allExpenses, ...convertedEntries];
           }
         } catch (err) {
