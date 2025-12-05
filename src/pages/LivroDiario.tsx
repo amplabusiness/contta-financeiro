@@ -467,6 +467,129 @@ const LivroDiario = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Lançamento</DialogTitle>
+              <DialogDescription>
+                Altere a conta e valores conforme necessário
+              </DialogDescription>
+            </DialogHeader>
+            {editingLine && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-account">Conta</Label>
+                  <select
+                    id="edit-account"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={editingLine.codigo_conta}
+                    onChange={(e) => {
+                      const account = chartOfAccounts.find(a => a.code === e.target.value)
+                      setEditingLine(prev => prev ? {
+                        ...prev,
+                        codigo_conta: e.target.value,
+                        nome_conta: account?.name || prev.nome_conta
+                      } : null)
+                    }}
+                  >
+                    {chartOfAccounts.map(account => (
+                      <option key={account.id} value={account.code}>
+                        {account.code} - {account.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-debit">Débito</Label>
+                  <Input
+                    id="edit-debit"
+                    type="number"
+                    step="0.01"
+                    value={editingLine.debito}
+                    onChange={(e) => setEditingLine(prev => prev ? {
+                      ...prev,
+                      debito: parseFloat(e.target.value) || 0
+                    } : null)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-credit">Crédito</Label>
+                  <Input
+                    id="edit-credit"
+                    type="number"
+                    step="0.01"
+                    value={editingLine.credito}
+                    onChange={(e) => setEditingLine(prev => prev ? {
+                      ...prev,
+                      credito: parseFloat(e.target.value) || 0
+                    } : null)}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Histórico de Alterações</DialogTitle>
+              <DialogDescription>
+                Todas as mudanças registradas para este lançamento
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 overflow-y-auto max-h-[60vh]">
+              {auditHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
+              ) : (
+                auditHistory.map((log) => (
+                  <div key={log.id} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-sm">
+                          {log.action === 'update' ? '✏️ Alterado' : log.action === 'delete' ? '🗑️ Deletado' : '📝 Criado'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(log.created_at).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {log.user?.email || 'Sistema'}
+                      </Badge>
+                    </div>
+                    {log.metadata?.change_description && (
+                      <p className="text-sm text-muted-foreground">
+                        {log.metadata.change_description}
+                      </p>
+                    )}
+                    {log.old_values && log.new_values && (
+                      <div className="text-xs space-y-1 bg-muted p-2 rounded">
+                        {Object.keys(log.new_values).map(key => (
+                          log.old_values[key] !== log.new_values[key] && (
+                            <div key={key}>
+                              <span className="font-mono">
+                                {key}: {JSON.stringify(log.old_values[key])} → {JSON.stringify(log.new_values[key])}
+                              </span>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   )
