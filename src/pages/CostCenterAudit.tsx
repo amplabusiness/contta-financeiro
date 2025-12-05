@@ -129,14 +129,13 @@ const CostCenterAudit = () => {
           .map(id => accountMap.get(id))
           .filter((acc): acc is any => acc !== undefined);
 
-        // Find discrepancies: linked accounts whose parent is not in registered accounts
+        // Find discrepancies: linked accounts that are NOT descendants of any registered account
         const discrepancies: CostCenterAuditResult["discrepancies"] = [];
 
         linkedAccounts.forEach(linkedAcc => {
-          const linkedTopLevel = getTopLevelParent(linkedAcc.code);
+          // Check if this linked account is a descendant of any registered account
           const isCompliant = registeredAccounts.some(regAcc => {
-            const regTopLevel = getTopLevelParent(regAcc.code);
-            return regTopLevel === linkedTopLevel;
+            return isAccountDescendant(linkedAcc.code, regAcc.code);
           });
 
           if (!isCompliant) {
@@ -145,7 +144,7 @@ const CostCenterAudit = () => {
               account_id: linkedAcc.id,
               account_code: linkedAcc.code,
               account_name: linkedAcc.name,
-              top_level_parent: linkedTopLevel,
+              top_level_parent: linkedAcc.code.split(".")[0], // Show the top-level for reference
               expense_count: expenseData.count,
               total_amount: expenseData.amount,
             });
