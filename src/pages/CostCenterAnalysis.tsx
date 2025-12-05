@@ -55,7 +55,9 @@ const CostCenterAnalysis = () => {
       setLoadingExpenses(true);
       setSelectedCostCenter(costCenter);
 
-      // Primeiro, tenta buscar usando cost_center_code (para despesas pagas)
+      console.log("Buscando lançamentos para centro:", costCenter);
+
+      // Busca 1: Despesas com cost_center_code
       let query = supabase
         .from("vw_expenses_with_accounts")
         .select("*")
@@ -70,6 +72,8 @@ const CostCenterAnalysis = () => {
 
       let { data: expenseData, error: expenseError } = await query.order("created_at", { ascending: false });
 
+      console.log("Resultado busca despesas:", { expenseData, expenseError });
+
       if (expenseError) {
         console.error("Erro ao buscar despesas:", expenseError);
         expenseData = [];
@@ -77,8 +81,8 @@ const CostCenterAnalysis = () => {
 
       let allExpenses = expenseData || [];
 
-      // Se não encontrou despesas e há código de centro, tenta buscar por nome no accounting_entries
-      if (allExpenses.length === 0 && costCenter.code) {
+      // Busca 2: Tenta buscar por nome do centro (case-insensitive)
+      if (costCenter.code) {
         try {
           const { data: accountingData, error: accountingError } = await supabase
             .from("accounting_entries")
@@ -88,33 +92,51 @@ const CostCenterAnalysis = () => {
               entry_date,
               entry_type,
               accounting_entry_lines(debit, credit)
-            `)
-            .like("description", `%${costCenter.name}%`);
+            `);
+
+          console.log("Lançamentos contábeis encontrados:", accountingData?.length);
 
           if (!accountingError && accountingData) {
+            // Filtrar os que mencionam o nome do centro ou código
+            const matchingEntries = accountingData.filter((entry: any) => {
+              const desc = entry.description?.toLowerCase() || "";
+              return desc.includes(costCenter.name.toLowerCase()) ||
+                     desc.includes(costCenter.code.toLowerCase());
+            });
+
+            console.log("Lançamentos que correspondem ao centro:", matchingEntries);
+
             // Converter accounting entries para formato compatível
-            const convertedEntries = accountingData.map((entry: any) => {
+            const convertedEntries = matchingEntries.map((entry: any) => {
               const lines = entry.accounting_entry_lines || [];
               const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+              const creditValue = lines.reduce((sum: number, line: any) => sum + Number(line.credit || 0), 0);
+              const value = debitValue || creditValue;
+
+              const entryDate = entry.entry_date || new Date().toISOString();
+              const [year, month] = entryDate.split('-');
 
               return {
                 id: entry.id,
                 description: entry.description,
-                expense_date: entry.entry_date,
-                created_at: entry.entry_date,
+                expense_date: entryDate,
+                created_at: entryDate,
                 account_code: entry.entry_type,
-                competence: entry.entry_date?.split('-').slice(1, 2)[0] + '/' + entry.entry_date?.split('-')[0],
-                amount: debitValue,
+                competence: month && year ? `${month}/${year}` : '',
+                amount: value,
                 name: entry.description
               };
             }).filter(entry => entry.amount > 0);
 
+            console.log("Lançamentos contábeis convertidos:", convertedEntries);
             allExpenses = [...allExpenses, ...convertedEntries];
           }
         } catch (err) {
           console.error("Erro ao buscar lançamentos contábeis:", err);
         }
       }
+
+      console.log("Total de lançamentos encontrados:", allExpenses.length);
 
       // Ordena por data decrescente
       allExpenses.sort((a, b) => {
