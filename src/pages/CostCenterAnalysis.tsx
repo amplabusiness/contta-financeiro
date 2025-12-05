@@ -81,8 +81,25 @@ const CostCenterAnalysis = () => {
 
       let allExpenses = expenseData || [];
 
-      // Busca 2: Tenta buscar por nome do centro (case-insensitive)
+      // Busca 2: Buscar despesas diretas (sem filtro de status)
       if (costCenter.code) {
+        try {
+          // Tenta buscar TODAS as despesas deste centro (independente de status)
+          const { data: allCenterExpenses, error: allCenterError } = await supabase
+            .from("expenses")
+            .select("*")
+            .eq("cost_center_id", costCenter.id || costCenter.code);
+
+          console.log("Despesas diretas encontradas:", allCenterExpenses?.length, allCenterExpenses);
+
+          if (!allCenterError && allCenterExpenses) {
+            allExpenses = [...allExpenses, ...allCenterExpenses];
+          }
+        } catch (err) {
+          console.error("Erro ao buscar despesas diretas:", err);
+        }
+
+        // Busca 3: Tenta buscar por nome do centro em accounting_entries
         try {
           const { data: accountingData, error: accountingError } = await supabase
             .from("accounting_entries")
@@ -91,20 +108,28 @@ const CostCenterAnalysis = () => {
               description,
               entry_date,
               entry_type,
+              cost_center_id,
               accounting_entry_lines(debit, credit)
             `);
 
           console.log("Lançamentos contábeis encontrados:", accountingData?.length);
 
           if (!accountingError && accountingData) {
-            // Filtrar os que mencionam o nome do centro ou código
+            // Filtrar os que mencionam o nome do centro, código, ou tem cost_center_id
             const matchingEntries = accountingData.filter((entry: any) => {
               const desc = entry.description?.toLowerCase() || "";
-              return desc.includes(costCenter.name.toLowerCase()) ||
-                     desc.includes(costCenter.code.toLowerCase());
+              const codeLower = costCenter.code.toLowerCase().replace(/\./g, '');
+              const nameLower = costCenter.name.toLowerCase();
+
+              const byDescription = desc.includes(nameLower) ||
+                                   desc.includes(codeLower) ||
+                                   desc.includes(costCenter.code.toLowerCase());
+              const byId = entry.cost_center_id === costCenter.id;
+
+              return byDescription || byId;
             });
 
-            console.log("Lançamentos que correspondem ao centro:", matchingEntries);
+            console.log("Lançamentos que correspondem ao centro:", matchingEntries.length, matchingEntries);
 
             // Converter accounting entries para formato compatível
             const convertedEntries = matchingEntries.map((entry: any) => {
@@ -128,7 +153,7 @@ const CostCenterAnalysis = () => {
               };
             }).filter(entry => entry.amount > 0);
 
-            console.log("Lançamentos contábeis convertidos:", convertedEntries);
+            console.log("Lançamentos contábeis convertidos:", convertedEntries.length);
             allExpenses = [...allExpenses, ...convertedEntries];
           }
         } catch (err) {
