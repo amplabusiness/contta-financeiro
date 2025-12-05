@@ -264,9 +264,9 @@ const LivroDiario = () => {
       const history = await AccountingAuditService.getEntryAuditHistory(entryId)
       setAuditHistory(history)
       setHistoryDialogOpen(true)
-    } catch (error) {
-      console.error('Erro ao carregar histórico:', error)
-      toast.error('Erro ao carregar histórico')
+    } catch (error: any) {
+      console.error('Erro ao carregar histórico:', error?.message || error)
+      toast.error(`Erro ao carregar histórico: ${error?.message || 'Erro desconhecido'}`)
     }
   }
 
