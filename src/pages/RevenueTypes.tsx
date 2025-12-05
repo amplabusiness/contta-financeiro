@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Calculator, Ban, CheckCircle } from "lucide-react
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
+import { getErrorMessage } from "@/lib/utils";
 
 const MINIMUM_WAGE = 1412.00; // Salário mínimo atual
 
@@ -134,11 +135,11 @@ const RevenueTypes = () => {
         .update({ is_active: newStatus })
         .eq("id", type.id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       toast.success(`Tipo de receita ${action} com sucesso!`);
       loadTypes();
     } catch (error: any) {
-      toast.error("Erro ao atualizar status: " + error.message);
+      toast.error("Erro ao atualizar status: " + getErrorMessage(error));
     }
   };
 

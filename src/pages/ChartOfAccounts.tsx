@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Pencil, Trash2, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ChartAccount {
   id: string;
@@ -136,11 +137,11 @@ const ChartOfAccounts = () => {
         .update({ is_active: newStatus })
         .eq("id", account.id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       toast.success(`Conta ${action} com sucesso!`);
       loadAccounts();
     } catch (error: any) {
-      toast.error("Erro ao atualizar status: " + error.message);
+      toast.error("Erro ao atualizar status: " + getErrorMessage(error));
     }
   };
 

@@ -8,8 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Plus, Pencil, Trash2, CheckCircle, RefreshCw, ChevronsUpDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -17,16 +20,30 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
+import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
+import { getErrorMessage } from "@/lib/utils";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
   const { registrarDespesa, registrarPagamentoDespesa } = useAccounting({ showToasts: false });
+  const { notifyExpenseChange } = useExpenseUpdate();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [costCenters, setCostCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  const [newCategoryData, setNewCategoryData] = useState({
+    name: "",
+    description: "",
+  });
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const [isAccountPickerOpen, setIsAccountPickerOpen] = useState(false);
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [categorySearchQuery, setCategorySearchQuery] = useState("");
   const [formData, setFormData] = useState({
     category: "",
     description: "",
@@ -37,47 +54,89 @@ const Expenses = () => {
     competence: "",
     notes: "",
     account_id: "",
-    cost_center: "",
+    cost_center_id: "",
+    is_recurring: false,
+    recurrence_day: 10,
   });
-
-  const categories = [
-    "Contas Fixas",
-    "Impostos",
-    "Folha de Pagamento",
-    "Serviços Terceiros",
-    "Material de Consumo",
-    "Contas Variáveis",
-    "Outros",
-  ];
-
-  const costCenters = [
-    "Administrativo",
-    "Financeiro",
-    "Tecnologia",
-    "Comercial",
-    "Recursos Humanos",
-    "Operacional",
-    "Marketing",
-  ];
 
   useEffect(() => {
     loadExpenses();
     loadAccounts();
-  }, [selectedYear, selectedMonth, selectedClientId]); // Recarregar quando mudar cliente
+    loadCategories();
+    loadCostCenters();
+  }, [selectedYear, selectedMonth, selectedClientId]);
+
+  const normalizeAccountType = (value?: string | null) => value?.trim().toLowerCase() ?? "";
 
   const loadAccounts = async () => {
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from("chart_of_accounts")
+        .select("id, code, name, account_type, type, is_active")
+        .eq("is_active", true)
+        .or("account_type.ilike.DESPESA,type.ilike.despesa")
+        .order("code");
+
+      if (response.error) {
+        console.error("Erro ao carregar contas");
+        throw new Error("Erro ao carregar contas");
+      }
+
+      const filteredAccounts = (response.data || []).filter((account) =>
+        normalizeAccountType(account.account_type).includes("despesa") ||
+        normalizeAccountType(account.type) === "despesa"
+      );
+
+      setAccounts(filteredAccounts);
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
+      console.error("Erro ao carregar contas:", errorMsg);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await supabase
+        .from("expense_categories")
         .select("*")
-        .eq("type", "despesa")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (response.error) {
+        console.error("Erro ao carregar categorias");
+        throw new Error("Erro ao carregar categorias");
+      }
+
+      // Deduplicate by name to prevent render key issues
+      const uniqueCategories = Array.from(
+        new Map((response.data || []).map(cat => [cat.name, cat])).values()
+      );
+
+      setCategories(uniqueCategories);
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar categorias";
+      console.error("Erro ao carregar categorias:", errorMsg);
+    }
+  };
+
+  const loadCostCenters = async () => {
+    try {
+      const response = await supabase
+        .from("cost_centers")
+        .select("id, code, name")
         .eq("is_active", true)
         .order("code");
 
-      if (error) throw error;
-      setAccounts(data || []);
+      if (response.error) {
+        console.error("Erro ao carregar centros de custo");
+        throw new Error("Erro ao carregar centros de custo");
+      }
+
+      setCostCenters(response.data || []);
     } catch (error: any) {
-      console.error("Erro ao carregar contas:", error);
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar centros de custo";
+      console.error("Erro ao carregar centros de custo:", errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -85,28 +144,77 @@ const Expenses = () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
 
-      // Filtrar por cliente se selecionado
       if (selectedClientId) {
         query = query.eq("client_id", selectedClientId);
       }
 
-      // Filtrar por competência se ano ou mês estiverem selecionados
-      if (selectedYear && selectedMonth) {
-        const monthStr = selectedMonth.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
-        query = query.eq("competence", competence);
-      } else if (selectedYear) {
-        query = query.like("competence", `%/${selectedYear}`);
+      const response = await query;
+
+      if (response.error) {
+        console.error("Erro ao carregar despesas");
+        throw new Error("Erro ao carregar despesas");
       }
 
-      const { data, error } = await query;
+      const data = response.data;
 
-      if (error) throw error;
-      setExpenses(data || []);
+      let filteredData = data || [];
+
+      if (selectedYear && selectedMonth) {
+        filteredData = filteredData.filter((expense) => {
+          const dueDate = new Date(expense.due_date);
+          return (
+            dueDate.getFullYear() === selectedYear &&
+            dueDate.getMonth() + 1 === selectedMonth
+          );
+        });
+      } else if (selectedYear) {
+        filteredData = filteredData.filter((expense) => {
+          const dueDate = new Date(expense.due_date);
+          return dueDate.getFullYear() === selectedYear;
+        });
+      }
+
+      setExpenses(filteredData);
     } catch (error: any) {
-      toast.error("Erro ao carregar despesas");
+      const errorMsg = error instanceof Error ? error.message : "Erro ao carregar despesas";
+      toast.error("Erro ao carregar despesas: " + errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateRecurringExpense = async (expense: any) => {
+    try {
+      const dueDate = new Date(expense.due_date);
+      const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, expense.recurrence_day);
+      const nextCompetence = `${String(nextMonth.getMonth() + 1).padStart(2, '0')}/${nextMonth.getFullYear()}`;
+
+      // Only send fields that exist in the database schema
+      const newExpenseData = {
+        category: expense.category,
+        description: expense.description,
+        amount: expense.amount,
+        due_date: nextMonth.toISOString().split('T')[0],
+        payment_date: null,
+        status: "pending",
+        competence: nextCompetence,
+        notes: expense.notes,
+        account_id: expense.account_id,
+        cost_center_id: expense.cost_center_id,
+        created_by: expense.created_by,
+      };
+
+      const { error } = await supabase
+        .from("expenses")
+        .insert(newExpenseData);
+
+      if (error) throw new Error(getErrorMessage(error));
+
+      toast.success("Despesa recorrente do próximo mês gerada!");
+      loadExpenses();
+    } catch (error: any) {
+      toast.error("Erro ao gerar despesa recorrente");
+      console.error("Erro:", error);
     }
   };
 
@@ -118,56 +226,172 @@ const Expenses = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      if (!formData.description?.trim()) {
+        throw new Error("Descrição é obrigatória");
+      }
+
+      if (!formData.amount || parseFloat(formData.amount) <= 0) {
+        throw new Error("Valor deve ser maior que zero");
+      }
+
+      if (!formData.due_date) {
+        throw new Error("Data de vencimento é obrigatória");
+      }
+
+      if (!formData.cost_center_id) {
+        throw new Error("Centro de custo é obrigatório");
+      }
+
+      if (!formData.category) {
+        throw new Error("Categoria é obrigatória");
+      }
+
+      const accountId = formData.account_id;
+
+      if (!accountId) {
+        throw new Error("Conta contábil é obrigatória");
+      }
+
+      const [year, month, day] = formData.due_date.split('-');
+      const calculatedCompetence = `${month}/${year}`;
+
+      console.log("Salvando com due_date:", formData.due_date, "competence:", calculatedCompetence);
+
+      // Only send fields that exist in the database schema
       const expenseData = {
-        ...formData,
+        category: formData.category,
+        description: formData.description,
         amount: parseFloat(formData.amount),
+        due_date: formData.due_date,
         payment_date: formData.payment_date || null,
-        account_id: formData.account_id || null,
-        created_by: user.id,
+        status: formData.status,
+        competence: calculatedCompetence,
+        notes: formData.notes || null,
+        account_id: accountId,
+        cost_center_id: formData.cost_center_id,
       };
 
       if (editingExpense) {
-        const { error } = await supabase
-          .from("expenses")
-          .update(expenseData)
-          .eq("id", editingExpense.id);
+        try {
+          console.log("Atualizando despesa com dados:", expenseData);
+          const response = await supabase
+            .from("expenses")
+            .update(expenseData)
+            .eq("id", editingExpense.id);
 
-        if (error) throw error;
-        toast.success("Despesa atualizada com sucesso!");
+          if (response.error) {
+            const errorMsg = getErrorMessage(response.error);
+            console.error("Erro Supabase ao atualizar despesa:", {
+              error: response.error,
+              message: errorMsg,
+              details: response.error?.details,
+              hint: response.error?.hint,
+              code: response.error?.code,
+            });
+            throw new Error(`Falha ao atualizar despesa: ${errorMsg}`);
+          }
+
+          console.log("Despesa atualizada com sucesso");
+          toast.success("Despesa atualizada com sucesso!");
+          notifyExpenseChange();
+        } catch (updateError: any) {
+          let errorMsg = "Erro ao atualizar despesa";
+
+          if (updateError instanceof Error) {
+            errorMsg = updateError.message;
+          } else if (typeof updateError === "string") {
+            errorMsg = updateError;
+          } else {
+            errorMsg = getErrorMessage(updateError);
+          }
+
+          console.error("Erro na atualização:", errorMsg);
+          throw new Error(errorMsg);
+        }
       } else {
-        // Inserir a despesa
-        const { data: newExpense, error: expenseError } = await supabase
-          .from("expenses")
-          .insert(expenseData)
-          .select()
-          .single();
+        const updateData = {
+          ...expenseData,
+          created_by: user.id,
+        };
 
-        if (expenseError) throw expenseError;
+        let newExpense: any = null;
+        try {
+          console.log("Dados sendo salvos:", updateData);
+          const { data, error } = await supabase
+            .from("expenses")
+            .insert(updateData)
+            .select("id")
+            .single();
 
-        // ✅ CONTABILIDADE INTEGRADA: Criar lançamento contábil automaticamente
+          if (error) {
+            const errorMsg = getErrorMessage(error);
+            console.error("Erro Supabase ao criar despesa:", {
+              error,
+              message: errorMsg,
+              details: error?.details,
+              hint: error?.hint,
+              code: error?.code,
+            });
+            throw new Error(`Falha ao criar despesa: ${errorMsg}`);
+          }
+
+          newExpense = data;
+        } catch (insertError: any) {
+          let errorMsg = "Erro ao criar despesa";
+
+          if (insertError instanceof Error) {
+            errorMsg = insertError.message;
+          } else if (typeof insertError === "string") {
+            errorMsg = insertError;
+          } else {
+            errorMsg = getErrorMessage(insertError);
+          }
+
+          console.error("Erro ao inserir despesa:", errorMsg);
+          throw new Error(errorMsg);
+        }
+
         const accountingResult = await registrarDespesa({
           expenseId: newExpense.id,
           amount: parseFloat(formData.amount),
           expenseDate: formData.due_date,
           category: formData.category,
           description: formData.description || 'Despesa',
-          competence: formData.competence,
+          competence: calculatedCompetence,
         });
 
         if (accountingResult.success) {
           toast.success("Despesa cadastrada com lançamento contábil!");
+          notifyExpenseChange();
         } else {
           console.error('Erro ao criar lançamento contábil:', accountingResult.error);
           toast.warning("Despesa cadastrada, mas erro no lançamento contábil");
+        }
+
+        // Show warning if filters are active
+        if (selectedYear || selectedMonth || selectedClientId) {
+          toast.info("Despesa criada! Ajuste os filtros acima para visualizá-la.");
         }
       }
 
       setOpen(false);
       setEditingExpense(null);
       resetForm();
-      loadExpenses();
+      await loadExpenses();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar despesa");
+      let errorMsg = "Erro ao salvar despesa";
+
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else {
+        errorMsg = getErrorMessage(error);
+      }
+
+      console.error("Erro capturado no handleSubmit:", {
+        message: errorMsg,
+        error,
+      });
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -177,15 +401,16 @@ const Expenses = () => {
     try {
       const paymentDate = new Date().toISOString().split("T")[0];
 
-      // Atualizar status da despesa
-      const { error } = await supabase
+      const response = await supabase
         .from("expenses")
         .update({ status: "paid", payment_date: paymentDate })
         .eq("id", expense.id);
 
-      if (error) throw error;
+      if (response.error) {
+        console.error("Erro ao marcar como pago");
+        throw new Error("Erro ao marcar despesa como paga");
+      }
 
-      // ✅ CONTABILIDADE INTEGRADA: Registrar pagamento automaticamente
       const accountingResult = await registrarPagamentoDespesa({
         paymentId: `${expense.id}_payment`,
         expenseId: expense.id,
@@ -196,6 +421,7 @@ const Expenses = () => {
 
       if (accountingResult.success) {
         toast.success("Despesa paga com lançamento contábil!");
+        notifyExpenseChange();
       } else {
         console.error('Erro ao criar lançamento de pagamento:', accountingResult.error);
         toast.warning("Despesa paga, mas erro no lançamento contábil");
@@ -203,7 +429,9 @@ const Expenses = () => {
 
       loadExpenses();
     } catch (error: any) {
-      toast.error("Erro ao atualizar despesa");
+      const errorMsg = error instanceof Error ? error.message : "Erro ao marcar despesa como paga";
+      console.error("Erro capturado no mark as paid:", errorMsg);
+      toast.error("Erro ao marcar despesa como paga: " + errorMsg);
     }
   };
 
@@ -211,13 +439,19 @@ const Expenses = () => {
     if (!confirm("Tem certeza que deseja excluir esta despesa?")) return;
 
     try {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      const response = await supabase.from("expenses").delete().eq("id", id);
 
-      if (error) throw error;
+      if (response.error) {
+        console.error("Erro ao excluir despesa");
+        throw new Error("Erro ao excluir despesa");
+      }
       toast.success("Despesa excluída com sucesso!");
+      notifyExpenseChange();
       loadExpenses();
     } catch (error: any) {
-      toast.error("Erro ao excluir despesa");
+      const errorMsg = error instanceof Error ? error.message : "Erro ao excluir despesa";
+      console.error("Erro capturado na exclusão:", errorMsg);
+      toast.error("Erro ao excluir despesa: " + errorMsg);
     }
   };
 
@@ -232,23 +466,99 @@ const Expenses = () => {
       competence: "",
       notes: "",
       account_id: "",
-      cost_center: "",
+      cost_center_id: "",
+      is_recurring: false,
+      recurrence_day: 10,
     });
+    setAccountSearchQuery("");
+    setCategorySearchQuery("");
+  };
+
+  const handleCreateNewCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newCategoryData.name.trim()) {
+      toast.error("Nome da categoria é obrigatório");
+      return;
+    }
+
+    // Check if category already exists
+    const existingCategory = categories.find(cat =>
+      cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
+    );
+
+    if (existingCategory) {
+      toast.error("Esta categoria já existe! Use a dropdown para selecioná-la.");
+      setFormData({ ...formData, category: existingCategory.name });
+      setNewCategoryDialogOpen(false);
+      setNewCategoryData({ name: "", description: "" });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await supabase
+        .from("expense_categories")
+        .insert({
+          code: `CAT_${Date.now()}`,
+          name: newCategoryData.name,
+          description: newCategoryData.description || null,
+          is_active: true,
+          display_order: (categories.length) + 1,
+        })
+        .select()
+        .single();
+
+      if (response.error) {
+        console.error("Erro ao criar categoria");
+        throw new Error("Erro ao criar categoria");
+      }
+
+      toast.success("Categoria criada com sucesso!");
+
+      setFormData({ ...formData, category: response.data.name });
+      setNewCategoryData({ name: "", description: "" });
+      setNewCategoryDialogOpen(false);
+      setCategorySearchQuery(""); // Reset search para mostrar todas as categorias
+
+      await loadCategories();
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao criar categoria";
+      console.error("Erro ao criar categoria:", errorMsg);
+      toast.error("Erro ao criar categoria: " + errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (expense: any) => {
     setEditingExpense(expense);
+    const formatDateForInput = (dateStr: string) => {
+      if (!dateStr) return "";
+      // Handle ISO strings and date-only strings correctly
+      if (dateStr.includes('T')) {
+        return dateStr.split('T')[0];
+      }
+      return dateStr;
+    };
+
+    console.log("Editando despesa - due_date original:", expense.due_date);
+    const formattedDate = formatDateForInput(expense.due_date);
+    console.log("Editando despesa - due_date formatado:", formattedDate);
+
     setFormData({
       category: expense.category,
       description: expense.description,
       amount: expense.amount.toString(),
-      due_date: expense.due_date,
-      payment_date: expense.payment_date || "",
+      due_date: formattedDate,
+      payment_date: formatDateForInput(expense.payment_date),
       status: expense.status,
       competence: expense.competence || "",
       notes: expense.notes || "",
       account_id: expense.account_id || "",
-      cost_center: expense.cost_center || "",
+      cost_center_id: expense.cost_center_id || "",
+      is_recurring: expense.is_recurring || false,
+      recurrence_day: expense.recurrence_day || 10,
     });
     setOpen(true);
   };
@@ -267,6 +577,20 @@ const Expenses = () => {
       canceled: "Cancelado",
     };
     return <Badge variant={variants[status]}>{labels[status]}</Badge>;
+  };
+
+  const getCategoryName = (expenseCategory: string) => {
+    // If the category is empty or null, return default text
+    if (!expenseCategory) return "Sem categoria";
+
+    // Check if the stored category matches any of the loaded categories by name
+    const matchedCategory = categories.find(
+      cat => cat.name.toLowerCase() === expenseCategory.toLowerCase()
+    );
+
+    // Return the matched category name, or return the stored value as-is if no match
+    // This ensures we display what's actually stored in the database
+    return matchedCategory ? matchedCategory.name : expenseCategory;
   };
 
   const totalPending = expenses
@@ -290,6 +614,14 @@ const Expenses = () => {
               : "Controle de contas a pagar - selecione um cliente para filtrar"
             }
           </p>
+          {(selectedYear || selectedMonth || selectedClientId) && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
+              <span className="font-medium">⚠️ Filtros ativos:</span>
+              {selectedYear && <Badge variant="secondary">Ano: {selectedYear}</Badge>}
+              {selectedMonth && <Badge variant="secondary">Mês: {selectedMonth}</Badge>}
+              {selectedClientId && <Badge variant="secondary">Cliente: {selectedClientName}</Badge>}
+            </div>
+          )}
         </div>
 
         <Card>
@@ -317,7 +649,7 @@ const Expenses = () => {
                 Nova Despesa
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingExpense ? "Editar Despesa" : "Nova Despesa"}</DialogTitle>
                 <DialogDescription>
@@ -328,54 +660,255 @@ const Expenses = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="account_id">Plano de Contas</Label>
-                    <Select
-                      value={formData.account_id}
-                      onValueChange={(value) => setFormData({ ...formData, account_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a conta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.code} - {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={isAccountPickerOpen} onOpenChange={(open) => {
+                      setIsAccountPickerOpen(open);
+                      if (!open) setAccountSearchQuery("");
+                    }}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isAccountPickerOpen}
+                          className="w-full justify-between"
+                        >
+                          {formData.account_id && accounts.find((acc) => acc.id === formData.account_id)
+                            ? `${accounts.find((acc) => acc.id === formData.account_id)?.code} - ${accounts.find((acc) => acc.id === formData.account_id)?.name}`
+                            : "Selecione a conta"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Digite para pesquisar"
+                            value={accountSearchQuery}
+                            onValueChange={setAccountSearchQuery}
+                          />
+                          <CommandList>
+                            {accounts.filter((account) =>
+                              `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
+                            ).length === 0 ? (
+                              <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {accounts
+                                  .filter((account) =>
+                                    `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
+                                  )
+                                  .map((account) => (
+                                    <CommandItem
+                                      key={account.id}
+                                      value={account.id}
+                                      onSelect={(currentValue) => {
+                                        setFormData({ ...formData, account_id: currentValue });
+                                        setIsAccountPickerOpen(false);
+                                        setAccountSearchQuery("");
+                                      }}
+                                    >
+                                      {account.code} - {account.name}
+                                      {formData.account_id === account.id && (
+                                        <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category">Categoria *</Label>
-                    <Select
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="category">Categoria *</Label>
+                      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-blue-600"
+                          >
+                            + Nova Categoria
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[400px]">
+                          <DialogHeader>
+                            <DialogTitle>Criar Nova Categoria</DialogTitle>
+                            <DialogDescription>
+                              Crie uma nova categoria de despesas
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleCreateNewCategory} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="new_category_name">Nome da Categoria *</Label>
+                              <Input
+                                id="new_category_name"
+                                placeholder="ex: Aluguel, Serviços, etc"
+                                value={newCategoryData.name}
+                                onChange={(e) =>
+                                  setNewCategoryData({ ...newCategoryData, name: e.target.value })
+                                }
+                                required
+                              />
+                              {newCategoryData.name && (
+                                <>
+                                  {categories.filter(cat =>
+                                    cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                  ).length > 0 && (
+                                    <div className="mt-3 border rounded-md p-3 bg-blue-50 dark:bg-blue-950">
+                                      <p className="text-xs font-medium text-blue-900 dark:text-blue-200 mb-2">
+                                        Categorias encontradas:
+                                      </p>
+                                      <div className="space-y-1">
+                                        {categories
+                                          .filter(cat =>
+                                            cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                          )
+                                          .slice(0, 5)
+                                          .map(cat => (
+                                            <div
+                                              key={cat.id}
+                                              className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                                              onClick={() => {
+                                                setFormData({ ...formData, category: cat.name });
+                                                setNewCategoryDialogOpen(false);
+                                                setNewCategoryData({ name: "", description: "" });
+                                              }}
+                                            >
+                                              <span className="text-sm font-medium">{cat.name}</span>
+                                              <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {categories.some(cat =>
+                                    cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
+                                  ) && (
+                                    <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                                      ⚠️ Esta categoria já existe! Clique acima para selecioná-la ou cancele.
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="new_category_description">Descrição</Label>
+                              <Textarea
+                                id="new_category_description"
+                                placeholder="Descrição da categoria (opcional)"
+                                value={newCategoryData.description}
+                                onChange={(e) =>
+                                  setNewCategoryData({ ...newCategoryData, description: e.target.value })
+                                }
+                                rows={2}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setNewCategoryDialogOpen(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={loading || (newCategoryData.name && categories.some(cat =>
+                                  cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                ))}
+                                title={newCategoryData.name && categories.some(cat =>
+                                  cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                ) ? "Selecione uma categoria encontrada acima ou digite um nome diferente" : ""}
+                              >
+                                {loading ? "Criando..." : "Criar"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    <Popover open={isCategoryPickerOpen} onOpenChange={(open) => {
+                      setIsCategoryPickerOpen(open);
+                      if (!open) setCategorySearchQuery("");
+                    }}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isCategoryPickerOpen}
+                          className="w-full justify-between"
+                        >
+                          {formData.category || "Selecione a categoria"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Digite para pesquisar"
+                            value={categorySearchQuery}
+                            onValueChange={setCategorySearchQuery}
+                          />
+                          <CommandList>
+                            {categories.filter((cat) =>
+                              cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                            ).length === 0 ? (
+                              <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                            ) : (
+                              <CommandGroup>
+                                {categories
+                                  .filter((cat) =>
+                                    cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                                  )
+                                  .map((cat) => (
+                                    <CommandItem
+                                      key={cat.id}
+                                      value={cat.name}
+                                      onSelect={(currentValue) => {
+                                        setFormData({ ...formData, category: currentValue });
+                                        setIsCategoryPickerOpen(false);
+                                        setCategorySearchQuery("");
+                                      }}
+                                    >
+                                      {cat.name}
+                                      {formData.category === cat.name && (
+                                        <Check className="ml-auto h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <input
+                      type="text"
+                      className="sr-only"
                       value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      readOnly
                       required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      tabIndex={-1}
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cost_center">Centro de Custo</Label>
+                    <Label htmlFor="cost_center_id">Centro de Custo *</Label>
                     <Select
-                      value={formData.cost_center}
-                      onValueChange={(value) => setFormData({ ...formData, cost_center: value })}
+                      value={formData.cost_center_id}
+                      onValueChange={(value) => setFormData({ ...formData, cost_center_id: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um departamento" />
+                        <SelectValue placeholder="Selecione um centro de custo" />
                       </SelectTrigger>
                       <SelectContent>
                         {costCenters.map((center) => (
-                          <SelectItem key={center} value={center}>
-                            {center}
+                          <SelectItem key={center.id} value={center.id}>
+                            {center.code} - {center.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -455,6 +988,45 @@ const Expenses = () => {
                       rows={2}
                     />
                   </div>
+                  <div className="col-span-2 space-y-3 border-t pt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_recurring"
+                        checked={formData.is_recurring}
+                        onCheckedChange={(checked) => 
+                          setFormData({ ...formData, is_recurring: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="is_recurring" className="font-medium cursor-pointer">
+                        É uma despesa recorrente?
+                      </Label>
+                    </div>
+                    {formData.is_recurring && (
+                      <div className="space-y-2 ml-6">
+                        <Label htmlFor="recurrence_day">
+                          Dia do mês para recorrência (1-31) *
+                        </Label>
+                        <Select
+                          value={formData.recurrence_day.toString()}
+                          onValueChange={(value) => setFormData({ ...formData, recurrence_day: parseInt(value) })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                              <SelectItem key={day} value={day.toString()}>
+                                Dia {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          A despesa será duplicada automaticamente neste dia a cada mês
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={loading}>
@@ -508,18 +1080,38 @@ const Expenses = () => {
                     <TableHead>Vencimento</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Recorrente</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses.map((expense) => (
+                  {expenses.map((expense) => {
+                    const categoryName = getCategoryName(expense.category);
+                    return (
                     <TableRow key={expense.id}>
-                      <TableCell className="font-medium">{expense.category}</TableCell>
+                      <TableCell className="font-medium">{categoryName}</TableCell>
                       <TableCell>{expense.description}</TableCell>
                       <TableCell>{new Date(expense.due_date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{formatCurrency(Number(expense.amount))}</TableCell>
                       <TableCell>{getStatusBadge(expense.status)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
+                        {expense.is_recurring && (
+                          <Badge variant="outline" className="bg-blue-50">
+                            Mês {expense.recurrence_day}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        {expense.is_recurring && expense.status !== "canceled" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => generateRecurringExpense(expense)}
+                            title="Gerar próxima recorrência"
+                          >
+                            <RefreshCw className="w-4 h-4 text-blue-600" />
+                          </Button>
+                        )}
                         {expense.status === "pending" && (
                           <Button
                             variant="ghost"
@@ -546,7 +1138,8 @@ const Expenses = () => {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

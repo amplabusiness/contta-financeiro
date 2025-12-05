@@ -7,7 +7,7 @@ import { formatCurrency } from "@/data/expensesData";
 import { MetricCard } from "@/components/MetricCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar } from "lucide-react";
+import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -138,6 +138,29 @@ const ClientDashboard = () => {
       return;
     }
     loadClientData();
+
+    // Setup Realtime subscription to listen for invoice changes
+    const subscription = supabase
+      .channel(`invoices-${selectedClientId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "invoices",
+          filter: `client_id=eq.${selectedClientId}`,
+        },
+        (payload) => {
+          console.log("Invoice change detected:", payload);
+          // Reload data when invoice changes
+          loadClientData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [selectedClientId, navigate]);
 
   const loadClientData = async () => {
@@ -236,6 +259,62 @@ const ClientDashboard = () => {
       overdue: "Vencido",
     };
     return <Badge variant={variants[status] || "secondary"}>{labels[status] || status}</Badge>;
+  };
+
+  const handleUndoPayment = async (invoice: any) => {
+    if (!confirm("Desafazer o pagamento desta fatura? Ela voltará a ficar pendente.")) return;
+
+    try {
+      setLoading(true);
+
+      // 1. Delete related accounting entries
+      const { error: deleteEntryError } = await supabase
+        .from("accounting_entries")
+        .delete()
+        .eq("invoice_id", invoice.id)
+        .ilike("description", "%Reconciliação OFX/CNAB%");
+
+      if (deleteEntryError && deleteEntryError.code !== "PGRST116") {
+        console.error("Aviso: Erro ao deletar lançamento contábil:", deleteEntryError);
+      }
+
+      // 2. Revert invoice status
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .update({
+          status: "pending",
+          payment_date: null,
+          cnab_reference: null,
+          reconciled_at: null,
+        })
+        .eq("id", invoice.id);
+
+      if (invoiceError) throw invoiceError;
+
+      // 3. Revert pending reconciliation if exists
+      const { error: reconciliationError } = await supabase
+        .from("pending_reconciliations")
+        .update({
+          status: "pending",
+          approved_at: null,
+          approved_by: null,
+          chart_of_accounts_id: null,
+          cost_center_id: null,
+        })
+        .eq("invoice_id", invoice.id)
+        .eq("status", "approved");
+
+      if (reconciliationError && reconciliationError.code !== "PGRST116") {
+        console.error("Aviso: Erro ao reverter conciliação:", reconciliationError);
+      }
+
+      toast.success("Pagamento desfeito! Fatura voltou a ficar pendente.");
+      loadClientData();
+    } catch (error: any) {
+      toast.error("Erro ao desfazer pagamento");
+      console.error(error);
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -397,17 +476,50 @@ const ClientDashboard = () => {
                         <TableHead>Vencimento</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoices.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                          <TableCell>{formatLocalDate(invoice.due_date)}</TableCell>
-                          <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                          <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
-                        </TableRow>
-                      ))}
+                      {invoices.map((invoice) => {
+                        const status = getDisplayStatus(invoice);
+                        const isPaid = status === "paid" && invoice.payment_date;
+                        return (
+                          <TableRow key={invoice.id} className={isPaid ? "bg-green-50" : ""}>
+                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{formatLocalDate(invoice.due_date)}</div>
+                                {isPaid && (
+                                  <div className="text-xs text-green-600 mt-1">
+                                    💰 Pago em {formatLocalDate(invoice.payment_date)}
+                                    {invoice.cnab_reference && (
+                                      <div className="text-xs text-muted-foreground">
+                                        Ref: {invoice.cnab_reference}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
+                            <TableCell>{getStatusBadge(status)}</TableCell>
+                            <TableCell className="text-right">
+                              {isPaid && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleUndoPayment(invoice)}
+                                  disabled={loading}
+                                  className="text-orange-600 hover:bg-orange-50"
+                                  title="Desfazer pagamento (reverte conciliação)"
+                                >
+                                  <Undo2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

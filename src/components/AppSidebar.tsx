@@ -50,6 +50,7 @@ import {
   Gavel,
   Tv,
   Gift,
+  Tags,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -123,6 +124,8 @@ export function AppSidebar() {
       items: [
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
+        { title: "Importar CNAB 400", url: "/import-cnab", icon: FileText },
+        { title: "Conciliações Pendentes", url: "/pending-reconciliations", icon: AlertTriangle },
         { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
         { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
       ],
@@ -143,8 +146,8 @@ export function AppSidebar() {
       label: "Contas a Pagar",
       items: [
         { title: "Despesas", url: "/expenses", icon: Wallet },
+        { title: "Categorias", url: "/expense-categories", icon: FolderTree },
         { title: "Fornecedores", url: "/accounts-payable", icon: CreditCard },
-        { title: "Despesas Recorrentes", url: "/recurring-expenses", icon: RefreshCw },
       ],
     },
     {
@@ -161,6 +164,7 @@ export function AppSidebar() {
       label: "Contabilidade",
       items: [
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
+        { title: "Centro de Custos", url: "/cost-center-analysis", icon: Tags },
         { title: "Saldo de Abertura", url: "/client-opening-balance", icon: Database },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },

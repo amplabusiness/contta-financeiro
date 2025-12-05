@@ -22,6 +22,7 @@ import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 import { formatDocument } from "@/lib/formatters";
 import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
 import { useNavigate } from "react-router-dom";
+import { getErrorMessage } from "@/lib/utils";
 
 const ProBonoClients = () => {
   const navigate = useNavigate();
@@ -284,7 +285,7 @@ const ProBonoClients = () => {
       loadProBonoClients();
     } catch (error: any) {
       console.error("Erro ao atualizar cliente:", error);
-      toast.error("Erro ao atualizar cliente");
+      toast.error("Erro ao atualizar cliente: " + getErrorMessage(error));
     }
   };
 
@@ -304,7 +305,7 @@ const ProBonoClients = () => {
         .eq('client_id', deletingClient.id)
         .limit(1);
 
-      if (invoicesError) throw invoicesError;
+      if (invoicesError) throw new Error(getErrorMessage(invoicesError));
 
       // Se houver faturas, apenas inativar o cliente
       if (invoices && invoices.length > 0) {
@@ -352,7 +353,7 @@ const ProBonoClients = () => {
       loadProBonoClients();
     } catch (error: any) {
       console.error("Erro ao excluir/inativar cliente:", error);
-      toast.error("Erro ao processar exclusão do cliente");
+      toast.error("Erro ao processar exclusão do cliente: " + getErrorMessage(error));
     }
   };
 

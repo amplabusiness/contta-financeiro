@@ -57,14 +57,18 @@ async function runHealthCheck() {
 
   try {
     // Tentar usar o AI Orchestrator primeiro (mais inteligente)
-    const { data, error } = await supabase.functions.invoke('ai-orchestrator', {
-      body: { action: 'full_health_check' }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-orchestrator', {
+        body: { action: 'full_health_check' }
+      });
 
-    if (!error && data?.success) {
-      console.log('[AccountingHealth] AI Orchestrator completed:', data);
-      localStorage.setItem(HEALTH_CHECK_KEY, Date.now().toString());
-      return;
+      if (!error && data?.success) {
+        console.log('[AccountingHealth] AI Orchestrator completed:', data);
+        localStorage.setItem(HEALTH_CHECK_KEY, Date.now().toString());
+        return;
+      }
+    } catch (orchestratorError) {
+      console.debug('[AccountingHealth] AI Orchestrator not available, falling back to manual check...', orchestratorError);
     }
 
     // Fallback para verificação manual se o orquestrador falhar
@@ -84,8 +88,10 @@ async function runHealthCheck() {
     console.log('[AccountingHealth] Health check completed successfully');
 
   } catch (error) {
-    console.error('[AccountingHealth] Error during health check:', error);
-    // Não falhar silenciosamente em produção, mas logar para debug
+    console.debug('[AccountingHealth] Error during health check (non-critical):', error);
+    // Background health checks are non-critical, so we fail silently
+    // Mark as checked to prevent repeated attempts
+    localStorage.setItem(HEALTH_CHECK_KEY, Date.now().toString());
   }
 }
 
@@ -104,14 +110,18 @@ async function cleanupOrphans() {
     if (entriesCount > 0 && linesCount === 0) {
       console.log(`[AccountingHealth] Found ${entriesCount} orphan entries, cleaning up...`);
 
-      const { error } = await supabase.functions.invoke('smart-accounting', {
-        body: { action: 'cleanup_orphans' }
-      });
+      try {
+        const { error } = await supabase.functions.invoke('smart-accounting', {
+          body: { action: 'cleanup_orphans' }
+        });
 
-      if (error) {
-        console.error('[AccountingHealth] Cleanup error:', error);
-      } else {
-        console.log('[AccountingHealth] Orphan entries cleaned');
+        if (error) {
+          console.debug('[AccountingHealth] Cleanup function error (non-critical):', error);
+        } else {
+          console.log('[AccountingHealth] Orphan entries cleaned');
+        }
+      } catch (funcError) {
+        console.debug('[AccountingHealth] Cleanup function not available:', funcError);
       }
     } else if (entriesCount > 0 && linesCount > 0) {
       // Verificar se há órfãos específicos
@@ -129,13 +139,17 @@ async function cleanupOrphans() {
 
       if (orphanCount > 0) {
         console.log(`[AccountingHealth] Found ${orphanCount} orphan entries, cleaning up...`);
-        await supabase.functions.invoke('smart-accounting', {
-          body: { action: 'cleanup_orphans' }
-        });
+        try {
+          await supabase.functions.invoke('smart-accounting', {
+            body: { action: 'cleanup_orphans' }
+          });
+        } catch (funcError) {
+          console.debug('[AccountingHealth] Cleanup function not available:', funcError);
+        }
       }
     }
   } catch (error) {
-    console.error('[AccountingHealth] Error checking orphans:', error);
+    console.debug('[AccountingHealth] Error checking orphans (non-critical):', error);
   }
 }
 
@@ -148,14 +162,18 @@ async function ensureChartOfAccounts() {
     if (!count || count === 0) {
       console.log('[AccountingHealth] Initializing chart of accounts...');
 
-      await supabase.functions.invoke('smart-accounting', {
-        body: { action: 'init_chart' }
-      });
+      try {
+        await supabase.functions.invoke('smart-accounting', {
+          body: { action: 'init_chart' }
+        });
 
-      console.log('[AccountingHealth] Chart of accounts initialized');
+        console.log('[AccountingHealth] Chart of accounts initialized');
+      } catch (funcError) {
+        console.debug('[AccountingHealth] Init chart function not available:', funcError);
+      }
     }
   } catch (error) {
-    console.error('[AccountingHealth] Error ensuring chart of accounts:', error);
+    console.debug('[AccountingHealth] Error ensuring chart of accounts (non-critical):', error);
   }
 }
 
@@ -177,9 +195,13 @@ async function processPendingData() {
     if (invoicesWithoutEntry?.length && !existingEntries?.length) {
       console.log('[AccountingHealth] Processing pending invoices...');
 
-      await supabase.functions.invoke('smart-accounting', {
-        body: { action: 'generate_retroactive', table: 'invoices' }
-      });
+      try {
+        await supabase.functions.invoke('smart-accounting', {
+          body: { action: 'generate_retroactive', table: 'invoices' }
+        });
+      } catch (funcError) {
+        console.debug('[AccountingHealth] Generate retroactive function not available:', funcError);
+      }
     }
 
     // Verificar saldos de abertura
@@ -197,13 +219,17 @@ async function processPendingData() {
     if (balancesWithoutEntry?.length && !existingBalanceEntries?.length) {
       console.log('[AccountingHealth] Processing pending opening balances...');
 
-      await supabase.functions.invoke('smart-accounting', {
-        body: { action: 'generate_retroactive', table: 'client_opening_balance' }
-      });
+      try {
+        await supabase.functions.invoke('smart-accounting', {
+          body: { action: 'generate_retroactive', table: 'client_opening_balance' }
+        });
+      } catch (funcError) {
+        console.debug('[AccountingHealth] Generate retroactive function not available:', funcError);
+      }
     }
 
   } catch (error) {
-    console.error('[AccountingHealth] Error processing pending data:', error);
+    console.debug('[AccountingHealth] Error processing pending data (non-critical):', error);
   }
 }
 
@@ -228,36 +254,46 @@ async function runAutomations() {
 
   try {
     // Chamar o agente de automação
-    const { data, error } = await supabase.functions.invoke('ai-automation-agent', {
-      body: { action: 'full_automation' }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-automation-agent', {
+        body: { action: 'full_automation' }
+      });
 
-    if (error) {
-      console.error('[Automation] Error:', error);
-      return;
-    }
+      if (error) {
+        console.debug('[Automation] Error from function:', error);
+        // Mark as checked even if function failed, to prevent repeated attempts
+        localStorage.setItem(AUTOMATION_CHECK_KEY, now.toString());
+        return;
+      }
 
-    console.log('[Automation] Completed:', data);
+      console.log('[Automation] Completed:', data);
 
-    // Logar resultados
-    if (data?.recurring_expenses?.generated > 0) {
-      console.log(`[Automation] Generated ${data.recurring_expenses.generated} recurring expenses`);
-    }
-    if (data?.invoices?.generated > 0) {
-      console.log(`[Automation] Generated ${data.invoices.generated} invoices`);
-    }
-    if (data?.contracts?.generated > 0) {
-      console.log(`[Automation] Generated ${data.contracts.generated} contracts`);
-    }
-    if (data?.company_status?.generated > 0) {
-      console.log(`[Automation] Generated ${data.company_status.generated} distracts`);
-    }
+      // Logar resultados
+      if (data?.recurring_expenses?.generated > 0) {
+        console.log(`[Automation] Generated ${data.recurring_expenses.generated} recurring expenses`);
+      }
+      if (data?.invoices?.generated > 0) {
+        console.log(`[Automation] Generated ${data.invoices.generated} invoices`);
+      }
+      if (data?.contracts?.generated > 0) {
+        console.log(`[Automation] Generated ${data.contracts.generated} contracts`);
+      }
+      if (data?.company_status?.generated > 0) {
+        console.log(`[Automation] Generated ${data.company_status.generated} distracts`);
+      }
 
-    // Marcar como executado
-    localStorage.setItem(AUTOMATION_CHECK_KEY, now.toString());
+      // Marcar como executado
+      localStorage.setItem(AUTOMATION_CHECK_KEY, now.toString());
+    } catch (funcError) {
+      console.debug('[Automation] Function not available or network error:', funcError);
+      // Mark as checked to prevent repeated attempts
+      localStorage.setItem(AUTOMATION_CHECK_KEY, now.toString());
+    }
 
   } catch (error) {
-    console.error('[Automation] Error during automation:', error);
+    console.debug('[Automation] Error during automation setup (non-critical):', error);
+    // Mark as checked to prevent repeated attempts
+    localStorage.setItem(AUTOMATION_CHECK_KEY, now.toString());
   }
 }
 
@@ -299,39 +335,49 @@ async function runAccountingCycle() {
 
   try {
     // Chamar o motor contábil
-    const { data, error } = await supabase.functions.invoke('ai-accounting-engine', {
-      body: { action: 'full_accounting_cycle' }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-accounting-engine', {
+        body: { action: 'full_accounting_cycle' }
+      });
 
-    if (error) {
-      console.error('[AccountingCycle] Error:', error);
-      return;
-    }
+      if (error) {
+        console.debug('[AccountingCycle] Error from function:', error);
+        // Mark as checked even if function failed, to prevent repeated attempts
+        localStorage.setItem(ACCOUNTING_CYCLE_KEY, now.toString());
+        return;
+      }
 
-    console.log('[AccountingCycle] Completed:', data);
+      console.log('[AccountingCycle] Completed:', data);
 
-    // Logar resultados
-    if (data?.pending?.invoices?.processed > 0) {
-      console.log(`[AccountingCycle] Processed ${data.pending.invoices.processed} invoices to journal`);
-    }
-    if (data?.pending?.expenses?.processed > 0) {
-      console.log(`[AccountingCycle] Processed ${data.pending.expenses.processed} expenses to journal`);
-    }
-    if (data?.provisions?.provisioned > 0) {
-      console.log(`[AccountingCycle] Provisioned ${data.provisions.provisioned} monthly fees`);
-    }
-    if (data?.trialBalance?.success) {
-      console.log(`[AccountingCycle] Trial balance generated: ${data.trialBalance.accounts_count} accounts`);
-    }
-    if (data?.yearClose?.success) {
-      console.log(`[AccountingCycle] Fiscal year closed! Result: R$ ${data.yearClose.net_result}`);
-    }
+      // Logar resultados
+      if (data?.pending?.invoices?.processed > 0) {
+        console.log(`[AccountingCycle] Processed ${data.pending.invoices.processed} invoices to journal`);
+      }
+      if (data?.pending?.expenses?.processed > 0) {
+        console.log(`[AccountingCycle] Processed ${data.pending.expenses.processed} expenses to journal`);
+      }
+      if (data?.provisions?.provisioned > 0) {
+        console.log(`[AccountingCycle] Provisioned ${data.provisions.provisioned} monthly fees`);
+      }
+      if (data?.trialBalance?.success) {
+        console.log(`[AccountingCycle] Trial balance generated: ${data.trialBalance.accounts_count} accounts`);
+      }
+      if (data?.yearClose?.success) {
+        console.log(`[AccountingCycle] Fiscal year closed! Result: R$ ${data.yearClose.net_result}`);
+      }
 
-    // Marcar como executado
-    localStorage.setItem(ACCOUNTING_CYCLE_KEY, now.toString());
+      // Marcar como executado
+      localStorage.setItem(ACCOUNTING_CYCLE_KEY, now.toString());
+    } catch (funcError) {
+      console.debug('[AccountingCycle] Function not available or network error:', funcError);
+      // Mark as checked to prevent repeated attempts
+      localStorage.setItem(ACCOUNTING_CYCLE_KEY, now.toString());
+    }
 
   } catch (error) {
-    console.error('[AccountingCycle] Error during cycle:', error);
+    console.debug('[AccountingCycle] Error during cycle setup (non-critical):', error);
+    // Mark as checked to prevent repeated attempts
+    localStorage.setItem(ACCOUNTING_CYCLE_KEY, now.toString());
   }
 }
 

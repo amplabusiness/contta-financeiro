@@ -5,18 +5,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Loader2 } from "lucide-react";
-import { PeriodFilter } from "@/components/PeriodFilter";
-import { usePeriod } from "@/contexts/PeriodContext";
+import { Loader2, ChevronDown, X } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 const CostCenterAnalysis = () => {
-  const { selectedYear, selectedMonth } = usePeriod();
   const [loading, setLoading] = useState(true);
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
+  const [costCenterWithoutData, setCostCenterWithoutData] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [allCostCenters, setAllCostCenters] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth_, setSelectedMonth_] = useState<string | null>(null);
+  const [selectedCostCenter, setSelectedCostCenter] = useState<any | null>(null);
+  const [costCenterExpenses, setCostCenterExpenses] = useState<any[]>([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -33,25 +48,193 @@ const CostCenterAnalysis = () => {
     { value: "12", label: "Dezembro" },
   ];
 
-  useEffect(() => {
-    loadCostCenterData();
-  }, [selectedYear, selectedMonth]);
+  const { subscribeToExpenseChanges } = useExpenseUpdate();
 
-  const loadCostCenterData = async () => {
+  const loadCostCenterExpenses = async (costCenter: any) => {
+    try {
+      setLoadingExpenses(true);
+      setSelectedCostCenter(costCenter);
+
+      console.log("Buscando lançamentos para centro:", costCenter);
+
+      let allExpenses: any[] = [];
+
+      // Busca 1: Despesas com status="paid" - BUSCAR POR CÓDIGO OU NOME
+      try {
+        let query = supabase
+          .from("vw_expenses_with_accounts")
+          .select("*")
+          .eq("status", "paid");
+
+        if (selectedMonth_) {
+          const competence = `${selectedMonth_}/${selectedYear}`;
+          query = query.eq("competence", competence);
+        } else {
+          query = query.like("competence", `%/${selectedYear}`);
+        }
+
+        const { data: allExpenseData, error: expenseError } = await query;
+
+        console.log("Total despesas pagas no período:", allExpenseData?.length);
+
+        if (!expenseError && allExpenseData) {
+          // Filtrar manualmente por código OU nome (case-insensitive)
+          const filtered = allExpenseData.filter((expense: any) => {
+            const expCenterCode = (expense.cost_center_code || "").toLowerCase();
+            const expCenterName = (expense.cost_center_name || "").toLowerCase();
+            const searchCode = costCenter.code.toLowerCase();
+            const searchName = costCenter.name.toLowerCase();
+
+            return expCenterCode === searchCode || expCenterName === searchName;
+          });
+
+          console.log("Despesas filtradas para", costCenter.name, ":", filtered.length);
+          if (filtered.length > 0) {
+            console.log("Primeiras despesas encontradas:", filtered.slice(0, 3).map(e => ({
+              description: e.description,
+              amount: e.amount,
+              cost_center_name: e.cost_center_name,
+              cost_center_code: e.cost_center_code
+            })));
+          }
+
+          allExpenses = [...allExpenses, ...filtered];
+        }
+      } catch (err) {
+        console.error("Erro ao buscar despesas:", err);
+      }
+
+      // Busca 2: Lançamentos contábeis que mencionam "Ampla Saúde" (SIMPLIFICADO)
+      try {
+        // Busca direta usando SQL para "Ampla Saúde"
+        const { data: matchingEntries, error: entriesError } = await supabase
+          .from("accounting_entries")
+          .select("id, description, entry_date, entry_type")
+          .ilike("description", `%${costCenter.name}%`);
+
+        console.log("Lançamentos contábeis encontrados:", matchingEntries?.length);
+
+        if (!entriesError && matchingEntries && matchingEntries.length > 0) {
+          // Para cada lançamento, buscar as linhas
+          const entriesWithLines = await Promise.all(
+            matchingEntries.map(async (entry: any) => {
+              const { data: lines } = await supabase
+                .from("accounting_entry_lines")
+                .select("debit, credit")
+                .eq("entry_id", entry.id);
+
+              const debitValue = lines?.reduce((sum, line) => sum + Number(line.debit || 0), 0) || 0;
+              const creditValue = lines?.reduce((sum, line) => sum + Number(line.credit || 0), 0) || 0;
+              const value = debitValue || creditValue;
+
+              const entryDate = entry.entry_date || new Date().toISOString();
+              const [year, month] = entryDate.split('-');
+
+              return {
+                id: entry.id,
+                description: entry.description,
+                expense_date: entryDate,
+                created_at: entryDate,
+                account_code: entry.entry_type,
+                competence: month && year ? `${month}/${year}` : '',
+                amount: value,
+                name: entry.description
+              };
+            })
+          );
+
+          const validEntries = entriesWithLines.filter(entry => entry.amount > 0);
+          console.log("Lançamentos com valor:", validEntries.length, validEntries);
+          allExpenses = [...allExpenses, ...validEntries];
+        }
+      } catch (err) {
+        console.error("Erro ao buscar lançamentos contábeis:", err);
+      }
+
+      console.log("Total de lançamentos encontrados:", allExpenses.length);
+
+      // Ordena por data decrescente
+      allExpenses.sort((a, b) => {
+        const dateA = new Date(a.expense_date || a.created_at).getTime();
+        const dateB = new Date(b.expense_date || b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      setCostCenterExpenses(allExpenses);
+    } catch (error: any) {
+      console.error("Erro ao carregar lançamentos:", error);
+      toast.error("Erro ao carregar lançamentos do centro de custo");
+      setCostCenterExpenses([]);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAllCostCenters().then((centers) => {
+      loadCostCenterData(centers);
+    });
+  }, [selectedYear, selectedMonth_]);
+
+  // Subscribe to expense changes and reload data automatically
+  useEffect(() => {
+    const unsubscribe = subscribeToExpenseChanges(() => {
+      loadAllCostCenters().then((centers) => {
+        loadCostCenterData(centers);
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_]);
+
+  // Calcular centros sem movimentação
+  useEffect(() => {
+    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
+      const centrosComDados = new Set(costCenterData.map(c => c.code));
+      const centersSemDados = allCostCenters.filter(
+        center => !centrosComDados.has(center.code)
+      );
+      setCostCenterWithoutData(centersSemDados);
+    }
+  }, [allCostCenters, costCenterData]);
+
+  const loadAllCostCenters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cost_centers")
+        .select("id, code, name, description, is_active, parent_id")
+        .eq("is_active", true)
+        .order("order_index, code");
+
+      if (error) throw error;
+
+      const centers = data || [];
+      setAllCostCenters(centers);
+      return centers;
+    } catch (error: any) {
+      console.error("Erro ao carregar centros de custo:", error);
+      toast.error("Erro ao carregar centros de custo");
+      return [];
+    }
+  };
+
+  const loadCostCenterData = async (centersParam?: any[]) => {
+    const costCentersToUse = centersParam || allCostCenters;
     try {
       setLoading(true);
-      
-      // Buscar despesas pagas
+
+      // Buscar despesas pagas com centros de custo
       let query = supabase
-        .from("expenses")
+        .from("vw_expenses_with_accounts")
         .select("*")
         .eq("status", "paid");
 
-      if (selectedYear && selectedMonth) {
-        const monthStr = selectedMonth.toString().padStart(2, '0');
-        const competence = `${monthStr}/${selectedYear}`;
+      if (selectedMonth_) {
+        // Se houver filtro de mês específico
+        const competence = `${selectedMonth_}/${selectedYear}`;
         query = query.eq("competence", competence);
-      } else if (selectedYear) {
+      } else {
+        // Por padrão, mostrar todo o ano
         query = query.like("competence", `%/${selectedYear}`);
       }
 
@@ -59,31 +242,112 @@ const CostCenterAnalysis = () => {
 
       if (error) throw error;
 
-      // Agrupar por centro de custo
-      const costCenterMap = new Map<string, number>();
+      // Buscar também saldos de abertura (lançamentos contábeis de abertura) com valores
+      // Buscar tanto 'saldo_abertura' quanto 'opening_balance'
+      const { data: openingBalancesType1 } = await supabase
+        .from("accounting_entries")
+        .select(`
+          id,
+          description,
+          entry_date,
+          accounting_entry_lines(debit, credit)
+        `)
+        .eq("entry_type", "saldo_abertura")
+        .lte("entry_date", `${selectedYear}-12-31`);
+
+      const { data: openingBalancesType2 } = await supabase
+        .from("accounting_entries")
+        .select(`
+          id,
+          description,
+          entry_date,
+          accounting_entry_lines(debit, credit)
+        `)
+        .eq("entry_type", "opening_balance")
+        .lte("entry_date", `${selectedYear}-12-31`);
+
+      const openingBalances = [...(openingBalancesType1 || []), ...(openingBalancesType2 || [])];
+
+      // Agrupar por centro de custo (usando code + name)
+      const costCenterMap = new Map<string, { total: number; code: string }>();
       let total = 0;
 
+      // Processar despesas
       expenses?.forEach((expense) => {
-        const costCenter = (expense as any).cost_center || "Não Classificado";
+        const costCenterName = (expense as any).cost_center_name || "Não Classificado";
+        const costCenterCode = (expense as any).cost_center_code || "";
+        const accountCode = (expense as any).account_code || "";
         const amount = Number(expense.amount);
-        costCenterMap.set(costCenter, (costCenterMap.get(costCenter) || 0) + amount);
+
+        const key = `${costCenterCode} - ${costCenterName}`;
+        const existing = costCenterMap.get(key) || { total: 0, code: costCenterCode };
+        costCenterMap.set(key, {
+          total: existing.total + amount,
+          code: costCenterCode
+        });
         total += amount;
       });
 
+      // Processar saldos de abertura (extrair centro de custo da descrição)
+      if (openingBalances && costCentersToUse.length > 0) {
+        openingBalances.forEach((entry: any) => {
+          const description = entry.description || "";
+          // Procurar por padrão como "Saldo de Abertura - NOME" ou "Saldo de Abertura: NOME"
+          // Tenta ambos os formatos (com hífen ou com dois-pontos)
+          let match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+          if (!match) {
+            // Tenta formato com dois-pontos
+            match = description.match(/Saldo de Abertura\s*:\s*(.+?)(?:\s*\(|$)/);
+          }
+
+          if (match) {
+            const centerName = match[1].trim();
+            // Procurar o centro correspondente (flexível para maiúsculas/minúsculas)
+            const center = costCentersToUse.find(c =>
+              c.name.toLowerCase() === centerName.toLowerCase()
+            );
+            if (center) {
+              const centerCode = center.code || "";
+              const key = `${centerCode} - ${center.name}`;
+              // Extrair o valor do débito
+              const lines = entry.accounting_entry_lines || [];
+              const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+
+              console.log(`Saldo encontrado: ${centerCode} = R$ ${debitValue}`);
+
+              if (debitValue > 0) {
+                const existing = costCenterMap.get(key) || { total: 0, code: centerCode };
+                costCenterMap.set(key, {
+                  total: existing.total + debitValue,
+                  code: centerCode
+                });
+                total += debitValue;
+              }
+            } else {
+              console.log(`Centro não encontrado: "${centerName}"`);
+              console.log(`Centros disponíveis:`, costCentersToUse.map(c => c.name));
+            }
+          } else {
+            console.log(`Descrição não correspondeu ao padrão esperado: "${description}"`);
+          }
+        });
+      }
+
       // Converter para array e calcular percentuais
       const costCenterArray = Array.from(costCenterMap.entries())
-        .map(([name, value]) => ({
+        .map(([name, data]) => ({
           name,
-          value,
-          percentage: ((value / total) * 100).toFixed(2),
+          value: data.total,
+          code: data.code,
+          percentage: ((data.total / total) * 100).toFixed(2),
         }))
         .sort((a, b) => b.value - a.value);
 
       setCostCenterData(costCenterArray);
       setTotalExpenses(total);
 
-      // Carregar comparação mensal (últimos 6 meses)
-      await loadMonthlyComparison();
+      // Carregar comparação mensal (últimos 6 meses) - desabilitado pois a seção está oculta
+      // await loadMonthlyComparison();
     } catch (error: any) {
       toast.error("Erro ao carregar dados de centro de custos");
       console.error(error);
@@ -95,10 +359,10 @@ const CostCenterAnalysis = () => {
   const loadMonthlyComparison = async () => {
     try {
       const { data: expenses, error } = await supabase
-        .from("expenses")
+        .from("vw_expenses_with_accounts")
         .select("*")
         .eq("status", "paid")
-        .like("competence", `%/${selectedYear}`);
+        .like("competence", `%/${selectedYear}`)
 
       if (error) throw error;
 
@@ -109,7 +373,9 @@ const CostCenterAnalysis = () => {
         const month = expense.competence?.split("/")[0];
         if (!month) return;
 
-        const costCenter = (expense as any).cost_center || "Não Classificado";
+        const costCenterName = (expense as any).cost_center_name || "Não Classificado";
+        const costCenterCode = (expense as any).cost_center_code || "";
+        const costCenter = `${costCenterCode} - ${costCenterName}`;
         const amount = Number(expense.amount);
 
         if (!monthlyMap.has(month)) {
@@ -161,14 +427,57 @@ const CostCenterAnalysis = () => {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-            <CardDescription>Filtrar análise por período</CardDescription>
+        <Card className="bg-blue-50 dark:bg-blue-950/20">
+          <CardHeader className="cursor-pointer" onClick={() => setShowFilters(!showFilters)}>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <ChevronDown className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                  Filtros Opcionais
+                </CardTitle>
+                <CardDescription>
+                  {selectedMonth_ ? `${months.find(m => m.value === selectedMonth_)?.label}/${selectedYear}` : `Exibindo: Ano inteiro (${selectedYear})`}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <PeriodFilter />
-          </CardContent>
+          {showFilters && (
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Ano</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Mês (Opcional)</label>
+                  <select
+                    value={selectedMonth_ || ''}
+                    onChange={(e) => setSelectedMonth_(e.target.value || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="">Todos os meses</option>
+                    {months.map(month => (
+                      <option key={month.value} value={month.value}>{month.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setSelectedYear(new Date().getFullYear());
+                  setSelectedMonth_(null);
+                }}>
+                  Resetar Filtros
+                </Button>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -251,12 +560,16 @@ const CostCenterAnalysis = () => {
         <Card>
           <CardHeader>
             <CardTitle>Ranking de Gastos por Centro de Custo</CardTitle>
-            <CardDescription>Departamentos ordenados por valor de despesas</CardDescription>
+            <CardDescription>Departamentos ordenados por valor de despesas (clique para ver lançamentos)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {costCenterData.map((center, index) => (
-                <div key={center.name} className="flex items-center gap-4">
+                <div
+                  key={center.name}
+                  className="flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors"
+                  onClick={() => loadCostCenterExpenses(center)}
+                >
                   <div className="text-2xl font-bold text-muted-foreground w-8">{index + 1}</div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
@@ -277,7 +590,7 @@ const CostCenterAnalysis = () => {
           </CardContent>
         </Card>
 
-        {monthlyComparison.length > 0 && (
+        {false && monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Evolução Mensal por Centro de Custo</CardTitle>
@@ -314,6 +627,142 @@ const CostCenterAnalysis = () => {
             </CardContent>
           </Card>
         )}
+
+        {costCenterWithoutData.length > 0 && (
+          <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900">
+            <CardHeader>
+              <CardTitle className="text-yellow-800 dark:text-yellow-200">Centros de Custo sem Movimentação</CardTitle>
+              <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                {costCenterWithoutData.length} centro(s) cadastrado(s) sem despesas ou saldo registrado
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {costCenterWithoutData.map((center) => (
+                  <li key={center.id} className="flex items-center gap-3 py-2 border-b last:border-b-0">
+                    <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 min-w-fit">
+                      {center.code}
+                    </span>
+                    <span className="text-gray-900 dark:text-gray-100">
+                      {center.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Centros de Custo Cadastrados</CardTitle>
+            <CardDescription>Lista completa de todos os centros de custo ativos no sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allCostCenters.length > 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allCostCenters.map((center) => (
+                      <TableRow key={center.id}>
+                        <TableCell className="font-mono font-medium">
+                          {center.code}
+                        </TableCell>
+                        <TableCell className="font-medium">{center.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {center.description || "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Nenhum centro de custo cadastrado</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog open={selectedCostCenter !== null} onOpenChange={(open) => {
+          if (!open) {
+            setSelectedCostCenter(null);
+            setCostCenterExpenses([]);
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedCostCenter?.name}</DialogTitle>
+              <DialogDescription>
+                Lançamentos que compõem o valor de {formatCurrency(selectedCostCenter?.value || 0)}
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingExpenses ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : costCenterExpenses.length > 0 ? (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Conta</TableHead>
+                      <TableHead>Competência</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {costCenterExpenses.map((expense) => (
+                      <TableRow key={expense.id}>
+                        <TableCell className="text-sm">
+                          {new Date(expense.expense_date || expense.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {expense.description || expense.name || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm font-mono">
+                          {expense.account_code || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {expense.competence || '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(Number(expense.amount) || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhum lançamento encontrado para este centro de custo no período selecionado.
+              </div>
+            )}
+
+            <div className="mt-6 pt-4 border-t flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Total de lançamentos: {costCenterExpenses.length}</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">
+                  Subtotal: {formatCurrency(
+                    costCenterExpenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0)
+                  )}
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

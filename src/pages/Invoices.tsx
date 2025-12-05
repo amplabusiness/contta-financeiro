@@ -21,6 +21,7 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
+import { getErrorMessage } from "@/lib/utils";
 
 const Invoices = () => {
   const { selectedYear, selectedMonth } = usePeriod();
@@ -247,7 +248,7 @@ const Invoices = () => {
         loadData();
       }, 1000);
     } catch (error: any) {
-      toast.error("Erro ao gerar honorários: " + error.message);
+      toast.error("Erro ao gerar honorários: " + getErrorMessage(error));
       setIsGenerating(false);
     }
   };
@@ -273,12 +274,12 @@ const Invoices = () => {
           .update(invoiceData)
           .eq("id", editingInvoice.id);
 
-        if (error) throw error;
+        if (error) throw new Error(getErrorMessage(error));
         toast.success("Honorário atualizado com sucesso!");
       } else {
         const { data: newInvoice, error } = await supabase.from("invoices").insert(invoiceData).select().single();
 
-        if (error) throw error;
+        if (error) throw new Error(getErrorMessage(error));
 
         // Buscar nome do cliente para o lançamento
         const client = clients.find(c => c.id === formData.client_id);
@@ -307,7 +308,7 @@ const Invoices = () => {
       resetForm();
       loadData();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar honorário");
+      toast.error(getErrorMessage(error) || "Erro ao salvar honorário");
     } finally {
       setLoading(false);
     }
@@ -323,7 +324,7 @@ const Invoices = () => {
         .update({ status: "paid", payment_date: paymentDate })
         .eq("id", invoice.id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
 
       // ✅ CONTABILIDADE INTEGRADA: Registrar recebimento automaticamente
       const accountingResult = await registrarRecebimento({
@@ -345,21 +346,30 @@ const Invoices = () => {
 
       loadData();
     } catch (error: any) {
-      toast.error("Erro ao atualizar honorário");
+      toast.error("Erro ao atualizar honorário: " + getErrorMessage(error));
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, invoice: any) => {
+    // Check if invoice is reconciled
+    if (invoice.status === "paid" && invoice.cnab_reference) {
+      toast.error(
+        "❌ Esta fatura está conciliada a um pagamento! " +
+        "Você precisa desfazer a conciliação antes de deletá-la."
+      );
+      return;
+    }
+
     if (!confirm("Tem certeza que deseja excluir este honorário?")) return;
 
     try {
       const { error } = await supabase.from("invoices").delete().eq("id", id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       toast.success("Honorário excluído com sucesso!");
       loadData();
     } catch (error: any) {
-      toast.error("Erro ao excluir honorário");
+      toast.error("Erro ao excluir honorário: " + getErrorMessage(error));
     }
   };
 
@@ -695,7 +705,13 @@ const Invoices = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(invoice.id)}
+                          onClick={() => handleDelete(invoice.id, invoice)}
+                          disabled={invoice.status === "paid" && invoice.cnab_reference}
+                          title={
+                            invoice.status === "paid" && invoice.cnab_reference
+                              ? "Fatura conciliada - desfaça a conciliação para deletar"
+                              : "Deletar fatura"
+                          }
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

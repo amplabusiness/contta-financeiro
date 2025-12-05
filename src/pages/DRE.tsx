@@ -33,6 +33,31 @@ const DRE = () => {
     totalExpenses: 0
   });
 
+  const syncExpensesToAccounting = useCallback(async (start: string | null, end: string | null) => {
+    if (!start || !end) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-accounting', {
+        body: {
+          action: 'generate_retroactive',
+          table: 'expenses',
+          start_date: start,
+          end_date: end
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.created) {
+        console.log(`[DRE] ${data.created} lançamentos de despesas sincronizados para o período.`);
+      }
+    } catch (syncError) {
+      console.error("Erro ao sincronizar despesas para a DRE:", syncError);
+    }
+  }, []);
+
   const loadDREData = useCallback(async () => {
     try {
       setLoading(true);
@@ -78,6 +103,8 @@ const DRE = () => {
         startDate = `${selectedYear}-01-01`;
         endDate = `${selectedYear}-12-31`;
       }
+
+      await syncExpensesToAccounting(startDate, endDate);
 
       // Buscar TODOS os lançamentos contábeis (sem filtro na query)
       const { data: allLines, error: linesError } = await supabase
@@ -190,7 +217,7 @@ const DRE = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, syncExpensesToAccounting]);
 
   useEffect(() => {
     loadDREData();

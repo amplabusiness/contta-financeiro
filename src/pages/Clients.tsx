@@ -25,6 +25,7 @@ import { CNPJInput } from "@/components/CNPJInput";
 import { EconomicGroupIndicator } from "@/components/EconomicGroupIndicator";
 import { FinancialGroupBadge } from "@/components/FinancialGroupBadge";
 import { FinancialGroupsDialog } from "@/components/FinancialGroupsDialog";
+import { getErrorMessage } from "@/lib/utils";
 
 const Clients = () => {
   const navigate = useNavigate();
@@ -335,11 +336,11 @@ const Clients = () => {
         .update({ is_active: newStatus })
         .eq("id", client.id);
 
-      if (error) throw error;
+      if (error) throw new Error(getErrorMessage(error));
       toast.success(`Cliente ${action} com sucesso!`);
       loadClients();
     } catch (error: any) {
-      toast.error("Erro ao atualizar status do cliente: " + error.message);
+      toast.error("Erro ao atualizar status do cliente: " + getErrorMessage(error));
     }
   };
 
