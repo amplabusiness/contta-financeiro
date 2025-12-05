@@ -138,6 +138,29 @@ const ClientDashboard = () => {
       return;
     }
     loadClientData();
+
+    // Setup Realtime subscription to listen for invoice changes
+    const subscription = supabase
+      .channel(`invoices-${selectedClientId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "invoices",
+          filter: `client_id=eq.${selectedClientId}`,
+        },
+        (payload) => {
+          console.log("Invoice change detected:", payload);
+          // Reload data when invoice changes
+          loadClientData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [selectedClientId, navigate]);
 
   const loadClientData = async () => {
