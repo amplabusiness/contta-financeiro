@@ -423,14 +423,32 @@ const ClientDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoices.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                          <TableCell>{formatLocalDate(invoice.due_date)}</TableCell>
-                          <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                          <TableCell>{getStatusBadge(getDisplayStatus(invoice))}</TableCell>
-                        </TableRow>
-                      ))}
+                      {invoices.map((invoice) => {
+                        const status = getDisplayStatus(invoice);
+                        const isPaid = status === "paid" && invoice.payment_date;
+                        return (
+                          <TableRow key={invoice.id} className={isPaid ? "bg-green-50" : ""}>
+                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{formatLocalDate(invoice.due_date)}</div>
+                                {isPaid && (
+                                  <div className="text-xs text-green-600 mt-1">
+                                    💰 Pago em {formatLocalDate(invoice.payment_date)}
+                                    {invoice.cnab_reference && (
+                                      <div className="text-xs text-muted-foreground">
+                                        Ref: {invoice.cnab_reference}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
+                            <TableCell>{getStatusBadge(status)}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
