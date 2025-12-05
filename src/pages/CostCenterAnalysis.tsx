@@ -55,14 +55,11 @@ const CostCenterAnalysis = () => {
       setLoadingExpenses(true);
       setSelectedCostCenter(costCenter);
 
+      // Primeiro, tenta buscar usando cost_center_code (para despesas pagas)
       let query = supabase
         .from("vw_expenses_with_accounts")
         .select("*")
-        .eq("status", "paid");
-
-      if (costCenter.code) {
-        query = query.eq("cost_center_code", costCenter.code);
-      }
+        .eq("cost_center_code", costCenter.code);
 
       if (selectedMonth_) {
         const competence = `${selectedMonth_}/${selectedYear}`;
@@ -71,11 +68,62 @@ const CostCenterAnalysis = () => {
         query = query.like("competence", `%/${selectedYear}`);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      let { data: expenseData, error: expenseError } = await query.order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (expenseError) {
+        console.error("Erro ao buscar despesas:", expenseError);
+        expenseData = [];
+      }
 
-      setCostCenterExpenses(data || []);
+      let allExpenses = expenseData || [];
+
+      // Se não encontrou despesas e há código de centro, tenta buscar por nome no accounting_entries
+      if (allExpenses.length === 0 && costCenter.code) {
+        try {
+          const { data: accountingData, error: accountingError } = await supabase
+            .from("accounting_entries")
+            .select(`
+              id,
+              description,
+              entry_date,
+              entry_type,
+              accounting_entry_lines(debit, credit)
+            `)
+            .like("description", `%${costCenter.name}%`);
+
+          if (!accountingError && accountingData) {
+            // Converter accounting entries para formato compatível
+            const convertedEntries = accountingData.map((entry: any) => {
+              const lines = entry.accounting_entry_lines || [];
+              const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+
+              return {
+                id: entry.id,
+                description: entry.description,
+                expense_date: entry.entry_date,
+                created_at: entry.entry_date,
+                account_code: entry.entry_type,
+                competence: entry.entry_date?.split('-').slice(1, 2)[0] + '/' + entry.entry_date?.split('-')[0],
+                amount: debitValue,
+                name: entry.description
+              };
+            }).filter(entry => entry.amount > 0);
+
+            allExpenses = [...allExpenses, ...convertedEntries];
+          }
+        } catch (err) {
+          console.error("Erro ao buscar lançamentos contábeis:", err);
+        }
+      }
+
+      // Ordena por data decrescente
+      allExpenses.sort((a, b) => {
+        const dateA = new Date(a.expense_date || a.created_at).getTime();
+        const dateB = new Date(b.expense_date || b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      setCostCenterExpenses(allExpenses);
     } catch (error: any) {
       console.error("Erro ao carregar lançamentos:", error);
       toast.error("Erro ao carregar lançamentos do centro de custo");
