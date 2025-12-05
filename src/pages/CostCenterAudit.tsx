@@ -33,10 +33,16 @@ const CostCenterAudit = () => {
     loadAuditData();
   }, []);
 
-  const getTopLevelParent = (accountCode: string): string => {
-    // Top-level parent is the first part before the first dot
-    // e.g., "4.1.1" -> "4", "1.2.3" -> "1"
-    return accountCode.split(".")[0];
+  const isAccountDescendant = (accountCode: string, parentCode: string): boolean => {
+    // Check if accountCode is a descendant of parentCode
+    // e.g., "4.1.1" is descendant of "4", "4.1", but not of "1"
+    // "1.1.3.04.001" is descendant of "1", "1.1", "1.1.3", "1.1.3.04"
+
+    // Exact match
+    if (accountCode === parentCode) return true;
+
+    // Check if accountCode starts with parentCode.
+    return accountCode.startsWith(parentCode + ".");
   };
 
   const loadAuditData = async () => {
