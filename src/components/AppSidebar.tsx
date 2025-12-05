@@ -51,6 +51,7 @@ import {
   Tv,
   Gift,
   Tags,
+  ClipboardCheck,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -166,6 +167,7 @@ export function AppSidebar() {
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
         { title: "Centro de Custo Despesas", url: "/cost-center-analysis", icon: Tags },
         { title: "Centro de Custo Ativo", url: "/cost-center-assets", icon: Tags },
+        { title: "Auditoria de Centros", url: "/cost-center-audit", icon: ClipboardCheck },
         { title: "Saldo de Abertura", url: "/client-opening-balance", icon: Database },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },
