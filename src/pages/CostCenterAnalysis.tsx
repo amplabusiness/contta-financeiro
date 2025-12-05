@@ -50,6 +50,41 @@ const CostCenterAnalysis = () => {
 
   const { subscribeToExpenseChanges } = useExpenseUpdate();
 
+  const loadCostCenterExpenses = async (costCenter: any) => {
+    try {
+      setLoadingExpenses(true);
+      setSelectedCostCenter(costCenter);
+
+      let query = supabase
+        .from("vw_expenses_with_accounts")
+        .select("*")
+        .eq("status", "paid");
+
+      if (costCenter.code) {
+        query = query.eq("cost_center_code", costCenter.code);
+      }
+
+      if (selectedMonth_) {
+        const competence = `${selectedMonth_}/${selectedYear}`;
+        query = query.eq("competence", competence);
+      } else {
+        query = query.like("competence", `%/${selectedYear}`);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setCostCenterExpenses(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar lançamentos:", error);
+      toast.error("Erro ao carregar lançamentos do centro de custo");
+      setCostCenterExpenses([]);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
+
   useEffect(() => {
     loadAllCostCenters().then((centers) => {
       loadCostCenterData(centers);
