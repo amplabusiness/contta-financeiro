@@ -107,46 +107,26 @@ const LivroDiario = () => {
         `)
         .order(dateField, { ascending: false })
 
-      if (dateField === 'created_at') {
-        // Para created_at (timestamp com timezone), usar horário do Brasil (UTC-3)
-        if (start && end) {
-          console.log('Filtrando created_at entre', start, 'e', end)
-          query = query.gte('created_at', `${start}T00:00:00-03:00`)
-                       .lte('created_at', `${end}T23:59:59-03:00`)
-        } else if (start) {
-          console.log('Filtrando created_at >=', start)
-          query = query.gte('created_at', `${start}T00:00:00-03:00`)
-        } else if (end) {
-          console.log('Filtrando created_at <=', end)
-          query = query.lte('created_at', `${end}T23:59:59-03:00`)
-        }
-      } else {
-        // Para entry_date (apenas data), usar filtro normal
-        if (start) {
-          console.log('Filtrando entry_date >=', start)
-          query = query.gte(dateField, start)
-        }
-        if (end) {
-          console.log('Filtrando entry_date <=', end)
-          query = query.lte(dateField, end)
-        }
-      }
+      // Aplicar filtros de data
+      if (start) query = query.gte(dateField, start)
+      if (end) query = query.lte(dateField, end)
 
       const { data, error } = await query
-      console.log('Resultado da query:', { total: data?.length || 0, campo: dateField, start, end })
-
-      // Debug: mostrar algumas datas de created_at
-      if (data && data.length > 0 && dateField === 'created_at') {
-        const amostra = data.slice(0, 5).map(e => ({
-          id: e.id.substring(0, 8),
-          entry_date: e.entry_date,
-          created_at: e.created_at,
-          description: e.description
-        }))
-        console.log('Amostra de datas created_at:', amostra)
-      }
-
       if (error) throw error
+
+      // Se estiver filtrando por created_at, filtrar manualmente por data (ignora hora/timezone)
+      let filteredData = data
+      if (dateField === 'created_at' && (start || end)) {
+        filteredData = data?.filter((entry: any) => {
+          const createdDate = entry.created_at ? entry.created_at.split('T')[0] : null
+          if (!createdDate) return false
+
+          const matchStart = !start || createdDate >= start
+          const matchEnd = !end || createdDate <= end
+
+          return matchStart && matchEnd
+        })
+      }
 
       const diarioEntries: DiarioEntry[] = []
 
