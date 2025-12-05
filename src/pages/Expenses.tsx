@@ -482,6 +482,19 @@ const Expenses = () => {
       return;
     }
 
+    // Check if category already exists
+    const existingCategory = categories.find(cat =>
+      cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
+    );
+
+    if (existingCategory) {
+      toast.error("Esta categoria já existe! Use a dropdown para selecioná-la.");
+      setFormData({ ...formData, category: existingCategory.name });
+      setNewCategoryDialogOpen(false);
+      setNewCategoryData({ name: "", description: "" });
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await supabase
