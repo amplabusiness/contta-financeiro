@@ -173,6 +173,12 @@ const LivroDiario = () => {
       if (!user.user?.id) throw new Error('Usuário não identificado')
 
       const updates: Record<string, any> = {}
+      const oldValues: Record<string, any> = {
+        account_code: editingLine.codigo_conta,
+        debit: editingLine.debito,
+        credit: editingLine.credito,
+        description: editingLine.historico
+      }
 
       if (editingLine.codigo_conta) {
         const account = chartOfAccounts.find(a => a.code === editingLine.codigo_conta)
@@ -189,24 +195,32 @@ const LivroDiario = () => {
         updates.credit = editingLine.credito
       }
 
+      if (Object.keys(updates).length === 0) {
+        toast.error('Nenhuma alteração foi feita')
+        return
+      }
+
       const { error: updateError } = await supabase
         .from('accounting_entry_lines')
         .update(updates)
-        .eq('id', editingLine.numero_lancamento)
+        .eq('id', editingLine.linha_id)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error('Erro de banco de dados:', updateError)
+        throw new Error(`Erro ao atualizar: ${updateError.message}`)
+      }
 
       await AccountingAuditService.logLineChange(
         editingLine.numero_lancamento,
-        editingLine.numero_lancamento,
+        editingLine.linha_id,
         {
-          line_id: editingLine.numero_lancamento,
+          line_id: editingLine.linha_id,
           old_account_code: editingLine.codigo_conta,
           new_account_code: editingLine.codigo_conta,
           old_debit: editingLine.debito,
-          new_debit: editingLine.debito,
+          new_debit: updates.debit !== undefined ? updates.debit : editingLine.debito,
           old_credit: editingLine.credito,
-          new_credit: editingLine.credito
+          new_credit: updates.credit !== undefined ? updates.credit : editingLine.credito
         },
         user.user.id
       )
@@ -215,9 +229,9 @@ const LivroDiario = () => {
       setEditDialogOpen(false)
       setEditingLine(null)
       loadDiario(startDate, endDate)
-    } catch (error) {
-      console.error('Erro ao salvar edição:', error)
-      toast.error('Erro ao atualizar lançamento')
+    } catch (error: any) {
+      console.error('Erro ao salvar edição:', error?.message || error)
+      toast.error(`Erro ao atualizar lançamento: ${error?.message || 'Erro desconhecido'}`)
     }
   }
 
