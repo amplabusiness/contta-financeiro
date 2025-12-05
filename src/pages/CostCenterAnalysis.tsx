@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Loader2, ChevronDown, X } from "lucide-react";
+import { Loader2, ChevronDown, X, Edit, Save } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
@@ -16,6 +16,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -32,6 +39,9 @@ const CostCenterAnalysis = () => {
   const [selectedCostCenter, setSelectedCostCenter] = useState<any | null>(null);
   const [costCenterExpenses, setCostCenterExpenses] = useState<any[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
+  const [chartAccounts, setChartAccounts] = useState<any[]>([]);
+  const [editingCenterId, setEditingCenterId] = useState<string | null>(null);
+  const [savingCenterId, setSavingCenterId] = useState<string | null>(null);
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -174,6 +184,7 @@ const CostCenterAnalysis = () => {
     loadAllCostCenters().then((centers) => {
       loadCostCenterData(centers);
     });
+    loadChartAccounts();
   }, [selectedYear, selectedMonth_]);
 
   // Subscribe to expense changes and reload data automatically
@@ -202,7 +213,7 @@ const CostCenterAnalysis = () => {
     try {
       const { data, error } = await supabase
         .from("cost_centers")
-        .select("id, code, name, description, is_active, parent_id")
+        .select("id, code, name, description, is_active, parent_id, default_chart_account_id")
         .eq("is_active", true)
         .order("order_index, code");
 
@@ -215,6 +226,45 @@ const CostCenterAnalysis = () => {
       console.error("Erro ao carregar centros de custo:", error);
       toast.error("Erro ao carregar centros de custo");
       return [];
+    }
+  };
+
+  const loadChartAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chart_of_accounts")
+        .select("id, code, name, account_type")
+        .eq("is_analytical", true)
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+      setChartAccounts(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar plano de contas:", error);
+      toast.error("Erro ao carregar plano de contas");
+    }
+  };
+
+  const handleAccountChange = async (centerId: string, accountId: string) => {
+    try {
+      setSavingCenterId(centerId);
+
+      const { error } = await supabase
+        .from("cost_centers")
+        .update({ default_chart_account_id: accountId })
+        .eq("id", centerId);
+
+      if (error) throw error;
+
+      toast.success("Vínculo atualizado com sucesso!");
+      setEditingCenterId(null);
+      await loadAllCostCenters();
+    } catch (error: any) {
+      console.error("Erro ao atualizar vínculo:", error);
+      toast.error("Erro ao atualizar vínculo");
+    } finally {
+      setSavingCenterId(null);
     }
   };
 
@@ -655,8 +705,13 @@ const CostCenterAnalysis = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Centros de Custo Cadastrados</CardTitle>
-            <CardDescription>Lista completa de todos os centros de custo ativos no sistema</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Vincular Centros de Custo ao Plano de Contas
+            </CardTitle>
+            <CardDescription>
+              Configure qual conta contábil está vinculada a cada centro de custo. Este vínculo é usado para lançamentos automáticos.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {allCostCenters.length > 0 ? (
@@ -664,23 +719,74 @@ const CostCenterAnalysis = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
+                      <TableHead className="w-[150px]">Código</TableHead>
                       <TableHead>Nome</TableHead>
-                    <TableHead>Descrição</TableHead>
+                      <TableHead className="w-[400px]">Conta Contábil Padrão</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allCostCenters.map((center) => (
-                      <TableRow key={center.id}>
-                        <TableCell className="font-mono font-medium">
-                          {center.code}
-                        </TableCell>
-                        <TableCell className="font-medium">{center.name}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                          {center.description || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {allCostCenters.map((center) => {
+                      const linkedAccount = chartAccounts.find(acc => acc.id === center.default_chart_account_id);
+                      const isEditing = editingCenterId === center.id;
+                      const isSaving = savingCenterId === center.id;
+
+                      return (
+                        <TableRow key={center.id}>
+                          <TableCell className="font-mono font-medium">
+                            {center.code}
+                          </TableCell>
+                          <TableCell className="font-medium">{center.name}</TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Select
+                                value={center.default_chart_account_id || ""}
+                                onValueChange={(value) => handleAccountChange(center.id, value)}
+                                disabled={isSaving}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Selecione uma conta..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {chartAccounts.map((account) => (
+                                    <SelectItem key={account.id} value={account.id}>
+                                      {account.code} - {account.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : linkedAccount ? (
+                              <div className="text-sm">
+                                <span className="font-mono font-medium">{linkedAccount.code}</span>
+                                <span className="text-muted-foreground"> - {linkedAccount.name}</span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground italic">Nenhuma conta vinculada</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingCenterId(null)}
+                                disabled={isSaving}
+                              >
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancelar"}
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingCenterId(center.id)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
