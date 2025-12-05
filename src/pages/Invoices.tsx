@@ -705,7 +705,13 @@ const Invoices = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(invoice.id)}
+                          onClick={() => handleDelete(invoice.id, invoice)}
+                          disabled={invoice.status === "paid" && invoice.cnab_reference}
+                          title={
+                            invoice.status === "paid" && invoice.cnab_reference
+                              ? "Fatura conciliada - desfaça a conciliação para deletar"
+                              : "Deletar fatura"
+                          }
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
