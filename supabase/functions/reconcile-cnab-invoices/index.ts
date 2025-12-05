@@ -79,19 +79,22 @@ serve(async (req) => {
         );
 
         if (match) {
-          // Update invoice as paid
-          const { error: updateError } = await supabase
-            .from("invoices")
-            .update({
-              status: "paid",
-              payment_date: transaction.payment_date || new Date().toISOString().split("T")[0],
-              reconciled_at: new Date().toISOString(),
+          // Save as pending reconciliation (awaiting approval)
+          const { error: insertError } = await supabase
+            .from("pending_reconciliations")
+            .insert({
+              bank_account_id,
+              invoice_id: match.invoice_id,
               cnab_reference: transaction.bank_reference,
-            })
-            .eq("id", match.invoice_id);
+              cnab_document: transaction.document_number || transaction.bank_reference,
+              amount: transaction.amount,
+              payment_date: transaction.payment_date || new Date().toISOString().split("T")[0],
+              confidence: match.confidence,
+              status: "pending",
+            });
 
-          if (updateError) {
-            results.errors.push(`Failed to update invoice ${match.invoice_id}: ${updateError.message}`);
+          if (insertError) {
+            results.errors.push(`Failed to save pending reconciliation: ${insertError.message}`);
           } else {
             results.reconciled++;
             results.matched_invoices.push({
@@ -102,14 +105,6 @@ serve(async (req) => {
               payment_date: transaction.payment_date || new Date().toISOString().split("T")[0],
               confidence: match.confidence,
             });
-
-            // Create accounting entry for payment if not exists
-            await createPaymentEntry(
-              supabase,
-              match.invoice_id,
-              transaction.amount,
-              transaction.payment_date || new Date().toISOString().split("T")[0]
-            );
           }
         } else {
           results.unmatched++;
@@ -200,45 +195,6 @@ async function findMatchingInvoice(
   return null;
 }
 
-async function createPaymentEntry(
-  supabase: any,
-  invoice_id: string,
-  amount: number,
-  payment_date: string
-): Promise<void> {
-  try {
-    // Get invoice details
-    const { data: invoice } = await supabase
-      .from("invoices")
-      .select("id, client_id, amount")
-      .eq("id", invoice_id)
-      .single();
-
-    if (!invoice) return;
-
-    // Check if payment entry already exists
-    const { data: existing } = await supabase
-      .from("accounting_entries")
-      .select("id")
-      .eq("invoice_id", invoice_id)
-      .eq("type", "payment");
-
-    if (existing && existing.length > 0) return;
-
-    // Create payment accounting entry
-    await supabase.from("accounting_entries").insert({
-      invoice_id,
-      client_id: invoice.client_id,
-      type: "payment",
-      amount,
-      entry_date: payment_date,
-      status: "posted",
-      description: `Pagamento reconciliado via CNAB`,
-    });
-  } catch (error) {
-    console.error("Error creating payment entry:", error);
-  }
-}
 
 function getDateOffset(date: string, days: number): string {
   const d = new Date(date);
