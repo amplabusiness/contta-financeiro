@@ -32,6 +32,7 @@ import AIAgents from "./pages/AIAgents";
 import AIInsights from "./pages/AIInsights";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
 import CostCenterAssets from "./pages/CostCenterAssets";
+import CostCenterAudit from "./pages/CostCenterAudit";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
@@ -133,6 +134,7 @@ const App = () => (
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
             <Route path="/cost-center-assets" element={<CostCenterAssets />} />
+            <Route path="/cost-center-audit" element={<CostCenterAudit />} />
             <Route path="/import-companies" element={<ImportCompanies />} />
             <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
             <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
