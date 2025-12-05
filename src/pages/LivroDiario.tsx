@@ -134,6 +134,18 @@ const LivroDiario = () => {
 
       const { data, error } = await query
       console.log('Resultado da query:', { total: data?.length || 0, campo: dateField, start, end })
+
+      // Debug: mostrar algumas datas de created_at
+      if (data && data.length > 0 && dateField === 'created_at') {
+        const amostra = data.slice(0, 5).map(e => ({
+          id: e.id.substring(0, 8),
+          entry_date: e.entry_date,
+          created_at: e.created_at,
+          description: e.description
+        }))
+        console.log('Amostra de datas created_at:', amostra)
+      }
+
       if (error) throw error
 
       const diarioEntries: DiarioEntry[] = []
