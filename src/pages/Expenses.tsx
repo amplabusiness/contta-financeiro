@@ -559,7 +559,7 @@ const Expenses = () => {
     }
   };
 
-  const handleEdit = (expense: any) => {
+  const handleEdit = async (expense: any) => {
     setEditingExpense(expense);
     const formatDateForInput = (dateStr: string) => {
       if (!dateStr) return "";
@@ -588,6 +588,31 @@ const Expenses = () => {
       is_recurring: expense.is_recurring || false,
       recurrence_day: expense.recurrence_day || 10,
     });
+
+    // Filtrar contas baseado no centro de custo
+    if (expense.cost_center_id) {
+      const selectedCenter = costCenters.find(c => c.id === expense.cost_center_id);
+      if (selectedCenter?.default_chart_account_id) {
+        try {
+          const { data: parentAccount } = await supabase
+            .from("chart_of_accounts")
+            .select("code")
+            .eq("id", selectedCenter.default_chart_account_id)
+            .single();
+
+          if (parentAccount) {
+            const filtered = accounts.filter(acc =>
+              acc.code.startsWith(parentAccount.code)
+            );
+            setFilteredAccounts(filtered);
+          }
+        } catch (error) {
+          console.error("Erro ao filtrar contas:", error);
+          setFilteredAccounts(accounts);
+        }
+      }
+    }
+
     setOpen(true);
   };
 
