@@ -155,6 +155,102 @@ const LivroDiario = () => {
     loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
   }
 
+  const handleEditLine = (entry: DiarioEntry) => {
+    setEditingLine(entry)
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingLine) return
+
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user?.id) throw new Error('Usuário não identificado')
+
+      const updates: Record<string, any> = {}
+
+      if (editingLine.codigo_conta) {
+        const account = chartOfAccounts.find(a => a.code === editingLine.codigo_conta)
+        if (account) {
+          updates.chart_of_accounts_id = account.id
+        }
+      }
+
+      if (editingLine.debito >= 0) {
+        updates.debit = editingLine.debito
+      }
+
+      if (editingLine.credito >= 0) {
+        updates.credit = editingLine.credito
+      }
+
+      const { error: updateError } = await supabase
+        .from('accounting_entry_lines')
+        .update(updates)
+        .eq('id', editingLine.numero_lancamento)
+
+      if (updateError) throw updateError
+
+      await AccountingAuditService.logLineChange(
+        editingLine.numero_lancamento,
+        editingLine.numero_lancamento,
+        {
+          line_id: editingLine.numero_lancamento,
+          old_account_code: editingLine.codigo_conta,
+          new_account_code: editingLine.codigo_conta,
+          old_debit: editingLine.debito,
+          new_debit: editingLine.debito,
+          old_credit: editingLine.credito,
+          new_credit: editingLine.credito
+        },
+        user.user.id
+      )
+
+      toast.success('Lançamento atualizado com sucesso!')
+      setEditDialogOpen(false)
+      setEditingLine(null)
+      loadDiario(startDate, endDate)
+    } catch (error) {
+      console.error('Erro ao salvar edição:', error)
+      toast.error('Erro ao atualizar lançamento')
+    }
+  }
+
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!confirm('Tem certeza que deseja deletar este lançamento? Uma entrada de auditoria será registrada.')) {
+      return
+    }
+
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (!user.user?.id) throw new Error('Usuário não identificado')
+
+      await AccountingAuditService.deleteEntryWithAudit(
+        entryId,
+        user.user.id,
+        'Deletado pelo usuário'
+      )
+
+      toast.success('Lançamento deletado com sucesso!')
+      loadDiario(startDate, endDate)
+    } catch (error) {
+      console.error('Erro ao deletar lançamento:', error)
+      toast.error('Erro ao deletar lançamento')
+    }
+  }
+
+  const handleShowHistory = async (entryId: string) => {
+    try {
+      setSelectedEntryId(entryId)
+      const history = await AccountingAuditService.getEntryAuditHistory(entryId)
+      setAuditHistory(history)
+      setHistoryDialogOpen(true)
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error)
+      toast.error('Erro ao carregar histórico')
+    }
+  }
+
   const groupedEntries = entries.reduce((acc, entry) => {
     if (!acc[entry.numero_lancamento]) acc[entry.numero_lancamento] = []
     acc[entry.numero_lancamento].push(entry)
