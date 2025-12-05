@@ -59,12 +59,11 @@ const CostCenterAnalysis = () => {
 
       let allExpenses: any[] = [];
 
-      // Busca 1: Despesas pagas com este centro de custo (mesmo filtro do ranking)
+      // Busca 1: TODAS as despesas com este centro de custo (sem filtro de status)
       try {
         let query = supabase
           .from("vw_expenses_with_accounts")
           .select("*")
-          .eq("status", "paid")
           .eq("cost_center_code", costCenter.code);
 
         if (selectedMonth_) {
@@ -76,13 +75,21 @@ const CostCenterAnalysis = () => {
 
         const { data: expenseData, error: expenseError } = await query.order("created_at", { ascending: false });
 
-        console.log("Despesas pagas encontradas:", expenseData?.length);
+        console.log("Despesas encontradas (sem filtro status):", expenseData?.length);
+        if (expenseData && expenseData.length > 0) {
+          console.log("Primeiras 3 despesas:", expenseData.slice(0, 3).map(e => ({
+            description: e.description,
+            amount: e.amount,
+            status: e.status,
+            competence: e.competence
+          })));
+        }
 
         if (!expenseError && expenseData) {
           allExpenses = [...allExpenses, ...expenseData];
         }
       } catch (err) {
-        console.error("Erro ao buscar despesas pagas:", err);
+        console.error("Erro ao buscar despesas:", err);
       }
 
       // Busca 2: Saldos de abertura - EXATAMENTE como faz no ranking
