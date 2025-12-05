@@ -506,6 +506,7 @@ const Expenses = () => {
       setFormData({ ...formData, category: response.data.name });
       setNewCategoryData({ name: "", description: "" });
       setNewCategoryDialogOpen(false);
+      setCategorySearchQuery(""); // Reset search para mostrar todas as categorias
 
       await loadCategories();
     } catch (error: any) {
