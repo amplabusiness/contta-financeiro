@@ -175,7 +175,9 @@ export class AccountingAuditService {
         .update(updates)
         .eq('id', lineId)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        throw new Error(`Erro ao atualizar linha: ${updateError.message}`)
+      }
 
       await this.logLineChange(
         entryId,
@@ -193,8 +195,8 @@ export class AccountingAuditService {
         },
         userId
       )
-    } catch (error) {
-      console.error('Erro ao atualizar linha com auditoria:', error)
+    } catch (error: any) {
+      console.error('Erro ao atualizar linha com auditoria:', error?.message || error)
       throw error
     }
   }
