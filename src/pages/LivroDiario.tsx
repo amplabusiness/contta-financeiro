@@ -3,12 +3,23 @@ import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
 import { formatCurrency } from '@/data/expensesData'
-import { Calendar, FileText, Filter } from 'lucide-react'
+import { Calendar, FileText, Filter, Edit2, Trash2, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { toast } from 'sonner'
+import { AccountingAuditService } from '@/services/AccountingAuditService'
 
 interface DiarioEntry {
   numero_lancamento: string
