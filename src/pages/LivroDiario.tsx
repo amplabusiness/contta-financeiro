@@ -96,7 +96,7 @@ const LivroDiario = () => {
             debit,
             credit,
             description,
-            chart_of_accounts_id,
+            account_id,
             chart_of_accounts (
               code,
               name
