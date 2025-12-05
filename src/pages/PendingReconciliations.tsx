@@ -53,6 +53,7 @@ interface InvoiceInfo {
 
 const PendingReconciliations = () => {
   const [pending, setPending] = useState<PendingReconciliation[]>([]);
+  const [approved, setApproved] = useState<PendingReconciliation[]>([]);
   const [loading, setLoading] = useState(true);
   const [invoiceInfo, setInvoiceInfo] = useState<InvoiceInfo>({});
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([]);
@@ -78,22 +79,36 @@ const PendingReconciliations = () => {
 
   const loadPendingReconciliations = async () => {
     try {
-      const { data, error } = await supabase
+      // Load pending reconciliations
+      const { data: pendingData, error: pendingError } = await supabase
         .from("pending_reconciliations")
         .select("*")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (pendingError) throw pendingError;
 
-      setPending(data || []);
+      // Load approved reconciliations (last 20 for potential undo)
+      const { data: approvedData, error: approvedError } = await supabase
+        .from("pending_reconciliations")
+        .select("*")
+        .eq("status", "approved")
+        .order("approved_at", { ascending: false })
+        .limit(20);
 
-      // Load invoice info
-      if (data && data.length > 0) {
-        await loadInvoiceInfo(data.map(r => r.invoice_id));
+      if (approvedError) throw approvedError;
+
+      setPending(pendingData || []);
+      setApproved(approvedData || []);
+
+      // Load invoice info for both
+      const allReconciliations = [...(pendingData || []), ...(approvedData || [])];
+      const invoiceIds = allReconciliations.map(r => r.invoice_id).filter(Boolean);
+      if (invoiceIds.length > 0) {
+        await loadInvoiceInfo(invoiceIds);
       }
     } catch (error: any) {
-      toast.error("Erro ao carregar conciliações pendentes");
+      toast.error("Erro ao carregar conciliações");
       console.error(error);
     } finally {
       setLoading(false);
