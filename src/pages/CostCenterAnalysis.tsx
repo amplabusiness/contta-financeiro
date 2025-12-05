@@ -421,7 +421,7 @@ const CostCenterAnalysis = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Análise de Centro de Custos</h1>
+          <h1 className="text-3xl font-bold">Centro de Custo Despesas</h1>
           <p className="text-muted-foreground">
             Visualize os gastos por departamento e identifique oportunidades de otimização
           </p>
