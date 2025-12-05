@@ -390,6 +390,24 @@ const LivroDiario = () => {
                             <TableCell className="text-sm text-muted-foreground">{item.historico}</TableCell>
                             <TableCell className="text-right">{item.debito > 0 ? formatCurrency(item.debito) : '-'}</TableCell>
                             <TableCell className="text-right">{item.credito > 0 ? formatCurrency(item.credito) : '-'}</TableCell>
+                            <TableCell className="text-right space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditLine(item)}
+                                className="h-8"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleShowHistory(lancamentoId)}
+                                className="h-8"
+                              >
+                                <History className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                         <TableRow className="bg-muted/50 font-semibold">
