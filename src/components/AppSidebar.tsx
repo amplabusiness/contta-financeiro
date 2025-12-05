@@ -124,6 +124,7 @@ export function AppSidebar() {
       items: [
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
+        { title: "Importar CNAB 400", url: "/import-cnab", icon: FileText },
         { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
         { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
       ],
