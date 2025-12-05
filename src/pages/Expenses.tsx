@@ -739,6 +739,13 @@ const Expenses = () => {
                                 }
                                 required
                               />
+                              {newCategoryData.name && categories.some(cat =>
+                                cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
+                              ) && (
+                                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                                  ⚠️ Esta categoria já existe! Você pode selecioná-la na dropdown de categorias.
+                                </div>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="new_category_description">Descrição</Label>
