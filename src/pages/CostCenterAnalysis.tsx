@@ -59,13 +59,12 @@ const CostCenterAnalysis = () => {
 
       let allExpenses: any[] = [];
 
-      // Busca 1: Despesas com status="paid" E cost_center_name (MESMA LÓGICA DO RANKING)
+      // Busca 1: Despesas com status="paid" - BUSCAR POR CÓDIGO OU NOME
       try {
         let query = supabase
           .from("vw_expenses_with_accounts")
           .select("*")
-          .eq("status", "paid")
-          .eq("cost_center_name", costCenter.name); // USA O NOME, NÃO O CÓDIGO!
+          .eq("status", "paid");
 
         if (selectedMonth_) {
           const competence = `${selectedMonth_}/${selectedYear}`;
@@ -74,20 +73,32 @@ const CostCenterAnalysis = () => {
           query = query.like("competence", `%/${selectedYear}`);
         }
 
-        const { data: expenseData, error: expenseError } = await query.order("created_at", { ascending: false });
+        const { data: allExpenseData, error: expenseError } = await query;
 
-        console.log("Despesas pagas com cost_center_name =", costCenter.name, ":", expenseData?.length);
-        if (expenseData && expenseData.length > 0) {
-          console.log("Primeiras 3 despesas:", expenseData.slice(0, 3).map(e => ({
-            description: e.description,
-            amount: e.amount,
-            status: e.status,
-            competence: e.competence
-          })));
-        }
+        console.log("Total despesas pagas no período:", allExpenseData?.length);
 
-        if (!expenseError && expenseData) {
-          allExpenses = [...allExpenses, ...expenseData];
+        if (!expenseError && allExpenseData) {
+          // Filtrar manualmente por código OU nome (case-insensitive)
+          const filtered = allExpenseData.filter((expense: any) => {
+            const expCenterCode = (expense.cost_center_code || "").toLowerCase();
+            const expCenterName = (expense.cost_center_name || "").toLowerCase();
+            const searchCode = costCenter.code.toLowerCase();
+            const searchName = costCenter.name.toLowerCase();
+
+            return expCenterCode === searchCode || expCenterName === searchName;
+          });
+
+          console.log("Despesas filtradas para", costCenter.name, ":", filtered.length);
+          if (filtered.length > 0) {
+            console.log("Primeiras despesas encontradas:", filtered.slice(0, 3).map(e => ({
+              description: e.description,
+              amount: e.amount,
+              cost_center_name: e.cost_center_name,
+              cost_center_code: e.cost_center_code
+            })));
+          }
+
+          allExpenses = [...allExpenses, ...filtered];
         }
       } catch (err) {
         console.error("Erro ao buscar despesas:", err);
