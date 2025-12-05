@@ -928,7 +928,7 @@ const Expenses = () => {
                     <Label htmlFor="cost_center_id">Centro de Custo *</Label>
                     <Select
                       value={formData.cost_center_id}
-                      onValueChange={(value) => setFormData({ ...formData, cost_center_id: value })}
+                      onValueChange={handleCostCenterChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um centro de custo" />
