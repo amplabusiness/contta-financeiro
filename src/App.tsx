@@ -31,6 +31,7 @@ import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
 import AIInsights from "./pages/AIInsights";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
+import CostCenterAssets from "./pages/CostCenterAssets";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
@@ -131,6 +132,7 @@ const App = () => (
             <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
+            <Route path="/cost-center-assets" element={<CostCenterAssets />} />
             <Route path="/import-companies" element={<ImportCompanies />} />
             <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
             <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
