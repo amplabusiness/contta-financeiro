@@ -517,7 +517,12 @@ const Expenses = () => {
       if (parentAccounts && parentAccounts.length > 0) {
         const parentCodes = parentAccounts.map(acc => acc.code);
         const filtered = accounts.filter(acc =>
-          parentCodes.some(code => acc.code.startsWith(code))
+          parentCodes.some(code => {
+            // Filtro exato: deve começar com o código E
+            // - ser igual ao código pai, OU
+            // - o próximo caractere deve ser um ponto (para evitar 4.1.10 quando o pai é 4.1.1)
+            return acc.code === code || acc.code.startsWith(code + '.');
+          })
         );
         setFilteredAccounts(filtered);
       } else {
