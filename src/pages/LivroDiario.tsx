@@ -132,8 +132,9 @@ const LivroDiario = () => {
       })
 
       setEntries(diarioEntries)
-    } catch (error) {
-      console.error('Erro ao carregar diário:', error)
+    } catch (error: any) {
+      console.error('Erro ao carregar diário:', error?.message || error)
+      toast.error(`Erro ao carregar diário: ${error?.message || 'Erro desconhecido'}`)
       setEntries([])
     } finally {
       setLoading(false)
