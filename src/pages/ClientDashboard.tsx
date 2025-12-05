@@ -442,7 +442,7 @@ const ClientDashboard = () => {
           </Card>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div>
           <Card>
             <CardHeader>
               <CardTitle>Honorários do Cliente</CardTitle>
