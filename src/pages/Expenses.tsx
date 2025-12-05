@@ -618,25 +618,49 @@ const Expenses = () => {
 
     // Filtrar contas baseado no centro de custo
     if (expense.cost_center_id) {
-      const selectedCenter = costCenters.find(c => c.id === expense.cost_center_id);
-      if (selectedCenter?.default_chart_account_id) {
-        try {
-          const { data: parentAccount } = await supabase
+      try {
+        // Buscar todas as contas vinculadas ao centro
+        const { data: centerAccounts } = await supabase
+          .from("cost_center_accounts")
+          .select("chart_account_id")
+          .eq("cost_center_id", expense.cost_center_id);
+
+        if (centerAccounts && centerAccounts.length > 0) {
+          // Buscar os códigos das contas pai
+          const accountIds = centerAccounts.map(item => item.chart_account_id);
+          const { data: parentAccounts } = await supabase
             .from("chart_of_accounts")
             .select("code")
-            .eq("id", selectedCenter.default_chart_account_id)
-            .single();
+            .in("id", accountIds);
 
-          if (parentAccount) {
+          if (parentAccounts && parentAccounts.length > 0) {
+            const parentCodes = parentAccounts.map(acc => acc.code);
             const filtered = accounts.filter(acc =>
-              acc.code.startsWith(parentAccount.code)
+              parentCodes.some(code => acc.code.startsWith(code))
             );
             setFilteredAccounts(filtered);
           }
-        } catch (error) {
-          console.error("Erro ao filtrar contas:", error);
-          setFilteredAccounts(accounts);
+        } else {
+          // Fallback: usar default_chart_account_id
+          const selectedCenter = costCenters.find(c => c.id === expense.cost_center_id);
+          if (selectedCenter?.default_chart_account_id) {
+            const { data: parentAccount } = await supabase
+              .from("chart_of_accounts")
+              .select("code")
+              .eq("id", selectedCenter.default_chart_account_id)
+              .single();
+
+            if (parentAccount) {
+              const filtered = accounts.filter(acc =>
+                acc.code.startsWith(parentAccount.code)
+              );
+              setFilteredAccounts(filtered);
+            }
+          }
         }
+      } catch (error) {
+        console.error("Erro ao filtrar contas:", error);
+        setFilteredAccounts(accounts);
       }
     }
 
