@@ -261,6 +261,62 @@ const ClientDashboard = () => {
     return <Badge variant={variants[status] || "secondary"}>{labels[status] || status}</Badge>;
   };
 
+  const handleUndoPayment = async (invoice: any) => {
+    if (!confirm("Desafazer o pagamento desta fatura? Ela voltará a ficar pendente.")) return;
+
+    try {
+      setLoading(true);
+
+      // 1. Delete related accounting entries
+      const { error: deleteEntryError } = await supabase
+        .from("accounting_entries")
+        .delete()
+        .eq("invoice_id", invoice.id)
+        .ilike("description", "%Reconciliação OFX/CNAB%");
+
+      if (deleteEntryError && deleteEntryError.code !== "PGRST116") {
+        console.error("Aviso: Erro ao deletar lançamento contábil:", deleteEntryError);
+      }
+
+      // 2. Revert invoice status
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .update({
+          status: "pending",
+          payment_date: null,
+          cnab_reference: null,
+          reconciled_at: null,
+        })
+        .eq("id", invoice.id);
+
+      if (invoiceError) throw invoiceError;
+
+      // 3. Revert pending reconciliation if exists
+      const { error: reconciliationError } = await supabase
+        .from("pending_reconciliations")
+        .update({
+          status: "pending",
+          approved_at: null,
+          approved_by: null,
+          chart_of_accounts_id: null,
+          cost_center_id: null,
+        })
+        .eq("invoice_id", invoice.id)
+        .eq("status", "approved");
+
+      if (reconciliationError && reconciliationError.code !== "PGRST116") {
+        console.error("Aviso: Erro ao reverter conciliação:", reconciliationError);
+      }
+
+      toast.success("Pagamento desfeito! Fatura voltou a ficar pendente.");
+      loadClientData();
+    } catch (error: any) {
+      toast.error("Erro ao desfazer pagamento");
+      console.error(error);
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
