@@ -485,6 +485,83 @@ const PendingReconciliations = () => {
           </div>
         )}
 
+        {approved.length > 0 && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-900">✅ Conciliações Aprovadas</CardTitle>
+              <CardDescription>
+                Clique em "Desfazer" se precisar reverter alguma conciliação
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fatura</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Documento CNAB</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Aprovada em</TableHead>
+                      <TableHead>Plano de Contas</TableHead>
+                      <TableHead>Centro de Custo</TableHead>
+                      <TableHead className="text-right">Ação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {approved.map((rec) => {
+                      const invoice = invoiceInfo[rec.invoice_id];
+                      const chartAccount = chartOfAccounts.find(c => c.id === rec.chart_of_accounts_id);
+                      const costCenter = costCenters.find(c => c.id === rec.cost_center_id);
+                      const isProcessing = processingId === rec.id;
+
+                      return (
+                        <TableRow key={rec.id} className="bg-blue-50/50">
+                          <TableCell className="font-medium">
+                            {invoice?.number || rec.invoice_id}
+                          </TableCell>
+                          <TableCell>{invoice?.client_name || "-"}</TableCell>
+                          <TableCell>{rec.cnab_document}</TableCell>
+                          <TableCell>{formatCurrency(rec.amount)}</TableCell>
+                          <TableCell>
+                            {rec.approved_at
+                              ? new Date(rec.approved_at).toLocaleDateString("pt-BR")
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {chartAccount ? `${chartAccount.code} - ${chartAccount.name}` : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {costCenter ? `${costCenter.code} - ${costCenter.name}` : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUndoReconciliation(rec.id)}
+                              disabled={isProcessing}
+                              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <AlertCircle className="w-4 h-4 mr-1" />
+                                  Desfazer
+                                </>
+                              )}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Approval Dialog - Select Chart of Accounts and Cost Center */}
         <Dialog
           open={approvalDialog.visible}
