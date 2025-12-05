@@ -7,6 +7,16 @@ import { PeriodProvider } from "@/contexts/PeriodContext";
 import App from "./App.tsx";
 import "./index.css";
 
+// Suppress ResizeObserver loop error (harmless warning)
+const resizeObserverErrorHandler = (e: ErrorEvent) => {
+  if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+    e.stopImmediatePropagation();
+    return;
+  }
+};
+
+window.addEventListener('error', resizeObserverErrorHandler);
+
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
