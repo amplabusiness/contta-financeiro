@@ -46,9 +46,12 @@ export class AccountingAuditService {
         }
       })
 
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro ao registrar auditoria de lançamento:', error)
+      if (error) {
+        console.error('Erro Supabase ao registrar auditoria:', error)
+        throw new Error(`Erro ao registrar auditoria: ${error.message}`)
+      }
+    } catch (error: any) {
+      console.error('Erro ao registrar auditoria de lançamento:', error?.message || error)
       throw error
     }
   }
