@@ -417,6 +417,7 @@ const PendingReconciliations = () => {
                         <TableHead>Valor</TableHead>
                         <TableHead>Data Pagamento</TableHead>
                         <TableHead>Confiança</TableHead>
+                        <TableHead>Motivo Anterior</TableHead>
                         <TableHead className="text-right">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -426,7 +427,7 @@ const PendingReconciliations = () => {
                         const isProcessing = processingId === rec.id;
 
                         return (
-                          <TableRow key={rec.id}>
+                          <TableRow key={rec.id} className={rec.rejected_reason ? "bg-yellow-50" : ""}>
                             <TableCell className="font-medium">
                               {invoice?.number || rec.invoice_id}
                             </TableCell>
@@ -442,6 +443,15 @@ const PendingReconciliations = () => {
                               >
                                 {Math.round(rec.confidence * 100)}%
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm max-w-[200px]">
+                              {rec.rejected_reason ? (
+                                <span className="text-orange-600 font-medium">
+                                  ⚠️ {rec.rejected_reason}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-right space-x-2">
                               <Button
