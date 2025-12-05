@@ -448,19 +448,21 @@ const ClientDashboard = () => {
               <CardTitle>Honorários do Cliente</CardTitle>
               <CardDescription>
                 Todos os honorários deste cliente
-                <div className="mt-1 space-y-0.5">
+              </CardDescription>
+              {(clientMonthlyFee !== null || clientPaymentDay !== null) && (
+                <div className="mt-2 space-y-0.5">
                   {clientMonthlyFee !== null && (
-                    <span className="block text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Valor cadastrado: {formatCurrency(clientMonthlyFee)}
-                    </span>
+                    </p>
                   )}
                   {clientPaymentDay !== null && (
-                    <span className="block text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Dia de vencimento cadastrado: {clientPaymentDay}
-                    </span>
+                    </p>
                   )}
                 </div>
-              </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
               {invoices.length === 0 ? (
