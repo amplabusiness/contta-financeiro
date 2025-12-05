@@ -252,9 +252,9 @@ const LivroDiario = () => {
 
       toast.success('Lançamento deletado com sucesso!')
       loadDiario(startDate, endDate)
-    } catch (error) {
-      console.error('Erro ao deletar lançamento:', error)
-      toast.error('Erro ao deletar lançamento')
+    } catch (error: any) {
+      console.error('Erro ao deletar lançamento:', error?.message || error)
+      toast.error(`Erro ao deletar lançamento: ${error?.message || 'Erro desconhecido'}`)
     }
   }
 
