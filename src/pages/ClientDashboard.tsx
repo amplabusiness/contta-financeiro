@@ -7,7 +7,7 @@ import { formatCurrency } from "@/data/expensesData";
 import { MetricCard } from "@/components/MetricCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar } from "lucide-react";
+import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -476,6 +476,7 @@ const ClientDashboard = () => {
                         <TableHead>Vencimento</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -502,6 +503,20 @@ const ClientDashboard = () => {
                             </TableCell>
                             <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
                             <TableCell>{getStatusBadge(status)}</TableCell>
+                            <TableCell className="text-right">
+                              {isPaid && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleUndoPayment(invoice)}
+                                  disabled={loading}
+                                  className="text-orange-600 hover:bg-orange-50"
+                                  title="Desfazer pagamento (reverte conciliação)"
+                                >
+                                  <Undo2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                         );
                       })}
