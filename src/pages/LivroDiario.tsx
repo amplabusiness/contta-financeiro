@@ -59,7 +59,22 @@ const LivroDiario = () => {
     setEndDate(lastDay.toISOString().split('T')[0])
 
     loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
+    loadChartOfAccounts()
   }, [])
+
+  const loadChartOfAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chart_of_accounts')
+        .select('id, code, name, type')
+        .order('code')
+
+      if (error) throw error
+      setChartOfAccounts(data || [])
+    } catch (error) {
+      console.error('Erro ao carregar plano de contas:', error)
+    }
+  }
 
   const loadDiario = async (start?: string, end?: string) => {
     try {
