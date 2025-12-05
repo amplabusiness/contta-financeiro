@@ -442,9 +442,9 @@ const PendingReconciliations = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground block">
                   Escolha a conta que receberá/enviará este valor
-                </p>
+                </span>
               </div>
 
               <div className="space-y-2">
@@ -466,9 +466,9 @@ const PendingReconciliations = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground block">
                   Escolha o departamento/projeto relacionado
-                </p>
+                </span>
               </div>
             </div>
             <DialogFooter>
