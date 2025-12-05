@@ -158,7 +158,7 @@ const Invoices = () => {
       let skipped = 0;
       let processed = 0;
 
-      let errors: string[] = [];
+      const errors: string[] = [];
 
       for (const client of activeClients) {
         processed++;
