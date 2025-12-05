@@ -81,7 +81,7 @@ const CostCenterAnalysis = () => {
 
       let allExpenses = expenseData || [];
 
-      // Busca 2: Buscar em accounting_entries
+      // Busca 2: Buscar em accounting_entries - INCLUINDO SALDOS DE ABERTURA
       if (costCenter.code) {
         try {
           const { data: accountingData, error: accountingError } = await supabase
@@ -108,27 +108,40 @@ const CostCenterAnalysis = () => {
             const matchingEntries = accountingData.filter((entry: any) => {
               const desc = entry.description?.toLowerCase() || "";
 
-              // Estratégia 1: Busca exata pelo código
+              // Estratégia 1: Busca por padrão "Saldo de Abertura - NOME" ou "Saldo de Abertura: NOME"
+              let match = desc.match(/saldo de abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+              if (!match) {
+                match = desc.match(/saldo de abertura\s*:\s*(.+?)(?:\s*\(|$)/);
+              }
+              if (match) {
+                const centerName = match[1].trim().toLowerCase();
+                if (centerName === costCenter.name.toLowerCase()) {
+                  console.log("Match por Saldo de Abertura:", entry.description);
+                  return true;
+                }
+              }
+
+              // Estratégia 2: Busca exata pelo código
               if (desc.includes(costCenter.code.toLowerCase())) {
                 console.log("Match por código:", entry.description);
                 return true;
               }
 
-              // Estratégia 2: Busca pelo nome
+              // Estratégia 3: Busca pelo nome
               if (desc.includes(costCenter.name.toLowerCase())) {
                 console.log("Match por nome:", entry.description);
                 return true;
               }
 
-              // Estratégia 3: Busca por ID
+              // Estratégia 4: Busca por ID
               if (entry.cost_center_id === costCenter.id) {
                 console.log("Match por ID:", entry.description);
                 return true;
               }
 
-              // Estratégia 4: Busca por componentes do código (ex: AMPLA, SAUDE)
-              const parts = costCenter.code.toLowerCase().split('.');
-              if (parts.some(part => desc.includes(part))) {
+              // Estratégia 5: Busca por componentes do código (ex: AMPLA, SAUDE)
+              const parts = costCenter.code.toLowerCase().split(/[\.\s_-]/);
+              if (parts.some(part => part && desc.includes(part))) {
                 console.log("Match por componente:", entry.description, "partes:", parts);
                 return true;
               }
