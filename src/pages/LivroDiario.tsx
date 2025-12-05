@@ -162,24 +162,51 @@ const LivroDiario = () => {
           <CardHeader>
             <CardTitle>Filtros</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant={filterMode === 'range' ? 'default' : 'outline'}
+                onClick={() => setFilterMode('range')}
+                className="flex-1"
+              >
+                Período
+              </Button>
+              <Button
+                variant={filterMode === 'specific' ? 'default' : 'outline'}
+                onClick={() => setFilterMode('specific')}
+                className="flex-1"
+              >
+                Dia Específico
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {filterMode === 'range' ? (
+                <>
+                  <div>
+                    <Label htmlFor="startDate">Data Inicial</Label>
+                    <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">Data Final</Label>
+                    <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label htmlFor="launchDate">Dia do Lançamento</Label>
+                  <Input id="launchDate" type="date" value={launchDate} onChange={(e) => setLaunchDate(e.target.value)} />
+                </div>
+              )}
               <div>
-                <Label htmlFor="startDate">Data Inicial</Label>
-                <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Label htmlFor="search">Buscar por Descrição</Label>
+                <Input id="search" placeholder="Conta, descrição..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
-              <div>
-                <Label htmlFor="endDate">Data Final</Label>
-                <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="search">Buscar</Label>
-                <Input id="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-              </div>
-              <div className="flex items-end gap-2">
-                <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
-                <Button onClick={handleClearFilter} variant="outline" className="flex-1">Limpar</Button>
-              </div>
+            </div>
+
+            <div className="flex items-end gap-2">
+              <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
+              <Button onClick={handleClearFilter} variant="outline" className="flex-1">Limpar</Button>
             </div>
           </CardContent>
         </Card>
