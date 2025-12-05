@@ -126,18 +126,18 @@ export class AccountingAuditService {
     try {
       const { data, error } = await supabase
         .from('audit_logs')
-        .select(`
-          *,
-          user:auth.users(email)
-        `)
+        .select('*')
         .eq('record_id', entryId)
         .eq('table_name', 'accounting_entries')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro Supabase ao buscar histórico:', error)
+        throw new Error(`Erro ao buscar histórico: ${error.message}`)
+      }
       return data || []
-    } catch (error) {
-      console.error('Erro ao buscar histórico de auditoria:', error)
+    } catch (error: any) {
+      console.error('Erro ao buscar histórico de auditoria:', error?.message || error)
       return []
     }
   }
@@ -146,18 +146,18 @@ export class AccountingAuditService {
     try {
       const { data, error } = await supabase
         .from('audit_logs')
-        .select(`
-          *,
-          user:auth.users(email)
-        `)
+        .select('*')
         .eq('record_id', lineId)
         .eq('table_name', 'accounting_entry_lines')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro Supabase ao buscar histórico de linha:', error)
+        throw new Error(`Erro ao buscar histórico: ${error.message}`)
+      }
       return data || []
-    } catch (error) {
-      console.error('Erro ao buscar histórico de linha:', error)
+    } catch (error: any) {
+      console.error('Erro ao buscar histórico de linha:', error?.message || error)
       return []
     }
   }
