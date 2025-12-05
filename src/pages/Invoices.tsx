@@ -350,7 +350,16 @@ const Invoices = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, invoice: any) => {
+    // Check if invoice is reconciled
+    if (invoice.status === "paid" && invoice.cnab_reference) {
+      toast.error(
+        "❌ Esta fatura está conciliada a um pagamento! " +
+        "Você precisa desfazer a conciliação antes de deletá-la."
+      );
+      return;
+    }
+
     if (!confirm("Tem certeza que deseja excluir este honorário?")) return;
 
     try {
