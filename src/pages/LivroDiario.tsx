@@ -29,6 +29,8 @@ const LivroDiario = () => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [launchDate, setLaunchDate] = useState('')
+  const [filterMode, setFilterMode] = useState<'range' | 'specific'>('range')
 
   useEffect(() => {
     // Usar o ano inteiro para mostrar todos os lançamentos por padrão
@@ -101,7 +103,13 @@ const LivroDiario = () => {
     }
   }
 
-  const handleFilter = () => loadDiario(startDate, endDate)
+  const handleFilter = () => {
+    if (filterMode === 'specific' && launchDate) {
+      loadDiario(launchDate, launchDate)
+    } else {
+      loadDiario(startDate, endDate)
+    }
+  }
 
   const handleClearFilter = () => {
     const now = new Date()
@@ -109,7 +117,9 @@ const LivroDiario = () => {
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
+    setLaunchDate('')
     setSearchTerm('')
+    setFilterMode('range')
     loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
   }
 
