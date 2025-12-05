@@ -58,6 +58,7 @@ import BarterClients from "./pages/BarterClients";
 import ConvertProBonoToBarter from "./pages/ConvertProBonoToBarter";
 import BankAccounts from "./pages/BankAccounts";
 import BankImport from "./pages/BankImport";
+import ImportCNAB from "./pages/ImportCNAB";
 import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
@@ -157,6 +158,7 @@ const App = () => (
             <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
             <Route path="/bank-accounts" element={<BankAccounts />} />
             <Route path="/bank-import" element={<BankImport />} />
+            <Route path="/import-cnab" element={<ImportCNAB />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
             <Route path="/cash-flow" element={<CashFlow />} />
