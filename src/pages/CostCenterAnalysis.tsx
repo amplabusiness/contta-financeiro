@@ -809,7 +809,10 @@ const CostCenterAnalysis = () => {
                               <div className="space-y-1">
                                 {(() => {
                                   const linkedAccountIds = centerAccounts.get(center.id) || [];
-                                  const linkedAccs = chartAccounts.filter(acc => linkedAccountIds.includes(acc.id));
+                                  const linkedAccs = chartAccounts.filter(acc =>
+                                    linkedAccountIds.includes(acc.id) &&
+                                    !acc.code.includes('.') // Apenas contas PAI (sem ponto no código)
+                                  );
 
                                   if (linkedAccs.length === 0) {
                                     return <span className="text-muted-foreground italic">Nenhuma conta vinculada</span>;
