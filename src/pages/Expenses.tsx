@@ -814,7 +814,15 @@ const Expenses = () => {
                               >
                                 Cancelar
                               </Button>
-                              <Button type="submit" disabled={loading}>
+                              <Button
+                                type="submit"
+                                disabled={loading || (newCategoryData.name && categories.some(cat =>
+                                  cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                ))}
+                                title={newCategoryData.name && categories.some(cat =>
+                                  cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                ) ? "Selecione uma categoria encontrada acima ou digite um nome diferente" : ""}
+                              >
                                 {loading ? "Criando..." : "Criar"}
                               </Button>
                             </DialogFooter>
