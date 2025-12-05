@@ -107,14 +107,12 @@ const LivroDiario = () => {
         `)
         .order(dateField, { ascending: false })
 
-      // Aplicar filtros de data
       if (start) query = query.gte(dateField, start)
       if (end) query = query.lte(dateField, end)
 
       const { data, error } = await query
       if (error) throw error
 
-      // Se estiver filtrando por created_at, filtrar manualmente por data (ignora hora/timezone)
       let filteredData = data
       if (dateField === 'created_at' && (start || end)) {
         filteredData = data?.filter((entry: any) => {
