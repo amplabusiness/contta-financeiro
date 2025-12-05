@@ -42,6 +42,12 @@ const LivroDiario = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [launchDate, setLaunchDate] = useState('')
   const [filterMode, setFilterMode] = useState<'range' | 'specific'>('range')
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingLine, setEditingLine] = useState<DiarioEntry | null>(null)
+  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([])
+  const [auditHistory, setAuditHistory] = useState<any[]>([])
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
+  const [selectedEntryId, setSelectedEntryId] = useState<string>('')
 
   useEffect(() => {
     // Usar o ano inteiro para mostrar todos os lançamentos por padrão
