@@ -42,6 +42,7 @@ const CostCenterAnalysis = () => {
   const [chartAccounts, setChartAccounts] = useState<any[]>([]);
   const [editingCenterId, setEditingCenterId] = useState<string | null>(null);
   const [savingCenterId, setSavingCenterId] = useState<string | null>(null);
+  const [centerAccounts, setCenterAccounts] = useState<Map<string, string[]>>(new Map());
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -221,11 +222,41 @@ const CostCenterAnalysis = () => {
 
       const centers = data || [];
       setAllCostCenters(centers);
+
+      // Carregar contas vinculadas para cada centro
+      await loadCenterAccounts(centers);
+
       return centers;
     } catch (error: any) {
       console.error("Erro ao carregar centros de custo:", error);
       toast.error("Erro ao carregar centros de custo");
       return [];
+    }
+  };
+
+  const loadCenterAccounts = async (centers: any[]) => {
+    try {
+      const accountMap = new Map<string, string[]>();
+
+      for (const center of centers) {
+        const { data } = await supabase
+          .from("cost_center_accounts")
+          .select("chart_account_id")
+          .eq("cost_center_id", center.id);
+
+        if (data && data.length > 0) {
+          accountMap.set(center.id, data.map(item => item.chart_account_id));
+        } else if (center.default_chart_account_id) {
+          // Fallback para conta antiga
+          accountMap.set(center.id, [center.default_chart_account_id]);
+        } else {
+          accountMap.set(center.id, []);
+        }
+      }
+
+      setCenterAccounts(accountMap);
+    } catch (error) {
+      console.error("Erro ao carregar contas dos centros:", error);
     }
   };
 
@@ -246,19 +277,29 @@ const CostCenterAnalysis = () => {
     }
   }
 
-  const handleAccountChange = async (centerId: string, accountId: string) => {
+  const handleAccountToggle = async (centerId: string, accountId: string, isSelected: boolean) => {
     try {
       setSavingCenterId(centerId);
 
-      const { error } = await supabase
-        .from("cost_centers")
-        .update({ default_chart_account_id: accountId })
-        .eq("id", centerId);
+      if (isSelected) {
+        // Remover vínculo
+        const { error } = await supabase
+          .from("cost_center_accounts")
+          .delete()
+          .eq("cost_center_id", centerId)
+          .eq("chart_account_id", accountId);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Adicionar vínculo
+        const { error } = await supabase
+          .from("cost_center_accounts")
+          .insert({ cost_center_id: centerId, chart_account_id: accountId });
 
-      toast.success("Vínculo atualizado com sucesso!");
-      setEditingCenterId(null);
+        if (error) throw error;
+      }
+
+      toast.success(isSelected ? "Conta removida" : "Conta adicionada");
       await loadAllCostCenters();
     } catch (error: any) {
       console.error("Erro ao atualizar vínculo:", error);
@@ -739,29 +780,47 @@ const CostCenterAnalysis = () => {
                           <TableCell className="font-medium">{center.name}</TableCell>
                           <TableCell>
                             {isEditing ? (
-                              <Select
-                                value={center.default_chart_account_id || ""}
-                                onValueChange={(value) => handleAccountChange(center.id, value)}
-                                disabled={isSaving}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Selecione uma conta..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {chartAccounts.map((account) => (
-                                    <SelectItem key={account.id} value={account.id}>
-                                      {account.code} - {account.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : linkedAccount ? (
-                              <div className="text-sm">
-                                <span className="font-mono font-medium">{linkedAccount.code}</span>
-                                <span className="text-muted-foreground"> - {linkedAccount.name}</span>
+                              <div className="space-y-2">
+                                {chartAccounts.map((account) => {
+                                  const linkedAccountIds = centerAccounts.get(center.id) || [];
+                                  const isSelected = linkedAccountIds.includes(account.id);
+
+                                  return (
+                                    <div key={account.id} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`${center.id}-${account.id}`}
+                                        checked={isSelected}
+                                        onCheckedChange={() => handleAccountToggle(center.id, account.id, isSelected)}
+                                        disabled={isSaving}
+                                      />
+                                      <label
+                                        htmlFor={`${center.id}-${account.id}`}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                      >
+                                        {account.code} - {account.name}
+                                      </label>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground italic">Nenhuma conta vinculada</span>
+                              <div className="space-y-1">
+                                {(() => {
+                                  const linkedAccountIds = centerAccounts.get(center.id) || [];
+                                  const linkedAccs = chartAccounts.filter(acc => linkedAccountIds.includes(acc.id));
+
+                                  if (linkedAccs.length === 0) {
+                                    return <span className="text-muted-foreground italic">Nenhuma conta vinculada</span>;
+                                  }
+
+                                  return linkedAccs.map(acc => (
+                                    <div key={acc.id} className="text-sm">
+                                      <span className="font-mono font-medium">{acc.code}</span>
+                                      <span className="text-muted-foreground"> - {acc.name}</span>
+                                    </div>
+                                  ));
+                                })()}
+                              </div>
                             )}
                           </TableCell>
                           <TableCell>
