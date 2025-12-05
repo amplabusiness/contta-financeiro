@@ -23,6 +23,7 @@ import { AccountingAuditService } from '@/services/AccountingAuditService'
 
 interface DiarioEntry {
   numero_lancamento: string
+  linha_id: string
   data_lancamento: string
   descricao: string
   tipo_lancamento: string
@@ -32,6 +33,7 @@ interface DiarioEntry {
   debito: number
   credito: number
   historico: string
+  chart_of_accounts_id?: string
 }
 
 const LivroDiario = () => {
