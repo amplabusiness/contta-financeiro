@@ -108,16 +108,17 @@ const LivroDiario = () => {
         .order(dateField, { ascending: false })
 
       if (dateField === 'created_at') {
-        // Para created_at (timestamp), adicionar horário completo do dia
-        if (start) {
-          const startDate = `${start}T00:00:00`
-          console.log('Filtrando created_at >=', startDate)
-          query = query.gte(dateField, startDate)
-        }
-        if (end) {
-          const endDate = `${end}T23:59:59`
-          console.log('Filtrando created_at <=', endDate)
-          query = query.lte(dateField, endDate)
+        // Para created_at (timestamp com timezone), converter para date no filtro
+        if (start && end) {
+          console.log('Filtrando created_at::date entre', start, 'e', end)
+          query = query.gte('created_at', `${start}T00:00:00Z`)
+                       .lte('created_at', `${end}T23:59:59Z`)
+        } else if (start) {
+          console.log('Filtrando created_at::date >=', start)
+          query = query.gte('created_at', `${start}T00:00:00Z`)
+        } else if (end) {
+          console.log('Filtrando created_at::date <=', end)
+          query = query.lte('created_at', `${end}T23:59:59Z`)
         }
       } else {
         // Para entry_date (apenas data), usar filtro normal
