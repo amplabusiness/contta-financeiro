@@ -113,18 +113,14 @@ const CostCenterAnalysis = () => {
 
         console.log("Total saldos de abertura encontrados:", openingBalances.length);
 
-        // LOG: Mostrar todos os nomes extraídos de saldos de abertura
+        // LOG: Mostrar as descriptions COMPLETAS dos saldos
         if (openingBalances.length > 0) {
-          const allCenterNames = openingBalances.map(entry => {
-            const description = entry.description || "";
-            let match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
-            if (!match) {
-              match = description.match(/Saldo de Abertura\s*:\s*(.+?)(?:\s*\(|$)/);
-            }
-            return match ? match[1].trim() : "NÃO CORRESPONDEU";
+          console.log("Primeiras 10 descriptions completas dos saldos:");
+          openingBalances.slice(0, 10).forEach((entry, idx) => {
+            console.log(`  ${idx + 1}. "${entry.description}"`);
           });
-          console.log("Centros encontrados nos saldos:", allCenterNames.slice(0, 10));
-          console.log("Procurando por:", costCenter.name);
+          console.log("Procurando por centro:", costCenter.name);
+          console.log("Código do centro:", costCenter.code);
         }
 
         // Procurar saldos que correspondem a este centro (MESMO PADRÃO DO RANKING)
