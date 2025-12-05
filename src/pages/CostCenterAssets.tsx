@@ -19,7 +19,7 @@ import {
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
-const CostCenterAnalysis = () => {
+const CostCenterAssets = () => {
   const [loading, setLoading] = useState(true);
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
   const [costCenterWithoutData, setCostCenterWithoutData] = useState<any[]>([]);
@@ -421,9 +421,9 @@ const CostCenterAnalysis = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Análise de Centro de Custos</h1>
+          <h1 className="text-3xl font-bold">Centro de Custo Ativo</h1>
           <p className="text-muted-foreground">
-            Visualize os gastos por departamento e identifique oportunidades de otimização
+            Análise de ativos alocados por centro de custo
           </p>
         </div>
 
@@ -768,4 +768,4 @@ const CostCenterAnalysis = () => {
   );
 };
 
-export default CostCenterAnalysis;
+export default CostCenterAssets;
