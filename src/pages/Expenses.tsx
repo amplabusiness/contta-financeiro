@@ -752,12 +752,46 @@ const Expenses = () => {
                                 }
                                 required
                               />
-                              {newCategoryData.name && categories.some(cat =>
-                                cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
-                              ) && (
-                                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                                  ⚠️ Esta categoria já existe! Você pode selecioná-la na dropdown de categorias.
-                                </div>
+                              {newCategoryData.name && (
+                                <>
+                                  {categories.filter(cat =>
+                                    cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                  ).length > 0 && (
+                                    <div className="mt-3 border rounded-md p-3 bg-blue-50 dark:bg-blue-950">
+                                      <p className="text-xs font-medium text-blue-900 dark:text-blue-200 mb-2">
+                                        Categorias encontradas:
+                                      </p>
+                                      <div className="space-y-1">
+                                        {categories
+                                          .filter(cat =>
+                                            cat.name.toLowerCase().includes(newCategoryData.name.toLowerCase())
+                                          )
+                                          .slice(0, 5)
+                                          .map(cat => (
+                                            <div
+                                              key={cat.id}
+                                              className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                                              onClick={() => {
+                                                setFormData({ ...formData, category: cat.name });
+                                                setNewCategoryDialogOpen(false);
+                                                setNewCategoryData({ name: "", description: "" });
+                                              }}
+                                            >
+                                              <span className="text-sm font-medium">{cat.name}</span>
+                                              <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {categories.some(cat =>
+                                    cat.name.toLowerCase() === newCategoryData.name.toLowerCase()
+                                  ) && (
+                                    <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                                      ⚠️ Esta categoria já existe! Clique acima para selecioná-la ou cancele.
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                             <div className="space-y-2">
