@@ -91,105 +91,111 @@ import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
 import NotFound from "./pages/NotFound";
 
+const appRoutes = [
+  { path: "/", element: <Navigate to="/auth" replace /> },
+  { path: "/accounts-payable", element: <AccountsPayable /> },
+  { path: "/ai-accountant", element: <AIAccountant /> },
+  { path: "/ai-agents", element: <AIAgents /> },
+  { path: "/ai-insights", element: <AIInsights /> },
+  { path: "/ai-network", element: <AINetwork /> },
+  { path: "/auth", element: <Auth /> },
+  { path: "/audit-logs", element: <AuditLogs /> },
+  { path: "/automated-upload", element: <AutomatedFileUpload /> },
+  { path: "/balance-sheet", element: <BalanceSheet /> },
+  { path: "/balancete", element: <Balancete /> },
+  { path: "/bank-accounts", element: <BankAccounts /> },
+  { path: "/bank-folder-import", element: <BankFolderImport /> },
+  { path: "/bank-import", element: <BankImport /> },
+  { path: "/bank-reconciliation", element: <BankReconciliation /> },
+  { path: "/barter-clients", element: <BarterClients /> },
+  { path: "/batch-enrichment", element: <BatchEnrichment /> },
+  { path: "/boleto-gaps", element: <BoletoGapsAnalysis /> },
+  { path: "/boleto-reconciliation", element: <BoletoReconciliation /> },
+  { path: "/boleto-reports-dashboard", element: <BoletoReportsDashboard /> },
+  { path: "/business-manager", element: <BusinessManager /> },
+  { path: "/cash-flow", element: <CashFlow /> },
+  { path: "/chart-of-accounts", element: <ChartOfAccounts /> },
+  { path: "/client-comparison-verification", element: <ClientComparisonVerification /> },
+  { path: "/client-dashboard", element: <ClientDashboard /> },
+  { path: "/client-enrichment", element: <ClientEnrichment /> },
+  { path: "/client-ledger", element: <ClientLedger /> },
+  { path: "/client-opening-balance", element: <ClientOpeningBalance /> },
+  { path: "/client-spreadsheet-verification", element: <ClientSpreadsheetVerification /> },
+  { path: "/client-verification", element: <ClientVerification /> },
+  { path: "/clients", element: <Clients /> },
+  { path: "/collection-dashboard", element: <CollectionDashboard /> },
+  { path: "/collection-letters", element: <CollectionLetters /> },
+  { path: "/collection-work-orders", element: <CollectionWorkOrders /> },
+  { path: "/convert-pro-bono-to-barter", element: <ConvertProBonoToBarter /> },
+  { path: "/contracts", element: <Contracts /> },
+  { path: "/cost-center-analysis", element: <CostCenterAnalysis /> },
+  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/debt-negotiation", element: <DebtNegotiation /> },
+  { path: "/default-analysis", element: <DefaultAnalysis /> },
+  { path: "/dre", element: <DRE /> },
+  { path: "/economic-group-analysis", element: <EconomicGroupAnalysis /> },
+  { path: "/economic-groups", element: <EconomicGroups /> },
+  { path: "/executive-dashboard", element: <ExecutiveDashboard /> },
+  { path: "/expenses", element: <Expenses /> },
+  { path: "/feature-requests", element: <FeatureRequests /> },
+  { path: "/fee-adjustment", element: <FeeAdjustment /> },
+  { path: "/fees-analysis", element: <FeesAnalysis /> },
+  { path: "/fix-revenue-entries", element: <FixRevenueEntries /> },
+  { path: "/generate-recurring-invoices", element: <GenerateRecurringInvoices /> },
+  { path: "/import", element: <Import /> },
+  { path: "/import-boletos", element: <ImportBoletos /> },
+  { path: "/import-boleto-report", element: <ImportBoletoReport /> },
+  { path: "/import-companies", element: <ImportCompanies /> },
+  { path: "/import-default-report", element: <ImportDefaultReport /> },
+  { path: "/import-expenses-spreadsheet", element: <ImportExpensesSpreadsheet /> },
+  { path: "/import-honorarios", element: <ImportHonorarios /> },
+  { path: "/import-invoices", element: <ImportInvoices /> },
+  { path: "/invoice-generation-report", element: <InvoiceGenerationReport /> },
+  { path: "/inactive-client-verification", element: <InactiveClientVerification /> },
+  { path: "/incentives", element: <Incentives /> },
+  { path: "/initial-load", element: <InitialLoad /> },
+  { path: "/invoices", element: <Invoices /> },
+  { path: "/inventory", element: <Inventory /> },
+  { path: "/labor-advisory", element: <LaborAdvisory /> },
+  { path: "/livro-diario", element: <LivroDiario /> },
+  { path: "/livro-razao", element: <LivroRazao /> },
+  { path: "/partners", element: <Partners /> },
+  { path: "/payroll", element: <Payroll /> },
+  { path: "/pending-entities", element: <PendingEntities /> },
+  { path: "/pix-reconciliation", element: <PixReconciliation /> },
+  { path: "/process-pro-bono-fix", element: <ProcessProBonoFix /> },
+  { path: "/profitability-analysis", element: <ProfitabilityAnalysis /> },
+  { path: "/pro-bono-clients", element: <ProBonoClients /> },
+  { path: "/razao-geral", element: <GeneralLedgerAll /> },
+  { path: "/recurring-expenses", element: <RecurringExpenses /> },
+  { path: "/regularize-accounting", element: <RegularizeAccounting /> },
+  { path: "/reconciliation-dashboard", element: <ReconciliationDashboard /> },
+  { path: "/reconciliation-discrepancies", element: <ReconciliationDiscrepancies /> },
+  { path: "/reports", element: <Reports /> },
+  { path: "/revenue-types", element: <RevenueTypes /> },
+  { path: "/settings", element: <Settings /> },
+  { path: "/super-conciliador", element: <SuperConciliador /> },
+  { path: "/trial-balance", element: <TrialBalance /> },
+  { path: "/unmatched-pix-report", element: <UnmatchedPixReport /> },
+  { path: "/video-content", element: <VideoContent /> },
+];
+
 const App = () => (
   <TooltipProvider>
     <ClientProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-            <Route path="/" element={<Navigate to="/auth" replace />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-            <Route path="/client-dashboard" element={<ClientDashboard />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/import" element={<Import />} />
-            <Route path="/import-boletos" element={<ImportBoletos />} />
-            <Route path="/import-invoices" element={<ImportInvoices />} />
-            <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
-            <Route path="/import-honorarios" element={<ImportHonorarios />} />
-            <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
-            <Route path="/audit-logs" element={<AuditLogs />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
-            <Route path="/dre" element={<DRE />} />
-            <Route path="/revenue-types" element={<RevenueTypes />} />
-            <Route path="/bank-reconciliation" element={<BankReconciliation />} />
-            <Route path="/pix-reconciliation" element={<PixReconciliation />} />
-            <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
-            <Route path="/trial-balance" element={<TrialBalance />} />
-            <Route path="/balance-sheet" element={<BalanceSheet />} />
-            <Route path="/fix-revenue-entries" element={<FixRevenueEntries />} />
-            <Route path="/client-ledger" element={<ClientLedger />} />
-            <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
-            <Route path="/ai-agents" element={<AIAgents />} />
-            <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
-            <Route path="/import-companies" element={<ImportCompanies />} />
-            <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
-            <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
-            <Route path="/import-invoices" element={<ImportInvoices />} />
-            <Route path="/client-enrichment" element={<ClientEnrichment />} />
-            <Route path="/batch-enrichment" element={<BatchEnrichment />} />
-            <Route path="/livro-diario" element={<LivroDiario />} />
-            <Route path="/livro-razao" element={<LivroRazao />} />
-            <Route path="/razao-geral" element={<GeneralLedgerAll />} />
-            <Route path="/balancete" element={<Balancete />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/collection-dashboard" element={<CollectionDashboard />} />
-            <Route path="/collection-letters" element={<CollectionLetters />} />
-            <Route path="/contracts" element={<Contracts />} />
-            <Route path="/fees-analysis" element={<FeesAnalysis />} />
-            <Route path="/fee-adjustment" element={<FeeAdjustment />} />
-            <Route path="/debt-negotiation" element={<DebtNegotiation />} />
-            <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
-            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
-            <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
-            <Route path="/pro-bono-clients" element={<ProBonoClients />} />
-            <Route path="/partners" element={<Partners />} />
-            <Route path="/economic-groups" element={<EconomicGroups />} />
-            <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
-            <Route path="/barter-clients" element={<BarterClients />} />
-            <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
-            <Route path="/bank-accounts" element={<BankAccounts />} />
-            <Route path="/bank-import" element={<BankImport />} />
-            <Route path="/accounts-payable" element={<AccountsPayable />} />
-            <Route path="/recurring-expenses" element={<RecurringExpenses />} />
-            <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
-            <Route path="/cash-flow" element={<CashFlow />} />
-            <Route path="/default-analysis" element={<DefaultAnalysis />} />
-            <Route path="/import-default-report" element={<ImportDefaultReport />} />
-            <Route path="/ai-agents" element={<AIAgents />} />
-            <Route path="/ai-insights" element={<AIInsights />} />
-            <Route path="/ai-accountant" element={<AIAccountant />} />
-            <Route path="/business-manager" element={<BusinessManager />} />
-            <Route path="/ai-network" element={<AINetwork />} />
-            <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
-            <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
-            <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
-            <Route path="/automated-upload" element={<AutomatedFileUpload />} />
-          <Route path="/client-verification" element={<ClientVerification />} />
-          <Route path="/inactive-client-verification" element={<InactiveClientVerification />} />
-          <Route path="/client-comparison-verification" element={<ClientComparisonVerification />} />
-          <Route path="/client-spreadsheet-verification" element={<ClientSpreadsheetVerification />} />
-          <Route path="/client-opening-balance" element={<ClientOpeningBalance />} />
-          <Route path="/bank-folder-import" element={<BankFolderImport />} />
-          <Route path="/super-conciliador" element={<SuperConciliador />} />
-          <Route path="/initial-load" element={<InitialLoad />} />
-            <Route path="/feature-requests" element={<FeatureRequests />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/payroll" element={<Payroll />} />
-            <Route path="/labor-advisory" element={<LaborAdvisory />} />
-            <Route path="/video-content" element={<VideoContent />} />
-            <Route path="/pending-entities" element={<PendingEntities />} />
-            <Route path="/incentives" element={<Incentives />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ClientProvider>
-      </TooltipProvider>
+      <PeriodProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          {appRoutes.map(({ path, element }) => (
+            <Route key={path} path={path} element={element} />
+          ))}
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </PeriodProvider>
+    </ClientProvider>
+  </TooltipProvider>
 );
 
 export default App;
