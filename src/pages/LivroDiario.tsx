@@ -73,8 +73,9 @@ const LivroDiario = () => {
 
       if (error) throw error
       setChartOfAccounts(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar plano de contas:', error)
+    } catch (error: any) {
+      console.error('Erro ao carregar plano de contas:', error?.message || error)
+      toast.error(`Erro ao carregar plano de contas: ${error?.message || 'Erro desconhecido'}`)
     }
   }
 
