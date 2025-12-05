@@ -104,94 +104,81 @@ const CostCenterAnalysis = () => {
         console.error("Erro ao buscar despesas:", err);
       }
 
-      // Busca 2: Saldos de abertura - EXATAMENTE como faz no ranking
+      // Busca 2: TODOS os lançamentos contábeis que mencionam este centro
       try {
-        const { data: openingBalancesType1 } = await supabase
+        const { data: allAccountingEntries } = await supabase
           .from("accounting_entries")
           .select(`
             id,
             description,
             entry_date,
             entry_type,
-            accounting_entry_lines(debit, credit)
-          `)
-          .eq("entry_type", "saldo_abertura");
+            accounting_entry_lines(
+              id,
+              debit,
+              credit,
+              account_id,
+              accounts(code, name)
+            )
+          `);
 
-        const { data: openingBalancesType2 } = await supabase
-          .from("accounting_entries")
-          .select(`
-            id,
-            description,
-            entry_date,
-            entry_type,
-            accounting_entry_lines(debit, credit)
-          `)
-          .eq("entry_type", "opening_balance");
+        console.log("Total lançamentos contábeis:", allAccountingEntries?.length);
 
-        const openingBalances = [...(openingBalancesType1 || []), ...(openingBalancesType2 || [])];
+        if (allAccountingEntries) {
+          // Filtrar por código ou nome do centro na descrição
+          const matchingEntries = allAccountingEntries.filter((entry: any) => {
+            const desc = (entry.description || "").toLowerCase();
+            const searchCode = costCenter.code.toLowerCase();
+            const searchName = costCenter.name.toLowerCase();
 
-        console.log("Total saldos de abertura encontrados:", openingBalances.length);
-
-        // LOG: Mostrar as descriptions COMPLETAS dos saldos
-        if (openingBalances.length > 0) {
-          console.log("Primeiras 10 descriptions completas dos saldos:");
-          openingBalances.slice(0, 10).forEach((entry, idx) => {
-            console.log(`  ${idx + 1}. "${entry.description}"`);
+            // Busca pelo código ou nome
+            return desc.includes(searchCode) ||
+                   desc.includes(searchName) ||
+                   desc.includes(searchCode.replace(/\./g, '')) ||
+                   desc.includes(searchName.replace(/\s/g, ''));
           });
-          console.log("Procurando por centro:", costCenter.name);
-          console.log("Código do centro:", costCenter.code);
+
+          console.log("Lançamentos contábeis que mencionam", costCenter.name, ":", matchingEntries.length);
+
+          if (matchingEntries.length > 0) {
+            console.log("Primeiros 5 lançamentos:", matchingEntries.slice(0, 5).map(e => ({
+              description: e.description,
+              entry_type: e.entry_type,
+              lines_count: e.accounting_entry_lines?.length
+            })));
+          }
+
+          // Converter para formato de despesa
+          const convertedEntries = matchingEntries.map((entry: any) => {
+            const lines = entry.accounting_entry_lines || [];
+            const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
+            const creditValue = lines.reduce((sum: number, line: any) => sum + Number(line.credit || 0), 0);
+            const value = debitValue || creditValue;
+
+            const entryDate = entry.entry_date || new Date().toISOString();
+            const [year, month] = entryDate.split('-');
+
+            // Pegar a conta do primeiro lançamento
+            const firstLine = lines[0];
+            const accountCode = firstLine?.accounts?.code || entry.entry_type;
+
+            return {
+              id: entry.id,
+              description: entry.description,
+              expense_date: entryDate,
+              created_at: entryDate,
+              account_code: accountCode,
+              competence: month && year ? `${month}/${year}` : '',
+              amount: value,
+              name: entry.description
+            };
+          }).filter(entry => entry.amount > 0);
+
+          console.log("Lançamentos convertidos:", convertedEntries.length);
+          allExpenses = [...allExpenses, ...convertedEntries];
         }
-
-        // Procurar saldos que correspondem a este centro (MESMO PADRÃO DO RANKING)
-        const matchingSaldos = openingBalances.filter((entry: any) => {
-          const description = entry.description || "";
-
-          // Procurar por padrão como "Saldo de Abertura - NOME" ou "Saldo de Abertura: NOME"
-          let match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
-          if (!match) {
-            match = description.match(/Saldo de Abertura\s*:\s*(.+?)(?:\s*\(|$)/);
-          }
-
-          if (match) {
-            const centerName = match[1].trim();
-            const found = centerName.toLowerCase() === costCenter.name.toLowerCase();
-            if (found) {
-              console.log("MATCH ENCONTRADO:", centerName, "===", costCenter.name);
-            }
-            // Comparar com o nome do centro (case-insensitive)
-            return found;
-          }
-
-          return false;
-        });
-
-        console.log("Saldos de abertura que correspondem:", matchingSaldos.length);
-
-        // Converter saldos para formato de despesa
-        const convertedSaldos = matchingSaldos.map((entry: any) => {
-          const lines = entry.accounting_entry_lines || [];
-          const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
-
-          const entryDate = entry.entry_date || new Date().toISOString();
-          const [year, month] = entryDate.split('-');
-
-          return {
-            id: entry.id,
-            description: entry.description,
-            expense_date: entryDate,
-            created_at: entryDate,
-            account_code: entry.entry_type,
-            competence: month && year ? `${month}/${year}` : '',
-            amount: debitValue,
-            name: entry.description
-          };
-        }).filter(entry => entry.amount > 0);
-
-        console.log("Saldos convertidos:", convertedSaldos.length, convertedSaldos);
-
-        allExpenses = [...allExpenses, ...convertedSaldos];
       } catch (err) {
-        console.error("Erro ao buscar saldos de abertura:", err);
+        console.error("Erro ao buscar lançamentos contábeis:", err);
       }
 
       console.log("Total de lançamentos encontrados:", allExpenses.length);
