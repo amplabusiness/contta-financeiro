@@ -211,16 +211,20 @@ export class AccountingAuditService {
         .eq('id', entryId)
         .single()
 
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        throw new Error(`Erro ao buscar lançamento: ${fetchError.message}`)
+      }
 
       const { error: deleteError } = await supabase
         .from('accounting_entries')
         .delete()
         .eq('id', entryId)
 
-      if (deleteError) throw deleteError
+      if (deleteError) {
+        throw new Error(`Erro ao deletar lançamento: ${deleteError.message}`)
+      }
 
-      await supabase.from('audit_logs').insert({
+      const { error: auditError } = await supabase.from('audit_logs').insert({
         user_id: userId,
         action: 'delete',
         table_name: 'accounting_entries',
@@ -233,8 +237,12 @@ export class AccountingAuditService {
           change_type: 'entry_deletion'
         }
       })
-    } catch (error) {
-      console.error('Erro ao deletar lançamento com auditoria:', error)
+
+      if (auditError) {
+        console.warn('Aviso ao registrar auditoria de deleção:', auditError)
+      }
+    } catch (error: any) {
+      console.error('Erro ao deletar lançamento com auditoria:', error?.message || error)
       throw error
     }
   }
