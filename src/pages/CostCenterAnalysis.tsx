@@ -113,6 +113,20 @@ const CostCenterAnalysis = () => {
 
         console.log("Total saldos de abertura encontrados:", openingBalances.length);
 
+        // LOG: Mostrar todos os nomes extraídos de saldos de abertura
+        if (openingBalances.length > 0) {
+          const allCenterNames = openingBalances.map(entry => {
+            const description = entry.description || "";
+            let match = description.match(/Saldo de Abertura\s*-\s*(.+?)(?:\s*\(|$)/);
+            if (!match) {
+              match = description.match(/Saldo de Abertura\s*:\s*(.+?)(?:\s*\(|$)/);
+            }
+            return match ? match[1].trim() : "NÃO CORRESPONDEU";
+          });
+          console.log("Centros encontrados nos saldos:", allCenterNames.slice(0, 10));
+          console.log("Procurando por:", costCenter.name);
+        }
+
         // Procurar saldos que correspondem a este centro (MESMO PADRÃO DO RANKING)
         const matchingSaldos = openingBalances.filter((entry: any) => {
           const description = entry.description || "";
@@ -125,8 +139,12 @@ const CostCenterAnalysis = () => {
 
           if (match) {
             const centerName = match[1].trim();
+            const found = centerName.toLowerCase() === costCenter.name.toLowerCase();
+            if (found) {
+              console.log("MATCH ENCONTRADO:", centerName, "===", costCenter.name);
+            }
             // Comparar com o nome do centro (case-insensitive)
-            return centerName.toLowerCase() === costCenter.name.toLowerCase();
+            return found;
           }
 
           return false;
