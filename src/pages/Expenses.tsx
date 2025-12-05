@@ -30,6 +30,7 @@ const Expenses = () => {
   const { notifyExpenseChange } = useExpenseUpdate();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [filteredAccounts, setFilteredAccounts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [costCenters, setCostCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,9 +73,9 @@ const Expenses = () => {
     try {
       const response = await supabase
         .from("chart_of_accounts")
-        .select("id, code, name, account_type, type, is_active")
+        .select("id, code, name, account_type, type, is_active, is_analytical")
         .eq("is_active", true)
-        .or("account_type.ilike.DESPESA,type.ilike.despesa")
+        .eq("is_analytical", true)
         .order("code");
 
       if (response.error) {
@@ -82,12 +83,8 @@ const Expenses = () => {
         throw new Error("Erro ao carregar contas");
       }
 
-      const filteredAccounts = (response.data || []).filter((account) =>
-        normalizeAccountType(account.account_type).includes("despesa") ||
-        normalizeAccountType(account.type) === "despesa"
-      );
-
-      setAccounts(filteredAccounts);
+      setAccounts(response.data || []);
+      setFilteredAccounts(response.data || []);
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
       console.error("Erro ao carregar contas:", errorMsg);
@@ -123,7 +120,7 @@ const Expenses = () => {
     try {
       const response = await supabase
         .from("cost_centers")
-        .select("id, code, name")
+        .select("id, code, name, default_chart_account_id")
         .eq("is_active", true)
         .order("code");
 
@@ -472,6 +469,37 @@ const Expenses = () => {
     });
     setAccountSearchQuery("");
     setCategorySearchQuery("");
+    setFilteredAccounts(accounts);
+  };
+
+  const handleCostCenterChange = async (costCenterId: string) => {
+    setFormData({ ...formData, cost_center_id: costCenterId, account_id: "" });
+
+    const selectedCenter = costCenters.find(c => c.id === costCenterId);
+    if (!selectedCenter?.default_chart_account_id) {
+      setFilteredAccounts(accounts);
+      return;
+    }
+
+    try {
+      const { data: parentAccount } = await supabase
+        .from("chart_of_accounts")
+        .select("code")
+        .eq("id", selectedCenter.default_chart_account_id)
+        .single();
+
+      if (parentAccount) {
+        const filtered = accounts.filter(acc =>
+          acc.code.startsWith(parentAccount.code)
+        );
+        setFilteredAccounts(filtered);
+      } else {
+        setFilteredAccounts(accounts);
+      }
+    } catch (error) {
+      console.error("Erro ao filtrar contas:", error);
+      setFilteredAccounts(accounts);
+    }
   };
 
   const handleCreateNewCategory = async (e: React.FormEvent) => {
@@ -672,8 +700,8 @@ const Expenses = () => {
                           aria-expanded={isAccountPickerOpen}
                           className="w-full justify-between"
                         >
-                          {formData.account_id && accounts.find((acc) => acc.id === formData.account_id)
-                            ? `${accounts.find((acc) => acc.id === formData.account_id)?.code} - ${accounts.find((acc) => acc.id === formData.account_id)?.name}`
+                          {formData.account_id && filteredAccounts.find((acc) => acc.id === formData.account_id)
+                            ? `${filteredAccounts.find((acc) => acc.id === formData.account_id)?.code} - ${filteredAccounts.find((acc) => acc.id === formData.account_id)?.name}`
                             : "Selecione a conta"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -686,13 +714,13 @@ const Expenses = () => {
                             onValueChange={setAccountSearchQuery}
                           />
                           <CommandList>
-                            {accounts.filter((account) =>
+                            {filteredAccounts.filter((account) =>
                               `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
                             ).length === 0 ? (
                               <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
                             ) : (
                               <CommandGroup>
-                                {accounts
+                                {filteredAccounts
                                   .filter((account) =>
                                     `${account.code} ${account.name}`.toLowerCase().includes(accountSearchQuery.toLowerCase())
                                   )
