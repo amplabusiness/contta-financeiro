@@ -109,15 +109,30 @@ const LivroDiario = () => {
 
       if (dateField === 'created_at') {
         // Para created_at (timestamp), adicionar horário completo do dia
-        if (start) query = query.gte(dateField, `${start}T00:00:00`)
-        if (end) query = query.lte(dateField, `${end}T23:59:59`)
+        if (start) {
+          const startDate = `${start}T00:00:00`
+          console.log('Filtrando created_at >=', startDate)
+          query = query.gte(dateField, startDate)
+        }
+        if (end) {
+          const endDate = `${end}T23:59:59`
+          console.log('Filtrando created_at <=', endDate)
+          query = query.lte(dateField, endDate)
+        }
       } else {
         // Para entry_date (apenas data), usar filtro normal
-        if (start) query = query.gte(dateField, start)
-        if (end) query = query.lte(dateField, end)
+        if (start) {
+          console.log('Filtrando entry_date >=', start)
+          query = query.gte(dateField, start)
+        }
+        if (end) {
+          console.log('Filtrando entry_date <=', end)
+          query = query.lte(dateField, end)
+        }
       }
 
       const { data, error } = await query
+      console.log('Resultado da query:', { total: data?.length || 0, campo: dateField, start, end })
       if (error) throw error
 
       const diarioEntries: DiarioEntry[] = []
