@@ -125,15 +125,21 @@ const CostCenterAnalysis = () => {
         console.log("Total lançamentos contábeis:", allAccountingEntries?.length);
 
         if (allAccountingEntries) {
-          // Filtrar por código ou nome do centro na descrição
+          // Filtrar por código ou nome do centro na descrição (aceita correspondência parcial)
           const matchingEntries = allAccountingEntries.filter((entry: any) => {
             const desc = (entry.description || "").toLowerCase();
             const searchCode = costCenter.code.toLowerCase();
             const searchName = costCenter.name.toLowerCase();
 
-            // Busca pelo código ou nome
+            // Remove acentos para comparação
+            const normalizeStr = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const descNormalized = normalizeStr(desc);
+            const nameNormalized = normalizeStr(searchName);
+
+            // Busca pelo código ou nome (com ou sem acentos)
             return desc.includes(searchCode) ||
                    desc.includes(searchName) ||
+                   descNormalized.includes(nameNormalized) ||
                    desc.includes(searchCode.replace(/\./g, '')) ||
                    desc.includes(searchName.replace(/\s/g, ''));
           });
