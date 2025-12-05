@@ -604,6 +604,80 @@ const CostCenterAnalysis = () => {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={selectedCostCenter !== null} onOpenChange={(open) => {
+          if (!open) {
+            setSelectedCostCenter(null);
+            setCostCenterExpenses([]);
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedCostCenter?.name}</DialogTitle>
+              <DialogDescription>
+                Lançamentos que compõem o valor de {formatCurrency(selectedCostCenter?.value || 0)}
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingExpenses ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : costCenterExpenses.length > 0 ? (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Conta</TableHead>
+                      <TableHead>Competência</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {costCenterExpenses.map((expense) => (
+                      <TableRow key={expense.id}>
+                        <TableCell className="text-sm">
+                          {new Date(expense.expense_date || expense.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {expense.description || expense.name || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm font-mono">
+                          {expense.account_code || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {expense.competence || '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(Number(expense.amount) || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhum lançamento encontrado para este centro de custo no período selecionado.
+              </div>
+            )}
+
+            <div className="mt-6 pt-4 border-t flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Total de lançamentos: {costCenterExpenses.length}</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">
+                  Subtotal: {formatCurrency(
+                    costCenterExpenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0)
+                  )}
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
