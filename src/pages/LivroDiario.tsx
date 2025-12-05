@@ -308,33 +308,60 @@ const LivroDiario = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {filterMode === 'range' ? (
-                <>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {filterMode === 'range' ? (
+                  <>
+                    <div>
+                      <Label htmlFor="startDate">Data Inicial</Label>
+                      <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate">Data Final</Label>
+                      <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    </div>
+                  </>
+                ) : (
                   <div>
-                    <Label htmlFor="startDate">Data Inicial</Label>
-                    <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <Label htmlFor="launchDate">Dia do Lançamento</Label>
+                    <Input id="launchDate" type="date" value={launchDate} onChange={(e) => setLaunchDate(e.target.value)} />
                   </div>
-                  <div>
-                    <Label htmlFor="endDate">Data Final</Label>
-                    <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                  </div>
-                </>
-              ) : (
+                )}
                 <div>
-                  <Label htmlFor="launchDate">Dia do Lançamento</Label>
-                  <Input id="launchDate" type="date" value={launchDate} onChange={(e) => setLaunchDate(e.target.value)} />
+                  <Label htmlFor="search">Buscar por Descrição ou Valor</Label>
+                  <Input
+                    id="search"
+                    placeholder="Conta, descrição, valor..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-              )}
-              <div>
-                <Label htmlFor="search">Buscar por Descrição</Label>
-                <Input id="search" placeholder="Conta, descrição..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
-            </div>
 
-            <div className="flex items-end gap-2">
-              <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
-              <Button onClick={handleClearFilter} variant="outline" className="flex-1">Limpar</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => {
+                  const yesterday = new Date()
+                  yesterday.setDate(yesterday.getDate() - 1)
+                  const dateStr = yesterday.toISOString().split('T')[0]
+                  setStartDate(dateStr)
+                  setEndDate(dateStr)
+                  setFilterMode('specific')
+                  loadDiario(dateStr, dateStr)
+                }} variant="secondary" className="flex-1 md:flex-none">
+                  Ontem
+                </Button>
+                <Button onClick={() => {
+                  const today = new Date().toISOString().split('T')[0]
+                  setStartDate(today)
+                  setEndDate(today)
+                  setFilterMode('specific')
+                  loadDiario(today, today)
+                }} variant="secondary" className="flex-1 md:flex-none">
+                  Hoje
+                </Button>
+                <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
+                <Button onClick={handleClearFilter} variant="outline" className="flex-1 md:flex-none">Limpar</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
