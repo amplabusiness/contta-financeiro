@@ -90,9 +90,12 @@ export class AccountingAuditService {
         }
       })
 
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro ao registrar auditoria de linha:', error)
+      if (error) {
+        console.error('Erro Supabase ao registrar auditoria de linha:', error)
+        throw new Error(`Erro ao registrar auditoria: ${error.message}`)
+      }
+    } catch (error: any) {
+      console.error('Erro ao registrar auditoria de linha:', error?.message || error)
       throw error
     }
   }
