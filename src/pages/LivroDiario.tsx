@@ -127,7 +127,7 @@ const LivroDiario = () => {
             debito: line.debit || 0,
             credito: line.credit || 0,
             historico: line.description || entry.description,
-            chart_of_accounts_id: line.chart_of_accounts_id
+            chart_of_accounts_id: line.account_id
           })
         })
       })
