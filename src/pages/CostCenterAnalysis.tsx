@@ -780,13 +780,15 @@ const CostCenterAnalysis = () => {
                           <TableCell className="font-medium">{center.name}</TableCell>
                           <TableCell>
                             {isEditing ? (
-                              <div className="space-y-2">
+                              <div className="space-y-2 max-h-96 overflow-y-auto">
                                 {chartAccounts.map((account) => {
                                   const linkedAccountIds = centerAccounts.get(center.id) || [];
                                   const isSelected = linkedAccountIds.includes(account.id);
+                                  const level = (account.code.match(/\./g) || []).length;
+                                  const indent = level * 20;
 
                                   return (
-                                    <div key={account.id} className="flex items-center space-x-2">
+                                    <div key={account.id} className="flex items-center space-x-2" style={{ paddingLeft: `${indent}px` }}>
                                       <Checkbox
                                         id={`${center.id}-${account.id}`}
                                         checked={isSelected}
