@@ -258,14 +258,18 @@ const LivroDiario = () => {
   }, {} as Record<string, DiarioEntry[]>)
 
   const filteredGroups = searchTerm
-    ? Object.entries(groupedEntries).filter(([_, items]) =>
-        items.some(item =>
-          item.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.nome_conta.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.codigo_conta.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.historico.toLowerCase().includes(searchTerm.toLowerCase())
+    ? Object.entries(groupedEntries).filter(([_, items]) => {
+        const searchLower = searchTerm.toLowerCase()
+        const searchNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
+        return items.some(item =>
+          item.descricao.toLowerCase().includes(searchLower) ||
+          item.nome_conta.toLowerCase().includes(searchLower) ||
+          item.codigo_conta.toLowerCase().includes(searchLower) ||
+          item.historico.toLowerCase().includes(searchLower) ||
+          (item.debito === searchNum || item.credito === searchNum) ||
+          (Math.abs(item.debito - searchNum) < 0.01 || Math.abs(item.credito - searchNum) < 0.01)
         )
-      )
+      })
     : Object.entries(groupedEntries)
 
   if (loading) {
