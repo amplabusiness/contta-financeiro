@@ -256,26 +256,27 @@ const PendingReconciliations = () => {
     setProcessingId(rejectionDialog.reconciliationId);
 
     try {
+      // Keep status as "pending" but add rejection reason for audit trail
       const { error } = await supabase
         .from("pending_reconciliations")
         .update({
-          status: "rejected",
           rejected_reason: rejectionDialog.reason,
+          // Status remains "pending" so it reappears in the list
         })
         .eq("id", rejectionDialog.reconciliationId);
 
       if (error) throw error;
 
-      toast.success("Conciliação rejeitada");
-
-      // Remove from pending list
-      setPending(
-        pending.filter(r => r.id !== rejectionDialog.reconciliationId)
+      toast.success(
+        "Conciliação marcada como revisar. Você pode analisar e conciliar corretamente agora."
       );
+
+      // Reload the list to show it's still there
+      await loadPendingReconciliations();
 
       setRejectionDialog({ visible: false, reason: "" });
     } catch (error: any) {
-      toast.error("Erro ao rejeitar conciliação");
+      toast.error("Erro ao processar rejeição");
       console.error(error);
     } finally {
       setProcessingId(null);
