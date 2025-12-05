@@ -185,7 +185,7 @@ const LivroDiario = () => {
       if (editingLine.codigo_conta) {
         const account = chartOfAccounts.find(a => a.code === editingLine.codigo_conta)
         if (account) {
-          updates.chart_of_accounts_id = account.id
+          updates.account_id = account.id
         }
       }
 
