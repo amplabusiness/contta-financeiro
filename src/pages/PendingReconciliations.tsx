@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
@@ -15,7 +16,7 @@ import { formatCurrency } from "@/data/expensesData";
 
 interface PendingReconciliation {
   id: string;
-  invoice_id: string;
+  invoice_id?: string;
   invoice_number?: string;
   cnab_reference: string;
   cnab_document: string;
@@ -23,6 +24,23 @@ interface PendingReconciliation {
   payment_date: string;
   confidence: number;
   status: "pending" | "approved" | "rejected";
+  ofx_amount?: number;
+  ofx_date?: string;
+  chart_of_accounts_id?: string;
+  cost_center_id?: string;
+}
+
+interface ChartOfAccount {
+  id: string;
+  code: string;
+  name: string;
+  account_type: string;
+}
+
+interface CostCenter {
+  id: string;
+  code: string;
+  name: string;
 }
 
 interface InvoiceInfo {
@@ -37,15 +55,25 @@ const PendingReconciliations = () => {
   const [pending, setPending] = useState<PendingReconciliation[]>([]);
   const [loading, setLoading] = useState(true);
   const [invoiceInfo, setInvoiceInfo] = useState<InvoiceInfo>({});
+  const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([]);
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [rejectionDialog, setRejectionDialog] = useState<{
     visible: boolean;
     reconciliationId?: string;
     reason: string;
   }>({ visible: false, reason: "" });
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [approvalDialog, setApprovalDialog] = useState<{
+    visible: boolean;
+    reconciliationId?: string;
+    chartAccountId: string;
+    costCenterId: string;
+  }>({ visible: false, chartAccountId: "", costCenterId: "" });
 
   useEffect(() => {
     loadPendingReconciliations();
+    loadChartOfAccounts();
+    loadCostCenters();
   }, []);
 
   const loadPendingReconciliations = async () => {
@@ -96,11 +124,55 @@ const PendingReconciliations = () => {
     }
   };
 
-  const handleApprove = async (reconciliationId: string) => {
-    const reconciliation = pending.find(r => r.id === reconciliationId);
+  const loadChartOfAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chart_of_accounts")
+        .select("id, code, name, account_type")
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+      setChartOfAccounts(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar plano de contas", error);
+    }
+  };
+
+  const loadCostCenters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cost_centers")
+        .select("id, code, name")
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+      setCostCenters(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar centros de custo", error);
+    }
+  };
+
+  const handleApproveClick = (reconciliationId: string) => {
+    setApprovalDialog({
+      visible: true,
+      reconciliationId,
+      chartAccountId: "",
+      costCenterId: "",
+    });
+  };
+
+  const handleApprove = async () => {
+    if (!approvalDialog.reconciliationId || !approvalDialog.chartAccountId || !approvalDialog.costCenterId) {
+      toast.error("Selecione o plano de contas e centro de custo");
+      return;
+    }
+
+    const reconciliation = pending.find(r => r.id === approvalDialog.reconciliationId);
     if (!reconciliation) return;
 
-    setProcessingId(reconciliationId);
+    setProcessingId(approvalDialog.reconciliationId);
 
     try {
       // 1. Update reconciliation status
@@ -109,41 +181,52 @@ const PendingReconciliations = () => {
         .update({
           status: "approved",
           approved_at: new Date().toISOString(),
+          chart_of_accounts_id: approvalDialog.chartAccountId,
+          cost_center_id: approvalDialog.costCenterId,
         })
-        .eq("id", reconciliationId);
+        .eq("id", approvalDialog.reconciliationId);
 
       if (updateError) throw updateError;
 
-      // 2. Update invoice as paid
-      const { error: invoiceError } = await supabase
-        .from("invoices")
-        .update({
-          status: "paid",
-          payment_date: reconciliation.payment_date,
-          reconciled_at: new Date().toISOString(),
-          cnab_reference: reconciliation.cnab_reference,
-        })
-        .eq("id", reconciliation.invoice_id);
+      // 2. Update invoice as paid (if exists)
+      if (reconciliation.invoice_id) {
+        const { error: invoiceError } = await supabase
+          .from("invoices")
+          .update({
+            status: "paid",
+            payment_date: reconciliation.payment_date,
+            reconciled_at: new Date().toISOString(),
+            cnab_reference: reconciliation.cnab_reference,
+          })
+          .eq("id", reconciliation.invoice_id);
 
-      if (invoiceError) throw invoiceError;
+        if (invoiceError) throw invoiceError;
+      }
 
       // 3. Create accounting entry
-      const invoice = invoiceInfo[reconciliation.invoice_id];
-      if (invoice) {
+      const chartAccount = chartOfAccounts.find(c => c.id === approvalDialog.chartAccountId);
+      const costCenter = costCenters.find(c => c.id === approvalDialog.costCenterId);
+
+      const invoice = reconciliation.invoice_id ? invoiceInfo[reconciliation.invoice_id] : null;
+
+      if (chartAccount && costCenter) {
         await supabase.from("accounting_entries").insert({
           invoice_id: reconciliation.invoice_id,
-          type: "payment",
-          amount: reconciliation.amount,
+          chart_of_accounts_id: approvalDialog.chartAccountId,
+          cost_center_id: approvalDialog.costCenterId,
+          type: reconciliation.amount > 0 ? "income" : "expense",
+          amount: Math.abs(reconciliation.amount),
           entry_date: reconciliation.payment_date,
           status: "posted",
-          description: `Pagamento reconciliado via CNAB - ${reconciliation.cnab_document}`,
+          description: `Reconciliação OFX/CNAB - ${reconciliation.cnab_document}`,
         });
       }
 
-      toast.success(`Conciliação aprovada para fatura ${invoice?.number}`);
+      toast.success(`Conciliação aprovada! Plano: ${chartAccount?.name} | CC: ${costCenter?.name}`);
 
       // Remove from pending list
-      setPending(pending.filter(r => r.id !== reconciliationId));
+      setPending(pending.filter(r => r.id !== approvalDialog.reconciliationId));
+      setApprovalDialog({ visible: false, chartAccountId: "", costCenterId: "" });
     } catch (error: any) {
       toast.error("Erro ao aprovar conciliação");
       console.error(error);
@@ -286,7 +369,7 @@ const PendingReconciliations = () => {
                               <Button
                                 size="sm"
                                 variant="default"
-                                onClick={() => handleApprove(rec.id)}
+                                onClick={() => handleApproveClick(rec.id)}
                                 disabled={isProcessing}
                               >
                                 {isProcessing ? (
@@ -324,6 +407,92 @@ const PendingReconciliations = () => {
             </Card>
           </div>
         )}
+
+        {/* Approval Dialog - Select Chart of Accounts and Cost Center */}
+        <Dialog
+          open={approvalDialog.visible}
+          onOpenChange={(open) =>
+            setApprovalDialog({ ...approvalDialog, visible: open })
+          }
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Aprovar Conciliação</DialogTitle>
+              <DialogDescription>
+                Selecione o plano de contas e centro de custo para esta conciliação
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="chart-account">Plano de Contas *</Label>
+                <Select
+                  value={approvalDialog.chartAccountId}
+                  onValueChange={(value) =>
+                    setApprovalDialog({ ...approvalDialog, chartAccountId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a conta contábil" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {chartOfAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.code} - {account.name} ({account.account_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Escolha a conta que receberá/enviará este valor
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cost-center">Centro de Custo *</Label>
+                <Select
+                  value={approvalDialog.costCenterId}
+                  onValueChange={(value) =>
+                    setApprovalDialog({ ...approvalDialog, costCenterId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o centro de custo" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {costCenters.map((center) => (
+                      <SelectItem key={center.id} value={center.id}>
+                        {center.code} - {center.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Escolha o departamento/projeto relacionado
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setApprovalDialog({ visible: false, chartAccountId: "", costCenterId: "" })
+                }
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleApprove}
+                disabled={
+                  processingId === approvalDialog.reconciliationId ||
+                  !approvalDialog.chartAccountId ||
+                  !approvalDialog.costCenterId
+                }
+              >
+                Confirmar Aprovação
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Rejection Dialog */}
         <Dialog
