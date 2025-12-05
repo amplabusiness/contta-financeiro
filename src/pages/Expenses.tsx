@@ -498,7 +498,7 @@ const Expenses = () => {
 
         if (parentAccount) {
           const filtered = accounts.filter(acc =>
-            acc.code.startsWith(parentAccount.code)
+            acc.code === parentAccount.code || acc.code.startsWith(parentAccount.code + '.')
           );
           setFilteredAccounts(filtered);
         } else {
