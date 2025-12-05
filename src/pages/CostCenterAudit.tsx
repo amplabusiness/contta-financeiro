@@ -267,18 +267,18 @@ const CostCenterAuditCard = ({ result }: { result: CostCenterAuditResult }) => {
   return (
     <Card className={result.is_compliant ? "border-green-200" : "border-red-200"}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              {result.is_compliant ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              )}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2 flex-1">
+            {result.is_compliant ? (
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+            ) : (
+              <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            )}
+            <CardTitle className="text-base">
               {result.cost_center_code} - {result.cost_center_name}
             </CardTitle>
           </div>
-          <Badge variant={result.is_compliant ? "outline" : "destructive"}>
+          <Badge variant={result.is_compliant ? "outline" : "destructive"} className="flex-shrink-0">
             {result.is_compliant ? "Conforme" : `${result.discrepancies.length} problema(s)`}
           </Badge>
         </div>
