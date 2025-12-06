@@ -68,10 +68,16 @@ const Auth = () => {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Session check error:", error);
+        return;
+      }
       if (session) {
         navigate("/dashboard");
       }
+    }).catch(err => {
+      console.error("Unexpected error checking session:", err);
     });
   }, [navigate]);
 

@@ -134,7 +134,6 @@ const App = () => (
             <Route path="/import-companies" element={<ImportCompanies />} />
             <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
             <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
-            <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/client-enrichment" element={<ClientEnrichment />} />
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
             <Route path="/livro-diario" element={<LivroDiario />} />
@@ -166,7 +165,6 @@ const App = () => (
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
             <Route path="/import-default-report" element={<ImportDefaultReport />} />
-            <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/ai-accountant" element={<AIAccountant />} />
             <Route path="/business-manager" element={<BusinessManager />} />
@@ -190,7 +188,6 @@ const App = () => (
             <Route path="/video-content" element={<VideoContent />} />
             <Route path="/pending-entities" element={<PendingEntities />} />
             <Route path="/incentives" element={<Incentives />} />
-            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

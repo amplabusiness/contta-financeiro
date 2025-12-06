@@ -89,13 +89,13 @@ export function FileImporter() {
 
       if (error) throw error
 
-      if (data.success) {
+      if (data?.success) {
         clearInterval(progressInterval);
         setProgress(100);
         setResult({
           success: true,
-          imported: data.imported || 0,
-          total: data.total_parsed || data.total_transactions || 0
+          imported: data?.imported || 0,
+          total: data?.total_parsed || data?.total_transactions || 0
         })
 
         toast({
