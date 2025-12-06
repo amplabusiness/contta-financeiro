@@ -2,6 +2,34 @@
 
 **Última Atualização**: 2025-12-06 (Sessão 14)
 
+---
+
+## ⚠️ INSTRUÇÃO OBRIGATÓRIA PARA TODAS AS IAs
+
+> **TODA IA que trabalhar nesta aplicação DEVE documentar suas alterações neste arquivo.**
+
+### O que documentar:
+1. **Data da sessão** (formato: DD/MM/YYYY - Sessão N)
+2. **Resumo das alterações** realizadas
+3. **Arquivos modificados** com descrição breve
+4. **Bugs corrigidos** (se houver)
+5. **Commits realizados** (hash e descrição)
+6. **Lições aprendidas** para futuras IAs
+
+### Onde documentar:
+- Adicione uma nova seção no final deste arquivo antes da seção "Referência Rápida"
+- Use o formato: `## Sessão N (DD/MM/YYYY) - Descrição`
+
+### Por que isso é importante:
+- Evita que IAs "delirem" ou esqueçam o contexto
+- Mantém histórico completo de todas as mudanças
+- Permite que qualquer IA continue o trabalho sem perder informações
+- Facilita debugging e rollback de alterações
+
+**NÃO PULE ESTA ETAPA. É OBRIGATÓRIO.**
+
+---
+
 ## Visão Geral
 Sistema de gestão financeira e contábil para escritório de contabilidade, em evolução para SaaS multi-tenant.
 
