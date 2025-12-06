@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-06-09 (Sessão 13)
+**Última Atualização**: 2025-12-06 (Sessão 14)
 
 ## Visão Geral
 Sistema de gestão financeira e contábil para escritório de contabilidade, em evolução para SaaS multi-tenant.
@@ -948,3 +948,221 @@ supabase functions logs FUNCTION_NAME
 4. Fechamento contábil automatizado
 
 **Para mais detalhes**: Ver `.claude/ROADMAP.md`
+
+---
+
+## Correções de Bugs (06/12/2025) - Sessão 14
+
+### Análise Completa de Código
+
+Foi realizada uma análise completa do codebase identificando **13 bugs**, sendo **5 críticos**. Todos os bugs críticos e de alta prioridade foram corrigidos.
+
+### Bugs Críticos Corrigidos
+
+#### 1. Rotas Duplicadas no App.tsx
+**Arquivos**: `src/App.tsx`
+**Problema**: Rotas `/import-invoices`, `/ai-agents`, `/settings` estavam definidas duas vezes, causando conflitos de navegação.
+**Correção**: Removidas as rotas duplicadas (linhas 137, 169, 193).
+
+```tsx
+// REMOVIDO (duplicatas):
+<Route path="/import-invoices" element={<ImportInvoices />} />  // linha 137
+<Route path="/ai-agents" element={<AIAgents />} />              // linha 169
+<Route path="/settings" element={<Settings />} />                // linha 193
+```
+
+#### 2. Memory Leak no DefaultReportImporter.tsx
+**Arquivos**: `src/components/DefaultReportImporter.tsx`
+**Problema**: `setInterval` criado para simular progresso não era limpo nos early returns, causando vazamento de memória.
+**Correção**: Adicionado `clearInterval(progressInterval)` antes de cada `return` nas condições de erro.
+
+```tsx
+// ANTES (vazamento):
+if (!user) {
+  toast.error("Usuário não autenticado");
+  return;  // interval continua rodando!
+}
+
+// DEPOIS (corrigido):
+if (!user) {
+  clearInterval(progressInterval);  // ADICIONADO
+  toast.error("Usuário não autenticado");
+  return;
+}
+```
+
+#### 3. DOMParser Indisponível em Ambientes Não-Browser
+**Arquivos**: `src/lib/ofxParser.ts`
+**Problema**: `DOMParser` é uma API exclusiva de browser, causando erro em Node.js/Workers/SSR.
+**Correção**: Adicionada verificação de disponibilidade antes de usar.
+
+```typescript
+// ADICIONADO:
+if (typeof DOMParser === 'undefined') {
+  return {
+    success: false,
+    error: 'XML parsing not available in this environment. DOMParser is only available in browser contexts.'
+  };
+}
+```
+
+#### 4. Race Condition no ExpenseUpdateContext.tsx
+**Arquivos**: `src/contexts/ExpenseUpdateContext.tsx`
+**Problema**: Usar `useState` para `listeners` causava stale closures - callbacks antigos eram chamados quando listeners mudavam.
+**Correção**: Substituído `useState` por `useRef` para evitar recriação de callbacks.
+
+```tsx
+// ANTES (race condition):
+const [listeners, setListeners] = useState<Set<() => void>>(new Set());
+const notifyExpenseChange = useCallback(() => {
+  listeners.forEach(listener => listener());  // pode estar desatualizado
+}, [listeners]);  // recria função a cada mudança
+
+// DEPOIS (corrigido):
+const listenersRef = useRef<Set<() => void>>(new Set());
+const notifyExpenseChange = useCallback(() => {
+  listenersRef.current.forEach(listener => listener());  // sempre atual
+}, []);  // callback estável
+```
+
+#### 5. Variável Não Utilizada no AccountingService.ts
+**Arquivos**: `src/services/AccountingService.ts`
+**Problema**: Variável `entryType` declarada mas não usada, ternário recalculado desnecessariamente.
+**Correção**: Uso da variável declarada ao invés de recalcular.
+
+```typescript
+// ANTES:
+const entryType = params.isCredit ? 'recebimento' : 'pagamento_despesa';
+return this.createEntry({
+  entryType: params.isCredit ? 'recebimento' : 'pagamento_despesa',  // recalculado!
+  ...
+});
+
+// DEPOIS:
+const entryType = params.isCredit ? 'recebimento' : 'pagamento_despesa';
+return this.createEntry({
+  entryType,  // usa a variável declarada
+  ...
+});
+```
+
+### Bugs de Alta Prioridade Corrigidos
+
+#### 6. Null Safety no FileImporter.tsx
+**Arquivos**: `src/components/FileImporter.tsx`
+**Problema**: Acesso a propriedades de `data` sem verificação de null.
+**Correção**: Adicionado optional chaining (`?.`).
+
+```typescript
+// ANTES:
+if (data.success) { ... }
+
+// DEPOIS:
+if (data?.success) { ... }
+```
+
+#### 7. Error Handling no Auth.tsx
+**Arquivos**: `src/pages/Auth.tsx`
+**Problema**: `getSession()` não tratava erros, usuário ficava preso na tela de login.
+**Correção**: Adicionado tratamento de erro com `.catch()`.
+
+```typescript
+// ANTES:
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session) navigate("/dashboard");
+});
+
+// DEPOIS:
+supabase.auth.getSession().then(({ data: { session }, error }) => {
+  if (error) {
+    console.error("Session check error:", error);
+    return;
+  }
+  if (session) navigate("/dashboard");
+}).catch(err => {
+  console.error("Unexpected error checking session:", err);
+});
+```
+
+#### 8. Validação NaN no AppSidebar.tsx
+**Arquivos**: `src/components/AppSidebar.tsx`
+**Problema**: `parseInt` poderia retornar `NaN` se sessionStorage tivesse valor corrompido.
+**Correção**: Validação do resultado antes de usar.
+
+```typescript
+// ANTES:
+scrollContainerRef.current.scrollTop = parseInt(savedPosition, 10);
+
+// DEPOIS:
+const position = parseInt(savedPosition, 10);
+if (!isNaN(position) && position >= 0) {
+  scrollContainerRef.current.scrollTop = position;
+}
+```
+
+### Bugs Identificados mas Não Corrigidos (Menor Prioridade)
+
+| Bug | Arquivo | Descrição | Impacto |
+|-----|---------|-----------|---------|
+| Tipo `any` excessivo | Vários | 30+ instâncias de `any` em Expenses.tsx, Clients.tsx | Fraco |
+| JSON.stringify em deps | useRealtimeSubscription.ts | Performance em comparação de subscriptions | Médio |
+| Erro silencioso | Invoices.tsx | Catch block só loga, não mostra ao usuário | Médio |
+| loadClients repetido | Layout.tsx | Chamado múltiplas vezes sem debounce | Baixo |
+| Cast inseguro | AIExecutionHistory.tsx | Uso de `as any` para tabelas | Baixo |
+
+### Commit da Sessão 14
+
+| Commit | Branch | Descrição |
+|--------|--------|-----------|
+| `9b4c668` | `claude/analyze-code-bugs-01YaXKxfLR6PhBJT4MEPn4uJ` | fix: Corrige múltiplos bugs críticos identificados na análise |
+
+### Arquivos Modificados
+
+```
+src/App.tsx                              # Rotas duplicadas removidas
+src/components/AppSidebar.tsx            # Validação NaN
+src/components/DefaultReportImporter.tsx # Memory leak corrigido
+src/components/FileImporter.tsx          # Null safety
+src/contexts/ExpenseUpdateContext.tsx    # Race condition corrigido
+src/lib/ofxParser.ts                     # DOMParser check
+src/pages/Auth.tsx                       # Error handling
+src/services/AccountingService.ts        # Variável não usada
+```
+
+### Lições Aprendidas
+
+1. **setInterval sempre precisa de cleanup** - Principalmente em early returns
+2. **useState vs useRef para callbacks** - Use `useRef` quando callbacks precisam acessar valores mutáveis
+3. **APIs de browser não existem em todos os ambientes** - Sempre verificar disponibilidade
+4. **Rotas React Router não validam duplicatas** - Só a primeira definição é usada
+5. **Optional chaining (`?.`) é essencial** - Sempre usar ao acessar dados de APIs
+
+---
+
+## Referência Rápida para Correção de Bugs
+
+### Checklist de Análise de Código
+
+- [ ] Memory leaks (setInterval, setTimeout, event listeners)
+- [ ] Race conditions (useCallback com dependências mutáveis)
+- [ ] Null/undefined safety (optional chaining)
+- [ ] Error handling (try/catch, .catch())
+- [ ] Rotas duplicadas (React Router)
+- [ ] APIs de ambiente específico (DOMParser, window, document)
+- [ ] Variáveis não utilizadas
+- [ ] Tipos `any` desnecessários
+
+### Ferramentas de Análise
+
+```bash
+# ESLint para análise estática
+npm run lint
+
+# Build para verificar erros de tipo
+npm run build
+
+# Buscar padrões problemáticos
+grep -r "setInterval" src/ --include="*.tsx"
+grep -r "useState.*Set\|Map" src/ --include="*.tsx"
+grep -r ": any" src/ --include="*.tsx" | wc -l
+```
