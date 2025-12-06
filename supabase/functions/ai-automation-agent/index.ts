@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Tipo para função de log
+type LogFunction = (msg: string) => void;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -56,7 +59,7 @@ serve(async (req) => {
         result = await detectRecurringPatterns(supabase, AI_KEY, AI_PROVIDER, log);
         break;
 
-      case 'full_automation':
+      case 'full_automation': {
         // Executa todas as automações
         const recurring = await generateRecurringExpenses(supabase, AI_KEY, AI_PROVIDER, log);
         const invoices = await generateInvoices(supabase, AI_KEY, AI_PROVIDER, log);
@@ -72,6 +75,7 @@ serve(async (req) => {
           company_status: status
         };
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -153,7 +157,7 @@ async function callAI(apiKey: string, provider: string, systemPrompt: string, us
 /**
  * GERAR DESPESAS RECORRENTES
  */
-async function generateRecurringExpenses(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function generateRecurringExpenses(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   log('📋 Generating recurring expenses...');
 
   const today = new Date();
@@ -223,7 +227,7 @@ async function generateRecurringExpenses(supabase: any, aiKey: string | undefine
       if (insertError) throw insertError;
 
       // Calcular próxima data
-      let nextDue = new Date(dueDate);
+      const nextDue = new Date(dueDate);
       switch (recurring.frequency) {
         case 'monthly': nextDue.setMonth(nextDue.getMonth() + 1); break;
         case 'bimonthly': nextDue.setMonth(nextDue.getMonth() + 2); break;
@@ -276,7 +280,7 @@ async function generateRecurringExpenses(supabase: any, aiKey: string | undefine
 /**
  * GERAR BOLETOS/FATURAS RESPEITANDO DATA DE ABERTURA
  */
-async function generateInvoices(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function generateInvoices(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   log('💰 Generating invoices...');
 
   const today = new Date();
@@ -429,7 +433,7 @@ async function validateInvoiceGeneration(supabase: any, client: any, competence:
 /**
  * GERAR CONTRATOS FALTANTES
  */
-async function generateMissingContracts(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function generateMissingContracts(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   log('📄 Generating missing contracts...');
 
   // Buscar clientes sem contrato ativo
@@ -614,7 +618,7 @@ async function generateMissingContracts(supabase: any, aiKey: string | undefined
 /**
  * VERIFICAR STATUS DAS EMPRESAS E GERAR DISTRATOS
  */
-async function checkCompanyStatusAndGenerateDistracts(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function checkCompanyStatusAndGenerateDistracts(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   log('🔍 Checking company status...');
 
   // Buscar clientes com situação irregular que ainda têm contrato ativo
@@ -793,7 +797,7 @@ async function checkCompanyStatusAndGenerateDistracts(supabase: any, aiKey: stri
 /**
  * DETECTAR PADRÕES DE DESPESAS RECORRENTES
  */
-async function detectRecurringPatterns(supabase: any, aiKey: string | undefined, provider: string, log: Function) {
+async function detectRecurringPatterns(supabase: any, aiKey: string | undefined, provider: string, log: LogFunction) {
   if (!aiKey) {
     return { success: false, error: 'AI key required for pattern detection' };
   }

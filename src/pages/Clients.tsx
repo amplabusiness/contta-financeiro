@@ -981,11 +981,9 @@ const Clients = () => {
                   {selectedClientId ? (
                     <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
                   ) : (
-                    <>Total: {clients.filter(client => 
-                      statusFilter === "all" || 
-                      (statusFilter === "active" && client.is_active) || 
-                      (statusFilter === "inactive" && !client.is_active)
-                      (statusFilter === "active" && client.is_active) || 
+                    <>Total: {clients.filter(client =>
+                      statusFilter === "all" ||
+                      (statusFilter === "active" && client.is_active) ||
                       (statusFilter === "inactive" && !client.is_active)
                     ).length} clientes</>
                   )}
