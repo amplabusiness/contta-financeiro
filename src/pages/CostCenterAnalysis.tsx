@@ -590,6 +590,7 @@ const CostCenterAnalysis = () => {
           </CardContent>
         </Card>
 
+        {/* eslint-disable-next-line no-constant-binary-expression -- Seção desabilitada intencionalmente */}
         {false && monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>

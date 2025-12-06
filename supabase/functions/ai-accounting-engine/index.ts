@@ -85,7 +85,7 @@ serve(async (req) => {
         result = { success: true, message: 'Ledger refreshed' };
         break;
 
-      case 'full_accounting_cycle':
+      case 'full_accounting_cycle': {
         // Ciclo completo de contabilização
         const pending = await processAllPending(supabase, AI_KEY, AI_PROVIDER, log);
         const currentDate = new Date();
@@ -112,6 +112,7 @@ serve(async (req) => {
           yearClose
         };
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -775,12 +776,13 @@ async function generateTrialBalance(supabase: any, periodType: string, competenc
       periodStart = `${competence}-01`;
       periodEnd = `${competence}-${new Date(year, month, 0).getDate()}`;
       break;
-    case 'quarterly':
+    case 'quarterly': {
       const quarter = Math.ceil(month / 3);
       const quarterStart = (quarter - 1) * 3 + 1;
       periodStart = `${year}-${String(quarterStart).padStart(2, '0')}-01`;
       periodEnd = `${year}-${String(quarterStart + 2).padStart(2, '0')}-${new Date(year, quarterStart + 2, 0).getDate()}`;
       break;
+    }
     case 'annual':
       periodStart = `${year}-01-01`;
       periodEnd = `${year}-12-31`;

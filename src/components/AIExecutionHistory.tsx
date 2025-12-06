@@ -11,7 +11,7 @@ interface ExecutionLog {
   tasks_executed: number;
   tasks_succeeded: number;
   tasks_failed: number;
-  details: any;
+  details: Record<string, unknown> | null;
 }
 
 export const AIExecutionHistory = () => {
@@ -28,14 +28,16 @@ export const AIExecutionHistory = () => {
 
   const loadHistory = async () => {
     try {
-      const { data, error } = await supabase
-        .from('automation_logs' as any)
+      // Tabela automation_logs pode não existir nos tipos gerados do Supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('automation_logs')
         .select('*')
         .order('execution_date', { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      setLogs((data as any) || []);
+      setLogs((data as ExecutionLog[]) || []);
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {
@@ -131,7 +133,7 @@ export const AIExecutionHistory = () => {
 
                     {log.details && Object.keys(log.details).length > 0 && (
                       <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                        {Object.entries(log.details).map(([key, value]: [string, any]) => (
+                        {Object.entries(log.details).map(([key, value]) => (
                           <div key={key}>
                             <strong>{key}:</strong> {JSON.stringify(value)}
                           </div>

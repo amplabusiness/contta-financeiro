@@ -56,7 +56,7 @@ serve(async (req) => {
         result = await detectRecurringPatterns(supabase, AI_KEY, AI_PROVIDER, log);
         break;
 
-      case 'full_automation':
+      case 'full_automation': {
         // Executa todas as automações
         const recurring = await generateRecurringExpenses(supabase, AI_KEY, AI_PROVIDER, log);
         const invoices = await generateInvoices(supabase, AI_KEY, AI_PROVIDER, log);
@@ -72,6 +72,7 @@ serve(async (req) => {
           company_status: status
         };
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -223,7 +224,7 @@ async function generateRecurringExpenses(supabase: any, aiKey: string | undefine
       if (insertError) throw insertError;
 
       // Calcular próxima data
-      let nextDue = new Date(dueDate);
+      const nextDue = new Date(dueDate);
       switch (recurring.frequency) {
         case 'monthly': nextDue.setMonth(nextDue.getMonth() + 1); break;
         case 'bimonthly': nextDue.setMonth(nextDue.getMonth() + 2); break;
