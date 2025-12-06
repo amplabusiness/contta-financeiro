@@ -31,7 +31,54 @@
 ---
 
 ## Visão Geral
-Sistema de gestão financeira e contábil para escritório de contabilidade, em evolução para SaaS multi-tenant.
+
+### 🎯 O QUE É ESTA APLICAÇÃO
+
+**Sistema financeiro de Contas a Pagar e Receber para empresas contábeis, com estrutura preparada para SaaS multi-tenant.**
+
+### Contexto de Negócio
+
+| Aspecto | Descrição |
+|---------|-----------|
+| **Cliente Principal** | Ampla Contabilidade (Goiânia-GO) |
+| **Tipo de Sistema** | ERP Financeiro para Escritórios de Contabilidade |
+| **Modelo de Negócio** | SaaS multi-tenant (em evolução) |
+| **Usuários** | Contadores, auxiliares, gestores financeiros |
+
+### Módulos Principais
+
+1. **Contas a Receber (Honorários)**
+   - Geração automática de faturas mensais para clientes do escritório
+   - Controle de inadimplência e cobrança
+   - Conciliação com pagamentos bancários (PIX, boleto, transferência)
+
+2. **Contas a Pagar (Despesas)**
+   - Cadastro e controle de despesas do escritório
+   - Categorização automática com IA
+   - Fluxo de aprovação e pagamento
+
+3. **Conciliação Bancária**
+   - Importação de extratos (OFX, CNAB)
+   - Match automático com honorários e despesas
+   - Super Conciliador (split de transações)
+
+4. **Contabilidade Integrada**
+   - Lançamentos automáticos (partida dobrada)
+   - Balancete, DRE, Balanço Patrimonial
+   - Livro Diário e Razão
+
+5. **Inteligência Artificial**
+   - 21 agentes especializados (Gemini 2.0)
+   - Classificação automática de transações
+   - Previsões e análises
+
+### ⚠️ REGRAS DE NEGÓCIO IMPORTANTES
+
+1. **Honorários são mensais** - Competência MM/YYYY
+2. **Clientes podem ser Pro-Bono ou Barter** (permuta)
+3. **Saldo de abertura vai para PL**, não para Receita
+4. **Conciliação pode ter SPLIT** - 1 transação para N honorários
+5. **Multi-tenancy via RLS** - `tenant_id` em todas as tabelas
 
 ## Stack Tecnológico
 - **Frontend**: React 18.3.1 + TypeScript 5.8.3 + Vite 5.4.21 + TailwindCSS + shadcn/ui
