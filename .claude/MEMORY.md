@@ -1338,8 +1338,38 @@ supabase/functions/ai-accounting-engine/index.ts  # Blocos em cases
 supabase/functions/ai-automation-agent/index.ts   # Blocos em cases
 ```
 
-### Erros de Lint Restantes (35)
+### Correção Final: Function Types (35 → 0 erros)
 
-Os 35 erros restantes são principalmente:
-- Uso de `Function` type genérico nas Edge Functions (requer refatoração significativa)
-- Estes não afetam a funcionalidade, apenas a qualidade do código
+Substituído tipo genérico `Function` por `LogFunction` tipado em todas as Edge Functions:
+
+```typescript
+// ANTES:
+log: Function
+
+// DEPOIS:
+type LogFunction = (msg: string) => void;
+log: LogFunction
+```
+
+**Arquivos corrigidos:**
+- `supabase/functions/ai-accounting-engine/index.ts`
+- `supabase/functions/ai-automation-agent/index.ts`
+- `supabase/functions/ai-bank-transaction-processor/index.ts`
+- `supabase/functions/ai-initial-load/index.ts`
+- `supabase/functions/ai-orchestrator/index.ts`
+
+### Resultado Final da Sessão 15
+
+| Métrica | Início | Final |
+|---------|--------|-------|
+| Erros de Lint | 52 | **0** |
+| Warnings | 875 | 871 |
+| Build | ✅ | ✅ |
+
+### Commits da Sessão 15
+
+| Commit | Descrição |
+|--------|-----------|
+| `43a4b57` | fix: Corrige bugs adicionais e erros de lint |
+| `850bf6c` | docs: Atualiza MEMORY.md com correções da Sessão 15 |
+| `5df05e4` | fix: Elimina todos os erros de lint (0 erros restantes) |
