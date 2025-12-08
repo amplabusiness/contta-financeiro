@@ -210,15 +210,15 @@ const Expenses = () => {
     try {
       const instances = [];
       const startDate = new Date(parentExpense.recurrence_start_date || parentExpense.due_date);
-      const twoYearsFromNow = new Date();
-      twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+      const twoYearsLimit = new Date(startDate);
+      twoYearsLimit.setFullYear(twoYearsLimit.getFullYear() + 2);
 
       let currentDate = new Date(startDate);
       let count = 0;
       const maxCount = parentExpense.recurrence_count || 999;
-      const endDate = parentExpense.recurrence_end_date ? new Date(parentExpense.recurrence_end_date) : twoYearsFromNow;
+      const endDate = parentExpense.recurrence_end_date ? new Date(parentExpense.recurrence_end_date) : twoYearsLimit;
 
-      while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsFromNow) {
+      while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
         if (count > 0) {
           const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
             ? parentExpense.recurrence_specific_days[0]
