@@ -149,7 +149,7 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
     xhr.open(method, url, true);
     xhr.responseType = "arraybuffer";
     xhr.withCredentials = sendCredentials;
-    xhr.timeout = 30000;
+    xhr.timeout = 60000;
 
     headers.forEach((value, key) => {
       xhr.setRequestHeader(key, value);
