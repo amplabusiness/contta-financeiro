@@ -1818,7 +1818,7 @@ const Expenses = () => {
                       <TableCell>{formatCurrency(Number(expense.amount))}</TableCell>
                       <TableCell>{getStatusBadge(expense.status)}</TableCell>
                       <TableCell className="text-center">
-                        {expense.is_recurring && (
+                        {(expense.is_recurring || expense.parent_expense_id) && (
                           <Badge variant="outline" className="bg-blue-50 text-blue-700">
                             {getRecurrenceLabel(expense)}
                           </Badge>
