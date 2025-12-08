@@ -140,6 +140,19 @@ const Expenses = () => {
     }
   };
 
+  const saveScrollPosition = () => {
+    scrollPositionRef.current = window.scrollY;
+    sessionStorage.setItem(SCROLL_POSITION_KEY, scrollPositionRef.current.toString());
+  };
+
+  const restoreScrollPosition = () => {
+    const saved = sessionStorage.getItem(SCROLL_POSITION_KEY);
+    if (saved) {
+      const scrollPos = parseInt(saved, 10);
+      window.scrollTo(0, scrollPos);
+    }
+  };
+
   const loadExpenses = async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
