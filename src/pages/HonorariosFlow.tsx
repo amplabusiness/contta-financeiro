@@ -62,7 +62,7 @@ const HonorariosFlow = () => {
       const [honorariosRes, clientsRes, banksRes] = await Promise.all([
         supabase.from("invoices").select("*").order("due_date", { ascending: false }),
         supabase.from("clients").select("id, name, monthly_fee").eq("is_active", true).order("name"),
-        supabase.from("bank_accounts").select("id, name").eq("account_type", "SICREDI").limit(1),
+        supabase.from("bank_accounts").select("id, name").ilike("name", "%SICREDI%").eq("is_active", true).limit(1),
       ]);
 
       const mappedHonorarios = (honorariosRes.data || []).map((h: any) => ({
