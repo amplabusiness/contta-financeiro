@@ -22,6 +22,28 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
   throw new Error("Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.");
 }
 
+// Create a resilient fetch wrapper that falls back to native fetch on XHR errors
+const resilientFetch: typeof fetch = async (input, init) => {
+  try {
+    return await customFetch(input, init);
+  } catch (error) {
+    const isXhrError = error instanceof TypeError &&
+      (error.message.includes("Network request failed") ||
+       error.message.includes("Network request timeout"));
+
+    if (isXhrError && typeof fetch !== "undefined") {
+      console.warn("[Supabase] XHR failed, falling back to native fetch", { url: String(input) });
+      try {
+        return await fetch(input as RequestInfo, init);
+      } catch (fallbackError) {
+        console.error("[Supabase] Native fetch also failed", fallbackError);
+        throw fallbackError;
+      }
+    }
+    throw error;
+  }
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +54,6 @@ export const supabase = createClient<Database>(resolvedSupabaseUrl, SUPABASE_PUB
     autoRefreshToken: true,
   },
   global: {
-    fetch: customFetch,
+    fetch: resilientFetch,
   }
 });
