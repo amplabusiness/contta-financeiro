@@ -722,17 +722,28 @@ const Expenses = () => {
           } else {
             // If only values changed, check if there are future instances in the database
             // We must query the database directly because 'expenses' state might be filtered by period
-            const { data: dbFutureExpenses } = await supabase
+            const { data: dbFutureExpenses, error: queryError } = await supabase
               .from("expenses")
               .select("id")
               .eq("parent_expense_id", parentId)
-              .gt("due_date", editingExpense.due_date)
-              .limit(1);
+              .gt("due_date", editingExpense.due_date);
+
+            if (queryError) {
+              console.warn("Error checking for future expenses:", queryError);
+            }
 
             const hasFutureInstances = (dbFutureExpenses && dbFutureExpenses.length > 0);
 
+            console.log("Future instances check:", {
+              parentId,
+              currentDueDate: editingExpense.due_date,
+              foundCount: dbFutureExpenses?.length || 0,
+              hasFutureInstances
+            });
+
             // If no future instances exist but recurrence is enabled, generate them
             if (!hasFutureInstances && pendingRecurringAction.data.is_recurring) {
+              console.log("No future instances found, generating...");
               await generateRecurringInstances(
                 {
                   ...pendingRecurringAction.data,
@@ -750,12 +761,20 @@ const Expenses = () => {
                 notes: pendingRecurringAction.data.notes,
               };
 
-              await supabase
+              console.log("Updating future instances with:", fieldsToUpdate);
+
+              const { error: updateError } = await supabase
                 .from("expenses")
                 .update(fieldsToUpdate)
                 .eq("parent_expense_id", parentId)
                 .gt("due_date", editingExpense.due_date);
 
+              if (updateError) {
+                console.error("Error updating future expenses:", updateError);
+                throw new Error(`Erro ao atualizar despesas futuras: ${updateError.message}`);
+              }
+
+              console.log("Successfully updated future instances");
               toast.success("Despesa e todas as futuras atualizadas!");
             } else {
               toast.success("Despesa atualizada!");
