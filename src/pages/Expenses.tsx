@@ -758,6 +758,25 @@ const Expenses = () => {
     return matchedCategory ? matchedCategory.name : expenseCategory;
   };
 
+  const getRecurrenceLabel = (expense: any) => {
+    const frequency = expense.recurrence_frequency || "mensal";
+    const frequencyLabels: Record<string, string> = {
+      weekly: "Semanal",
+      biweekly: "Quinzenal",
+      monthly: "Mensal",
+      annual: "Anual",
+    };
+
+    const frequencyLabel = frequencyLabels[frequency] || frequency;
+
+    if (frequency === "monthly" && expense.recurrence_specific_days && expense.recurrence_specific_days.length > 0) {
+      const day = expense.recurrence_specific_days[0];
+      return `${frequencyLabel} (dia ${day})`;
+    }
+
+    return frequencyLabel;
+  };
+
   const totalPending = expenses
     .filter((e) => e.status === "pending" || e.status === "overdue")
     .reduce((sum, e) => sum + Number(e.amount), 0);
