@@ -389,6 +389,7 @@ const Expenses = () => {
         }
       }
 
+      saveScrollPosition();
       setOpen(false);
       setEditingExpense(null);
       resetForm();
