@@ -229,17 +229,17 @@ const Expenses = () => {
       const startDateStr = parentExpense.recurrence_start_date || parentExpense.due_date;
       const startDate = parseDate(startDateStr);
 
-      // Calcular limite: até o final do 2º ano a partir do ano de início
-      // Se começa em 2026, gera para 2026 e 2027 (2 anos civis)
+      // Calcular limite: até o final do 5º ano a partir do ano de início
+      // Se começa em 2026, gera para 2026, 2027, 2028, 2029 e 2030 (5 anos civis)
       const startYear = startDate.getFullYear();
-      const twoYearsLimit = new Date(startYear + 1, 11, 31, 23, 59, 59);
+      const fiveYearsLimit = new Date(startYear + 4, 11, 31, 23, 59, 59);
 
       let currentDate = new Date(startDate);
       let count = 0;
       const maxCount = parentExpense.recurrence_count || 999;
 
       const endDateStr = parentExpense.recurrence_end_date;
-      const endDate = endDateStr ? parseDate(endDateStr) : twoYearsLimit;
+      const endDate = endDateStr ? parseDate(endDateStr) : fiveYearsLimit;
 
       const parentDueDate = parentExpense.due_date.split('T')[0];
       const parentDueDateObj = parseDate(parentExpense.due_date);
@@ -248,12 +248,12 @@ const Expenses = () => {
       console.log("Gerando recorrências:", {
         startDate: startDate.toISOString(),
         startYear,
-        twoYearsLimit: twoYearsLimit.toISOString(),
+        fiveYearsLimit: fiveYearsLimit.toISOString(),
         parentDueDate,
         targetDay
       });
 
-      while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
+      while (count < maxCount && currentDate <= endDate && currentDate <= fiveYearsLimit) {
         // Format as YYYY-MM-DD manually to ensure local date is used
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
