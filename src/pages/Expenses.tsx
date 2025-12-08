@@ -450,6 +450,15 @@ const Expenses = () => {
         expenseData.recurrence_specific_days = formData.recurrence_specific_days && formData.recurrence_specific_days.length > 0
           ? formData.recurrence_specific_days
           : null;
+
+        console.log("Recurrence data being saved:", {
+          is_recurring: expenseData.is_recurring,
+          recurrence_frequency: expenseData.recurrence_frequency,
+          recurrence_day: expenseData.recurrence_day,
+          recurrence_start_date: expenseData.recurrence_start_date,
+          recurrence_specific_days: expenseData.recurrence_specific_days,
+          formDataFrequency: formData.recurrence_frequency,
+        });
       }
 
       if (editingExpense) {
