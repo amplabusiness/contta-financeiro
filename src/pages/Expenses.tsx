@@ -739,11 +739,56 @@ const Expenses = () => {
               .gt("due_date", editingExpense.due_date);
 
             if (pendingRecurringAction.data.is_recurring) {
+              // When regenerating, we must ensure we use the correct start date logic
+              // If we are editing an instance (e.g. Jan 2026), and we want to regenerate future ones,
+              // we should start generating from the NEXT occurrence after this one.
+
+              // However, generateRecurringInstances uses recurrence_start_date from the data passed.
+              // If that date is the original start date (e.g. Jan 2025), it will try to generate from there,
+              // but skip existing ones? No, it skips if date matches parentDueDate.
+
+              // To be safe, let's ensure the data passed to generateRecurringInstances has a start date
+              // that allows it to generate the correct future instances.
+              // But generateRecurringInstances logic is: start from start_date, go until end_date.
+              // It checks if instance exists? No, it just inserts.
+              // Wait, it does NOT check if instance exists (except for the parent date check).
+
+              // So if we delete future instances, we are fine.
+              // But we must ensure we don't duplicate PAST instances if we are editing a middle instance.
+
+              // Actually, generateRecurringInstances is designed to generate the WHOLE series?
+              // No, it generates from start_date.
+
+              // If we are editing Jan 2026. We deleted Jan 2027+.
+              // We want to generate Jan 2027+.
+              // We should NOT generate Jan 2025-Dec 2025.
+
+              // If we pass the original start date (Jan 2025), it will try to generate Jan 2025...
+              // And since we didn't delete them, we might get duplicates or errors?
+              // The code says:
+              // if (currentIsoDate !== parentDueDate) { ... insert ... }
+
+              // It doesn't check if other instances exist.
+              // So we MUST adjust the start date to be the NEXT occurrence after the current one.
+
+              const nextMonth = new Date(editingExpense.due_date);
+              nextMonth.setMonth(nextMonth.getMonth() + 1);
+              // Adjust day based on recurrence rule?
+              // For now, just using the due_date of the current expense as the "start" for the new series
+              // might be safer if we want to generate future ones.
+
+              // But generateRecurringInstances uses the passed data.
+              // Let's override recurrence_start_date to be the current expense's due date
+              // so it starts generating from there (and the function logic will skip the first one if it matches).
+
+              const regenerationData = {
+                ...pendingRecurringAction.data,
+                recurrence_start_date: editingExpense.due_date,
+                created_by: editingExpense.created_by,
+              };
+
               await generateRecurringInstances(
-                {
-                  ...pendingRecurringAction.data,
-                  created_by: editingExpense.created_by,
-                },
+                regenerationData,
                 editingExpense.id
               );
             }
