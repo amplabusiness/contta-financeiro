@@ -770,6 +770,9 @@ const Expenses = () => {
         <div className="flex items-center justify-between">
           <div />
           <Dialog open={open} onOpenChange={(value) => {
+            if (!value) {
+              saveScrollPosition();
+            }
             setOpen(value);
             if (!value) {
               setEditingExpense(null);
