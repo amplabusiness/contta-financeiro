@@ -28,15 +28,27 @@ const resilientFetch: typeof fetch = async (input, init) => {
     return await customFetch(input, init);
   } catch (error) {
     const isXhrError = error instanceof TypeError &&
-      (error.message.includes("Network request failed") ||
+      ((error as any).cause === "xhr_timeout" ||
+       (error as any).cause === "xhr_network_error" ||
+       error.message.includes("Network request failed") ||
        error.message.includes("Network request timeout"));
 
     if (isXhrError && typeof fetch !== "undefined") {
-      console.warn("[Supabase] XHR failed, falling back to native fetch", { url: String(input) });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.warn("[Supabase] XHR failed, attempting fallback to native fetch", {
+        url: String(input),
+        cause: (error as any).cause,
+        error: errorMsg,
+      });
       try {
         return await fetch(input as RequestInfo, init);
       } catch (fallbackError) {
-        console.error("[Supabase] Native fetch also failed", fallbackError);
+        const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        console.error("[Supabase] Native fetch also failed", {
+          url: String(input),
+          xhrError: errorMsg,
+          fallbackError: fallbackErrorMsg,
+        });
         throw fallbackError;
       }
     }
