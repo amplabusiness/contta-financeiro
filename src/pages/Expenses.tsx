@@ -250,7 +250,8 @@ const Expenses = () => {
         startYear,
         limitDate: limitDate.toISOString(),
         parentDueDate,
-        targetDay
+        targetDay,
+        frequency: parentExpense.recurrence_frequency
       });
 
       while (count < maxCount && currentDate <= endDate && currentDate <= limitDate) {
