@@ -390,11 +390,9 @@ const Expenses = () => {
         throw new Error("Conta contábil é obrigatória");
       }
 
-      // Para despesas recorrentes NOVAS, use a data de início como due_date
-      // Para despesas já existentes, mantenha o due_date original
-      const actualDueDate = formData.is_recurring && formData.recurrence_start_date && !editingExpense
-        ? formData.recurrence_start_date
-        : formData.due_date;
+      // Para despesas recorrentes, respeitar o due_date informado pelo usuário
+      // A data de início da recorrência serve para controlar o ciclo, mas o dia do vencimento manda
+      const actualDueDate = formData.due_date;
 
       const [year, month, day] = actualDueDate.split('-');
       const calculatedCompetence = `${month}/${year}`;
