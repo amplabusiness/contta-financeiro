@@ -429,6 +429,18 @@ const Expenses = () => {
           console.log("Despesa atualizada com sucesso");
           toast.success("Despesa atualizada com sucesso!");
           notifyExpenseChange();
+
+          // Se a despesa não era recorrente e passou a ser, gerar as instâncias futuras
+          if (formData.is_recurring && !editingExpense.is_recurring) {
+            console.log("Convertendo despesa para recorrente, gerando instâncias futuras...");
+            await generateRecurringInstances(
+              {
+                ...expenseData,
+                created_by: editingExpense.created_by || user.id,
+              },
+              editingExpense.id
+            );
+          }
         } catch (updateError: any) {
           let errorMsg = "Erro ao atualizar despesa";
 
