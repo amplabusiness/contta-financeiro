@@ -694,7 +694,7 @@ const Expenses = () => {
             (editingExpense.is_recurring !== pendingRecurringAction.data.is_recurring) ||
             (editingExpense.is_recurring && pendingRecurringAction.data.is_recurring && (
               editingExpense.recurrence_frequency !== pendingRecurringAction.data.recurrence_frequency ||
-              editingExpense.recurrence_start_date !== pendingRecurringAction.data.recurrence_start_date ||
+              isDifferent(editingExpense.recurrence_start_date, pendingRecurringAction.data.recurrence_start_date) ||
               isDifferent(editingExpense.recurrence_end_date, pendingRecurringAction.data.recurrence_end_date) ||
               isDifferent(editingExpense.recurrence_count, pendingRecurringAction.data.recurrence_count) ||
               JSON.stringify(editingExpense.recurrence_specific_days || []) !== JSON.stringify(pendingRecurringAction.data.recurrence_specific_days || [])
