@@ -1338,9 +1338,32 @@ const Expenses = () => {
 
     const frequencyLabel = frequencyLabels[frequency] || frequency;
 
-    if ((frequency === "monthly" || frequency === "mensal") && expense.recurrence_specific_days && expense.recurrence_specific_days.length > 0) {
-      const day = expense.recurrence_specific_days[0];
-      return `${frequencyLabel} (dia ${day})`;
+    // For monthly recurrence, try to show the day from multiple sources
+    if (frequency === "monthly" || frequency === "mensal") {
+      let dayToShow: number | undefined;
+
+      // First, try recurrence_specific_days (newer format)
+      if (expense.recurrence_specific_days && expense.recurrence_specific_days.length > 0) {
+        dayToShow = expense.recurrence_specific_days[0];
+      }
+      // If not found, try recurrence_day (fallback)
+      else if (expense.recurrence_day) {
+        dayToShow = expense.recurrence_day;
+      }
+      // If still not found, try to extract from due_date
+      else if (expense.due_date) {
+        const dueDateStr = expense.due_date.includes('T')
+          ? expense.due_date.split('T')[0]
+          : expense.due_date;
+        const dayFromDate = parseInt(dueDateStr.split('-')[2]);
+        if (!isNaN(dayFromDate)) {
+          dayToShow = dayFromDate;
+        }
+      }
+
+      if (dayToShow) {
+        return `${frequencyLabel} (dia ${dayToShow})`;
+      }
     }
 
     return frequencyLabel;
