@@ -720,13 +720,24 @@ const Expenses = () => {
 
             toast.success("Despesa e recorrências futuras atualizadas!");
           } else {
-            // If only values changed, just update all existing instances
+            // If only values changed, check if there are future instances
             const futureDespenses = expenses.filter(e =>
               (e.parent_expense_id === parentId || e.id === parentId) &&
               e.due_date > editingExpense.due_date
             );
 
-            if (futureDespenses.length > 0) {
+            // If no future instances exist but recurrence is enabled, generate them
+            if (futureDespenses.length === 0 && pendingRecurringAction.data.is_recurring) {
+              await generateRecurringInstances(
+                {
+                  ...pendingRecurringAction.data,
+                  created_by: editingExpense.created_by,
+                },
+                editingExpense.id
+              );
+              toast.success("Recorrências futuras geradas!");
+            } else if (futureDespenses.length > 0) {
+              // Update all existing future instances with new values
               const fieldsToUpdate = {
                 category: pendingRecurringAction.data.category,
                 description: pendingRecurringAction.data.description,
@@ -739,9 +750,11 @@ const Expenses = () => {
                 .update(fieldsToUpdate)
                 .eq("parent_expense_id", parentId)
                 .gt("due_date", editingExpense.due_date);
-            }
 
-            toast.success("Despesa e todas as futuras atualizadas!");
+              toast.success("Despesa e todas as futuras atualizadas!");
+            } else {
+              toast.success("Despesa atualizada!");
+            }
           }
         } else {
           await supabase
