@@ -274,6 +274,10 @@ const Expenses = () => {
 
           const competence = `${month}/${year}`;
 
+          // Validate that we're copying the frequency correctly
+          const frequencyToCopy = parentExpense.recurrence_frequency || "monthly";
+          console.log(`Creating instance for ${currentIsoDate} with frequency: ${frequencyToCopy}`);
+
           instances.push({
             category: parentExpense.category,
             description: parentExpense.description,
@@ -289,12 +293,12 @@ const Expenses = () => {
             created_by: parentExpense.created_by,
             parent_expense_id: parentId,
             is_recurring: true,
-            recurrence_frequency: parentExpense.recurrence_frequency,
-            recurrence_day: parentExpense.recurrence_day,
-            recurrence_start_date: parentExpense.recurrence_start_date,
-            recurrence_end_date: parentExpense.recurrence_end_date,
-            recurrence_count: parentExpense.recurrence_count,
-            recurrence_specific_days: parentExpense.recurrence_specific_days,
+            recurrence_frequency: frequencyToCopy,
+            recurrence_day: parentExpense.recurrence_day || 10,
+            recurrence_start_date: parentExpense.recurrence_start_date || null,
+            recurrence_end_date: parentExpense.recurrence_end_date || null,
+            recurrence_count: parentExpense.recurrence_count || null,
+            recurrence_specific_days: (parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0) ? parentExpense.recurrence_specific_days : null,
           });
         }
 
