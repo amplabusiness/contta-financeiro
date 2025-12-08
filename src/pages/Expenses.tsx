@@ -615,6 +615,8 @@ const Expenses = () => {
   };
 
   const handleEdit = async (expense: any) => {
+    // Salvar posição de scroll ANTES de abrir o dialog
+    saveScrollPosition();
     setEditingExpense(expense);
     const formatDateForInput = (dateStr: string) => {
       if (!dateStr) return "";
