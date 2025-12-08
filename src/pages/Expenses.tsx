@@ -22,6 +22,7 @@ import { useClient } from "@/contexts/ClientContext";
 import { useAccounting } from "@/hooks/useAccounting";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
+import { RecurringExpenseForm } from "@/components/RecurringExpenseForm";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
