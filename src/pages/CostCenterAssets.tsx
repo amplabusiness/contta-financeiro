@@ -315,6 +315,14 @@ const CostCenterAssets = () => {
     try {
       setLoading(true);
 
+      // Se não há centros de custo do tipo 'assets', retornar vazio
+      if (costCentersToUse.length === 0) {
+        setCostCenterData([]);
+        setTotalExpenses(0);
+        setLoading(false);
+        return;
+      }
+
       // Buscar despesas pagas com centros de custo
       let query = supabase
         .from("vw_expenses_with_accounts")
@@ -330,9 +338,15 @@ const CostCenterAssets = () => {
         query = query.like("competence", `%/${selectedYear}`);
       }
 
-      const { data: expenses, error } = await query;
+      const { data: allExpenses, error } = await query;
 
       if (error) throw error;
+
+      // Filtrar despesas apenas para centros de custo do tipo 'assets'
+      const centerCodes = new Set(costCentersToUse.map(c => c.code));
+      const expenses = allExpenses?.filter((expense: any) =>
+        centerCodes.has(expense.cost_center_code)
+      ) || [];
 
       // Buscar também saldos de abertura (lançamentos contábeis de abertura) com valores
       // Buscar tanto 'saldo_abertura' quanto 'opening_balance'
