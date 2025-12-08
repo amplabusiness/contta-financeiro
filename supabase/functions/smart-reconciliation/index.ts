@@ -70,15 +70,20 @@ serve(async (req) => {
           );
 
           for (const inv of exactMatches) {
+            // Bonus de confiança para faturas pendentes vs já pagas
+            const baseConfidence = 0.95;
+            const isPending = inv.status === 'pending';
+            const confidence = isPending ? baseConfidence : baseConfidence - 0.05;
+
             suggestions.push({
               type: 'invoice',
               id: inv.id,
               client_id: inv.client_id,
               client_name: inv.clients?.name || 'Cliente',
               amount: inv.amount,
-              description: `${inv.clients?.name} - ${inv.competence}`,
-              confidence: 0.95,
-              reason: 'Valor exato correspondente'
+              description: `${inv.clients?.name} - ${inv.competence} ${inv.status === 'paid' ? '(Já Paga)' : ''}`,
+              confidence,
+              reason: `Valor exato correspondente${inv.status === 'paid' ? ' - reconciliando pagamento anterior' : ''}`
             });
           }
 
