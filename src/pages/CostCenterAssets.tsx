@@ -641,46 +641,56 @@ const CostCenterAssets = () => {
             </CardHeader>
             <CardContent className="p-4">
               {costCenterData.length > 0 ? (
-                <div style={{ width: "100%", height: "500px", overflow: "visible" }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                      <Pie
-                        data={costCenterData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="30%"
-                        cy="50%"
-                        outerRadius={110}
-                        cursor="pointer"
-                      >
-                        {costCenterData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number) => formatCurrency(value)}
-                        labelFormatter={(label: string) => label}
-                        contentStyle={{
-                          backgroundColor: "#ffffff",
-                          color: "#000000",
-                          border: "2px solid #333",
-                          borderRadius: "8px",
-                          padding: "12px 16px",
-                          boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
-                          zIndex: 9999,
-                          opacity: 1,
-                        }}
-                        cursor="pointer"
-                        wrapperStyle={{ outline: "none" }}
-                      />
-                      <Legend
-                        layout="vertical"
-                        align="right"
-                        verticalAlign="middle"
-                        wrapperStyle={{ paddingLeft: "20px", position: "relative", zIndex: 1 }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="flex items-center gap-8">
+                  <div style={{ width: "45%", height: "400px" }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={costCenterData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          cursor="pointer"
+                        >
+                          {costCenterData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number) => formatCurrency(value)}
+                          labelFormatter={(label: string) => label}
+                          contentStyle={{
+                            backgroundColor: "#ffffff",
+                            color: "#000000",
+                            border: "2px solid #333",
+                            borderRadius: "8px",
+                            padding: "12px 16px",
+                            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+                            zIndex: 9999,
+                            opacity: 1,
+                          }}
+                          cursor="pointer"
+                          wrapperStyle={{ outline: "none" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto max-h-[400px]">
+                    <div className="space-y-2">
+                      {costCenterData.map((center, index) => (
+                        <div key={center.name} className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-sm flex-shrink-0"
+                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                          />
+                          <span className="text-sm">{center.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">Sem dados para exibir</p>
