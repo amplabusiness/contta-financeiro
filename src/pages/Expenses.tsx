@@ -682,30 +682,67 @@ const Expenses = () => {
         if (updateAll) {
           const parentId = editingExpense.parent_expense_id || editingExpense.id;
 
+          // Check if recurrence parameters changed
+          const recurrenceParamsChanged =
+            editingExpense.recurrence_frequency !== pendingRecurringAction.data.recurrence_frequency ||
+            editingExpense.recurrence_start_date !== pendingRecurringAction.data.recurrence_start_date ||
+            editingExpense.recurrence_end_date !== pendingRecurringAction.data.recurrence_end_date ||
+            editingExpense.recurrence_count !== pendingRecurringAction.data.recurrence_count ||
+            JSON.stringify(editingExpense.recurrence_specific_days || []) !== JSON.stringify(pendingRecurringAction.data.recurrence_specific_days || []) ||
+            editingExpense.is_recurring !== pendingRecurringAction.data.is_recurring;
+
+          console.log("Recurrence params changed:", recurrenceParamsChanged);
+
           // First, update the current expense
           await supabase
             .from("expenses")
             .update(pendingRecurringAction.data)
             .eq("id", editingExpense.id);
 
-          // Then delete only FUTURE expenses (strictly greater than, not equal)
-          await supabase
-            .from("expenses")
-            .delete()
-            .eq("parent_expense_id", parentId)
-            .gt("due_date", editingExpense.due_date);
+          // Only delete and regenerate if recurrence parameters changed
+          if (recurrenceParamsChanged) {
+            // Delete only FUTURE expenses (strictly greater than, not equal)
+            await supabase
+              .from("expenses")
+              .delete()
+              .eq("parent_expense_id", parentId)
+              .gt("due_date", editingExpense.due_date);
 
-          if (pendingRecurringAction.data.is_recurring) {
-            await generateRecurringInstances(
-              {
-                ...pendingRecurringAction.data,
-                created_by: editingExpense.created_by,
-              },
-              editingExpense.id
+            if (pendingRecurringAction.data.is_recurring) {
+              await generateRecurringInstances(
+                {
+                  ...pendingRecurringAction.data,
+                  created_by: editingExpense.created_by,
+                },
+                editingExpense.id
+              );
+            }
+
+            toast.success("Despesa e recorrências futuras atualizadas!");
+          } else {
+            // If only values changed, just update all existing instances
+            const futureDespenses = expenses.filter(e =>
+              (e.parent_expense_id === parentId || e.id === parentId) &&
+              e.due_date > editingExpense.due_date
             );
-          }
 
-          toast.success("Despesa e recorrências futuras atualizadas!");
+            if (futureDespenses.length > 0) {
+              const fieldsToUpdate = {
+                category: pendingRecurringAction.data.category,
+                description: pendingRecurringAction.data.description,
+                amount: pendingRecurringAction.data.amount,
+                notes: pendingRecurringAction.data.notes,
+              };
+
+              await supabase
+                .from("expenses")
+                .update(fieldsToUpdate)
+                .eq("parent_expense_id", parentId)
+                .gt("due_date", editingExpense.due_date);
+            }
+
+            toast.success("Despesa e todas as futuras atualizadas!");
+          }
         } else {
           await supabase
             .from("expenses")
