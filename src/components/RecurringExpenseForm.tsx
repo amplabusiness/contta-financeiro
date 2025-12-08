@@ -51,27 +51,31 @@ export const RecurringExpenseForm = ({ formData, onFormChange }: RecurringExpens
         />
       </div>
 
-      {/* Data para Recorrência Mensal */}
+      {/* Dia do Mês para Recorrência Mensal */}
       {formData.recurrence_frequency === "monthly" && (
         <div className="space-y-2">
-          <Label htmlFor="recurrence_monthly_date">Data para gerar despesa cada mês</Label>
+          <Label htmlFor="recurrence_monthly_day">Dia do mês (1-31)</Label>
           <Input
-            id="recurrence_monthly_date"
-            type="date"
+            id="recurrence_monthly_day"
+            type="number"
+            min="1"
+            max="31"
             value={formData.recurrence_specific_days && formData.recurrence_specific_days.length > 0
-              ? `2024-01-${String(formData.recurrence_specific_days[0]).padStart(2, '0')}`
+              ? formData.recurrence_specific_days[0]
               : ""
             }
             onChange={(e) => {
-              const date = new Date(e.target.value);
-              const day = date.getDate();
-              onFormChange({
-                recurrence_specific_days: [day],
-              });
+              const day = parseInt(e.target.value);
+              if (day >= 1 && day <= 31) {
+                onFormChange({
+                  recurrence_specific_days: [day],
+                });
+              }
             }}
+            placeholder="Ex: 15"
           />
           <p className="text-xs text-muted-foreground">
-            A despesa será gerada no dia especificado de cada mês
+            A despesa será gerada no dia {formData.recurrence_specific_days && formData.recurrence_specific_days.length > 0 ? formData.recurrence_specific_days[0] : "???"} de cada mês
           </p>
         </div>
       )}
