@@ -412,6 +412,12 @@ const Expenses = () => {
       const calculatedCompetence = `${month}/${year}`;
 
       console.log("Salvando com due_date:", actualDueDate, "competence:", calculatedCompetence);
+      console.log("Dados de recorrência:", {
+        is_recurring: formData.is_recurring,
+        frequency: formData.recurrence_frequency,
+        start: formData.recurrence_start_date,
+        end: formData.recurrence_end_date
+      });
 
       // Only send fields that exist in the database schema
       const expenseData: any = {
