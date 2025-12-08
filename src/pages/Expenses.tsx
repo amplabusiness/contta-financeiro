@@ -209,7 +209,16 @@ const Expenses = () => {
   const generateRecurringInstances = async (parentExpense: any, parentId: string) => {
     try {
       const instances = [];
-      const startDate = new Date(parentExpense.recurrence_start_date || parentExpense.due_date);
+
+      // Parse dates manually to avoid timezone issues
+      const parseDate = (dateStr: string) => {
+        if (!dateStr) return new Date();
+        const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+
+      const startDateStr = parentExpense.recurrence_start_date || parentExpense.due_date;
+      const startDate = parseDate(startDateStr);
 
       // Calcular limite: até o final do 2º ano a partir do ano de início
       // Se começa em 2026, gera para 2026 e 2027 (2 anos civis)
@@ -219,19 +228,33 @@ const Expenses = () => {
       let currentDate = new Date(startDate);
       let count = 0;
       const maxCount = parentExpense.recurrence_count || 999;
-      const endDate = parentExpense.recurrence_end_date ? new Date(parentExpense.recurrence_end_date) : twoYearsLimit;
+
+      const endDateStr = parentExpense.recurrence_end_date;
+      const endDate = endDateStr ? parseDate(endDateStr) : twoYearsLimit;
+
       const parentDueDate = parentExpense.due_date.split('T')[0];
 
+      console.log("Gerando recorrências:", {
+        startDate: startDate.toISOString(),
+        startYear,
+        twoYearsLimit: twoYearsLimit.toISOString(),
+        parentDueDate
+      });
+
       while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
-        const currentIsoDate = currentDate.toISOString().split('T')[0];
+        // Format as YYYY-MM-DD manually to ensure local date is used
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const currentIsoDate = `${year}-${month}-${day}`;
 
         // Gerar se não for a mesma data da despesa pai (evitar duplicidade da primeira ocorrência)
         if (currentIsoDate !== parentDueDate) {
-          const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
+          const dayOfMonth = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
             ? parentExpense.recurrence_specific_days[0]
             : currentDate.getDate();
 
-          const competence = `${String(currentDate.getMonth() + 1).padStart(2, '0')}/${currentDate.getFullYear()}`;
+          const competence = `${month}/${year}`;
 
           instances.push({
             category: parentExpense.category,
@@ -261,11 +284,13 @@ const Expenses = () => {
             currentDate.setDate(currentDate.getDate() + 15);
             break;
           case "monthly":
-            const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
+            const targetDay = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
               ? parentExpense.recurrence_specific_days[0]
               : currentDate.getDate();
             currentDate.setMonth(currentDate.getMonth() + 1);
-            currentDate.setDate(Math.min(day, new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()));
+            // Handle end of month logic
+            const lastDayOfNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            currentDate.setDate(Math.min(targetDay, lastDayOfNextMonth));
             break;
           case "annual":
             currentDate.setFullYear(currentDate.getFullYear() + 1);
