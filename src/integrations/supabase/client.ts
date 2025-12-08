@@ -27,15 +27,59 @@ const resilientFetch: typeof fetch = async (input, init) => {
   const maxRetries = 5;
   let lastError: any = null;
 
+  // Normalize input to ensure we don't have issues with reused Request objects
+  let fetchInput = input;
+  let fetchInit = init;
+
+  if (typeof Request !== 'undefined' && input instanceof Request) {
+    // If it's a Request object, we should try to clone it or extract URL/init
+    // to avoid "Request body is already used" errors on retries
+    try {
+      fetchInput = input.url;
+      fetchInit = {
+        ...init,
+        method: input.method,
+        headers: input.headers,
+        // We can't easily clone the body if it's a stream, but for Supabase it's usually JSON string
+        body: input.body,
+        credentials: input.credentials,
+        cache: input.cache,
+        mode: input.mode,
+        redirect: input.redirect,
+        referrer: input.referrer,
+        referrerPolicy: input.referrerPolicy,
+        integrity: input.integrity,
+        keepalive: input.keepalive,
+        signal: input.signal,
+      };
+    } catch (e) {
+      console.warn("[Supabase] Failed to normalize Request object, using original input", e);
+    }
+  }
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      // Check for network connectivity before attempting
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new Error("Offline: No internet connection detected");
+      }
+
       // Try native fetch first (which is patched by patchFetchForVitePing but eventually calls native fetch)
       const response = await Promise.race([
-        fetch(input as RequestInfo, init),
+        fetch(fetchInput as RequestInfo, fetchInit),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Fetch timeout after 60s")), 60000)
         ),
       ]);
+
+      if (!response) {
+        throw new Error("No response received from fetch");
+      }
+
+      // If response is 5xx, we might want to retry?
+      // Supabase client handles HTTP errors, but if it's a 502/503/504 from a proxy, maybe retry?
+      // For now, let's just return the response and let Supabase handle it.
+
       return response as Response;
     } catch (error) {
       lastError = error;
@@ -44,46 +88,56 @@ const resilientFetch: typeof fetch = async (input, init) => {
       // Check if this is a network connectivity issue
       const isNetworkError = errorMsg.includes("Failed to fetch") ||
                            errorMsg.includes("Network") ||
-                           errorMsg.includes("timeout");
+                           errorMsg.includes("timeout") ||
+                           errorMsg.includes("Offline") ||
+                           errorMsg.includes("connection");
 
-      if (attempt < maxRetries - 1) {
+      // Don't retry if it's an AbortError (user cancelled)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error;
+      }
+
+      if (attempt < maxRetries - 1 && isNetworkError) {
         const delayMs = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s, 8s, 16s
         console.warn(`[Supabase] Fetch attempt ${attempt + 1}/${maxRetries} failed, retrying in ${delayMs}ms`, {
-          url: String(input),
+          url: String(fetchInput),
           error: errorMsg,
           isNetworkError,
         });
 
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delayMs));
-      } else {
+      } else if (attempt === maxRetries - 1) {
         console.warn("[Supabase] Native fetch failed after all retries, attempting fallback to customFetch (XHR)", {
-          url: String(input),
+          url: String(fetchInput),
           error: errorMsg,
           attempts: maxRetries,
         });
 
         try {
-          return await customFetch(input, init);
+          return await customFetch(fetchInput, fetchInit);
         } catch (xhrError) {
           const xhrErrorMsg = xhrError instanceof Error ? xhrError.message : String(xhrError);
 
           // Log detailed error information
           console.error("[Supabase] All connection methods failed", {
-            url: String(input),
+            url: String(fetchInput),
             fetchError: errorMsg,
             xhrError: xhrErrorMsg,
-            method: typeof init?.method === "string" ? init.method : "GET",
+            method: typeof fetchInit?.method === "string" ? fetchInit.method : "GET",
           });
 
           // Re-throw with better context
           const finalError = new Error(
-            `[Supabase Connection Failed] Unable to reach ${String(input).split("?")[0]}. ` +
+            `[Supabase Connection Failed] Unable to reach ${String(fetchInput).split("?")[0]}. ` +
             `Possible causes: Network connectivity issue, Supabase server is down, or CORS policy issue. ` +
             `Original error: ${errorMsg}`
           );
           throw finalError;
         }
+      } else {
+        // If not a network error, throw immediately (e.g. programming error)
+        throw error;
       }
     }
   }
