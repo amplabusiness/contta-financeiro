@@ -184,16 +184,25 @@ const Expenses = () => {
 
       if (selectedYear && selectedMonth) {
         filteredData = filteredData.filter((expense) => {
-          const dueDate = new Date(expense.due_date);
+          if (!expense.due_date) return false;
+          // Parse date string manually to avoid timezone issues
+          const [yearStr, monthStr] = expense.due_date.split('-');
+          const year = parseInt(yearStr);
+          const month = parseInt(monthStr);
+
           return (
-            dueDate.getFullYear() === selectedYear &&
-            dueDate.getMonth() + 1 === selectedMonth
+            year === selectedYear &&
+            month === selectedMonth
           );
         });
       } else if (selectedYear) {
         filteredData = filteredData.filter((expense) => {
-          const dueDate = new Date(expense.due_date);
-          return dueDate.getFullYear() === selectedYear;
+          if (!expense.due_date) return false;
+          // Parse date string manually to avoid timezone issues
+          const [yearStr] = expense.due_date.split('-');
+          const year = parseInt(yearStr);
+
+          return year === selectedYear;
         });
       }
 
