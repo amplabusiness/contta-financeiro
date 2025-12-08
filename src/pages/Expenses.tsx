@@ -1547,6 +1547,7 @@ const Expenses = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(expense)}
+                          title="Editar despesa"
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -1554,6 +1555,7 @@ const Expenses = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(expense.id)}
+                          title="Excluir despesa"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
