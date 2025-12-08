@@ -51,34 +51,27 @@ export const RecurringExpenseForm = ({ formData, onFormChange }: RecurringExpens
         />
       </div>
 
-      {/* Dias do Mês (apenas para mensal) */}
+      {/* Data para Recorrência Mensal */}
       {formData.recurrence_frequency === "monthly" && (
         <div className="space-y-2">
-          <Label>Dias do mês para gerar despesa</Label>
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-              <label key={day} className="flex items-center space-x-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={formData.recurrence_specific_days.includes(day)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onFormChange({
-                        recurrence_specific_days: [...formData.recurrence_specific_days, day].sort((a, b) => a - b),
-                      });
-                    } else {
-                      onFormChange({
-                        recurrence_specific_days: formData.recurrence_specific_days.filter((d) => d !== day),
-                      });
-                    }
-                  }}
-                />
-                <span className="text-xs">{day}</span>
-              </label>
-            ))}
-          </div>
+          <Label htmlFor="recurrence_monthly_date">Data para gerar despesa cada mês</Label>
+          <Input
+            id="recurrence_monthly_date"
+            type="date"
+            value={formData.recurrence_specific_days && formData.recurrence_specific_days.length > 0
+              ? `2024-01-${String(formData.recurrence_specific_days[0]).padStart(2, '0')}`
+              : ""
+            }
+            onChange={(e) => {
+              const date = new Date(e.target.value);
+              const day = date.getDate();
+              onFormChange({
+                recurrence_specific_days: [day],
+              });
+            }}
+          />
           <p className="text-xs text-muted-foreground">
-            Selecione os dias do mês em que a despesa será duplicada
+            A despesa será gerada no dia especificado de cada mês
           </p>
         </div>
       )}
