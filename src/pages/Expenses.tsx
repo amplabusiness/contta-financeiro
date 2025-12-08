@@ -891,6 +891,12 @@ const Expenses = () => {
                 ...pendingRecurringAction.data,
                 recurrence_start_date: pendingRecurringAction.data.due_date,
                 created_by: editingExpense.created_by,
+                // Ensure frequency is passed correctly
+                recurrence_frequency: pendingRecurringAction.data.recurrence_frequency,
+                recurrence_day: pendingRecurringAction.data.recurrence_day,
+                recurrence_end_date: pendingRecurringAction.data.recurrence_end_date,
+                recurrence_count: pendingRecurringAction.data.recurrence_count,
+                recurrence_specific_days: pendingRecurringAction.data.recurrence_specific_days,
               };
 
               await generateRecurringInstances(
@@ -905,6 +911,14 @@ const Expenses = () => {
                 description: pendingRecurringAction.data.description,
                 amount: pendingRecurringAction.data.amount,
                 notes: pendingRecurringAction.data.notes,
+                // Also update recurrence fields to ensure consistency
+                recurrence_frequency: pendingRecurringAction.data.recurrence_frequency,
+                recurrence_day: pendingRecurringAction.data.recurrence_day,
+                recurrence_start_date: pendingRecurringAction.data.recurrence_start_date,
+                recurrence_end_date: pendingRecurringAction.data.recurrence_end_date,
+                recurrence_count: pendingRecurringAction.data.recurrence_count,
+                recurrence_specific_days: pendingRecurringAction.data.recurrence_specific_days,
+                is_recurring: true, // Ensure they are marked as recurring
               };
 
               console.log("Updating future instances with:", fieldsToUpdate);
