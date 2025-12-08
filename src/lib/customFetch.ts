@@ -149,6 +149,7 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
     xhr.open(method, url, true);
     xhr.responseType = "arraybuffer";
     xhr.withCredentials = sendCredentials;
+    xhr.timeout = 30000;
 
     headers.forEach((value, key) => {
       xhr.setRequestHeader(key, value);
@@ -187,12 +188,27 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
 
     xhr.onerror = () => {
       cleanup();
-      reject(new TypeError("Network request failed"));
+      const error = new TypeError("Network request failed");
+      (error as any).cause = "xhr_network_error";
+      (error as any).url = url;
+      (error as any).method = method;
+      console.error("[customFetch] Network error:", {
+        url,
+        method,
+        readyState: xhr.readyState,
+        status: xhr.status,
+        statusText: xhr.statusText,
+      });
+      reject(error);
     };
 
     xhr.ontimeout = () => {
       cleanup();
-      reject(new TypeError("Network request failed"));
+      const error = new TypeError("Network request timeout");
+      (error as any).cause = "xhr_timeout";
+      (error as any).url = url;
+      console.error("[customFetch] Request timeout:", { url, method });
+      reject(error);
     };
 
     try {
@@ -207,7 +223,11 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
       }
     } catch (error) {
       cleanup();
-      reject(error as Error);
+      const sendError = error instanceof Error ? error : new Error(String(error));
+      (sendError as any).cause = "xhr_send_error";
+      (sendError as any).url = url;
+      console.error("[customFetch] Send error:", { url, method, originalError: error });
+      reject(sendError);
     }
   });
 };
