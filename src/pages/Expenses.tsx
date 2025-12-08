@@ -391,6 +391,10 @@ const Expenses = () => {
       setEditingExpense(null);
       resetForm();
       await loadExpenses();
+      // Restaurar scroll após salvar
+      setTimeout(() => {
+        restoreScrollPosition();
+      }, 200);
     } catch (error: any) {
       let errorMsg = "Erro ao salvar despesa";
 
