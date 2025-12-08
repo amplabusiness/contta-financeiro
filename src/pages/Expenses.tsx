@@ -211,9 +211,10 @@ const Expenses = () => {
       const instances = [];
       const startDate = new Date(parentExpense.recurrence_start_date || parentExpense.due_date);
 
-      // Calcular limite: até o final do 2º ano civil a partir do ano de início
+      // Calcular limite: até o final do 2º ano a partir do ano de início
+      // Se começa em 2026, gera para 2026 e 2027 (2 anos civis)
       const startYear = startDate.getFullYear();
-      const twoYearsLimit = new Date(startYear + 2, 11, 31, 23, 59, 59);
+      const twoYearsLimit = new Date(startYear + 1, 11, 31, 23, 59, 59);
 
       let currentDate = new Date(startDate);
       let count = 0;
