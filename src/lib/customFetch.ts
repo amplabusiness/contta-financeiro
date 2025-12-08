@@ -195,14 +195,14 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
       (error as any).method = method;
       (error as any).status = xhr.status;
       (error as any).readyState = xhr.readyState;
-      console.error("[customFetch] Network error:", {
+      console.error("[customFetch] Network error: " + JSON.stringify({
         url,
         method,
         readyState: xhr.readyState,
         status: xhr.status,
         statusText: xhr.statusText,
         message: errorMsg,
-      });
+      }));
       reject(error);
     };
 
