@@ -94,6 +94,7 @@ import VideoContent from "./pages/VideoContent";
 import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
 import HonorariosFlow from "./pages/HonorariosFlow";
+import ReconcileHonorarios from "./pages/ReconcileHonorarios";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
