@@ -667,7 +667,7 @@ const CostCenterAssets = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ranking de Valor por Centro de Custo</CardTitle>
+            <CardTitle>{costCenterData.length > 1 ? "Ranking de Valor por Centro de Custo" : "Centros de Custo"}</CardTitle>
             <CardDescription>Departamentos ordenados por valor de ativos (clique para ver lançamentos)</CardDescription>
           </CardHeader>
           <CardContent>
