@@ -215,8 +215,9 @@ const CostCenterAssets = () => {
     try {
       const { data, error } = await supabase
         .from("cost_centers")
-        .select("id, code, name, description, is_active, parent_id, default_chart_account_id")
+        .select("id, code, name, description, is_active, parent_id, default_chart_account_id, center_type")
         .eq("is_active", true)
+        .eq("center_type", "assets")
         .order("order_index, code");
 
       if (error) throw error;
