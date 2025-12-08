@@ -242,19 +242,27 @@ const Expenses = () => {
       const endDate = endDateStr ? parseDate(endDateStr) : twoYearsLimit;
 
       const parentDueDate = parentExpense.due_date.split('T')[0];
+      const parentDueDateObj = parseDate(parentExpense.due_date);
+      const targetDay = parentDueDateObj.getDate();
 
       console.log("Gerando recorrências:", {
         startDate: startDate.toISOString(),
         startYear,
         twoYearsLimit: twoYearsLimit.toISOString(),
-        parentDueDate
+        parentDueDate,
+        targetDay
       });
 
       while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
         // Format as YYYY-MM-DD manually to ensure local date is used
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
+
+        // Use o dia do vencimento original como base, ajustando para o último dia do mês se necessário
+        const daysInMonth = new Date(year, currentDate.getMonth() + 1, 0).getDate();
+        const dayToUse = Math.min(targetDay, daysInMonth);
+        const day = String(dayToUse).padStart(2, '0');
+
         const currentIsoDate = `${year}-${month}-${day}`;
 
         // Gerar se não for a mesma data da despesa pai (evitar duplicidade da primeira ocorrência)
