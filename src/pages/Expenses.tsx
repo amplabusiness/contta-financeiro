@@ -730,23 +730,52 @@ const Expenses = () => {
           } else {
             // If only values changed, check if there are future instances in the database
             // We must query the database directly because 'expenses' state might be filtered by period
+            // Look for expenses with the same properties (category, description) that are in the future
             const { data: dbFutureExpenses, error: queryError } = await supabase
               .from("expenses")
-              .select("id")
-              .eq("parent_expense_id", parentId)
-              .gt("due_date", editingExpense.due_date);
+              .select("id, description, category, due_date, parent_expense_id")
+              .or(`parent_expense_id.eq.${parentId},parent_expense_id.eq.${editingExpense.id}`)
+              .gt("due_date", editingExpense.due_date)
+              .eq("is_recurring", false);
 
             if (queryError) {
               console.warn("Error checking for future expenses:", queryError);
             }
 
-            const hasFutureInstances = (dbFutureExpenses && dbFutureExpenses.length > 0);
+            let hasFutureInstances = (dbFutureExpenses && dbFutureExpenses.length > 0);
+
+            // If still not found, try alternate search: same description and category created after this one
+            if (!hasFutureInstances && editingExpense.description && editingExpense.category) {
+              const { data: altFutureExpenses } = await supabase
+                .from("expenses")
+                .select("id, description, category, due_date, parent_expense_id")
+                .eq("description", editingExpense.description)
+                .eq("category", editingExpense.category)
+                .eq("cost_center_id", editingExpense.cost_center_id)
+                .gt("due_date", editingExpense.due_date)
+                .eq("is_recurring", false)
+                .limit(100);
+
+              if (altFutureExpenses && altFutureExpenses.length > 0) {
+                console.log("Found future instances by matching description/category:", altFutureExpenses.map(e => e.due_date));
+                hasFutureInstances = true;
+                // Update dbFutureExpenses to contain the found records
+                if (dbFutureExpenses) {
+                  dbFutureExpenses.push(...altFutureExpenses.filter(alt =>
+                    !dbFutureExpenses.some(db => db.id === alt.id)
+                  ));
+                }
+              }
+            }
 
             console.log("Future instances check:", {
               parentId,
+              editingExpenseId: editingExpense.id,
               currentDueDate: editingExpense.due_date,
               foundCount: dbFutureExpenses?.length || 0,
-              hasFutureInstances
+              hasFutureInstances,
+              description: editingExpense.description,
+              category: editingExpense.category
             });
 
             // If no future instances exist but recurrence is enabled, generate them
