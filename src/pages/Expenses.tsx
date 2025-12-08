@@ -870,11 +870,18 @@ const Expenses = () => {
             // If no future instances exist but recurrence is enabled, generate them
             if (!hasFutureInstances && pendingRecurringAction.data.is_recurring) {
               console.log("No future instances found, generating...");
+
+              // Force start date to be the current expense's due date to ensure we generate future items
+              // and don't get stuck in the past or duplicate past items.
+              // This is critical when "repairing" a broken chain where future items are missing.
+              const generationData = {
+                ...pendingRecurringAction.data,
+                recurrence_start_date: pendingRecurringAction.data.due_date,
+                created_by: editingExpense.created_by,
+              };
+
               await generateRecurringInstances(
-                {
-                  ...pendingRecurringAction.data,
-                  created_by: editingExpense.created_by,
-                },
+                generationData,
                 editingExpense.id
               );
               toast.success("Recorrências futuras geradas!");
