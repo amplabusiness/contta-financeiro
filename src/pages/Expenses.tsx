@@ -684,13 +684,19 @@ const Expenses = () => {
 
           // Check if recurrence parameters changed
           // Only consider actual recurrence config changes, not cosmetic updates
+          // Helper to compare values treating null/undefined as equal
+          const isDifferent = (a: any, b: any) => {
+            if ((a === null || a === undefined) && (b === null || b === undefined)) return false;
+            return a !== b;
+          };
+
           const recurrenceParamsChanged =
             (editingExpense.is_recurring !== pendingRecurringAction.data.is_recurring) ||
             (editingExpense.is_recurring && pendingRecurringAction.data.is_recurring && (
               editingExpense.recurrence_frequency !== pendingRecurringAction.data.recurrence_frequency ||
               editingExpense.recurrence_start_date !== pendingRecurringAction.data.recurrence_start_date ||
-              editingExpense.recurrence_end_date !== pendingRecurringAction.data.recurrence_end_date ||
-              editingExpense.recurrence_count !== pendingRecurringAction.data.recurrence_count ||
+              isDifferent(editingExpense.recurrence_end_date, pendingRecurringAction.data.recurrence_end_date) ||
+              isDifferent(editingExpense.recurrence_count, pendingRecurringAction.data.recurrence_count) ||
               JSON.stringify(editingExpense.recurrence_specific_days || []) !== JSON.stringify(pendingRecurringAction.data.recurrence_specific_days || [])
             ));
 
