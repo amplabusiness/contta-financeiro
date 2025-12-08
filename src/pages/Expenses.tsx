@@ -70,14 +70,6 @@ const Expenses = () => {
     loadCostCenters();
   }, [selectedYear, selectedMonth, selectedClientId]);
 
-  // Restaurar scroll após os expenses serem carregados
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      restoreScrollPosition();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [expenses]);
-
   const normalizeAccountType = (value?: string | null) => value?.trim().toLowerCase() ?? "";
 
   const loadAccounts = async () => {
