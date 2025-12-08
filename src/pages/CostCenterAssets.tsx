@@ -641,15 +641,16 @@ const CostCenterAssets = () => {
             </CardHeader>
             <CardContent>
               {costCenterData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={500}>
+                <PieChart>
                     <Pie
                       data={costCenterData}
                       dataKey="value"
                       nameKey="name"
-                      cx="50%"
+                      cx="35%"
                       cy="50%"
                       outerRadius={120}
+                      cursor="pointer"
                     >
                       {costCenterData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -662,7 +663,10 @@ const CostCenterAssets = () => {
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "var(--radius)",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                        zIndex: 1000,
                       }}
+                      cursor="pointer"
                     />
                     <Legend
                       layout="vertical"
