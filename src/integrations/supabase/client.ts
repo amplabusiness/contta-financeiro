@@ -22,30 +22,54 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
   throw new Error("Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.");
 }
 
-// Create a resilient fetch wrapper that falls back to customFetch (XHR) on fetch errors
+// Create a resilient fetch wrapper with retry logic
 const resilientFetch: typeof fetch = async (input, init) => {
-  try {
-    // Try native fetch first (which is patched by patchFetchForVitePing but eventually calls native fetch)
-    return await fetch(input as RequestInfo, init);
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    console.warn("[Supabase] Native fetch failed, attempting fallback to customFetch (XHR)", {
-      url: String(input),
-      error: errorMsg,
-    });
+  const maxRetries = 3;
+  let lastError: any = null;
 
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      return await customFetch(input, init);
-    } catch (xhrError) {
-      const xhrErrorMsg = xhrError instanceof Error ? xhrError.message : String(xhrError);
-      console.error("[Supabase] CustomFetch (XHR) fallback also failed", {
-        url: String(input),
-        fetchError: errorMsg,
-        xhrError: xhrErrorMsg,
-      });
-      throw error;
+      // Try native fetch first (which is patched by patchFetchForVitePing but eventually calls native fetch)
+      const response = await Promise.race([
+        fetch(input as RequestInfo, init),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Fetch timeout after 30s")), 30000)
+        ),
+      ]);
+      return response as Response;
+    } catch (error) {
+      lastError = error;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      if (attempt < maxRetries - 1) {
+        const delayMs = Math.pow(2, attempt) * 1000;
+        console.warn(`[Supabase] Fetch attempt ${attempt + 1} failed, retrying in ${delayMs}ms`, {
+          url: String(input),
+          error: errorMsg,
+        });
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      } else {
+        console.warn("[Supabase] Native fetch failed after retries, attempting fallback to customFetch (XHR)", {
+          url: String(input),
+          error: errorMsg,
+        });
+
+        try {
+          return await customFetch(input, init);
+        } catch (xhrError) {
+          const xhrErrorMsg = xhrError instanceof Error ? xhrError.message : String(xhrError);
+          console.error("[Supabase] CustomFetch (XHR) fallback also failed", {
+            url: String(input),
+            fetchError: errorMsg,
+            xhrError: xhrErrorMsg,
+          });
+          throw lastError;
+        }
+      }
     }
   }
+
+  throw lastError;
 };
 
 // Import the supabase client like this:
