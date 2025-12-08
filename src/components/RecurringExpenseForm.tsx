@@ -16,11 +16,17 @@ interface RecurringExpenseFormProps {
   isPaused?: boolean;
 }
 
-export const RecurringExpenseForm = ({ formData, onFormChange }: RecurringExpenseFormProps) => {
+export const RecurringExpenseForm = ({ formData, onFormChange, isPaused }: RecurringExpenseFormProps) => {
   if (!formData.is_recurring) return null;
 
   return (
     <div className="space-y-4 ml-6 border-l-2 border-blue-300 pl-4">
+      {isPaused && (
+        <div className="p-3 bg-orange-50 border border-orange-200 rounded text-sm text-orange-800">
+          <strong>⏸️ Esta recorrência está pausada</strong>
+          <p className="text-xs mt-1">Nenhuma nova despesa será gerada até que você a retome.</p>
+        </div>
+      )}
       {/* Frequência */}
       <div className="space-y-2">
         <Label htmlFor="recurrence_frequency">Frequência da Recorrência *</Label>
