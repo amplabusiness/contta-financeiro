@@ -229,17 +229,17 @@ const Expenses = () => {
       const startDateStr = parentExpense.recurrence_start_date || parentExpense.due_date;
       const startDate = parseDate(startDateStr);
 
-      // Calcular limite: até o final do 2º ano a partir do ano de início
-      // Se começa em 2026, gera para 2026 e 2027 (2 anos civis)
+      // Calcular limite: até o final do 3º ano a partir do ano de início (startYear + 2)
+      // Isso garante cobertura para 2027 mesmo se o ano base for considerado 2025
       const startYear = startDate.getFullYear();
-      const twoYearsLimit = new Date(startYear + 1, 11, 31, 23, 59, 59);
+      const limitDate = new Date(startYear + 2, 11, 31, 23, 59, 59);
 
       let currentDate = new Date(startDate);
       let count = 0;
       const maxCount = parentExpense.recurrence_count || 999;
 
       const endDateStr = parentExpense.recurrence_end_date;
-      const endDate = endDateStr ? parseDate(endDateStr) : twoYearsLimit;
+      const endDate = endDateStr ? parseDate(endDateStr) : limitDate;
 
       const parentDueDate = parentExpense.due_date.split('T')[0];
       const parentDueDateObj = parseDate(parentExpense.due_date);
@@ -248,12 +248,12 @@ const Expenses = () => {
       console.log("Gerando recorrências:", {
         startDate: startDate.toISOString(),
         startYear,
-        twoYearsLimit: twoYearsLimit.toISOString(),
+        limitDate: limitDate.toISOString(),
         parentDueDate,
         targetDay
       });
 
-      while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
+      while (count < maxCount && currentDate <= endDate && currentDate <= limitDate) {
         // Format as YYYY-MM-DD manually to ensure local date is used
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
