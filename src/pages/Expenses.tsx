@@ -23,6 +23,8 @@ import { useAccounting } from "@/hooks/useAccounting";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
 
+const SCROLL_POSITION_KEY = "expenses-scroll-position";
+
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
@@ -35,6 +37,7 @@ const Expenses = () => {
   const [costCenters, setCostCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const scrollPositionRef = useRef<number>(0);
   const [editingExpense, setEditingExpense] = useState<any>(null);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [newCategoryData, setNewCategoryData] = useState({
