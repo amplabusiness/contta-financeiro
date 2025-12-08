@@ -77,6 +77,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { selectedClientId, selectedClientName } = useClient();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const auditCompleted = localStorage.getItem("cost_center_audit_completed") === "true";
 
   // Restaurar posição de scroll quando o componente monta ou a rota muda
   useEffect(() => {
