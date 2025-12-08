@@ -1157,31 +1157,10 @@ const Expenses = () => {
                         É uma despesa recorrente?
                       </Label>
                     </div>
-                    {formData.is_recurring && (
-                      <div className="space-y-2 ml-6">
-                        <Label htmlFor="recurrence_day">
-                          Dia do mês para recorrência (1-31) *
-                        </Label>
-                        <Select
-                          value={formData.recurrence_day.toString()}
-                          onValueChange={(value) => setFormData({ ...formData, recurrence_day: parseInt(value) })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                              <SelectItem key={day} value={day.toString()}>
-                                Dia {day}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          A despesa será duplicada automaticamente neste dia a cada mês
-                        </p>
-                      </div>
-                    )}
+                    <RecurringExpenseForm
+                      formData={formData}
+                      onFormChange={(updates) => setFormData({ ...formData, ...updates })}
+                    />
                   </div>
                 </div>
                 <DialogFooter>
