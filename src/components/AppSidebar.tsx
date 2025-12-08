@@ -134,7 +134,6 @@ export function AppSidebar() {
     {
       label: "Contas a Receber",
       items: [
-        { title: "Honorários", url: "/invoices", icon: CreditCard },
         { title: "Fluxo de Honorários", url: "/honorarios-flow", icon: DollarSign },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
         { title: "Análise", url: "/fees-analysis", icon: TrendingUp },
