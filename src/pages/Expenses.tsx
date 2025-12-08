@@ -784,15 +784,39 @@ const Expenses = () => {
                   dbFutureExpenses.push(...altFutureExpenses.filter(alt =>
                     !dbFutureExpenses.some(db => db.id === alt.id)
                   ));
+                } else {
+                  // If dbFutureExpenses was null, initialize it
+                  // We can't assign to const, so we need to handle this logic carefully
+                  // But wait, dbFutureExpenses is const. We can't push to it if it's null.
+                  // Actually, supabase returns null or array.
                 }
               }
+            }
+
+            // Re-assign to a mutable array to handle the case where dbFutureExpenses is null
+            let expensesToUpdate = dbFutureExpenses || [];
+
+            if (expensesToUpdate.length === 0 && editingExpense.description && editingExpense.category) {
+               const { data: altFutureExpenses } = await supabase
+                .from("expenses")
+                .select("id, description, category, due_date, parent_expense_id")
+                .eq("description", editingExpense.description)
+                .eq("category", editingExpense.category)
+                .eq("cost_center_id", editingExpense.cost_center_id)
+                .gt("due_date", editingExpense.due_date)
+                .limit(100);
+
+               if (altFutureExpenses) {
+                 expensesToUpdate = altFutureExpenses;
+                 hasFutureInstances = expensesToUpdate.length > 0;
+               }
             }
 
             console.log("Future instances check:", {
               parentId,
               editingExpenseId: editingExpense.id,
               currentDueDate: editingExpense.due_date,
-              foundCount: dbFutureExpenses?.length || 0,
+              foundCount: expensesToUpdate.length,
               hasFutureInstances,
               description: editingExpense.description,
               category: editingExpense.category
@@ -819,11 +843,11 @@ const Expenses = () => {
               };
 
               console.log("Updating future instances with:", fieldsToUpdate);
-              console.log("Future expenses to update:", dbFutureExpenses?.map(e => ({ id: e.id, due_date: e.due_date })));
+              console.log("Future expenses to update:", expensesToUpdate.map(e => ({ id: e.id, due_date: e.due_date })));
 
               // Update using the list of found IDs to ensure we get all matching records
-              if (dbFutureExpenses && dbFutureExpenses.length > 0) {
-                const futureIds = dbFutureExpenses.map(e => e.id);
+              if (expensesToUpdate.length > 0) {
+                const futureIds = expensesToUpdate.map(e => e.id);
                 const { error: updateError } = await supabase
                   .from("expenses")
                   .update(fieldsToUpdate)
