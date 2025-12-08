@@ -799,20 +799,24 @@ const Expenses = () => {
               };
 
               console.log("Updating future instances with:", fieldsToUpdate);
+              console.log("Future expenses to update:", dbFutureExpenses?.map(e => ({ id: e.id, due_date: e.due_date })));
 
-              const { error: updateError } = await supabase
-                .from("expenses")
-                .update(fieldsToUpdate)
-                .eq("parent_expense_id", parentId)
-                .gt("due_date", editingExpense.due_date);
+              // Update using the list of found IDs to ensure we get all matching records
+              if (dbFutureExpenses && dbFutureExpenses.length > 0) {
+                const futureIds = dbFutureExpenses.map(e => e.id);
+                const { error: updateError } = await supabase
+                  .from("expenses")
+                  .update(fieldsToUpdate)
+                  .in("id", futureIds);
 
-              if (updateError) {
-                console.error("Error updating future expenses:", updateError);
-                throw new Error(`Erro ao atualizar despesas futuras: ${updateError.message}`);
+                if (updateError) {
+                  console.error("Error updating future expenses:", updateError);
+                  throw new Error(`Erro ao atualizar despesas futuras: ${updateError.message}`);
+                }
+
+                console.log(`Successfully updated ${futureIds.length} future instances`);
+                toast.success(`Despesa e ${futureIds.length} futuras atualizadas!`);
               }
-
-              console.log("Successfully updated future instances");
-              toast.success("Despesa e todas as futuras atualizadas!");
             } else {
               toast.success("Despesa atualizada!");
             }
