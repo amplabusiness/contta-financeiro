@@ -720,14 +720,19 @@ const Expenses = () => {
 
             toast.success("Despesa e recorrências futuras atualizadas!");
           } else {
-            // If only values changed, check if there are future instances
-            const futureDespenses = expenses.filter(e =>
-              (e.parent_expense_id === parentId || e.id === parentId) &&
-              e.due_date > editingExpense.due_date
-            );
+            // If only values changed, check if there are future instances in the database
+            // We must query the database directly because 'expenses' state might be filtered by period
+            const { data: dbFutureExpenses } = await supabase
+              .from("expenses")
+              .select("id")
+              .eq("parent_expense_id", parentId)
+              .gt("due_date", editingExpense.due_date)
+              .limit(1);
+
+            const hasFutureInstances = (dbFutureExpenses && dbFutureExpenses.length > 0);
 
             // If no future instances exist but recurrence is enabled, generate them
-            if (futureDespenses.length === 0 && pendingRecurringAction.data.is_recurring) {
+            if (!hasFutureInstances && pendingRecurringAction.data.is_recurring) {
               await generateRecurringInstances(
                 {
                   ...pendingRecurringAction.data,
@@ -736,7 +741,7 @@ const Expenses = () => {
                 editingExpense.id
               );
               toast.success("Recorrências futuras geradas!");
-            } else if (futureDespenses.length > 0) {
+            } else if (hasFutureInstances) {
               // Update all existing future instances with new values
               const fieldsToUpdate = {
                 category: pendingRecurringAction.data.category,
