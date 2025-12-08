@@ -669,7 +669,7 @@ const CostCenterAnalysis = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ranking de Gastos por Centro de Custo</CardTitle>
+            <CardTitle>{costCenterData.length > 1 ? "Ranking de Gastos por Centro de Custo" : "Centros de Custo"}</CardTitle>
             <CardDescription>Departamentos ordenados por valor de despesas (clique para ver lançamentos)</CardDescription>
           </CardHeader>
           <CardContent>
