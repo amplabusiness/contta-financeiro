@@ -24,7 +24,7 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
 
 // Create a resilient fetch wrapper with retry logic
 const resilientFetch: typeof fetch = async (input, init) => {
-  const maxRetries = 3;
+  const maxRetries = 5;
   let lastError: any = null;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -33,7 +33,7 @@ const resilientFetch: typeof fetch = async (input, init) => {
       const response = await Promise.race([
         fetch(input as RequestInfo, init),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Fetch timeout after 30s")), 30000)
+          setTimeout(() => reject(new Error("Fetch timeout after 60s")), 60000)
         ),
       ]);
       return response as Response;
@@ -41,29 +41,48 @@ const resilientFetch: typeof fetch = async (input, init) => {
       lastError = error;
       const errorMsg = error instanceof Error ? error.message : String(error);
 
+      // Check if this is a network connectivity issue
+      const isNetworkError = errorMsg.includes("Failed to fetch") ||
+                           errorMsg.includes("Network") ||
+                           errorMsg.includes("timeout");
+
       if (attempt < maxRetries - 1) {
-        const delayMs = Math.pow(2, attempt) * 1000;
-        console.warn(`[Supabase] Fetch attempt ${attempt + 1} failed, retrying in ${delayMs}ms`, {
+        const delayMs = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s, 8s, 16s
+        console.warn(`[Supabase] Fetch attempt ${attempt + 1}/${maxRetries} failed, retrying in ${delayMs}ms`, {
           url: String(input),
           error: errorMsg,
+          isNetworkError,
         });
+
+        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delayMs));
       } else {
-        console.warn("[Supabase] Native fetch failed after retries, attempting fallback to customFetch (XHR)", {
+        console.warn("[Supabase] Native fetch failed after all retries, attempting fallback to customFetch (XHR)", {
           url: String(input),
           error: errorMsg,
+          attempts: maxRetries,
         });
 
         try {
           return await customFetch(input, init);
         } catch (xhrError) {
           const xhrErrorMsg = xhrError instanceof Error ? xhrError.message : String(xhrError);
-          console.error("[Supabase] CustomFetch (XHR) fallback also failed", {
+
+          // Log detailed error information
+          console.error("[Supabase] All connection methods failed", {
             url: String(input),
             fetchError: errorMsg,
             xhrError: xhrErrorMsg,
+            method: typeof init?.method === "string" ? init.method : "GET",
           });
-          throw lastError;
+
+          // Re-throw with better context
+          const finalError = new Error(
+            `[Supabase Connection Failed] Unable to reach ${String(input).split("?")[0]}. ` +
+            `Possible causes: Network connectivity issue, Supabase server is down, or CORS policy issue. ` +
+            `Original error: ${errorMsg}`
+          );
+          throw finalError;
         }
       }
     }
