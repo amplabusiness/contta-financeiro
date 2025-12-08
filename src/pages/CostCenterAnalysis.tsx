@@ -586,39 +586,41 @@ const CostCenterAnalysis = () => {
           )}
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total de Despesas</CardTitle>
-              <CardDescription>Valor total do período selecionado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-primary">{formatCurrency(totalExpenses)}</div>
-            </CardContent>
-          </Card>
+        {costCenterData.length > 1 && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total de Despesas</CardTitle>
+                <CardDescription>Valor total do período selecionado</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-primary">{formatCurrency(totalExpenses)}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Centro de Custo com Maior Gasto</CardTitle>
-              <CardDescription>Departamento que mais gastou no período</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {costCenterData.length > 0 ? (
-                <div>
-                  <div className="text-2xl font-bold">{costCenterData[0].name}</div>
-                  <div className="text-3xl font-bold text-destructive mt-2">
-                    {formatCurrency(costCenterData[0].value)}
+            <Card>
+              <CardHeader>
+                <CardTitle>Centro de Custo com Maior Gasto</CardTitle>
+                <CardDescription>Departamento que mais gastou no período</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {costCenterData.length > 0 ? (
+                  <div>
+                    <div className="text-2xl font-bold">{costCenterData[0].name}</div>
+                    <div className="text-3xl font-bold text-destructive mt-2">
+                      {formatCurrency(costCenterData[0].value)}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {costCenterData[0].percentage}% do total
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {costCenterData[0].percentage}% do total
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Sem dados disponíveis</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                ) : (
+                  <p className="text-muted-foreground">Sem dados disponíveis</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Card>
           <CardHeader>
