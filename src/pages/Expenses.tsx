@@ -23,8 +23,6 @@ import { useAccounting } from "@/hooks/useAccounting";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
 
-const SCROLL_POSITION_KEY = "expenses-scroll-position";
-
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
