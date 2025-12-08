@@ -142,20 +142,16 @@ const Expenses = () => {
 
   const saveScrollPosition = () => {
     scrollPositionRef.current = window.scrollY;
-    console.log('Salvando scroll position:', scrollPositionRef.current);
-    sessionStorage.setItem(SCROLL_POSITION_KEY, scrollPositionRef.current.toString());
   };
 
   const restoreScrollPosition = () => {
-    const saved = sessionStorage.getItem(SCROLL_POSITION_KEY);
-    console.log('Scroll position salva:', saved);
-    if (saved) {
-      const scrollPos = parseInt(saved, 10);
-      console.log('Restaurando para:', scrollPos);
-      // Forçar restauração do scroll com timeout maior
-      setTimeout(() => {
-        window.scrollTo({ top: scrollPos, behavior: 'auto' });
-      }, 50);
+    const scrollPos = scrollPositionRef.current;
+    if (scrollPos > 0) {
+      // Restaurar multiple times para garantir que funciona
+      window.scrollTo(0, scrollPos);
+      setTimeout(() => window.scrollTo(0, scrollPos), 0);
+      setTimeout(() => window.scrollTo(0, scrollPos), 50);
+      setTimeout(() => window.scrollTo(0, scrollPos), 150);
     }
   };
 
