@@ -25,10 +25,15 @@ interface CostCenterAuditResult {
   is_compliant: boolean;
 }
 
+const AUDIT_COMPLETED_KEY = "cost_center_audit_completed";
+
 const CostCenterAudit = () => {
   const [loading, setLoading] = useState(true);
   const [auditResults, setAuditResults] = useState<CostCenterAuditResult[]>([]);
   const [discrepancyCount, setDiscrepancyCount] = useState(0);
+  const [auditCompleted, setAuditCompleted] = useState(
+    localStorage.getItem(AUDIT_COMPLETED_KEY) === "true"
+  );
 
   useEffect(() => {
     loadAuditData();
