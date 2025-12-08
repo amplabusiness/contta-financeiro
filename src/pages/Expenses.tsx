@@ -1191,6 +1191,33 @@ const Expenses = () => {
       recurrence_specific_days: expense.recurrence_specific_days || [],
     });
 
+    // Se for uma instância filha, buscar dados do pai para preencher recorrência
+    if (expense.parent_expense_id) {
+      try {
+        const { data: parentExpense } = await supabase
+          .from("expenses")
+          .select("*")
+          .eq("id", expense.parent_expense_id)
+          .single();
+
+        if (parentExpense) {
+          console.log("Dados do pai carregados para edição:", parentExpense);
+          setFormData(prev => ({
+            ...prev,
+            is_recurring: true,
+            recurrence_frequency: parentExpense.recurrence_frequency || "monthly",
+            recurrence_day: parentExpense.recurrence_day || 10,
+            recurrence_start_date: parentExpense.recurrence_start_date || "",
+            recurrence_end_date: parentExpense.recurrence_end_date || "",
+            recurrence_count: parentExpense.recurrence_count || undefined,
+            recurrence_specific_days: parentExpense.recurrence_specific_days || [],
+          }));
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados da despesa pai:", error);
+      }
+    }
+
     // Filtrar contas baseado no centro de custo
     if (expense.cost_center_id) {
       try {
