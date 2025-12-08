@@ -1825,7 +1825,7 @@ const Expenses = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right space-x-1">
-                        {expense.is_recurring && expense.status !== "canceled" && (
+                        {(expense.is_recurring || expense.parent_expense_id) && expense.status !== "canceled" && (
                           <Button
                             variant="ghost"
                             size="icon"
