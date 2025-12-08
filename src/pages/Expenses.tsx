@@ -352,17 +352,22 @@ const Expenses = () => {
         throw new Error("Conta contábil é obrigatória");
       }
 
-      const [year, month, day] = formData.due_date.split('-');
+      // Para despesas recorrentes, use a data de início como due_date
+      const actualDueDate = formData.is_recurring && formData.recurrence_start_date
+        ? formData.recurrence_start_date
+        : formData.due_date;
+
+      const [year, month, day] = actualDueDate.split('-');
       const calculatedCompetence = `${month}/${year}`;
 
-      console.log("Salvando com due_date:", formData.due_date, "competence:", calculatedCompetence);
+      console.log("Salvando com due_date:", actualDueDate, "competence:", calculatedCompetence);
 
       // Only send fields that exist in the database schema
       const expenseData: any = {
         category: formData.category,
         description: formData.description,
         amount: parseFloat(formData.amount),
-        due_date: formData.due_date,
+        due_date: actualDueDate,
         payment_date: formData.payment_date || null,
         status: formData.status,
         competence: calculatedCompetence,
