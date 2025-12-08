@@ -695,6 +695,32 @@ const Expenses = () => {
     }
   };
 
+  const handleTogglePause = async (expense: any) => {
+    try {
+      setLoading(true);
+      const newPausedState = !expense.is_paused;
+
+      await supabase
+        .from("expenses")
+        .update({ is_paused: newPausedState })
+        .eq("id", expense.id);
+
+      const message = newPausedState
+        ? "Recorrência pausada! Não serão geradas novas despesas."
+        : "Recorrência retomada! Novas despesas serão geradas automaticamente.";
+
+      toast.success(message);
+      notifyExpenseChange();
+      await loadExpenses();
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao pausar/retomar recorrência";
+      toast.error(errorMsg);
+      console.error("Erro:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       category: "",
