@@ -23,6 +23,7 @@ import { useAccounting } from "@/hooks/useAccounting";
 import { useExpenseUpdate } from "@/contexts/ExpenseUpdateContext";
 import { getErrorMessage } from "@/lib/utils";
 import { RecurringExpenseForm } from "@/components/RecurringExpenseForm";
+import { RecurringExpenseDialog } from "@/components/RecurringExpenseDialog";
 
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
@@ -47,6 +48,9 @@ const Expenses = () => {
   const [isAccountPickerOpen, setIsAccountPickerOpen] = useState(false);
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [categorySearchQuery, setCategorySearchQuery] = useState("");
+  const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
+  const [recurringDialogMode, setRecurringDialogMode] = useState<"edit" | "delete">("edit");
+  const [pendingRecurringAction, setPendingRecurringAction] = useState<any>(null);
   const [formData, setFormData] = useState({
     category: "",
     description: "",
@@ -202,13 +206,87 @@ const Expenses = () => {
     }
   };
 
+  const generateRecurringInstances = async (parentExpense: any, parentId: string) => {
+    try {
+      const instances = [];
+      const startDate = new Date(parentExpense.recurrence_start_date || parentExpense.due_date);
+      const twoYearsFromNow = new Date();
+      twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+
+      let currentDate = new Date(startDate);
+      let count = 0;
+      const maxCount = parentExpense.recurrence_count || 999;
+      const endDate = parentExpense.recurrence_end_date ? new Date(parentExpense.recurrence_end_date) : twoYearsFromNow;
+
+      while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsFromNow) {
+        if (count > 0) {
+          const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
+            ? parentExpense.recurrence_specific_days[0]
+            : currentDate.getDate();
+
+          const competence = `${String(currentDate.getMonth() + 1).padStart(2, '0')}/${currentDate.getFullYear()}`;
+
+          instances.push({
+            category: parentExpense.category,
+            description: parentExpense.description,
+            amount: parentExpense.amount,
+            due_date: currentDate.toISOString().split('T')[0],
+            payment_date: null,
+            status: "pending",
+            competence: competence,
+            notes: parentExpense.notes,
+            account_id: parentExpense.account_id,
+            cost_center_id: parentExpense.cost_center_id,
+            client_id: parentExpense.client_id,
+            created_by: parentExpense.created_by,
+            parent_expense_id: parentId,
+            is_recurring: false,
+          });
+        }
+
+        count++;
+
+        switch (parentExpense.recurrence_frequency) {
+          case "weekly":
+            currentDate.setDate(currentDate.getDate() + 7);
+            break;
+          case "biweekly":
+            currentDate.setDate(currentDate.getDate() + 15);
+            break;
+          case "monthly":
+            const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
+              ? parentExpense.recurrence_specific_days[0]
+              : currentDate.getDate();
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            currentDate.setDate(Math.min(day, new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()));
+            break;
+          case "annual":
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+            break;
+        }
+      }
+
+      if (instances.length > 0) {
+        const { error } = await supabase
+          .from("expenses")
+          .insert(instances);
+
+        if (error) throw new Error(getErrorMessage(error));
+
+        toast.success(`${instances.length} despesas recorrentes geradas automaticamente!`);
+      }
+    } catch (error: any) {
+      toast.error("Erro ao gerar despesas recorrentes");
+      console.error("Erro:", error);
+    }
+  };
+
   const generateRecurringExpense = async (expense: any) => {
     try {
       const dueDate = new Date(expense.due_date);
       const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, expense.recurrence_day);
       const nextCompetence = `${String(nextMonth.getMonth() + 1).padStart(2, '0')}/${nextMonth.getFullYear()}`;
 
-      // Only send fields that exist in the database schema
       const newExpenseData = {
         category: expense.category,
         description: expense.description,
@@ -309,6 +387,17 @@ const Expenses = () => {
       }
 
       if (editingExpense) {
+        if (editingExpense.is_recurring || editingExpense.parent_expense_id) {
+          setPendingRecurringAction({
+            type: "update",
+            data: expenseData,
+          });
+          setRecurringDialogMode("edit");
+          setRecurringDialogOpen(true);
+          setLoading(false);
+          return;
+        }
+
         try {
           console.log("Atualizando despesa com dados:", expenseData);
           const response = await supabase
@@ -405,6 +494,16 @@ const Expenses = () => {
           toast.warning("Despesa cadastrada, mas erro no lançamento contábil");
         }
 
+        if (formData.is_recurring) {
+          await generateRecurringInstances(
+            {
+              ...expenseData,
+              created_by: user.id,
+            },
+            newExpense.id
+          );
+        }
+
         // Show warning if filters are active
         if (selectedYear || selectedMonth || selectedClientId) {
           toast.info("Despesa criada! Ajuste os filtros acima para visualizá-la.");
@@ -477,6 +576,18 @@ const Expenses = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const expense = expenses.find(e => e.id === id);
+
+    if (expense && (expense.is_recurring || expense.parent_expense_id)) {
+      setPendingRecurringAction({
+        type: "delete",
+        id: id,
+      });
+      setRecurringDialogMode("delete");
+      setRecurringDialogOpen(true);
+      return;
+    }
+
     if (!confirm("Tem certeza que deseja excluir esta despesa?")) return;
 
     try {
@@ -493,6 +604,94 @@ const Expenses = () => {
       const errorMsg = error instanceof Error ? error.message : "Erro ao excluir despesa";
       console.error("Erro capturado na exclusão:", errorMsg);
       toast.error("Erro ao excluir despesa: " + errorMsg);
+    }
+  };
+
+  const handleRecurringAction = async (updateAll: boolean) => {
+    if (!pendingRecurringAction) return;
+
+    try {
+      setLoading(true);
+
+      if (pendingRecurringAction.type === "update") {
+        if (updateAll) {
+          const parentId = editingExpense.parent_expense_id || editingExpense.id;
+
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("parent_expense_id", parentId)
+            .gte("due_date", editingExpense.due_date);
+
+          await supabase
+            .from("expenses")
+            .update(pendingRecurringAction.data)
+            .eq("id", editingExpense.id);
+
+          if (pendingRecurringAction.data.is_recurring) {
+            await generateRecurringInstances(
+              pendingRecurringAction.data,
+              editingExpense.id
+            );
+          }
+
+          toast.success("Despesa e recorrências futuras atualizadas!");
+        } else {
+          await supabase
+            .from("expenses")
+            .update({
+              ...pendingRecurringAction.data,
+              is_recurring: false,
+              parent_expense_id: null,
+            })
+            .eq("id", editingExpense.id);
+
+          toast.success("Apenas esta despesa foi atualizada!");
+        }
+
+        notifyExpenseChange();
+        setOpen(false);
+        setEditingExpense(null);
+        resetForm();
+        await loadExpenses();
+        setTimeout(() => restoreScrollPosition(), 200);
+      } else if (pendingRecurringAction.type === "delete") {
+        const expense = expenses.find(e => e.id === pendingRecurringAction.id);
+
+        if (updateAll) {
+          const parentId = expense.parent_expense_id || expense.id;
+
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("parent_expense_id", parentId)
+            .gte("due_date", expense.due_date);
+
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("id", pendingRecurringAction.id);
+
+          toast.success("Despesa e recorrências futuras excluídas!");
+        } else {
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("id", pendingRecurringAction.id);
+
+          toast.success("Apenas esta despesa foi excluída!");
+        }
+
+        notifyExpenseChange();
+        await loadExpenses();
+      }
+    } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : "Erro ao processar ação";
+      toast.error(errorMsg);
+      console.error("Erro:", error);
+    } finally {
+      setLoading(false);
+      setPendingRecurringAction(null);
     }
   };
 
@@ -792,6 +991,15 @@ const Expenses = () => {
 
   return (
     <Layout>
+      <RecurringExpenseDialog
+        open={recurringDialogOpen}
+        onClose={() => {
+          setRecurringDialogOpen(false);
+          setPendingRecurringAction(null);
+        }}
+        onConfirm={handleRecurringAction}
+        mode={recurringDialogMode}
+      />
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">
