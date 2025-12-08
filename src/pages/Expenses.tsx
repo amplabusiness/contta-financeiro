@@ -1335,7 +1335,22 @@ const Expenses = () => {
   };
 
   const getRecurrenceLabel = (expense: any) => {
-    const frequency = (expense.recurrence_frequency || "monthly").toLowerCase();
+    const rawFrequency = expense.recurrence_frequency;
+    const frequency = (rawFrequency || "monthly").toLowerCase();
+
+    // Debug log for problematic cases
+    if (frequency === "monthly" && expense.description?.includes("Anuidade")) {
+      console.log("DEBUG: Expense with 'Anuidade' showing as monthly:", {
+        expenseId: expense.id,
+        rawFrequency: rawFrequency,
+        normalizedFrequency: frequency,
+        is_recurring: expense.is_recurring,
+        parent_expense_id: expense.parent_expense_id,
+        recurrence_day: expense.recurrence_day,
+        recurrence_specific_days: expense.recurrence_specific_days,
+      });
+    }
+
     const frequencyLabels: Record<string, string> = {
       weekly: "Semanal",
       biweekly: "Quinzenal",
