@@ -1512,6 +1512,20 @@ const Expenses = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => handleTogglePause(expense)}
+                            title={expense.is_paused ? "Retomar recorrência" : "Pausar recorrência"}
+                          >
+                            {expense.is_paused ? (
+                              <Play className="w-4 h-4 text-orange-600" />
+                            ) : (
+                              <Pause className="w-4 h-4 text-orange-600" />
+                            )}
+                          </Button>
+                        )}
+                        {expense.is_recurring && expense.status !== "canceled" && !expense.is_paused && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => generateRecurringExpense(expense)}
                             title="Gerar próxima recorrência"
                           >
