@@ -94,6 +94,7 @@ import LaborAdvisory from "./pages/LaborAdvisory";
 import VideoContent from "./pages/VideoContent";
 import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
+import HonorariosFlow from "./pages/HonorariosFlow";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -117,6 +118,7 @@ const App = () => (
             <Route path="/import-invoices" element={<ImportInvoices />} />
             <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
             <Route path="/import-honorarios" element={<ImportHonorarios />} />
+            <Route path="/honorarios-flow" element={<HonorariosFlow />} />
             <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
             <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
