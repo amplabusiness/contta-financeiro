@@ -1244,8 +1244,8 @@ const Expenses = () => {
                       <TableCell>{getStatusBadge(expense.status)}</TableCell>
                       <TableCell className="text-center">
                         {expense.is_recurring && (
-                          <Badge variant="outline" className="bg-blue-50">
-                            Mês {expense.recurrence_day}
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                            {getRecurrenceLabel(expense)}
                           </Badge>
                         )}
                       </TableCell>
