@@ -1311,17 +1311,19 @@ const Expenses = () => {
   };
 
   const getRecurrenceLabel = (expense: any) => {
-    const frequency = expense.recurrence_frequency || "mensal";
+    const frequency = (expense.recurrence_frequency || "monthly").toLowerCase();
     const frequencyLabels: Record<string, string> = {
       weekly: "Semanal",
       biweekly: "Quinzenal",
       monthly: "Mensal",
+      mensal: "Mensal", // Handle legacy/pt-br value if present
       annual: "Anual",
+      anual: "Anual", // Handle legacy/pt-br value if present
     };
 
     const frequencyLabel = frequencyLabels[frequency] || frequency;
 
-    if (frequency === "monthly" && expense.recurrence_specific_days && expense.recurrence_specific_days.length > 0) {
+    if ((frequency === "monthly" || frequency === "mensal") && expense.recurrence_specific_days && expense.recurrence_specific_days.length > 0) {
       const day = expense.recurrence_specific_days[0];
       return `${frequencyLabel} (dia ${day})`;
     }
