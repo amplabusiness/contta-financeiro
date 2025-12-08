@@ -682,16 +682,18 @@ const Expenses = () => {
         if (updateAll) {
           const parentId = editingExpense.parent_expense_id || editingExpense.id;
 
-          await supabase
-            .from("expenses")
-            .delete()
-            .eq("parent_expense_id", parentId)
-            .gte("due_date", editingExpense.due_date);
-
+          // First, update the current expense
           await supabase
             .from("expenses")
             .update(pendingRecurringAction.data)
             .eq("id", editingExpense.id);
+
+          // Then delete only FUTURE expenses (strictly greater than, not equal)
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("parent_expense_id", parentId)
+            .gt("due_date", editingExpense.due_date);
 
           if (pendingRecurringAction.data.is_recurring) {
             await generateRecurringInstances(
