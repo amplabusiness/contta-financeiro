@@ -64,7 +64,9 @@ const Expenses = () => {
   });
 
   useEffect(() => {
-    loadExpenses();
+    loadExpenses().then(() => {
+      restoreScrollPosition();
+    });
     loadAccounts();
     loadCategories();
     loadCostCenters();
