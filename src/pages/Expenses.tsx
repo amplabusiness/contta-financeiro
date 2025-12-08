@@ -734,9 +734,8 @@ const Expenses = () => {
             const { data: dbFutureExpenses, error: queryError } = await supabase
               .from("expenses")
               .select("id, description, category, due_date, parent_expense_id")
-              .or(`parent_expense_id.eq.${parentId},parent_expense_id.eq.${editingExpense.id}`)
-              .gt("due_date", editingExpense.due_date)
-              .eq("is_recurring", false);
+              .eq("parent_expense_id", parentId)
+              .gt("due_date", editingExpense.due_date);
 
             if (queryError) {
               console.warn("Error checking for future expenses:", queryError);
@@ -753,7 +752,6 @@ const Expenses = () => {
                 .eq("category", editingExpense.category)
                 .eq("cost_center_id", editingExpense.cost_center_id)
                 .gt("due_date", editingExpense.due_date)
-                .eq("is_recurring", false)
                 .limit(100);
 
               if (altFutureExpenses && altFutureExpenses.length > 0) {
