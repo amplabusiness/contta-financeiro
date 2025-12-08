@@ -78,7 +78,7 @@ const HonorariosFlow = () => {
       }
     } catch (error: unknown) {
       toast.error("Erro ao carregar dados");
-      console.error(error);
+      console.error("[HonorariosFlow] Load error:", error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
