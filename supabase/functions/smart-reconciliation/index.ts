@@ -120,39 +120,60 @@ serve(async (req) => {
 
           // Estratégia 3: Match por texto (CNPJ, nome do cliente na descrição)
           const txDesc = transaction.description.toLowerCase();
+          const txYear = new Date(transaction.date).getFullYear();
+          const txMonth = new Date(transaction.date).getMonth() + 1;
+
           for (const inv of invoices) {
             if (suggestions.some(s => s.id === inv.id)) continue;
 
             const clientName = (inv.clients?.name || '').toLowerCase();
             const clientCnpj = (inv.clients?.cnpj || '').replace(/\D/g, '');
 
+            // Extrair competência da fatura (MM/YYYY)
+            const invCompetence = inv.competence || '';
+            const [invMonth, invYear] = invCompetence.split('/').map(Number);
+            const isFromPreviousMonth =
+              (invYear < txYear) ||
+              (invYear === txYear && invMonth < txMonth);
+
             let confidence = 0;
             let reason = '';
 
-            // Verificar se nome do cliente está na descrição
-            if (clientName && txDesc.includes(clientName.split(' ')[0])) {
-              confidence = 0.75;
-              reason = 'Nome do cliente encontrado na descrição';
-            }
-            // Verificar se CNPJ está na descrição
-            else if (clientCnpj && clientCnpj.length > 8 && txDesc.includes(clientCnpj.slice(0, 8))) {
+            // Verificar se CNPJ está na descrição (maior prioridade)
+            if (clientCnpj && clientCnpj.length > 8 && txDesc.includes(clientCnpj.slice(0, 8))) {
               confidence = 0.85;
               reason = 'CNPJ encontrado na descrição';
+            }
+            // Verificar se nome do cliente está na descrição
+            else if (clientName && txDesc.includes(clientName.split(' ')[0])) {
+              confidence = 0.75;
+              reason = 'Nome do cliente encontrado na descrição';
+              // Aumentar confiança se é fatura de mês anterior
+              if (isFromPreviousMonth) {
+                confidence += 0.05;
+                reason += ' (fatura de mês anterior)';
+              }
             }
             // Verificar valor aproximado (dentro de 10%)
             else if (Math.abs(inv.amount - transaction.amount) / transaction.amount < 0.1) {
               confidence = 0.5;
               reason = 'Valor aproximado (diferença < 10%)';
+              // Aumentar confiança se é fatura de mês anterior
+              if (isFromPreviousMonth) {
+                confidence += 0.1;
+                reason += ' - fatura de período anterior';
+              }
             }
 
             if (confidence > 0) {
+              const statusNote = inv.status === 'paid' ? ' (Já Paga)' : '';
               suggestions.push({
                 type: 'invoice',
                 id: inv.id,
                 client_id: inv.client_id,
                 client_name: inv.clients?.name || 'Cliente',
                 amount: inv.amount,
-                description: `${inv.clients?.name} - ${inv.competence}`,
+                description: `${inv.clients?.name} - ${inv.competence}${statusNote}`,
                 confidence,
                 reason
               });
