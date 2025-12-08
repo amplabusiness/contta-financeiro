@@ -51,11 +51,15 @@ serve(async (req) => {
       let suggestions: MatchSuggestion[] = [];
 
       if (isCredit) {
-        // Para créditos, buscar honorários pendentes
+        // Para créditos, buscar honorários pendentes E recentemente pagos (até 90 dias atrás)
+        // Isso permite reconciliar pagamentos de períodos anteriores
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
         const { data: invoices } = await supabase
           .from('invoices')
           .select('*, clients(id, name, cnpj)')
-          .eq('status', 'pending')
+          .or(`status.eq.pending,and(status.eq.paid,payment_date.gte.${ninetyDaysAgo.toISOString()})`)
           .order('due_date', { ascending: true })
           .limit(100);
 
