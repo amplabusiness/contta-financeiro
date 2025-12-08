@@ -277,7 +277,7 @@ const Expenses = () => {
       console.log("Salvando com due_date:", formData.due_date, "competence:", calculatedCompetence);
 
       // Only send fields that exist in the database schema
-      const expenseData = {
+      const expenseData: any = {
         category: formData.category,
         description: formData.description,
         amount: parseFloat(formData.amount),
@@ -288,7 +288,20 @@ const Expenses = () => {
         notes: formData.notes || null,
         account_id: accountId,
         cost_center_id: formData.cost_center_id,
+        is_recurring: formData.is_recurring,
       };
+
+      // Add recurring expense fields if is_recurring is true
+      if (formData.is_recurring) {
+        expenseData.recurrence_day = formData.recurrence_day;
+        expenseData.recurrence_frequency = formData.recurrence_frequency;
+        expenseData.recurrence_start_date = formData.recurrence_start_date || null;
+        expenseData.recurrence_end_date = formData.recurrence_end_date || null;
+        expenseData.recurrence_count = formData.recurrence_count || null;
+        expenseData.recurrence_specific_days = formData.recurrence_specific_days && formData.recurrence_specific_days.length > 0
+          ? formData.recurrence_specific_days
+          : null;
+      }
 
       if (editingExpense) {
         try {
