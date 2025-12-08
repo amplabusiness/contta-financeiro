@@ -620,48 +620,50 @@ const CostCenterAssets = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Centro de Custo</CardTitle>
-            <CardDescription>Gráfico de pizza mostrando a participação de cada departamento</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {costCenterData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={costCenterData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    label={({ name, value }) => {
-                      const total = costCenterData.reduce((sum, entry) => sum + entry.value, 0);
-                      const percentage = ((value / total) * 100).toFixed(1);
-                      return `${name}: ${percentage}%`;
-                    }}
-                  >
-                    {costCenterData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">Sem dados para exibir</p>
-            )}
-          </CardContent>
-        </Card>
+        {costCenterData.length > 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Centro de Custo</CardTitle>
+              <CardDescription>Gráfico de pizza mostrando a participação de cada departamento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {costCenterData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={costCenterData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={120}
+                      label={({ name, value }) => {
+                        const total = costCenterData.reduce((sum, entry) => sum + entry.value, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${name}: ${percentage}%`;
+                      }}
+                    >
+                      {costCenterData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">Sem dados para exibir</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
