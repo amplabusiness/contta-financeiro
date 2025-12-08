@@ -51,6 +51,12 @@ const CostCenterAudit = () => {
     return accountCode.startsWith(parentCode + ".");
   };
 
+  const markAuditAsCompleted = () => {
+    localStorage.setItem(AUDIT_COMPLETED_KEY, "true");
+    setAuditCompleted(true);
+    toast.success("Auditoria finalizada! Item removido do menu.");
+  };
+
   const loadAuditData = async () => {
     try {
       setLoading(true);
