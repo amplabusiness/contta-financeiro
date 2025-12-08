@@ -59,6 +59,11 @@ const Expenses = () => {
     cost_center_id: "",
     is_recurring: false,
     recurrence_day: 10,
+    recurrence_frequency: "monthly",
+    recurrence_start_date: "",
+    recurrence_end_date: "",
+    recurrence_count: undefined as number | undefined,
+    recurrence_specific_days: [] as number[],
   });
 
   useEffect(() => {
@@ -486,6 +491,11 @@ const Expenses = () => {
       cost_center_id: "",
       is_recurring: false,
       recurrence_day: 10,
+      recurrence_frequency: "monthly",
+      recurrence_start_date: "",
+      recurrence_end_date: "",
+      recurrence_count: undefined,
+      recurrence_specific_days: [],
     });
     setAccountSearchQuery("");
     setCategorySearchQuery("");
@@ -641,6 +651,11 @@ const Expenses = () => {
       cost_center_id: expense.cost_center_id || "",
       is_recurring: expense.is_recurring || false,
       recurrence_day: expense.recurrence_day || 10,
+      recurrence_frequency: expense.recurrence_frequency || "monthly",
+      recurrence_start_date: expense.recurrence_start_date || "",
+      recurrence_end_date: expense.recurrence_end_date || "",
+      recurrence_count: expense.recurrence_count || undefined,
+      recurrence_specific_days: expense.recurrence_specific_days || [],
     });
 
     // Filtrar contas baseado no centro de custo
