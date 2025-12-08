@@ -638,7 +638,10 @@ const Expenses = () => {
 
           if (pendingRecurringAction.data.is_recurring) {
             await generateRecurringInstances(
-              pendingRecurringAction.data,
+              {
+                ...pendingRecurringAction.data,
+                created_by: editingExpense.created_by,
+              },
               editingExpense.id
             );
           }
