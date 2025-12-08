@@ -1431,6 +1431,7 @@ const Expenses = () => {
                     <RecurringExpenseForm
                       formData={formData}
                       onFormChange={(updates) => setFormData({ ...formData, ...updates })}
+                      isPaused={editingExpense?.is_paused}
                     />
                   </div>
                 </div>
