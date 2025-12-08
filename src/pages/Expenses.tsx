@@ -731,16 +731,18 @@ const Expenses = () => {
         if (updateAll) {
           const parentId = expense.parent_expense_id || expense.id;
 
-          await supabase
-            .from("expenses")
-            .delete()
-            .eq("parent_expense_id", parentId)
-            .gte("due_date", expense.due_date);
-
+          // Delete the current expense
           await supabase
             .from("expenses")
             .delete()
             .eq("id", pendingRecurringAction.id);
+
+          // Then delete only FUTURE expenses (strictly greater than, not equal)
+          await supabase
+            .from("expenses")
+            .delete()
+            .eq("parent_expense_id", parentId)
+            .gt("due_date", expense.due_date);
 
           toast.success("Despesa e recorrências futuras excluídas!");
         } else {
