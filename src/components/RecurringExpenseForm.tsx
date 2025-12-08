@@ -13,6 +13,7 @@ interface RecurringExpenseFormProps {
     recurrence_day: number;
   };
   onFormChange: (updates: any) => void;
+  isPaused?: boolean;
 }
 
 export const RecurringExpenseForm = ({ formData, onFormChange }: RecurringExpenseFormProps) => {
