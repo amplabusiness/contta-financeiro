@@ -215,6 +215,43 @@ const CostCenterAudit = () => {
           </Card>
         ) : (
           <>
+            {discrepancyCount === 0 && !auditCompleted && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Check className="h-5 w-5 text-green-600" />
+                        <h3 className="font-semibold text-green-900">Auditoria Concluída!</h3>
+                      </div>
+                      <p className="text-sm text-green-800">
+                        Todos os centros de custo foram auditados e estão em conformidade. Clique abaixo para finalizar a auditoria e remover este item do menu.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={markAuditAsCompleted}
+                      className="bg-green-600 hover:bg-green-700 flex-shrink-0"
+                    >
+                      Finalizar Auditoria
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {auditCompleted && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-green-600" />
+                    <p className="text-sm text-green-800">
+                      Auditoria finalizada! Item removido do menu lateral.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
