@@ -220,9 +220,13 @@ const Expenses = () => {
       let count = 0;
       const maxCount = parentExpense.recurrence_count || 999;
       const endDate = parentExpense.recurrence_end_date ? new Date(parentExpense.recurrence_end_date) : twoYearsLimit;
+      const parentDueDate = parentExpense.due_date.split('T')[0];
 
       while (count < maxCount && currentDate <= endDate && currentDate <= twoYearsLimit) {
-        if (count > 0) {
+        const currentIsoDate = currentDate.toISOString().split('T')[0];
+
+        // Gerar se não for a mesma data da despesa pai (evitar duplicidade da primeira ocorrência)
+        if (currentIsoDate !== parentDueDate) {
           const day = parentExpense.recurrence_specific_days && parentExpense.recurrence_specific_days.length > 0
             ? parentExpense.recurrence_specific_days[0]
             : currentDate.getDate();
@@ -233,7 +237,7 @@ const Expenses = () => {
             category: parentExpense.category,
             description: parentExpense.description,
             amount: parentExpense.amount,
-            due_date: currentDate.toISOString().split('T')[0],
+            due_date: currentIsoDate,
             payment_date: null,
             status: "pending",
             competence: competence,
