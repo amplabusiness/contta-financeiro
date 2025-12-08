@@ -291,6 +291,11 @@ const Expenses = () => {
         is_recurring: formData.is_recurring,
       };
 
+      // Add client_id if available
+      if (selectedClientId) {
+        expenseData.client_id = selectedClientId;
+      }
+
       // Add recurring expense fields if is_recurring is true
       if (formData.is_recurring) {
         expenseData.recurrence_day = formData.recurrence_day;
