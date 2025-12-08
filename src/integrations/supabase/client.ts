@@ -22,37 +22,29 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
   throw new Error("Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.");
 }
 
-// Create a resilient fetch wrapper that falls back to native fetch on XHR errors
+// Create a resilient fetch wrapper that falls back to customFetch (XHR) on fetch errors
 const resilientFetch: typeof fetch = async (input, init) => {
   try {
-    return await customFetch(input, init);
+    // Try native fetch first (which is patched by patchFetchForVitePing but eventually calls native fetch)
+    return await fetch(input as RequestInfo, init);
   } catch (error) {
-    const isXhrError = error instanceof TypeError &&
-      ((error as any).cause === "xhr_timeout" ||
-       (error as any).cause === "xhr_network_error" ||
-       error.message.includes("Network request failed") ||
-       error.message.includes("Network request timeout"));
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.warn("[Supabase] Native fetch failed, attempting fallback to customFetch (XHR)", {
+      url: String(input),
+      error: errorMsg,
+    });
 
-    if (isXhrError && typeof fetch !== "undefined") {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.warn("[Supabase] XHR failed, attempting fallback to native fetch", {
+    try {
+      return await customFetch(input, init);
+    } catch (xhrError) {
+      const xhrErrorMsg = xhrError instanceof Error ? xhrError.message : String(xhrError);
+      console.error("[Supabase] CustomFetch (XHR) fallback also failed", {
         url: String(input),
-        cause: (error as any).cause,
-        error: errorMsg,
+        fetchError: errorMsg,
+        xhrError: xhrErrorMsg,
       });
-      try {
-        return await fetch(input as RequestInfo, init);
-      } catch (fallbackError) {
-        const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-        console.error("[Supabase] Native fetch also failed", {
-          url: String(input),
-          xhrError: errorMsg,
-          fallbackError: fallbackErrorMsg,
-        });
-        throw fallbackError;
-      }
+      throw error;
     }
-    throw error;
   }
 };
 
