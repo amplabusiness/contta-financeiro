@@ -1523,16 +1523,6 @@ const Expenses = () => {
                             )}
                           </Button>
                         )}
-                        {expense.is_recurring && expense.status !== "canceled" && !expense.is_paused && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => generateRecurringExpense(expense)}
-                            title="Gerar próxima recorrência"
-                          >
-                            <RefreshCw className="w-4 h-4 text-blue-600" />
-                          </Button>
-                        )}
                         {expense.status === "pending" && (
                           <Button
                             variant="ghost"
