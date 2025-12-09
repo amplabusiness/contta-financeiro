@@ -639,12 +639,14 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
     reference_id,
     competence,
     expense_category,
+    bank_account_id,
   } = params;
 
-  console.log('Creating smart entry:', { entry_type, amount, date, description, client_id });
+  console.log('Creating smart entry:', { entry_type, amount, date, description, client_id, bank_account_id });
 
   // Garantir estrutura básica do plano de contas (is_analytical=true = conta analítica)
   await ensureAccountExists(supabase, userId, '1.1.1.01', 'Caixa Geral', 'ATIVO', true, '1.1.1');
+  await ensureAccountExists(supabase, userId, '1.1.1.02', 'Banco Sicredi C/C', 'ATIVO', true, '1.1.1');
   await ensureAccountExists(supabase, userId, '3.1.1.01', 'Honorários Contábeis', 'RECEITA', true, '3.1.1');
 
   let debitAccountId: string;
