@@ -267,14 +267,33 @@ const ReconcileHonorarios = () => {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="tx-desc">Descrição da Transação (opcional)</Label>
-              <Input
-                id="tx-desc"
-                placeholder="Ex: Transferência do cliente XYZ, PIX, DOC, etc"
-                value={transactionDesc}
-                onChange={(e) => setTransactionDesc(e.target.value)}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tx-desc">Descrição da Transação (opcional)</Label>
+                <Input
+                  id="tx-desc"
+                  placeholder="Ex: Transferência do cliente XYZ, PIX, DOC, etc"
+                  value={transactionDesc}
+                  onChange={(e) => setTransactionDesc(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="client-filter">Cliente (opcional)</Label>
+                <select
+                  id="client-filter"
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                >
+                  <option value="">Todos os clientes</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <Button 
