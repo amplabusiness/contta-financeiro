@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import PaymentHistorySection from "@/components/PaymentHistorySection";
+import { toast } from "@/components/ui/use-toast";
 
 const ClientDashboard = () => {
   const { selectedClientId, selectedClientName } = useClient();
