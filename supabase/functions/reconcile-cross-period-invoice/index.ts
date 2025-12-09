@@ -7,12 +7,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface SplitLine {
+  clientId: string;
+  amount: number;
+  competence: string;
+}
+
 interface ReconcileRequest {
   action:
     | "find_invoices"
     | "reconcile_transaction"
     | "get_reconciliation_details"
-    | "create_invoice";
+    | "create_invoice"
+    | "split_transaction";
   data: {
     transactionId?: string;
     transactionAmount?: number;
@@ -26,6 +33,7 @@ interface ReconcileRequest {
     dueDate?: string;
     amount?: number;
     description?: string;
+    splitLines?: SplitLine[];
   };
 }
 
