@@ -169,11 +169,7 @@ const PaymentHistorySection = ({
       setPendingInvoices(pending);
     } catch (error) {
       console.error("Erro ao carregar histórico de pagamento:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar histórico de pagamento",
-        variant: "destructive",
-      });
+      toast.error("Erro ao carregar histórico de pagamento");
     } finally {
       setLoading(false);
     }
