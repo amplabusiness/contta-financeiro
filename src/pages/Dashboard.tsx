@@ -18,6 +18,7 @@ import { useOfflineMode } from "@/hooks/useOfflineMode";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { selectedClientId, selectedClientName, setSelectedClient } = useClient();
+  const { isOfflineMode, offlineData, saveOfflineData } = useOfflineMode();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
