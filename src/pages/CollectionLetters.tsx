@@ -263,7 +263,27 @@ Ampla Contabilidade 📊`,
           created_by: user.id,
         });
       }
-      await fetchTemplates();
+
+      // Reload templates after creating
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("message_templates")
+          .select("*")
+          .in("type", [
+            "collection_letter_1",
+            "collection_letter_2",
+            "collection_letter_3",
+            "collection_whatsapp_1",
+          ])
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setTemplates(data || []);
+      } finally {
+        setIsLoading(false);
+      }
+
       toast({
         title: "Templates criados",
         description: "Templates padrão de cobrança foram criados com sucesso.",
@@ -271,6 +291,8 @@ Ampla Contabilidade 📊`,
     } catch (error) {
       console.error("Error creating default templates:", error);
     }
+    // defaultTemplates is a constant defined outside the component, so it doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
   const fetchTemplates = useCallback(async () => {

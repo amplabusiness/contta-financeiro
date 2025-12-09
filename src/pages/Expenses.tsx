@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,16 +59,9 @@ const Expenses = () => {
     recurrence_day: 10,
   });
 
-  useEffect(() => {
-    loadExpenses();
-    loadAccounts();
-    loadCategories();
-    loadCostCenters();
-  }, [selectedYear, selectedMonth, selectedClientId]);
-
   const normalizeAccountType = (value?: string | null) => value?.trim().toLowerCase() ?? "";
 
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       const response = await supabase
         .from("chart_of_accounts")
@@ -92,7 +85,7 @@ const Expenses = () => {
       const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
       console.error("Erro ao carregar contas:", errorMsg);
     }
-  };
+  }, []);
 
   const loadCategories = async () => {
     try {
@@ -140,7 +133,7 @@ const Expenses = () => {
     }
   };
 
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
 
@@ -181,7 +174,14 @@ const Expenses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClientId, selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    loadExpenses();
+    loadAccounts();
+    loadCategories();
+    loadCostCenters();
+  }, [selectedYear, selectedMonth, selectedClientId, loadExpenses, loadAccounts]);
 
   const generateRecurringExpense = async (expense: any) => {
     try {

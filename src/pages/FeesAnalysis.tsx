@@ -240,7 +240,7 @@ const FeesAnalysis = () => {
     } finally{
       setIsLoading(false);
     }
-  }, [selectedMonth, selectedYear, selectedClient, viewMode, toast]);
+  }, [selectedMonth, selectedYear, selectedClient, viewMode, toast, calculateStatistics, checkMissingBillings]);
 
   useEffect(() => {
     fetchData();
@@ -257,55 +257,7 @@ const FeesAnalysis = () => {
     clients: { id: string; name: string } | null;
   }
 
-  const calculateStatistics = (
-    invoicesData: Invoice[],
-    clientsData: Client[],
-    openingBalanceData: OpeningBalance[] = []
-  ) => {
-    const totalBilled = invoicesData.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const paidInvoices = invoicesData.filter((inv) => inv.status === "paid");
-    const totalReceived = paidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const pendingInvoices = invoicesData.filter((inv) => inv.status === "pending");
-    const totalPending = pendingInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const overdueInvoices = invoicesData.filter((inv) => inv.status === "overdue");
-    const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-
-    const receivedPercentage = totalBilled > 0 ? (totalReceived / totalBilled) * 100 : 0;
-
-    // Get unique clients
-    const uniqueClients = new Set(invoicesData.map((inv) => inv.client_id));
-
-    // Calculate opening balance totals (saldo de abertura)
-    // All opening balances with pending/partial status are considered overdue
-    // since competence is before 01/2025
-    const pendingOpeningBalances = openingBalanceData.filter(
-      (ob) => ob.status === "pending" || ob.status === "partial"
-    );
-    const openingBalanceCount = pendingOpeningBalances.length;
-    const openingBalanceAmount = pendingOpeningBalances.reduce(
-      (sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)),
-      0
-    );
-
-    setMonthlyStats({
-      totalBilled,
-      totalReceived,
-      totalPending,
-      receivedPercentage,
-      clientsCount: uniqueClients.size,
-      paidCount: paidInvoices.length,
-      pendingCount: pendingInvoices.length,
-      overdueCount: overdueInvoices.length,
-      overdueAmount,
-      openingBalanceCount,
-      openingBalanceAmount,
-    });
-
-    // Calculate overdue segmentation with opening balances
-    calculateOverdueSegmentation(overdueInvoices, pendingOpeningBalances);
-  };
-
-  const calculateOverdueSegmentation = (
+  const calculateOverdueSegmentation = useCallback((
     overdueInvoices: Invoice[],
     openingBalances: OpeningBalance[] = []
   ) => {
@@ -404,9 +356,57 @@ const FeesAnalysis = () => {
     });
 
     setOverdueSegmentation({ oneMonth, twoMonths, threeMonths });
-  };
+  }, []);
 
-  const checkMissingBillings = (
+  const calculateStatistics = useCallback((
+    invoicesData: Invoice[],
+    clientsData: Client[],
+    openingBalanceData: OpeningBalance[] = []
+  ) => {
+    const totalBilled = invoicesData.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const paidInvoices = invoicesData.filter((inv) => inv.status === "paid");
+    const totalReceived = paidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const pendingInvoices = invoicesData.filter((inv) => inv.status === "pending");
+    const totalPending = pendingInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const overdueInvoices = invoicesData.filter((inv) => inv.status === "overdue");
+    const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+    const receivedPercentage = totalBilled > 0 ? (totalReceived / totalBilled) * 100 : 0;
+
+    // Get unique clients
+    const uniqueClients = new Set(invoicesData.map((inv) => inv.client_id));
+
+    // Calculate opening balance totals (saldo de abertura)
+    // All opening balances with pending/partial status are considered overdue
+    // since competence is before 01/2025
+    const pendingOpeningBalances = openingBalanceData.filter(
+      (ob) => ob.status === "pending" || ob.status === "partial"
+    );
+    const openingBalanceCount = pendingOpeningBalances.length;
+    const openingBalanceAmount = pendingOpeningBalances.reduce(
+      (sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)),
+      0
+    );
+
+    setMonthlyStats({
+      totalBilled,
+      totalReceived,
+      totalPending,
+      receivedPercentage,
+      clientsCount: uniqueClients.size,
+      paidCount: paidInvoices.length,
+      pendingCount: pendingInvoices.length,
+      overdueCount: overdueInvoices.length,
+      overdueAmount,
+      openingBalanceCount,
+      openingBalanceAmount,
+    });
+
+    // Calculate overdue segmentation with opening balances
+    calculateOverdueSegmentation(overdueInvoices, pendingOpeningBalances);
+  }, [calculateOverdueSegmentation]);
+
+  const checkMissingBillings = useCallback((
     clientsData: Client[],
     invoicesData: Invoice[],
     memberIds: Set<string>,
@@ -446,7 +446,7 @@ const FeesAnalysis = () => {
     // Find clients missing invoices
     const missing = activeClients.filter((client) => !clientsWithInvoices.has(client.id));
     setMissingBillings(missing);
-  };
+  }, [viewMode, selectedMonth]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
