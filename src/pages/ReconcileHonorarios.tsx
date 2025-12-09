@@ -100,6 +100,7 @@ const ReconcileHonorarios = () => {
               transactionAmount: parseFloat(transactionAmount),
               transactionDate,
               transactionDescription: transactionDesc,
+              clientId: selectedClientId || undefined,
             },
           },
         }
