@@ -324,7 +324,43 @@ const ReconcileHonorarios = () => {
                 Clique em uma fatura para reconciliá-la com a transação
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Option to change client and re-search */}
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                <p className="text-sm text-blue-900 mb-2">
+                  <strong>💡 Alterar cliente:</strong> Se nenhuma fatura corresponder, você pode mudar o filtro de cliente e buscar novamente.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="change-client-filter" className="text-xs">Cliente para nova busca</Label>
+                    <select
+                      id="change-client-filter"
+                      value={selectedClientId}
+                      onChange={(e) => setSelectedClientId(e.target.value)}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
+                    >
+                      <option value="">Todos os clientes</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      onClick={() => handleSearch(selectedClientId)}
+                      disabled={loading}
+                      variant="outline"
+                      className="w-full text-xs"
+                    >
+                      {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Search className="mr-2 h-3 w-3" />}
+                      Buscar Novamente
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 {matches.map((match) => (
                   <div
