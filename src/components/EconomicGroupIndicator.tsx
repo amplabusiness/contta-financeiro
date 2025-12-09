@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -43,13 +43,7 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
   const location = useLocation();
   const { setSelectedClient } = useClient();
 
-  useEffect(() => {
-    if (dialogOpen && !groupData) {
-      loadGroupData();
-    }
-  }, [dialogOpen]);
-
-  const loadGroupData = async () => {
+  const loadGroupData = useCallback(async () => {
     if (!dialogOpen) return;
     
     setLoading(true);
@@ -115,7 +109,13 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
     } finally {
       setLoading(false);
     }
-  };
+  }, [dialogOpen, client, allClients]);
+
+  useEffect(() => {
+    if (dialogOpen && !groupData) {
+      loadGroupData();
+    }
+  }, [dialogOpen, groupData, loadGroupData]);
 
   const handleCompanyClick = async (companyId: string, companyName: string) => {
     // Buscar dados do cliente
@@ -153,11 +153,7 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
   // Verificar se o cliente pertence a um grupo
   const [belongsToGroup, setBelongsToGroup] = useState(false);
 
-  useEffect(() => {
-    checkGroupMembership();
-  }, [client.id]);
-
-  const checkGroupMembership = async () => {
+  const checkGroupMembership = useCallback(async () => {
     try {
       // Verificar se há sócios em comum com outras empresas por NOME
       if (!client.qsa || client.qsa.length === 0) {
@@ -181,7 +177,7 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
       // Verificar se alguma outra empresa compartilha os mesmos sócios por NOME
       const hasSharedPartners = allClients?.some(otherClient => {
         if (otherClient.id === client.id || !otherClient.qsa) return false;
-        
+
         const otherPartnerNames = otherClient.qsa
           .map((socio: any) => socio.nome)
           .filter((nome: string) => nome && nome.trim().length > 0)
@@ -195,7 +191,11 @@ export const EconomicGroupIndicator = ({ client, allClients }: EconomicGroupIndi
       console.error('Error checking group membership:', error);
       setBelongsToGroup(false);
     }
-  };
+  }, [client, allClients]);
+
+  useEffect(() => {
+    checkGroupMembership();
+  }, [checkGroupMembership]);
 
   if (!belongsToGroup) {
     return <span className="text-muted-foreground">—</span>;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,11 +25,7 @@ const PixReconciliation = () => {
   const [matches, setMatches] = useState<PixMatch[]>([]);
   const [unmatched, setUnmatched] = useState<any[]>([]);
 
-  useEffect(() => {
-    analyzePixTransactions();
-  }, []);
-
-  const analyzePixTransactions = async () => {
+  const analyzePixTransactions = useCallback(async () => {
     setAnalyzing(true);
     try {
       // Buscar transações PIX não conciliadas (do mais antigo para o mais novo)
@@ -119,7 +115,12 @@ const PixReconciliation = () => {
     } finally {
       setAnalyzing(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    analyzePixTransactions();
+  }, [analyzePixTransactions]);
 
   const extractCNPJFromDescription = (description: string): string | null => {
     // Extrair CNPJ da descrição (14 dígitos seguidos)

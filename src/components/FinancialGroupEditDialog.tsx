@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,19 +53,7 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
   const [newMemberFee, setNewMemberFee] = useState<string>("");
   const [newMemberPaymentDay, setNewMemberPaymentDay] = useState<string>("");
 
-  useEffect(() => {
-    if (open) {
-      loadGroupMembers();
-      loadAvailableClients();
-      // Limpar estados ao abrir o diálogo
-      setRemovedMembersData(new Map());
-      setRemovingMembers(new Set());
-      setNewPayerId("");
-      setNewPayerFee("");
-    }
-  }, [open, groupId]);
-
-  const loadGroupMembers = async () => {
+  const loadGroupMembers = useCallback(async () => {
     try {
       setLoading(true);
       const { data: membersData, error } = await supabase
@@ -101,9 +89,9 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
-  const loadAvailableClients = async () => {
+  const loadAvailableClients = useCallback(async () => {
     try {
       const { data: existingMembers } = await supabase
         .from('economic_group_members')
@@ -124,7 +112,19 @@ export function FinancialGroupEditDialog({ open, onOpenChange, groupId, groupNam
       console.error('Error loading available clients:', error);
       toast.error('Erro ao carregar clientes disponíveis');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      loadGroupMembers();
+      loadAvailableClients();
+      // Limpar estados ao abrir o diálogo
+      setRemovedMembersData(new Map());
+      setRemovingMembers(new Set());
+      setNewPayerId("");
+      setNewPayerFee("");
+    }
+  }, [open, loadGroupMembers, loadAvailableClients]);
 
   const handleAddMember = async () => {
     if (!selectedClientId) return;
