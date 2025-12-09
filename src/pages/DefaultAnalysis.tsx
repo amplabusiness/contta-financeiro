@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,11 +63,7 @@ export default function DefaultAnalysis() {
     defaultRate: 0,
   });
 
-  useEffect(() => {
-    loadDefaultData();
-  }, [selectedClientId]); // Recarregar quando mudar cliente
-
-  const loadDefaultData = async () => {
+  const loadDefaultData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -243,7 +239,11 @@ export default function DefaultAnalysis() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    loadDefaultData();
+  }, [loadDefaultData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
@@ -37,21 +37,7 @@ const LivroRazao = () => {
   const [endDate, setEndDate] = useState('')
   const [searchParams] = useSearchParams()
 
-  useEffect(() => {
-    loadAccounts()
-    // Usar o ano inteiro por padrão
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
-  }, [])
-
-  useEffect(() => {
-    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
-  }, [selectedAccount])
-
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -77,9 +63,9 @@ const LivroRazao = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams])
 
-  const loadRazao = async (accountId: string, start?: string, end?: string) => {
+  const loadRazao = useCallback(async (accountId: string, start?: string, end?: string) => {
     try {
       setLoading(true)
 
@@ -214,7 +200,21 @@ const LivroRazao = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [accounts])
+
+  useEffect(() => {
+    loadAccounts()
+    // Usar o ano inteiro por padrão
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+  }, [loadAccounts])
+
+  useEffect(() => {
+    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
+  }, [selectedAccount, startDate, endDate, loadRazao])
 
   const handleFilter = () => {
     if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)

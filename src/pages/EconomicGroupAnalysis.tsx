@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,11 +68,7 @@ const EconomicGroupAnalysis = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [totalRevenue, setTotalRevenue] = useState(0);
 
-  useEffect(() => {
-    loadEconomicGroups();
-  }, [selectedYear, selectedMonth]);
-
-  const loadEconomicGroups = async () => {
+  const loadEconomicGroups = useCallback(async () => {
     setIsLoading(true);
     try {
       const year = selectedYear || new Date().getFullYear();
@@ -268,7 +264,11 @@ const EconomicGroupAnalysis = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    loadEconomicGroups();
+  }, [loadEconomicGroups]);
 
   const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups);

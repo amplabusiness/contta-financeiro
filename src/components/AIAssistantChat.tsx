@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bot, Send, User, Loader2, HelpCircle, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,19 +56,7 @@ export function AIAssistantChat({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Buscar perguntas pendentes da IA
-  useEffect(() => {
-    loadPendingQuestions();
-  }, [context, contextId]);
-
-  // Auto-scroll para última mensagem
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const loadPendingQuestions = async () => {
+  const loadPendingQuestions = useCallback(async () => {
     try {
       let query = supabase
         .from("ai_pending_questions")
@@ -119,7 +107,19 @@ export function AIAssistantChat({
     } catch (error) {
       console.error("Erro ao carregar perguntas pendentes:", error);
     }
-  };
+  }, [context, contextId, isOpen]);
+
+  // Buscar perguntas pendentes da IA
+  useEffect(() => {
+    loadPendingQuestions();
+  }, [loadPendingQuestions]);
+
+  // Auto-scroll para última mensagem
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const getAgentForContext = (ctx: string): AIAgent => {
     // Mapear contexto para agente apropriado

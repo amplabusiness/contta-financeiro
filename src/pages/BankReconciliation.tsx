@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,85 +31,43 @@ const BankReconciliation = () => {
     { client_id: "", invoice_id: "", amount: "", description: "" }
   ]);
 
-  useEffect(() => {
-    loadTransactions();
-    loadClients();
-    loadInvoices();
-    calculateKPIs();
-  }, []);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     const { data } = await supabase.from("clients").select("*").eq("is_active", true);
     setClients(data || []);
-  };
+  }, []);
 
-  const loadInvoices = async () => {
+  const loadInvoices = useCallback(async () => {
     const { data } = await supabase
       .from("invoices")
       .select("*, clients(name)")
       .eq("status", "pending");
     setInvoices(data || []);
-  };
+  }, []);
 
-  const loadTransactions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("bank_transactions")
-        .select(`
-          *,
-          matched_expense_id:expenses(description),
-          matched_invoice_id:invoices(id, clients(name))
-        `)
-        .order("transaction_date", { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      
-      // Carregar matches múltiplos para cada transação
-      const transactionsWithMatches = await Promise.all(
-        (data || []).map(async (tx) => {
-          if (tx.has_multiple_matches) {
-            const { data: matches } = await supabase
-              .from("bank_transaction_matches")
-              .select("*, clients(name), invoices(id)")
-              .eq("bank_transaction_id", tx.id);
-            return { ...tx, matches: matches || [] };
-          }
-          return tx;
-        })
-      );
-      
-      setTransactions(transactionsWithMatches);
-      calculateKPIs(transactionsWithMatches);
-    } catch (error: any) {
-      console.error("Erro ao carregar transações:", error);
-    }
-  };
-
-  const calculateKPIs = async (txData?: any[]) => {
+  const calculateKPIs = useCallback(async (txData?: any[]) => {
     const data = txData || transactions;
-    
+
     const matched = data.filter((t: any) => t.matched);
     const unmatched = data.filter((t: any) => !t.matched);
-    
+
     const credits = data.filter((t: any) => t.transaction_type === "credit");
     const debits = data.filter((t: any) => t.transaction_type === "debit");
-    
+
     const totalCredit = credits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
     const totalDebit = debits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
-    
+
     const matchedCredit = matched
       .filter((t: any) => t.transaction_type === "credit")
       .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
-    
+
     const matchedDebit = matched
       .filter((t: any) => t.transaction_type === "debit")
       .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
-    
+
     const avgConfidence = matched.length > 0
       ? matched.reduce((sum: number, t: any) => sum + (t.ai_confidence || 0), 0) / matched.length
       : 0;
-    
+
     const lastImport = data.length > 0 ? data[0].created_at : null;
 
     setKpiData({
@@ -123,7 +81,49 @@ const BankReconciliation = () => {
       averageConfidence: avgConfidence,
       lastImportDate: lastImport,
     });
-  };
+  }, [transactions]);
+
+  const loadTransactions = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("bank_transactions")
+        .select(`
+          *,
+          matched_expense_id:expenses(description),
+          matched_invoice_id:invoices(id, clients(name))
+        `)
+        .order("transaction_date", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      // Carregar matches múltiplos para cada transação
+      const transactionsWithMatches = await Promise.all(
+        (data || []).map(async (tx) => {
+          if (tx.has_multiple_matches) {
+            const { data: matches } = await supabase
+              .from("bank_transaction_matches")
+              .select("*, clients(name), invoices(id)")
+              .eq("bank_transaction_id", tx.id);
+            return { ...tx, matches: matches || [] };
+          }
+          return tx;
+        })
+      );
+
+      setTransactions(transactionsWithMatches);
+      calculateKPIs(transactionsWithMatches);
+    } catch (error: any) {
+      console.error("Erro ao carregar transações:", error);
+    }
+  }, [calculateKPIs]);
+
+  useEffect(() => {
+    loadTransactions();
+    loadClients();
+    loadInvoices();
+    calculateKPIs();
+  }, [loadTransactions, loadClients, loadInvoices, calculateKPIs]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

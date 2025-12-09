@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,11 +58,7 @@ const ProBonoClients = () => {
     payment_day: ""
   });
 
-  useEffect(() => {
-    loadProBonoClients();
-  }, [statusFilter]);
-
-  const loadProBonoClients = async () => {
+  const loadProBonoClients = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -195,7 +191,11 @@ const ProBonoClients = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    loadProBonoClients();
+  }, [loadProBonoClients]);
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";

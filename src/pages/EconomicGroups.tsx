@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -200,7 +200,7 @@ export default function EconomicGroups() {
   };
 
   // Buscar clientes por nome ou CNPJ
-  const searchClients = async (term: string) => {
+  const searchClients = useCallback(async (term: string) => {
     if (term.length < 2) {
       setSearchResults([]);
       return;
@@ -237,7 +237,7 @@ export default function EconomicGroups() {
     } finally {
       setSearching(false);
     }
-  };
+  }, [selectedClients]);
 
   // Adicionar cliente à lista de selecionados
   const addClient = (client: ClientOption) => {
@@ -426,7 +426,7 @@ export default function EconomicGroups() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, searchClients]);
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);

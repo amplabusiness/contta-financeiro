@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,17 +74,6 @@ const ReconciliationDiscrepancies = () => {
     due_date: ""
   });
   const [reconciling, setReconciling] = useState(false);
-
-  useEffect(() => {
-    loadDiscrepancies();
-    loadInvoices();
-    loadExpenses();
-    loadClients();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [discrepancies, searchTerm, filterType, filterSeverity]);
 
   const loadInvoices = async () => {
     const { data } = await supabase
@@ -232,7 +221,7 @@ const ReconciliationDiscrepancies = () => {
     };
   };
 
-  const loadDiscrepancies = async () => {
+  const loadDiscrepancies = useCallback(async () => {
     setLoading(true);
     try {
       const { data: transactions, error } = await supabase
@@ -256,9 +245,9 @@ const ReconciliationDiscrepancies = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...discrepancies];
 
     // Filtro de busca
@@ -281,7 +270,18 @@ const ReconciliationDiscrepancies = () => {
     }
 
     setFilteredDiscrepancies(filtered);
-  };
+  }, [discrepancies, searchTerm, filterType, filterSeverity]);
+
+  useEffect(() => {
+    loadDiscrepancies();
+    loadInvoices();
+    loadExpenses();
+    loadClients();
+  }, [loadDiscrepancies]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const getSeverityBadge = (severity: string) => {
     const variants = {

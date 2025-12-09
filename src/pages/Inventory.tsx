@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,11 +119,7 @@ const Inventory = () => {
     { value: "escritorio", label: "Escritorio" },
   ];
 
-  useEffect(() => {
-    loadData();
-  }, [showInactive]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Load products
@@ -168,7 +164,11 @@ const Inventory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showInactive]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleConsumption = async () => {
     if (!selectedProduct || consumptionQty <= 0) return;
