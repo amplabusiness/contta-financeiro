@@ -57,7 +57,7 @@ const ReconcileHonorarios = () => {
         .select("id, name")
         .eq("is_active", true)
         .order("name");
-      
+
       setBankAccounts(data || []);
       if (data && data.length > 0) {
         setBankAccountId(data[0].id);
@@ -65,6 +65,21 @@ const ReconcileHonorarios = () => {
     } catch (error) {
       console.error("Erro ao carregar contas bancárias:", error);
       toast.error("Erro ao carregar contas bancárias");
+    }
+  };
+
+  const loadClients = async () => {
+    try {
+      const { data } = await supabase
+        .from("clients")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+
+      setClients(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+      toast.error("Erro ao carregar clientes");
     }
   };
 
