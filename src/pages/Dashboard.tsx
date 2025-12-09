@@ -188,7 +188,16 @@ const Dashboard = () => {
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      console.error("Erro crítico ao carregar dados da Dashboard:", {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Mostrar toast com erro amigável
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        console.warn("Problema de conectividade com o servidor. Verifique sua internet.");
+      }
     } finally {
       setLoading(false);
     }
