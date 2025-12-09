@@ -51,11 +51,15 @@ serve(async (req) => {
       let suggestions: MatchSuggestion[] = [];
 
       if (isCredit) {
-        // Para créditos, buscar honorários pendentes
+        // Para créditos, buscar honorários pendentes E recentemente pagos (até 90 dias atrás)
+        // Isso permite reconciliar pagamentos de períodos anteriores
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
         const { data: invoices } = await supabase
           .from('invoices')
           .select('*, clients(id, name, cnpj)')
-          .eq('status', 'pending')
+          .or(`status.eq.pending,and(status.eq.paid,payment_date.gte.${ninetyDaysAgo.toISOString()})`)
           .order('due_date', { ascending: true })
           .limit(100);
 
@@ -66,15 +70,20 @@ serve(async (req) => {
           );
 
           for (const inv of exactMatches) {
+            // Bonus de confiança para faturas pendentes vs já pagas
+            const baseConfidence = 0.95;
+            const isPending = inv.status === 'pending';
+            const confidence = isPending ? baseConfidence : baseConfidence - 0.05;
+
             suggestions.push({
               type: 'invoice',
               id: inv.id,
               client_id: inv.client_id,
               client_name: inv.clients?.name || 'Cliente',
               amount: inv.amount,
-              description: `${inv.clients?.name} - ${inv.competence}`,
-              confidence: 0.95,
-              reason: 'Valor exato correspondente'
+              description: `${inv.clients?.name} - ${inv.competence} ${inv.status === 'paid' ? '(Já Paga)' : ''}`,
+              confidence,
+              reason: `Valor exato correspondente${inv.status === 'paid' ? ' - reconciliando pagamento anterior' : ''}`
             });
           }
 
@@ -111,39 +120,60 @@ serve(async (req) => {
 
           // Estratégia 3: Match por texto (CNPJ, nome do cliente na descrição)
           const txDesc = transaction.description.toLowerCase();
+          const txYear = new Date(transaction.date).getFullYear();
+          const txMonth = new Date(transaction.date).getMonth() + 1;
+
           for (const inv of invoices) {
             if (suggestions.some(s => s.id === inv.id)) continue;
 
             const clientName = (inv.clients?.name || '').toLowerCase();
             const clientCnpj = (inv.clients?.cnpj || '').replace(/\D/g, '');
 
+            // Extrair competência da fatura (MM/YYYY)
+            const invCompetence = inv.competence || '';
+            const [invMonth, invYear] = invCompetence.split('/').map(Number);
+            const isFromPreviousMonth =
+              (invYear < txYear) ||
+              (invYear === txYear && invMonth < txMonth);
+
             let confidence = 0;
             let reason = '';
 
-            // Verificar se nome do cliente está na descrição
-            if (clientName && txDesc.includes(clientName.split(' ')[0])) {
-              confidence = 0.75;
-              reason = 'Nome do cliente encontrado na descrição';
-            }
-            // Verificar se CNPJ está na descrição
-            else if (clientCnpj && clientCnpj.length > 8 && txDesc.includes(clientCnpj.slice(0, 8))) {
+            // Verificar se CNPJ está na descrição (maior prioridade)
+            if (clientCnpj && clientCnpj.length > 8 && txDesc.includes(clientCnpj.slice(0, 8))) {
               confidence = 0.85;
               reason = 'CNPJ encontrado na descrição';
+            }
+            // Verificar se nome do cliente está na descrição
+            else if (clientName && txDesc.includes(clientName.split(' ')[0])) {
+              confidence = 0.75;
+              reason = 'Nome do cliente encontrado na descrição';
+              // Aumentar confiança se é fatura de mês anterior
+              if (isFromPreviousMonth) {
+                confidence += 0.05;
+                reason += ' (fatura de mês anterior)';
+              }
             }
             // Verificar valor aproximado (dentro de 10%)
             else if (Math.abs(inv.amount - transaction.amount) / transaction.amount < 0.1) {
               confidence = 0.5;
               reason = 'Valor aproximado (diferença < 10%)';
+              // Aumentar confiança se é fatura de mês anterior
+              if (isFromPreviousMonth) {
+                confidence += 0.1;
+                reason += ' - fatura de período anterior';
+              }
             }
 
             if (confidence > 0) {
+              const statusNote = inv.status === 'paid' ? ' (Já Paga)' : '';
               suggestions.push({
                 type: 'invoice',
                 id: inv.id,
                 client_id: inv.client_id,
                 client_name: inv.clients?.name || 'Cliente',
                 amount: inv.amount,
-                description: `${inv.clients?.name} - ${inv.competence}`,
+                description: `${inv.clients?.name} - ${inv.competence}${statusNote}`,
                 confidence,
                 reason
               });

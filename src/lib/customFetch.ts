@@ -149,6 +149,7 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
     xhr.open(method, url, true);
     xhr.responseType = "arraybuffer";
     xhr.withCredentials = sendCredentials;
+    xhr.timeout = 60000;
 
     headers.forEach((value, key) => {
       xhr.setRequestHeader(key, value);
@@ -187,12 +188,39 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
 
     xhr.onerror = () => {
       cleanup();
-      reject(new TypeError("Network request failed"));
+      const errorMsg = `Network error: ${method} ${url} (state: ${xhr.readyState}, status: ${xhr.status})`;
+      const error = new TypeError(errorMsg);
+      (error as any).cause = "xhr_network_error";
+      (error as any).url = url;
+      (error as any).method = method;
+      (error as any).status = xhr.status;
+      (error as any).readyState = xhr.readyState;
+      console.error("[customFetch] Network error: " + JSON.stringify({
+        url,
+        method,
+        readyState: xhr.readyState,
+        status: xhr.status,
+        statusText: xhr.statusText,
+        message: errorMsg,
+      }));
+      reject(error);
     };
 
     xhr.ontimeout = () => {
       cleanup();
-      reject(new TypeError("Network request failed"));
+      const errorMsg = `Request timeout after 60s: ${method} ${url}`;
+      const error = new TypeError(errorMsg);
+      (error as any).cause = "xhr_timeout";
+      (error as any).url = url;
+      (error as any).method = method;
+      (error as any).timeoutMs = 60000;
+      console.error("[customFetch] Request timeout:", {
+        url,
+        method,
+        timeoutMs: 60000,
+        message: errorMsg,
+      });
+      reject(error);
     };
 
     try {
@@ -207,7 +235,19 @@ export const customFetch = async (input: SupportedRequestInfo, init?: RequestIni
       }
     } catch (error) {
       cleanup();
-      reject(error as Error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const sendError = new TypeError(`Failed to send XHR: ${errorMessage} for ${method} ${url}`);
+      (sendError as any).cause = "xhr_send_error";
+      (sendError as any).url = url;
+      (sendError as any).method = method;
+      (sendError as any).originalError = error;
+      console.error("[customFetch] Send error:", {
+        url,
+        method,
+        originalError: errorMessage,
+        message: sendError.message,
+      });
+      reject(sendError);
     }
   });
 };

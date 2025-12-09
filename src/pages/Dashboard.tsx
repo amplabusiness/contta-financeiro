@@ -13,10 +13,12 @@ import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { MetricDetailDialog } from "@/components/MetricDetailDialog";
+import { useOfflineMode } from "@/hooks/useOfflineMode";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { selectedClientId, selectedClientName, setSelectedClient } = useClient();
+  const { isOfflineMode, offlineData, saveOfflineData } = useOfflineMode();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -44,7 +46,20 @@ const Dashboard = () => {
     type: "invoices",
   });
 
-  const loadDashboardData = useCallback(async () => {
+  useEffect(() => {
+    if (isOfflineMode && offlineData) {
+      // Carregar dados do cache quando offline
+      setStats(offlineData.dashboardStats || stats);
+      setClients(offlineData.clients || []);
+      setRecentInvoices(offlineData.invoices || []);
+      setLoading(false);
+    } else {
+      // Carregar dados do servidor quando online
+      loadDashboardData();
+    }
+  }, [selectedClientId, isOfflineMode]); // Recarregar quando mudar o cliente selecionado ou modo offline
+
+  const loadDashboardData = async () => {
     try {
       // Construir queries com filtro de cliente se selecionado
       let clientsQuery = supabase
@@ -69,13 +84,29 @@ const Dashboard = () => {
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
       }
 
-      const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes, openingBalanceRes] = await Promise.all([
+      // Usar Promise.allSettled para não falhar se uma query falhar
+      const results = await Promise.allSettled([
         clientsQuery,
         recentInvoicesQuery,
         expensesQuery,
         allInvoicesQuery,
         openingBalanceQuery,
       ]);
+
+      // Extrair dados com fallback para array vazio
+      const clientsRes = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: [] };
+      const recentInvoicesRes = results[1].status === 'fulfilled' ? results[1].value : { data: [] };
+      const expensesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
+      const allInvoicesRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
+      const openingBalanceRes = results[4].status === 'fulfilled' ? results[4].value : { data: [] };
+
+      // Logar erros se houver
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const queryNames = ['clients', 'recentInvoices', 'expenses', 'allInvoices', 'openingBalance'];
+          console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
+        }
+      });
 
       const totalClients = clientsRes.count || 0;
       const recentInvoices = recentInvoicesRes.data || [];
@@ -167,8 +198,32 @@ const Dashboard = () => {
       setClientsHealth(healthData);
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
+
+      // Salvar dados no cache para modo offline
+      saveOfflineData({
+        dashboardStats: stats,
+        clients: clientsList,
+        invoices: recentInvoices,
+      });
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      console.error("Erro crítico ao carregar dados da Dashboard:", {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Se falhar e houver dados em cache, usar dados em cache
+      if (offlineData) {
+        console.log("Usando dados em cache devido a erro de conexão");
+        setStats(offlineData.dashboardStats || stats);
+        setClients(offlineData.clients || []);
+        setRecentInvoices(offlineData.invoices || []);
+      }
+
+      // Mostrar toast com erro amigável
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        console.warn("Problema de conectividade com o servidor. Verifique sua internet.");
+      }
     } finally {
       setLoading(false);
     }
@@ -213,10 +268,20 @@ const Dashboard = () => {
           openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
         }
 
-        const [{ data: invoicesData }, { data: openingBalanceData }] = await Promise.all([
+        const results = await Promise.allSettled([
           invoicesQuery,
           openingBalanceQuery,
         ]);
+
+        const invoicesData = results[0].status === 'fulfilled' ? results[0].value.data : null;
+        const openingBalanceData = results[1].status === 'fulfilled' ? results[1].value.data : null;
+
+        if (results[0].status === 'rejected') {
+          console.warn("Erro ao buscar faturas pendentes:", results[0].reason?.message);
+        }
+        if (results[1].status === 'rejected') {
+          console.warn("Erro ao buscar saldos de abertura:", results[1].reason?.message);
+        }
 
         // Transformar saldos de abertura para formato similar às faturas
         const openingBalanceItems = (openingBalanceData || []).map(ob => ({
@@ -253,10 +318,20 @@ const Dashboard = () => {
           openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
         }
 
-        const [{ data: invoicesData }, { data: openingBalanceData }] = await Promise.all([
+        const results = await Promise.allSettled([
           invoicesQuery,
           openingBalanceQuery,
         ]);
+
+        const invoicesData = results[0].status === 'fulfilled' ? results[0].value.data : null;
+        const openingBalanceData = results[1].status === 'fulfilled' ? results[1].value.data : null;
+
+        if (results[0].status === 'rejected') {
+          console.warn("Erro ao buscar faturas vencidas:", results[0].reason?.message);
+        }
+        if (results[1].status === 'rejected') {
+          console.warn("Erro ao buscar saldos de abertura vencidos:", results[1].reason?.message);
+        }
 
         // Filtrar saldos de abertura vencidos
         const now = new Date();
@@ -291,7 +366,11 @@ const Dashboard = () => {
           expensesQuery = expensesQuery.eq("client_id", selectedClientId);
         }
 
-        const { data } = await expensesQuery;
+        const { data, error } = await expensesQuery;
+
+        if (error) {
+          console.warn("Erro ao buscar despesas:", error.message);
+        }
 
         setDetailDialog({
           open: true,
@@ -302,7 +381,10 @@ const Dashboard = () => {
         });
       }
     } catch (error) {
-      console.error("Erro ao carregar detalhes:", error);
+      console.error("Erro ao carregar detalhes:", {
+        message: error instanceof Error ? error.message : String(error),
+        error,
+      });
     }
   };
 

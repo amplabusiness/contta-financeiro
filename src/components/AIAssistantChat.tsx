@@ -56,7 +56,20 @@ export function AIAssistantChat({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const loadPendingQuestions = useCallback(async () => {
+  // Buscar perguntas pendentes da IA
+  useEffect(() => {
+    // TODO: Reativar quando tabela ai_pending_questions estiver disponível
+    // loadPendingQuestions();
+  }, [context, contextId]);
+
+  // Auto-scroll para última mensagem
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const loadPendingQuestions = async () => {
     try {
       let query = supabase
         .from("ai_pending_questions")

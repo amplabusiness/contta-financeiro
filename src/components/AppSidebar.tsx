@@ -51,6 +51,7 @@ import {
   Tv,
   Gift,
   Tags,
+  ClipboardCheck,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -76,6 +77,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { selectedClientId, selectedClientName } = useClient();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const auditCompleted = localStorage.getItem("cost_center_audit_completed") === "true";
 
   // Restaurar posição de scroll quando o componente monta ou a rota muda
   useEffect(() => {
@@ -137,8 +139,9 @@ export function AppSidebar() {
     {
       label: "Contas a Receber",
       items: [
-        { title: "Honorários", url: "/invoices", icon: CreditCard },
+        { title: "Fluxo de Honorários", url: "/honorarios-flow", icon: DollarSign },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
+        { title: "Reconciliar", url: "/reconcile-honorarios", icon: RefreshCw },
         { title: "Análise", url: "/fees-analysis", icon: TrendingUp },
         { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
         { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
@@ -168,7 +171,9 @@ export function AppSidebar() {
       label: "Contabilidade",
       items: [
         { title: "Plano de Contas", url: "/chart-of-accounts", icon: FolderTree },
-        { title: "Centro de Custos", url: "/cost-center-analysis", icon: Tags },
+        { title: "Centro de Custo Despesas", url: "/cost-center-analysis", icon: Tags },
+        { title: "Centro de Custo Ativo", url: "/cost-center-assets", icon: Tags },
+        ...(auditCompleted ? [] : [{ title: "Auditoria de Centros", url: "/cost-center-audit", icon: ClipboardCheck }]),
         { title: "Saldo de Abertura", url: "/client-opening-balance", icon: Database },
         { title: "Balancete", url: "/balancete", icon: FileCheck },
         { title: "DRE", url: "/dre", icon: BarChart3 },

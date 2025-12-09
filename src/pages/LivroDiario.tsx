@@ -44,6 +44,7 @@ const LivroDiario = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [launchDate, setLaunchDate] = useState('')
   const [filterMode, setFilterMode] = useState<'range' | 'specific'>('range')
+  const [dateFilterType, setDateFilterType] = useState<'entry_date' | 'created_at'>('entry_date')
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingLine, setEditingLine] = useState<DiarioEntry | null>(null)
   const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([])
@@ -60,7 +61,7 @@ const LivroDiario = () => {
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
 
-    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
+    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
     loadChartOfAccounts()
   }, [])
 
@@ -73,12 +74,13 @@ const LivroDiario = () => {
 
       if (error) throw error
       setChartOfAccounts(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar plano de contas:', error)
+    } catch (error: any) {
+      console.error('Erro ao carregar plano de contas:', error?.message || error)
+      toast.error(`Erro ao carregar plano de contas: ${error?.message || 'Erro desconhecido'}`)
     }
   }
 
-  const loadDiario = async (start?: string, end?: string) => {
+  const loadDiario = async (start?: string, end?: string, dateField: 'entry_date' | 'created_at' = 'entry_date') => {
     try {
       setLoading(true)
 
@@ -87,6 +89,7 @@ const LivroDiario = () => {
         .select(`
           id,
           entry_date,
+          created_at,
           description,
           entry_type,
           document_number,
@@ -95,24 +98,37 @@ const LivroDiario = () => {
             debit,
             credit,
             description,
-            chart_of_accounts_id,
+            account_id,
             chart_of_accounts (
               code,
               name
             )
           )
         `)
-        .order('entry_date', { ascending: false })
+        .order(dateField, { ascending: false })
 
-      if (start) query = query.gte('entry_date', start)
-      if (end) query = query.lte('entry_date', end)
+      if (start) query = query.gte(dateField, start)
+      if (end) query = query.lte(dateField, end)
 
       const { data, error } = await query
       if (error) throw error
 
+      let filteredData = data
+      if (dateField === 'created_at' && (start || end)) {
+        filteredData = data?.filter((entry: any) => {
+          const createdDate = entry.created_at ? entry.created_at.split('T')[0] : null
+          if (!createdDate) return false
+
+          const matchStart = !start || createdDate >= start
+          const matchEnd = !end || createdDate <= end
+
+          return matchStart && matchEnd
+        })
+      }
+
       const diarioEntries: DiarioEntry[] = []
 
-      data?.forEach((entry: any) => {
+      filteredData?.forEach((entry: any) => {
         entry.accounting_entry_lines?.forEach((line: any) => {
           diarioEntries.push({
             numero_lancamento: entry.id,
@@ -126,14 +142,15 @@ const LivroDiario = () => {
             debito: line.debit || 0,
             credito: line.credit || 0,
             historico: line.description || entry.description,
-            chart_of_accounts_id: line.chart_of_accounts_id
+            chart_of_accounts_id: line.account_id
           })
         })
       })
 
       setEntries(diarioEntries)
-    } catch (error) {
-      console.error('Erro ao carregar diário:', error)
+    } catch (error: any) {
+      console.error('Erro ao carregar diário:', error?.message || error)
+      toast.error(`Erro ao carregar diário: ${error?.message || 'Erro desconhecido'}`)
       setEntries([])
     } finally {
       setLoading(false)
@@ -142,22 +159,23 @@ const LivroDiario = () => {
 
   const handleFilter = () => {
     if (filterMode === 'specific' && launchDate) {
-      loadDiario(launchDate, launchDate)
+      loadDiario(launchDate, launchDate, dateFilterType)
     } else {
-      loadDiario(startDate, endDate)
+      loadDiario(startDate, endDate, dateFilterType)
     }
   }
 
   const handleClearFilter = () => {
     const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
     setLaunchDate('')
     setSearchTerm('')
     setFilterMode('range')
-    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0])
+    setDateFilterType('entry_date')
+    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
   }
 
   const handleEditLine = (entry: DiarioEntry) => {
@@ -183,7 +201,7 @@ const LivroDiario = () => {
       if (editingLine.codigo_conta) {
         const account = chartOfAccounts.find(a => a.code === editingLine.codigo_conta)
         if (account) {
-          updates.chart_of_accounts_id = account.id
+          updates.account_id = account.id
         }
       }
 
@@ -228,7 +246,7 @@ const LivroDiario = () => {
       toast.success('Lançamento atualizado com sucesso!')
       setEditDialogOpen(false)
       setEditingLine(null)
-      loadDiario(startDate, endDate)
+      loadDiario(startDate, endDate, dateFilterType)
     } catch (error: any) {
       console.error('Erro ao salvar edição:', error?.message || error)
       toast.error(`Erro ao atualizar lançamento: ${error?.message || 'Erro desconhecido'}`)
@@ -251,7 +269,7 @@ const LivroDiario = () => {
       )
 
       toast.success('Lançamento deletado com sucesso!')
-      loadDiario(startDate, endDate)
+      loadDiario(startDate, endDate, dateFilterType)
     } catch (error: any) {
       console.error('Erro ao deletar lançamento:', error?.message || error)
       toast.error(`Erro ao deletar lançamento: ${error?.message || 'Erro desconhecido'}`)
@@ -332,6 +350,18 @@ const LivroDiario = () => {
             </div>
 
             <div className="space-y-4">
+              <div className="mb-4">
+                <Label htmlFor="dateFilterType">Tipo de Data</Label>
+                <select
+                  id="dateFilterType"
+                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                  value={dateFilterType}
+                  onChange={(e) => setDateFilterType(e.target.value as 'entry_date' | 'created_at')}
+                >
+                  <option value="entry_date">Data do Lançamento (quando ocorreu)</option>
+                  <option value="created_at">Data de Criação (quando registrou no sistema)</option>
+                </select>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {filterMode === 'range' ? (
                   <>
@@ -369,7 +399,7 @@ const LivroDiario = () => {
                   setStartDate(dateStr)
                   setEndDate(dateStr)
                   setFilterMode('specific')
-                  loadDiario(dateStr, dateStr)
+                  loadDiario(dateStr, dateStr, dateFilterType)
                 }} variant="secondary" className="flex-1 md:flex-none">
                   Ontem
                 </Button>
@@ -378,7 +408,7 @@ const LivroDiario = () => {
                   setStartDate(today)
                   setEndDate(today)
                   setFilterMode('specific')
-                  loadDiario(today, today)
+                  loadDiario(today, today, dateFilterType)
                 }} variant="secondary" className="flex-1 md:flex-none">
                   Hoje
                 </Button>

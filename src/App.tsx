@@ -9,7 +9,6 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import Clients from "./pages/Clients";
-import Invoices from "./pages/Invoices";
 import Expenses from "./pages/Expenses";
 import ExpenseCategories from "./pages/ExpenseCategories";
 import Import from "./pages/Import";
@@ -31,6 +30,8 @@ import RegularizeAccounting from "./pages/RegularizeAccounting";
 import AIAgents from "./pages/AIAgents";
 import AIInsights from "./pages/AIInsights";
 import CostCenterAnalysis from "./pages/CostCenterAnalysis";
+import CostCenterAssets from "./pages/CostCenterAssets";
+import CostCenterAudit from "./pages/CostCenterAudit";
 import ImportCompanies from "./pages/ImportCompanies";
 import ReconciliationDashboard from "./pages/ReconciliationDashboard";
 import ReconciliationDiscrepancies from "./pages/ReconciliationDiscrepancies";
@@ -92,6 +93,8 @@ import LaborAdvisory from "./pages/LaborAdvisory";
 import VideoContent from "./pages/VideoContent";
 import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
+import HonorariosFlow from "./pages/HonorariosFlow";
+import ReconcileHonorarios from "./pages/ReconcileHonorarios";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
@@ -190,15 +193,102 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
-          {appRoutes.map(({ path, element }) => (
-            <Route key={path} path={path} element={element} />
-          ))}
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </PeriodProvider>
-    </ClientProvider>
-  </TooltipProvider>
+            <Route path="/" element={<Navigate to="/auth" replace />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+            <Route path="/client-dashboard" element={<ClientDashboard />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/expense-categories" element={<ExpenseCategories />} />
+            <Route path="/import" element={<Import />} />
+            <Route path="/import-boletos" element={<ImportBoletos />} />
+            <Route path="/import-invoices" element={<ImportInvoices />} />
+            <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
+            <Route path="/import-honorarios" element={<ImportHonorarios />} />
+            <Route path="/honorarios-flow" element={<HonorariosFlow />} />
+            <Route path="/reconcile-honorarios" element={<ReconcileHonorarios />} />
+            <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
+            <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
+            <Route path="/dre" element={<DRE />} />
+            <Route path="/revenue-types" element={<RevenueTypes />} />
+            <Route path="/bank-reconciliation" element={<BankReconciliation />} />
+            <Route path="/pix-reconciliation" element={<PixReconciliation />} />
+            <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
+            <Route path="/trial-balance" element={<TrialBalance />} />
+            <Route path="/balance-sheet" element={<BalanceSheet />} />
+            <Route path="/fix-revenue-entries" element={<FixRevenueEntries />} />
+            <Route path="/client-ledger" element={<ClientLedger />} />
+            <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
+            <Route path="/ai-agents" element={<AIAgents />} />
+            <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
+            <Route path="/cost-center-assets" element={<CostCenterAssets />} />
+            <Route path="/cost-center-audit" element={<CostCenterAudit />} />
+            <Route path="/import-companies" element={<ImportCompanies />} />
+            <Route path="/reconciliation-dashboard" element={<ReconciliationDashboard />} />
+            <Route path="/reconciliation-discrepancies" element={<ReconciliationDiscrepancies />} />
+            <Route path="/client-enrichment" element={<ClientEnrichment />} />
+            <Route path="/batch-enrichment" element={<BatchEnrichment />} />
+            <Route path="/livro-diario" element={<LivroDiario />} />
+            <Route path="/livro-razao" element={<LivroRazao />} />
+            <Route path="/razao-geral" element={<GeneralLedgerAll />} />
+            <Route path="/balancete" element={<Balancete />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/collection-dashboard" element={<CollectionDashboard />} />
+            <Route path="/collection-letters" element={<CollectionLetters />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/fees-analysis" element={<FeesAnalysis />} />
+            <Route path="/fee-adjustment" element={<FeeAdjustment />} />
+            <Route path="/debt-negotiation" element={<DebtNegotiation />} />
+            <Route path="/collection-work-orders" element={<CollectionWorkOrders />} />
+            <Route path="/profitability-analysis" element={<ProfitabilityAnalysis />} />
+            <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
+            <Route path="/pro-bono-clients" element={<ProBonoClients />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/economic-groups" element={<EconomicGroups />} />
+            <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
+            <Route path="/barter-clients" element={<BarterClients />} />
+            <Route path="/convert-pro-bono-to-barter" element={<ConvertProBonoToBarter />} />
+            <Route path="/bank-accounts" element={<BankAccounts />} />
+            <Route path="/bank-import" element={<BankImport />} />
+            <Route path="/import-cnab" element={<ImportCNAB />} />
+            <Route path="/pending-reconciliations" element={<PendingReconciliations />} />
+            <Route path="/accounts-payable" element={<AccountsPayable />} />
+            <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
+            <Route path="/cash-flow" element={<CashFlow />} />
+            <Route path="/default-analysis" element={<DefaultAnalysis />} />
+            <Route path="/import-default-report" element={<ImportDefaultReport />} />
+            <Route path="/ai-insights" element={<AIInsights />} />
+            <Route path="/ai-accountant" element={<AIAccountant />} />
+            <Route path="/business-manager" element={<BusinessManager />} />
+            <Route path="/ai-network" element={<AINetwork />} />
+            <Route path="/generate-recurring-invoices" element={<GenerateRecurringInvoices />} />
+            <Route path="/invoice-generation-report" element={<InvoiceGenerationReport />} />
+            <Route path="/boleto-reconciliation" element={<BoletoReconciliation />} />
+            <Route path="/automated-upload" element={<AutomatedFileUpload />} />
+          <Route path="/client-verification" element={<ClientVerification />} />
+          <Route path="/inactive-client-verification" element={<InactiveClientVerification />} />
+          <Route path="/client-comparison-verification" element={<ClientComparisonVerification />} />
+          <Route path="/client-spreadsheet-verification" element={<ClientSpreadsheetVerification />} />
+          <Route path="/client-opening-balance" element={<ClientOpeningBalance />} />
+          <Route path="/bank-folder-import" element={<BankFolderImport />} />
+          <Route path="/super-conciliador" element={<SuperConciliador />} />
+          <Route path="/initial-load" element={<InitialLoad />} />
+            <Route path="/feature-requests" element={<FeatureRequests />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/labor-advisory" element={<LaborAdvisory />} />
+            <Route path="/video-content" element={<VideoContent />} />
+            <Route path="/pending-entities" element={<PendingEntities />} />
+            <Route path="/incentives" element={<Incentives />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ExpenseUpdateProvider>
+        </ClientProvider>
+      </TooltipProvider>
 );
 
 export default App;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +40,7 @@ const COLORS = [
   "#0ea5e9", // Sky
 ];
 
-const CostCenterAnalysis = () => {
+const CostCenterAssets = () => {
   const [loading, setLoading] = useState(true);
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
   const [costCenterWithoutData, setCostCenterWithoutData] = useState<any[]>([]);
@@ -230,7 +230,7 @@ const CostCenterAnalysis = () => {
         .from("cost_centers")
         .select("id, code, name, description, is_active, parent_id, default_chart_account_id, center_type")
         .eq("is_active", true)
-        .eq("center_type", "expenses")
+        .eq("center_type", "assets")
         .order("order_index, code");
 
       if (error) throw error;
@@ -328,7 +328,7 @@ const CostCenterAnalysis = () => {
     try {
       setLoading(true);
 
-      // Se não há centros de custo do tipo 'expenses', retornar vazio
+      // Se não há centros de custo do tipo 'assets', retornar vazio
       if (costCentersToUse.length === 0) {
         setCostCenterData([]);
         setTotalExpenses(0);
@@ -355,7 +355,7 @@ const CostCenterAnalysis = () => {
 
       if (error) throw error;
 
-      // Filtrar despesas apenas para centros de custo do tipo 'expenses'
+      // Filtrar despesas apenas para centros de custo do tipo 'assets'
       const centerCodes = new Set(costCentersToUse.map(c => c.code));
       const expenses = allExpenses?.filter((expense: any) =>
         centerCodes.has(expense.cost_center_code)
@@ -473,35 +473,7 @@ const CostCenterAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedYear, selectedMonth_, allCostCenters]);
-
-  useEffect(() => {
-    loadAllCostCenters().then((centers) => {
-      loadCostCenterData(centers);
-    });
-  }, [selectedYear, selectedMonth_, loadCostCenterData]);
-
-  // Subscribe to expense changes and reload data automatically
-  useEffect(() => {
-    const unsubscribe = subscribeToExpenseChanges(() => {
-      loadAllCostCenters().then((centers) => {
-        loadCostCenterData(centers);
-      });
-    });
-
-    return unsubscribe;
-  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_, loadCostCenterData]);
-
-  // Calcular centros sem movimentação
-  useEffect(() => {
-    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
-      const centrosComDados = new Set(costCenterData.map(c => c.code));
-      const centersSemDados = allCostCenters.filter(
-        center => !centrosComDados.has(center.code)
-      );
-      setCostCenterWithoutData(centersSemDados);
-    }
-  }, [allCostCenters, costCenterData]);
+  };
 
   const loadMonthlyComparison = async () => {
     try {
@@ -568,9 +540,9 @@ const CostCenterAnalysis = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Centro de Custo Despesas</h1>
+          <h1 className="text-3xl font-bold">Centro de Custo Ativo</h1>
           <p className="text-muted-foreground">
-            Visualize os gastos por departamento e identifique oportunidades de otimização
+            Visualize a alocação de ativos por departamento e controle sua distribuição
           </p>
         </div>
 
@@ -627,41 +599,39 @@ const CostCenterAnalysis = () => {
           )}
         </Card>
 
-        {costCenterData.length > 1 && (
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Total de Despesas</CardTitle>
-                <CardDescription>Valor total do período selecionado</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold text-primary">{formatCurrency(totalExpenses)}</div>
-              </CardContent>
-            </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total de Ativos</CardTitle>
+              <CardDescription>Valor total de ativos no período selecionado</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-primary">{formatCurrency(totalExpenses)}</div>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Centro de Custo com Maior Gasto</CardTitle>
-                <CardDescription>Departamento que mais gastou no período</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {costCenterData.length > 0 ? (
-                  <div>
-                    <div className="text-2xl font-bold">{costCenterData[0].name}</div>
-                    <div className="text-3xl font-bold text-destructive mt-2">
-                      {formatCurrency(costCenterData[0].value)}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {costCenterData[0].percentage}% do total
-                    </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Centro com Maior Valor</CardTitle>
+              <CardDescription>Departamento com maior quantidade de ativos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {costCenterData.length > 0 ? (
+                <div>
+                  <div className="text-2xl font-bold">{costCenterData[0].name}</div>
+                  <div className="text-3xl font-bold text-destructive mt-2">
+                    {formatCurrency(costCenterData[0].value)}
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">Sem dados disponíveis</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {costCenterData[0].percentage}% do total
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Sem dados disponíveis</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {costCenterData.length > 1 && (
           <Card>
@@ -731,8 +701,8 @@ const CostCenterAnalysis = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{costCenterData.length > 1 ? "Ranking de Gastos por Centro de Custo" : "Centros de Custo"}</CardTitle>
-            <CardDescription>Departamentos ordenados por valor de despesas (clique para ver lançamentos)</CardDescription>
+            <CardTitle>{costCenterData.length > 1 ? "Ranking de Valor por Centro de Custo" : "Centros de Custo"}</CardTitle>
+            <CardDescription>Departamentos ordenados por valor de ativos (clique para ver lançamentos)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -762,11 +732,11 @@ const CostCenterAnalysis = () => {
           </CardContent>
         </Card>
 
-        {monthlyComparison.length > 0 && (
+        {false && monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Evolução Mensal por Centro de Custo</CardTitle>
-              <CardDescription>Comparação de gastos ao longo do ano</CardDescription>
+              <CardDescription>Comparação de ativos ao longo do ano</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -803,9 +773,9 @@ const CostCenterAnalysis = () => {
         {costCenterWithoutData.length > 0 && (
           <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900">
             <CardHeader>
-              <CardTitle className="text-yellow-800 dark:text-yellow-200">Centros de Custo sem Movimentação</CardTitle>
+              <CardTitle className="text-yellow-800 dark:text-yellow-200">Centros de Custo sem Ativos</CardTitle>
               <CardDescription className="text-yellow-700 dark:text-yellow-300">
-                {costCenterWithoutData.length} centro(s) cadastrado(s) sem despesas ou saldo registrado
+                {costCenterWithoutData.length} centro(s) cadastrado(s) sem ativos registrado
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1019,4 +989,4 @@ const CostCenterAnalysis = () => {
   );
 };
 
-export default CostCenterAnalysis;
+export default CostCenterAssets;

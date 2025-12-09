@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
 import { useAccountingHealth } from "@/hooks/useAccountingHealth";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,7 +34,8 @@ export function Layout({ children }: LayoutProps) {
   const clientsLoadedRef = useRef(false);
 
   // Auto-manutenção contábil - roda silenciosamente no background
-  useAccountingHealth();
+  // TODO: Reativar quando ai-orchestrator estiver respondendo
+  // useAccountingHealth();
 
   const loadClients = useCallback(async () => {
     // Prevenir chamadas duplicadas
@@ -222,6 +224,7 @@ export function Layout({ children }: LayoutProps) {
           </main>
         </div>
       </div>
+      <ConnectionStatus />
     </SidebarProvider>
   );
 }

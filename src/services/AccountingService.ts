@@ -136,6 +136,7 @@ class AccountingService {
           client_name: params.clientName,
           reference_type: params.referenceType,
           reference_id: params.referenceId,
+          bank_account_id: params.bankAccountId,
           expense_category: params.expenseCategory,
           metadata: params.metadata,
         }

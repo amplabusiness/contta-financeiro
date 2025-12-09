@@ -10,10 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import ConsolidatedPaymentsSection from "@/components/ConsolidatedPaymentsSection";
+import { useToast } from "@/components/ui/use-toast";
 
 const ClientDashboard = () => {
   const { selectedClientId, selectedClientName } = useClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOverdue: 0,
@@ -138,11 +141,16 @@ const ClientDashboard = () => {
     try {
       setLoading(true);
 
-      const { data: clientData } = await supabase
+      const { data: clientData, error: clientError } = await supabase
         .from("clients")
         .select("monthly_fee, payment_day")
         .eq("id", selectedClientId)
         .single();
+
+      if (clientError) {
+        console.error("Erro ao buscar dados do cliente:", clientError);
+        throw clientError;
+      }
 
       const monthlyFeeFromCadastro =
         clientData && clientData.monthly_fee !== null && clientData.monthly_fee !== undefined
@@ -157,26 +165,38 @@ const ClientDashboard = () => {
       setClientPaymentDay(paymentDayFromCadastro);
 
       // Carregar honorários
-      const { data: invoicesData } = await supabase
+      const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("due_date", { ascending: false });
 
+      if (invoicesError) {
+        console.warn("Erro ao buscar invoices:", invoicesError);
+      }
+
       // Carregar saldos de abertura
-      const { data: openingBalanceData } = await supabase
+      const { data: openingBalanceData, error: obError } = await supabase
         .from("client_opening_balance")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("competence", { ascending: false });
 
+      if (obError) {
+        console.warn("Erro ao buscar opening balances:", obError);
+      }
+
       // Carregar razão do cliente
-      const { data: ledgerData } = await supabase
+      const { data: ledgerData, error: ledgerError } = await supabase
         .from("client_ledger")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("transaction_date", { ascending: false })
         .limit(20);
+
+      if (ledgerError) {
+        console.warn("Erro ao buscar ledger:", ledgerError);
+      }
 
       const allInvoices = invoicesData || [];
       const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro, paymentDayFromCadastro);
@@ -209,8 +229,23 @@ const ClientDashboard = () => {
       setInvoices(aggregatedInvoices);
       setOpeningBalances(openingBalances);
       setLedgerEntries(ledgerData || []);
-    } catch (error) {
-      console.error("Erro ao carregar dados do cliente:", error);
+    } catch (error: any) {
+      console.error("Erro ao carregar dados do cliente:", {
+        error,
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+      });
+
+      if (error?.message?.includes("Failed to fetch")) {
+        toast.error(
+          "Erro de conexão com o servidor. Verifique sua internet ou tente novamente."
+        );
+      } else if (error?.message?.includes("Offline")) {
+        toast.error("Você está offline. Verifique sua conexão com a internet.");
+      } else {
+        toast.error("Erro ao carregar dados do cliente");
+      }
     } finally {
       setLoading(false);
     }
@@ -381,199 +416,36 @@ const ClientDashboard = () => {
           />
         </div>
 
-        {stats.overdueCount > 0 && (
-          <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <CardTitle className="text-destructive">⚠️ Atenção: Cliente com Inadimplência</CardTitle>
-              <CardDescription>
-                Existem {stats.overdueCount} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
 
-        {/* Saldo de Abertura */}
-        {openingBalances.length > 0 && (
-          <Card className="border-orange-500/50 bg-orange-50/30">
-            <CardHeader>
-              <CardTitle className="text-orange-700">📋 Saldo de Abertura (Débitos Anteriores)</CardTitle>
-              <CardDescription>
-                Débitos de competências anteriores a 2025
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-[300px] overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Competência</TableHead>
-                      <TableHead>Valor Original</TableHead>
-                      <TableHead>Pago</TableHead>
-                      <TableHead>Saldo</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {openingBalances.map((ob) => {
-                      const saldo = Number(ob.amount) - Number(ob.paid_amount || 0);
-                      return (
-                        <TableRow key={ob.id}>
-                          <TableCell className="font-medium">{ob.competence}</TableCell>
-                          <TableCell>{formatCurrency(Number(ob.amount))}</TableCell>
-                          <TableCell className="text-green-600">{formatCurrency(Number(ob.paid_amount || 0))}</TableCell>
-                          <TableCell className={saldo > 0 ? "text-red-600 font-semibold" : "text-green-600"}>
-                            {formatCurrency(saldo)}
-                          </TableCell>
-                          <TableCell>
-                            {ob.status === "paid" ? (
-                              <Badge variant="default">Pago</Badge>
-                            ) : ob.status === "partial" ? (
-                              <Badge variant="secondary">Parcial</Badge>
-                            ) : (
-                              <Badge variant="destructive">Pendente</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <div>
+          {clientMonthlyFee !== null || clientPaymentDay !== null ? (
+            <Card className="mb-6 bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-900">📋 Configuração do Cliente</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {clientMonthlyFee !== null && (
+                  <p className="text-sm text-blue-800">
+                    Valor cadastrado: <span className="font-semibold">{formatCurrency(clientMonthlyFee)}</span>
+                  </p>
+                )}
+                {clientPaymentDay !== null && (
+                  <p className="text-sm text-blue-800">
+                    Dia de vencimento: <span className="font-semibold">{clientPaymentDay}</span>
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Honorários do Cliente</CardTitle>
-              <CardDescription>
-                Todos os honorários deste cliente
-                <div className="mt-1 space-y-0.5">
-                  {clientMonthlyFee !== null && (
-                    <span className="block text-xs text-muted-foreground">
-                      Valor cadastrado: {formatCurrency(clientMonthlyFee)}
-                    </span>
-                  )}
-                  {clientPaymentDay !== null && (
-                    <span className="block text-xs text-muted-foreground">
-                      Dia de vencimento cadastrado: {clientPaymentDay}
-                    </span>
-                  )}
-                </div>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {invoices.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum honorário cadastrado para este cliente
-                </p>
-              ) : (
-                <div className="max-h-[400px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Competência</TableHead>
-                        <TableHead>Vencimento</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ação</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoices.map((invoice) => {
-                        const status = getDisplayStatus(invoice);
-                        const isPaid = status === "paid" && invoice.payment_date;
-                        return (
-                          <TableRow key={invoice.id} className={isPaid ? "bg-green-50" : ""}>
-                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{formatLocalDate(invoice.due_date)}</div>
-                                {isPaid && (
-                                  <div className="text-xs text-green-600 mt-1">
-                                    💰 Pago em {formatLocalDate(invoice.payment_date)}
-                                    {invoice.cnab_reference && (
-                                      <div className="text-xs text-muted-foreground">
-                                        Ref: {invoice.cnab_reference}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                            <TableCell>{getStatusBadge(status)}</TableCell>
-                            <TableCell className="text-right">
-                              {isPaid && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleUndoPayment(invoice)}
-                                  disabled={loading}
-                                  className="text-orange-600 hover:bg-orange-50"
-                                  title="Desfazer pagamento (reverte conciliação)"
-                                >
-                                  <Undo2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Movimento do Razão</CardTitle>
-              <CardDescription>Últimos 20 lançamentos do razão</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {ledgerEntries.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum movimento no razão ainda
-                </p>
-              ) : (
-                <div className="max-h-[400px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Débito</TableHead>
-                        <TableHead>Crédito</TableHead>
-                        <TableHead>Saldo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ledgerEntries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell>{formatLocalDate(entry.transaction_date)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {entry.description}
-                          </TableCell>
-                          <TableCell className="text-destructive">
-                            {entry.debit > 0 ? formatCurrency(entry.debit) : "-"}
-                          </TableCell>
-                          <TableCell className="text-success">
-                            {entry.credit > 0 ? formatCurrency(entry.credit) : "-"}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {formatCurrency(entry.balance)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ConsolidatedPaymentsSection
+            clientId={selectedClientId}
+            invoices={invoices}
+            openingBalances={openingBalances}
+            clientMonthlyFee={clientMonthlyFee}
+            clientPaymentDay={clientPaymentDay}
+            onPaymentStatusChange={() => loadClientData()}
+          />
         </div>
       </div>
     </Layout>
