@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { MetricDetailDialog } from "@/components/MetricDetailDialog";
+import { useOfflineMode } from "@/hooks/useOfflineMode";
 
 const Dashboard = () => {
   const navigate = useNavigate();
