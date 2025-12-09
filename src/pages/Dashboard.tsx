@@ -288,10 +288,20 @@ const Dashboard = () => {
           openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
         }
 
-        const [{ data: invoicesData }, { data: openingBalanceData }] = await Promise.all([
+        const results = await Promise.allSettled([
           invoicesQuery,
           openingBalanceQuery,
         ]);
+
+        const invoicesData = results[0].status === 'fulfilled' ? results[0].value.data : null;
+        const openingBalanceData = results[1].status === 'fulfilled' ? results[1].value.data : null;
+
+        if (results[0].status === 'rejected') {
+          console.warn("Erro ao buscar faturas vencidas:", results[0].reason?.message);
+        }
+        if (results[1].status === 'rejected') {
+          console.warn("Erro ao buscar saldos de abertura vencidos:", results[1].reason?.message);
+        }
 
         // Filtrar saldos de abertura vencidos
         const now = new Date();
