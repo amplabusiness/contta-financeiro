@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
 import { useAccountingHealth } from "@/hooks/useAccountingHealth";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 
 interface LayoutProps {
   children: ReactNode;
