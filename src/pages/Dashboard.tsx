@@ -73,13 +73,29 @@ const Dashboard = () => {
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
       }
 
-      const [clientsRes, recentInvoicesRes, expensesRes, allInvoicesRes, openingBalanceRes] = await Promise.all([
+      // Usar Promise.allSettled para não falhar se uma query falhar
+      const results = await Promise.allSettled([
         clientsQuery,
         recentInvoicesQuery,
         expensesQuery,
         allInvoicesQuery,
         openingBalanceQuery,
       ]);
+
+      // Extrair dados com fallback para array vazio
+      const clientsRes = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: [] };
+      const recentInvoicesRes = results[1].status === 'fulfilled' ? results[1].value : { data: [] };
+      const expensesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
+      const allInvoicesRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
+      const openingBalanceRes = results[4].status === 'fulfilled' ? results[4].value : { data: [] };
+
+      // Logar erros se houver
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const queryNames = ['clients', 'recentInvoices', 'expenses', 'allInvoices', 'openingBalance'];
+          console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
+        }
+      });
 
       const totalClients = clientsRes.count || 0;
       const recentInvoices = recentInvoicesRes.data || [];
