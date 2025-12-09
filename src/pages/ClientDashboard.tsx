@@ -248,8 +248,23 @@ const ClientDashboard = () => {
       setInvoices(aggregatedInvoices);
       setOpeningBalances(openingBalances);
       setLedgerEntries(ledgerData || []);
-    } catch (error) {
-      console.error("Erro ao carregar dados do cliente:", error);
+    } catch (error: any) {
+      console.error("Erro ao carregar dados do cliente:", {
+        error,
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+      });
+
+      if (error?.message?.includes("Failed to fetch")) {
+        toast.error(
+          "Erro de conexão com o servidor. Verifique sua internet ou tente novamente."
+        );
+      } else if (error?.message?.includes("Offline")) {
+        toast.error("Você está offline. Verifique sua conexão com a internet.");
+      } else {
+        toast.error("Erro ao carregar dados do cliente");
+      }
     } finally {
       setLoading(false);
     }
