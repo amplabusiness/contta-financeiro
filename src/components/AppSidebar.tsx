@@ -83,12 +83,16 @@ export function AppSidebar() {
   useEffect(() => {
     const savedPosition = sessionStorage.getItem(SCROLL_POSITION_KEY);
     if (savedPosition && scrollContainerRef.current) {
-      // Pequeno delay para garantir que o DOM foi atualizado
-      setTimeout(() => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = parseInt(savedPosition, 10);
-        }
-      }, 0);
+      const position = parseInt(savedPosition, 10);
+      // Validate that parseInt returned a valid number
+      if (!isNaN(position) && position >= 0) {
+        // Pequeno delay para garantir que o DOM foi atualizado
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = position;
+          }
+        }, 0);
+      }
     }
   }, [location.pathname]);
 

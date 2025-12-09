@@ -341,7 +341,7 @@ class AccountingService {
     const entryType = params.isCredit ? 'recebimento' : 'pagamento_despesa';
 
     return this.createEntry({
-      entryType: params.isCredit ? 'recebimento' : 'pagamento_despesa',
+      entryType,
       amount: Math.abs(params.amount),
       date: params.transactionDate,
       description: params.description,

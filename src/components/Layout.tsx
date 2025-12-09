@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,31 @@ export function Layout({ children }: LayoutProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
+  // Ref para prevenir múltiplas chamadas simultâneas
+  const isLoadingClientsRef = useRef(false);
+  const clientsLoadedRef = useRef(false);
+
   // Auto-manutenção contábil - roda silenciosamente no background
   // TODO: Reativar quando ai-orchestrator estiver respondendo
   // useAccountingHealth();
+
+  const loadClients = useCallback(async () => {
+    // Prevenir chamadas duplicadas
+    if (isLoadingClientsRef.current || clientsLoadedRef.current) return;
+
+    isLoadingClientsRef.current = true;
+    try {
+      const { data } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      setClients(data || []);
+      clientsLoadedRef.current = true;
+    } finally {
+      isLoadingClientsRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,22 +72,14 @@ export function Layout({ children }: LayoutProps) {
       setSession(session);
       if (!session) {
         navigate("/auth");
+        clientsLoadedRef.current = false; // Reset ao fazer logout
       } else {
         loadClients();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const loadClients = async () => {
-    const { data } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("is_active", true)
-      .order("name");
-    setClients(data || []);
-  };
+  }, [navigate, loadClients]);
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);

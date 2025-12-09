@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,10 +96,6 @@ const ClientOpeningBalance = () => {
   // Cliente selecionado para lote
   const [selectedClientForBatch, setSelectedClientForBatch] = useState<Client | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [globalClientId]); // Recarregar quando mudar cliente global
-
   // ✅ CONTABILIDADE INTEGRADA: Função para criar lançamento contábil do saldo de abertura
   const createAccountingEntryForBalance = async (
     balanceId: string,
@@ -135,31 +131,7 @@ const ClientOpeningBalance = () => {
     }
   };
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      // Buscar clientes ativos com monthly_fee
-      const { data: clientsData, error: clientsError } = await supabase
-        .from("clients")
-        .select("id, name, cnpj, cpf, opening_balance, monthly_fee")
-        .eq("is_active", true)
-        .order("name");
-
-      if (clientsError) throw clientsError;
-      setClients(clientsData || []);
-
-      // Buscar saldos de abertura
-      await loadBalances();
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      toast.error("Erro ao carregar dados");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadBalances = async (clientId?: string) => {
+  const loadBalances = useCallback(async (clientId?: string) => {
     try {
       let query = supabase
         .from("client_opening_balance")
@@ -189,7 +161,35 @@ const ClientOpeningBalance = () => {
       console.error("Erro ao carregar saldos:", error);
       toast.error("Erro ao carregar saldos de abertura");
     }
-  };
+  }, [globalClientId, filterClientId]);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Buscar clientes ativos com monthly_fee
+      const { data: clientsData, error: clientsError } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf, opening_balance, monthly_fee")
+        .eq("is_active", true)
+        .order("name");
+
+      if (clientsError) throw clientsError;
+      setClients(clientsData || []);
+
+      // Buscar saldos de abertura
+      await loadBalances();
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      toast.error("Erro ao carregar dados");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadBalances]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]); // Recarregar quando mudar cliente global
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

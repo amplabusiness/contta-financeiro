@@ -139,6 +139,7 @@ export function DefaultReportImporter() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        clearInterval(progressInterval);
         toast.error("Usuário não autenticado");
         return;
       }
@@ -148,6 +149,7 @@ export function DefaultReportImporter() {
       console.log("Parsed defaults:", defaults);
 
       if (defaults.length === 0) {
+        clearInterval(progressInterval);
         toast.error("Nenhum dado válido encontrado no arquivo");
         return;
       }

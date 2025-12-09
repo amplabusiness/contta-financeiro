@@ -183,6 +183,14 @@ function parseOFXSGML(content: string): OFXParseResult {
  */
 function parseOFXXML(content: string): OFXParseResult {
   try {
+    // Check if DOMParser is available (not available in Node.js/Workers)
+    if (typeof DOMParser === 'undefined') {
+      return {
+        success: false,
+        error: 'XML parsing not available in this environment. DOMParser is only available in browser contexts.'
+      };
+    }
+
     // Simple XML parser for OFX 2.x
     // For production, consider using DOMParser or a proper XML library
     const parser = new DOMParser();

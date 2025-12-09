@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Crown } from "lucide-react";
@@ -45,11 +45,7 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadGroupInfo();
-  }, [clientId]);
-
-  const loadGroupInfo = async () => {
+  const loadGroupInfo = useCallback(async () => {
     try {
       // Buscar se o cliente pertence a algum grupo financeiro
       const { data: memberData, error: memberError } = await supabase
@@ -91,7 +87,11 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clientId]);
+
+  useEffect(() => {
+    loadGroupInfo();
+  }, [loadGroupInfo]);
 
   if (loading || !groupInfo) {
     return null;

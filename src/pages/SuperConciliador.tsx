@@ -113,11 +113,7 @@ const SuperConciliador = () => {
     matchedToday: 0
   });
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
       await Promise.all([
@@ -129,7 +125,12 @@ const SuperConciliador = () => {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   const loadTransactions = async () => {
     const { data, error } = await supabase

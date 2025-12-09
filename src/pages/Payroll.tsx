@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,11 +138,7 @@ const Payroll = () => {
     { value: "Socio", label: "Socio" },
   ];
 
-  useEffect(() => {
-    loadData();
-  }, [showInactive]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Load employees (active or inactive based on filter)
@@ -177,7 +173,11 @@ const Payroll = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showInactive]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const resetForm = () => {
     setFormData({

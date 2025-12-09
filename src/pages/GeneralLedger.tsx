@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +44,7 @@ const GeneralLedger = () => {
     }
   };
 
-  const loadLedger = async (accountId: string) => {
+  const loadLedger = useCallback(async (accountId: string) => {
     setLoading(true);
     try {
       const account = accounts.find(a => a.id === accountId);
@@ -90,7 +90,7 @@ const GeneralLedger = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accounts]);
 
   useEffect(() => {
     loadAccounts();
@@ -100,7 +100,7 @@ const GeneralLedger = () => {
     if (selectedAccount) {
       loadLedger(selectedAccount);
     }
-  }, [selectedAccount]);
+  }, [selectedAccount, loadLedger]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

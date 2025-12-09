@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,15 +68,11 @@ const CashFlow = () => {
     status: "projected",
   });
 
-  useEffect(() => {
-    loadCashFlowData();
-  }, [selectedPeriod, selectedClientId]);
-
   const syncCashFlow = async () => {
     setSyncing(true);
     try {
       const { data, error } = await supabase.functions.invoke('sync-cash-flow');
-      
+
       if (error) throw error;
 
       toast.success(`Fluxo de caixa sincronizado! ${data.summary.total_created} transações criadas.`);
@@ -133,7 +129,75 @@ const CashFlow = () => {
     });
   };
 
-  const loadCashFlowData = async () => {
+  const calculateProjection = useCallback((accounts: BankAccount[], payables: any[], receivables: any[], transactions: any[]) => {
+    const startDate = new Date();
+    const endDate = addDays(startDate, selectedPeriod);
+    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
+
+    // Saldo inicial (soma de todas as contas)
+    const initialBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+
+    const projectionData: CashFlowProjection[] = [];
+    const alertsList: any[] = [];
+    let runningBalance = initialBalance;
+
+    dateRange.forEach((date) => {
+      const dateStr = format(date, "yyyy-MM-dd");
+
+      // Calcular entradas do dia
+      const dayInflow = receivables
+        .filter((inv) => isSameDay(parseISO(inv.due_date), date))
+        .reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+      // Calcular saídas do dia
+      const dayOutflow = payables
+        .filter((pay) => isSameDay(parseISO(pay.due_date), date))
+        .reduce((sum, pay) => sum + Number(pay.amount), 0);
+
+      // Adicionar transações manuais do fluxo de caixa
+      const manualInflow = transactions
+        .filter((t) => t.transaction_type === 'inflow' && isSameDay(parseISO(t.transaction_date), date))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const manualOutflow = transactions
+        .filter((t) => t.transaction_type === 'outflow' && isSameDay(parseISO(t.transaction_date), date))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const totalDayInflow = dayInflow + manualInflow;
+      const totalDayOutflow = dayOutflow + manualOutflow;
+
+      runningBalance = runningBalance + totalDayInflow - totalDayOutflow;
+
+      projectionData.push({
+        date: dateStr,
+        balance: runningBalance,
+        inflow: totalDayInflow,
+        outflow: totalDayOutflow,
+        projected_balance: runningBalance,
+      });
+
+      // Gerar alertas para saldos negativos
+      if (runningBalance < 0 && alertsList.length < 5) {
+        const deficit = Math.abs(runningBalance);
+        const daysUntil = Math.ceil((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        alertsList.push({
+          date: dateStr,
+          type: "negative_balance",
+          severity: deficit > 10000 ? "critical" : deficit > 5000 ? "high" : "medium",
+          message: `Saldo negativo de ${formatCurrency(deficit)} previsto`,
+          days_until: daysUntil,
+          deficit: deficit,
+          payables_due: payables.filter((p) => isSameDay(parseISO(p.due_date), date)),
+        });
+      }
+    });
+
+    setProjection(projectionData);
+    setAlerts(alertsList);
+  }, [selectedPeriod]);
+
+  const loadCashFlowData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -244,75 +308,11 @@ const CashFlow = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClientId, calculateProjection]);
 
-  const calculateProjection = (accounts: BankAccount[], payables: any[], receivables: any[], transactions: any[]) => {
-    const startDate = new Date();
-    const endDate = addDays(startDate, selectedPeriod);
-    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-
-    // Saldo inicial (soma de todas as contas)
-    const initialBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
-
-    const projectionData: CashFlowProjection[] = [];
-    const alertsList: any[] = [];
-    let runningBalance = initialBalance;
-
-    dateRange.forEach((date) => {
-      const dateStr = format(date, "yyyy-MM-dd");
-      
-      // Calcular entradas do dia
-      const dayInflow = receivables
-        .filter((inv) => isSameDay(parseISO(inv.due_date), date))
-        .reduce((sum, inv) => sum + Number(inv.amount), 0);
-
-      // Calcular saídas do dia
-      const dayOutflow = payables
-        .filter((pay) => isSameDay(parseISO(pay.due_date), date))
-        .reduce((sum, pay) => sum + Number(pay.amount), 0);
-
-      // Adicionar transações manuais do fluxo de caixa
-      const manualInflow = transactions
-        .filter((t) => t.transaction_type === 'inflow' && isSameDay(parseISO(t.transaction_date), date))
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-
-      const manualOutflow = transactions
-        .filter((t) => t.transaction_type === 'outflow' && isSameDay(parseISO(t.transaction_date), date))
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-
-      const totalDayInflow = dayInflow + manualInflow;
-      const totalDayOutflow = dayOutflow + manualOutflow;
-
-      runningBalance = runningBalance + totalDayInflow - totalDayOutflow;
-
-      projectionData.push({
-        date: dateStr,
-        balance: runningBalance,
-        inflow: totalDayInflow,
-        outflow: totalDayOutflow,
-        projected_balance: runningBalance,
-      });
-
-      // Gerar alertas para saldos negativos
-      if (runningBalance < 0 && alertsList.length < 5) {
-        const deficit = Math.abs(runningBalance);
-        const daysUntil = Math.ceil((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        alertsList.push({
-          date: dateStr,
-          type: "negative_balance",
-          severity: deficit > 10000 ? "critical" : deficit > 5000 ? "high" : "medium",
-          message: `Saldo negativo de ${formatCurrency(deficit)} previsto`,
-          days_until: daysUntil,
-          deficit: deficit,
-          payables_due: payables.filter((p) => isSameDay(parseISO(p.due_date), date)),
-        });
-      }
-    });
-
-    setProjection(projectionData);
-    setAlerts(alertsList);
-  };
+  useEffect(() => {
+    loadCashFlowData();
+  }, [loadCashFlowData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

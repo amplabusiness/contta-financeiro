@@ -71,16 +71,9 @@ const Expenses = () => {
     recurrence_specific_days: [] as number[],
   });
 
-  useEffect(() => {
-    loadExpenses();
-    loadAccounts();
-    loadCategories();
-    loadCostCenters();
-  }, [selectedYear, selectedMonth, selectedClientId]);
-
   const normalizeAccountType = (value?: string | null) => value?.trim().toLowerCase() ?? "";
 
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       const response = await supabase
         .from("chart_of_accounts")
@@ -100,7 +93,7 @@ const Expenses = () => {
       const errorMsg = error instanceof Error ? error.message : "Erro ao carregar contas";
       console.error("Erro ao carregar contas:", errorMsg);
     }
-  };
+  }, []);
 
   const loadCategories = async () => {
     try {
@@ -213,7 +206,14 @@ const Expenses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClientId, selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    loadExpenses();
+    loadAccounts();
+    loadCategories();
+    loadCostCenters();
+  }, [selectedYear, selectedMonth, selectedClientId, loadExpenses, loadAccounts]);
 
   const generateRecurringInstances = async (parentExpense: any, parentId: string) => {
     try {

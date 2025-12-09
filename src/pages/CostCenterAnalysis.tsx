@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -473,7 +473,35 @@ const CostCenterAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth_, allCostCenters]);
+
+  useEffect(() => {
+    loadAllCostCenters().then((centers) => {
+      loadCostCenterData(centers);
+    });
+  }, [selectedYear, selectedMonth_, loadCostCenterData]);
+
+  // Subscribe to expense changes and reload data automatically
+  useEffect(() => {
+    const unsubscribe = subscribeToExpenseChanges(() => {
+      loadAllCostCenters().then((centers) => {
+        loadCostCenterData(centers);
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_, loadCostCenterData]);
+
+  // Calcular centros sem movimentação
+  useEffect(() => {
+    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
+      const centrosComDados = new Set(costCenterData.map(c => c.code));
+      const centersSemDados = allCostCenters.filter(
+        center => !centrosComDados.has(center.code)
+      );
+      setCostCenterWithoutData(centersSemDados);
+    }
+  }, [allCostCenters, costCenterData]);
 
   const loadMonthlyComparison = async () => {
     try {
@@ -734,7 +762,7 @@ const CostCenterAnalysis = () => {
           </CardContent>
         </Card>
 
-        {false && monthlyComparison.length > 0 && (
+        {monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Evolução Mensal por Centro de Custo</CardTitle>

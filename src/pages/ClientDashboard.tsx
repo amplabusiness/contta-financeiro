@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,38 +135,7 @@ const ClientDashboard = () => {
     );
   };
 
-  useEffect(() => {
-    if (!selectedClientId) {
-      navigate("/dashboard");
-      return;
-    }
-    loadClientData();
-
-    // Setup Realtime subscription to listen for invoice changes
-    const subscription = supabase
-      .channel(`invoices-${selectedClientId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "invoices",
-          filter: `client_id=eq.${selectedClientId}`,
-        },
-        (payload) => {
-          console.log("Invoice change detected:", payload);
-          // Reload data when invoice changes
-          loadClientData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [selectedClientId, navigate]);
-
-  const loadClientData = async () => {
+  const loadClientData = useCallback(async () => {
     if (!selectedClientId) return;
 
     try {
@@ -280,7 +249,39 @@ const ClientDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    if (!selectedClientId) {
+      navigate("/dashboard");
+      return;
+    }
+    loadClientData();
+
+    // Setup Realtime subscription to listen for invoice changes
+    const subscription = supabase
+      .channel(`invoices-${selectedClientId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "invoices",
+          filter: `client_id=eq.${selectedClientId}`,
+        },
+        (payload) => {
+          console.log("Invoice change detected:", payload);
+          // Reload data when invoice changes
+          loadClientData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [selectedClientId, navigate, loadClientData]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {

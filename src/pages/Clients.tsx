@@ -985,8 +985,6 @@ const Clients = () => {
                       statusFilter === "all" || 
                       (statusFilter === "active" && client.is_active) || 
                       (statusFilter === "inactive" && !client.is_active)
-                      (statusFilter === "active" && client.is_active) || 
-                      (statusFilter === "inactive" && !client.is_active)
                     ).length} clientes</>
                   )}
                 </CardDescription>

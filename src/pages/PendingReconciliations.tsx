@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,13 +71,31 @@ const PendingReconciliations = () => {
     costCenterId: string;
   }>({ visible: false, chartAccountId: "", costCenterId: "" });
 
-  useEffect(() => {
-    loadPendingReconciliations();
-    loadChartOfAccounts();
-    loadCostCenters();
+  const loadInvoiceInfo = useCallback(async (invoiceIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("id, number, client_id, due_date, clients(name)")
+        .in("id", invoiceIds);
+
+      if (error) throw error;
+
+      const infoMap: InvoiceInfo = {};
+      data?.forEach((inv: any) => {
+        infoMap[inv.id] = {
+          number: inv.number,
+          client_name: inv.clients?.name || "Unknown",
+          due_date: inv.due_date,
+        };
+      });
+
+      setInvoiceInfo(infoMap);
+    } catch (error: any) {
+      console.error("Erro ao carregar informações de faturas", error);
+    }
   }, []);
 
-  const loadPendingReconciliations = async () => {
+  const loadPendingReconciliations = useCallback(async () => {
     try {
       // Load pending reconciliations
       const { data: pendingData, error: pendingError } = await supabase
@@ -113,33 +131,9 @@ const PendingReconciliations = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadInvoiceInfo]);
 
-  const loadInvoiceInfo = async (invoiceIds: string[]) => {
-    try {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select("id, number, client_id, due_date, clients(name)")
-        .in("id", invoiceIds);
-
-      if (error) throw error;
-
-      const infoMap: InvoiceInfo = {};
-      data?.forEach((inv: any) => {
-        infoMap[inv.id] = {
-          number: inv.number,
-          client_name: inv.clients?.name || "Unknown",
-          due_date: inv.due_date,
-        };
-      });
-
-      setInvoiceInfo(infoMap);
-    } catch (error: any) {
-      console.error("Erro ao carregar informações de faturas", error);
-    }
-  };
-
-  const loadChartOfAccounts = async () => {
+  const loadChartOfAccounts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("chart_of_accounts")
@@ -152,9 +146,9 @@ const PendingReconciliations = () => {
     } catch (error: any) {
       console.error("Erro ao carregar plano de contas", error);
     }
-  };
+  }, []);
 
-  const loadCostCenters = async () => {
+  const loadCostCenters = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("cost_centers")
@@ -167,7 +161,13 @@ const PendingReconciliations = () => {
     } catch (error: any) {
       console.error("Erro ao carregar centros de custo", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPendingReconciliations();
+    loadChartOfAccounts();
+    loadCostCenters();
+  }, [loadPendingReconciliations, loadChartOfAccounts, loadCostCenters]);
 
   const handleApproveClick = (reconciliationId: string) => {
     setApprovalDialog({

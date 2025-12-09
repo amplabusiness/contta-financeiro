@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ExpenseUpdateContextType {
@@ -11,21 +11,18 @@ const ExpenseUpdateContext = createContext<ExpenseUpdateContextType | undefined>
 
 export const ExpenseUpdateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
-  const [listeners, setListeners] = useState<Set<() => void>>(new Set());
+  // Use ref instead of state for listeners to avoid stale closure issues
+  const listenersRef = useRef<Set<() => void>>(new Set());
 
   const notifyExpenseChange = useCallback(() => {
     setLastUpdate(Date.now());
-    listeners.forEach(listener => listener());
-  }, [listeners]);
+    listenersRef.current.forEach(listener => listener());
+  }, []); // No dependencies - stable callback
 
   const subscribeToExpenseChanges = useCallback((callback: () => void) => {
-    setListeners(prev => new Set([...prev, callback]));
+    listenersRef.current.add(callback);
     return () => {
-      setListeners(prev => {
-        const next = new Set(prev);
-        next.delete(callback);
-        return next;
-      });
+      listenersRef.current.delete(callback);
     };
   }, []);
 
