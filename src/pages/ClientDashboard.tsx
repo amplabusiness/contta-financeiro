@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 const ClientDashboard = () => {
   const { selectedClientId, selectedClientName } = useClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOverdue: 0,
