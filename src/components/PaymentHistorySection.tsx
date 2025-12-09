@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
 import { Undo2, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PaymentHistorySectionProps {
   clientId: string;
