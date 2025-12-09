@@ -302,13 +302,11 @@ const ReconcileHonorarios = () => {
       return;
     }
 
-    // Validar que todas as linhas têm cliente e competência
     if (splitLines.some((line) => !line.clientId || !line.competence || line.amount <= 0)) {
       toast.error("Preencha todos os campos obrigatórios em cada linha");
       return;
     }
 
-    // Validar que o total das linhas equals ao valor da transação
     if (Math.abs(splitTotal - totalAmount) > 0.01) {
       toast.error(
         `Total das linhas (R$ ${splitTotal.toFixed(2)}) não corresponde ao valor da transação (R$ ${totalAmount.toFixed(2)})`
@@ -318,6 +316,9 @@ const ReconcileHonorarios = () => {
 
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { data, error } = await supabase.functions.invoke(
         "reconcile-cross-period-invoice",
         {
@@ -340,15 +341,63 @@ const ReconcileHonorarios = () => {
 
       if (error) throw error;
 
-      if (data.success) {
-        toast.success(`✅ Transação dividida entre ${splitLines.length} clientes e reconciliada!`);
+      if (data.success && data.invoiceIds && data.invoiceIds.length > 0) {
+        let successCount = 0;
+        let errorCount = 0;
 
-        setTransactionAmount("");
-        setTransactionDesc("");
-        setMatches([]);
-        setShowSplitForm(false);
-        setSplitLines([]);
-        setAiGuidance(null);
+        for (let i = 0; i < data.invoiceIds.length; i++) {
+          const invoiceId = data.invoiceIds[i];
+          const line = splitLines[i];
+          const client = clients.find((c) => c.id === line.clientId);
+
+          if (!client) continue;
+
+          try {
+            const accountingResult = await registrarRecebimento({
+              paymentId: `payment_${invoiceId}_${transactionDate}_line${i}`,
+              invoiceId,
+              clientId: line.clientId,
+              clientName: client.name,
+              amount: line.amount,
+              paymentDate: transactionDate,
+              bankAccountId,
+              description: `Recebimento de ${client.name} - Honorários ${line.competence} (Linha ${i + 1}/${splitLines.length})`,
+            });
+
+            if (accountingResult.success) {
+              successCount++;
+            } else {
+              errorCount++;
+              console.error(`Erro ao registrar lançamento da linha ${i + 1}:`, accountingResult.error);
+            }
+          } catch (err: any) {
+            errorCount++;
+            console.error(`Erro ao registrar lançamento da linha ${i + 1}:`, err.message);
+          }
+        }
+
+        if (successCount > 0 && errorCount === 0) {
+          toast.success(
+            `✅ Transação dividida e reconciliada com sucesso!\n` +
+            `${successCount} cliente(s) reconciliado(s)\n` +
+            `Total: R$ ${totalAmount.toFixed(2)}`
+          );
+
+          setTransactionAmount("");
+          setTransactionDesc("");
+          setMatches([]);
+          setShowSplitForm(false);
+          setSplitLines([]);
+          setAiGuidance(null);
+        } else if (successCount > 0 && errorCount > 0) {
+          toast.warning(
+            `⚠️ Transação dividida parcialmente\n` +
+            `${successCount} cliente(s) reconciliado(s)\n` +
+            `${errorCount} erro(s) ao registrar lançamentos`
+          );
+        } else {
+          throw new Error("Erro ao registrar lançamentos contábeis");
+        }
       } else {
         throw new Error(data.error || "Erro ao dividir transação");
       }
