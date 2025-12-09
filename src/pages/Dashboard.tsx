@@ -351,7 +351,10 @@ const Dashboard = () => {
         });
       }
     } catch (error) {
-      console.error("Erro ao carregar detalhes:", error);
+      console.error("Erro ao carregar detalhes:", {
+        message: error instanceof Error ? error.message : String(error),
+        error,
+      });
     }
   };
 
