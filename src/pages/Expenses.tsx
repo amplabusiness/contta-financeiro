@@ -156,7 +156,7 @@ const Expenses = () => {
     }
   };
 
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       let query = supabase.from("expenses").select("*").order("due_date", { ascending: false });
 

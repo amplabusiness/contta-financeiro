@@ -323,7 +323,7 @@ const CostCenterAnalysis = () => {
     }
   };
 
-  const loadCostCenterData = async (centersParam?: any[]) => {
+  const loadCostCenterData = useCallback(async (centersParam?: any[]) => {
     const costCentersToUse = centersParam || allCostCenters;
     try {
       setLoading(true);
