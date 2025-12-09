@@ -122,10 +122,16 @@ const ConsolidatedPaymentsSection = ({
 
   const consultAccountantAI = async (items: PaymentItem[]) => {
     try {
+      // Apenas tenta consultar se há itens pendentes
+      const pendingItems = items.filter(i => i.status !== "paid");
+      if (pendingItems.length === 0) {
+        return;
+      }
+
       const totalOverdue = items
         .filter(i => i.status === "overdue")
         .reduce((sum, i) => sum + (i.amount - (i.paid_amount || 0)), 0);
-      
+
       const totalPending = items
         .filter(i => i.status === "pending")
         .reduce((sum, i) => sum + (i.amount - (i.paid_amount || 0)), 0);
@@ -145,27 +151,43 @@ Análise contábil: Este cliente tem:
 Responda de forma breve e profissional (máximo 2 frases).
       `;
 
-      const { data, error } = await supabase.functions.invoke("ai-accountant-agent", {
-        body: {
-          type: "validate_entry",
-          data: {
-            description: prompt,
-            transaction_type: "consolidation_analysis",
-          },
-        },
-      });
+      // Timeout de 10 segundos para não bloquear a UI
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout na consulta ao Contador IA")), 10000)
+      );
 
-      if (error) {
-        console.warn("Erro ao consultar AI:", error);
+      try {
+        const { data, error } = await Promise.race([
+          supabase.functions.invoke("ai-accountant-agent", {
+            body: {
+              type: "validate_entry",
+              data: {
+                description: prompt,
+                transaction_type: "consolidation_analysis",
+              },
+            },
+          }),
+          timeoutPromise,
+        ]) as any;
+
+        if (error) {
+          console.warn("Erro ao consultar AI Accountant:", {
+            message: error.message,
+            status: error.status,
+          });
+          setAiRecommendation(null);
+          return;
+        }
+
+        if (data?.analysis) {
+          setAiRecommendation(data.analysis);
+        }
+      } catch (invokeError) {
+        console.warn("Falha na invocação do AI Accountant:", invokeError instanceof Error ? invokeError.message : String(invokeError));
         setAiRecommendation(null);
-        return;
-      }
-
-      if (data?.analysis) {
-        setAiRecommendation(data.analysis);
       }
     } catch (error) {
-      console.warn("Não foi possível obter recomendação do contador IA:", error);
+      console.warn("Erro ao preparar consulta ao Contador IA:", error instanceof Error ? error.message : String(error));
       setAiRecommendation(null);
     }
   };
