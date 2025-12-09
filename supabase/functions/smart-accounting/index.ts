@@ -703,19 +703,49 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
     }
 
     case 'recebimento': {
-      // Débito: Caixa
+      // Débito: Conta Bancária Específica (ou Caixa Geral como fallback)
       // Crédito: Conta do Cliente (baixa do saldo)
 
-      const { data: cashAccount } = await supabase
-        .from('chart_of_accounts')
-        .select('id')
-        .eq('code', '1.1.1.01')
-        .single();
+      let bankAccount = null;
 
-      if (!cashAccount) {
-        throw new Error('Conta de caixa não encontrada');
+      // Se temos bank_account_id, buscar a conta bancária específica
+      if (bank_account_id) {
+        const { data: bankData } = await supabase
+          .from('bank_accounts')
+          .select('id, name')
+          .eq('id', bank_account_id)
+          .single();
+
+        if (bankData) {
+          // Criar/buscar conta contábil correspondente ao banco
+          // Padrão: 1.1.1.02 para Sicredi, podemos estender para outros bancos
+          bankAccount = await ensureAccountExists(
+            supabase,
+            userId,
+            '1.1.1.02', // Banco Sicredi C/C (padrão)
+            `${bankData.name} C/C`,
+            'ATIVO',
+            true, // is_analytical
+            '1.1.1'
+          );
+        }
       }
-      debitAccountId = cashAccount.id;
+
+      // Se não temos banco específico, usar Caixa Geral como fallback
+      if (!bankAccount) {
+        const { data: cashAccount } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('code', '1.1.1.01')
+          .single();
+
+        if (!cashAccount) {
+          throw new Error('Conta de caixa não encontrada');
+        }
+        debitAccountId = cashAccount.id;
+      } else {
+        debitAccountId = bankAccount.id;
+      }
 
       // Buscar conta do cliente
       const clientAccount = await ensureClientAccount(supabase, userId, client_id, client_name);
