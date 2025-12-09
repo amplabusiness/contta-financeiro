@@ -383,16 +383,6 @@ const ClientDashboard = () => {
           />
         </div>
 
-        {stats.overdueCount > 0 && (
-          <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <CardTitle className="text-destructive">⚠️ Atenção: Cliente com Inadimplência</CardTitle>
-              <CardDescription>
-                Existem {stats.overdueCount} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
 
         {/* Saldo de Abertura */}
         {openingBalances.length > 0 && (
