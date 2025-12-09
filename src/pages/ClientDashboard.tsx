@@ -404,57 +404,6 @@ const ClientDashboard = () => {
         </div>
 
 
-        {/* Saldo de Abertura */}
-        {openingBalances.length > 0 && (
-          <Card className="border-orange-500/50 bg-orange-50/30">
-            <CardHeader>
-              <CardTitle className="text-orange-700">📋 Saldo de Abertura (Débitos Anteriores)</CardTitle>
-              <CardDescription>
-                Débitos de competências anteriores a 2025
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-[300px] overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Competência</TableHead>
-                      <TableHead>Valor Original</TableHead>
-                      <TableHead>Pago</TableHead>
-                      <TableHead>Saldo</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {openingBalances.map((ob) => {
-                      const saldo = Number(ob.amount) - Number(ob.paid_amount || 0);
-                      return (
-                        <TableRow key={ob.id}>
-                          <TableCell className="font-medium">{ob.competence}</TableCell>
-                          <TableCell>{formatCurrency(Number(ob.amount))}</TableCell>
-                          <TableCell className="text-green-600">{formatCurrency(Number(ob.paid_amount || 0))}</TableCell>
-                          <TableCell className={saldo > 0 ? "text-red-600 font-semibold" : "text-green-600"}>
-                            {formatCurrency(saldo)}
-                          </TableCell>
-                          <TableCell>
-                            {ob.status === "paid" ? (
-                              <Badge variant="default">Pago</Badge>
-                            ) : ob.status === "partial" ? (
-                              <Badge variant="secondary">Parcial</Badge>
-                            ) : (
-                              <Badge variant="destructive">Pendente</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <div>
           {clientMonthlyFee !== null || clientPaymentDay !== null ? (
             <Card className="mb-6 bg-blue-50 border-blue-200">
@@ -476,8 +425,10 @@ const ClientDashboard = () => {
             </Card>
           ) : null}
 
-          <PaymentHistorySection
+          <ConsolidatedPaymentsSection
             clientId={selectedClientId}
+            invoices={invoices}
+            openingBalances={openingBalances}
             clientMonthlyFee={clientMonthlyFee}
             clientPaymentDay={clientPaymentDay}
             onPaymentStatusChange={() => loadClientData()}
