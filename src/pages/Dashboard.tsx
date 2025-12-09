@@ -47,8 +47,17 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    loadDashboardData();
-  }, [selectedClientId]); // Recarregar quando mudar o cliente selecionado
+    if (isOfflineMode && offlineData) {
+      // Carregar dados do cache quando offline
+      setStats(offlineData.dashboardStats || stats);
+      setClients(offlineData.clients || []);
+      setRecentInvoices(offlineData.invoices || []);
+      setLoading(false);
+    } else {
+      // Carregar dados do servidor quando online
+      loadDashboardData();
+    }
+  }, [selectedClientId, isOfflineMode]); // Recarregar quando mudar o cliente selecionado ou modo offline
 
   const loadDashboardData = async () => {
     try {
