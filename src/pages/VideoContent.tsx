@@ -509,7 +509,7 @@ Sobre qual tema quer um video?`;
     }, 1500);
   };
 
-  const useSuggestion = (suggestion: typeof AI_VIDEO_SUGGESTIONS[0]) => {
+  const applySuggestion = (suggestion: typeof AI_VIDEO_SUGGESTIONS[0]) => {
     setNewTitle(suggestion.titulo);
     setNewDescription(suggestion.descricao);
     setNewType(suggestion.tipo);
@@ -885,7 +885,7 @@ Sobre qual tema quer um video?`;
                         "cursor-pointer hover:border-blue-300 transition-colors",
                         suggestion.prioridade === "alta" && "border-l-4 border-l-amber-500"
                       )}
-                      onClick={() => useSuggestion(suggestion)}
+                      onClick={() => applySuggestion(suggestion)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">

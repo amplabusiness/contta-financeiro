@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,11 +48,7 @@ const AuditLogs = () => {
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [showResolved, setShowResolved] = useState(false);
 
-  useEffect(() => {
-    loadLogs();
-  }, [showResolved]);
-
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       const query = supabase
         .from("audit_logs" as any)
@@ -72,7 +68,11 @@ const AuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showResolved]);
+
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
 
   const handleResolve = async () => {
     if (!selectedLog || !resolutionNotes.trim()) {

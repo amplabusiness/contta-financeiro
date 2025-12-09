@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -112,27 +112,7 @@ const FeeAdjustment = () => {
   const [initializingAll, setInitializingAll] = useState(false);
   const [initAllDialogOpen, setInitAllDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadMinimumWages(),
-        loadPendingClients(),
-        loadAdjustmentHistory()
-      ]);
-    } catch (error: any) {
-      console.error("Erro ao carregar dados:", error);
-      toast.error("Erro ao carregar dados");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMinimumWages = async () => {
+  const loadMinimumWages = useCallback(async () => {
     const { data, error } = await supabase
       .from("minimum_wage_history")
       .select("*")
@@ -143,9 +123,9 @@ const FeeAdjustment = () => {
     if (data && data.length > 0) {
       setCurrentMinWage(data[0].value);
     }
-  };
+  }, []);
 
-  const loadPendingClients = async () => {
+  const loadPendingClients = useCallback(async () => {
     const { data, error } = await supabase
       .from("v_clients_pending_adjustment")
       .select("*")
@@ -193,9 +173,9 @@ const FeeAdjustment = () => {
       minFeeInMinWages,
       maxFeeInMinWages
     });
-  };
+  }, []);
 
-  const loadAdjustmentHistory = async () => {
+  const loadAdjustmentHistory = useCallback(async () => {
     const { data, error } = await supabase
       .from("fee_adjustment_history")
       .select(`
@@ -216,7 +196,27 @@ const FeeAdjustment = () => {
     }));
 
     setAdjustmentHistory(enrichedData);
-  };
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadMinimumWages(),
+        loadPendingClients(),
+        loadAdjustmentHistory()
+      ]);
+    } catch (error: any) {
+      console.error("Erro ao carregar dados:", error);
+      toast.error("Erro ao carregar dados");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMinimumWages, loadPendingClients, loadAdjustmentHistory]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleAddMinimumWage = async () => {
     try {

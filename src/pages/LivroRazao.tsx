@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
@@ -37,21 +37,7 @@ const LivroRazao = () => {
   const [endDate, setEndDate] = useState('')
   const [searchParams] = useSearchParams()
 
-  useEffect(() => {
-    loadAccounts()
-    // Usar o ano inteiro por padrão
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
-  }, [])
-
-  useEffect(() => {
-    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
-  }, [selectedAccount])
-
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -77,9 +63,9 @@ const LivroRazao = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams])
 
-  const loadRazao = async (accountId: string, start?: string, end?: string) => {
+  const loadRazao = useCallback(async (accountId: string, start?: string, end?: string) => {
     try {
       setLoading(true)
 
@@ -110,15 +96,21 @@ const LivroRazao = () => {
       // Calcular saldo inicial
       let saldoInicial = 0
       if (start && accountIds.length > 0) {
-        const { data: saldoData } = await supabase
+        const { data: saldoData, error: saldoError } = await supabase
           .from('accounting_entry_lines')
-          .select('debit, credit, entry_id!inner(entry_date)')
+          .select('debit, credit, entry_id(entry_date)')
           .in('account_id', accountIds)
-          .lt('entry_id.entry_date', start)
+
+        if (saldoError) throw saldoError
 
         if (saldoData) {
-          const totalDebito = saldoData.reduce((sum, line) => sum + (line.debit || 0), 0)
-          const totalCredito = saldoData.reduce((sum, line) => sum + (line.credit || 0), 0)
+          // Filtrar apenas lançamentos anterior à data inicial
+          const saldoFiltrado = saldoData.filter((line: any) => {
+            return line.entry_id && line.entry_id.entry_date < start
+          })
+
+          const totalDebito = saldoFiltrado.reduce((sum, line) => sum + (line.debit || 0), 0)
+          const totalCredito = saldoFiltrado.reduce((sum, line) => sum + (line.credit || 0), 0)
           // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
           const primeiroDigito = account.code.charAt(0)
           const isDevedora = ['1', '4'].includes(primeiroDigito)
@@ -134,21 +126,29 @@ const LivroRazao = () => {
           credit,
           description,
           account_id,
-          entry_id!inner(id, entry_date, description)
+          entry_id(id, entry_date, description)
         `)
         .in('account_id', accountIds)
-        .order('entry_id.entry_date', { ascending: true })
+        .order('entry_id(entry_date)', { ascending: true })
 
       if (start) query = query.gte('entry_id.entry_date', start)
       if (end) query = query.lte('entry_id.entry_date', end)
 
       const { data, error } = await query
-      if (error) throw error
+      if (error) {
+        console.error('Erro na query Supabase:', error)
+        throw new Error(`Erro ao carregar lançamentos: ${error.message}`)
+      }
+
+      if (!data) {
+        setEntries([])
+        return
+      }
 
       // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
       const primeiroDigito = account.code.charAt(0)
       const isDevedora = ['1', '4'].includes(primeiroDigito)
-      
+
       let saldoAcumulado = saldoInicial
       const razaoEntries: RazaoEntry[] = []
 
@@ -163,13 +163,18 @@ const LivroRazao = () => {
         })
       }
 
-      data?.forEach((line: any) => {
+      data.forEach((line: any) => {
+        if (!line.entry_id) {
+          console.warn('Linha sem entry_id associado:', line)
+          return
+        }
+
         const debito = line.debit || 0
         const credito = line.credit || 0
         saldoAcumulado += isDevedora ? debito - credito : credito - debito
 
         // Se for conta sintética, incluir o código da conta filha na descrição
-        let descricao = line.description || line.entry_id.description
+        let descricao = line.description || line.entry_id.description || 'Sem descrição'
         if (account.is_synthetic) {
           const childAccount = accounts.find(a => a.id === line.account_id)
           if (childAccount) {
@@ -188,13 +193,28 @@ const LivroRazao = () => {
       })
 
       setEntries(razaoEntries)
-    } catch (error) {
-      console.error('Erro ao carregar razão:', error)
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error) || 'Erro desconhecido ao carregar razão'
+      console.error('Erro ao carregar razão:', errorMessage)
       setEntries([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [accounts])
+
+  useEffect(() => {
+    loadAccounts()
+    // Usar o ano inteiro por padrão
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+  }, [loadAccounts])
+
+  useEffect(() => {
+    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
+  }, [selectedAccount, startDate, endDate, loadRazao])
 
   const handleFilter = () => {
     if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)

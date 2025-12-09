@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
@@ -28,11 +28,7 @@ const ExecutiveDashboard = () => {
   const [netMargin, setNetMargin] = useState(0);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
 
-  useEffect(() => {
-    loadExecutiveData();
-  }, [selectedYear, selectedMonth, selectedClientId]);
-
-  const loadExecutiveData = async () => {
+  const loadExecutiveData = useCallback(async () => {
     setLoading(true);
     try {
       // Use selectedYear and selectedMonth from context, with defaults if empty
@@ -208,7 +204,11 @@ const ExecutiveDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth, selectedClientId]);
+
+  useEffect(() => {
+    loadExecutiveData();
+  }, [loadExecutiveData]);
 
   if (loading) {
     return (

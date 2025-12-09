@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,11 +68,7 @@ const EconomicGroupAnalysis = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [totalRevenue, setTotalRevenue] = useState(0);
 
-  useEffect(() => {
-    loadEconomicGroups();
-  }, [selectedYear, selectedMonth]);
-
-  const loadEconomicGroups = async () => {
+  const loadEconomicGroups = useCallback(async () => {
     setIsLoading(true);
     try {
       const year = selectedYear || new Date().getFullYear();
@@ -83,7 +79,7 @@ const EconomicGroupAnalysis = () => {
       const endDate = new Date(year, month, 0, 23, 59, 59);
 
       // Buscar clientes ativos com QSA
-      // @ts-ignore - Supabase type recursion issue
+      // @ts-expect-error - Supabase type recursion issue
       const clientsResult = await supabase
         .from('clients')
         .select('id, name, cnpj, qsa, monthly_fee')
@@ -268,7 +264,11 @@ const EconomicGroupAnalysis = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    loadEconomicGroups();
+  }, [loadEconomicGroups]);
 
   const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups);

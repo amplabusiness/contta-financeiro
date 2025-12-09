@@ -27,27 +27,41 @@ interface PeriodProviderProps {
 
 export const PeriodProvider: React.FC<PeriodProviderProps> = ({ children }) => {
   const currentDate = new Date();
-  const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
+
+  // Initialize state from localStorage if available
+  const getInitialYear = () => {
+    try {
+      const saved = localStorage.getItem('workingPeriod');
+      if (saved) {
+        const { year } = JSON.parse(saved);
+        return year;
+      }
+    } catch (e) {
+      console.error('Error loading working period from localStorage:', e);
+    }
+    return currentDate.getFullYear();
+  };
+
+  const getInitialMonth = () => {
+    try {
+      const saved = localStorage.getItem('workingPeriod');
+      if (saved) {
+        const { month } = JSON.parse(saved);
+        return month;
+      }
+    } catch (e) {
+      console.error('Error loading working period from localStorage:', e);
+    }
+    return currentDate.getMonth() + 1;
+  };
+
+  const [selectedYear, setSelectedYear] = useState<number>(getInitialYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(getInitialMonth());
 
   // Save to localStorage whenever period changes
   useEffect(() => {
     localStorage.setItem('workingPeriod', JSON.stringify({ year: selectedYear, month: selectedMonth }));
   }, [selectedYear, selectedMonth]);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('workingPeriod');
-    if (saved) {
-      try {
-        const { year, month } = JSON.parse(saved);
-        setSelectedYear(year);
-        setSelectedMonth(month);
-      } catch (e) {
-        console.error('Error loading working period:', e);
-      }
-    }
-  }, []);
 
   const getFormattedPeriod = () => {
     const monthNames = [

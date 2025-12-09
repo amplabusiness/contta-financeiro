@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
@@ -44,11 +44,7 @@ const Dashboard = () => {
     type: "invoices",
   });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [selectedClientId]); // Recarregar quando mudar o cliente selecionado
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       // Construir queries com filtro de cliente se selecionado
       let clientsQuery = supabase
@@ -176,7 +172,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]); // Recarregar quando mudar o cliente selecionado
 
   const handleViewClient = (clientId: string, clientName: string) => {
     setSelectedClient(clientId, clientName);

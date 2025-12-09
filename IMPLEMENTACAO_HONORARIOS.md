@@ -572,6 +572,77 @@ Configurações
 
 ---
 
+## 🧮 Mapeamento Centro de Custos x Plano de Contas (Sérgio + Adiantamentos)
+
+> "isso mesmo sergio e seus gastos, subgrupo filhos e seus gastos, subgrupo casa de campo de sergio"
+> "todas as operações tem que estar atrelada ao plano de contas nada nesta aplicação funciona sem o plano de contas"
+
+### Estado atual (base nas migrations)
+- `chart_of_accounts` já traz as contas analíticas exigidas (`1.1.3.04.01` Adiantamentos - Sergio, `2.1.4.01` AFAC - Sergio, `1.1.1.02` Banco Sicredi) em `supabase/migrations/20251130020000_partner_expense_accounts.sql` e no plano completo `20251129250000_complete_chart_of_accounts.sql`.
+- `cost_centers` + `cost_center_id` (despesas e transações) foram criados na mesma migration (`20251130020000_partner_expense_accounts.sql`), porém não há vínculo direto com o plano de contas.
+- `expenses.account_id` já referencia `chart_of_accounts` (`20251113012601_535c2a5b-a040-4617-8669-f40ae3149b75.sql`) e `bank_transactions` possui `journal_entry_id` (`20251129200000_add_journal_reference_columns.sql`), o que permite rastrear as partidas.
+- Categorias específicas do sócio (`supabase/migrations/20251130030000_sergio_expense_categories.sql`) relacionam `expense_categories.chart_account_id`, mas o cost center ainda não direciona automaticamente a conta.
+- O front já expõe campos de plano de contas + centro de custo em `src/pages/Expenses.tsx`, `src/pages/RecurringExpenses.tsx` e dashboards como `src/pages/CostCenterAnalysis.tsx`, porém os valores não são mandatórios nem validados.
+
+### Lacunas identificadas
+1. `cost_centers` não possui `default_chart_account_id` → não conseguimos forçar o vínculo entre centro de custo e conta contábil.
+2. `expenses.cost_center_id` e `bank_transactions.cost_center_id` continuam opcionais; importadores (`scripts/import_expenses_from_excel.py`, `scripts/import_jan2025.py`) só guardam rótulos textuais.
+3. Ausência dos subgrupos exigidos (Filhos, Casa de Campo) impede separar despesas dos dependentes e da casa do Lago das Brisas.
+4. Não existe visão única dos saldos de adiantamentos por sócio/cost center, dificultando o acompanhamento do que precisa ser devolvido ou transformado em AFAC.
+
+### Requisitos funcionais/contábeis
+1. Tornar obrigatório o preenchimento de `account_id` (plano de contas) **e** `cost_center_id` em `expenses` e `bank_transactions`, bloqueando gravações inconsistentes via trigger ou constraint.
+2. Adicionar `default_chart_account_id UUID REFERENCES chart_of_accounts(id)` (e timestamps) à tabela `cost_centers` para que cada centro carregue sua conta padrão.
+3. Criar os novos nós de centro de custo para o Sérgio (Filhos + Casa de Campo) reaproveitando os dados de `partner_family` e `partner_properties` definidos em `20251130040000_company_profile_employees.sql`.
+4. Popular `default_chart_account_id` dos centros `SERGIO*` apontando para `1.1.3.04.01` (Adiantamentos - Sergio). Ao receber devolução ou formalizar AFAC, o sistema deve gerar `D 1.1.1.02 / C 1.1.3.04.01` ou `D 1.1.3.04.01 / C 2.1.4.01` respectivamente.
+5. Atualizar views/relatórios (`vw_expenses_by_cost_center`, DRE, Livro Diário) para exibir o centro de custo e a conta contábil lado a lado.
+
+### Estrutura proposta para os centros de custo do Sérgio
+```
+SERGIO
+├── SERGIO.FILHOS
+│   ├── SERGIO.FILHOS.NAYARA
+│   ├── SERGIO.FILHOS.VICTOR
+│   └── SERGIO.FILHOS.SERGIO_AUGUSTO
+├── SERGIO.CASA_CAMPO        (Casa Lago das Brisas)
+├── SERGIO.IMOVEIS           (demais imóveis)
+├── SERGIO.VEICULOS
+├── SERGIO.PESSOAL           (saúde, personal, anuidades)
+├── SERGIO.TELEFONE
+└── SERGIO.OUTROS
+```
+
+| Código | Descrição | Conta Débito (pagamento pela empresa) | Conta Crédito (pagamento pela empresa) | Tags / Observações |
+| --- | --- | --- | --- | --- |
+| `AMPLA` | Operações do escritório | Conta `4.x` da categoria (`expense_categories.chart_account_id`) | `1.1.1.02` Banco Sicredi | Mantém rateio por categoria operacional. |
+| `SERGIO` | Despesas gerais do sócio | `1.1.3.04.01` Adiantamentos - Sergio | `1.1.1.02` Banco Sicredi | Tags: `PIX SERGIO`, `PAGAMENTO SERGIO`. |
+| `SERGIO.FILHOS` | Hub para dependentes | `1.1.3.04.01` | `1.1.1.02` | Usar quando não souber qual filho; deve ser reclassificado para um filho específico antes do fechamento. |
+| `SERGIO.FILHOS.NAYARA` | Babá, escola dos netos | `1.1.3.04.01` | `1.1.1.02` | Palavras-chave: `BABÁ`, `ESCOLA`, `NAYARA`. |
+| `SERGIO.FILHOS.VICTOR` | Custos ligados ao Victor (legalização) | `1.1.3.04.01` | `1.1.1.02` | Palavras-chave: `VICTOR HUGO`, `LEGALIZACAO`. |
+| `SERGIO.FILHOS.SERGIO_AUGUSTO` | Clínica Ampla / faculdade | `1.1.3.04.01` | `1.1.1.02` | Palavras-chave: `CLINICA AMPLA`, `MEDICINA`, `SERGIO AUGUSTO`. |
+| `SERGIO.CASA_CAMPO` | Casa Lago das Brisas (lazer) | `1.1.3.04.01` | `1.1.1.02` | Palavras-chave: `LAGO BRISAS`, `BURITI ALEGRE`, `CONDOMINIO LAGO`. |
+| `SERGIO.IMOVEIS` | IPTU/condomínio dos demais imóveis | `1.1.3.04.01` | `1.1.1.02` | Subdividir para `APTO MARISTA`, `SALAS 301-303`, `VILA ABAJA`. |
+| `SERGIO.VEICULOS` | IPVA, combustível, manutenção | `1.1.3.04.01` | `1.1.1.02` | Tags: `BMW`, `BIZ`, `CG`, `CARRETINHA`. |
+| `SERGIO.PESSOAL` | Saúde, personal, anuidades | `1.1.3.04.01` | `1.1.1.02` | Tags: `PLANO DE SAUDE`, `PERSONAL`, `CRC`. |
+| `SERGIO.TELEFONE` | Planos de telefonia pessoais | `1.1.3.04.01` | `1.1.1.02` | Tags: `CLARO`, `VIVO`, `TIM`. |
+| `SERGIO.OUTROS` | Qualquer gasto do sócio sem categoria definida | `1.1.3.04.01` | `1.1.1.02` | Deve ser revisado e reclassificado mensalmente. |
+
+> Todos os centros `SERGIO*` devem aceitar apenas contas de adiantamento. Caso o sócio devolva recursos, gerar entrada `D 1.1.1.02 / C 1.1.3.04.01`. Se decidir capitalizar via AFAC, reclassificar `D 1.1.3.04.01 / C 2.1.4.01` conforme instruído em `partner_expense_accounts`.
+
+### Fluxos contábeis obrigatórios
+1. **Empresa paga despesa pessoal** → `D 1.1.3.04.01` / `C 1.1.1.02` + `cost_center_id` específico (`SERGIO.*`).
+2. **Sócio devolve o valor** → `D 1.1.1.02` / `C 1.1.3.04.01`, mantendo o mesmo `cost_center_id` para zerar o saldo.
+3. **Transformar em AFAC** → `D 1.1.3.04.01` / `C 2.1.4.01`, vinculando o centro de custo utilizado na despesa original para rastreabilidade.
+
+### Impactos por camada
+- **Banco de Dados**: nova FK em `cost_centers`, constraints `NOT NULL` em `expenses.account_id`/`cost_center_id` e `bank_transactions.cost_center_id`, scripts de data fix para preencher históricos.
+- **Ingestão (scripts + Edge Functions)**: atualizar detectores de proprietário para atribuir `SERGIO.FILHOS.*` e `SERGIO.CASA_CAMPO` com base nas palavras-chave listadas acima.
+- **Backend/Serviços**: `AccountingService` e funções como `smart-accounting` devem usar o `default_chart_account_id` do centro de custo quando o usuário não informar manualmente.
+- **Frontend**: telas `Expenses.tsx`, `RecurringExpenses.tsx`, `CostCenterAnalysis.tsx` e componentes `AIClassificationDialog` devem bloquear salvamento sem plano de contas e sem centro de custo.
+- **Relatórios**: DRE, Livro Diário e widgets (`src/pages/Index.tsx`, `CostCenterAnalysis.tsx`) precisam mostrar o saldo de adiantamentos por centro (`SERGIO.*`) x saldo em `2.1.4.01` para evidenciar quanto o sócio deve/depositou.
+
+---
+
 ## 🔄 Rotas Adicionadas
 
 ### App.tsx - Novas Rotas:

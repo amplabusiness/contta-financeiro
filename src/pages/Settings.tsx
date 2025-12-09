@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -100,11 +100,7 @@ const Settings = () => {
     official_salary: "",
   });
 
-  useEffect(() => {
-    loadEmployees();
-  }, [showInactive]);
-
-  const loadEmployees = async () => {
+  const loadEmployees = useCallback(async () => {
     setLoadingEmployees(true);
     try {
       let query = supabase
@@ -130,7 +126,11 @@ const Settings = () => {
     } finally {
       setLoadingEmployees(false);
     }
-  };
+  }, [showInactive, toast]);
+
+  useEffect(() => {
+    loadEmployees();
+  }, [loadEmployees]);
 
   const resetEmployeeForm = () => {
     setEmployeeForm({
