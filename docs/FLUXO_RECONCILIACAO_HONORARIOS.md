@@ -269,6 +269,90 @@ Resultado:
 
 ---
 
+## 🔀 Scenario 4: Dividir Transação entre Múltiplos Clientes
+
+Quando uma única transação bancária contém pagamentos de múltiplos clientes, você pode dividir o valor entre eles.
+
+### Quando Usar
+- Transferência consolidada de múltiplos clientes
+- Pagamento agrupado que pertence a vários clientes
+- Integração de valores de diferentes fontes em uma transação única
+
+### Como Usar
+
+1. **Executar busca** → Sistema não encontrará correspondência (ou encontrará para apenas 1 cliente)
+2. **Clicar em "Dividir entre Múltiplos Clientes"**
+3. **Consultar o Contador IA** (recomendado):
+   - Clique em "Consultar IA"
+   - O Contador IA fornecerá orientações contábeis sobre:
+     - Forma correta de contabilizar a divisão
+     - Tratamento da competência e data de pagamento
+     - Requisitos de auditoria
+     - Validações necessárias
+
+4. **Adicionar Linhas de Divisão:**
+   - Clique em "+ Adicionar Linha" para cada cliente
+   - Preencha:
+     - **Cliente:** Seleção do cliente
+     - **Valor:** Valor específico deste cliente
+     - **Competência:** Mês/Ano da fatura original (MM/YYYY)
+
+5. **Validação Automática:**
+   - Sistema verifica que o total das linhas = valor da transação
+   - Barra vermelha indica diferença
+   - Barra verde indica total correto
+
+6. **Clicar em "Dividir e Reconciliar"**
+
+O sistema executará:
+- ✅ Criar uma fatura para cada linha (com seu cliente e competência)
+- ✅ Marcar cada fatura como "paid"
+- ✅ Registrar data de pagamento = data da transação
+- ✅ Criar lançamentos contábeis separados por cliente
+
+### Exemplo Prático
+
+```
+Transação: 15/01/2025 → R$ 10.000,00
+Descrição: Transferência de honorários
+
+Divisão:
+┌─────────────────────────────────────────┐
+│ Cliente A → R$ 4.000,00 | 12/2024      │
+│ Cliente B → R$ 3.500,00 | 12/2024      │
+│ Cliente C → R$ 2.500,00 | 01/2025      │
+│ TOTAL    → R$ 10.000,00 ✓              │
+└─────────────────────────────────────────┘
+
+Resultado:
+✅ Fatura 1: Cliente A | 12/2024 | R$ 4.000,00 | Paga em 15/01/2025
+✅ Fatura 2: Cliente B | 12/2024 | R$ 3.500,00 | Paga em 15/01/2025
+✅ Fatura 3: Cliente C | 01/2025 | R$ 2.500,00 | Paga em 15/01/2025
+
+Lançamentos Contábeis (3 separados):
+D: 1.1.1.02 - Banco SICREDI          R$ 4.000,00
+  C: 1.1.2 - Cliente A (a Receber)   R$ 4.000,00
+  Data: 15/01/2025 | Competência: 12/2024
+
+D: 1.1.1.02 - Banco SICREDI          R$ 3.500,00
+  C: 1.1.2 - Cliente B (a Receber)   R$ 3.500,00
+  Data: 15/01/2025 | Competência: 12/2024
+
+D: 1.1.1.02 - Banco SICREDI          R$ 2.500,00
+  C: 1.1.2 - Cliente C (a Receber)   R$ 2.500,00
+  Data: 15/01/2025 | Competência: 01/2025
+```
+
+### Validações Contábeis (orientadas pelo Contador IA)
+
+- ✅ Cada fatura mantém sua competência original
+- ✅ Cada pagamento é registrado separadamente por cliente
+- ✅ Data de pagamento é a mesma para todas as linhas
+- ✅ Total da transação é distribuído sem resíduos
+- ✅ Rastreabilidade completa (cada linha gera um lançamento)
+
+---
+
 ## 🚀 Próximos Passos
 
 Após implementar este fluxo:
