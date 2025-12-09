@@ -210,6 +210,7 @@ export function Layout({ children }: LayoutProps) {
           </main>
         </div>
       </div>
+      <ConnectionStatus />
     </SidebarProvider>
   );
 }
