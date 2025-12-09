@@ -200,12 +200,16 @@ Responda de forma breve e profissional (máximo 2 frases).
 
       if (item.type === "invoice") {
         const invoiceId = item.id.replace("invoice-", "");
-        
-        await supabase
+
+        const { error: deleteError } = await supabase
           .from("accounting_entries")
           .delete()
           .eq("invoice_id", invoiceId)
           .ilike("description", "%Reconciliação OFX/CNAB%");
+
+        if (deleteError && deleteError.code !== "PGRST116") {
+          console.warn("Aviso ao deletar lançamento:", deleteError);
+        }
 
         const { error: invoiceError } = await supabase
           .from("invoices")
@@ -217,7 +221,7 @@ Responda de forma breve e profissional (máximo 2 frases).
 
         if (invoiceError) throw invoiceError;
 
-        await supabase
+        const { error: reconcError } = await supabase
           .from("pending_reconciliations")
           .update({
             status: "pending",
@@ -228,14 +232,22 @@ Responda de forma breve e profissional (máximo 2 frases).
           })
           .eq("invoice_id", invoiceId)
           .eq("status", "approved");
+
+        if (reconcError && reconcError.code !== "PGRST116") {
+          console.warn("Aviso ao reverter conciliação:", reconcError);
+        }
       }
 
       toast.success("Pagamento desfeito! Volta a ficar pendente.");
       loadAndConsolidate();
       onPaymentStatusChange?.();
     } catch (error: any) {
-      toast.error("Erro ao desfazer pagamento");
-      console.error(error);
+      const errorMsg = error?.message || "Erro desconhecido";
+      console.error("Erro ao desfazer pagamento:", {
+        message: errorMsg,
+        error,
+      });
+      toast.error(`Erro ao desfazer pagamento: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
