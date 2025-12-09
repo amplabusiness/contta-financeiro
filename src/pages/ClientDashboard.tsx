@@ -11,7 +11,7 @@ import { AlertCircle, DollarSign, TrendingUp, FileText, Calendar, Undo2 } from "
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import PaymentHistorySection from "@/components/PaymentHistorySection";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const ClientDashboard = () => {
   const { selectedClientId, selectedClientName } = useClient();
