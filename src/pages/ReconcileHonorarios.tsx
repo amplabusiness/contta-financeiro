@@ -44,6 +44,7 @@ const ReconcileHonorarios = () => {
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [matches, setMatches] = useState<InvoiceMatch[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+  const [selectedClientForReconciliation, setSelectedClientForReconciliation] = useState<string | null>(null);
 
   useEffect(() => {
     loadBankAccounts();
