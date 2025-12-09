@@ -49,6 +49,15 @@ const ReconcileHonorarios = () => {
   const [newInvoiceClientId, setNewInvoiceClientId] = useState("");
   const [newInvoiceCompetence, setNewInvoiceCompetence] = useState("");
   const [newInvoiceDueDate, setNewInvoiceDueDate] = useState("");
+  const [showSplitForm, setShowSplitForm] = useState(false);
+  const [splitLines, setSplitLines] = useState<Array<{
+    id: string;
+    clientId: string;
+    amount: number;
+    competence: string;
+  }>>([]);
+  const [aiGuidance, setAiGuidance] = useState<string | null>(null);
+  const [showAiGuidance, setShowAiGuidance] = useState(false);
 
   useEffect(() => {
     loadBankAccounts();
