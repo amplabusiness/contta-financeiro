@@ -196,26 +196,38 @@ const ClientDashboard = () => {
       setClientPaymentDay(paymentDayFromCadastro);
 
       // Carregar honorários
-      const { data: invoicesData } = await supabase
+      const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("due_date", { ascending: false });
 
+      if (invoicesError) {
+        console.warn("Erro ao buscar invoices:", invoicesError);
+      }
+
       // Carregar saldos de abertura
-      const { data: openingBalanceData } = await supabase
+      const { data: openingBalanceData, error: obError } = await supabase
         .from("client_opening_balance")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("competence", { ascending: false });
 
+      if (obError) {
+        console.warn("Erro ao buscar opening balances:", obError);
+      }
+
       // Carregar razão do cliente
-      const { data: ledgerData } = await supabase
+      const { data: ledgerData, error: ledgerError } = await supabase
         .from("client_ledger")
         .select("*")
         .eq("client_id", selectedClientId)
         .order("transaction_date", { ascending: false })
         .limit(20);
+
+      if (ledgerError) {
+        console.warn("Erro ao buscar ledger:", ledgerError);
+      }
 
       const allInvoices = invoicesData || [];
       const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, monthlyFeeFromCadastro, paymentDayFromCadastro);
