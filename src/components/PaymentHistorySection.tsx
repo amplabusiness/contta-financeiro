@@ -33,6 +33,7 @@ const PaymentHistorySection = ({
   clientPaymentDay,
   onPaymentStatusChange,
 }: PaymentHistorySectionProps) => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [paidInvoices, setPaidInvoices] = useState<InvoiceData[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<InvoiceData[]>([]);
