@@ -234,6 +234,7 @@ async function reconcileTransaction(
     transactionDate?: string;
     transactionAmount?: number;
     bankAccountId?: string;
+    clientId?: string;
   }
 ): Promise<ReconcileResponse> {
   try {
@@ -254,24 +255,43 @@ async function reconcileTransaction(
 
     // Marcar fatura como paga
     const paymentDate = data.transactionDate || new Date().toISOString().split("T")[0];
+    const updateData: any = {
+      status: "paid",
+      payment_date: paymentDate,
+    };
+
+    // Se foi especificado um clientId diferente, atualizar a fatura
+    if (data.clientId && data.clientId !== invoice.client_id) {
+      updateData.client_id = data.clientId;
+
+      // Buscar o nome do novo cliente para referência
+      const { data: newClient } = await supabase
+        .from("clients")
+        .select("name")
+        .eq("id", data.clientId)
+        .single();
+
+      if (newClient) {
+        invoice.clients = { name: newClient.name };
+      }
+    }
+
     const { error: updateError } = await supabase
       .from("invoices")
-      .update({
-        status: "paid",
-        payment_date: paymentDate,
-      })
+      .update(updateData)
       .eq("id", data.invoiceId);
 
     if (updateError) throw updateError;
 
     // Registrar lançamento contábil (recebimento)
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (user && data.bankAccountId) {
       // Chamar o hook useAccounting para registrar recebimento
       // Este passo é feito no frontend, mas aqui documentamos a intenção
+      const clientInfo = data.clientId ? `(cliente alterado para: ${data.clientId})` : "";
       console.log(
-        `[Reconciliação] Registrar recebimento: Fatura ${data.invoiceId} recebida em ${paymentDate}`
+        `[Reconciliação] Registrar recebimento: Fatura ${data.invoiceId} recebida em ${paymentDate} ${clientInfo}`
       );
     }
 
