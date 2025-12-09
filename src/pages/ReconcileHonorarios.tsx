@@ -672,8 +672,208 @@ const ReconcileHonorarios = () => {
           </Card>
         )}
 
+        {/* Dividir transação entre múltiplos clientes (Scenario 4) */}
+        {!showSplitForm && !showCreateInvoiceForm && transactionAmount && (
+          <Card className="border-purple-200 bg-purple-50">
+            <CardHeader>
+              <CardTitle className="text-purple-900">🔀 Dividir entre Múltiplos Clientes</CardTitle>
+              <CardDescription>
+                Se a transação pertence a vários clientes, clique aqui para dividir o valor
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => setShowSplitForm(true)}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                ➗ Dividir Transação
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Formulário de divisão de transação (Scenario 4) */}
+        {showSplitForm && (
+          <Card className="border-purple-200">
+            <CardHeader>
+              <CardTitle className="text-purple-900">Dividir Transação entre Clientes</CardTitle>
+              <CardDescription>
+                Distribua o valor de R$ {parseFloat(transactionAmount).toFixed(2)} entre múltiplos clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* AI Accountant Guidance Section */}
+              <div className="border-l-4 border-purple-400 bg-purple-50 p-4 rounded">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium text-purple-900 flex items-center gap-2">
+                      🤖 Orientação do Contador IA
+                    </p>
+                    <p className="text-xs text-purple-700 mt-1">
+                      {aiGuidance ? "Clique no botão abaixo para consultar novamente" : "Consulte o Contador IA para obter orientações contábeis antes de dividir"}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={consultarAiParaDivisao}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="whitespace-nowrap"
+                  >
+                    {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                    Consultar IA
+                  </Button>
+                </div>
+              </div>
+
+              {/* AI Guidance Display */}
+              {aiGuidance && showAiGuidance && (
+                <div className="bg-white border border-purple-200 p-4 rounded max-h-64 overflow-y-auto">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap font-mono text-xs">
+                    {aiGuidance}
+                  </p>
+                  <Button
+                    onClick={() => setShowAiGuidance(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 text-purple-600"
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              )}
+
+              {/* Split Lines */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">Linhas de Divisão</h4>
+                  <Button
+                    onClick={addSplitLine}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                  >
+                    + Adicionar Linha
+                  </Button>
+                </div>
+
+                {splitLines.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Clique em "Adicionar Linha" para começar
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {splitLines.map((line, idx) => (
+                      <div
+                        key={line.id}
+                        className="flex gap-2 items-end p-3 bg-white border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <Label className="text-xs">Cliente</Label>
+                          <select
+                            value={line.clientId}
+                            onChange={(e) => updateSplitLine(line.id, "clientId", e.target.value)}
+                            className="w-full px-2 py-1 border rounded text-sm"
+                          >
+                            <option value="">Selecionar...</option>
+                            {clients.map((client) => (
+                              <option key={client.id} value={client.id}>
+                                {client.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="w-28">
+                          <Label className="text-xs">Valor</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={line.amount || ""}
+                            onChange={(e) => updateSplitLine(line.id, "amount", parseFloat(e.target.value) || 0)}
+                            className="text-sm px-2 py-1"
+                            placeholder="0.00"
+                          />
+                        </div>
+
+                        <div className="w-24">
+                          <Label className="text-xs">Competência</Label>
+                          <Input
+                            value={line.competence}
+                            onChange={(e) => updateSplitLine(line.id, "competence", e.target.value)}
+                            className="text-sm px-2 py-1"
+                            placeholder="MM/YYYY"
+                          />
+                        </div>
+
+                        <Button
+                          onClick={() => removeSplitLine(line.id)}
+                          disabled={loading}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Total Validation */}
+              {splitLines.length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                  <span className="font-medium text-sm">Total das Linhas:</span>
+                  <div className="text-right">
+                    <div className={`text-lg font-bold ${
+                      Math.abs(getTotalSplitAmount() - parseFloat(transactionAmount)) < 0.01
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}>
+                      R$ {getTotalSplitAmount().toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {Math.abs(getTotalSplitAmount() - parseFloat(transactionAmount)) < 0.01
+                        ? "✓ Valor correto"
+                        : `Diferença: R$ ${Math.abs(getTotalSplitAmount() - parseFloat(transactionAmount)).toFixed(2)}`}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSplitAndReconcile}
+                  disabled={loading || splitLines.length === 0 || Math.abs(getTotalSplitAmount() - parseFloat(transactionAmount)) > 0.01}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                  Dividir e Reconciliar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowSplitForm(false);
+                    setSplitLines([]);
+                  }}
+                  disabled={loading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+
+              <div className="bg-purple-50 border border-purple-200 p-3 rounded text-xs text-purple-900">
+                <strong>ℹ️ Como funciona:</strong> Cada linha será contabilizada como um recebimento separado, mantendo a competência original da fatura e registrando a data de pagamento em {transactionDate}.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Criar fatura sem correspondência (Scenario 3) */}
-        {!showCreateInvoiceForm && matches.length === 0 && transactionAmount && (
+        {!showCreateInvoiceForm && !showSplitForm && matches.length === 0 && transactionAmount && (
           <Card>
             <CardHeader>
               <CardTitle>Nenhuma fatura encontrada</CardTitle>
