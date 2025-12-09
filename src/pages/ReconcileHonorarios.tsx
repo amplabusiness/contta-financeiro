@@ -214,6 +214,152 @@ const ReconcileHonorarios = () => {
     }
   };
 
+  const consultarAiParaDivisao = async () => {
+    setLoading(true);
+    try {
+      const query = `
+        Cenário de Reconciliação: Transação dividida entre múltiplos clientes
+
+        Uma empresa recebeu R$ ${parseFloat(transactionAmount).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        })} em uma única transação bancária em ${transactionDate}.
+
+        Essa transação será dividida entre múltiplos clientes, cada um com sua fatura de competência diferente.
+
+        Questões para validação contábil:
+        1. Qual é a forma correta de contabilizar essa divisão? Devo criar múltiplos lançamentos de recebimento (um por cliente) ou um único lançamento com sublinhas?
+        2. A competência de cada fatura deve ser mantida na origem (ex: fatura de 12/2024 permanece 12/2024) e apenas a data do pagamento muda para ${transactionDate}?
+        3. Há algum requisito de auditoria ou rastreabilidade especial para transações divididas entre clientes?
+        4. Há alguma validação contábil que você recomenda antes de finalizar essa divisão?
+        5. Do ponto de vista da DRE (Demonstração de Resultado do Exercício), como essa divisão afeta a recognição da receita?
+      `;
+
+      const { data, error } = await supabase.functions.invoke("ai-accountant-agent", {
+        body: {
+          type: "analyze_transaction",
+          data: {
+            description: query,
+            amount: parseFloat(transactionAmount),
+            date: transactionDate,
+            transaction_type: "credit",
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      setAiGuidance(data.analysis);
+      setShowAiGuidance(true);
+      toast.success("Orientação do Contador IA obtida com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao consultar AI Accountant:", error);
+      toast.error("Erro ao consultar AI Accountant: " + (error.message || "erro desconhecido"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addSplitLine = () => {
+    setSplitLines([
+      ...splitLines,
+      {
+        id: Date.now().toString(),
+        clientId: "",
+        amount: 0,
+        competence: "",
+      },
+    ]);
+  };
+
+  const updateSplitLine = (id: string, field: string, value: any) => {
+    setSplitLines(
+      splitLines.map((line) =>
+        line.id === id ? { ...line, [field]: value } : line
+      )
+    );
+  };
+
+  const removeSplitLine = (id: string) => {
+    setSplitLines(splitLines.filter((line) => line.id !== id));
+  };
+
+  const getTotalSplitAmount = () => {
+    return splitLines.reduce((sum, line) => sum + (line.amount || 0), 0);
+  };
+
+  const handleSplitAndReconcile = async () => {
+    const totalAmount = parseFloat(transactionAmount) || 0;
+    const splitTotal = getTotalSplitAmount();
+
+    if (splitLines.length === 0) {
+      toast.error("Adicione pelo menos uma linha de divisão");
+      return;
+    }
+
+    if (!bankAccountId) {
+      toast.error("Selecione uma conta bancária");
+      return;
+    }
+
+    // Validar que todas as linhas têm cliente e competência
+    if (splitLines.some((line) => !line.clientId || !line.competence || line.amount <= 0)) {
+      toast.error("Preencha todos os campos obrigatórios em cada linha");
+      return;
+    }
+
+    // Validar que o total das linhas equals ao valor da transação
+    if (Math.abs(splitTotal - totalAmount) > 0.01) {
+      toast.error(
+        `Total das linhas (R$ ${splitTotal.toFixed(2)}) não corresponde ao valor da transação (R$ ${totalAmount.toFixed(2)})`
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "reconcile-cross-period-invoice",
+        {
+          body: {
+            action: "split_transaction",
+            data: {
+              transactionDate,
+              transactionAmount: totalAmount,
+              bankAccountId,
+              splitLines: splitLines.map((line) => ({
+                clientId: line.clientId,
+                amount: line.amount,
+                competence: line.competence,
+              })),
+              description: transactionDesc,
+            },
+          },
+        }
+      );
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(`✅ Transação dividida entre ${splitLines.length} clientes e reconciliada!`);
+
+        setTransactionAmount("");
+        setTransactionDesc("");
+        setMatches([]);
+        setShowSplitForm(false);
+        setSplitLines([]);
+        setAiGuidance(null);
+      } else {
+        throw new Error(data.error || "Erro ao dividir transação");
+      }
+    } catch (error: any) {
+      console.error("Erro ao dividir transação:", error);
+      toast.error(error.message || "Erro ao dividir transação");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateInvoiceAndReconcile = async () => {
     if (!newInvoiceClientId || !newInvoiceCompetence || !transactionAmount || !transactionDate) {
       toast.error("Preencha todos os campos obrigatórios");
