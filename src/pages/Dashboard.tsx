@@ -198,12 +198,27 @@ const Dashboard = () => {
       setClientsHealth(healthData);
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
+
+      // Salvar dados no cache para modo offline
+      saveOfflineData({
+        dashboardStats: stats,
+        clients: clientsList,
+        invoices: recentInvoices,
+      });
     } catch (error) {
       console.error("Erro crítico ao carregar dados da Dashboard:", {
         error,
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
+
+      // Se falhar e houver dados em cache, usar dados em cache
+      if (offlineData) {
+        console.log("Usando dados em cache devido a erro de conexão");
+        setStats(offlineData.dashboardStats || stats);
+        setClients(offlineData.clients || []);
+        setRecentInvoices(offlineData.invoices || []);
+      }
 
       // Mostrar toast com erro amigável
       if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
