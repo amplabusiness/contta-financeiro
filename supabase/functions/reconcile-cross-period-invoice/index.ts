@@ -97,6 +97,7 @@ async function findPendingInvoices(
     transactionAmount?: number;
     transactionDate?: string;
     transactionDescription?: string;
+    clientId?: string;
   }
 ): Promise<FindInvoicesResponse> {
   try {
@@ -104,13 +105,19 @@ async function findPendingInvoices(
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const { data: invoices, error } = await supabase
+    let query = supabase
       .from("invoices")
       .select("*, clients(name, cnpj)")
       .or(
         `status.eq.pending,and(status.eq.paid,payment_date.gte.${ninetyDaysAgo.toISOString()})`
-      )
-      .order("due_date", { ascending: false });
+      );
+
+    // Filtrar por cliente se informado
+    if (data.clientId) {
+      query = query.eq("client_id", data.clientId);
+    }
+
+    const { data: invoices, error } = await query.order("due_date", { ascending: false });
 
     if (error) throw error;
 
