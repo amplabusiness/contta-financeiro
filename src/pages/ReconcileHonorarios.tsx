@@ -84,7 +84,7 @@ const ReconcileHonorarios = () => {
     }
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (newClientId?: string) => {
     if (!transactionAmount || !transactionDate) {
       toast.error("Data e valor são obrigatórios");
       return;
@@ -92,6 +92,8 @@ const ReconcileHonorarios = () => {
 
     setLoading(true);
     try {
+      const clientId = newClientId !== undefined ? newClientId : selectedClientId;
+
       const { data, error } = await supabase.functions.invoke(
         "reconcile-cross-period-invoice",
         {
@@ -101,7 +103,7 @@ const ReconcileHonorarios = () => {
               transactionAmount: parseFloat(transactionAmount),
               transactionDate,
               transactionDescription: transactionDesc,
-              clientId: selectedClientId || undefined,
+              clientId: clientId || undefined,
             },
           },
         }
@@ -111,10 +113,13 @@ const ReconcileHonorarios = () => {
 
       if (data.success) {
         setMatches(data.invoices || []);
+        setSelectedInvoice(null);
+        setSelectedClientForReconciliation(clientId || null);
+
         if (data.invoices?.length === 0) {
-          toast.info("Nenhuma fatura encontrada para reconciliar");
+          toast.info("Nenhuma fatura encontrada para este cliente");
         } else {
-          toast.success(`${data.invoices?.length} fatura(s) encontrada(s)`);
+          toast.success(`${data.invoices?.length} fatura(s) encontrada(s) para este cliente`);
         }
       } else {
         throw new Error(data.error || "Erro ao buscar faturas");
