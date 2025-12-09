@@ -517,6 +517,134 @@ const ReconcileHonorarios = () => {
           </Card>
         )}
 
+        {/* Criar fatura sem correspondência (Scenario 3) */}
+        {!showCreateInvoiceForm && matches.length === 0 && transactionAmount && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Nenhuma fatura encontrada</CardTitle>
+              <CardDescription>
+                Deseja criar uma nova fatura para este recebimento?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => setShowCreateInvoiceForm(true)}
+                className="w-full"
+                variant="outline"
+              >
+                ➕ Criar Nova Fatura
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Formulário para criar fatura (Scenario 3) */}
+        {showCreateInvoiceForm && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Criar Fatura para Este Recebimento</CardTitle>
+              <CardDescription>
+                Preencha os detalhes da nova fatura a ser criada
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="create-client-id">Cliente *</Label>
+                  <select
+                    id="create-client-id"
+                    value={newInvoiceClientId}
+                    onChange={(e) => setNewInvoiceClientId(e.target.value)}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                  >
+                    <option value="">Selecionar cliente...</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="create-competence">Competência *</Label>
+                  <Input
+                    id="create-competence"
+                    placeholder="MM/YYYY"
+                    value={newInvoiceCompetence}
+                    onChange={(e) => setNewInvoiceCompetence(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="create-due-date">Data de Vencimento</Label>
+                  <Input
+                    id="create-due-date"
+                    type="date"
+                    value={newInvoiceDueDate}
+                    onChange={(e) => setNewInvoiceDueDate(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="create-amount">Valor *</Label>
+                  <Input
+                    id="create-amount"
+                    type="number"
+                    step="0.01"
+                    value={transactionAmount}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="create-desc">Descrição (opcional)</Label>
+                <Input
+                  id="create-desc"
+                  placeholder="Descrição da fatura"
+                  value={transactionDesc}
+                  onChange={(e) => setTransactionDesc(e.target.value)}
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                <p className="text-xs text-blue-900">
+                  <strong>ℹ️ Informação:</strong> Uma nova fatura será criada com competência {newInvoiceCompetence || "MM/YYYY"}
+                  e será reconciliada com a transação de {transactionDate} automaticamente.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCreateInvoiceAndReconcile}
+                  disabled={loading || !newInvoiceClientId || !newInvoiceCompetence}
+                  className="flex-1"
+                >
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                  Criar Fatura e Reconciliar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowCreateInvoiceForm(false);
+                    setNewInvoiceClientId("");
+                    setNewInvoiceCompetence("");
+                    setNewInvoiceDueDate("");
+                  }}
+                  disabled={loading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Info adicional */}
         <Card>
           <CardHeader>
