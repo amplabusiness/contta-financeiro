@@ -220,19 +220,12 @@ const PaymentHistorySection = ({
         console.error("Aviso: Erro ao reverter conciliação:", reconciliationError);
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Pagamento desfeito! Fatura voltou a ficar pendente.",
-      });
+      toast.success("Pagamento desfeito! Fatura voltou a ficar pendente.");
 
       loadPaymentHistory();
       onPaymentStatusChange?.();
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: "Erro ao desfazer pagamento",
-        variant: "destructive",
-      });
+      toast.error("Erro ao desfazer pagamento");
       console.error(error);
     } finally {
       setLoading(false);
