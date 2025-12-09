@@ -205,6 +205,87 @@ const ReconcileHonorarios = () => {
     }
   };
 
+  const handleCreateInvoiceAndReconcile = async () => {
+    if (!newInvoiceClientId || !newInvoiceCompetence || !transactionAmount || !transactionDate) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (!bankAccountId) {
+      toast.error("Selecione uma conta bancária");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const selectedClient = clients.find(c => c.id === newInvoiceClientId);
+      if (!selectedClient) throw new Error("Cliente não encontrado");
+
+      const { data, error } = await supabase.functions.invoke(
+        "reconcile-cross-period-invoice",
+        {
+          body: {
+            action: "create_invoice",
+            data: {
+              clientId: newInvoiceClientId,
+              amount: parseFloat(transactionAmount),
+              competence: newInvoiceCompetence,
+              dueDate: newInvoiceDueDate,
+              transactionDate,
+              bankAccountId,
+              description: transactionDesc,
+            },
+          },
+        }
+      );
+
+      if (error) throw error;
+
+      if (data.success && data.invoiceId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado");
+
+        const accountingResult = await registrarRecebimento({
+          paymentId: `payment_${data.invoiceId}_${transactionDate}`,
+          invoiceId: data.invoiceId,
+          clientId: newInvoiceClientId,
+          clientName: selectedClient.name,
+          amount: parseFloat(transactionAmount),
+          paymentDate: transactionDate,
+          bankAccountId,
+          description: `Recebimento de ${selectedClient.name} - Honorários ${newInvoiceCompetence}`,
+        });
+
+        if (accountingResult.success) {
+          toast.success(
+            `✅ Fatura criada e reconciliada!\n` +
+            `Cliente: ${selectedClient.name}\n` +
+            `Competência: ${newInvoiceCompetence}\n` +
+            `Pagamento: ${transactionDate}`
+          );
+
+          setTransactionAmount("");
+          setTransactionDesc("");
+          setMatches([]);
+          setSelectedInvoice(null);
+          setShowCreateInvoiceForm(false);
+          setNewInvoiceClientId("");
+          setNewInvoiceCompetence("");
+          setNewInvoiceDueDate("");
+        } else {
+          throw new Error(accountingResult.error || "Erro ao registrar lançamento contábil");
+        }
+      } else {
+        throw new Error(data.error || "Erro ao criar fatura");
+      }
+    } catch (error: any) {
+      console.error("Erro ao criar fatura:", error);
+      toast.error(error.message || "Erro ao criar fatura");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
