@@ -69,7 +69,7 @@ export function AIAssistantChat({
     }
   }, [messages]);
 
-  const loadPendingQuestions = async () => {
+  const loadPendingQuestions = useCallback(async () => {
     try {
       let query = supabase
         .from("ai_pending_questions")

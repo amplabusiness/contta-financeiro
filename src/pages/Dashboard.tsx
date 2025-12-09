@@ -59,7 +59,7 @@ const Dashboard = () => {
     }
   }, [selectedClientId, isOfflineMode]); // Recarregar quando mudar o cliente selecionado ou modo offline
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       // Construir queries com filtro de cliente se selecionado
       let clientsQuery = supabase
@@ -227,7 +227,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId]);
+  }, [selectedClientId, saveOfflineData, offlineData]);
 
   useEffect(() => {
     loadDashboardData();
