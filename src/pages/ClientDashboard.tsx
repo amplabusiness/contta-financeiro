@@ -172,11 +172,16 @@ const ClientDashboard = () => {
     try {
       setLoading(true);
 
-      const { data: clientData } = await supabase
+      const { data: clientData, error: clientError } = await supabase
         .from("clients")
         .select("monthly_fee, payment_day")
         .eq("id", selectedClientId)
         .single();
+
+      if (clientError) {
+        console.error("Erro ao buscar dados do cliente:", clientError);
+        throw clientError;
+      }
 
       const monthlyFeeFromCadastro =
         clientData && clientData.monthly_fee !== null && clientData.monthly_fee !== undefined
