@@ -346,6 +346,83 @@ interface CreateInvoiceResponse {
   error?: string;
 }
 
+interface SplitTransactionResponse {
+  success: boolean;
+  invoiceIds?: string[];
+  message?: string;
+  totalAmount?: number;
+  linesProcessed?: number;
+  error?: string;
+}
+
+async function splitTransaction(
+  supabase: any,
+  data: {
+    transactionDate?: string;
+    transactionAmount?: number;
+    bankAccountId?: string;
+    description?: string;
+    splitLines?: SplitLine[];
+  }
+): Promise<SplitTransactionResponse> {
+  try {
+    if (!data.splitLines || data.splitLines.length === 0) {
+      throw new Error("splitLines é obrigatório");
+    }
+
+    if (!data.transactionDate || !data.transactionAmount || !data.bankAccountId) {
+      throw new Error("transactionDate, transactionAmount e bankAccountId são obrigatórios");
+    }
+
+    const invoiceIds: string[] = [];
+    let totalProcessed = 0;
+
+    for (const line of data.splitLines) {
+      if (!line.clientId || !line.competence || line.amount <= 0) {
+        throw new Error("Todas as linhas devem ter clientId, competence e amount válidos");
+      }
+
+      const now = new Date().toISOString();
+
+      const { data: newInvoice, error: insertError } = await supabase
+        .from("invoices")
+        .insert({
+          client_id: line.clientId,
+          amount: line.amount,
+          competence: line.competence,
+          due_date: data.transactionDate,
+          status: "paid",
+          payment_date: data.transactionDate,
+          description: data.description || `Fatura criada via divisão de transação de ${data.transactionDate}`,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      invoiceIds.push(newInvoice.id);
+      totalProcessed += line.amount;
+    }
+
+    return {
+      success: true,
+      invoiceIds,
+      linesProcessed: data.splitLines.length,
+      totalAmount: totalProcessed,
+      message: `Transação dividida em ${data.splitLines.length} faturas com sucesso. Total: R$ ${totalProcessed.toFixed(2)}`,
+    };
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro ao dividir transação";
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
 async function createInvoice(
   supabase: any,
   data: {
