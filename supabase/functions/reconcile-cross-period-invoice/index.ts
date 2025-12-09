@@ -51,6 +51,11 @@ serve(async (req) => {
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    } else if (action === "create_invoice") {
+      const result = await createInvoice(supabase, data);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else if (action === "get_reconciliation_details") {
       const result = await getReconciliationDetails(supabase, data);
       return new Response(JSON.stringify(result), {
