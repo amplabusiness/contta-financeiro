@@ -153,11 +153,16 @@ const PaymentHistorySection = ({
     try {
       setLoading(true);
 
-      const { data: invoicesData } = await supabase
+      const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", clientId)
         .order("due_date", { ascending: false });
+
+      if (invoicesError) {
+        console.error("Erro ao buscar faturas:", invoicesError);
+        throw invoicesError;
+      }
 
       const allInvoices = invoicesData || [];
       const aggregatedInvoices = aggregateInvoicesByCompetence(allInvoices, clientMonthlyFee, clientPaymentDay);
@@ -168,7 +173,12 @@ const PaymentHistorySection = ({
       setPaidInvoices(paid);
       setPendingInvoices(pending);
     } catch (error) {
-      console.error("Erro ao carregar histórico de pagamento:", error);
+      console.error("Erro ao carregar histórico de pagamento:", {
+        error,
+        clientId,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       toast.error("Erro ao carregar histórico de pagamento");
     } finally {
       setLoading(false);
