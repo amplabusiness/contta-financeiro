@@ -64,6 +64,11 @@ serve(async (req) => {
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    } else if (action === "split_transaction") {
+      const result = await splitTransaction(supabase, data);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else if (action === "get_reconciliation_details") {
       const result = await getReconciliationDetails(supabase, data);
       return new Response(JSON.stringify(result), {
