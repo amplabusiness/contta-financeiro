@@ -74,47 +74,66 @@ const ConsolidatedPaymentsSection = ({
 
       // Adicionar invoices
       invoices.forEach((inv) => {
-        const status = inv.status === "paid" ? "paid" : 
-                       getInvoiceStatus(inv.due_date, inv.status === "paid");
-        items.push({
-          id: `invoice-${inv.id}`,
-          type: "invoice",
-          competence: inv.competence || "-",
-          amount: Number(inv.amount),
-          due_date: inv.due_date,
-          payment_date: inv.payment_date,
-          status,
-          description: inv.description,
-        });
+        try {
+          const status = inv.status === "paid" ? "paid" :
+                         getInvoiceStatus(inv.due_date, inv.status === "paid");
+          items.push({
+            id: `invoice-${inv.id}`,
+            type: "invoice",
+            competence: inv.competence || "-",
+            amount: Number(inv.amount),
+            due_date: inv.due_date,
+            payment_date: inv.payment_date,
+            status,
+            description: inv.description,
+          });
+        } catch (invoiceError) {
+          console.warn("Erro ao processar invoice:", invoiceError);
+        }
       });
 
       // Adicionar opening balances
       openingBalances.forEach((ob) => {
-        const pendingAmount = Number(ob.amount) - Number(ob.paid_amount || 0);
-        const status = ob.status === "paid" ? "paid" : 
-                       ob.status === "partial" ? "partial" : 
-                       getInvoiceStatus(ob.competence, ob.status === "paid");
-        items.push({
-          id: `opening-${ob.id}`,
-          type: "opening_balance",
-          competence: ob.competence,
-          amount: Number(ob.amount),
-          paid_amount: Number(ob.paid_amount || 0),
-          due_date: ob.competence,
-          status,
-          notes: `Saldo anterior: R$ ${formatCurrency(pendingAmount)}`,
-        });
+        try {
+          const pendingAmount = Number(ob.amount) - Number(ob.paid_amount || 0);
+          const status = ob.status === "paid" ? "paid" :
+                         ob.status === "partial" ? "partial" :
+                         getInvoiceStatus(ob.competence, ob.status === "paid");
+          items.push({
+            id: `opening-${ob.id}`,
+            type: "opening_balance",
+            competence: ob.competence,
+            amount: Number(ob.amount),
+            paid_amount: Number(ob.paid_amount || 0),
+            due_date: ob.competence,
+            status,
+            notes: `Saldo anterior: R$ ${formatCurrency(pendingAmount)}`,
+          });
+        } catch (obError) {
+          console.warn("Erro ao processar opening balance:", obError);
+        }
       });
 
       // Ordenar por data
-      items.sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime());
+      items.sort((a, b) => {
+        try {
+          return new Date(b.due_date).getTime() - new Date(a.due_date).getTime();
+        } catch {
+          return 0;
+        }
+      });
 
       setConsolidatedItems(items);
 
-      // Consultar contador IA
-      await consultAccountantAI(items);
+      // Consultar contador IA (não bloqueia se falhar)
+      try {
+        await consultAccountantAI(items);
+      } catch (aiError) {
+        console.warn("Falha ao consultar AI (não-bloqueante):", aiError);
+      }
     } catch (error) {
-      console.error("Erro ao consolidar pagamentos:", error);
+      console.error("Erro ao consolidar pagamentos:", error instanceof Error ? error.message : String(error));
+      toast.error("Erro ao carregar dados consolidados");
     } finally {
       setLoading(false);
     }
