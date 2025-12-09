@@ -58,7 +58,8 @@ export function AIAssistantChat({
 
   // Buscar perguntas pendentes da IA
   useEffect(() => {
-    loadPendingQuestions();
+    // TODO: Reativar quando tabela ai_pending_questions estiver disponível
+    // loadPendingQuestions();
   }, [context, contextId]);
 
   // Auto-scroll para última mensagem
