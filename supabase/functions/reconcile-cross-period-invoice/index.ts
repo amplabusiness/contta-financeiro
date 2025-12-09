@@ -19,6 +19,7 @@ interface ReconcileRequest {
     transactionDescription?: string;
     invoiceId?: string;
     bankAccountId?: string;
+    clientId?: string;
   };
 }
 
