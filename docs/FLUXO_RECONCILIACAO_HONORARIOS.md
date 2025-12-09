@@ -364,18 +364,130 @@ Após implementar este fluxo:
 
 ---
 
+## 📊 Validação dos Lançamentos Contábeis
+
+### Estrutura Contábil Implementada
+
+Todos os 4 scenarios seguem a **partida dobrada contábil** corrigida:
+
+**Banco Utilizado:** SICREDI (Conta: 1.1.1.02)
+**Clientes a Receber:** Conta Sintética 1.1.2.01 com subcontas por cliente
+
+### Scenario 1: Reconciliação Simples
+```
+Lançamento Contábil Criado:
+├─ Data: Data da transação (ex: 15/01/2025)
+├─ Competência: Data original da fatura (ex: 12/2024)
+├─ Débito: 1.1.1.02 (Banco Sicredi C/C) → R$ X.XXX,00
+├─ Crédito: 1.1.2.01.{clientId} (Cliente a Receber) → R$ X.XXX,00
+└─ Tipo: recebimento
+   Referência: payment_{invoiceId}_{date}
+```
+
+### Scenario 2: Alterar Cliente
+```
+Apenas a BUSCA muda (filtra por novo cliente).
+O lançamento contábil é criado da mesma forma que Scenario 1,
+mas com o novo cliente selecionado.
+
+Importante: A fatura ORIGINAL (Cliente A) permanece "pendente" na base de dados.
+A fatura do NOVO cliente (Cliente B) é criada e reconciliada.
+```
+
+### Scenario 3: Criar Fatura Sem Correspondência
+```
+Duas operações:
+1. CRIAR FATURA:
+   ├─ Status: "paid" (já marcada como paga)
+   ├─ Payment Date: Data da transação
+   └─ Competência: Conforme informado pelo usuário
+
+2. LANÇAMENTO CONTÁBIL:
+   ├─ Data: Data da transação
+   ├─ Competência: Competência da fatura
+   ├─ Débito: 1.1.1.02 (Banco Sicredi C/C) → R$ X.XXX,00
+   ├─ Crédito: 1.1.2.01.{clientId} (Cliente a Receber) → R$ X.XXX,00
+   └─ Tipo: recebimento
+      Referência: payment_{invoiceId}_{date}
+```
+
+### Scenario 4: Dividir Transação (Múltiplos Clientes)
+```
+Para CADA linha de divisão:
+
+Lançamento 1:
+├─ Data: Data da transação
+├─ Competência: Competência da Linha 1
+├─ Débito: 1.1.1.02 (Banco Sicredi C/C) → R$ 4.000,00
+├─ Crédito: 1.1.2.01.{clientId_A} (Cliente A a Receber) → R$ 4.000,00
+└─ Referência: payment_{invoiceId_1}_{date}_line1
+
+Lançamento 2:
+├─ Data: Data da transação
+├─ Competência: Competência da Linha 2
+├─ Débito: 1.1.1.02 (Banco Sicredi C/C) → R$ 3.500,00
+├─ Crédito: 1.1.2.01.{clientId_B} (Cliente B a Receber) → R$ 3.500,00
+└─ Referência: payment_{invoiceId_2}_{date}_line2
+
+Lançamento 3:
+├─ Data: Data da transação
+├─ Competência: Competência da Linha 3
+├─ Débito: 1.1.1.02 (Banco Sicredi C/C) → R$ 2.500,00
+├─ Crédito: 1.1.2.01.{clientId_C} (Cliente C a Receber) → R$ 2.500,00
+└─ Referência: payment_{invoiceId_3}_{date}_line3
+
+TOTAL: 3 lançamentos, mas 1 transação bancária de R$ 10.000,00
+```
+
+### ✅ Verificação dos Lançamentos
+
+Para validar que os lançamentos foram criados corretamente:
+
+1. **Acessar Lançamentos Contábeis** (menu principal)
+2. **Filtrar por:**
+   - Data: Data da transação (ex: 15/01/2025)
+   - Tipo: "recebimento"
+   - Descrição: Nome do cliente
+
+3. **Verificar que aparecem:**
+   - Débito em 1.1.1.02 (Banco Sicredi)
+   - Crédito em 1.1.2.01.{clientId} (Cliente a Receber)
+   - Partida dobrada (débito = crédito)
+
+4. **Para Scenario 4, verificar:**
+   - 3 lançamentos separados (um por cliente)
+   - Cada um com sua competência específica
+   - Débitos somam valor total da transação
+   - Créditos distribuídos entre clientes
+
+### ⚠️ Problemas Comuns e Soluções
+
+| Problema | Causa | Solução |
+|----------|-------|--------|
+| Lançamento não criado | Fatura não foi reconciliada | Verifique se accountingResult.success = true |
+| Banco errado (Caixa em vez de SICREDI) | Conta bancária não informada | Sempre selecione conta bancária no formulário |
+| Competência incorreta | Fatura sem competência | Verifique formato MM/YYYY |
+| Saldo duplicado | Lançamento de receita + recebimento | Normal! Receita em 12/2024, pagamento em 01/2025 |
+
+---
+
 ## 📞 Suporte
 
 Se encontrar problemas:
 
 1. Verifique se a **fatura existe** no sistema (Scenario 1 e 2)
 2. Confirme o **valor exato** da transação
-3. Verifique se a **conta bancária** está correta
+3. Verifique se a **conta bancária** está selecionada
 4. Ao criar nova fatura (Scenario 3), verifique **competência** no formato MM/YYYY
-5. Consulte os **logs de erro** em Auditoria
+5. Para Scenario 4, valide que **total das linhas = valor da transação**
+6. Consulte os **lançamentos contábeis** para verificar débito/crédito
+7. Consulte os **logs de erro** em Auditoria se necessário
+8. Consulte o **Contador IA** para orientações contábeis
 
 ---
 
-**Versão:** 1.1
+**Versão:** 1.2
 **Atualizado:** Janeiro 2025
 **Sistema:** Ampla Contabilidade
+**Conta Bancária:** SICREDI (1.1.1.02)
+**Status dos Scenarios:** Todos implementados com validação contábil ✅
