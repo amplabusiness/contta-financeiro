@@ -143,7 +143,7 @@ const ReconcileHonorarios = () => {
       const invoice = matches.find(m => m.id === invoiceId);
       if (!invoice) throw new Error("Fatura não encontrada");
 
-      // 1. Executar reconciliação via Edge Function
+      // 1. Executar reconciliação via Edge Function (com clientId se foi alterado)
       const { data: reconData, error: reconError } = await supabase.functions.invoke(
         "reconcile-cross-period-invoice",
         {
@@ -154,6 +154,7 @@ const ReconcileHonorarios = () => {
               transactionDate,
               transactionAmount: parseFloat(transactionAmount),
               bankAccountId,
+              clientId: selectedClientForReconciliation || undefined,
             },
           },
         }
@@ -168,7 +169,7 @@ const ReconcileHonorarios = () => {
       const accountingResult = await registrarRecebimento({
         paymentId: `payment_${invoiceId}_${transactionDate}`,
         invoiceId,
-        clientId: "", // Será obtido da fatura
+        clientId: selectedClientForReconciliation || "",
         clientName: invoice.client_name,
         amount: invoice.amount,
         paymentDate: transactionDate,
@@ -182,12 +183,13 @@ const ReconcileHonorarios = () => {
           `Fatura: ${invoice.competence}\n` +
           `Pagamento: ${transactionDate}`
         );
-        
+
         // Limpar formulário
         setTransactionAmount("");
         setTransactionDesc("");
         setMatches([]);
         setSelectedInvoice(null);
+        setSelectedClientForReconciliation(null);
       } else {
         throw new Error(accountingResult.error || "Erro ao registrar lançamento contábil");
       }
