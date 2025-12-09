@@ -204,6 +204,71 @@ D: 1.1.1.02 - Banco SICREDI          R$ 5.000,00
 
 ---
 
+## 📋 Scenario 2: Alterar Cliente na Reconciliação
+
+Se a fatura encontrada pertence ao cliente errado, você pode:
+
+1. **Na seção "Faturas Encontradas"**, há um campo para alterar o cliente
+2. Clique em **"Buscar Novamente"** com o novo cliente
+3. Selecione a fatura correta entre os novos resultados
+4. Proceda com a reconciliação
+
+Isso é útil quando:
+- A transação foi digitada com nome genérico
+- Múltiplos clientes com nomes similares
+- Pagamento consolidado de múltiplos clientes
+
+---
+
+## 📝 Scenario 3: Criar Recebimento SEM Fatura
+
+Se **nenhuma fatura for encontrada**, você pode criar uma nova:
+
+### Quando Usar
+- Você recebeu um pagamento mas não tem fatura registrada
+- Fatura foi emitida em período anterior não mais pesquisável
+- Pagamento espontâneo sem prévia emissão de fatura
+
+### Como Usar
+
+1. **Executar busca** → Sistema encontrará 0 faturas
+2. **Clicar em "Criar Nova Fatura"**
+3. **Preencher dados:**
+   - **Cliente:** Seleção obrigatória
+   - **Competência:** Mês/Ano (MM/YYYY) - obrigatório
+   - **Data de Vencimento:** Opcional
+   - **Valor:** Preenchido automaticamente da transação
+   - **Descrição:** Opcional
+
+4. **Clicar em "Criar Fatura e Reconciliar"**
+
+O sistema executará:
+- ✅ Criar nova fatura com competência especificada
+- ✅ Marcar como "paid" (status = paga)
+- ✅ Registrar data de pagamento = data da transação
+- ✅ Criar lançamento contábil de recebimento automaticamente
+
+### Exemplo
+
+```
+Transação: 15/01/2025 → R$ 2.500,00
+Resultado da Busca: Nenhuma fatura encontrada
+
+Ação:
+1. Clicar "Criar Nova Fatura"
+2. Cliente: "ABC Advogados"
+3. Competência: "01/2025"
+4. Data Vencimento: (deixar em branco ou 31/01/2025)
+5. Clicar "Criar Fatura e Reconciliar"
+
+Resultado:
+✅ Fatura criada: ABC Advogados | 01/2025 | R$ 2.500,00
+✅ Status: Paga em 15/01/2025
+✅ Lançamento contábil registrado
+```
+
+---
+
 ## 🚀 Próximos Passos
 
 Após implementar este fluxo:
@@ -219,13 +284,14 @@ Após implementar este fluxo:
 
 Se encontrar problemas:
 
-1. Verifique se a **fatura existe** no sistema
+1. Verifique se a **fatura existe** no sistema (Scenario 1 e 2)
 2. Confirme o **valor exato** da transação
 3. Verifique se a **conta bancária** está correta
-4. Consulte os **logs de erro** em Auditoria
+4. Ao criar nova fatura (Scenario 3), verifique **competência** no formato MM/YYYY
+5. Consulte os **logs de erro** em Auditoria
 
 ---
 
-**Versão:** 1.0  
-**Atualizado:** Janeiro 2025  
+**Versão:** 1.1
+**Atualizado:** Janeiro 2025
 **Sistema:** Ampla Contabilidade
