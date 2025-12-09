@@ -336,7 +336,11 @@ const Dashboard = () => {
           expensesQuery = expensesQuery.eq("client_id", selectedClientId);
         }
 
-        const { data } = await expensesQuery;
+        const { data, error } = await expensesQuery;
+
+        if (error) {
+          console.warn("Erro ao buscar despesas:", error.message);
+        }
 
         setDetailDialog({
           open: true,
