@@ -29,7 +29,8 @@ export function Layout({ children }: LayoutProps) {
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
 
   // Auto-manutenção contábil - roda silenciosamente no background
-  useAccountingHealth();
+  // TODO: Reativar quando ai-orchestrator estiver respondendo
+  // useAccountingHealth();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
