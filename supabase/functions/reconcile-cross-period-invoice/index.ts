@@ -11,7 +11,8 @@ interface ReconcileRequest {
   action:
     | "find_invoices"
     | "reconcile_transaction"
-    | "get_reconciliation_details";
+    | "get_reconciliation_details"
+    | "create_invoice";
   data: {
     transactionId?: string;
     transactionAmount?: number;
@@ -21,6 +22,10 @@ interface ReconcileRequest {
     bankAccountId?: string;
     clientId?: string;
     changedClientId?: string;
+    competence?: string;
+    dueDate?: string;
+    amount?: number;
+    description?: string;
   };
 }
 
