@@ -445,92 +445,32 @@ const ClientDashboard = () => {
         )}
 
         <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Honorários do Cliente</CardTitle>
-              <CardDescription>
-                Todos os honorários deste cliente
-              </CardDescription>
-              {(clientMonthlyFee !== null || clientPaymentDay !== null) && (
-                <div className="mt-2 space-y-0.5">
-                  {clientMonthlyFee !== null && (
-                    <p className="text-xs text-muted-foreground">
-                      Valor cadastrado: {formatCurrency(clientMonthlyFee)}
-                    </p>
-                  )}
-                  {clientPaymentDay !== null && (
-                    <p className="text-xs text-muted-foreground">
-                      Dia de vencimento cadastrado: {clientPaymentDay}
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {invoices.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum honorário cadastrado para este cliente
-                </p>
-              ) : (
-                <div className="max-h-[400px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Competência</TableHead>
-                        <TableHead>Vencimento</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ação</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoices.map((invoice) => {
-                        const status = getDisplayStatus(invoice);
-                        const isPaid = status === "paid" && invoice.payment_date;
-                        return (
-                          <TableRow key={invoice.id} className={isPaid ? "bg-green-50" : ""}>
-                            <TableCell>{invoice.competenceLabel || invoice.competence || "-"}</TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{formatLocalDate(invoice.due_date)}</div>
-                                {isPaid && (
-                                  <div className="text-xs text-green-600 mt-1">
-                                    💰 Pago em {formatLocalDate(invoice.payment_date)}
-                                    {invoice.cnab_reference && (
-                                      <div className="text-xs text-muted-foreground">
-                                        Ref: {invoice.cnab_reference}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                            <TableCell>{getStatusBadge(status)}</TableCell>
-                            <TableCell className="text-right">
-                              {isPaid && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleUndoPayment(invoice)}
-                                  disabled={loading}
-                                  className="text-orange-600 hover:bg-orange-50"
-                                  title="Desfazer pagamento (reverte conciliação)"
-                                >
-                                  <Undo2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {clientMonthlyFee !== null || clientPaymentDay !== null ? (
+            <Card className="mb-6 bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-900">📋 Configuração do Cliente</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {clientMonthlyFee !== null && (
+                  <p className="text-sm text-blue-800">
+                    Valor cadastrado: <span className="font-semibold">{formatCurrency(clientMonthlyFee)}</span>
+                  </p>
+                )}
+                {clientPaymentDay !== null && (
+                  <p className="text-sm text-blue-800">
+                    Dia de vencimento: <span className="font-semibold">{clientPaymentDay}</span>
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
+          <PaymentHistorySection
+            clientId={selectedClientId}
+            clientMonthlyFee={clientMonthlyFee}
+            clientPaymentDay={clientPaymentDay}
+            onPaymentStatusChange={() => loadClientData()}
+          />
         </div>
       </div>
     </Layout>
