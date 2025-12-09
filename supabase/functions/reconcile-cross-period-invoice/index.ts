@@ -326,6 +326,66 @@ async function reconcileTransaction(
   }
 }
 
+interface CreateInvoiceResponse {
+  success: boolean;
+  invoiceId?: string;
+  message?: string;
+  error?: string;
+}
+
+async function createInvoice(
+  supabase: any,
+  data: {
+    clientId?: string;
+    amount?: number;
+    competence?: string;
+    dueDate?: string;
+    transactionDate?: string;
+    bankAccountId?: string;
+    description?: string;
+  }
+): Promise<CreateInvoiceResponse> {
+  try {
+    if (!data.clientId || !data.amount || !data.competence) {
+      throw new Error("clientId, amount e competence são obrigatórios");
+    }
+
+    const now = new Date().toISOString();
+    const dueDate = data.dueDate || new Date().toISOString().split("T")[0];
+
+    const { data: newInvoice, error: insertError } = await supabase
+      .from("invoices")
+      .insert({
+        client_id: data.clientId,
+        amount: data.amount,
+        competence: data.competence,
+        due_date: dueDate,
+        status: "paid",
+        payment_date: data.transactionDate,
+        description: data.description || `Fatura criada via reconciliação de ${data.transactionDate}`,
+        created_at: now,
+        updated_at: now,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    return {
+      success: true,
+      invoiceId: newInvoice.id,
+      message: `Fatura criada com sucesso. ID: ${newInvoice.id}`,
+    };
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro ao criar fatura";
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
 async function getReconciliationDetails(
   supabase: any,
   data: { invoiceId?: string }
