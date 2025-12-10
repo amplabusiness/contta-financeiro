@@ -311,18 +311,75 @@ const Settings = () => {
   // Estados para os campos da empresa
   const [companyForm, setCompanyForm] = useState({
     cnpj: "",
-    razaoSocial: "Ampla Contabilidade Ltda",
-    nomeFantasia: "Ampla Business",
+    razaoSocial: "",
+    nomeFantasia: "",
     crc: "",
-    website: "www.amplabusiness.com.br",
+    crcState: "GO",
+    website: "",
     email: "",
     phone: "",
     address: "",
     number: "",
+    bairro: "",
     city: "",
     state: "",
     zip: "",
+    // Responsável técnico
+    responsavelTecnico: "",
+    responsavelCrc: "",
+    responsavelCpf: "",
   });
+  const [officeId, setOfficeId] = useState<string | null>(null);
+  const [loadingOffice, setLoadingOffice] = useState(false);
+
+  // Carregar dados do escritório
+  const loadAccountingOffice = useCallback(async () => {
+    setLoadingOffice(true);
+    try {
+      const { data, error } = await supabase
+        .from("accounting_office")
+        .select("*")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.log("Nenhum escritório cadastrado ainda");
+        return;
+      }
+
+      if (data) {
+        setOfficeId(data.id);
+        setCompanyForm({
+          cnpj: data.cnpj || "",
+          razaoSocial: data.razao_social || "",
+          nomeFantasia: data.nome_fantasia || "",
+          crc: data.crc_number || "",
+          crcState: data.crc_state || "GO",
+          website: data.website || "",
+          email: data.email || "",
+          phone: data.telefone || "",
+          address: data.endereco || "",
+          number: data.numero || "",
+          bairro: data.bairro || "",
+          city: data.cidade || "",
+          state: data.estado || "",
+          zip: data.cep || "",
+          responsavelTecnico: data.responsavel_tecnico || "",
+          responsavelCrc: data.responsavel_crc || "",
+          responsavelCpf: data.responsavel_cpf || "",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar escritório:", error);
+    } finally {
+      setLoadingOffice(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAccountingOffice();
+  }, [loadAccountingOffice]);
 
   // Formatar CNPJ enquanto digita
   const formatCnpj = (value: string) => {
@@ -407,14 +464,61 @@ const Settings = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // TODO: Implement save functionality
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const officeData = {
+        razao_social: companyForm.razaoSocial,
+        nome_fantasia: companyForm.nomeFantasia,
+        cnpj: companyForm.cnpj,
+        crc_number: companyForm.crc,
+        crc_state: companyForm.crcState,
+        responsavel_tecnico: companyForm.responsavelTecnico,
+        responsavel_crc: companyForm.responsavelCrc,
+        responsavel_cpf: companyForm.responsavelCpf,
+        endereco: companyForm.address,
+        numero: companyForm.number,
+        bairro: companyForm.bairro,
+        cidade: companyForm.city,
+        estado: companyForm.state,
+        cep: companyForm.zip,
+        telefone: companyForm.phone,
+        email: companyForm.email,
+        website: companyForm.website,
+      };
+
+      if (officeId) {
+        // Atualizar existente
+        const { error } = await supabase
+          .from("accounting_office")
+          .update(officeData)
+          .eq("id", officeId);
+
+        if (error) throw error;
+      } else {
+        // Criar novo
+        const { data, error } = await supabase
+          .from("accounting_office")
+          .insert({ ...officeData, is_active: true })
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) setOfficeId(data.id);
+      }
+
       toast({
         title: "Configurações salvas",
-        description: "As configurações foram atualizadas com sucesso.",
+        description: "Os dados do escritório foram atualizados com sucesso.",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message || "Não foi possível salvar as configurações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -593,7 +697,16 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bairro">Bairro</Label>
+                        <Input
+                          id="bairro"
+                          placeholder="Bairro"
+                          value={companyForm.bairro}
+                          onChange={handleFieldChange("bairro")}
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="city">Cidade</Label>
                         <Input
@@ -620,6 +733,46 @@ const Settings = () => {
                           placeholder="00000-000"
                           value={companyForm.zip}
                           onChange={handleFieldChange("zip")}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Responsável Técnico</CardTitle>
+                    <CardDescription>
+                      Contador responsável pelos serviços (usado em contratos e documentos)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="responsavelTecnico">Nome Completo</Label>
+                        <Input
+                          id="responsavelTecnico"
+                          placeholder="Nome do Contador"
+                          value={companyForm.responsavelTecnico}
+                          onChange={handleFieldChange("responsavelTecnico")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="responsavelCrc">CRC do Responsável</Label>
+                        <Input
+                          id="responsavelCrc"
+                          placeholder="CRC/GO 000000"
+                          value={companyForm.responsavelCrc}
+                          onChange={handleFieldChange("responsavelCrc")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="responsavelCpf">CPF do Responsável</Label>
+                        <Input
+                          id="responsavelCpf"
+                          placeholder="000.000.000-00"
+                          value={companyForm.responsavelCpf}
+                          onChange={handleFieldChange("responsavelCpf")}
                         />
                       </div>
                     </div>
