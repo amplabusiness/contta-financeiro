@@ -64,6 +64,16 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
+      - name: Reparar migrations órfãs (se existirem)
+        run: |
+          # Reparar qualquer migration que exista no histórico remoto mas não localmente
+          supabase migration repair --status reverted 20251210_honorarios_especiais || true
+          supabase migration repair --status reverted 20251210_contratos_profissionais || true
+          supabase migration repair --status reverted 20251210_confissao_divida || true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        continue-on-error: true
+
       - name: Aplicar migrations
         run: supabase db push
         env:
