@@ -7,6 +7,24 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+## [1.19.0] - 2025-12-10
+
+### Adicionado
+- **Verificação de Saldo de Abertura**: Dr. Cícero agora verifica se cliente tem débitos antigos antes de classificar
+- Função `clienteTemSaldoAbertura()` para consultar saldos pendentes
+- Pergunta interativa quando cliente tem dívida antiga: "É pagamento de dívida antiga ou honorário atual?"
+- Opção para dividir pagamento entre dívida antiga e competência atual
+
+### Melhorado
+- Classificação de recebimentos agora considera o histórico de débitos do cliente
+- Janeiro/2025 sempre classifica como baixa de Clientes a Receber (período de abertura)
+- Fevereiro+ pergunta ao usuário quando cliente tem saldo devedor antigo
+
+### Corrigido
+- Adicionada função `ruleBasedClassificationSync()` para fallback do Gemini
+
+---
+
 ## [1.18.0] - 2025-12-10
 
 ### Adicionado

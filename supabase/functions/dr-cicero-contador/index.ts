@@ -178,6 +178,38 @@ function isPeriodoAbertura(date: string): boolean {
   return txDate >= inicio && txDate <= fim;
 }
 
+// Verificar se cliente tem saldo de abertura pendente (débitos antigos)
+async function clienteTemSaldoAbertura(supabase: any, clientId: string): Promise<{ temSaldo: boolean; saldo: number }> {
+  try {
+    // Buscar saldo de abertura do cliente
+    const { data: openingBalance } = await supabase
+      .from('client_opening_balance')
+      .select('balance_amount')
+      .eq('client_id', clientId)
+      .maybeSingle();
+
+    if (openingBalance && openingBalance.balance_amount > 0) {
+      // Verificar quanto já foi pago deste saldo
+      const { data: payments } = await supabase
+        .from('accounting_entry_lines')
+        .select('amount, entry_id!inner(description)')
+        .eq('account_id', '1.1.2.01') // Clientes a Receber
+        .eq('type', 'credit') // Créditos são baixas
+        .ilike('entry_id.description', '%saldo abertura%');
+
+      const totalPago = payments?.reduce((sum: number, p: any) => sum + Math.abs(p.amount || 0), 0) || 0;
+      const saldoPendente = openingBalance.balance_amount - totalPago;
+
+      return { temSaldo: saldoPendente > 0, saldo: Math.max(0, saldoPendente) };
+    }
+
+    return { temSaldo: false, saldo: 0 };
+  } catch (error) {
+    console.error('[Dr.Cícero] Erro ao verificar saldo de abertura:', error);
+    return { temSaldo: false, saldo: 0 };
+  }
+}
+
 interface ClassificationResult {
   confidence: number;
   debit_account: string;
@@ -458,10 +490,10 @@ async function ruleBasedClassificationAsync(
       if (uniqueClients.length === 1) {
         const match = uniqueClients[0];
 
-        // Janeiro/2025 = Período de Abertura - Baixa Clientes a Receber
+        // Janeiro/2025 = Período de Abertura - Baixa Clientes a Receber (SEMPRE)
         if (isAbertura) {
           return {
-            confidence: 0.90,
+            confidence: 0.95,
             debit_account: '1.1.1.02',
             debit_account_name: 'Banco Sicredi C/C',
             credit_account: '1.1.2.01',
@@ -469,11 +501,35 @@ async function ruleBasedClassificationAsync(
             entry_type: 'recebimento_abertura',
             description: `Recebimento honorários (${match.relationship}): ${payerResult.payer_name} - ${match.client_name}`,
             needs_confirmation: false,
-            reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. Como este sócio está vinculado a APENAS UMA empresa, classifiquei automaticamente como honorário deste cliente. JANEIRO/2025 = baixa de Clientes a Receber.`,
+            reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. JANEIRO/2025 = período de abertura. Este recebimento BAIXA o saldo de Clientes a Receber (débitos de competências anteriores).`,
           };
         }
 
-        // Período normal - Receita de honorários
+        // Verificar se cliente tem saldo de abertura pendente (débitos antigos)
+        const saldoInfo = await clienteTemSaldoAbertura(supabase, match.client_id);
+
+        if (saldoInfo.temSaldo) {
+          // Cliente tem débitos antigos - perguntar se é pagamento de dívida antiga ou competência atual
+          return {
+            confidence: 0.80,
+            debit_account: '1.1.1.02',
+            debit_account_name: 'Banco Sicredi C/C',
+            credit_account: '1.1.2.01',
+            credit_account_name: `Clientes a Receber - ${match.client_name}`,
+            entry_type: 'recebimento',
+            description: `Recebimento honorários: ${payerResult.payer_name} - ${match.client_name}`,
+            needs_confirmation: true,
+            question: `Dr. Cícero: O cliente ${match.client_name} tem um saldo devedor de R$ ${saldoInfo.saldo.toFixed(2)} de períodos anteriores. Este pagamento de R$ ${amount.toFixed(2)} é referente a:\n\n1. Pagamento de DÍVIDA ANTIGA (baixa do saldo de abertura)\n2. Honorário da COMPETÊNCIA ATUAL (gera receita nova)`,
+            options: [
+              `É pagamento de dívida antiga (baixa saldo de R$ ${saldoInfo.saldo.toFixed(2)})`,
+              'É honorário da competência atual (receita nova)',
+              'É um pouco de cada (preciso dividir o valor)'
+            ],
+            reasoning: `Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. O cliente tem saldo devedor de R$ ${saldoInfo.saldo.toFixed(2)} de períodos anteriores. Preciso saber se este pagamento é para quitar dívida antiga ou é receita nova.`,
+          };
+        }
+
+        // Sem saldo antigo - é receita normal
         return {
           confidence: 0.85,
           debit_account: '1.1.1.02',
@@ -483,7 +539,7 @@ async function ruleBasedClassificationAsync(
           entry_type: 'recebimento',
           description: `Recebimento honorários (${match.relationship}): ${payerResult.payer_name} - ${match.client_name}`,
           needs_confirmation: false,
-          reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. Como este sócio está vinculado a APENAS UMA empresa, classifiquei automaticamente como honorário deste cliente.`,
+          reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. Cliente sem débitos antigos - classificado como honorário regular.`,
         };
       }
 
@@ -795,9 +851,67 @@ function parseGeminiResponse(response: string, transaction: Transaction): Classi
     };
   } catch (error) {
     console.error('[Dr.Cícero] Error parsing Gemini response:', error);
-    // Fallback para classificação genérica
-    return ruleBasedClassification(transaction, null, []);
+    // Fallback para classificação genérica (síncrona)
+    return ruleBasedClassificationSync(transaction);
   }
+}
+
+// Classificação síncrona simplificada (para fallback do Gemini)
+function ruleBasedClassificationSync(transaction: Transaction): ClassificationResult {
+  const desc = transaction.description.toLowerCase();
+  const isCredit = transaction.type === 'credit' || transaction.amount < 0;
+  const amount = Math.abs(transaction.amount);
+
+  // Verificar família Leão
+  const familiaCheck = identificarFamiliaLeao(transaction.description);
+  if (familiaCheck.isFamilia) {
+    if (isCredit) {
+      return {
+        confidence: 0.7,
+        debit_account: '1.1.1.02',
+        debit_account_name: 'Banco Sicredi C/C',
+        credit_account: familiaCheck.conta,
+        credit_account_name: `Adiantamento - ${familiaCheck.membro}`,
+        entry_type: 'devolucao_adiantamento',
+        description: `Devolução adiantamento: ${familiaCheck.membro}`,
+        needs_confirmation: true,
+        question: `Recebimento de R$ ${amount.toFixed(2)} de ${familiaCheck.membro}. É devolução de adiantamento?`,
+        options: ['Sim', 'Não'],
+        reasoning: `Identificado membro da família: ${familiaCheck.membro}`,
+      };
+    } else {
+      return {
+        confidence: 0.8,
+        debit_account: familiaCheck.conta,
+        debit_account_name: `Adiantamento - ${familiaCheck.membro}`,
+        credit_account: '1.1.1.02',
+        credit_account_name: 'Banco Sicredi C/C',
+        entry_type: 'adiantamento_socio',
+        description: `Adiantamento ${familiaCheck.membro}`,
+        needs_confirmation: true,
+        question: `Saída de R$ ${amount.toFixed(2)} para ${familiaCheck.membro}. É adiantamento a sócio?`,
+        options: ['Sim', 'Não'],
+        reasoning: `Identificado membro da família: ${familiaCheck.membro}`,
+      };
+    }
+  }
+
+  // Classificação genérica
+  return {
+    confidence: 0.3,
+    debit_account: isCredit ? '1.1.1.02' : '4.1.2.99',
+    debit_account_name: isCredit ? 'Banco Sicredi C/C' : 'Outras Despesas',
+    credit_account: isCredit ? '3.1.2.01' : '1.1.1.02',
+    credit_account_name: isCredit ? 'Outras Receitas' : 'Banco Sicredi C/C',
+    entry_type: isCredit ? 'receita_diversa' : 'despesa_diversa',
+    description: transaction.description,
+    needs_confirmation: true,
+    question: `Não identifiquei a natureza desta ${isCredit ? 'receita' : 'despesa'} de R$ ${amount.toFixed(2)}. Pode me ajudar?`,
+    options: isCredit
+      ? ['Honorários de cliente', 'Receita financeira', 'Outro']
+      : ['Despesa com pessoal', 'Despesa administrativa', 'Serviços de terceiros', 'Outro'],
+    reasoning: 'Classificação genérica - aguardando confirmação do usuário.',
+  };
 }
 
 // Criar lançamento contábil após confirmação

@@ -1749,3 +1749,84 @@ if (isCredit && !clientInfo) {
 1. Adicionar campo para selecionar empresa no Dialog do SuperConciliador
 2. Salvar padrão aprendido quando usuário confirmar empresa
 3. Considerar criar índice de familiares além dos sócios oficiais
+
+---
+
+## Sessão 19 (10/12/2025) - Versionamento e Saldo de Abertura Melhorado
+
+### Sistema de Versionamento
+
+Criado sistema de versionamento semântico:
+
+- **package.json**: Versão atualizada para 1.19.0, nome `ampla-contabilidade`
+- **CHANGELOG.md**: Histórico completo de 19 versões documentadas
+
+### Convenções de Versão
+
+| Tipo | Incremento | Exemplo |
+|------|------------|---------|
+| MAJOR | Mudanças incompatíveis | 2.0.0 |
+| MINOR | Novas funcionalidades | 1.19.0 |
+| PATCH | Correções de bugs | 1.19.1 |
+
+### Melhoria na Lógica de Saldo de Abertura
+
+**Regra Implementada**:
+
+1. **Janeiro/2025 (Período de Abertura)**: TODOS os recebimentos → baixa de Clientes a Receber
+   - Não gera receita nova
+   - Lançamento: D: Banco | C: Clientes a Receber
+
+2. **Fevereiro/2025+**: Verificar se cliente tem saldo de abertura pendente
+   - Se cliente tem dívida antiga → Dr. Cícero PERGUNTA ao usuário
+   - Opções: "É pagamento de dívida antiga" ou "É honorário atual"
+   - Permite dividir valor entre dívida antiga e competência atual
+
+### Nova Função Implementada
+
+```typescript
+// Verificar se cliente tem saldo de abertura pendente
+async function clienteTemSaldoAbertura(supabase, clientId): Promise<{ temSaldo: boolean; saldo: number }>
+```
+
+**Lógica**:
+1. Busca `client_opening_balance` do cliente
+2. Verifica quanto já foi pago via `accounting_entry_lines`
+3. Calcula saldo pendente
+4. Retorna `{ temSaldo: true/false, saldo: valor }`
+
+### Fluxo de Classificação Atualizado
+
+```
+Recebimento identificado
+    ↓
+É Janeiro/2025?
+    SIM → Baixa Clientes a Receber (automático)
+    NÃO ↓
+Cliente tem saldo de abertura?
+    SIM → Pergunta: "Dívida antiga ou Competência atual?"
+    NÃO → Classificar como honorário regular
+```
+
+### Arquivos Modificados
+
+| Arquivo | Modificação |
+|---------|-------------|
+| `package.json` | Versão 1.19.0, metadados |
+| `CHANGELOG.md` | Criado com histórico |
+| `supabase/functions/dr-cicero-contador/index.ts` | Verificação de saldo, função sync |
+| `.claude/MEMORY.md` | Sessão 19 documentada |
+
+### Commits
+
+| Commit | Descrição |
+|--------|-----------|
+| `780c82c` | chore: Adiciona sistema de versionamento (v1.18.0) |
+| (pendente) | feat: Dr. Cícero verifica saldo de abertura antes de classificar (v1.19.0) |
+
+### Lições Aprendidas
+
+1. **Clientes antigos pagam dívidas antigas** - Muitos clientes devedores vão pagar débitos de períodos anteriores
+2. **Saldo de abertura é um ATIVO** - Recebimento deve BAIXAR o ativo, não criar receita nova
+3. **Perguntar é melhor que errar** - Quando há dúvida sobre competência, Dr. Cícero pergunta ao usuário
+4. **Versionamento é essencial** - Permite rastrear mudanças e facilita comunicação
