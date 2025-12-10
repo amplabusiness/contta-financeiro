@@ -49,6 +49,9 @@ import Settings from "./pages/Settings";
 import CollectionDashboard from "./pages/CollectionDashboard";
 import CollectionLetters from "./pages/CollectionLetters";
 import Contracts from "./pages/Contracts";
+import ServiceProposals from "./pages/ServiceProposals";
+import ContractTerminations from "./pages/ContractTerminations";
+import ResponsibilityLetters from "./pages/ResponsibilityLetters";
 import FeesAnalysis from "./pages/FeesAnalysis";
 import CollectionWorkOrders from "./pages/CollectionWorkOrders";
 import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
@@ -242,6 +245,9 @@ const App = () => (
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />
             <Route path="/collection-letters" element={<CollectionLetters />} />
             <Route path="/contracts" element={<Contracts />} />
+            <Route path="/service-proposals" element={<ServiceProposals />} />
+            <Route path="/contract-terminations" element={<ContractTerminations />} />
+            <Route path="/responsibility-letters" element={<ResponsibilityLetters />} />
             <Route path="/fees-analysis" element={<FeesAnalysis />} />
             <Route path="/fee-adjustment" element={<FeeAdjustment />} />
             <Route path="/debt-negotiation" element={<DebtNegotiation />} />

@@ -52,6 +52,9 @@ import {
   Gift,
   Tags,
   ClipboardCheck,
+  FilePlus2,
+  FileOutput,
+  Shield,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -160,7 +163,15 @@ export function AppSidebar() {
         { title: "Pro-Bono", url: "/pro-bono-clients", icon: Heart },
         { title: "Grupos Financeiros", url: "/economic-groups", icon: GitMerge },
         { title: "Análise por Sócios", url: "/economic-group-analysis", icon: Network },
+      ],
+    },
+    {
+      label: "Contratos",
+      items: [
         { title: "Contratos", url: "/contracts", icon: FileText },
+        { title: "Propostas", url: "/service-proposals", icon: FilePlus2 },
+        { title: "Distratos", url: "/contract-terminations", icon: FileOutput },
+        { title: "Carta Responsab.", url: "/responsibility-letters", icon: Shield },
       ],
     },
     {
