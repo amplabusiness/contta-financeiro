@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   Settings as SettingsIcon, User, Bell, Shield, Building2, Mail, Save, Loader2, Search,
   Users, UserPlus, Home, Car, AlertTriangle, Brain, Plus, Edit, Trash2, Heart, MoreHorizontal,
-  CheckCircle2, Briefcase
+  CheckCircle2, Briefcase, Key, Copy, Eye, EyeOff, RefreshCw, Lock, Unlock, UserCog
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,20 @@ interface Employee {
   is_active: boolean;
 }
 
+interface SystemUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  employee_id: string | null;
+  role: string;
+  is_active: boolean;
+  must_change_password: boolean;
+  last_login: string | null;
+  created_at: string;
+  temp_password?: string;
+}
+
 const DEPARTMENTS = [
   { value: "contabil", label: "Contabil" },
   { value: "fiscal", label: "Fiscal" },
@@ -55,6 +69,13 @@ const CONTRACT_TYPES = [
   { value: "autonomo", label: "Autonomo" },
   { value: "estagio", label: "Estagiario" },
   { value: "freelancer", label: "Freelancer" },
+];
+
+const USER_ROLES = [
+  { value: "admin", label: "Administrador", description: "Acesso total ao sistema" },
+  { value: "manager", label: "Gerente", description: "Gerencia equipe e relatórios" },
+  { value: "operator", label: "Operador", description: "Operações do dia a dia" },
+  { value: "viewer", label: "Visualizador", description: "Apenas consulta" },
 ];
 
 // Interface para dados da empresa via Brasil API
@@ -100,6 +121,24 @@ const Settings = () => {
     official_salary: "",
   });
 
+  // User states
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [showUserDialog, setShowUserDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
+  const [showDeleteUserDialog, setShowDeleteUserDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<SystemUser | null>(null);
+  const [showInactiveUsers, setShowInactiveUsers] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [userForm, setUserForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "viewer",
+    employee_id: "",
+  });
+
   const loadEmployees = useCallback(async () => {
     setLoadingEmployees(true);
     try {
@@ -131,6 +170,42 @@ const Settings = () => {
   useEffect(() => {
     loadEmployees();
   }, [loadEmployees]);
+
+  // Carregar usuários do sistema
+  const loadSystemUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      let query = supabase
+        .from("system_users")
+        .select("*")
+        .order("name");
+
+      if (!showInactiveUsers) {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setSystemUsers(data || []);
+    } catch (error: any) {
+      console.error("Error loading users:", error);
+      // Tabela pode não existir ainda, silenciar erro
+      if (!error.message?.includes("does not exist")) {
+        toast({
+          title: "Erro ao carregar usuarios",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [showInactiveUsers, toast]);
+
+  useEffect(() => {
+    loadSystemUsers();
+  }, [loadSystemUsers]);
 
   const resetEmployeeForm = () => {
     setEmployeeForm({
@@ -286,6 +361,240 @@ const Settings = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Funções para gerenciamento de usuários
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const resetUserForm = () => {
+    setUserForm({
+      name: "",
+      email: "",
+      phone: "",
+      role: "viewer",
+      employee_id: "",
+    });
+    setEditingUser(null);
+    setGeneratedPassword(null);
+    setShowPassword(false);
+  };
+
+  const openCreateUser = () => {
+    resetUserForm();
+    const newPassword = generatePassword();
+    setGeneratedPassword(newPassword);
+    setShowUserDialog(true);
+  };
+
+  const openEditUser = (user: SystemUser) => {
+    setEditingUser(user);
+    setUserForm({
+      name: user.name,
+      email: user.email,
+      phone: user.phone || "",
+      role: user.role,
+      employee_id: user.employee_id || "",
+    });
+    setGeneratedPassword(null);
+    setShowUserDialog(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!userForm.name.trim() || !userForm.email.trim()) {
+      toast({
+        title: "Campos obrigatorios",
+        description: "Preencha nome e e-mail",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (editingUser) {
+        // Atualizar usuário existente
+        const { error } = await supabase
+          .from("system_users")
+          .update({
+            name: userForm.name,
+            email: userForm.email,
+            phone: userForm.phone || null,
+            role: userForm.role,
+            employee_id: userForm.employee_id || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingUser.id);
+
+        if (error) throw error;
+        toast({
+          title: "Usuario atualizado!",
+        });
+      } else {
+        // Criar novo usuário com senha gerada
+        const { error } = await supabase
+          .from("system_users")
+          .insert({
+            name: userForm.name,
+            email: userForm.email,
+            phone: userForm.phone || null,
+            role: userForm.role,
+            employee_id: userForm.employee_id || null,
+            temp_password: generatedPassword,
+            must_change_password: true,
+            is_active: true,
+          });
+
+        if (error) throw error;
+        toast({
+          title: "Usuario criado!",
+          description: "Compartilhe a senha temporaria com o usuario",
+        });
+      }
+
+      setShowUserDialog(false);
+      resetUserForm();
+      loadSystemUsers();
+    } catch (error: any) {
+      console.error("Error saving user:", error);
+      toast({
+        title: "Erro ao salvar usuario",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (user: SystemUser) => {
+    setSubmitting(true);
+    try {
+      const newPassword = generatePassword();
+
+      const { error } = await supabase
+        .from("system_users")
+        .update({
+          temp_password: newPassword,
+          must_change_password: true,
+          login_attempts: 0,
+          locked_until: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Mostrar a nova senha
+      setEditingUser(user);
+      setGeneratedPassword(newPassword);
+      setShowUserDialog(true);
+
+      toast({
+        title: "Senha redefinida!",
+        description: "Nova senha temporaria gerada",
+      });
+
+      loadSystemUsers();
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast({
+        title: "Erro ao redefinir senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = (user: SystemUser) => {
+    setUserToDelete(user);
+    setShowDeleteUserDialog(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("system_users")
+        .update({ is_active: false })
+        .eq("id", userToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Usuario desativado!",
+      });
+      setShowDeleteUserDialog(false);
+      setUserToDelete(null);
+      loadSystemUsers();
+    } catch (error: any) {
+      console.error("Error deactivating user:", error);
+      toast({
+        title: "Erro ao desativar usuario",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleUserStatus = async (user: SystemUser) => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("system_users")
+        .update({ is_active: !user.is_active })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: user.is_active ? "Usuario desativado!" : "Usuario reativado!",
+      });
+      loadSystemUsers();
+    } catch (error: any) {
+      console.error("Error toggling user:", error);
+      toast({
+        title: "Erro ao alterar status",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copiado!",
+      description: "Senha copiada para a area de transferencia",
+    });
+  };
+
+  const getRoleLabel = (value: string) => {
+    const role = USER_ROLES.find(r => r.value === value);
+    return role?.label || value;
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case "admin": return "destructive";
+      case "manager": return "default";
+      case "operator": return "secondary";
+      default: return "outline";
     }
   };
 
@@ -905,21 +1214,154 @@ const Settings = () => {
               <TabsContent value="users" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Gerenciamento de Usuários</CardTitle>
-                    <CardDescription>
-                      Configure usuários e permissões do sistema
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Usuarios do Sistema</CardTitle>
+                        <CardDescription>
+                          Gerencie usuarios e seus acessos ao sistema
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={showInactiveUsers ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setShowInactiveUsers(!showInactiveUsers)}
+                        >
+                          {showInactiveUsers ? "Ver Ativos" : "Ver Inativos"}
+                        </Button>
+                        <Button onClick={openCreateUser}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Novo Usuario
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-12">
-                      <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        Sistema de Usuários em Desenvolvimento
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        Em breve você poderá gerenciar usuários, perfis e permissões
-                      </p>
-                      <Button variant="outline">Saiba Mais</Button>
+                    {loadingUsers ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : systemUsers.length === 0 ? (
+                      <div className="text-center py-12">
+                        <UserCog className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Nenhum usuario cadastrado</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Cadastre usuarios para controlar o acesso ao sistema
+                        </p>
+                        <Button onClick={openCreateUser}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Cadastrar Usuario
+                        </Button>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Usuario</TableHead>
+                            <TableHead>Perfil</TableHead>
+                            <TableHead>Ultimo Acesso</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Acoes</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {systemUsers.map((user) => (
+                            <TableRow key={user.id} className={!user.is_active ? "opacity-50" : ""}>
+                              <TableCell>
+                                <div className="font-medium">{user.name}</div>
+                                <div className="text-xs text-muted-foreground">{user.email}</div>
+                                {user.must_change_password && (
+                                  <Badge variant="outline" className="mt-1 text-xs text-orange-600 border-orange-300">
+                                    <Key className="w-3 h-3 mr-1" />
+                                    Deve trocar senha
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={getRoleBadgeVariant(user.role) as any}>
+                                  {getRoleLabel(user.role)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {user.last_login
+                                  ? new Date(user.last_login).toLocaleDateString("pt-BR", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : <span className="text-muted-foreground">Nunca acessou</span>
+                                }
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={user.is_active ? "default" : "secondary"}>
+                                  {user.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEditUser(user)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleResetPassword(user)}>
+                                      <RefreshCw className="h-4 w-4 mr-2" />
+                                      Redefinir Senha
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => toggleUserStatus(user)}>
+                                      {user.is_active ? (
+                                        <>
+                                          <Lock className="h-4 w-4 mr-2" />
+                                          Desativar
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Unlock className="h-4 w-4 mr-2" />
+                                          Reativar
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteUser(user)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Excluir
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Informações sobre perfis */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Perfis de Acesso</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {USER_ROLES.map((role) => (
+                        <div key={role.value} className="p-3 border rounded-lg">
+                          <Badge variant={getRoleBadgeVariant(role.value) as any} className="mb-2">
+                            {role.label}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground">{role.description}</p>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -1306,6 +1748,205 @@ const Settings = () => {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteEmployee}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Desativar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* User Dialog */}
+      <Dialog open={showUserDialog} onOpenChange={(open) => {
+        if (!open) resetUserForm();
+        setShowUserDialog(open);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {generatedPassword && !editingUser
+                ? "Novo Usuario"
+                : generatedPassword
+                ? "Senha Redefinida"
+                : "Editar Usuario"}
+            </DialogTitle>
+            <DialogDescription>
+              {generatedPassword && !editingUser
+                ? "Preencha os dados e compartilhe a senha temporaria com o usuario"
+                : generatedPassword
+                ? "Compartilhe a nova senha temporaria com o usuario"
+                : "Atualize as informacoes do usuario"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Senha Gerada - Destaque */}
+            {generatedPassword && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <Label className="text-green-800 font-medium">Senha Temporaria</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={generatedPassword}
+                      readOnly
+                      className="pr-20 font-mono text-lg bg-white"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => copyToClipboard(generatedPassword)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-green-700 mt-2">
+                  O usuario devera trocar a senha no primeiro acesso
+                </p>
+              </div>
+            )}
+
+            {/* Formulário - só mostra se não for apenas exibição de senha */}
+            {(!generatedPassword || !editingUser) && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="user-name">Nome Completo *</Label>
+                    <Input
+                      id="user-name"
+                      value={userForm.name}
+                      onChange={(e) => setUserForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ex: Maria Silva"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="user-email">E-mail *</Label>
+                    <Input
+                      id="user-email"
+                      type="email"
+                      value={userForm.email}
+                      onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="email@empresa.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="user-phone">Telefone</Label>
+                    <Input
+                      id="user-phone"
+                      value={userForm.phone}
+                      onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(62) 99999-9999"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Perfil de Acesso *</Label>
+                    <Select
+                      value={userForm.role}
+                      onValueChange={(value) => setUserForm(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {USER_ROLES.map(role => (
+                          <SelectItem key={role.value} value={role.value}>
+                            <div className="flex flex-col">
+                              <span>{role.label}</span>
+                              <span className="text-xs text-muted-foreground">{role.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Vincular a Funcionario</Label>
+                  <Select
+                    value={userForm.employee_id}
+                    onValueChange={(value) => setUserForm(prev => ({ ...prev, employee_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um funcionario (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {employees.map(emp => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.name} - {getDepartmentLabel(emp.department)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Vincule a um funcionario para associar o acesso
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUserDialog(false)}>
+              {generatedPassword && editingUser ? "Fechar" : "Cancelar"}
+            </Button>
+            {(!generatedPassword || !editingUser) && (
+              <Button onClick={handleSaveUser} disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    {editingUser ? "Salvar" : "Criar Usuario"}
+                  </>
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User AlertDialog */}
+      <AlertDialog open={showDeleteUserDialog} onOpenChange={setShowDeleteUserDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar Usuario</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desativar o usuario "{userToDelete?.name}"?
+              O usuario nao podera mais acessar o sistema, mas podera ser reativado depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
               className="bg-red-600 hover:bg-red-700"
             >
               {submitting ? (
