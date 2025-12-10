@@ -64,15 +64,6 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
-      - name: Reparar migrations órfãs (se existirem)
-        run: |
-          # Reparar qualquer migration que exista no histórico remoto mas não localmente
-          # Só precisa do timestamp numérico, não do nome completo
-          supabase migration repair --status reverted 20251210 || true
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        continue-on-error: true
-
       - name: Aplicar migrations
         run: supabase db push
         env:
