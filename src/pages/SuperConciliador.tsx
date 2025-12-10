@@ -168,9 +168,18 @@ const SuperConciliador = () => {
       return;
     }
 
+    // Mapear 'type' do banco para 'transaction_type' esperado pela interface
+    // E garantir que os sinais estão corretos para exibição
+    const mappedData = (data || []).map(tx => ({
+      ...tx,
+      transaction_type: tx.type as 'credit' | 'debit',
+      // Garante valor positivo para display (o sinal é mostrado baseado no tipo)
+      amount: Math.abs(tx.amount)
+    }));
+
     // Carregar matches múltiplos
     const txWithMatches = await Promise.all(
-      (data || []).map(async (tx) => {
+      mappedData.map(async (tx) => {
         if (tx.has_multiple_matches) {
           const { data: matches } = await supabase
             .from("bank_transaction_matches")
@@ -182,8 +191,8 @@ const SuperConciliador = () => {
       })
     );
 
-    setTransactions(txWithMatches);
-    calculateStats(txWithMatches);
+    setTransactions(txWithMatches as BankTransaction[]);
+    calculateStats(txWithMatches as BankTransaction[]);
   };
 
   const loadInvoices = async () => {
@@ -1226,7 +1235,7 @@ const SuperConciliador = () => {
                       tx.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {tx.transaction_type === 'credit' ? '+' : '-'}
-                      {formatCurrency(tx.amount)}
+                      {formatCurrency(Math.abs(tx.amount))}
                     </div>
 
                     {/* Status/Ação */}

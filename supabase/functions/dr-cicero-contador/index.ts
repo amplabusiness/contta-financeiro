@@ -163,6 +163,21 @@ interface Transaction {
   document?: string; // CPF/CNPJ extraído
 }
 
+// Período de abertura: Janeiro/2025 (início do sistema)
+// Recebimentos neste período são de competências anteriores
+// Devem ir para Saldos de Abertura (5.2.1.02), não para Receita
+const PERIODO_ABERTURA = {
+  inicio: '2025-01-01',
+  fim: '2025-01-31'
+};
+
+function isPeriodoAbertura(date: string): boolean {
+  const txDate = new Date(date);
+  const inicio = new Date(PERIODO_ABERTURA.inicio);
+  const fim = new Date(PERIODO_ABERTURA.fim);
+  return txDate >= inicio && txDate <= fim;
+}
+
 interface ClassificationResult {
   confidence: number;
   debit_account: string;
@@ -259,6 +274,15 @@ serve(async (req) => {
     if (action === 'process_batch') {
       const { transactions, auto_approve_threshold = 0.9 } = body;
       const result = await processBatch(supabase, user.id, transactions, auto_approve_threshold);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Validar e corrigir sinais das transações bancárias
+    if (action === 'validate_transaction_signs') {
+      const { bank_account_id, date_from, date_to, auto_fix = false } = body;
+      const result = await validateTransactionSigns(supabase, bank_account_id, date_from, date_to, auto_fix);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -384,6 +408,9 @@ function ruleBasedClassification(
   const isCredit = transaction.type === 'credit' || transaction.amount < 0;
   const amount = Math.abs(transaction.amount);
 
+  // Verificar se é período de abertura (Janeiro/2025)
+  const isAbertura = isPeriodoAbertura(transaction.date);
+
   // PRIORIDADE 1: Verificar se é transação da família Leão
   const familiaCheck = identificarFamiliaLeao(transaction.description);
   if (familiaCheck.isFamilia) {
@@ -448,6 +475,23 @@ function ruleBasedClassification(
   if (isCredit) {
     // Verificar se é PIX ou boleto de cliente
     if (desc.includes('pix') || desc.includes('liq.cobranca')) {
+      // REGRA ESPECIAL: Janeiro/2025 = Período de Abertura
+      // O saldo já foi registrado em Clientes a Receber (via Saldo de Abertura)
+      // Recebimento deve BAIXAR o Clientes a Receber, não criar receita nova
+      if (isAbertura) {
+        return {
+          confidence: 0.95,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: 'Clientes a Receber',
+          entry_type: 'recebimento_abertura',
+          description: `Recebimento (Saldo Abertura): ${transaction.description}`,
+          needs_confirmation: false,
+          reasoning: `JANEIRO/2025 = PERÍODO DE ABERTURA. O saldo deste cliente já foi registrado em Clientes a Receber via Saldo de Abertura. Este recebimento BAIXA o saldo do cliente (credita 1.1.2.01), NÃO gera receita nova.`,
+        };
+      }
+
       if (clientInfo) {
         return {
           confidence: 0.85,
@@ -580,6 +624,15 @@ REGRAS IMPORTANTES:
 1. Se confidence < 0.8, SEMPRE defina needs_confirmation=true
 2. Honorários de clientes são a principal receita da empresa
 3. Recebimentos de períodos anteriores devem ir para conta 5.2.1.02 (Saldos de Abertura)
+
+⚠️ REGRA CRÍTICA - PERÍODO DE ABERTURA (JANEIRO/2025):
+- Janeiro/2025 é o PRIMEIRO MÊS do sistema
+- Os saldos dos clientes já foram registrados em Clientes a Receber (1.1.2.xx) via Saldo de Abertura
+- Recebimentos em janeiro BAIXAM o Clientes a Receber, NÃO geram receita nova
+- NÃO classificar como Receita (3.x.x.xx) - distorceria o resultado de 2025
+- Lançamento correto: D: Banco (1.1.1.02) | C: Clientes a Receber (1.1.2.01)
+- O efeito é: reduz o ativo (recebível) e aumenta outro ativo (banco)
+- needs_confirmation: false (é regra fixa)
 
 REGRAS ESPECIAIS PARA FAMÍLIA LEÃO:
 4. NUNCA classificar transferências para membros da família como DESPESA operacional
@@ -935,4 +988,126 @@ async function initializeDatabase(supabase: any): Promise<any> {
       message: `Erro ao inicializar banco: ${error.message}`,
     };
   }
+}
+
+// Validar e corrigir sinais das transações bancárias
+// Dr. Cícero: "Os sinais devem estar corretos para a contabilidade funcionar!"
+// Regra: CREDIT (entrada) = valor POSITIVO, DEBIT (saída) = valor NEGATIVO
+async function validateTransactionSigns(
+  supabase: any,
+  bankAccountId?: string,
+  dateFrom?: string,
+  dateTo?: string,
+  autoFix: boolean = false
+): Promise<any> {
+  console.log('[Dr.Cícero] Validating transaction signs...');
+
+  // Construir query
+  let query = supabase
+    .from('bank_transactions')
+    .select('id, transaction_date, description, amount, type');
+
+  if (bankAccountId) {
+    query = query.eq('bank_account_id', bankAccountId);
+  }
+
+  if (dateFrom) {
+    query = query.gte('transaction_date', dateFrom);
+  }
+
+  if (dateTo) {
+    query = query.lte('transaction_date', dateTo);
+  }
+
+  const { data: transactions, error } = await query.order('transaction_date', { ascending: true });
+
+  if (error) {
+    return {
+      success: false,
+      message: `Dr. Cícero: Erro ao buscar transações: ${error.message}`,
+    };
+  }
+
+  // Verificar sinais incorretos
+  const problems: any[] = [];
+
+  // CREDITS com valor negativo (errado - deveria ser positivo)
+  const creditsWithNegative = transactions.filter((t: any) => t.type === 'credit' && t.amount < 0);
+
+  // DEBITS com valor positivo (errado - deveria ser negativo)
+  const debitsWithPositive = transactions.filter((t: any) => t.type === 'debit' && t.amount > 0);
+
+  creditsWithNegative.forEach((t: any) => {
+    problems.push({
+      id: t.id,
+      type: 'credit_with_negative',
+      description: t.description,
+      current_amount: t.amount,
+      correct_amount: Math.abs(t.amount),
+      message: `CREDIT "${t.description}" tem valor negativo (${t.amount}) - deveria ser positivo`,
+    });
+  });
+
+  debitsWithPositive.forEach((t: any) => {
+    problems.push({
+      id: t.id,
+      type: 'debit_with_positive',
+      description: t.description,
+      current_amount: t.amount,
+      correct_amount: -Math.abs(t.amount),
+      message: `DEBIT "${t.description}" tem valor positivo (${t.amount}) - deveria ser negativo`,
+    });
+  });
+
+  // Se não há problemas
+  if (problems.length === 0) {
+    return {
+      success: true,
+      message: `Dr. Cícero: Excelente! Todas as ${transactions.length} transações estão com os sinais corretos.`,
+      total_analyzed: transactions.length,
+      problems_found: 0,
+      fixed: 0,
+    };
+  }
+
+  // Se auto_fix está habilitado, corrigir automaticamente
+  let fixed = 0;
+  if (autoFix) {
+    console.log(`[Dr.Cícero] Auto-fixing ${problems.length} transactions...`);
+
+    for (const problem of problems) {
+      const { error: updateError } = await supabase
+        .from('bank_transactions')
+        .update({ amount: problem.correct_amount })
+        .eq('id', problem.id);
+
+      if (!updateError) {
+        fixed++;
+        problem.fixed = true;
+      } else {
+        problem.fixed = false;
+        problem.fix_error = updateError.message;
+      }
+    }
+  }
+
+  const message = autoFix
+    ? `Dr. Cícero: Encontrei ${problems.length} transações com sinais incorretos e corrigi ${fixed}.`
+    : `Dr. Cícero: Encontrei ${problems.length} transações com sinais incorretos. Use auto_fix=true para corrigir automaticamente.`;
+
+  return {
+    success: true,
+    message,
+    total_analyzed: transactions.length,
+    problems_found: problems.length,
+    fixed,
+    problems: problems.slice(0, 50), // Limitar para não sobrecarregar a resposta
+    summary: {
+      credits_with_negative: creditsWithNegative.length,
+      debits_with_positive: debitsWithPositive.length,
+    },
+    recommendation: problems.length > 0
+      ? 'Dr. Cícero recomenda: Verifique o parser do arquivo OFX. O padrão é CREDIT=positivo, DEBIT=negativo.'
+      : null,
+  };
 }

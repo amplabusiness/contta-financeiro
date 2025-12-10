@@ -1539,3 +1539,86 @@ Detecta automaticamente:
 - Edge Function deployada no Supabase
 - Tabela ai_learned_patterns criada com 10 padrões iniciais
 - Padrões da família Leão adicionados (18 padrões)
+
+---
+
+## Sessão 17 (10/12/2025) - Correções Dr. Cícero e Período de Abertura
+
+### Correção de Sinais nas Transações Bancárias
+
+**Problema identificado**: Transações de janeiro/2025 com sinais invertidos
+- CREDIT (recebimentos) aparecendo como negativos
+- DEBIT (pagamentos) aparecendo como positivos
+
+**Causa raiz**:
+1. Coluna no banco é `type`, mas código usava `transaction_type`
+2. Sinais não estavam sendo convertidos corretamente na importação OFX
+
+**Correções aplicadas**:
+
+1. **SuperConciliador.tsx** - Mapeamento correto ao carregar transações:
+```typescript
+const mappedData = (data || []).map(tx => ({
+  ...tx,
+  transaction_type: tx.type as 'credit' | 'debit',
+  amount: Math.abs(tx.amount) // Valor sempre positivo para display
+}));
+```
+
+2. **Correção direta no Supabase** - 31 transações DEBIT corrigidas de positivo para negativo
+
+3. **Nova action no Dr. Cícero**: `validate_transaction_signs`
+   - Detecta automaticamente sinais incorretos
+   - Pode corrigir com `auto_fix=true`
+   - Parâmetros: `bank_account_id`, `date_from`, `date_to`
+
+### Regra de Período de Abertura (Janeiro/2025)
+
+**Conceito**: Janeiro/2025 é o primeiro mês do sistema. Recebimentos são de competências anteriores.
+
+**Lógica contábil correta**:
+
+1. **Saldo de Abertura já registrado**:
+   - `D: Clientes a Receber (1.1.2.xx) | C: Saldos de Abertura (5.2.1.02)`
+
+2. **Quando cliente paga em janeiro**:
+   - `D: Banco (1.1.1.02) | C: Clientes a Receber (1.1.2.01)`
+   - **BAIXA** o saldo do cliente, NÃO gera receita nova
+
+3. **Resultado**:
+   - Não distorce o DRE de 2025 (não cria receita fictícia)
+   - Saldo de Clientes a Receber diminui conforme pagamentos entram
+
+**Código adicionado ao Dr. Cícero**:
+```typescript
+const PERIODO_ABERTURA = {
+  inicio: '2025-01-01',
+  fim: '2025-01-31'
+};
+
+function isPeriodoAbertura(date: string): boolean {
+  const txDate = new Date(date);
+  const inicio = new Date(PERIODO_ABERTURA.inicio);
+  const fim = new Date(PERIODO_ABERTURA.fim);
+  return txDate >= inicio && txDate <= fim;
+}
+```
+
+**Classificação automática para recebimentos em janeiro**:
+- entry_type: `recebimento_abertura`
+- D: Banco (1.1.1.02)
+- C: Clientes a Receber (1.1.2.01)
+- needs_confirmation: false (regra fixa)
+
+### Arquivos Modificados
+
+| Arquivo | Modificação |
+|---------|-------------|
+| `src/pages/SuperConciliador.tsx` | Mapeamento type → transaction_type |
+| `supabase/functions/dr-cicero-contador/index.ts` | Action validate_transaction_signs, regra período abertura |
+
+### Lições Aprendidas
+
+1. **Colunas do banco vs código**: Sempre verificar se os nomes das colunas coincidem
+2. **Período de abertura**: Recebimentos do primeiro mês não são receita, são baixa de recebíveis
+3. **Validação de sinais**: CREDIT = positivo, DEBIT = negativo (padrão contábil)
