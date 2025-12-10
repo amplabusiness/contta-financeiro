@@ -78,24 +78,51 @@ interface Client {
   cep: string | null;
 }
 
-// Dados do escritório (em produção, viria do perfil da empresa)
-const officeData = {
-  name: "AMPLA ASSESSORIA CONTABIL LTDA",
-  tradeName: "Ampla Business",
+interface AccountingOffice {
+  id: string;
+  razao_social: string;
+  nome_fantasia: string | null;
+  cnpj: string;
+  crc_number: string | null;
+  crc_state: string | null;
+  responsavel_tecnico: string | null;
+  responsavel_crc: string | null;
+  responsavel_cpf: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  cep: string | null;
+  telefone: string | null;
+  celular: string | null;
+  email: string | null;
+  website: string | null;
+}
+
+// Dados padrão do escritório (usado como fallback)
+const defaultOfficeData: AccountingOffice = {
+  id: "",
+  razao_social: "AMPLA ASSESSORIA CONTABIL LTDA",
+  nome_fantasia: "Ampla Business",
   cnpj: "21.565.040/0001-07",
-  crc: "CRC/GO 007640/O",
-  address: "Rua 1, Qd. 24, Lt. 08",
-  number: "S/N",
-  neighborhood: "Setor Maracanã",
-  city: "Goiânia",
-  state: "GO",
-  zip: "74.680-320",
+  crc_number: "007640/O",
+  crc_state: "GO",
+  responsavel_tecnico: "Sergio Carneiro Leão",
+  responsavel_crc: "CRC/GO 008074",
+  responsavel_cpf: null,
+  endereco: "Rua 1, Qd. 24, Lt. 08",
+  numero: "S/N",
+  complemento: null,
+  bairro: "Setor Maracanã",
+  cidade: "Goiânia",
+  estado: "GO",
+  cep: "74.680-320",
+  telefone: "(62) 3932-1365",
+  celular: null,
   email: "contato@amplabusiness.com.br",
   website: "www.amplabusiness.com.br",
-  phone: "(62) 3932-1365",
-  accountant: "Sérgio Rosa de Carvalho",
-  accountantCpf: "CPF do Contador",
-  accountantCrc: "CRC/GO 024.270/O-5",
 };
 
 // Serviços por tipo de contrato
@@ -142,6 +169,7 @@ const Contracts = () => {
   const navigate = useNavigate();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [officeData, setOfficeData] = useState<AccountingOffice>(defaultOfficeData);
   const [isLoading, setIsLoading] = useState(false);
   const [showNewContract, setShowNewContract] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -161,6 +189,28 @@ const Contracts = () => {
     adjustment_index: "IGPM",
     special_clauses: "",
   });
+
+  const fetchAccountingOffice = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("accounting_office")
+        .select("*")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.log("Usando dados padrão do escritório:", error.message);
+        return;
+      }
+
+      if (data) {
+        setOfficeData(data);
+      }
+    } catch (error) {
+      console.log("Usando dados padrão do escritório");
+    }
+  }, []);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -203,9 +253,10 @@ const Contracts = () => {
   }, [toast]);
 
   useEffect(() => {
+    fetchAccountingOffice();
     fetchContracts();
     fetchClients();
-  }, [fetchContracts, fetchClients]);
+  }, [fetchAccountingOffice, fetchContracts, fetchClients]);
 
   // Gera o contrato completo com embasamento jurídico
   const generateContractContent = (type: string): string => {
@@ -247,16 +298,16 @@ EMBASAMENTO LEGAL:
 ───────────────────────────────────────────────────────────────────────────────
 
 CONTRATADA (Prestadora de Serviços):
-Razão Social: ${officeData.name}
-Nome Fantasia: ${officeData.tradeName}
+Razão Social: ${officeData.razao_social}
+Nome Fantasia: ${officeData.nome_fantasia || officeData.razao_social}
 CNPJ: ${officeData.cnpj}
-Registro CRC: ${officeData.crc}
-Endereço: ${officeData.address}, ${officeData.number} - ${officeData.neighborhood}
-CEP: ${officeData.zip} - ${officeData.city}/${officeData.state}
-E-mail: ${officeData.email}
-Telefone: ${officeData.phone}
-Responsável Técnico: ${officeData.accountant}
-CRC Responsável: ${officeData.accountantCrc}
+Registro CRC: CRC/${officeData.crc_state} ${officeData.crc_number}
+Endereço: ${officeData.endereco || ""}, ${officeData.numero || "S/N"} - ${officeData.bairro || ""}
+CEP: ${officeData.cep || ""} - ${officeData.cidade || ""}/${officeData.estado || ""}
+E-mail: ${officeData.email || ""}
+Telefone: ${officeData.telefone || ""}
+Responsável Técnico: ${officeData.responsavel_tecnico || ""}
+CRC Responsável: ${officeData.responsavel_crc || ""}
 
 CONTRATANTE (Tomador de Serviços):
 Razão Social: ${client.name}
@@ -477,7 +528,7 @@ informações obtidas em decorrência deste contrato, conforme:
                            CLÁUSULA 13ª - DO FORO
 ───────────────────────────────────────────────────────────────────────────────
 
-13.1. Fica eleito o foro da comarca de ${officeData.city}/${officeData.state} para dirimir
+13.1. Fica eleito o foro da comarca de ${officeData.cidade || "Goiânia"}/${officeData.estado || "GO"} para dirimir
 quaisquer questões oriundas deste contrato, com renúncia expressa a qualquer
 outro, por mais privilegiado que seja.
 
@@ -501,12 +552,12 @@ como prova de entrega e ciência.
 ═══════════════════════════════════════════════════════════════════════════════
 
 Data de Elaboração: ${formattedDate}
-Responsável: ${officeData.accountant} - ${officeData.accountantCrc}
+Responsável: ${officeData.responsavel_tecnico || ""} - ${officeData.responsavel_crc || ""}
 Versão: Conforme Resolução CFC 1.590/2020
 
-CONTRATADA: ${officeData.name}
+CONTRATADA: ${officeData.razao_social}
 CNPJ: ${officeData.cnpj}
-CRC: ${officeData.crc}
+CRC: CRC/${officeData.crc_state} ${officeData.crc_number}
 
 CONTRATANTE: ${client.name}
 CNPJ/CPF: ${client.cnpj || "Não informado"}
