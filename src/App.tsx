@@ -95,6 +95,8 @@ import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
 import HonorariosFlow from "./pages/HonorariosFlow";
 import ReconcileHonorarios from "./pages/ReconcileHonorarios";
+import Invoices from "./pages/Invoices";
+import RecurringExpenses from "./pages/RecurringExpenses";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
