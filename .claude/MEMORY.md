@@ -1373,3 +1373,169 @@ log: LogFunction
 | `43a4b57` | fix: Corrige bugs adicionais e erros de lint |
 | `850bf6c` | docs: Atualiza MEMORY.md com correções da Sessão 15 |
 | `5df05e4` | fix: Elimina todos os erros de lint (0 erros restantes) |
+
+---
+
+## Sessão 16 (10/12/2025) - Dr. Cícero Contador IA
+
+### Implementação do Dr. Cícero - Contador IA Guardian
+
+**Conceito**: Dr. Cícero é o contador IA responsável por TODA classificação contábil. Nenhum lançamento é feito sem a aprovação dele.
+
+### Edge Function Criada
+
+**Arquivo**: `supabase/functions/dr-cicero-contador/index.ts`
+
+**Actions disponíveis**:
+| Action | Descrição |
+|--------|-----------|
+| `analyze_transaction` | Analisa e classifica uma transação bancária |
+| `create_entry` | Cria lançamento contábil após aprovação |
+| `learn_classification` | Aprende novo padrão de classificação |
+| `process_batch` | Processa lote de transações |
+| `init_database` | Verifica/inicializa tabela de padrões |
+
+### Tabela de Padrões Aprendidos
+
+**Migration**: `supabase/migrations/20250110_ai_learned_patterns.sql`
+
+**Estrutura**:
+```sql
+CREATE TABLE ai_learned_patterns (
+  id UUID PRIMARY KEY,
+  description_pattern TEXT NOT NULL UNIQUE,
+  entry_type TEXT NOT NULL,
+  debit_account TEXT NOT NULL,
+  debit_account_name TEXT,
+  credit_account TEXT NOT NULL,
+  credit_account_name TEXT,
+  entry_description TEXT,
+  confidence DECIMAL(3,2) DEFAULT 0.9,
+  usage_count INTEGER DEFAULT 1,
+  last_used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by UUID REFERENCES auth.users(id)
+);
+```
+
+**Padrões Iniciais (10)**:
+- TARIFA, TED, DOC → Tarifas Bancárias
+- LIQ.COBRANCA, RECEBIMENTO PIX → Recebimentos
+- ENERGIA, CEMIG → Energia Elétrica
+- TELEFONE, INTERNET → Telefone/Internet
+- ALUGUEL → Aluguel
+
+**Padrões da Família Leão (18)**:
+- AMPLA SAUDE/SAÚDE → Investimento (1.2.1.01)
+- SERGIO AUGUSTO, FACULDADE, MEDICINA → Adiantamento Sérgio Augusto (1.1.3.03)
+- VICTOR HUGO → Adiantamento Victor Hugo (1.1.3.04)
+- NAYARA, BABA/BABÁ → Adiantamento Nayara (1.1.3.05)
+- CARLA LEAO/LEÃO → Adiantamento Carla (1.1.3.02)
+- SERGIO CARNEIRO, CASA → Adiantamento Sérgio Carneiro (1.1.3.01)
+- SITIO/SÍTIO → Adiantamento Sítio (1.1.3.99)
+
+### Contexto da Família Leão
+
+**REGRA FUNDAMENTAL**: Todo gasto da família = ADIANTAMENTO A SÓCIOS (NUNCA despesa operacional!)
+
+**Membros da Família**:
+| Membro | Relação | Conta | Centro de Custo |
+|--------|---------|-------|-----------------|
+| Sérgio Carneiro Leão | Fundador | 1.1.3.01 | SÉRGIO CARNEIRO |
+| Carla Leão | Esposa | 1.1.3.02 | CARLA LEÃO |
+| Sérgio Augusto | Filho (Ampla Saúde) | 1.1.3.03 | SÉRGIO AUGUSTO |
+| Victor Hugo | Filho (Legalização) | 1.1.3.04 | VICTOR HUGO |
+| Nayara | Filha (Admin) | 1.1.3.05 | NAYARA |
+
+**Investimentos**:
+- Ampla Saúde (Clínica Médica do Trabalho) → 1.2.1.01 Investimentos
+
+**Imóveis**:
+- Sede própria → Despesa da empresa (CC: EMPRESA/SEDE)
+- Casa do Sérgio, Sítio → Adiantamento a Sócios
+
+### Integração com SuperConciliador
+
+**Arquivo modificado**: `src/pages/SuperConciliador.tsx`
+
+**Novos recursos**:
+1. Botão "Dr. Cícero" para processar todas transações pendentes
+2. Dialog de classificação com pergunta/resposta
+3. Classificação individual com confirmação
+4. Identificação automática de CPF/CNPJ em PIX
+
+**Interface DrCiceroClassification**:
+```typescript
+interface DrCiceroClassification {
+  confidence: number;
+  debit_account: string;
+  debit_account_name: string;
+  credit_account: string;
+  credit_account_name: string;
+  entry_type: string;
+  description: string;
+  needs_confirmation: boolean;
+  question?: string;
+  options?: string[];
+  reasoning: string;
+}
+```
+
+### Funções de Detecção de Família
+
+**Função**: `identificarFamiliaLeao(desc: string)`
+
+Detecta automaticamente:
+- Nomes dos membros da família
+- Ampla Saúde (investimento)
+- Sítio, casa, despesas pessoais
+- Babá (despesa da Nayara)
+
+### Plano de Contas Atualizado
+
+**Novas contas de Adiantamento a Sócios**:
+- 1.1.3.01 - Sérgio Carneiro Leão
+- 1.1.3.02 - Carla Leão
+- 1.1.3.03 - Sérgio Augusto
+- 1.1.3.04 - Victor Hugo
+- 1.1.3.05 - Nayara
+- 1.1.3.99 - Família (geral/sítio)
+
+**Nova conta de Investimento**:
+- 1.2.1.01 - Investimentos - Ampla Saúde
+
+### Centros de Custo para Família
+
+- EMPRESA/SEDE - Despesas operacionais
+- SÓCIOS/FAMÍLIA - Movimentações particulares
+- SÉRGIO CARNEIRO - Adiantamentos do fundador
+- CARLA LEÃO - Adiantamentos da sócia
+- SÉRGIO AUGUSTO - Adiantamentos (Ampla Saúde)
+- VICTOR HUGO - Adiantamentos
+- NAYARA - Adiantamentos (inclui babá)
+- SÍTIO - Despesas do sítio de lazer
+- AMPLA SAÚDE - Investimentos na clínica
+
+### Lições Aprendidas
+
+1. **Empresa familiar precisa separar gastos pessoais** - Tudo que for da família vai para Adiantamento a Sócios, nunca para despesa operacional
+2. **Investimentos em outras empresas** - Controlados em conta de Ativo (1.2.1.xx) para futura devolução
+3. **Centro de Custo é essencial** - Permite rastrear para quem foi cada gasto
+4. **IA com contexto** - O Dr. Cícero recebe todo o contexto da família para classificar corretamente
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `supabase/functions/dr-cicero-contador/index.ts` | Criado | Edge Function do Dr. Cícero |
+| `supabase/migrations/20250110_ai_learned_patterns.sql` | Criado | Tabela de padrões |
+| `src/pages/SuperConciliador.tsx` | Modificado | Dialog Dr. Cícero, funções IA |
+| `src/components/AppSidebar.tsx` | Modificado | Menu simplificado |
+| `scripts/run-migration.mjs` | Criado | Script para verificar tabela |
+
+### Deploy
+
+- Edge Function deployada no Supabase
+- Tabela ai_learned_patterns criada com 10 padrões iniciais
+- Padrões da família Leão adicionados (18 padrões)

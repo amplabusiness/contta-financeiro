@@ -130,23 +130,18 @@ export function AppSidebar() {
       items: [
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
-        { title: "Importar CNAB 400", url: "/import-cnab", icon: FileText },
-        { title: "Conciliações Pendentes", url: "/pending-reconciliations", icon: AlertTriangle },
-        { title: "Conciliação", url: "/bank-reconciliation", icon: RefreshCw },
-        { title: "Super Conciliador", url: "/super-conciliador", icon: Target },
+        { title: "Conciliador", url: "/super-conciliador", icon: Target },
+        { title: "Aprovações", url: "/pending-reconciliations", icon: AlertTriangle },
       ],
     },
     {
-      label: "Contas a Receber",
+      label: "Honorários",
       items: [
         { title: "Fluxo de Honorários", url: "/honorarios-flow", icon: DollarSign },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
-        { title: "Reconciliar", url: "/reconcile-honorarios", icon: RefreshCw },
         { title: "Análise", url: "/fees-analysis", icon: TrendingUp },
-        { title: "Reajuste por SM", url: "/fee-adjustment", icon: Calculator },
         { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
         { title: "Cobrança", url: "/collection-dashboard", icon: FileText },
-        { title: "Negociação", url: "/debt-negotiation", icon: Handshake },
       ],
     },
     {

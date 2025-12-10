@@ -24,6 +24,8 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AIAssistantChat } from "@/components/AIAssistantChat";
+import { AITeamBadge } from "@/components/AITeamBadge";
 
 interface BankTransaction {
   id: string;
@@ -80,6 +82,21 @@ interface SplitEntry {
   selected: boolean;
 }
 
+// Interface para classificação do Dr. Cícero
+interface DrCiceroClassification {
+  confidence: number;
+  debit_account: string;
+  debit_account_name: string;
+  credit_account: string;
+  credit_account_name: string;
+  entry_type: string;
+  description: string;
+  needs_confirmation: boolean;
+  question?: string;
+  options?: string[];
+  reasoning: string;
+}
+
 const SuperConciliador = () => {
   // State
   const [loading, setLoading] = useState(true);
@@ -94,6 +111,13 @@ const SuperConciliador = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'matched'>('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+
+  // Dr. Cícero Dialog
+  const [drCiceroDialog, setDrCiceroDialog] = useState(false);
+  const [drCiceroTransaction, setDrCiceroTransaction] = useState<BankTransaction | null>(null);
+  const [drCiceroClassification, setDrCiceroClassification] = useState<DrCiceroClassification | null>(null);
+  const [drCiceroLoading, setDrCiceroLoading] = useState(false);
+  const [userAnswer, setUserAnswer] = useState('');
 
   // Dialog de conciliação
   const [conciliationOpen, setConciliationOpen] = useState(false);
@@ -566,6 +590,159 @@ const SuperConciliador = () => {
     }
   };
 
+  // Extrair CPF/CNPJ de descrição de PIX
+  const extractDocumentFromDescription = (description: string): string | null => {
+    // Padrões para PIX: "PIX_CRED 12345678901234 NOME" ou "PIX_CRED 12345678901 NOME"
+    // CNPJ: 14 dígitos, CPF: 11 dígitos
+    const patterns = [
+      /PIX_CRED\s+(\d{14})\s/i,     // CNPJ no PIX
+      /PIX_CRED\s+(\d{11})\s/i,     // CPF no PIX
+      /(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/,  // CNPJ formatado
+      /(\d{3}\.\d{3}\.\d{3}-\d{2})/,         // CPF formatado
+      /\s(\d{14})\s/,               // CNPJ sem formato
+      /\s(\d{11})\s/,               // CPF sem formato
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match) {
+        // Retorna apenas os dígitos
+        return match[1].replace(/\D/g, '');
+      }
+    }
+    return null;
+  };
+
+  // Auto-conciliar por CPF/CNPJ extraído do PIX
+  const findDocumentMatches = async () => {
+    setProcessing(true);
+    try {
+      let matched = 0;
+      let notFound = 0;
+      const pendingCredits = transactions.filter(t => !t.matched && t.transaction_type === 'credit');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      // Carregar todos os clientes com documentos
+      const { data: clients } = await supabase
+        .from("clients")
+        .select("id, name, cnpj, cpf")
+        .eq("is_active", true);
+
+      for (const tx of pendingCredits) {
+        const document = extractDocumentFromDescription(tx.description || '');
+        if (!document) continue;
+
+        // Buscar cliente pelo CPF/CNPJ
+        const client = clients?.find(c => {
+          const clientCnpj = c.cnpj?.replace(/\D/g, '') || '';
+          const clientCpf = c.cpf?.replace(/\D/g, '') || '';
+          return clientCnpj === document || clientCpf === document;
+        });
+
+        if (!client) {
+          notFound++;
+          console.log(`Cliente não encontrado para documento ${document} na transação: ${tx.description}`);
+          continue;
+        }
+
+        // Buscar honorário pendente deste cliente (mais próximo do valor)
+        const clientInvoices = invoices.filter(inv =>
+          inv.client_id === client.id && inv.status === 'pending'
+        );
+
+        if (clientInvoices.length === 0) {
+          console.log(`Sem honorários pendentes para cliente ${client.name}`);
+          continue;
+        }
+
+        // Encontrar o honorário mais próximo do valor (tolerância de 10%)
+        let bestMatch: Invoice | null = null;
+        let bestDiff = Infinity;
+        for (const inv of clientInvoices) {
+          const diff = Math.abs(inv.amount - tx.amount);
+          const tolerance = tx.amount * 0.1; // 10% de tolerância
+          if (diff < tolerance && diff < bestDiff) {
+            bestMatch = inv;
+            bestDiff = diff;
+          }
+        }
+
+        // Se não encontrou com tolerância, pega o primeiro pendente (para períodos anteriores)
+        if (!bestMatch && clientInvoices.length > 0) {
+          // Se o valor da transação é maior, pode ser soma de vários meses
+          // Neste caso, apenas registra o primeiro como parcial
+          bestMatch = clientInvoices[0];
+        }
+
+        if (bestMatch) {
+          // Conciliar
+          await supabase
+            .from("bank_transactions")
+            .update({
+              matched: true,
+              matched_invoice_id: bestMatch.id,
+              ai_confidence: bestDiff < 0.01 ? 1.0 : 0.9,
+              ai_suggestion: `Match por CPF/CNPJ: ${client.name}`
+            })
+            .eq("id", tx.id);
+
+          await supabase
+            .from("invoices")
+            .update({ status: "paid", payment_date: tx.transaction_date })
+            .eq("id", bestMatch.id);
+
+          // Lançamento contábil
+          await supabase.functions.invoke('smart-accounting', {
+            body: {
+              action: 'create_entry',
+              entry: {
+                type: 'invoice',
+                operation: 'payment',
+                referenceId: bestMatch.id,
+                referenceType: 'invoice',
+                amount: tx.amount,
+                date: tx.transaction_date,
+                description: `Recebimento PIX: ${client.name}`,
+                clientId: client.id
+              }
+            }
+          });
+
+          // Razão do cliente
+          await supabase
+            .from("client_ledger")
+            .insert({
+              client_id: client.id,
+              transaction_date: tx.transaction_date,
+              description: `Recebimento PIX: ${tx.description}`,
+              credit: tx.amount,
+              debit: 0,
+              balance: 0,
+              invoice_id: bestMatch.id,
+              reference_type: 'bank_transaction',
+              reference_id: tx.id,
+              created_by: user.id,
+            });
+
+          matched++;
+        }
+      }
+
+      if (matched > 0 || notFound > 0) {
+        toast.success(`${matched} transações conciliadas por CPF/CNPJ${notFound > 0 ? ` (${notFound} clientes não encontrados)` : ''}`);
+      } else {
+        toast.info("Nenhuma transação PIX com documento identificável encontrada");
+      }
+      await loadAllData();
+    } catch (error: any) {
+      console.error("Erro:", error);
+      toast.error("Erro: " + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   // Buscar matches por valor exato
   const findExactMatches = async () => {
     setProcessing(true);
@@ -624,6 +801,163 @@ const SuperConciliador = () => {
     }
   };
 
+  // ===== DR. CÍCERO FUNCTIONS =====
+
+  // Abrir dialog do Dr. Cícero para analisar uma transação
+  const openDrCiceroDialog = async (transaction: BankTransaction) => {
+    setDrCiceroTransaction(transaction);
+    setDrCiceroClassification(null);
+    setUserAnswer('');
+    setDrCiceroDialog(true);
+    setDrCiceroLoading(true);
+
+    try {
+      // Extrair documento se for PIX
+      let document = null;
+      const pixMatch = transaction.description.match(/PIX_CRED\s+(\d{11,14})\s/i);
+      if (pixMatch) {
+        document = pixMatch[1];
+      }
+
+      // Chamar Dr. Cícero para analisar
+      const { data, error } = await supabase.functions.invoke('dr-cicero-contador', {
+        body: {
+          action: 'analyze_transaction',
+          transaction: {
+            id: transaction.id,
+            description: transaction.description,
+            amount: transaction.amount,
+            date: transaction.transaction_date,
+            type: transaction.transaction_type,
+            document,
+          }
+        }
+      });
+
+      if (error) throw error;
+      setDrCiceroClassification(data);
+    } catch (error: any) {
+      console.error('Erro ao chamar Dr. Cícero:', error);
+      // Classificação fallback local
+      setDrCiceroClassification({
+        confidence: 0.5,
+        debit_account: transaction.transaction_type === 'credit' ? '1.1.1.02' : '4.1.2.99',
+        debit_account_name: transaction.transaction_type === 'credit' ? 'Banco Sicredi' : 'Outras Despesas',
+        credit_account: transaction.transaction_type === 'credit' ? '3.1.2.01' : '1.1.1.02',
+        credit_account_name: transaction.transaction_type === 'credit' ? 'Outras Receitas' : 'Banco Sicredi',
+        entry_type: transaction.transaction_type === 'credit' ? 'receita' : 'despesa',
+        description: transaction.description,
+        needs_confirmation: true,
+        question: `Dr. Cícero precisa de ajuda: O que é esta ${transaction.transaction_type === 'credit' ? 'receita' : 'despesa'} de ${formatCurrency(Math.abs(transaction.amount))}?`,
+        options: transaction.transaction_type === 'credit'
+          ? ['Honorário de cliente', 'Receita financeira', 'Devolução', 'Outro']
+          : ['Pagamento fornecedor', 'Despesa pessoal', 'Despesa administrativa', 'Outro'],
+        reasoning: 'Serviço de IA indisponível. Usando classificação manual.',
+      });
+    } finally {
+      setDrCiceroLoading(false);
+    }
+  };
+
+  // Confirmar classificação do Dr. Cícero e criar lançamento
+  const confirmDrCiceroClassification = async (answer?: string) => {
+    if (!drCiceroTransaction || !drCiceroClassification) return;
+
+    setDrCiceroLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      // Se é confirmação sem alteração ou com resposta do usuário
+      const finalAnswer = answer || userAnswer;
+
+      // Chamar Dr. Cícero para criar o lançamento
+      const { data, error } = await supabase.functions.invoke('dr-cicero-contador', {
+        body: {
+          action: 'create_entry',
+          transaction: {
+            id: drCiceroTransaction.id,
+            description: drCiceroTransaction.description,
+            amount: drCiceroTransaction.amount,
+            date: drCiceroTransaction.transaction_date,
+            type: drCiceroTransaction.transaction_type,
+          },
+          classification: drCiceroClassification,
+          user_confirmation: finalAnswer,
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Dr. Cícero: Lançamento criado com sucesso!`);
+      setDrCiceroDialog(false);
+      await loadAllData();
+    } catch (error: any) {
+      console.error('Erro ao criar lançamento:', error);
+      toast.error('Erro ao criar lançamento: ' + error.message);
+    } finally {
+      setDrCiceroLoading(false);
+    }
+  };
+
+  // Processar todas transações pendentes com Dr. Cícero
+  const processAllWithDrCicero = async () => {
+    setProcessing(true);
+    try {
+      const pendingTx = transactions.filter(t => !t.matched);
+
+      if (pendingTx.length === 0) {
+        toast.info('Não há transações pendentes para processar');
+        return;
+      }
+
+      const txData = pendingTx.map(tx => {
+        let document = null;
+        const pixMatch = tx.description.match(/PIX_CRED\s+(\d{11,14})\s/i);
+        if (pixMatch) document = pixMatch[1];
+
+        return {
+          id: tx.id,
+          description: tx.description,
+          amount: tx.amount,
+          date: tx.transaction_date,
+          type: tx.transaction_type,
+          document,
+        };
+      });
+
+      const { data, error } = await supabase.functions.invoke('dr-cicero-contador', {
+        body: {
+          action: 'process_batch',
+          transactions: txData,
+          auto_approve_threshold: 0.85, // Auto-aprova apenas com 85%+ de confiança
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Dr. Cícero: ${data.auto_approved} aprovadas automaticamente, ${data.pending_review} aguardando revisão`);
+
+      // Se há itens pendentes de revisão, abrir o primeiro
+      const pendingReview = data.items?.filter((i: any) => i.status === 'pending_review') || [];
+      if (pendingReview.length > 0) {
+        const firstPending = transactions.find(t => t.id === pendingReview[0].transaction_id);
+        if (firstPending) {
+          setDrCiceroTransaction(firstPending);
+          setDrCiceroClassification(pendingReview[0].classification);
+          setDrCiceroDialog(true);
+        }
+      }
+
+      await loadAllData();
+    } catch (error: any) {
+      console.error('Erro no processamento:', error);
+      toast.error('Erro: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -639,30 +973,45 @@ const SuperConciliador = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Target className="h-8 w-8 text-primary" />
-              Super Conciliador
-            </h1>
-            <p className="text-muted-foreground">
-              O melhor conciliador bancário do mundo - com IA e automação total
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <Target className="h-8 w-8 text-primary" />
+                Conciliador
+              </h1>
+              <p className="text-muted-foreground">
+                Conciliação bancária inteligente com Dr. Cícero (Contador IA)
+              </p>
+            </div>
+            <AITeamBadge variant="compact" />
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={loadAllData} disabled={processing}>
               <RefreshCw className={`h-4 w-4 mr-2 ${processing ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
+            <Button variant="outline" onClick={findDocumentMatches} disabled={processing}>
+              <CreditCard className="h-4 w-4 mr-2" />
+              CPF/CNPJ
+            </Button>
             <Button variant="outline" onClick={findExactMatches} disabled={processing}>
               <Zap className="h-4 w-4 mr-2" />
-              Match Exato
+              Valor Exato
             </Button>
-            <Button onClick={runAutoReconciliation} disabled={processing}>
+            <Button onClick={processAllWithDrCicero} disabled={processing} className="bg-blue-600 hover:bg-blue-700">
               <Bot className="h-4 w-4 mr-2" />
-              Auto-Conciliar IA
+              Dr. Cícero
             </Button>
           </div>
         </div>
+
+        {/* Chat do Contador IA */}
+        <AIAssistantChat
+          context="accounting"
+          defaultOpen={false}
+          compact
+          className="border-l-4 border-l-blue-500"
+        />
 
         {/* KPIs */}
         <div className="grid gap-4 md:grid-cols-5">
@@ -1112,6 +1461,142 @@ const SuperConciliador = () => {
                 </>
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Dr. Cícero */}
+      <Dialog open={drCiceroDialog} onOpenChange={setDrCiceroDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-blue-600" />
+              Dr. Cícero - Contador IA
+            </DialogTitle>
+            <DialogDescription>
+              Análise contábil da transação
+            </DialogDescription>
+          </DialogHeader>
+
+          {drCiceroTransaction && (
+            <div className="space-y-4">
+              {/* Detalhes da transação */}
+              <Card className="bg-muted/50">
+                <CardContent className="p-4 space-y-2">
+                  <div className="text-sm font-medium">{drCiceroTransaction.description}</div>
+                  <div className="flex justify-between text-sm">
+                    <span>Valor:</span>
+                    <span className={`font-bold ${drCiceroTransaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatCurrency(Math.abs(drCiceroTransaction.amount))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Data:</span>
+                    <span>{format(new Date(drCiceroTransaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {drCiceroLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <span className="ml-3">Dr. Cícero analisando...</span>
+                </div>
+              ) : drCiceroClassification && (
+                <>
+                  {/* Classificação sugerida */}
+                  <Card className={drCiceroClassification.confidence >= 0.8 ? 'border-green-200 bg-green-50/50' : 'border-yellow-200 bg-yellow-50/50'}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        Classificação Sugerida
+                        <Badge variant={drCiceroClassification.confidence >= 0.8 ? 'default' : 'secondary'}>
+                          {(drCiceroClassification.confidence * 100).toFixed(0)}% confiança
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Débito:</span>
+                        <span className="font-medium">{drCiceroClassification.debit_account} - {drCiceroClassification.debit_account_name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Crédito:</span>
+                        <span className="font-medium">{drCiceroClassification.credit_account} - {drCiceroClassification.credit_account_name}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground italic mt-2">
+                        {drCiceroClassification.reasoning}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Pergunta do Dr. Cícero */}
+                  {drCiceroClassification.needs_confirmation && drCiceroClassification.question && (
+                    <Card className="border-blue-200 bg-blue-50/50">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start gap-2">
+                          <Bot className="h-5 w-5 text-blue-600 mt-0.5" />
+                          <div className="text-sm font-medium">{drCiceroClassification.question}</div>
+                        </div>
+
+                        {drCiceroClassification.options && drCiceroClassification.options.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {drCiceroClassification.options.map((option, i) => (
+                              <Button
+                                key={i}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => confirmDrCiceroClassification(option)}
+                                disabled={drCiceroLoading}
+                              >
+                                {option}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Ou digite sua resposta..."
+                            value={userAnswer}
+                            onChange={(e) => setUserAnswer(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && userAnswer && confirmDrCiceroClassification()}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => confirmDrCiceroClassification()}
+                            disabled={!userAnswer || drCiceroLoading}
+                          >
+                            Enviar
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDrCiceroDialog(false)}>
+              Cancelar
+            </Button>
+            {drCiceroClassification && !drCiceroClassification.needs_confirmation && (
+              <Button onClick={() => confirmDrCiceroClassification()} disabled={drCiceroLoading}>
+                {drCiceroLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Aprovar Lançamento
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
