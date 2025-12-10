@@ -139,6 +139,7 @@ export function AppSidebar() {
       items: [
         { title: "Fluxo de Honorários", url: "/honorarios-flow", icon: DollarSign },
         { title: "Gerar Honorários", url: "/generate-recurring-invoices", icon: Calendar },
+        { title: "Especiais", url: "/special-fees", icon: Calculator },
         { title: "Análise", url: "/fees-analysis", icon: TrendingUp },
         { title: "Inadimplência", url: "/default-analysis", icon: AlertTriangle },
         { title: "Cobrança", url: "/collection-dashboard", icon: FileText },

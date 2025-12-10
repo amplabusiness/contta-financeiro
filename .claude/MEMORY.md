@@ -1830,3 +1830,89 @@ Cliente tem saldo de abertura?
 2. **Saldo de abertura é um ATIVO** - Recebimento deve BAIXAR o ativo, não criar receita nova
 3. **Perguntar é melhor que errar** - Quando há dúvida sobre competência, Dr. Cícero pergunta ao usuário
 4. **Versionamento é essencial** - Permite rastrear mudanças e facilita comunicação
+
+---
+
+## Sessão 20 (10/12/2025) - Sistema de Honorários Especiais v1.21.0
+
+### Contexto
+
+Usuário solicitou sistema completo para gerenciar honorários diferenciados:
+- Honorários Variáveis (% sobre faturamento)
+- Abertura/Alteração de Empresas
+- Comissões por Indicação
+- Declaração de IRPF
+
+### Novas Tabelas Criadas
+
+| Tabela | Descrição |
+|--------|-----------|
+| `client_variable_fees` | Configuração de honorários variáveis (% sobre faturamento) |
+| `client_monthly_revenue` | Faturamento mensal para cálculo de honorário variável |
+| `company_services` | Serviços de abertura, alteração e baixa de empresas |
+| `company_service_costs` | Taxas e custos de serviços (Junta, DARE, certificados) |
+| `referral_partners` | Parceiros/corretores que indicam clientes |
+| `client_referrals` | Indicações de clientes com configuração de comissão |
+| `referral_commission_payments` | Pagamentos de comissões por indicação |
+| `irpf_declarations` | Declarações de IRPF (sócios e particulares) |
+
+### Funcionalidades Implementadas
+
+#### 1. Honorários Variáveis (% sobre faturamento)
+- **Exemplo**: Mata Pragas paga honorário fixo + 2.87% do faturamento dia 20
+- Tabela `client_variable_fees` configura taxa, dia de vencimento, base de cálculo
+- Tabela `client_monthly_revenue` armazena faturamento mensal para cálculo
+- Função `calculate_variable_fee()` calcula automaticamente
+
+#### 2. Abertura/Alteração de Empresas
+- Recebe valor fixo (ex: R$ 2.500) e paga taxas do governo
+- Lucro = Valor Cobrado - Total de Taxas
+- Coluna `profit` é GENERATED (calculada automaticamente)
+- Trigger `trg_update_service_costs` atualiza total de custos
+
+#### 3. Comissões por Indicação
+- 10% do honorário por X meses para quem indicou
+- Parceiro tem chave PIX cadastrada para pagamento
+- Trigger `trg_calculate_referral_end_date` calcula data fim
+- View `vw_pending_commissions` mostra comissões pendentes
+
+#### 4. Declaração de IRPF
+- Declarações anuais dos sócios e particulares
+- Valor médio R$ 300
+- Botão "Gerar dos Sócios" puxa automaticamente do QSA
+- Função `generate_irpf_forecast()` cria previsões
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/20251210_honorarios_especiais.sql` | Criado - 8 tabelas, triggers, views, funções |
+| `src/pages/SpecialFees.tsx` | Criado - Página com 4 abas para gestão |
+| `src/App.tsx` | Modificado - Rota `/special-fees` |
+| `src/components/AppSidebar.tsx` | Modificado - Menu "Especiais" em Honorários |
+| `package.json` | Atualizado - Versão 1.21.0 |
+| `CHANGELOG.md` | Atualizado - Documentação v1.21.0 |
+
+### Desafios Técnicos Resolvidos
+
+1. **GENERATED column com INTERVAL** - PostgreSQL não permite expressões não-imutáveis em colunas geradas
+   - Solução: Usar trigger em vez de GENERATED ALWAYS AS
+
+2. **Supabase db push** - Conflito de versões de migrations
+   - Solução: `supabase migration repair --status applied/reverted`
+
+3. **VIEW com colunas diferentes** - CREATE OR REPLACE VIEW não pode alterar colunas
+   - Solução: DROP VIEW IF EXISTS antes de CREATE VIEW
+
+### Diretiva do Usuário
+
+> "para não ter varios menus da mesma coisa procura concentrar as mesmas rotinas em um menu"
+
+- Item "Especiais" adicionado ao grupo "Honorários" no sidebar
+- Página única com 4 abas (Variáveis, Abertura, Indicações, IRPF)
+
+### Versão
+
+- **Anterior**: 1.20.0
+- **Atual**: 1.21.0
+- **Tipo**: MINOR (nova funcionalidade)

@@ -254,6 +254,24 @@ serve(async (req) => {
       });
     }
 
+    // AÇÃO: Identificar cliente pelo CNPJ na descrição da transação
+    if (action === 'identify_client_by_cnpj') {
+      const { description } = body;
+      const result = await identifyClientByCnpj(supabase, description);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Buscar membros do grupo econômico de um cliente
+    if (action === 'get_economic_group_members') {
+      const { client_id, cnpj } = body;
+      const result = await getEconomicGroupMembers(supabase, client_id, cnpj);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // AÇÃO: Carregar índice de sócios/clientes
     if (action === 'build_client_index') {
       const result = await buildClientIndex(supabase);
@@ -470,6 +488,126 @@ async function ruleBasedClassificationAsync(
 
   // Verificar se é período de abertura (Janeiro/2025)
   const isAbertura = isPeriodoAbertura(transaction.date);
+
+  // PRIORIDADE -1: Se é recebimento, tentar identificar cliente pelo CNPJ primeiro
+  if (isCredit && !clientInfo) {
+    const cnpjResult = await identifyClientByCnpj(supabase, transaction.description);
+
+    if (cnpjResult.found) {
+      console.log('[Dr.Cícero] Client found by CNPJ:', cnpjResult.client_nome_fantasia);
+
+      // Se cliente pertence a grupo econômico ou tem empresas relacionadas
+      if (cnpjResult.has_economic_group && cnpjResult.economic_group) {
+        const group = cnpjResult.economic_group;
+
+        // Construir lista de empresas do grupo para escolha
+        const empresaOptions = group.members.map(m =>
+          `${m.client_name} (R$ ${m.monthly_fee?.toFixed(2) || '0.00'})`
+        );
+
+        // Calcular valor total esperado do grupo
+        const totalExpected = group.members.reduce((sum, m) => sum + (m.monthly_fee || 0), 0);
+
+        return {
+          confidence: 0.85,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: 'Clientes a Receber',
+          entry_type: 'recebimento_grupo',
+          description: `Recebimento ${group.name}: R$ ${amount.toFixed(2)}`,
+          needs_confirmation: true,
+          question: `Dr. Cícero: Identifiquei o pagador ${cnpjResult.client_nome_fantasia} que é ${group.is_main_payer ? 'PAGADOR PRINCIPAL' : 'membro'} do ${group.name} (${group.members.length} empresas).\n\nValor recebido: R$ ${amount.toFixed(2)}\nValor total esperado do grupo: R$ ${totalExpected.toFixed(2)}\n\nComo devo ratear este pagamento?`,
+          options: [
+            `Ratear proporcionalmente entre as ${group.members.length} empresas`,
+            'Aplicar ao cliente pagador apenas',
+            'Selecionar empresas manualmente',
+            ...empresaOptions.map(e => `Aplicar 100% a: ${e}`)
+          ],
+          reasoning: `Identificado CNPJ ${cnpjResult.cnpj} pertencente ao ${group.name}. O pagamento pode ser rateado entre: ${empresaOptions.join(', ')}.`,
+        };
+      }
+
+      // Se tem empresas relacionadas (pelo QSA) mas não está em grupo formal
+      if (cnpjResult.related_companies && cnpjResult.related_companies.length > 0) {
+        const related = cnpjResult.related_companies;
+        const empresaOptions = [
+          `${cnpjResult.client_nome_fantasia} (pagador - R$ ${cnpjResult.monthly_fee?.toFixed(2) || '0.00'})`,
+          ...related.map(r => `${r.client_name} (R$ ${r.monthly_fee?.toFixed(2) || '0.00'})`)
+        ];
+
+        return {
+          confidence: 0.75,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: `Clientes a Receber - ${cnpjResult.client_nome_fantasia}`,
+          entry_type: 'recebimento',
+          description: `Recebimento honorários: ${cnpjResult.client_nome_fantasia}`,
+          needs_confirmation: true,
+          question: `Dr. Cícero: Identifiquei o pagador ${cnpjResult.client_nome_fantasia} (CNPJ: ${cnpjResult.cnpj}). Encontrei ${related.length} empresa(s) relacionada(s) pelos sócios.\n\nValor recebido: R$ ${amount.toFixed(2)}\n\nEste pagamento é referente a qual(is) empresa(s)?`,
+          options: [
+            `Apenas ${cnpjResult.client_nome_fantasia} (pagador)`,
+            'Ratear entre empresas relacionadas',
+            ...empresaOptions.map(e => `100% para: ${e}`)
+          ],
+          reasoning: `Identificado CNPJ ${cnpjResult.cnpj}. Empresas relacionadas: ${related.map(r => r.client_name).join(', ')}.`,
+        };
+      }
+
+      // Cliente encontrado sem grupo - classificação direta
+      // Janeiro/2025 = Período de Abertura
+      if (isAbertura) {
+        return {
+          confidence: 0.95,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: `Clientes a Receber - ${cnpjResult.client_nome_fantasia}`,
+          entry_type: 'recebimento_abertura',
+          description: `Recebimento honorários (CNPJ): ${cnpjResult.client_nome_fantasia}`,
+          needs_confirmation: false,
+          reasoning: `Dr. Cícero: Identifiquei ${cnpjResult.client_nome_fantasia} pelo CNPJ ${cnpjResult.cnpj}. JANEIRO/2025 = período de abertura. Este recebimento BAIXA o saldo de Clientes a Receber.`,
+        };
+      }
+
+      // Verificar saldo de abertura pendente
+      const saldoInfo = await clienteTemSaldoAbertura(supabase, cnpjResult.client_id!);
+
+      if (saldoInfo.temSaldo) {
+        return {
+          confidence: 0.80,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: `Clientes a Receber - ${cnpjResult.client_nome_fantasia}`,
+          entry_type: 'recebimento',
+          description: `Recebimento honorários: ${cnpjResult.client_nome_fantasia}`,
+          needs_confirmation: true,
+          question: `Dr. Cícero: Identifiquei ${cnpjResult.client_nome_fantasia} pelo CNPJ. O cliente tem saldo devedor de R$ ${saldoInfo.saldo.toFixed(2)} de períodos anteriores.\n\nEste pagamento de R$ ${amount.toFixed(2)} é:`,
+          options: [
+            `Pagamento de dívida antiga (baixa saldo de R$ ${saldoInfo.saldo.toFixed(2)})`,
+            'Honorário da competência atual (receita nova)',
+            'Dividir entre dívida antiga e competência atual'
+          ],
+          reasoning: `Identificado pelo CNPJ ${cnpjResult.cnpj}. Cliente tem saldo devedor antigo.`,
+        };
+      }
+
+      // Recebimento normal
+      return {
+        confidence: 0.90,
+        debit_account: '1.1.1.02',
+        debit_account_name: 'Banco Sicredi C/C',
+        credit_account: '1.1.2.01',
+        credit_account_name: `Clientes a Receber - ${cnpjResult.client_nome_fantasia}`,
+        entry_type: 'recebimento',
+        description: `Recebimento honorários (CNPJ): ${cnpjResult.client_nome_fantasia}`,
+        needs_confirmation: false,
+        reasoning: `Dr. Cícero: Identifiquei ${cnpjResult.client_nome_fantasia} pelo CNPJ ${cnpjResult.cnpj}. Classificado como honorário regular.`,
+      };
+    }
+  }
 
   // PRIORIDADE 0: Se é recebimento, tentar identificar pagador pelo nome no QSA
   if (isCredit && !clientInfo) {
@@ -1531,6 +1669,369 @@ async function buildClientIndex(supabase: any): Promise<any> {
     },
     sample_partners: Object.keys(stats.partner_index).slice(0, 20),
   };
+}
+
+// ==========================================
+// IDENTIFICAÇÃO POR CNPJ E GRUPOS ECONÔMICOS
+// ==========================================
+
+// Extrair CNPJ de uma descrição de transação bancária
+function extractCnpjFromDescription(description: string): string | null {
+  // Formatos comuns de CNPJ em descrições:
+  // 12345678000199
+  // 12.345.678/0001-99
+  // 12345678/0001-99
+
+  // Primeiro, tentar formato sem pontuação (14 dígitos)
+  const rawMatch = description.match(/\b(\d{14})\b/);
+  if (rawMatch) {
+    return rawMatch[1];
+  }
+
+  // Tentar formato com pontuação
+  const formattedMatch = description.match(/\b(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})\b/);
+  if (formattedMatch) {
+    // Remover pontuação para normalizar
+    return formattedMatch[1].replace(/[.\-\/]/g, '');
+  }
+
+  return null;
+}
+
+// Interface para resultado da identificação por CNPJ
+interface CnpjIdentification {
+  found: boolean;
+  cnpj?: string;
+  client_id?: string;
+  client_name?: string;
+  client_nome_fantasia?: string;
+  monthly_fee?: number;
+  has_economic_group: boolean;
+  economic_group?: {
+    id: string;
+    name: string;
+    total_fee: number;
+    is_main_payer: boolean;
+    members: Array<{
+      client_id: string;
+      client_name: string;
+      client_cnpj: string;
+      monthly_fee: number;
+      billing_share_percent?: number;
+    }>;
+  };
+  related_companies?: Array<{
+    client_id: string;
+    client_name: string;
+    client_cnpj: string;
+    monthly_fee: number;
+    relationship: string;
+  }>;
+  reasoning: string;
+}
+
+// Identificar cliente pelo CNPJ na descrição da transação
+async function identifyClientByCnpj(
+  supabase: any,
+  description: string
+): Promise<CnpjIdentification> {
+  console.log('[Dr.Cícero] Identifying client by CNPJ from:', description);
+
+  // Extrair CNPJ da descrição
+  const cnpj = extractCnpjFromDescription(description);
+
+  if (!cnpj) {
+    return {
+      found: false,
+      has_economic_group: false,
+      reasoning: 'Dr. Cícero: Não encontrei um CNPJ válido na descrição da transação.',
+    };
+  }
+
+  console.log('[Dr.Cícero] CNPJ extracted:', cnpj);
+
+  // Buscar cliente pelo CNPJ
+  const { data: client, error } = await supabase
+    .from('clients')
+    .select('id, name, nome_fantasia, cnpj, monthly_fee, qsa')
+    .eq('cnpj', cnpj)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[Dr.Cícero] Error fetching client:', error);
+    return {
+      found: false,
+      cnpj,
+      has_economic_group: false,
+      reasoning: `Dr. Cícero: Erro ao buscar cliente: ${error.message}`,
+    };
+  }
+
+  if (!client) {
+    return {
+      found: false,
+      cnpj,
+      has_economic_group: false,
+      reasoning: `Dr. Cícero: Não encontrei nenhum cliente cadastrado com o CNPJ ${cnpj}.`,
+    };
+  }
+
+  // Cliente encontrado! Agora verificar se pertence a um grupo econômico
+  const groupResult = await getEconomicGroupMembers(supabase, client.id, cnpj);
+
+  // Se encontrou grupo econômico
+  if (groupResult.found && groupResult.members && groupResult.members.length > 0) {
+    return {
+      found: true,
+      cnpj,
+      client_id: client.id,
+      client_name: client.name,
+      client_nome_fantasia: client.nome_fantasia,
+      monthly_fee: client.monthly_fee,
+      has_economic_group: true,
+      economic_group: {
+        id: groupResult.group_id || '',
+        name: groupResult.group_name || 'Grupo Econômico',
+        total_fee: groupResult.total_fee || 0,
+        is_main_payer: groupResult.is_main_payer || false,
+        members: groupResult.members,
+      },
+      reasoning: `Dr. Cícero: Encontrei o cliente ${client.nome_fantasia || client.name} (CNPJ: ${cnpj}). Este cliente é ${groupResult.is_main_payer ? 'o PAGADOR PRINCIPAL' : 'membro'} do ${groupResult.group_name || 'grupo econômico'} com ${groupResult.members.length} empresas.`,
+    };
+  }
+
+  // Tentar encontrar empresas relacionadas pelo QSA (mesmo sem grupo formal)
+  const relatedResult = await findRelatedCompaniesByQsa(supabase, client);
+
+  if (relatedResult.length > 0) {
+    return {
+      found: true,
+      cnpj,
+      client_id: client.id,
+      client_name: client.name,
+      client_nome_fantasia: client.nome_fantasia,
+      monthly_fee: client.monthly_fee,
+      has_economic_group: false,
+      related_companies: relatedResult,
+      reasoning: `Dr. Cícero: Encontrei o cliente ${client.nome_fantasia || client.name} (CNPJ: ${cnpj}). Não está em um grupo econômico formal, mas encontrei ${relatedResult.length} empresas relacionadas pelos sócios em comum.`,
+    };
+  }
+
+  // Cliente encontrado, mas sem grupo ou relacionamentos
+  return {
+    found: true,
+    cnpj,
+    client_id: client.id,
+    client_name: client.name,
+    client_nome_fantasia: client.nome_fantasia,
+    monthly_fee: client.monthly_fee,
+    has_economic_group: false,
+    reasoning: `Dr. Cícero: Encontrei o cliente ${client.nome_fantasia || client.name} (CNPJ: ${cnpj}). Este cliente não pertence a nenhum grupo econômico.`,
+  };
+}
+
+// Buscar membros do grupo econômico de um cliente
+interface EconomicGroupResult {
+  found: boolean;
+  group_id?: string;
+  group_name?: string;
+  total_fee?: number;
+  is_main_payer?: boolean;
+  members?: Array<{
+    client_id: string;
+    client_name: string;
+    client_cnpj: string;
+    monthly_fee: number;
+    billing_share_percent?: number;
+  }>;
+  reasoning: string;
+}
+
+async function getEconomicGroupMembers(
+  supabase: any,
+  clientId?: string,
+  cnpj?: string
+): Promise<EconomicGroupResult> {
+  console.log('[Dr.Cícero] Getting economic group for:', clientId || cnpj);
+
+  // Se não temos ID, buscar pelo CNPJ
+  let targetClientId = clientId;
+  if (!targetClientId && cnpj) {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('cnpj', cnpj)
+      .maybeSingle();
+
+    if (client) {
+      targetClientId = client.id;
+    }
+  }
+
+  if (!targetClientId) {
+    return {
+      found: false,
+      reasoning: 'Dr. Cícero: Não foi possível identificar o cliente para buscar o grupo econômico.',
+    };
+  }
+
+  // Verificar se o cliente é o main_payer de algum grupo
+  const { data: groupAsPayer } = await supabase
+    .from('economic_groups')
+    .select('*')
+    .eq('main_payer_client_id', targetClientId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (groupAsPayer) {
+    // Este cliente é o pagador principal! Buscar todos os membros
+    const { data: members } = await supabase
+      .from('economic_group_members')
+      .select('*, client:client_id(id, name, nome_fantasia, cnpj, monthly_fee)')
+      .eq('economic_group_id', groupAsPayer.id)
+      .eq('is_active', true);
+
+    const memberList = members?.map((m: any) => ({
+      client_id: m.client?.id || m.client_id,
+      client_name: m.client?.nome_fantasia || m.client?.name || m.company_name,
+      client_cnpj: m.client?.cnpj || m.cnpj,
+      monthly_fee: m.individual_fee || m.client?.monthly_fee || 0,
+      billing_share_percent: m.billing_share_percent,
+    })) || [];
+
+    return {
+      found: true,
+      group_id: groupAsPayer.id,
+      group_name: groupAsPayer.name || groupAsPayer.group_name,
+      total_fee: groupAsPayer.total_monthly_fee,
+      is_main_payer: true,
+      members: memberList,
+      reasoning: `Dr. Cícero: Este cliente é o PAGADOR PRINCIPAL do grupo "${groupAsPayer.name}" com ${memberList.length} empresas.`,
+    };
+  }
+
+  // Verificar se o cliente é membro de algum grupo
+  const { data: membership } = await supabase
+    .from('economic_group_members')
+    .select('*, group:economic_group_id(*)')
+    .eq('client_id', targetClientId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (membership && membership.group) {
+    // Encontrou o grupo! Buscar todos os membros
+    const { data: allMembers } = await supabase
+      .from('economic_group_members')
+      .select('*, client:client_id(id, name, nome_fantasia, cnpj, monthly_fee)')
+      .eq('economic_group_id', membership.group.id)
+      .eq('is_active', true);
+
+    const memberList = allMembers?.map((m: any) => ({
+      client_id: m.client?.id || m.client_id,
+      client_name: m.client?.nome_fantasia || m.client?.name || m.company_name,
+      client_cnpj: m.client?.cnpj || m.cnpj,
+      monthly_fee: m.individual_fee || m.client?.monthly_fee || 0,
+      billing_share_percent: m.billing_share_percent,
+    })) || [];
+
+    // Buscar quem é o main_payer
+    const { data: mainPayer } = await supabase
+      .from('clients')
+      .select('name, nome_fantasia')
+      .eq('id', membership.group.main_payer_client_id)
+      .maybeSingle();
+
+    return {
+      found: true,
+      group_id: membership.group.id,
+      group_name: membership.group.name || membership.group.group_name,
+      total_fee: membership.group.total_monthly_fee,
+      is_main_payer: false,
+      members: memberList,
+      reasoning: `Dr. Cícero: Este cliente é membro do grupo "${membership.group.name}". O pagador principal é ${mainPayer?.nome_fantasia || mainPayer?.name || 'não definido'}.`,
+    };
+  }
+
+  return {
+    found: false,
+    reasoning: 'Dr. Cícero: Este cliente não pertence a nenhum grupo econômico cadastrado.',
+  };
+}
+
+// Encontrar empresas relacionadas pelo QSA (mesmos sócios)
+async function findRelatedCompaniesByQsa(
+  supabase: any,
+  client: any
+): Promise<Array<{
+  client_id: string;
+  client_name: string;
+  client_cnpj: string;
+  monthly_fee: number;
+  relationship: string;
+}>> {
+  if (!client.qsa || !Array.isArray(client.qsa) || client.qsa.length === 0) {
+    return [];
+  }
+
+  // Extrair nomes dos sócios deste cliente
+  const socioNames = client.qsa
+    .map((s: any) => s.nome || s.name)
+    .filter((n: string) => n && n.length > 3);
+
+  if (socioNames.length === 0) {
+    return [];
+  }
+
+  // Buscar todos os clientes com QSA
+  const { data: allClients } = await supabase
+    .from('clients')
+    .select('id, name, nome_fantasia, cnpj, qsa, monthly_fee')
+    .not('qsa', 'is', null)
+    .neq('id', client.id); // Excluir o próprio cliente
+
+  if (!allClients) return [];
+
+  const related: Array<{
+    client_id: string;
+    client_name: string;
+    client_cnpj: string;
+    monthly_fee: number;
+    relationship: string;
+  }> = [];
+
+  // Para cada cliente, verificar se tem sócios em comum
+  for (const otherClient of allClients) {
+    if (!otherClient.qsa || !Array.isArray(otherClient.qsa)) continue;
+
+    const otherSocios = otherClient.qsa
+      .map((s: any) => s.nome || s.name)
+      .filter((n: string) => n);
+
+    // Verificar sócios em comum
+    const commonSocios = socioNames.filter((nome: string) => {
+      const normalizedNome = normalizeForSearch(nome);
+      return otherSocios.some((os: string) => {
+        const normalizedOs = normalizeForSearch(os);
+        // Match se tem 2+ partes do nome em comum
+        const nomeParts = normalizedNome.split(' ').filter(p => p.length >= 3);
+        const osParts = normalizedOs.split(' ').filter(p => p.length >= 3);
+        const matches = nomeParts.filter(np => osParts.some(op => np.includes(op) || op.includes(np)));
+        return matches.length >= 2;
+      });
+    });
+
+    if (commonSocios.length > 0) {
+      related.push({
+        client_id: otherClient.id,
+        client_name: otherClient.nome_fantasia || otherClient.name,
+        client_cnpj: otherClient.cnpj,
+        monthly_fee: otherClient.monthly_fee || 0,
+        relationship: `Sócio em comum: ${commonSocios[0]}`,
+      });
+    }
+  }
+
+  return related;
 }
 
 // Validar e corrigir sinais das transações bancárias

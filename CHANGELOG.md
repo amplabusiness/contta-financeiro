@@ -7,6 +7,53 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+## [1.21.0] - 2025-12-10
+
+### Adicionado
+- **Sistema de Honorários Especiais**: Gestão completa de honorários diferenciados
+  - **Honorários Variáveis**: % sobre faturamento (ex: Mata Pragas 2.87% dia 20)
+  - **Abertura/Alteração de Empresas**: Controle de valor cobrado vs taxas pagas = lucro
+  - **Comissões por Indicação**: 10% do honorário por X meses para quem indicou (com PIX)
+  - **IRPF**: Declarações anuais dos sócios e particulares (média R$ 300)
+- 8 novas tabelas: `client_variable_fees`, `client_monthly_revenue`, `company_services`, `company_service_costs`, `referral_partners`, `client_referrals`, `referral_commission_payments`, `irpf_declarations`
+- Trigger `trg_update_service_costs` para calcular lucro automaticamente
+- Trigger `trg_calculate_referral_end_date` para data fim de comissões
+- Função `generate_irpf_forecast()` para gerar IRPF dos sócios automaticamente
+- Função `calculate_variable_fee()` para calcular honorário baseado em faturamento
+- Views: `vw_pending_commissions`, `vw_clients_variable_fees`, `vw_irpf_summary`
+- Página `/special-fees` centralizada no menu Honorários > Especiais
+
+### Menu
+- Item "Especiais" adicionado ao grupo "Honorários" no sidebar
+
+---
+
+## [1.20.0] - 2025-12-10
+
+### Adicionado
+- **Identificação por CNPJ**: Dr. Cícero agora identifica clientes pelo CNPJ presente na descrição do PIX
+- **Grupos Econômicos**: Suporte completo a grupos econômicos com rateio de pagamentos
+- **Grupo Cezário criado**: A.I EMPREENDIMENTOS como pagador principal (3 empresas: Alliance, Mamute Jeans, Papelaria Jardim Goiás)
+- Novas actions: `identify_client_by_cnpj`, `get_economic_group_members`
+- Função `extractCnpjFromDescription()` para extrair CNPJ com/sem formatação
+- Função `findRelatedCompaniesByQsa()` para encontrar empresas relacionadas pelo QSA
+- Script de teste: `test-cnpj-identification.mjs`, `create-grupo-cezario.mjs`
+
+### Melhorado
+- `ruleBasedClassificationAsync()` agora busca primeiro por CNPJ, depois por nome
+- Quando cliente pertence a grupo econômico, mostra opções de rateio
+- Quando cliente tem empresas relacionadas (pelo QSA), sugere vinculação
+
+### Fluxo de Classificação Atualizado
+1. Extrai CNPJ da descrição (se houver)
+2. Busca cliente pelo CNPJ
+3. Verifica se cliente pertence a grupo econômico
+4. Se grupo: oferece opções de rateio entre empresas
+5. Se não grupo: verifica empresas relacionadas pelo QSA
+6. Se não encontrou por CNPJ: busca por nome no QSA dos clientes
+
+---
+
 ## [1.19.0] - 2025-12-10
 
 ### Adicionado
