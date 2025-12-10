@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-12-06 (Sessão 14)
+**Última Atualização**: 2025-12-10 (Sessão 18)
 
 ---
 
@@ -1622,3 +1622,130 @@ function isPeriodoAbertura(date: string): boolean {
 1. **Colunas do banco vs código**: Sempre verificar se os nomes das colunas coincidem
 2. **Período de abertura**: Recebimentos do primeiro mês não são receita, são baixa de recebíveis
 3. **Validação de sinais**: CREDIT = positivo, DEBIT = negativo (padrão contábil)
+
+---
+
+## Sessão 18 (10/12/2025) - Identificação de Sócios nos Pagamentos
+
+### Funcionalidade Implementada
+
+**Problema**: Clientes às vezes pagam pela conta pessoal de sócios/familiares, não pela empresa.
+- Ex: Paula Milhomem (filha) paga pelo Restaurante Iuvaci
+- Ex: Enzo Donadi (proprietário) paga pela Crystal, ECD ou Verdi
+
+**Solução**: Dr. Cícero agora consulta o QSA (Quadro de Sócios e Administradores) de todos os clientes para identificar quem está pagando.
+
+### Novas Actions no Dr. Cícero
+
+| Action | Descrição |
+|--------|-----------|
+| `identify_payer_by_name` | Identifica pagador pelo nome na descrição do PIX/TED |
+| `build_client_index` | Constrói índice de todos sócios → empresas |
+
+### Lógica de Classificação Automática
+
+**1. Se sócio tem APENAS UMA EMPRESA:**
+- Classifica automaticamente como honorário daquela empresa
+- Exemplo: IUVACI MILHOMEM → Restaurante Iuvaci (único)
+- `needs_confirmation: false`
+
+**2. Se sócio tem MÚLTIPLAS EMPRESAS:**
+- Dr. Cícero pergunta ao usuário qual empresa
+- Exemplo: ENZO DONADI → Crystal, ECD ou Verdi?
+- `needs_confirmation: true`
+- Opções incluem todas as empresas do sócio
+
+### Estatísticas do Índice
+
+Dados extraídos do Supabase:
+- **217 clientes** no cadastro
+- **211 clientes** com QSA preenchido
+- **325 sócios** no total
+- **207 sócios únicos** (alguns são sócios de múltiplas empresas)
+
+### Exemplos de Identificação Testados
+
+| Descrição do PIX | Resultado |
+|------------------|-----------|
+| PIX RECEBIDO - ENZO DE AQUINO ALVES DONADI | ⚠️ 3 empresas (Crystal, ECD, Verdi) - pergunta |
+| PIX RECEBIDO - IUVACI OLIVEIRA MILHOMEM | ✅ 1 empresa (Restaurante Iuvaci) - classifica |
+| PIX RECEBIDO CARLOS HENRY MILHOMEM | ⚠️ Encontrado como Administrador do Restaurante Iuvaci |
+| PIX RECEBIDO SERGIO CARNEIRO LEAO | ⚠️ 6 empresas (Ampla, Prest Lixo, etc.) |
+| PIX BARBOSA JUNIOR | ⚠️ Múltiplas empresas de Avenir Barbosa Junior |
+
+### Funções Auxiliares Criadas
+
+**`normalizeForSearch(text: string)`**
+- Remove acentos
+- Converte para minúsculas
+- Normaliza espaços
+
+**`extractNamesFromDescription(description: string)`**
+- Extrai possíveis nomes da descrição bancária
+- Remove prefixos: PIX, TRANSF, TED, DOC, SICREDI
+- Remove CPF/CNPJ numéricos
+- Remove datas e valores
+
+**`identifyPayerByName(supabase, searchText)`**
+- Busca todos clientes com QSA
+- Calcula score de match (0-100)
+- Match exato = 100
+- Match parcial proporcional ao número de partes do nome
+- Bônus de +15 se sobrenome bate
+
+### Integração com ruleBasedClassificationAsync
+
+A classificação baseada em regras agora é **assíncrona** e consulta os QSAs:
+
+```typescript
+// PRIORIDADE 0: Se é recebimento, tentar identificar pagador pelo nome no QSA
+if (isCredit && !clientInfo) {
+  const payerResult = await identifyPayerByName(supabase, transaction.description);
+
+  if (payerResult.found && payerResult.confidence >= 0.5) {
+    // Se tem APENAS UMA EMPRESA, classificar direto!
+    if (uniqueClients.length === 1) {
+      return { confidence: 0.90, needs_confirmation: false, ... };
+    }
+
+    // Se tem MÚLTIPLAS EMPRESAS, perguntar ao usuário
+    if (uniqueClients.length > 1) {
+      return { needs_confirmation: true, question: '...', options: [...] };
+    }
+  }
+}
+```
+
+### Correção de Schema
+
+**Problema encontrado**: Coluna `fantasy_name` não existe, é `nome_fantasia`
+
+**Correção**: Substituído todas as ocorrências na Edge Function
+
+### Arquivos Modificados
+
+| Arquivo | Modificação |
+|---------|-------------|
+| `supabase/functions/dr-cicero-contador/index.ts` | Novas actions identify_payer_by_name e build_client_index; ruleBasedClassificationAsync; funções de normalização e match |
+| `scripts/explore-qsa.mjs` | Script para explorar QSA dos clientes |
+| `scripts/test-payer-identification.mjs` | Script de teste das identificações |
+
+### Deploy
+
+- Edge Function `dr-cicero-contador` atualizada no Supabase
+- Testado com 11 casos de uso reais
+- Todos os testes passaram com sucesso
+
+### Lições Aprendidas
+
+1. **QSA é fonte valiosa** - Contém todos os sócios e administradores das empresas
+2. **Nome fantasia vs razão social** - Verificar ambos para identificação
+3. **Sócio em múltiplas empresas** - Caso comum, sistema deve perguntar
+4. **Normalização de nomes** - Essencial para match (acentos, maiúsculas)
+5. **Colunas do banco** - `nome_fantasia` não `fantasy_name`
+
+### Próximos Passos
+
+1. Adicionar campo para selecionar empresa no Dialog do SuperConciliador
+2. Salvar padrão aprendido quando usuário confirmar empresa
+3. Considerar criar índice de familiares além dos sócios oficiais

@@ -198,6 +198,42 @@ serve(async (req) => {
   }
 
   try {
+    // Supabase client com service role para consultas
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const body = await req.json();
+    const { action } = body;
+
+    console.log('[Dr.Cícero] Action:', action);
+
+    // =====================================================
+    // AÇÕES PÚBLICAS (não requerem autenticação de usuário)
+    // =====================================================
+
+    // AÇÃO: Identificar pagador pelo nome (busca em sócios/QSA dos clientes)
+    if (action === 'identify_payer_by_name') {
+      const { name, description } = body;
+      const result = await identifyPayerByName(supabase, name || description);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Carregar índice de sócios/clientes
+    if (action === 'build_client_index') {
+      const result = await buildClientIndex(supabase);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // =====================================================
+    // AÇÕES PROTEGIDAS (requerem autenticação de usuário)
+    // =====================================================
+
     const authClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -215,16 +251,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const body = await req.json();
-    const { action } = body;
-
-    console.log('[Dr.Cícero] Action:', action);
 
     // AÇÃO: Inicializar tabela de padrões (se não existir)
     if (action === 'init_database') {
@@ -333,9 +359,10 @@ async function analyzeTransaction(supabase: any, transaction: Transaction): Prom
   };
 
   // Se não tiver GEMINI_API_KEY, usar classificação baseada em regras
+  // NOTA: Agora usamos a versão assíncrona que consulta os QSAs dos clientes
   if (!GEMINI_API_KEY) {
-    console.log('[Dr.Cícero] No GEMINI_API_KEY, using rule-based classification');
-    return ruleBasedClassification(transaction, clientInfo, patterns);
+    console.log('[Dr.Cícero] No GEMINI_API_KEY, using rule-based classification with QSA lookup');
+    return ruleBasedClassificationAsync(supabase, transaction, clientInfo, patterns);
   }
 
   // Chamar Gemini para classificação inteligente
@@ -345,7 +372,7 @@ async function analyzeTransaction(supabase: any, transaction: Transaction): Prom
     return parseGeminiResponse(geminiResponse, transaction);
   } catch (error) {
     console.error('[Dr.Cícero] Gemini error, falling back to rules:', error);
-    return ruleBasedClassification(transaction, clientInfo, patterns);
+    return ruleBasedClassificationAsync(supabase, transaction, clientInfo, patterns);
   }
 }
 
@@ -398,18 +425,90 @@ function identificarFamiliaLeao(desc: string): { isFamilia: boolean; membro: str
   return { isFamilia: false, membro: '', conta: '', centroCusto: '' };
 }
 
-// Classificação baseada em regras (fallback)
-function ruleBasedClassification(
+// Classificação baseada em regras (fallback) - VERSÃO ASSÍNCRONA
+async function ruleBasedClassificationAsync(
+  supabase: any,
   transaction: Transaction,
   clientInfo: any,
   patterns: any[]
-): ClassificationResult {
+): Promise<ClassificationResult> {
   const desc = transaction.description.toLowerCase();
   const isCredit = transaction.type === 'credit' || transaction.amount < 0;
   const amount = Math.abs(transaction.amount);
 
   // Verificar se é período de abertura (Janeiro/2025)
   const isAbertura = isPeriodoAbertura(transaction.date);
+
+  // PRIORIDADE 0: Se é recebimento, tentar identificar pagador pelo nome no QSA
+  if (isCredit && !clientInfo) {
+    const payerResult = await identifyPayerByName(supabase, transaction.description);
+
+    if (payerResult.found && payerResult.confidence >= 0.5) {
+      // Se encontrou o pagador nos QSA dos clientes
+
+      // Contar quantas empresas este sócio está vinculado
+      const uniqueClients = payerResult.matches?.reduce((acc, m) => {
+        if (!acc.find(c => c.client_id === m.client_id)) {
+          acc.push(m);
+        }
+        return acc;
+      }, [] as typeof payerResult.matches) || [];
+
+      // Se tem APENAS UMA EMPRESA, classificar direto!
+      if (uniqueClients.length === 1) {
+        const match = uniqueClients[0];
+
+        // Janeiro/2025 = Período de Abertura - Baixa Clientes a Receber
+        if (isAbertura) {
+          return {
+            confidence: 0.90,
+            debit_account: '1.1.1.02',
+            debit_account_name: 'Banco Sicredi C/C',
+            credit_account: '1.1.2.01',
+            credit_account_name: `Clientes a Receber - ${match.client_name}`,
+            entry_type: 'recebimento_abertura',
+            description: `Recebimento honorários (${match.relationship}): ${payerResult.payer_name} - ${match.client_name}`,
+            needs_confirmation: false,
+            reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. Como este sócio está vinculado a APENAS UMA empresa, classifiquei automaticamente como honorário deste cliente. JANEIRO/2025 = baixa de Clientes a Receber.`,
+          };
+        }
+
+        // Período normal - Receita de honorários
+        return {
+          confidence: 0.85,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: `Clientes a Receber - ${match.client_name}`,
+          entry_type: 'recebimento',
+          description: `Recebimento honorários (${match.relationship}): ${payerResult.payer_name} - ${match.client_name}`,
+          needs_confirmation: false,
+          reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. Como este sócio está vinculado a APENAS UMA empresa, classifiquei automaticamente como honorário deste cliente.`,
+        };
+      }
+
+      // Se tem MÚLTIPLAS EMPRESAS, perguntar ao usuário
+      if (uniqueClients.length > 1) {
+        const empresaOptions = uniqueClients.map(c =>
+          `${c.client_name} (${c.relationship})`
+        );
+
+        return {
+          confidence: payerResult.confidence,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: '1.1.2.01',
+          credit_account_name: 'Clientes a Receber',
+          entry_type: 'recebimento',
+          description: `Recebimento honorários: ${payerResult.payer_name}`,
+          needs_confirmation: true,
+          question: `Dr. Cícero pergunta: Identifiquei "${payerResult.payer_name}" como sócio de ${uniqueClients.length} empresas. De qual empresa este pagamento de R$ ${amount.toFixed(2)} é honorário?`,
+          options: [...empresaOptions, 'Nenhuma dessas - é outro tipo de receita'],
+          reasoning: `Identificado "${payerResult.payer_name}" em ${uniqueClients.length} empresas: ${empresaOptions.join(', ')}. Preciso saber de qual empresa é o honorário.`,
+        };
+      }
+    }
+  }
 
   // PRIORIDADE 1: Verificar se é transação da família Leão
   const familiaCheck = identificarFamiliaLeao(transaction.description);
@@ -988,6 +1087,336 @@ async function initializeDatabase(supabase: any): Promise<any> {
       message: `Erro ao inicializar banco: ${error.message}`,
     };
   }
+}
+
+// ==========================================
+// IDENTIFICAÇÃO DE SÓCIOS/FAMILIARES
+// ==========================================
+
+// Interface para resultado da identificação
+interface PayerIdentification {
+  found: boolean;
+  confidence: number;
+  payer_name?: string;
+  client_id?: string;
+  client_name?: string;
+  client_nome_fantasia?: string;
+  client_cnpj?: string;
+  relationship?: string; // Sócio, Administrador, etc.
+  reasoning: string;
+  matches?: Array<{
+    name: string;
+    client_name: string;
+    client_id: string;
+    relationship: string;
+    score: number;
+  }>;
+}
+
+// Normalizar nome para comparação (remover acentos, caixa baixa)
+function normalizeForSearch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9\s]/g, ' ')    // Remove caracteres especiais
+    .replace(/\s+/g, ' ')            // Normaliza espaços
+    .trim();
+}
+
+// Extrair possíveis nomes de uma descrição de transação bancária
+function extractNamesFromDescription(description: string): string[] {
+  const desc = description.toUpperCase();
+  const names: string[] = [];
+
+  // Padrões comuns de PIX
+  // PIX RECEBIDO - JOAO DA SILVA
+  // PIX - MARIA SANTOS CPF 12345678900
+  // TRANSF PIX FULANO DE TAL
+  // PIX_CRED SICREDI 99999999999 JOSE CARLOS
+
+  // Remover prefixos comuns de PIX
+  let cleanDesc = desc
+    .replace(/PIX[\s_]?(RECEBIDO|ENVIADO|CRED|DEB)?[\s:-]*/gi, '')
+    .replace(/TRANSF(ERENCIA)?[\s_]?(PIX)?[\s:-]*/gi, '')
+    .replace(/TED[\s:-]*/gi, '')
+    .replace(/DOC[\s:-]*/gi, '')
+    .replace(/DEPOSITO[\s:-]*/gi, '')
+    .replace(/SICREDI[\s]?\d*[\s:-]*/gi, '')
+    .replace(/CPF[\s:]?\d{11}[\s:-]*/gi, '')
+    .replace(/CNPJ[\s:]?\d{14}[\s:-]*/gi, '')
+    .replace(/\d{11,14}/g, '') // Remove CPF/CNPJ
+    .replace(/\d{2}\/\d{2}\/\d{4}/g, '') // Remove datas
+    .replace(/R\$[\s]?[\d,.]+/g, '') // Remove valores
+    .replace(/[\s-]+$/, '') // Remove trailing
+    .trim();
+
+  // Se sobrou algo significativo, adicionar como possível nome
+  if (cleanDesc.length >= 3) {
+    names.push(cleanDesc);
+  }
+
+  // Também tentar extrair partes do nome original
+  const parts = desc.split(/[\s\-\/]+/);
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    // Se parece um nome (começa com letra, tem tamanho razoável)
+    if (/^[A-Z]{2,}$/.test(part) && part.length >= 3) {
+      // Verificar se não é palavra reservada
+      const reserved = ['PIX', 'TRANSF', 'TED', 'DOC', 'CPF', 'CNPJ', 'SICREDI', 'ITAU', 'BRADESCO', 'CAIXA', 'BANCO', 'RECEBIDO', 'ENVIADO', 'CREDITO', 'DEBITO', 'PAGAMENTO'];
+      if (!reserved.includes(part)) {
+        names.push(part);
+      }
+    }
+  }
+
+  return [...new Set(names)]; // Remover duplicatas
+}
+
+// Identificar pagador pelo nome (busca nos QSA dos clientes)
+async function identifyPayerByName(
+  supabase: any,
+  searchText: string
+): Promise<PayerIdentification> {
+  console.log('[Dr.Cícero] Identifying payer from:', searchText);
+
+  // Extrair possíveis nomes da descrição
+  const possibleNames = extractNamesFromDescription(searchText);
+  console.log('[Dr.Cícero] Possible names extracted:', possibleNames);
+
+  if (possibleNames.length === 0) {
+    return {
+      found: false,
+      confidence: 0,
+      reasoning: 'Dr. Cícero: Não consegui extrair um nome da descrição para busca.',
+    };
+  }
+
+  // Buscar todos os clientes com QSA
+  const { data: clients, error } = await supabase
+    .from('clients')
+    .select('id, name, nome_fantasia, cnpj, qsa')
+    .not('qsa', 'is', null);
+
+  if (error) {
+    console.error('[Dr.Cícero] Error fetching clients:', error);
+    return {
+      found: false,
+      confidence: 0,
+      reasoning: `Dr. Cícero: Erro ao buscar clientes: ${error.message}`,
+    };
+  }
+
+  // Construir índice de sócios
+  const matches: Array<{
+    name: string;
+    client_name: string;
+    client_id: string;
+    client_nome_fantasia: string;
+    client_cnpj: string;
+    relationship: string;
+    score: number;
+  }> = [];
+
+  // Para cada nome possível extraído
+  for (const searchName of possibleNames) {
+    const normalizedSearch = normalizeForSearch(searchName);
+    const searchParts = normalizedSearch.split(' ').filter(p => p.length >= 3);
+
+    // Para cada cliente
+    for (const client of clients) {
+      if (!client.qsa || !Array.isArray(client.qsa)) continue;
+
+      // Para cada sócio do cliente
+      for (const socio of client.qsa) {
+        const socioNome = socio.nome || socio.name;
+        if (!socioNome) continue;
+
+        const normalizedSocio = normalizeForSearch(socioNome);
+        const socioParts = normalizedSocio.split(' ').filter(p => p.length >= 2);
+
+        // Calcular score de match
+        let score = 0;
+
+        // Match exato do nome completo
+        if (normalizedSocio === normalizedSearch) {
+          score = 100;
+        } else {
+          // Match parcial - verificar quantas partes do nome batem
+          let matchedParts = 0;
+          for (const searchPart of searchParts) {
+            if (socioParts.some(sp => sp.includes(searchPart) || searchPart.includes(sp))) {
+              matchedParts++;
+            }
+          }
+
+          if (searchParts.length > 0 && matchedParts > 0) {
+            // Score baseado na proporção de partes que bateram
+            score = Math.round((matchedParts / Math.max(searchParts.length, socioParts.length)) * 80);
+
+            // Bonus se o sobrenome bate (geralmente é mais distintivo)
+            const lastSearchPart = searchParts[searchParts.length - 1];
+            const lastSocioPart = socioParts[socioParts.length - 1];
+            if (lastSearchPart && lastSocioPart &&
+                (lastSearchPart.includes(lastSocioPart) || lastSocioPart.includes(lastSearchPart))) {
+              score += 15;
+            }
+          }
+        }
+
+        // Se score é significativo, adicionar ao resultado
+        if (score >= 40) {
+          matches.push({
+            name: socioNome,
+            client_name: client.name,
+            client_id: client.id,
+            client_nome_fantasia: client.nome_fantasia || client.name,
+            client_cnpj: client.cnpj,
+            relationship: socio.qualificacao || socio.role || 'Sócio',
+            score,
+          });
+        }
+      }
+
+      // Também verificar match com o próprio nome do cliente (empresa)
+      const normalizedClientName = normalizeForSearch(client.name);
+      const clientParts = normalizedClientName.split(' ').filter(p => p.length >= 3);
+
+      for (const searchPart of searchParts) {
+        if (clientParts.some(cp => cp.includes(searchPart) || searchPart.includes(cp))) {
+          // Match direto com nome da empresa
+          matches.push({
+            name: client.name,
+            client_name: client.name,
+            client_id: client.id,
+            client_nome_fantasia: client.nome_fantasia || client.name,
+            client_cnpj: client.cnpj,
+            relationship: 'Empresa (nome direto)',
+            score: 90,
+          });
+          break;
+        }
+      }
+
+      // Verificar nome fantasia também
+      if (client.nome_fantasia) {
+        const normalizedFantasy = normalizeForSearch(client.nome_fantasia);
+        const fantasyParts = normalizedFantasy.split(' ').filter(p => p.length >= 3);
+
+        for (const searchPart of searchParts) {
+          if (fantasyParts.some(fp => fp.includes(searchPart) || searchPart.includes(fp))) {
+            matches.push({
+              name: client.nome_fantasia,
+              client_name: client.name,
+              client_id: client.id,
+              client_nome_fantasia: client.nome_fantasia,
+              client_cnpj: client.cnpj,
+              relationship: 'Empresa (nome fantasia)',
+              score: 95,
+            });
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Ordenar por score e remover duplicatas
+  const uniqueMatches = matches
+    .sort((a, b) => b.score - a.score)
+    .filter((match, index, self) =>
+      index === self.findIndex(m => m.client_id === match.client_id && m.name === match.name)
+    );
+
+  // Se encontrou matches
+  if (uniqueMatches.length > 0) {
+    const bestMatch = uniqueMatches[0];
+    const confidence = bestMatch.score / 100;
+
+    return {
+      found: true,
+      confidence,
+      payer_name: bestMatch.name,
+      client_id: bestMatch.client_id,
+      client_name: bestMatch.client_name,
+      client_nome_fantasia: bestMatch.client_nome_fantasia,
+      client_cnpj: bestMatch.client_cnpj,
+      relationship: bestMatch.relationship,
+      reasoning: `Dr. Cícero: Identifiquei "${bestMatch.name}" como ${bestMatch.relationship} do cliente ${bestMatch.client_nome_fantasia || bestMatch.client_name}. Este pagamento é provavelmente um honorário deste cliente.`,
+      matches: uniqueMatches.slice(0, 5), // Retornar top 5 matches
+    };
+  }
+
+  // Nenhum match encontrado
+  return {
+    found: false,
+    confidence: 0,
+    reasoning: `Dr. Cícero: Não encontrei nenhum sócio ou cliente correspondente a "${searchText}" no cadastro. Pode ser um novo cliente ou alguém não cadastrado nos QSAs.`,
+  };
+}
+
+// Construir índice de clientes/sócios (para consultas rápidas)
+async function buildClientIndex(supabase: any): Promise<any> {
+  console.log('[Dr.Cícero] Building client index...');
+
+  const { data: clients, error } = await supabase
+    .from('clients')
+    .select('id, name, nome_fantasia, cnpj, qsa, is_active')
+    .order('name');
+
+  if (error) {
+    return {
+      success: false,
+      message: `Dr. Cícero: Erro ao construir índice: ${error.message}`,
+    };
+  }
+
+  // Estatísticas
+  const stats = {
+    total_clients: clients.length,
+    clients_with_qsa: 0,
+    total_partners: 0,
+    unique_partners: new Set<string>(),
+    partner_index: {} as Record<string, Array<{ client_id: string; client_name: string; relationship: string }>>,
+  };
+
+  // Construir índice
+  for (const client of clients) {
+    if (client.qsa && Array.isArray(client.qsa)) {
+      stats.clients_with_qsa++;
+
+      for (const socio of client.qsa) {
+        const nome = socio.nome || socio.name;
+        if (!nome) continue;
+
+        stats.total_partners++;
+        stats.unique_partners.add(nome);
+
+        const normalized = normalizeForSearch(nome);
+        if (!stats.partner_index[normalized]) {
+          stats.partner_index[normalized] = [];
+        }
+
+        stats.partner_index[normalized].push({
+          client_id: client.id,
+          client_name: client.nome_fantasia || client.name,
+          relationship: socio.qualificacao || 'Sócio',
+        });
+      }
+    }
+  }
+
+  return {
+    success: true,
+    message: `Dr. Cícero: Índice construído com sucesso!`,
+    stats: {
+      total_clients: stats.total_clients,
+      clients_with_qsa: stats.clients_with_qsa,
+      total_partners: stats.total_partners,
+      unique_partners: stats.unique_partners.size,
+    },
+    sample_partners: Object.keys(stats.partner_index).slice(0, 20),
+  };
 }
 
 // Validar e corrigir sinais das transações bancárias
