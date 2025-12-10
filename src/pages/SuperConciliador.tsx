@@ -810,6 +810,24 @@ const SuperConciliador = () => {
     }
   };
 
+  // ===== SALDO DE ABERTURA (JANEIRO/2025) =====
+  // Janeiro/2025 é período de abertura - receitas devem ser verificadas pelo Dr. Cícero
+  // para determinar se são de clientes com saldo de abertura pendente
+
+  // Verificar se transação é de janeiro/2025 (período de abertura)
+  const isJaneiro2025 = (date: string) => {
+    return date.startsWith('2025-01');
+  };
+
+  // Contar receitas de janeiro pendentes (para mostrar badge informativo)
+  const receitasJaneiroPendentes = useMemo(() => {
+    return transactions.filter(t =>
+      !t.matched &&
+      t.transaction_type === 'credit' &&
+      isJaneiro2025(t.transaction_date)
+    );
+  }, [transactions]);
+
   // ===== DR. CÍCERO FUNCTIONS =====
 
   // Abrir dialog do Dr. Cícero para analisar uma transação
@@ -1011,6 +1029,12 @@ const SuperConciliador = () => {
               <Bot className="h-4 w-4 mr-2" />
               Dr. Cícero
             </Button>
+            {receitasJaneiroPendentes.length > 0 && (
+              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-700">
+                <Calendar className="h-3 w-3 mr-1" />
+                {receitasJaneiroPendentes.length} receitas Jan/25
+              </Badge>
+            )}
           </div>
         </div>
 

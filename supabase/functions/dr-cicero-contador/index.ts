@@ -800,6 +800,26 @@ async function ruleBasedClassificationAsync(
           reasoning: `Identifiquei o cliente ${clientInfo.name} pelo CPF/CNPJ. Preciso confirmar se é honorário.`,
         };
       } else {
+        // JANEIRO/2025 = Período de abertura - recebimentos são de competências anteriores
+        if (isAbertura) {
+          return {
+            confidence: 0.85,
+            debit_account: '1.1.1.02',
+            debit_account_name: 'Banco Sicredi C/C',
+            credit_account: '5.2.1.02',
+            credit_account_name: 'Saldos de Abertura',
+            entry_type: 'saldo_abertura',
+            description: `Saldo de Abertura Jan/2025: ${transaction.description}`,
+            needs_confirmation: true,
+            question: `Dr. Cícero: JANEIRO/2025 é período de abertura. Este recebimento de R$ ${amount.toFixed(2)} é de competências anteriores.\n\nClassificar como SALDO DE ABERTURA?`,
+            options: [
+              'Sim, é saldo de abertura (competência anterior)',
+              'Não, é receita nova de janeiro/2025',
+              'É honorário de cliente específico'
+            ],
+            reasoning: `Dr. Cícero: Janeiro/2025 é mês de abertura. Não identifiquei cliente, mas recebimentos neste período são de competências anteriores → conta 5.2.1.02 (Saldos de Abertura).`,
+          };
+        }
         return {
           confidence: 0.5,
           debit_account: '1.1.1.02',
@@ -848,6 +868,27 @@ async function ruleBasedClassificationAsync(
         reasoning: 'Transferências podem ter várias finalidades. Preciso saber para classificar corretamente.',
       };
     }
+  }
+
+  // PERÍODO DE ABERTURA (Janeiro/2025): Priorizar Saldo de Abertura para créditos
+  if (isAbertura && isCredit) {
+    return {
+      confidence: 0.85,
+      debit_account: '1.1.1.02',
+      debit_account_name: 'Banco Sicredi C/C',
+      credit_account: '5.2.1.02',
+      credit_account_name: 'Saldos de Abertura',
+      entry_type: 'saldo_abertura',
+      description: `Saldo de Abertura Jan/2025: ${transaction.description}`,
+      needs_confirmation: true,
+      question: `Dr. Cícero: JANEIRO/2025 é o período de abertura do sistema. Este recebimento de R$ ${amount.toFixed(2)} é referente a competências anteriores.\n\nDevo classificar como SALDO DE ABERTURA?`,
+      options: [
+        'Sim, é saldo de abertura (competência anterior)',
+        'Não, é receita nova de janeiro/2025',
+        'É honorário de cliente específico'
+      ],
+      reasoning: `Dr. Cícero: Janeiro/2025 é mês de abertura. Recebimentos neste período são de competências anteriores → conta 5.2.1.02 (Saldos de Abertura).`,
+    };
   }
 
   // Classificação genérica - sempre pedir confirmação
@@ -1000,6 +1041,10 @@ function ruleBasedClassificationSync(transaction: Transaction): ClassificationRe
   const isCredit = transaction.type === 'credit' || transaction.amount < 0;
   const amount = Math.abs(transaction.amount);
 
+  // JANEIRO/2025 = PERÍODO DE ABERTURA
+  // Todos os recebimentos são de competências anteriores e devem ir para Saldo de Abertura
+  const isAbertura = isPeriodoAbertura(transaction.date);
+
   // Verificar família Leão
   const familiaCheck = identificarFamiliaLeao(transaction.description);
   if (familiaCheck.isFamilia) {
@@ -1034,7 +1079,28 @@ function ruleBasedClassificationSync(transaction: Transaction): ClassificationRe
     }
   }
 
-  // Classificação genérica
+  // PERÍODO DE ABERTURA (Janeiro/2025): Classificar como Saldo de Abertura
+  if (isAbertura && isCredit) {
+    return {
+      confidence: 0.85,
+      debit_account: '1.1.1.02',
+      debit_account_name: 'Banco Sicredi C/C',
+      credit_account: '5.2.1.02',
+      credit_account_name: 'Saldos de Abertura',
+      entry_type: 'saldo_abertura',
+      description: `Saldo de Abertura Jan/2025: ${transaction.description}`,
+      needs_confirmation: true,
+      question: `Dr. Cícero: JANEIRO/2025 é o período de abertura do sistema. Este recebimento de R$ ${amount.toFixed(2)} é referente a competências anteriores.\n\nDevo classificar como SALDO DE ABERTURA (ajuste de exercícios anteriores)?`,
+      options: [
+        'Sim, é saldo de abertura (competência anterior)',
+        'Não, é receita nova de janeiro/2025',
+        'É honorário de cliente específico'
+      ],
+      reasoning: `Dr. Cícero: Janeiro/2025 é mês de abertura. Recebimentos neste período são de competências anteriores e devem ir para conta 5.2.1.02 (Saldos de Abertura), não para Receita.`,
+    };
+  }
+
+  // Classificação genérica para outros meses
   return {
     confidence: 0.3,
     debit_account: isCredit ? '1.1.1.02' : '4.1.2.99',
