@@ -52,6 +52,7 @@ import Contracts from "./pages/Contracts";
 import ServiceProposals from "./pages/ServiceProposals";
 import ContractTerminations from "./pages/ContractTerminations";
 import ResponsibilityLetters from "./pages/ResponsibilityLetters";
+import DebtConfession from "./pages/DebtConfession";
 import FeesAnalysis from "./pages/FeesAnalysis";
 import CollectionWorkOrders from "./pages/CollectionWorkOrders";
 import ProfitabilityAnalysis from "./pages/ProfitabilityAnalysis";
@@ -248,6 +249,7 @@ const App = () => (
             <Route path="/service-proposals" element={<ServiceProposals />} />
             <Route path="/contract-terminations" element={<ContractTerminations />} />
             <Route path="/responsibility-letters" element={<ResponsibilityLetters />} />
+            <Route path="/debt-confession" element={<DebtConfession />} />
             <Route path="/fees-analysis" element={<FeesAnalysis />} />
             <Route path="/fee-adjustment" element={<FeeAdjustment />} />
             <Route path="/debt-negotiation" element={<DebtNegotiation />} />

@@ -170,6 +170,7 @@ export function AppSidebar() {
       items: [
         { title: "Contratos", url: "/contracts", icon: FileText },
         { title: "Propostas", url: "/service-proposals", icon: FilePlus2 },
+        { title: "Confissão Dívida", url: "/debt-confession", icon: Handshake },
         { title: "Distratos", url: "/contract-terminations", icon: FileOutput },
         { title: "Carta Responsab.", url: "/responsibility-letters", icon: Shield },
       ],
