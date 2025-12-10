@@ -1,7 +1,13 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "ampla-contabilidade",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.18.0",
+  "description": "Sistema financeiro de Contas a Pagar e Receber para empresas contábeis - Ampla Contabilidade",
+  "author": "Ampla Business <sergio@amplabusiness.com.br>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amplabusiness/data-bling-sheets-3122699b"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
