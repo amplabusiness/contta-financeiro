@@ -2347,3 +2347,90 @@ Adicionado filtro de **Data Inicial** e **Data Final** na página `BalanceSheet.
 - **Anterior**: 1.25.0
 - **Atual**: 1.26.0
 - **Tipo**: PATCH (correção de dados)
+
+---
+
+## Sessão 26 (11/12/2025) - Correção de Adiantamentos no DRE
+
+### Contexto
+
+O DRE estava mostrando R$ 233.873,02 em "Outras Despesas Administrativas" (4.1.2.99), quando a maioria eram adiantamentos pessoais da família Leão que deveriam estar em contas de Adiantamento a Sócios (1.1.3.04.xx).
+
+### Problemas Identificados
+
+1. **Lançamentos pessoais em conta de despesa**: Gastos da família (Sergio, Nayara, Victor, etc.) estavam em 4.1.2.99
+2. **Duplicatas**: "AMPLA CONTABILIDADE" tinha lançamentos duplicados (Provisionamento + Adiantamento)
+3. **Energia pessoal**: Energia da casa do Sergio estava em Energia Elétrica (4.1.2.02)
+
+### Correções Realizadas
+
+#### 1. Reclassificação de Adiantamentos (Migration 20251211220000)
+
+Movidos 23 lançamentos de 4.1.2.99 para contas corretas:
+
+| Conta Destino | Lançamentos | Valor |
+|---------------|-------------|-------|
+| 1.1.3.04.01 (Sergio Carneiro) | 9 | ~R$ 30.000 |
+| 1.1.3.04.03 (Victor Hugo) | 3 | ~R$ 15.000 |
+| 1.1.3.04.04 (Nayara) | 9 | ~R$ 18.000 |
+| 1.1.3.04.05 (Sérgio Augusto) | 1 | ~R$ 18.000 |
+| 1.1.3.04.02 (Outros/Scala) | 1 | R$ 1.000 |
+
+#### 2. Remoção de Duplicatas (Migration 20251211230000)
+
+Removidos R$ 143.827,26 em lançamentos duplicados de "AMPLA CONTABILIDADE".
+
+#### 3. Energia do Sergio (Migration 20251211240000)
+
+Movido R$ 868,11 de "Energia - Sergio" para Adiantamento a Sócios.
+
+### Resultado Final do DRE
+
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| Receitas | R$ 136.821,59 | R$ 136.821,59 |
+| Despesas | R$ 286.881,16 | **R$ 142.185,79** |
+| Resultado | -R$ 150.059,57 | **-R$ 5.364,20** |
+
+### Esclarecimentos do Dr. Cícero
+
+**NÃO são adiantamentos pessoais (ficam como despesa):**
+- Dep. Pessoal (Terceirizado) - R$ 12.968,01 → É departamento de RH, não "pessoal"
+- Anuidade CRC - Carla/Sergio → São contadores da Ampla, despesa da empresa
+- IPTU Sede → Imposto do imóvel da empresa
+
+**SÃO adiantamentos pessoais (movidos para 1.1.3.04.xx):**
+- Condomínios (Lago, Mundi)
+- IPVA de veículos pessoais
+- Energia de residências
+- Babá da Nayara
+- Plano de Saúde pessoal
+- Obras em imóveis pessoais
+
+### Migrations Criadas
+
+| Migration | Descrição |
+|-----------|-----------|
+| `20251211220000_fix_adiantamentos_to_correct_accounts.sql` | Move 23 lançamentos para Adiantamento |
+| `20251211230000_remove_duplicate_ampla_contabilidade.sql` | Remove duplicatas |
+| `20251211240000_fix_energia_sergio_to_adiantamento.sql` | Move energia pessoal |
+
+### Scripts Criados
+
+| Script | Descrição |
+|--------|-----------|
+| `scripts/investigate-dre-adiantamentos.mjs` | Investiga conta 4.1.2.99 |
+| `scripts/analyze-dre-deep.mjs` | Análise profunda com Dr. Cícero |
+
+### Lições Aprendidas
+
+1. **"Dep. Pessoal" ≠ "Pessoal"**: Departamento de RH terceirizado é despesa operacional
+2. **Anuidades de funcionários**: CRC de contadores que trabalham na empresa é despesa
+3. **Dr. Cícero deve perguntar**: Em caso de dúvida, perguntar ao usuário antes de classificar
+4. **Verificar duplicatas**: Mesmo descrição com tipos diferentes pode indicar duplicata
+
+### Versão
+
+- **Anterior**: 1.26.0
+- **Atual**: 1.27.0
+- **Tipo**: PATCH (correção de classificação contábil)

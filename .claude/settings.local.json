@@ -35,7 +35,11 @@
       "Bash(python -m json.tool:*)",
       "Bash(cat:*)",
       "Bash(python:*)",
-      "Bash(npx supabase db push:*)"
+      "Bash(npx supabase db push:*)",
+      "Bash(npx vercel --prod)",
+      "Bash(node scripts/investigate-dre-adiantamentos.mjs:*)",
+      "Bash(node -e:*)",
+      "Bash(node scripts/analyze-dre-deep.mjs:*)"
     ],
     "deny": [],
     "ask": []
