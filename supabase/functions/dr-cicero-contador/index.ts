@@ -219,6 +219,7 @@ interface ClassificationResult {
   entry_type: string;
   description: string;
   needs_confirmation: boolean;
+  needs_account_creation?: boolean; // Indica que usuário quer criar nova conta
   question?: string;
   options?: string[];
   reasoning: string;
@@ -267,6 +268,15 @@ serve(async (req) => {
     if (action === 'get_economic_group_members') {
       const { client_id, cnpj } = body;
       const result = await getEconomicGroupMembers(supabase, client_id, cnpj);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Buscar boletos liquidados para reconciliação
+    if (action === 'find_boletos_liquidados') {
+      const { transaction_date, amount, tolerance } = body;
+      const result = await findBoletosLiquidados(supabase, transaction_date, amount, tolerance || 0.50);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -359,6 +369,35 @@ serve(async (req) => {
     if (action === 'validate_transaction_signs') {
       const { bank_account_id, date_from, date_to, auto_fix = false } = body;
       const result = await validateTransactionSigns(supabase, bank_account_id, date_from, date_to, auto_fix);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Criar conta no plano de contas
+    if (action === 'create_account') {
+      const { code, name, account_type, nature, parent_code, description } = body;
+      const result = await createChartAccount(supabase, user.id, {
+        code, name, account_type, nature, parent_code, description
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Listar contas disponíveis por tipo
+    if (action === 'list_accounts') {
+      const { account_type, search } = body;
+      const result = await listChartAccounts(supabase, account_type, search);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // AÇÃO: Sugerir código para nova conta
+    if (action === 'suggest_account_code') {
+      const { parent_code, account_type } = body;
+      const result = await suggestNextAccountCode(supabase, parent_code, account_type);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -489,7 +528,95 @@ async function ruleBasedClassificationAsync(
   // Verificar se é período de abertura (Janeiro/2025)
   const isAbertura = isPeriodoAbertura(transaction.date);
 
-  // PRIORIDADE -1: Se é recebimento, tentar identificar cliente pelo CNPJ primeiro
+  // PRIORIDADE 0: Se é crédito, verificar se há boletos liquidados importados para esta data
+  // Isso resolve o problema de agregação bancária (vários boletos no mesmo dia = um crédito)
+  if (isCredit) {
+    const boletosResult = await findBoletosLiquidados(supabase, transaction.date, amount);
+
+    if (boletosResult.found && boletosResult.boletos.length > 0) {
+      console.log('[Dr.Cícero] Boletos liquidados encontrados:', boletosResult.total_boletos);
+
+      // Verificar se todos são saldo de abertura
+      const todosAbertura = boletosResult.boletos.every(b => b.is_opening_balance);
+      const diferenca = Math.abs(amount - boletosResult.total_valor);
+
+      // Se o valor bate exatamente (ou quase)
+      if (diferenca <= 0.50) {
+        const clientesList = boletosResult.boletos.map(b =>
+          `• ${b.client_name}: R$ ${b.valor_pago.toFixed(2)} (${b.competencia})`
+        ).join('\n');
+
+        if (boletosResult.boletos.length === 1) {
+          // Um único boleto - classificação automática
+          const boleto = boletosResult.boletos[0];
+          // Se é abertura OU Janeiro/2025, vai para Saldo de Abertura (5.2.1.02)
+          const usarSaldoAbertura = todosAbertura || isAbertura;
+          return {
+            confidence: 0.98,
+            debit_account: '1.1.1.02',
+            debit_account_name: 'Banco Sicredi C/C',
+            credit_account: usarSaldoAbertura ? '5.2.1.02' : '3.1.1.01',
+            credit_account_name: usarSaldoAbertura ? 'Saldos de Abertura' : 'Honorários Contábeis',
+            entry_type: usarSaldoAbertura ? 'saldo_abertura' : 'recebimento',
+            description: usarSaldoAbertura
+              ? `Saldo de Abertura Jan/2025: ${boleto.client_name} - ${boleto.competencia}`
+              : `Recebimento boleto: ${boleto.client_name} - ${boleto.competencia}`,
+            needs_confirmation: false,
+            reasoning: `Dr. Cícero: Identifiquei este crédito através do relatório de boletos liquidados.\n\nCliente: ${boleto.client_name}\nCompetência: ${boleto.competencia}\nBoleto: ${boleto.numero_boleto}\n${usarSaldoAbertura ? '⚠️ SALDO DE ABERTURA - conta 5.2.1.02' : 'Receita de honorários'}`,
+          };
+        }
+
+        // Múltiplos boletos - confirmar composição
+        // Se é abertura OU Janeiro/2025, vai para Saldo de Abertura (5.2.1.02)
+        const usarSaldoAberturaMulti = todosAbertura || isAbertura;
+        return {
+          confidence: 0.95,
+          debit_account: '1.1.1.02',
+          debit_account_name: 'Banco Sicredi C/C',
+          credit_account: usarSaldoAberturaMulti ? '5.2.1.02' : '3.1.1.01',
+          credit_account_name: usarSaldoAberturaMulti ? 'Saldos de Abertura' : 'Honorários Contábeis',
+          entry_type: usarSaldoAberturaMulti ? 'saldo_abertura_multiplo' : 'recebimento_multiplo',
+          description: usarSaldoAberturaMulti
+            ? `Saldo de Abertura Jan/2025: ${boletosResult.total_boletos} boletos - R$ ${boletosResult.total_valor.toFixed(2)}`
+            : `Recebimento de ${boletosResult.total_boletos} boletos - R$ ${boletosResult.total_valor.toFixed(2)}`,
+          needs_confirmation: !usarSaldoAberturaMulti, // Se é abertura, não precisa confirmar
+          question: usarSaldoAberturaMulti ? undefined : `Dr. Cícero: Identifiquei ${boletosResult.total_boletos} boleto(s) liquidado(s) que compõem este crédito de R$ ${amount.toFixed(2)}:\n\n${clientesList}\n\nTotal: R$ ${boletosResult.total_valor.toFixed(2)}\n\nConfirma a reconciliação?`,
+          options: usarSaldoAberturaMulti ? undefined : [
+            'Confirmar e reconciliar todos',
+            'Selecionar boletos manualmente',
+            'Não são esses boletos'
+          ],
+          reasoning: usarSaldoAberturaMulti
+            ? `Dr. Cícero: JANEIRO/2025 = período de abertura. ${boletosResult.total_boletos} boletos classificados como SALDO DE ABERTURA. Conta: 5.2.1.02.`
+            : boletosResult.reasoning,
+        };
+      }
+
+      // Valor não bate - pedir seleção manual
+      const clientesList = boletosResult.boletos.map(b =>
+        `• ${b.client_name}: R$ ${b.valor_pago.toFixed(2)}`
+      ).join('\n');
+
+      return {
+        confidence: 0.70,
+        debit_account: '1.1.1.02',
+        debit_account_name: 'Banco Sicredi C/C',
+        credit_account: '1.1.2.01',
+        credit_account_name: 'Clientes a Receber',
+        entry_type: 'recebimento_parcial',
+        description: `Crédito R$ ${amount.toFixed(2)} - boletos disponíveis: R$ ${boletosResult.total_valor.toFixed(2)}`,
+        needs_confirmation: true,
+        question: `Dr. Cícero: Encontrei ${boletosResult.total_boletos} boleto(s) nesta data totalizando R$ ${boletosResult.total_valor.toFixed(2)}, mas o crédito é de R$ ${amount.toFixed(2)} (diferença: R$ ${diferenca.toFixed(2)}).\n\nBoletos disponíveis:\n${clientesList}\n\nQual(is) boleto(s) corresponde(m) a este crédito?`,
+        options: [
+          'Abrir seleção manual de boletos',
+          'Ignorar boletos e classificar manualmente'
+        ],
+        reasoning: boletosResult.reasoning,
+      };
+    }
+  }
+
+  // PRIORIDADE 1: Se é recebimento, tentar identificar cliente pelo CNPJ primeiro
   if (isCredit && !clientInfo) {
     const cnpjResult = await identifyClientByCnpj(supabase, transaction.description);
 
@@ -556,18 +683,18 @@ async function ruleBasedClassificationAsync(
       }
 
       // Cliente encontrado sem grupo - classificação direta
-      // Janeiro/2025 = Período de Abertura
+      // JANEIRO/2025 = PERÍODO DE ABERTURA - TODOS vão para Saldo de Abertura (5.2.1.02)
       if (isAbertura) {
         return {
           confidence: 0.95,
           debit_account: '1.1.1.02',
           debit_account_name: 'Banco Sicredi C/C',
-          credit_account: '1.1.2.01',
-          credit_account_name: `Clientes a Receber - ${cnpjResult.client_nome_fantasia}`,
-          entry_type: 'recebimento_abertura',
-          description: `Recebimento honorários (CNPJ): ${cnpjResult.client_nome_fantasia}`,
+          credit_account: '5.2.1.02',
+          credit_account_name: 'Saldos de Abertura',
+          entry_type: 'saldo_abertura',
+          description: `Saldo de Abertura Jan/2025: ${cnpjResult.client_nome_fantasia} (CNPJ: ${cnpjResult.cnpj})`,
           needs_confirmation: false,
-          reasoning: `Dr. Cícero: Identifiquei ${cnpjResult.client_nome_fantasia} pelo CNPJ ${cnpjResult.cnpj}. JANEIRO/2025 = período de abertura. Este recebimento BAIXA o saldo de Clientes a Receber.`,
+          reasoning: `Dr. Cícero: JANEIRO/2025 = período de abertura. Receita de R$ ${amount.toFixed(2)} de ${cnpjResult.client_nome_fantasia} classificada como SALDO DE ABERTURA. Conta: 5.2.1.02.`,
         };
       }
 
@@ -628,18 +755,18 @@ async function ruleBasedClassificationAsync(
       if (uniqueClients.length === 1) {
         const match = uniqueClients[0];
 
-        // Janeiro/2025 = Período de Abertura - Baixa Clientes a Receber (SEMPRE)
+        // JANEIRO/2025 = PERÍODO DE ABERTURA - TODOS vão para Saldo de Abertura (5.2.1.02)
         if (isAbertura) {
           return {
             confidence: 0.95,
             debit_account: '1.1.1.02',
             debit_account_name: 'Banco Sicredi C/C',
-            credit_account: '1.1.2.01',
-            credit_account_name: `Clientes a Receber - ${match.client_name}`,
-            entry_type: 'recebimento_abertura',
-            description: `Recebimento honorários (${match.relationship}): ${payerResult.payer_name} - ${match.client_name}`,
+            credit_account: '5.2.1.02',
+            credit_account_name: 'Saldos de Abertura',
+            entry_type: 'saldo_abertura',
+            description: `Saldo de Abertura Jan/2025: ${payerResult.payer_name} - ${match.client_name}`,
             needs_confirmation: false,
-            reasoning: `Dr. Cícero: Identifiquei "${payerResult.payer_name}" como ${match.relationship} do cliente ${match.client_name}. JANEIRO/2025 = período de abertura. Este recebimento BAIXA o saldo de Clientes a Receber (débitos de competências anteriores).`,
+            reasoning: `Dr. Cícero: JANEIRO/2025 = período de abertura. Receita de R$ ${amount.toFixed(2)} de ${match.client_name} (pagador: ${payerResult.payer_name}) classificada como SALDO DE ABERTURA. Conta: 5.2.1.02.`,
           };
         }
 
@@ -681,12 +808,28 @@ async function ruleBasedClassificationAsync(
         };
       }
 
-      // Se tem MÚLTIPLAS EMPRESAS, perguntar ao usuário
+      // Se tem MÚLTIPLAS EMPRESAS
       if (uniqueClients.length > 1) {
         const empresaOptions = uniqueClients.map(c =>
           `${c.client_name} (${c.relationship})`
         );
 
+        // JANEIRO/2025 = PERÍODO DE ABERTURA - ir direto para saldo de abertura SEM PERGUNTAR
+        if (isAbertura) {
+          return {
+            confidence: 0.90,
+            debit_account: '1.1.1.02',
+            debit_account_name: 'Banco Sicredi C/C',
+            credit_account: '5.2.1.02',
+            credit_account_name: 'Saldos de Abertura',
+            entry_type: 'recebimento_abertura_generico',
+            description: `Recebimento saldo abertura: ${payerResult.payer_name} - R$ ${amount.toFixed(2)}`,
+            needs_confirmation: false,
+            reasoning: `Dr. Cícero: JANEIRO/2025 = período de abertura. Receita de R$ ${amount.toFixed(2)} classificada como SALDO DE ABERTURA (competência anterior). Pagador: ${payerResult.payer_name}. Não é necessário identificar qual empresa pois vai para ajuste de PL.`,
+          };
+        }
+
+        // Fora do período de abertura - perguntar qual empresa
         return {
           confidence: payerResult.confidence,
           debit_account: '1.1.1.02',
@@ -768,20 +911,18 @@ async function ruleBasedClassificationAsync(
   if (isCredit) {
     // Verificar se é PIX ou boleto de cliente
     if (desc.includes('pix') || desc.includes('liq.cobranca')) {
-      // REGRA ESPECIAL: Janeiro/2025 = Período de Abertura
-      // O saldo já foi registrado em Clientes a Receber (via Saldo de Abertura)
-      // Recebimento deve BAIXAR o Clientes a Receber, não criar receita nova
+      // JANEIRO/2025 = PERÍODO DE ABERTURA - TODOS vão para Saldo de Abertura (5.2.1.02)
       if (isAbertura) {
         return {
           confidence: 0.95,
           debit_account: '1.1.1.02',
           debit_account_name: 'Banco Sicredi C/C',
-          credit_account: '1.1.2.01',
-          credit_account_name: 'Clientes a Receber',
-          entry_type: 'recebimento_abertura',
-          description: `Recebimento (Saldo Abertura): ${transaction.description}`,
+          credit_account: '5.2.1.02',
+          credit_account_name: 'Saldos de Abertura',
+          entry_type: 'saldo_abertura',
+          description: `Saldo de Abertura Jan/2025: ${transaction.description}`,
           needs_confirmation: false,
-          reasoning: `JANEIRO/2025 = PERÍODO DE ABERTURA. O saldo deste cliente já foi registrado em Clientes a Receber via Saldo de Abertura. Este recebimento BAIXA o saldo do cliente (credita 1.1.2.01), NÃO gera receita nova.`,
+          reasoning: `Dr. Cícero: JANEIRO/2025 = período de abertura. Receita de R$ ${amount.toFixed(2)} classificada como SALDO DE ABERTURA. Conta: 5.2.1.02.`,
         };
       }
 
@@ -801,23 +942,18 @@ async function ruleBasedClassificationAsync(
         };
       } else {
         // JANEIRO/2025 = Período de abertura - recebimentos são de competências anteriores
+        // REGRA DECISÃO FINAL: ir DIRETO para saldo de abertura SEM PERGUNTAR
         if (isAbertura) {
           return {
-            confidence: 0.85,
+            confidence: 0.95,
             debit_account: '1.1.1.02',
             debit_account_name: 'Banco Sicredi C/C',
             credit_account: '5.2.1.02',
             credit_account_name: 'Saldos de Abertura',
             entry_type: 'saldo_abertura',
             description: `Saldo de Abertura Jan/2025: ${transaction.description}`,
-            needs_confirmation: true,
-            question: `Dr. Cícero: JANEIRO/2025 é período de abertura. Este recebimento de R$ ${amount.toFixed(2)} é de competências anteriores.\n\nClassificar como SALDO DE ABERTURA?`,
-            options: [
-              'Sim, é saldo de abertura (competência anterior)',
-              'Não, é receita nova de janeiro/2025',
-              'É honorário de cliente específico'
-            ],
-            reasoning: `Dr. Cícero: Janeiro/2025 é mês de abertura. Não identifiquei cliente, mas recebimentos neste período são de competências anteriores → conta 5.2.1.02 (Saldos de Abertura).`,
+            needs_confirmation: false,
+            reasoning: `Dr. Cícero: JANEIRO/2025 = período de abertura. Receita de R$ ${amount.toFixed(2)} classificada automaticamente como SALDO DE ABERTURA (competência anterior). Conta: 5.2.1.02.`,
           };
         }
         return {
@@ -852,8 +988,8 @@ async function ruleBasedClassificationAsync(
       };
     }
 
-    // Transferências
-    if (desc.includes('transf') || desc.includes('pix enviado') || desc.includes('pix_deb')) {
+    // Transferências e PIX - PERGUNTAR TIPO ESPECÍFICO
+    if (desc.includes('transf') || desc.includes('pix enviado') || desc.includes('pix_deb') || desc.includes('pix')) {
       return {
         confidence: 0.4,
         debit_account: '4.1.2.05',
@@ -863,9 +999,17 @@ async function ruleBasedClassificationAsync(
         entry_type: 'pagamento',
         description: `Transferência: ${transaction.description}`,
         needs_confirmation: true,
-        question: `Dr. Cícero pergunta: Identifiquei uma saída de R$ ${amount.toFixed(2)} via ${desc.includes('pix') ? 'PIX' : 'Transferência'}. Qual a natureza deste pagamento?`,
-        options: ['Pagamento de fornecedor', 'Pagamento de funcionário', 'Despesa administrativa', 'Retirada de sócio', 'Outro'],
-        reasoning: 'Transferências podem ter várias finalidades. Preciso saber para classificar corretamente.',
+        question: `Dr. Cícero pergunta: Identifiquei uma saída de R$ ${amount.toFixed(2)} via ${desc.includes('pix') ? 'PIX' : 'Transferência'}.\n\n"${transaction.description}"\n\nQual a natureza deste pagamento?`,
+        options: [
+          '💼 ADIANTAMENTO A SÓCIO (não é despesa, vai para Ativo)',
+          '🏢 DESPESA DA EMPRESA (vai para DRE)',
+          '📋 PAGAMENTO DE FORNECEDOR (baixa de obrigação)',
+          '💰 INVESTIMENTO (Ampla Saúde ou outro)',
+          '🔄 TRANSFERÊNCIA ENTRE CONTAS',
+          '➕ CRIAR NOVA CONTA (classificação específica)',
+          '❓ OUTRO (especificar)'
+        ],
+        reasoning: 'IMPORTANTE: Adiantamento a sócio NÃO é despesa! Vai para conta 1.1.3.xx (Ativo). Despesa só se for gasto operacional da empresa.',
       };
     }
   }
@@ -901,11 +1045,23 @@ async function ruleBasedClassificationAsync(
     entry_type: isCredit ? 'receita_diversa' : 'despesa_diversa',
     description: transaction.description,
     needs_confirmation: true,
-    question: `Dr. Cícero pergunta: Não consegui identificar a natureza desta ${isCredit ? 'receita' : 'despesa'} de R$ ${amount.toFixed(2)}: "${transaction.description}". Pode me ajudar a classificar?`,
+    question: isCredit
+      ? `Dr. Cícero pergunta: Não consegui identificar a natureza desta receita de R$ ${amount.toFixed(2)}:\n\n"${transaction.description}"\n\nPode me ajudar a classificar?`
+      : `Dr. Cícero pergunta: Identifiquei uma saída de R$ ${amount.toFixed(2)}:\n\n"${transaction.description}"\n\n⚠️ IMPORTANTE: Adiantamento a sócio NÃO é despesa!\n\nQual a natureza deste pagamento?`,
     options: isCredit
-      ? ['Honorários de cliente', 'Receita financeira', 'Devolução/Reembolso', 'Outro']
-      : ['Despesa com pessoal', 'Despesa administrativa', 'Despesa financeira', 'Serviços de terceiros', 'Outro'],
-    reasoning: 'Não encontrei padrão conhecido. Preciso de ajuda para classificar corretamente.',
+      ? ['Honorários de cliente', 'Receita financeira', 'Devolução/Reembolso', '➕ Criar nova conta', 'Outro']
+      : [
+          '💼 ADIANTAMENTO A SÓCIO (não é despesa, vai para Ativo)',
+          '🏢 DESPESA DA EMPRESA (vai para DRE)',
+          '📋 PAGAMENTO DE FORNECEDOR (baixa de obrigação)',
+          '💰 INVESTIMENTO (Ampla Saúde ou outro)',
+          '🔄 TRANSFERÊNCIA ENTRE CONTAS',
+          '➕ CRIAR NOVA CONTA (classificação específica)',
+          '❓ OUTRO (especificar)'
+        ],
+    reasoning: isCredit
+      ? 'Não encontrei padrão conhecido. Preciso de ajuda para classificar corretamente.'
+      : 'IMPORTANTE: Adiantamento a sócio NÃO é despesa! Vai para conta 1.1.3.xx (Ativo). Despesa só se for gasto operacional da empresa.',
   };
 }
 
@@ -1182,15 +1338,70 @@ function adjustClassificationBasedOnFeedback(
   const adjusted = { ...classification };
   const feedbackLower = feedback.toLowerCase();
 
-  // Ajustar baseado nas respostas comuns
-  if (feedbackLower.includes('honorário') || feedbackLower.includes('honorario')) {
+  // PRIORIDADE 1: ADIANTAMENTO A SÓCIO (NÃO É DESPESA!)
+  if (feedbackLower.includes('adiantamento') || feedbackLower.includes('sócio') || feedbackLower.includes('socio')) {
+    adjusted.entry_type = 'adiantamento_socio';
+    adjusted.debit_account = '1.1.3.04'; // Adiantamentos a Sócios (genérico)
+    adjusted.debit_account_name = 'Adiantamentos a Sócios';
+    adjusted.credit_account = '1.1.1.02';
+    adjusted.credit_account_name = 'Banco Sicredi C/C';
+    adjusted.description = `Adiantamento a Sócio: ${classification.description}`;
+    console.log('[Dr.Cícero] Classificado como ADIANTAMENTO A SÓCIO - NÃO vai para DRE');
+  }
+  // PRIORIDADE 2: INVESTIMENTO (Ampla Saúde)
+  else if (feedbackLower.includes('investimento') || feedbackLower.includes('ampla saúde') || feedbackLower.includes('ampla saude')) {
+    adjusted.entry_type = 'investimento';
+    adjusted.debit_account = '1.2.1.01';
+    adjusted.debit_account_name = 'Investimentos - Ampla Saúde';
+    adjusted.credit_account = '1.1.1.02';
+    adjusted.credit_account_name = 'Banco Sicredi C/C';
+    adjusted.description = `Investimento Ampla Saúde: ${classification.description}`;
+    console.log('[Dr.Cícero] Classificado como INVESTIMENTO - NÃO vai para DRE');
+  }
+  // PRIORIDADE 3: TRANSFERÊNCIA ENTRE CONTAS
+  else if (feedbackLower.includes('transferência entre') || feedbackLower.includes('transferencia entre')) {
+    adjusted.entry_type = 'transferencia_interna';
+    adjusted.debit_account = '1.1.1.01'; // Outra conta bancária
+    adjusted.debit_account_name = 'Caixa Geral';
+    adjusted.credit_account = '1.1.1.02';
+    adjusted.credit_account_name = 'Banco Sicredi C/C';
+    adjusted.description = `Transferência entre contas: ${classification.description}`;
+    console.log('[Dr.Cícero] Classificado como TRANSFERÊNCIA ENTRE CONTAS - NÃO vai para DRE');
+  }
+  // PRIORIDADE 4: PAGAMENTO DE FORNECEDOR (baixa de passivo)
+  else if (feedbackLower.includes('fornecedor') || feedbackLower.includes('pagamento')) {
+    adjusted.entry_type = 'pagamento_fornecedor';
+    adjusted.debit_account = '2.1.1.01';
+    adjusted.debit_account_name = 'Fornecedores a Pagar';
+    adjusted.credit_account = '1.1.1.02';
+    adjusted.credit_account_name = 'Banco Sicredi C/C';
+    adjusted.description = `Pagamento Fornecedor: ${classification.description}`;
+    console.log('[Dr.Cícero] Classificado como PAGAMENTO DE FORNECEDOR - baixa de passivo');
+  }
+  // PRIORIDADE 5: DESPESA DA EMPRESA (vai para DRE)
+  else if (feedbackLower.includes('despesa')) {
+    adjusted.entry_type = 'despesa';
+    adjusted.debit_account = '4.1.2.99';
+    adjusted.debit_account_name = 'Outras Despesas Administrativas';
+    adjusted.credit_account = '1.1.1.02';
+    adjusted.credit_account_name = 'Banco Sicredi C/C';
+    adjusted.description = `Despesa: ${classification.description}`;
+    console.log('[Dr.Cícero] Classificado como DESPESA - vai para DRE');
+  }
+  // CRIAR NOVA CONTA - Usuário quer criar uma conta específica
+  else if (feedbackLower.includes('criar nova conta') || feedbackLower.includes('nova conta')) {
+    // Sinalizar que precisa criar conta - o frontend vai iniciar o fluxo de criação
+    adjusted.needs_account_creation = true;
+    adjusted.confidence = 0; // Força confirmação após criar conta
+    adjusted.needs_confirmation = true;
+    console.log('[Dr.Cícero] Usuário solicitou CRIAR NOVA CONTA - aguardando criação');
+    return adjusted; // Retorna sem modificar classificação
+  }
+  // Ajustar baseado nas respostas antigas (compatibilidade)
+  else if (feedbackLower.includes('honorário') || feedbackLower.includes('honorario')) {
     adjusted.entry_type = 'recebimento';
     adjusted.credit_account = '1.1.2.01';
     adjusted.credit_account_name = 'Clientes a Receber';
-  } else if (feedbackLower.includes('retirada') || feedbackLower.includes('sócio') || feedbackLower.includes('socio')) {
-    adjusted.entry_type = 'retirada_socio';
-    adjusted.debit_account = '5.2.1.01';
-    adjusted.debit_account_name = 'Lucros Acumulados';
   } else if (feedbackLower.includes('funcionário') || feedbackLower.includes('funcionario') || feedbackLower.includes('salário')) {
     adjusted.entry_type = 'despesa_pessoal';
     adjusted.debit_account = '4.1.1.01';
@@ -1358,6 +1569,227 @@ async function processBatch(
     success: true,
     message: `Dr. Cícero processou ${transactions.length} transações: ${results.auto_approved} aprovadas, ${results.pending_review} aguardando revisão, ${results.errors} erros.`,
     ...results,
+  };
+}
+
+// ==========================================
+// GERENCIAMENTO DE PLANO DE CONTAS
+// ==========================================
+
+interface CreateAccountParams {
+  code: string;
+  name: string;
+  account_type: 'ATIVO' | 'PASSIVO' | 'PATRIMONIO_LIQUIDO' | 'RECEITA' | 'DESPESA';
+  nature: 'DEVEDORA' | 'CREDORA';
+  parent_code?: string;
+  description?: string;
+}
+
+// Criar conta no plano de contas
+async function createChartAccount(
+  supabase: any,
+  userId: string,
+  params: CreateAccountParams
+): Promise<any> {
+  console.log('[Dr.Cícero] Criando conta no plano de contas:', params);
+
+  const { code, name, account_type, nature, parent_code, description } = params;
+
+  // Validar código
+  if (!code || !code.match(/^\d+(\.\d+)*$/)) {
+    return {
+      success: false,
+      error: 'Código inválido. Use formato: 1.1.3.04 ou similar'
+    };
+  }
+
+  // Verificar se código já existe
+  const { data: existing } = await supabase
+    .from('chart_of_accounts')
+    .select('id, code, name')
+    .eq('code', code)
+    .maybeSingle();
+
+  if (existing) {
+    return {
+      success: false,
+      error: `Código ${code} já existe: ${existing.name}`,
+      existing_account: existing
+    };
+  }
+
+  // Buscar conta pai se fornecida
+  let parentId = null;
+  if (parent_code) {
+    const { data: parentAccount } = await supabase
+      .from('chart_of_accounts')
+      .select('id')
+      .eq('code', parent_code)
+      .maybeSingle();
+
+    if (parentAccount) {
+      parentId = parentAccount.id;
+    }
+  }
+
+  // Calcular nível baseado no código
+  const level = code.split('.').length;
+
+  // Criar a conta
+  const { data: newAccount, error } = await supabase
+    .from('chart_of_accounts')
+    .insert({
+      code,
+      name,
+      account_type,
+      nature,
+      level,
+      is_analytical: true, // Contas criadas pelo Dr. Cícero são analíticas
+      is_active: true,
+      parent_id: parentId,
+      created_by: userId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Dr.Cícero] Erro ao criar conta:', error);
+    return {
+      success: false,
+      error: `Erro ao criar conta: ${error.message}`
+    };
+  }
+
+  console.log('[Dr.Cícero] Conta criada com sucesso:', newAccount);
+  return {
+    success: true,
+    message: `Dr. Cícero: Conta "${name}" (${code}) criada com sucesso!`,
+    account: newAccount
+  };
+}
+
+// Listar contas do plano de contas
+async function listChartAccounts(
+  supabase: any,
+  accountType?: string,
+  search?: string
+): Promise<any> {
+  let query = supabase
+    .from('chart_of_accounts')
+    .select('id, code, name, account_type, nature, level, is_analytical, is_active')
+    .eq('is_active', true)
+    .order('code');
+
+  if (accountType) {
+    query = query.eq('account_type', accountType.toUpperCase());
+  }
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
+  }
+
+  const { data, error } = await query.limit(50);
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+
+  // Organizar por tipo para facilitar a visualização
+  const organized: Record<string, any[]> = {
+    ATIVO: [],
+    PASSIVO: [],
+    PATRIMONIO_LIQUIDO: [],
+    RECEITA: [],
+    DESPESA: []
+  };
+
+  data?.forEach((account: any) => {
+    if (organized[account.account_type]) {
+      organized[account.account_type].push(account);
+    }
+  });
+
+  return {
+    success: true,
+    accounts: data,
+    organized,
+    total: data?.length || 0
+  };
+}
+
+// Sugerir próximo código disponível para uma conta
+async function suggestNextAccountCode(
+  supabase: any,
+  parentCode?: string,
+  accountType?: string
+): Promise<any> {
+  // Se tem código pai, buscar subcontas
+  if (parentCode) {
+    const { data: subAccounts } = await supabase
+      .from('chart_of_accounts')
+      .select('code')
+      .like('code', `${parentCode}.%`)
+      .order('code', { ascending: false })
+      .limit(1);
+
+    if (subAccounts && subAccounts.length > 0) {
+      const lastCode = subAccounts[0].code;
+      const parts = lastCode.split('.');
+      const lastNum = parseInt(parts[parts.length - 1]) || 0;
+      const nextNum = (lastNum + 1).toString().padStart(2, '0');
+      parts[parts.length - 1] = nextNum;
+
+      return {
+        success: true,
+        suggested_code: parts.join('.'),
+        parent_code: parentCode,
+        reasoning: `Próximo código disponível após ${lastCode}`
+      };
+    } else {
+      return {
+        success: true,
+        suggested_code: `${parentCode}.01`,
+        parent_code: parentCode,
+        reasoning: `Primeira subconta de ${parentCode}`
+      };
+    }
+  }
+
+  // Se não tem pai, sugerir baseado no tipo
+  const typePrefix: Record<string, string> = {
+    'ATIVO': '1',
+    'PASSIVO': '2',
+    'RECEITA': '3',
+    'DESPESA': '4',
+    'PATRIMONIO_LIQUIDO': '5'
+  };
+
+  const prefix = typePrefix[accountType?.toUpperCase() || 'DESPESA'] || '4';
+
+  // Buscar última conta do tipo
+  const { data: lastAccounts } = await supabase
+    .from('chart_of_accounts')
+    .select('code')
+    .like('code', `${prefix}.%`)
+    .order('code', { ascending: false })
+    .limit(1);
+
+  if (lastAccounts && lastAccounts.length > 0) {
+    return {
+      success: true,
+      suggested_code: `${prefix}.1.2.99`, // Código genérico para outras
+      parent_code: `${prefix}.1.2`,
+      reasoning: `Sugestão para nova conta de ${accountType || 'DESPESA'}. Verifique o plano de contas para código mais específico.`
+    };
+  }
+
+  return {
+    success: true,
+    suggested_code: `${prefix}.1.1.01`,
+    reasoning: `Primeira conta de ${accountType || 'DESPESA'}`
   };
 }
 
@@ -1583,7 +2015,9 @@ async function identifyPayerByName(
         }
 
         // Se score é significativo, adicionar ao resultado
-        if (score >= 40) {
+        // Score mínimo de 60 para evitar falsos positivos (ex: "SILVA" batendo com muitos)
+        // Também exigir pelo menos 2 partes do nome coincidindo
+        if (score >= 60 && matchedParts >= 2) {
           matches.push({
             name: socioNome,
             client_name: client.name,
@@ -1597,23 +2031,28 @@ async function identifyPayerByName(
       }
 
       // Também verificar match com o próprio nome do cliente (empresa)
+      // Mas exigir pelo menos 2 partes do nome coincidindo para evitar falsos positivos
       const normalizedClientName = normalizeForSearch(client.name);
       const clientParts = normalizedClientName.split(' ').filter(p => p.length >= 3);
 
+      let clientMatchedParts = 0;
       for (const searchPart of searchParts) {
         if (clientParts.some(cp => cp.includes(searchPart) || searchPart.includes(cp))) {
-          // Match direto com nome da empresa
-          matches.push({
-            name: client.name,
-            client_name: client.name,
-            client_id: client.id,
-            client_nome_fantasia: client.nome_fantasia || client.name,
-            client_cnpj: client.cnpj,
-            relationship: 'Empresa (nome direto)',
-            score: 90,
-          });
-          break;
+          clientMatchedParts++;
         }
+      }
+
+      // Exigir pelo menos 2 partes coincidindo
+      if (clientMatchedParts >= 2) {
+        matches.push({
+          name: client.name,
+          client_name: client.name,
+          client_id: client.id,
+          client_nome_fantasia: client.nome_fantasia || client.name,
+          client_cnpj: client.cnpj,
+          relationship: 'Empresa (nome direto)',
+          score: 85 + (clientMatchedParts * 3), // Score proporcional
+        });
       }
 
       // Verificar nome fantasia também
@@ -1621,19 +2060,24 @@ async function identifyPayerByName(
         const normalizedFantasy = normalizeForSearch(client.nome_fantasia);
         const fantasyParts = normalizedFantasy.split(' ').filter(p => p.length >= 3);
 
+        let fantasyMatchedParts = 0;
         for (const searchPart of searchParts) {
           if (fantasyParts.some(fp => fp.includes(searchPart) || searchPart.includes(fp))) {
-            matches.push({
-              name: client.nome_fantasia,
-              client_name: client.name,
-              client_id: client.id,
-              client_nome_fantasia: client.nome_fantasia,
-              client_cnpj: client.cnpj,
-              relationship: 'Empresa (nome fantasia)',
-              score: 95,
-            });
-            break;
+            fantasyMatchedParts++;
           }
+        }
+
+        // Exigir pelo menos 2 partes coincidindo
+        if (fantasyMatchedParts >= 2) {
+          matches.push({
+            name: client.nome_fantasia,
+            client_name: client.name,
+            client_id: client.id,
+            client_nome_fantasia: client.nome_fantasia,
+            client_cnpj: client.cnpj,
+            relationship: 'Empresa (nome fantasia)',
+            score: 90 + (fantasyMatchedParts * 2),
+          });
         }
       }
     }
@@ -1893,6 +2337,136 @@ async function identifyClientByCnpj(
     monthly_fee: client.monthly_fee,
     has_economic_group: false,
     reasoning: `Dr. Cícero: Encontrei o cliente ${client.nome_fantasia || client.name} (CNPJ: ${cnpj}). Este cliente não pertence a nenhum grupo econômico.`,
+  };
+}
+
+// Buscar boletos liquidados para uma data específica (resolve problema de agregação bancária)
+interface BoletoLiquidadoMatch {
+  found: boolean;
+  boletos: Array<{
+    id: string;
+    numero_boleto: string;
+    client_name: string;
+    client_id: string | null;
+    valor_pago: number;
+    competencia: string;
+    is_opening_balance: boolean;
+    reconciled: boolean;
+  }>;
+  total_valor: number;
+  total_boletos: number;
+  reasoning: string;
+}
+
+async function findBoletosLiquidados(
+  supabase: any,
+  transactionDate: string,
+  transactionAmount: number,
+  tolerance: number = 0.50
+): Promise<BoletoLiquidadoMatch> {
+  console.log('[Dr.Cícero] Buscando boletos liquidados para:', transactionDate, 'valor:', transactionAmount);
+
+  // Buscar boletos do mesmo dia que não foram reconciliados
+  const { data: boletos, error } = await supabase
+    .from('boletos_liquidados')
+    .select('id, numero_boleto, client_name, client_id, valor_pago, competencia, is_opening_balance, reconciled')
+    .eq('data_pagamento', transactionDate)
+    .eq('reconciled', false)
+    .order('client_name');
+
+  if (error) {
+    console.error('[Dr.Cícero] Erro ao buscar boletos:', error);
+    return {
+      found: false,
+      boletos: [],
+      total_valor: 0,
+      total_boletos: 0,
+      reasoning: `Erro ao buscar boletos: ${error.message}`,
+    };
+  }
+
+  if (!boletos || boletos.length === 0) {
+    return {
+      found: false,
+      boletos: [],
+      total_valor: 0,
+      total_boletos: 0,
+      reasoning: `Não encontrei boletos liquidados na data ${transactionDate}.`,
+    };
+  }
+
+  const totalValor = boletos.reduce((sum: number, b: any) => sum + Number(b.valor_pago), 0);
+  const diferenca = Math.abs(transactionAmount - totalValor);
+
+  // Verificar se os boletos correspondem ao valor da transação
+  if (diferenca <= tolerance) {
+    return {
+      found: true,
+      boletos: boletos.map((b: any) => ({
+        id: b.id,
+        numero_boleto: b.numero_boleto,
+        client_name: b.client_name,
+        client_id: b.client_id,
+        valor_pago: Number(b.valor_pago),
+        competencia: b.competencia,
+        is_opening_balance: b.is_opening_balance,
+        reconciled: b.reconciled,
+      })),
+      total_valor: totalValor,
+      total_boletos: boletos.length,
+      reasoning: `Dr. Cícero: Encontrei ${boletos.length} boleto(s) liquidado(s) na data ${transactionDate} totalizando R$ ${totalValor.toFixed(2)}. Diferença de R$ ${diferenca.toFixed(2)} do valor do extrato.`,
+    };
+  }
+
+  // Tentar encontrar combinação de boletos que bata com o valor
+  // (algoritmo simplificado - pegar boletos em ordem até atingir o valor)
+  const boletosOrdenados = [...boletos].sort((a: any, b: any) => Number(b.valor_pago) - Number(a.valor_pago));
+  let somaParcial = 0;
+  const boletosMatch: any[] = [];
+
+  for (const boleto of boletosOrdenados) {
+    if (somaParcial + Number(boleto.valor_pago) <= transactionAmount + tolerance) {
+      boletosMatch.push(boleto);
+      somaParcial += Number(boleto.valor_pago);
+      if (Math.abs(somaParcial - transactionAmount) <= tolerance) break;
+    }
+  }
+
+  if (boletosMatch.length > 0 && Math.abs(somaParcial - transactionAmount) <= tolerance) {
+    return {
+      found: true,
+      boletos: boletosMatch.map((b: any) => ({
+        id: b.id,
+        numero_boleto: b.numero_boleto,
+        client_name: b.client_name,
+        client_id: b.client_id,
+        valor_pago: Number(b.valor_pago),
+        competencia: b.competencia,
+        is_opening_balance: b.is_opening_balance,
+        reconciled: b.reconciled,
+      })),
+      total_valor: somaParcial,
+      total_boletos: boletosMatch.length,
+      reasoning: `Dr. Cícero: Encontrei ${boletosMatch.length} de ${boletos.length} boleto(s) que correspondem ao valor R$ ${transactionAmount.toFixed(2)} (soma: R$ ${somaParcial.toFixed(2)}).`,
+    };
+  }
+
+  // Retornar todos os boletos do dia para o usuário decidir
+  return {
+    found: true,
+    boletos: boletos.map((b: any) => ({
+      id: b.id,
+      numero_boleto: b.numero_boleto,
+      client_name: b.client_name,
+      client_id: b.client_id,
+      valor_pago: Number(b.valor_pago),
+      competencia: b.competencia,
+      is_opening_balance: b.is_opening_balance,
+      reconciled: b.reconciled,
+    })),
+    total_valor: totalValor,
+    total_boletos: boletos.length,
+    reasoning: `Dr. Cícero: Encontrei ${boletos.length} boleto(s) na data ${transactionDate} totalizando R$ ${totalValor.toFixed(2)}, mas não corresponde exatamente ao valor R$ ${transactionAmount.toFixed(2)} (diferença: R$ ${diferenca.toFixed(2)}). Preciso que você selecione quais boletos correspondem a este crédito.`,
   };
 }
 

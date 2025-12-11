@@ -1397,12 +1397,27 @@ const Expenses = () => {
     return frequencyLabel;
   };
 
-  const totalPending = expenses
+  // Função para identificar se é adiantamento a sócio (não é despesa real)
+  const isAdiantamento = (category: string) => {
+    const cat = (category || '').toLowerCase();
+    return cat.includes('adiantamento');
+  };
+
+  // Separar despesas reais de adiantamentos
+  const despesasReais = expenses.filter(e => !isAdiantamento(e.category));
+  const adiantamentos = expenses.filter(e => isAdiantamento(e.category));
+
+  // Totais apenas das DESPESAS REAIS (sem adiantamentos)
+  const totalPending = despesasReais
     .filter((e) => e.status === "pending" || e.status === "overdue")
     .reduce((sum, e) => sum + Number(e.amount), 0);
 
-  const totalPaid = expenses
+  const totalPaid = despesasReais
     .filter((e) => e.status === "paid")
+    .reduce((sum, e) => sum + Number(e.amount), 0);
+
+  // Total de adiantamentos (informativo)
+  const totalAdiantamentos = adiantamentos
     .reduce((sum, e) => sum + Number(e.amount), 0);
 
   return (
@@ -1418,21 +1433,23 @@ const Expenses = () => {
       />
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">
-            {selectedClientId ? `Despesas - ${selectedClientName}` : "Despesas"}
-          </h1>
+          <h1 className="text-3xl font-bold">Despesas - Ampla Contabilidade</h1>
           <p className="text-muted-foreground">
-            {selectedClientId
-              ? "Despesas do cliente selecionado"
-              : "Controle de contas a pagar - selecione um cliente para filtrar"
-            }
+            Controle de contas a pagar da empresa
           </p>
-          {(selectedYear || selectedMonth || selectedClientId) && (
+          {(selectedYear || selectedMonth) && (
             <div className="mt-2 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
               <span className="font-medium">⚠️ Filtros ativos:</span>
               {selectedYear && <Badge variant="secondary">Ano: {selectedYear}</Badge>}
               {selectedMonth && <Badge variant="secondary">Mês: {selectedMonth}</Badge>}
-              {selectedClientId && <Badge variant="secondary">Cliente: {selectedClientName}</Badge>}
+            </div>
+          )}
+          {adiantamentos.length > 0 && (
+            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>ℹ️ Nota:</strong> {adiantamentos.length} item(s) são <strong>Adiantamentos a Sócios</strong> (R$ {formatCurrency(totalAdiantamentos)}) -
+                não são despesas da empresa e não afetam o DRE.
+              </p>
             </div>
           )}
         </div>
@@ -1835,25 +1852,46 @@ const Expenses = () => {
           </Dialog>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card>
-            <CardHeader>
-              <CardTitle>A Pagar</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Despesas a Pagar</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-warning">
+              <div className="text-2xl font-bold text-warning">
                 {formatCurrency(totalPending)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {despesasReais.filter(e => e.status === "pending" || e.status === "overdue").length} pendente(s)
+              </p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <CardTitle>Pago</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Despesas Pagas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">
+              <div className="text-2xl font-bold text-success">
                 {formatCurrency(totalPaid)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {despesasReais.filter(e => e.status === "paid").length} paga(s)
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-blue-700 dark:text-blue-300">
+                💼 Adiantamentos a Sócios
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatCurrency(totalAdiantamentos)}
+              </div>
+              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">
+                {adiantamentos.length} item(s) - NÃO é despesa
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -1861,7 +1899,10 @@ const Expenses = () => {
         <Card>
           <CardHeader>
             <CardTitle>Lista de Despesas</CardTitle>
-            <CardDescription>Total: {expenses.length} registros</CardDescription>
+            <CardDescription>
+              Total: {despesasReais.length} despesas reais
+              {adiantamentos.length > 0 && ` + ${adiantamentos.length} adiantamentos`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {expenses.length === 0 ? (
@@ -1884,9 +1925,16 @@ const Expenses = () => {
                 <TableBody>
                   {expenses.map((expense) => {
                     const categoryName = getCategoryName(expense.category);
+                    const isAdiant = isAdiantamento(expense.category);
                     return (
-                    <TableRow key={expense.id}>
-                      <TableCell className="font-medium">{categoryName}</TableCell>
+                    <TableRow
+                      key={expense.id}
+                      className={isAdiant ? "bg-blue-50/50 dark:bg-blue-950/30" : ""}
+                    >
+                      <TableCell className="font-medium">
+                        {isAdiant && <span className="text-blue-600 mr-1">💼</span>}
+                        {categoryName}
+                      </TableCell>
                       <TableCell>{expense.description}</TableCell>
                       <TableCell>{new Date(expense.due_date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{formatCurrency(Number(expense.amount))}</TableCell>

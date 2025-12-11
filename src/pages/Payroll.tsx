@@ -38,6 +38,10 @@ import {
   UserCheck,
   MoreHorizontal,
   Trash2,
+  ListChecks,
+  Receipt,
+  Play,
+  Eye,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -89,6 +93,43 @@ interface LaborAlert {
   is_resolved: boolean;
 }
 
+interface EsocialRubrica {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tipo: string;
+  incidencia_inss: boolean;
+  incidencia_irrf: boolean;
+  incidencia_fgts: boolean;
+  account_id: string | null;
+  account_debit_id: string | null;
+  account_credit_id: string | null;
+  is_active: boolean;
+  account_name?: string;
+}
+
+interface PayrollRecord {
+  id: string;
+  employee_id: string;
+  competencia: string;
+  total_proventos: number;
+  total_descontos: number;
+  liquido: number;
+  status: string;
+  employee_name?: string;
+  employee_role?: string;
+}
+
+interface PayrollEvent {
+  id: string;
+  payroll_id: string;
+  rubrica_id: string;
+  valor: number;
+  rubrica_codigo?: string;
+  rubrica_descricao?: string;
+  rubrica_tipo?: string;
+}
+
 const Payroll = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [alerts, setAlerts] = useState<LaborAlert[]>([]);
@@ -108,6 +149,17 @@ const Payroll = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+
+  // Rubricas and Payroll states
+  const [rubricas, setRubricas] = useState<EsocialRubrica[]>([]);
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
+  const [payrollEvents, setPayrollEvents] = useState<PayrollEvent[]>([]);
+  const [selectedCompetencia, setSelectedCompetencia] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
+  const [generatingPayroll, setGeneratingPayroll] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -178,6 +230,148 @@ const Payroll = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Load rubricas
+  const loadRubricas = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("esocial_rubricas")
+        .select(`
+          id,
+          codigo,
+          descricao,
+          tipo,
+          incidencia_inss,
+          incidencia_irrf,
+          incidencia_fgts,
+          account_id,
+          account_debit_id,
+          account_credit_id,
+          is_active
+        `)
+        .order("codigo", { ascending: true });
+
+      if (error) throw error;
+      setRubricas(data || []);
+    } catch (error) {
+      console.error("Error loading rubricas:", error);
+    }
+  }, []);
+
+  // Load payroll records for competencia
+  const loadPayrollRecords = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("payroll")
+        .select(`
+          id,
+          employee_id,
+          competencia,
+          total_proventos,
+          total_descontos,
+          liquido,
+          status,
+          employees (name, role)
+        `)
+        .eq("competencia", selectedCompetencia)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const records = (data || []).map((p: any) => ({
+        ...p,
+        employee_name: p.employees?.name,
+        employee_role: p.employees?.role,
+      }));
+      setPayrollRecords(records);
+    } catch (error) {
+      console.error("Error loading payroll records:", error);
+    }
+  }, [selectedCompetencia]);
+
+  // Load payroll events for selected payroll
+  const loadPayrollEvents = useCallback(async (payrollId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("payroll_events")
+        .select(`
+          id,
+          payroll_id,
+          rubrica_id,
+          valor,
+          esocial_rubricas (codigo, descricao, tipo)
+        `)
+        .eq("payroll_id", payrollId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      const events = (data || []).map((e: any) => ({
+        ...e,
+        rubrica_codigo: e.esocial_rubricas?.codigo,
+        rubrica_descricao: e.esocial_rubricas?.descricao,
+        rubrica_tipo: e.esocial_rubricas?.tipo,
+      }));
+      setPayrollEvents(events);
+    } catch (error) {
+      console.error("Error loading payroll events:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRubricas();
+  }, [loadRubricas]);
+
+  useEffect(() => {
+    loadPayrollRecords();
+  }, [loadPayrollRecords]);
+
+  useEffect(() => {
+    if (selectedPayroll) {
+      loadPayrollEvents(selectedPayroll.id);
+    } else {
+      setPayrollEvents([]);
+    }
+  }, [selectedPayroll, loadPayrollEvents]);
+
+  // Generate payroll for an employee
+  const handleGeneratePayroll = async (employeeId: string) => {
+    setGeneratingPayroll(true);
+    try {
+      const { data, error } = await supabase.rpc("gerar_folha_funcionario", {
+        p_employee_id: employeeId,
+        p_competencia: selectedCompetencia,
+      });
+
+      if (error) throw error;
+      toast.success("Folha gerada com sucesso!");
+      loadPayrollRecords();
+    } catch (error: any) {
+      console.error("Error generating payroll:", error);
+      toast.error(error.message || "Erro ao gerar folha");
+    } finally {
+      setGeneratingPayroll(false);
+    }
+  };
+
+  // Generate payroll for all employees
+  const handleGenerateAllPayroll = async () => {
+    setGeneratingPayroll(true);
+    try {
+      const { data, error } = await supabase.rpc("gerar_folha_mensal", {
+        p_competencia: selectedCompetencia,
+      });
+
+      if (error) throw error;
+      toast.success(`Folha gerada para ${data} funcionarios!`);
+      loadPayrollRecords();
+    } catch (error: any) {
+      console.error("Error generating payroll:", error);
+      toast.error(error.message || "Erro ao gerar folha");
+    } finally {
+      setGeneratingPayroll(false);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -533,10 +727,22 @@ const Payroll = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="employees" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="employees">
               <Users className="h-4 w-4 mr-2" />
               Funcionarios ({employees.length})
+            </TabsTrigger>
+            <TabsTrigger value="rubricas">
+              <ListChecks className="h-4 w-4 mr-2" />
+              Rubricas ({rubricas.length})
+            </TabsTrigger>
+            <TabsTrigger value="folha">
+              <Receipt className="h-4 w-4 mr-2" />
+              Folha Mensal
+            </TabsTrigger>
+            <TabsTrigger value="detalhamento">
+              <Eye className="h-4 w-4 mr-2" />
+              Detalhamento
             </TabsTrigger>
             <TabsTrigger value="alerts">
               <AlertTriangle className="h-4 w-4 mr-2" />
@@ -694,6 +900,310 @@ const Payroll = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Rubricas Tab */}
+          <TabsContent value="rubricas" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ListChecks className="h-5 w-5" />
+                  Rubricas eSocial
+                </CardTitle>
+                <CardDescription>
+                  Codigos eSocial vinculados ao plano de contas para lancamentos automaticos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[100px]">Codigo</TableHead>
+                      <TableHead>Descricao</TableHead>
+                      <TableHead className="w-[100px]">Tipo</TableHead>
+                      <TableHead className="w-[80px] text-center">INSS</TableHead>
+                      <TableHead className="w-[80px] text-center">IRRF</TableHead>
+                      <TableHead className="w-[80px] text-center">FGTS</TableHead>
+                      <TableHead className="w-[80px] text-center">Contabil</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rubricas.map((rubrica) => (
+                      <TableRow key={rubrica.id}>
+                        <TableCell className="font-mono font-bold">
+                          {rubrica.codigo}
+                        </TableCell>
+                        <TableCell>{rubrica.descricao}</TableCell>
+                        <TableCell>
+                          <Badge variant={rubrica.tipo === "PROVENTO" ? "default" : "destructive"}>
+                            {rubrica.tipo === "PROVENTO" ? "Provento" : "Desconto"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {rubrica.incidencia_inss ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {rubrica.incidencia_irrf ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {rubrica.incidencia_fgts ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {rubrica.account_debit_id ? (
+                            <CheckCircle2 className="h-4 w-4 text-blue-500 mx-auto" title="Vinculado ao plano de contas" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mx-auto" title="Sem vinculo contabil" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Folha Mensal Tab */}
+          <TabsContent value="folha" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Receipt className="h-5 w-5" />
+                      Folha de Pagamento - {selectedCompetencia}
+                    </CardTitle>
+                    <CardDescription>
+                      Gere e visualize a folha de pagamento por competencia
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="month"
+                      value={selectedCompetencia}
+                      onChange={(e) => setSelectedCompetencia(e.target.value)}
+                      className="w-[180px]"
+                    />
+                    <Button
+                      onClick={handleGenerateAllPayroll}
+                      disabled={generatingPayroll}
+                    >
+                      {generatingPayroll ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Gerando...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" />
+                          Gerar Folha
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {payrollRecords.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Nenhuma folha gerada
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Clique em "Gerar Folha" para calcular a folha de pagamento
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Funcionario</TableHead>
+                        <TableHead className="text-right">Proventos</TableHead>
+                        <TableHead className="text-right">Descontos</TableHead>
+                        <TableHead className="text-right">Liquido</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Acoes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payrollRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{record.employee_name}</div>
+                              <div className="text-sm text-gray-500">{record.employee_role}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 font-medium">
+                            {formatCurrency(record.total_proventos)}
+                          </TableCell>
+                          <TableCell className="text-right text-red-600 font-medium">
+                            {formatCurrency(record.total_descontos)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            {formatCurrency(record.liquido)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={record.status === "FINALIZADO" ? "default" : "secondary"}>
+                              {record.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedPayroll(record)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ver
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Detalhamento Tab */}
+          <TabsContent value="detalhamento" className="space-y-4">
+            {!selectedPayroll ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Eye className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Selecione uma folha
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Va na aba "Folha Mensal" e clique em "Ver" para detalhar os eventos
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Eye className="h-5 w-5" />
+                          {selectedPayroll.employee_name} - {selectedCompetencia}
+                        </CardTitle>
+                        <CardDescription>
+                          Detalhamento de proventos e descontos
+                        </CardDescription>
+                      </div>
+                      <Button variant="outline" onClick={() => setSelectedPayroll(null)}>
+                        Voltar
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Proventos */}
+                  <Card>
+                    <CardHeader className="bg-green-50">
+                      <CardTitle className="text-green-700 text-lg">Proventos</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Codigo</TableHead>
+                            <TableHead>Descricao</TableHead>
+                            <TableHead className="text-right">Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {payrollEvents
+                            .filter((e) => e.rubrica_tipo === "PROVENTO")
+                            .map((event) => (
+                              <TableRow key={event.id}>
+                                <TableCell className="font-mono">{event.rubrica_codigo}</TableCell>
+                                <TableCell>{event.rubrica_descricao}</TableCell>
+                                <TableCell className="text-right text-green-600 font-medium">
+                                  {formatCurrency(event.valor)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          <TableRow className="bg-green-50 font-bold">
+                            <TableCell colSpan={2}>Total Proventos</TableCell>
+                            <TableCell className="text-right text-green-700">
+                              {formatCurrency(selectedPayroll.total_proventos)}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+
+                  {/* Descontos */}
+                  <Card>
+                    <CardHeader className="bg-red-50">
+                      <CardTitle className="text-red-700 text-lg">Descontos</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Codigo</TableHead>
+                            <TableHead>Descricao</TableHead>
+                            <TableHead className="text-right">Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {payrollEvents
+                            .filter((e) => e.rubrica_tipo === "DESCONTO")
+                            .map((event) => (
+                              <TableRow key={event.id}>
+                                <TableCell className="font-mono">{event.rubrica_codigo}</TableCell>
+                                <TableCell>{event.rubrica_descricao}</TableCell>
+                                <TableCell className="text-right text-red-600 font-medium">
+                                  {formatCurrency(event.valor)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          <TableRow className="bg-red-50 font-bold">
+                            <TableCell colSpan={2}>Total Descontos</TableCell>
+                            <TableCell className="text-right text-red-700">
+                              {formatCurrency(selectedPayroll.total_descontos)}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Resumo */}
+                <Card>
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between text-xl font-bold">
+                      <span>Liquido a Receber:</span>
+                      <span className="text-blue-600">
+                        {formatCurrency(selectedPayroll.liquido)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="alerts" className="space-y-4">

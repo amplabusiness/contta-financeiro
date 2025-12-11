@@ -89,6 +89,16 @@ interface IrpfDeclaration {
   result_amount?: number;
 }
 
+interface MonthlyRevenue {
+  id: string;
+  client_id: string;
+  client_name?: string;
+  reference_month: string;
+  gross_revenue: number;
+  calculated_fee?: number;
+  percentage_rate?: number;
+}
+
 export default function SpecialFees() {
   const [activeTab, setActiveTab] = useState("variable");
   const [loading, setLoading] = useState(true);
@@ -99,6 +109,7 @@ export default function SpecialFees() {
   const [referralPartners, setReferralPartners] = useState<ReferralPartner[]>([]);
   const [clientReferrals, setClientReferrals] = useState<ClientReferral[]>([]);
   const [irpfDeclarations, setIrpfDeclarations] = useState<IrpfDeclaration[]>([]);
+  const [monthlyRevenues, setMonthlyRevenues] = useState<MonthlyRevenue[]>([]);
 
   // Estados para diálogos
   const [showVariableFeeDialog, setShowVariableFeeDialog] = useState(false);
@@ -106,10 +117,17 @@ export default function SpecialFees() {
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
   const [showReferralDialog, setShowReferralDialog] = useState(false);
   const [showIrpfDialog, setShowIrpfDialog] = useState(false);
+  const [showRevenueDialog, setShowRevenueDialog] = useState(false);
 
   // Clientes para seleção
   const [clients, setClients] = useState<{id: string, name: string, cnpj?: string}[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Mês de referência para faturamento
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   useEffect(() => {
     loadData();
@@ -225,7 +243,18 @@ export default function SpecialFees() {
     fee_type: 'percentage',
     percentage_rate: 2.87,
     due_day: 20,
-    calculation_base: 'faturamento'
+    calculation_base: 'faturamento',
+    // Comissão do funcionário
+    employee_commission_rate: 1.25,
+    employee_name: '',
+    employee_pix_key: '',
+    employee_pix_type: 'cpf'
+  });
+
+  const [revenueForm, setRevenueForm] = useState({
+    client_id: '',
+    reference_month: selectedMonth,
+    gross_revenue: 0
   });
 
   const [companyServiceForm, setCompanyServiceForm] = useState({
@@ -260,6 +289,280 @@ export default function SpecialFees() {
     client_id: '',
     fee_amount: 300
   });
+
+  // Carregar faturamentos do mês selecionado
+  const loadMonthlyRevenues = async () => {
+    const referenceMonth = `${selectedMonth}-01`;
+
+    // Buscar clientes com honorário variável e seus faturamentos
+    const { data: fees } = await supabase
+      .from('client_variable_fees')
+      .select(`
+        id,
+        client_id,
+        percentage_rate,
+        employee_commission_rate,
+        employee_name,
+        clients(name)
+      `)
+      .eq('is_active', true);
+
+    const { data: revenues } = await supabase
+      .from('client_monthly_revenue')
+      .select('*')
+      .eq('reference_month', referenceMonth);
+
+    // Combinar dados
+    const combined = (fees || []).map((fee: any) => {
+      const revenue = revenues?.find(r => r.client_id === fee.client_id);
+      const grossRevenue = revenue?.gross_revenue || 0;
+      const calculatedFee = grossRevenue * (fee.percentage_rate / 100);
+
+      return {
+        id: revenue?.id || '',
+        client_id: fee.client_id,
+        client_name: fee.clients?.name || '',
+        reference_month: referenceMonth,
+        gross_revenue: grossRevenue,
+        calculated_fee: calculatedFee,
+        percentage_rate: fee.percentage_rate,
+        employee_commission_rate: fee.employee_commission_rate,
+        employee_name: fee.employee_name
+      };
+    });
+
+    setMonthlyRevenues(combined);
+  };
+
+  // Salvar faturamento mensal
+  const saveMonthlyRevenue = async () => {
+    try {
+      const referenceMonth = `${revenueForm.reference_month}-01`;
+
+      const { error } = await supabase
+        .from('client_monthly_revenue')
+        .upsert({
+          client_id: revenueForm.client_id,
+          reference_month: referenceMonth,
+          gross_revenue: revenueForm.gross_revenue
+        }, {
+          onConflict: 'client_id,reference_month'
+        });
+
+      if (error) throw error;
+
+      toast.success('Faturamento salvo!');
+      setShowRevenueDialog(false);
+      loadMonthlyRevenues();
+    } catch (error: any) {
+      toast.error('Erro ao salvar: ' + error.message);
+    }
+  };
+
+  // Gerar fatura do honorário variável + lançamentos contábeis (receita + custo comissão)
+  const generateInvoice = async (clientId: string, amount: number, clientName: string) => {
+    try {
+      const referenceMonth = selectedMonth;
+      const [year, month] = referenceMonth.split('-');
+      const dueDate = new Date(parseInt(year), parseInt(month), 20); // Dia 20 do mês seguinte
+      const competenceDate = `${year}-${month}-01`;
+
+      // Buscar dados do honorário para pegar comissão
+      const feeData = monthlyRevenues.find(r => r.client_id === clientId);
+      const employeeCommissionRate = (feeData as any)?.employee_commission_rate || 0;
+      const employeeName = (feeData as any)?.employee_name || '';
+      const commissionAmount = amount * (employeeCommissionRate / 100);
+
+      // 1. Criar a fatura
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          client_id: clientId,
+          competence: `${month}/${year}`,
+          amount: amount,
+          description: `Honorário Variável - ${month}/${year}`,
+          due_date: dueDate.toISOString(),
+          status: 'pending',
+          invoice_type: 'variable_fee'
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // 2. Buscar contas necessárias
+      const { data: revenueAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '3.1.1.01') // Honorários Contábeis
+        .eq('is_active', true)
+        .single();
+
+      // Conta de CUSTO para comissões (CSV - Custo dos Serviços Vendidos)
+      // A comissão é CUSTO pois está diretamente vinculada à prestação do serviço
+      let commissionCostAccount = null;
+      const { data: existingCostAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '4.5.1.01') // Comissão sobre Honorários Variáveis (CUSTO)
+        .eq('is_active', true)
+        .single();
+
+      if (existingCostAccount) {
+        commissionCostAccount = existingCostAccount;
+      } else {
+        // Fallback para conta antiga se a nova não existir
+        const { data: fallbackAccount } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .or('code.eq.4.1.1.06,code.eq.4.1.1.99')
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+        commissionCostAccount = fallbackAccount;
+      }
+
+      // Conta de passivo para comissões a pagar (2.1.3.03)
+      let commissionPayableAccount = null;
+      const { data: existingPayableAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '2.1.3.03') // Comissões a Pagar (nova conta)
+        .eq('is_active', true)
+        .single();
+
+      if (existingPayableAccount) {
+        commissionPayableAccount = existingPayableAccount;
+      } else {
+        // Fallback para conta antiga se a nova não existir
+        const { data: fallbackPayable } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('code', '2.1.1.06')
+          .eq('is_active', true)
+          .single();
+        commissionPayableAccount = fallbackPayable;
+      }
+
+      // 3. Buscar ou criar conta de cliente a receber
+      let clientAccountId: string | null = null;
+      const { data: existingClientAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', `1.1.2.01.${clientId.substring(0, 8)}`)
+        .single();
+
+      if (existingClientAccount) {
+        clientAccountId = existingClientAccount.id;
+      } else {
+        const { data: newAccount } = await supabase
+          .from('chart_of_accounts')
+          .insert({
+            code: `1.1.2.01.${clientId.substring(0, 8)}`,
+            name: `Clientes a Receber - ${clientName}`,
+            type: 'asset',
+            parent_code: '1.1.2.01',
+            is_analytical: true,
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (newAccount) {
+          clientAccountId = newAccount.id;
+        }
+      }
+
+      // 4. Criar lançamento contábil da RECEITA
+      if (revenueAccount && clientAccountId) {
+        const { data: entry, error: entryError } = await supabase
+          .from('accounting_entries')
+          .insert({
+            entry_date: new Date().toISOString().split('T')[0],
+            competence_date: competenceDate,
+            description: `Honorário Variável ${clientName} - ${month}/${year}`,
+            entry_type: 'receita_honorarios',
+            source_type: 'invoice',
+            source_id: invoice.id,
+            status: 'posted'
+          })
+          .select()
+          .single();
+
+        if (!entryError && entry) {
+          await supabase
+            .from('accounting_entry_lines')
+            .insert([
+              {
+                entry_id: entry.id,
+                account_id: clientAccountId,
+                debit: amount,
+                credit: 0,
+                description: `Honorário Variável - ${clientName}`
+              },
+              {
+                entry_id: entry.id,
+                account_id: revenueAccount.id,
+                debit: 0,
+                credit: amount,
+                description: `Receita Honorário Variável - ${clientName}`
+              }
+            ]);
+        }
+      }
+
+      // 5. Criar lançamento contábil do CUSTO DA COMISSÃO (se houver)
+      // D - 4.5.1.01 Comissão sobre Honorários Variáveis (CUSTO)
+      // C - 2.1.3.03 Comissões a Pagar (PASSIVO)
+      if (commissionAmount > 0 && commissionCostAccount && commissionPayableAccount) {
+        const { data: commEntry, error: commError } = await supabase
+          .from('accounting_entries')
+          .insert({
+            entry_date: new Date().toISOString().split('T')[0],
+            competence_date: competenceDate,
+            description: `Custo Comissão ${employeeName} - Hon. Variável ${clientName} - ${month}/${year}`,
+            entry_type: 'provisao_custo', // Custo, não despesa
+            source_type: 'invoice',
+            source_id: invoice.id,
+            status: 'posted'
+          })
+          .select()
+          .single();
+
+        if (!commError && commEntry) {
+          await supabase
+            .from('accounting_entry_lines')
+            .insert([
+              {
+                entry_id: commEntry.id,
+                account_id: commissionCostAccount.id, // 4.5.1.01 - CUSTO
+                debit: commissionAmount,
+                credit: 0,
+                description: `Custo Comissão ${employeeName} - ${clientName}`
+              },
+              {
+                entry_id: commEntry.id,
+                account_id: commissionPayableAccount.id, // 2.1.3.03 - Passivo
+                debit: 0,
+                credit: commissionAmount,
+                description: `Comissão a pagar - ${employeeName}`
+              }
+            ]);
+        }
+
+        toast.success(
+          `Fatura de ${formatCurrency(amount)} gerada para ${clientName}!\n` +
+          `Comissão de ${formatCurrency(commissionAmount)} provisionada para ${employeeName}`
+        );
+      } else {
+        toast.success(`Fatura de ${formatCurrency(amount)} gerada para ${clientName} com lançamento contábil!`);
+      }
+
+      loadMonthlyRevenues();
+    } catch (error: any) {
+      toast.error('Erro ao gerar fatura: ' + error.message);
+    }
+  };
 
   // Handlers de salvamento
   const saveVariableFee = async () => {
@@ -560,7 +863,8 @@ export default function SpecialFees() {
                       <TableHead>Cliente</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead>Taxa</TableHead>
-                      <TableHead>Base</TableHead>
+                      <TableHead>Comissão Func.</TableHead>
+                      <TableHead>Funcionário</TableHead>
                       <TableHead>Vencimento</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Ações</TableHead>
@@ -572,7 +876,8 @@ export default function SpecialFees() {
                         <TableCell className="font-medium">{fee.client_name}</TableCell>
                         <TableCell>{fee.fee_name}</TableCell>
                         <TableCell>{fee.percentage_rate}%</TableCell>
-                        <TableCell className="capitalize">{fee.calculation_base}</TableCell>
+                        <TableCell>{(fee as any).employee_commission_rate || 0}%</TableCell>
+                        <TableCell>{(fee as any).employee_name || '-'}</TableCell>
                         <TableCell>Dia {fee.due_day}</TableCell>
                         <TableCell>
                           <Badge variant={fee.is_active ? "default" : "secondary"}>
@@ -588,13 +893,149 @@ export default function SpecialFees() {
                     ))}
                     {variableFees.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           Nenhum honorário variável cadastrado
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+
+            {/* Card de Faturamento Mensal */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calculator className="h-5 w-5" />
+                      Cálculo Mensal de Honorários
+                    </CardTitle>
+                    <CardDescription>
+                      Informe o faturamento do cliente para calcular o honorário
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="month"
+                      value={selectedMonth}
+                      onChange={(e) => {
+                        setSelectedMonth(e.target.value);
+                      }}
+                      className="w-40"
+                    />
+                    <Button variant="outline" onClick={loadMonthlyRevenues}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Carregar
+                    </Button>
+                    <Button onClick={() => setShowRevenueDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Informar Faturamento
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="text-right">Faturamento</TableHead>
+                      <TableHead className="text-right">Taxa</TableHead>
+                      <TableHead className="text-right">Honorário</TableHead>
+                      <TableHead className="text-right">Comissão Func.</TableHead>
+                      <TableHead>Funcionário</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {monthlyRevenues.map((rev: any) => {
+                      const employeeCommission = (rev.calculated_fee || 0) * ((rev.employee_commission_rate || 0) / 100);
+                      return (
+                        <TableRow key={rev.client_id}>
+                          <TableCell className="font-medium">{rev.client_name}</TableCell>
+                          <TableCell className="text-right">
+                            {rev.gross_revenue > 0 ? formatCurrency(rev.gross_revenue) : (
+                              <span className="text-muted-foreground">Não informado</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">{rev.percentage_rate}%</TableCell>
+                          <TableCell className="text-right font-bold text-green-600">
+                            {formatCurrency(rev.calculated_fee || 0)}
+                          </TableCell>
+                          <TableCell className="text-right text-orange-600">
+                            {formatCurrency(employeeCommission)}
+                          </TableCell>
+                          <TableCell>{rev.employee_name || '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setRevenueForm({
+                                    client_id: rev.client_id,
+                                    reference_month: selectedMonth,
+                                    gross_revenue: rev.gross_revenue || 0
+                                  });
+                                  setShowRevenueDialog(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              {rev.gross_revenue > 0 && rev.calculated_fee > 0 && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => generateInvoice(rev.client_id, rev.calculated_fee, rev.client_name)}
+                                >
+                                  <Banknote className="h-4 w-4 mr-1" />
+                                  Gerar Fatura
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {monthlyRevenues.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          Clique em "Carregar" para ver os clientes com honorário variável
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+
+                {monthlyRevenues.length > 0 && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Faturamento</p>
+                        <p className="text-xl font-bold">
+                          {formatCurrency(monthlyRevenues.reduce((sum: number, r: any) => sum + (r.gross_revenue || 0), 0))}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Honorários</p>
+                        <p className="text-xl font-bold text-green-600">
+                          {formatCurrency(monthlyRevenues.reduce((sum: number, r: any) => sum + (r.calculated_fee || 0), 0))}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Comissões</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {formatCurrency(monthlyRevenues.reduce((sum: number, r: any) => {
+                            const commission = (r.calculated_fee || 0) * ((r.employee_commission_rate || 0) / 100);
+                            return sum + commission;
+                          }, 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -827,7 +1268,7 @@ export default function SpecialFees() {
 
       {/* Dialog: Novo Honorário Variável */}
       <Dialog open={showVariableFeeDialog} onOpenChange={setShowVariableFeeDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Novo Honorário Variável</DialogTitle>
             <DialogDescription>
@@ -860,7 +1301,7 @@ export default function SpecialFees() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Taxa (%)</Label>
+                <Label>Taxa do Cliente (%)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -895,12 +1336,152 @@ export default function SpecialFees() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Seção de Comissão do Funcionário */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3 text-orange-600">Comissão do Funcionário</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Taxa sobre honorário (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={variableFeeForm.employee_commission_rate}
+                    onChange={e => setVariableFeeForm({...variableFeeForm, employee_commission_rate: parseFloat(e.target.value)})}
+                    placeholder="Ex: 1.25"
+                  />
+                </div>
+                <div>
+                  <Label>Nome do Funcionário</Label>
+                  <Input
+                    value={variableFeeForm.employee_name}
+                    onChange={e => setVariableFeeForm({...variableFeeForm, employee_name: e.target.value})}
+                    placeholder="Quem recebe a comissão"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mt-2">
+                <div className="col-span-2">
+                  <Label>Chave PIX</Label>
+                  <Input
+                    value={variableFeeForm.employee_pix_key}
+                    onChange={e => setVariableFeeForm({...variableFeeForm, employee_pix_key: e.target.value})}
+                    placeholder="PIX para pagamento"
+                  />
+                </div>
+                <div>
+                  <Label>Tipo PIX</Label>
+                  <Select
+                    value={variableFeeForm.employee_pix_type}
+                    onValueChange={v => setVariableFeeForm({...variableFeeForm, employee_pix_type: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="telefone">Telefone</SelectItem>
+                      <SelectItem value="aleatoria">Aleatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowVariableFeeDialog(false)}>
               Cancelar
             </Button>
             <Button onClick={saveVariableFee}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Informar Faturamento */}
+      <Dialog open={showRevenueDialog} onOpenChange={setShowRevenueDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Informar Faturamento Mensal</DialogTitle>
+            <DialogDescription>
+              Informe o faturamento do cliente para calcular o honorário variável
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Cliente</Label>
+              <Select
+                value={revenueForm.client_id}
+                onValueChange={v => setRevenueForm({...revenueForm, client_id: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {variableFees.map(fee => (
+                    <SelectItem key={fee.client_id} value={fee.client_id}>
+                      {fee.client_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Mês de Referência</Label>
+              <Input
+                type="month"
+                value={revenueForm.reference_month}
+                onChange={e => setRevenueForm({...revenueForm, reference_month: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label>Faturamento Bruto (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={revenueForm.gross_revenue}
+                onChange={e => setRevenueForm({...revenueForm, gross_revenue: parseFloat(e.target.value) || 0})}
+                placeholder="0,00"
+              />
+            </div>
+
+            {/* Preview do cálculo */}
+            {revenueForm.client_id && revenueForm.gross_revenue > 0 && (
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Prévia do Cálculo</h4>
+                {(() => {
+                  const fee = variableFees.find(f => f.client_id === revenueForm.client_id);
+                  if (!fee) return null;
+                  const honorario = revenueForm.gross_revenue * (fee.percentage_rate / 100);
+                  const comissao = honorario * (((fee as any).employee_commission_rate || 0) / 100);
+                  return (
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Faturamento:</span>
+                        <span>{formatCurrency(revenueForm.gross_revenue)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Taxa ({fee.percentage_rate}%):</span>
+                        <span className="text-green-600 font-medium">{formatCurrency(honorario)}</span>
+                      </div>
+                      {(fee as any).employee_commission_rate > 0 && (
+                        <div className="flex justify-between">
+                          <span>Comissão ({(fee as any).employee_commission_rate}%):</span>
+                          <span className="text-orange-600">{formatCurrency(comissao)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRevenueDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveMonthlyRevenue}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

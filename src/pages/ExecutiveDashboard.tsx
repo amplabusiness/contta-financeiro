@@ -36,38 +36,58 @@ const ExecutiveDashboard = () => {
       const month = selectedMonth || new Date().getMonth() + 1;
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59);
+      const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDateStr = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
-      // Buscar faturamento (invoices pagas no período)
-      let paidInvoicesQuery = supabase
-        .from("invoices")
-        .select("amount, paid_date, client_id")
-        .eq("status", "paid")
-        .gte("paid_date", startDate.toISOString())
-        .lte("paid_date", endDate.toISOString());
+      // =====================================================
+      // FONTE ÚNICA DE VERDADE: CONTABILIDADE
+      // Buscar lançamentos contábeis do período
+      // =====================================================
 
-      // Aplicar filtro de cliente se selecionado
-      if (selectedClientId) {
-        paidInvoicesQuery = paidInvoicesQuery.eq("client_id", selectedClientId);
-      }
+      // Buscar TODAS as contas de Receita (3.x) e Despesa (4.x)
+      const { data: chartAccounts, error: chartError } = await supabase
+        .from('chart_of_accounts')
+        .select('id, code, name, type')
+        .eq('is_active', true)
+        .eq('is_analytical', true);
 
-      const { data: paidInvoices, error: invoicesError } = await paidInvoicesQuery;
-      if (invoicesError) throw invoicesError;
+      if (chartError) throw chartError;
 
-      // Buscar despesas (pagas no período)
-      let paidExpensesQuery = supabase
-        .from("expenses")
-        .select("amount, payment_date, client_id")
-        .eq("status", "paid")
-        .gte("payment_date", startDate.toISOString())
-        .lte("payment_date", endDate.toISOString());
+      // Separar contas por tipo
+      const revenueAccountIds = chartAccounts?.filter(a => a.code.startsWith('3')).map(a => a.id) || [];
+      const expenseAccountIds = chartAccounts?.filter(a => a.code.startsWith('4')).map(a => a.id) || [];
 
-      // Aplicar filtro de cliente se selecionado
-      if (selectedClientId) {
-        paidExpensesQuery = paidExpensesQuery.eq("client_id", selectedClientId);
-      }
+      // Buscar TODOS os lançamentos contábeis
+      const { data: allLines, error: linesError } = await supabase
+        .from('accounting_entry_lines')
+        .select(`
+          debit,
+          credit,
+          account_id,
+          entry_id(entry_date, competence_date)
+        `);
 
-      const { data: paidExpenses, error: expensesError } = await paidExpensesQuery;
-      if (expensesError) throw expensesError;
+      if (linesError) throw linesError;
+
+      // Filtrar lançamentos do período (usar competence_date ou entry_date)
+      const periodLines = allLines?.filter((line: any) => {
+        const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+        if (!lineDate) return false;
+        return lineDate >= startDateStr && lineDate <= endDateStr;
+      }) || [];
+
+      // Calcular totais de RECEITA (contas 3.x - crédito aumenta receita)
+      const totalRevenueFromAccounting = periodLines
+        .filter((line: any) => revenueAccountIds.includes(line.account_id))
+        .reduce((sum: number, line: any) => sum + (Number(line.credit) || 0) - (Number(line.debit) || 0), 0);
+
+      // Calcular totais de DESPESA (contas 4.x - débito aumenta despesa)
+      const totalExpensesFromAccounting = periodLines
+        .filter((line: any) => expenseAccountIds.includes(line.account_id))
+        .reduce((sum: number, line: any) => sum + (Number(line.debit) || 0) - (Number(line.credit) || 0), 0);
+
+      console.log(`[ExecutiveDashboard] Contabilidade - Receitas: ${totalRevenueFromAccounting}, Despesas: ${totalExpensesFromAccounting}`);
 
       // Buscar inadimplência de faturas (pendentes e atrasadas até a data final do período)
       let overdueInvoicesQuery = supabase
@@ -104,9 +124,12 @@ const ExecutiveDashboard = () => {
         return sum + remaining;
       }, 0);
 
-      // Calcular totais
-      const revenue = paidInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      const expenses = paidExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+      // =====================================================
+      // USAR VALORES DA CONTABILIDADE
+      // =====================================================
+      const revenue = totalRevenueFromAccounting;
+      const expenses = totalExpensesFromAccounting;
+
       const invoiceDefault = overdueInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
       const defaultAmount = invoiceDefault + openingBalanceDefault;
       const margin = revenue > 0 ? ((revenue - expenses) / revenue) * 100 : 0;
@@ -134,26 +157,29 @@ const ExecutiveDashboard = () => {
         });
       }
 
-      // Agrupar faturamento por mês
-      paidInvoices?.forEach((invoice) => {
-        if (invoice.paid_date) {
-          const date = new Date(invoice.paid_date);
-          const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-          if (monthlyMap.has(monthKey)) {
-            const data = monthlyMap.get(monthKey)!;
-            data.faturamento += Number(invoice.amount);
-          }
-        }
-      });
+      // =====================================================
+      // GRÁFICO: Usar dados da CONTABILIDADE para 12 meses
+      // =====================================================
 
-      // Agrupar despesas por mês
-      paidExpenses?.forEach((expense) => {
-        if (expense.payment_date) {
-          const date = new Date(expense.payment_date);
-          const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-          if (monthlyMap.has(monthKey)) {
-            const data = monthlyMap.get(monthKey)!;
-            data.despesas += Number(expense.amount);
+      // Agrupar lançamentos contábeis por mês (receitas e despesas)
+      allLines?.forEach((line: any) => {
+        const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+        if (!lineDate) return;
+
+        const date = new Date(lineDate);
+        const monthKey = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
+        if (monthlyMap.has(monthKey)) {
+          const data = monthlyMap.get(monthKey)!;
+
+          // Receitas (contas 3.x) - crédito aumenta
+          if (revenueAccountIds.includes(line.account_id)) {
+            data.faturamento += (Number(line.credit) || 0) - (Number(line.debit) || 0);
+          }
+
+          // Despesas (contas 4.x) - débito aumenta
+          if (expenseAccountIds.includes(line.account_id)) {
+            data.despesas += (Number(line.debit) || 0) - (Number(line.credit) || 0);
           }
         }
       });

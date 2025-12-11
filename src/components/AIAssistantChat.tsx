@@ -71,14 +71,15 @@ export function AIAssistantChat({
 
   const loadPendingQuestions = useCallback(async () => {
     try {
+      // Tabela ai_pending_questions não tem coluna 'context', filtrar apenas por status
       let query = supabase
         .from("ai_pending_questions")
         .select("*")
-        .eq("status", "pending")
-        .eq("context", context);
+        .eq("status", "pending");
 
+      // contextId mapeia para bank_transaction_id quando disponível
       if (contextId) {
-        query = query.eq("context_id", contextId);
+        query = query.eq("bank_transaction_id", contextId);
       }
 
       const { data, error } = await query.order("created_at", { ascending: true });
@@ -97,10 +98,10 @@ export function AIAssistantChat({
             id: q.id,
             agent,
             isUser: false,
-            content: q.question,
+            content: q.question_text, // campo correto da tabela
             timestamp: new Date(q.created_at),
             questionId: q.id,
-            options: q.suggested_options || [],
+            options: q.options || [], // campo correto da tabela
             answered: false,
           };
         });
@@ -192,6 +193,9 @@ export function AIAssistantChat({
 
   const handleAnswerQuestion = async (questionId: string, answer: string) => {
     try {
+      // Obter usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+
       // Atualizar pergunta como respondida
       const { error } = await supabase
         .from("ai_pending_questions")
@@ -199,6 +203,7 @@ export function AIAssistantChat({
           status: "answered",
           answer,
           answered_at: new Date().toISOString(),
+          answered_by: user?.id,
         })
         .eq("id", questionId);
 

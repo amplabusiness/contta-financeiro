@@ -254,35 +254,41 @@ const BankImport = () => {
       // Import each transaction
       for (const txn of parsedData.transactions) {
         try {
-          // Check if transaction already exists (by bank_reference)
-          const { data: existing } = await supabase
-            .from("bank_transactions")
-            .select("id")
-            .eq("bank_reference", txn.fitid || '')
-            .maybeSingle();
+          // Check if transaction already exists (by fitid + bank_account_id - unique constraint)
+          if (txn.fitid) {
+            const { data: existing } = await supabase
+              .from("bank_transactions")
+              .select("id")
+              .eq("bank_account_id", selectedAccount)
+              .eq("fitid", txn.fitid)
+              .maybeSingle();
 
-          if (existing) {
-            duplicateTransactions++;
-            continue;
+            if (existing) {
+              duplicateTransactions++;
+              continue;
+            }
           }
 
-          // Insert transaction
+          // Insert transaction - use only fields that exist in the table
+          const insertData = {
+            bank_account_id: selectedAccount,
+            transaction_date: format(txn.date, 'yyyy-MM-dd'),
+            transaction_type: txn.type.toLowerCase() === 'credit' ? 'credit' : 'debit',
+            amount: Math.abs(txn.amount),
+            description: txn.memo || txn.description || 'Sem descrição',
+            fitid: txn.fitid || null,
+            created_by: user.id
+          };
+
+          console.log('Inserting transaction:', insertData);
+
           const { error: txnError } = await supabase
             .from("bank_transactions")
-            .insert({
-              transaction_date: format(txn.date, 'yyyy-MM-dd'),
-              transaction_type: txn.type.toLowerCase() === 'credit' ? 'credit' : 'debit',
-              amount: Math.abs(txn.amount),
-              description: txn.memo || txn.description || 'Sem descrição',
-              bank_reference: txn.fitid || null,
-              category: null,
-              matched: false,
-              imported_from: 'ofx',
-              created_by: user.id
-            });
+            .insert(insertData);
 
           if (txnError) {
-            errors.push(`Erro na transação ${txn.fitid}: ${txnError.message}`);
+            console.error('Transaction insert error:', txnError);
+            errors.push(`Erro na transação ${txn.fitid}: ${txnError.message} (code: ${txnError.code}, details: ${txnError.details})`);
             continue;
           }
 

@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-12-10 (Sessão 18)
+**Última Atualização**: 2025-12-10 (Sessão 24)
 
 ---
 
@@ -1916,3 +1916,434 @@ Usuário solicitou sistema completo para gerenciar honorários diferenciados:
 - **Anterior**: 1.20.0
 - **Atual**: 1.21.0
 - **Tipo**: MINOR (nova funcionalidade)
+
+---
+
+## Sessão 21 (10/12/2025) - Sistema Profissional de Contratos v1.22.0
+
+### Contexto
+
+Implementação de sistema completo de contratos profissionais para o escritório contábil, seguindo normas do CFC e legislação brasileira.
+
+### Documentos Implementados
+
+1. **Proposta de Serviços (NBC PG 01)** - Proposta comercial antes do contrato
+2. **Contrato com Aceite Tácito (Art. 111 CC)** - Contrato que entra em vigor sem assinatura
+3. **Distrato/Rescisão (Resolução CFC 1.590/2020)** - Rescisão com obrigações finais
+4. **Carta de Responsabilidade (ITG 1000)** - Responsabilidade da administração
+5. **Confissão de Dívida (Título Executivo)** - Documento com força de execução
+
+### Arquivos Criados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/pages/Contracts.tsx` | Página principal com 5 abas |
+| `src/pages/DebtConfession.tsx` | Gerador de confissão de dívida |
+| `supabase/migrations/20251210_contratos_profissionais.sql` | Tabelas contracts, service_proposals |
+
+### Fundamentação Legal
+
+- **Art. 111 Código Civil** - Aceite tácito por comportamento concludente
+- **Art. 784 CPC** - Força executiva de documentos
+- **NBC PG 01** - Normas para propostas de serviços contábeis
+- **Resolução CFC 1.590/2020** - Procedimentos para rescisão
+- **ITG 1000** - Contabilidade para pequenas empresas
+
+---
+
+## Sessão 22 (10/12/2025) - Configurações do Escritório e Usuários v1.23.0/v1.24.0
+
+### Contexto
+
+Dados do escritório contábil estavam hardcoded nos contratos. Usuário solicitou:
+1. Dados do escritório vindos do banco de dados
+2. Sistema de gerenciamento de usuários com geração de senha
+
+### Tabelas Criadas
+
+| Tabela | Descrição |
+|--------|-----------|
+| `accounting_office` | Dados do escritório (razão social, CNPJ, CRC, responsável técnico, endereço, etc.) |
+| `system_users` | Usuários do sistema com perfis de acesso |
+
+### Dados do Escritório
+
+```
+Razão Social: AMPLA ASSESSORIA CONTABIL LTDA
+Nome Fantasia: Ampla Business
+CNPJ: 21.565.040/0001-07
+CRC: CRC/GO 007640/O
+Responsável Técnico: Sergio Carneiro Leão
+CRC Responsável: CRC/GO 008074
+Endereço: Rua 1, Qd. 24, Lt. 08, S/N - Setor Maracanã
+CEP: 74.680-320 - Goiânia/GO
+E-mail: contato@amplabusiness.com.br
+Telefone: (62) 3932-1365
+```
+
+### Sistema de Usuários
+
+**Perfis de Acesso:**
+| Perfil | Descrição |
+|--------|-----------|
+| admin | Acesso total ao sistema |
+| manager | Gerencia equipe e relatórios |
+| operator | Operações do dia a dia |
+| viewer | Apenas consulta |
+
+**Funcionalidades:**
+- Geração automática de senha temporária (8 caracteres)
+- Flag `must_change_password` força troca no primeiro acesso
+- Vínculo opcional com funcionário (`employee_id`)
+- Ativar/desativar usuários
+- Redefinir senha
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/20251220130000_accounting_office_settings.sql` | Criado - Tabela accounting_office |
+| `supabase/migrations/20251220140000_system_users.sql` | Criado - Tabela system_users |
+| `src/pages/Contracts.tsx` | Modificado - Busca dados do escritório dinamicamente |
+| `src/pages/Settings.tsx` | Modificado - Aba Usuários funcional |
+
+### Versão v1.24.0 - Período de Abertura
+
+**Problema**: Janeiro/2025 é mês de abertura, receitas são de competências anteriores.
+
+**Regra Implementada no Dr. Cícero:**
+1. Janeiro/2025 = Período de abertura
+2. Recebimentos não identificados → Dr. Cícero pergunta se é saldo de abertura
+3. Se cliente tem saldo devedor pendente → pergunta se é pagamento da dívida antiga
+4. Evita cobrança dupla (não envia automaticamente para saldo de abertura)
+
+**Opções apresentadas ao usuário:**
+- "Sim, é saldo de abertura (competência anterior)"
+- "Não, é receita nova de janeiro/2025"
+- "É honorário de cliente específico"
+
+**A partir de Fevereiro**: Comportamento volta ao normal (receitas são do período corrente)
+
+### Commits
+
+| Hash | Mensagem |
+|------|----------|
+| `3728ecd` | feat: Sistema de Gerenciamento de Usuários v1.23.0 |
+| `23637bc` | feat: Dr. Cícero verifica saldo de abertura antes de classificar (v1.24.0) |
+
+### Versão Final
+
+- **Anterior**: 1.21.0
+- **Atual**: 1.24.0
+- **Tipo**: MINOR (novas funcionalidades)
+
+---
+
+## Sessão 23 (10/12/2025) - Sistema de Boletos Liquidados e Reconciliação v1.25.0
+
+### Contexto
+
+O usuário identificou um problema crítico na conciliação bancária:
+- Quando o banco recebe múltiplos boletos no mesmo dia, agrupa tudo em uma única linha no extrato
+- Isso torna impossível saber quais clientes específicos pagaram
+- Exemplo: Extrato mostra "Crédito R$ 50.000,00" mas são 10 boletos de clientes diferentes
+
+### Solução Implementada
+
+Sistema completo para importar lista de boletos liquidados do relatório bancário e reconciliar com o extrato.
+
+### Tabelas Criadas
+
+| Tabela | Descrição |
+|--------|-----------|
+| `boletos_liquidados` | Pagamentos de boletos identificados individualmente |
+| `boletos_agregados` | Agregação de boletos por dia para reconciliação |
+
+### Views Criadas
+
+| View | Descrição |
+|------|-----------|
+| `v_boletos_composicao_diaria` | Mostra composição dos boletos por dia |
+| `v_reconciliacao_pendente` | Transações de crédito pendentes com boletos do mesmo dia |
+
+### Funções RPC
+
+| Função | Descrição |
+|--------|-----------|
+| `import_boletos_liquidados` | Importa lote de boletos do relatório bancário |
+| `reconcile_boletos_with_transaction` | Reconcilia múltiplos boletos com uma transação |
+| `find_boletos_for_transaction` | Encontra boletos candidatos para reconciliação |
+
+### Páginas Criadas
+
+| Página | Rota | Descrição |
+|--------|------|-----------|
+| `ImportBoletosLiquidados.tsx` | `/import-boletos-liquidados` | Importar lista de boletos colando texto |
+| `BoletosComposicao.tsx` | `/boletos-composicao` | Visualizar composição diária e reconciliar |
+
+### Integração com Dr. Cícero
+
+**Prioridade 0** na classificação de créditos: Antes de tentar identificar por CNPJ, verificar se há boletos liquidados importados para a data.
+
+**Comportamento:**
+1. Dr. Cícero busca boletos da data da transação
+2. Se valor bate exatamente → mostra composição e pergunta confirmação
+3. Se valor não bate → mostra boletos disponíveis para seleção manual
+4. Se boletos são "saldo de abertura" → baixa em Clientes a Receber (não receita)
+
+### Formato de Importação
+
+O usuário cola o texto do relatório bancário no formato:
+```
+TIPO    NÚMERO      NOSSO Nº    CLIENTE                              VENCIMENTO  PAGAMENTO   VALOR       STATUS
+SIMPLES 0025200008  25/200008-1 ACTION SOLUCOES INDUSTRIAIS LTDA    10/02/2025  10/02/2025  12.143,72   LIQUIDADO COMPE
+```
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/20251220150000_boletos_liquidados.sql` | Criado - Sistema completo |
+| `src/pages/ImportBoletosLiquidados.tsx` | Criado - Importação de boletos |
+| `src/pages/BoletosComposicao.tsx` | Criado - Visualização e reconciliação |
+| `src/App.tsx` | Modificado - Novas rotas |
+| `supabase/functions/dr-cicero-contador/index.ts` | Modificado - Integração com boletos |
+
+### Versão Final
+
+- **Anterior**: 1.24.0
+- **Atual**: 1.25.0
+- **Tipo**: MINOR (nova funcionalidade de reconciliação)
+
+---
+
+## Sessão 24 (10/12/2025) - Padronização: Contabilidade como Fonte Única de Verdade
+
+### Contexto
+
+O usuário identificou inconsistências de valores entre diferentes telas do sistema:
+- Dashboard Executivo mostrava um valor de despesas
+- Página de Despesas mostrava outro valor
+- Análise de Rentabilidade usava outra fonte
+
+**Decisão arquitetural**: Todas as fontes de dados (extrato bancário, folha de pagamento, honorários, despesas) ALIMENTAM a contabilidade. Todos os relatórios e dashboards LÊEM da contabilidade.
+
+### Arquitetura de Dados Padronizada
+
+```
+FONTES DE ENTRADA (escrevem):
+├── Extrato Bancário → bank_transactions → accounting_entries
+├── Folha de Pagamento → payroll → accounting_entries
+├── Honorários → invoices → accounting_entries
+└── Despesas → expenses → accounting_entries
+
+         ↓ (alimentam)
+
+CONTABILIDADE (fonte única de verdade):
+├── accounting_entries (lançamentos)
+└── accounting_entry_lines (partidas dobradas)
+    ├── Contas 1.x = Ativo
+    ├── Contas 2.x = Passivo
+    ├── Contas 3.x = Receitas (crédito aumenta)
+    └── Contas 4.x = Despesas (débito aumenta)
+
+         ↓ (lêem)
+
+RELATÓRIOS/DASHBOARDS:
+├── ExecutiveDashboard ✅
+├── DRE ✅
+├── CashFlow ✅
+├── ProfitabilityAnalysis ✅
+├── Balancete ✅
+└── Balanço Patrimonial ✅
+```
+
+### Cálculos Padrão para Contabilidade
+
+```typescript
+// Buscar contas do plano de contas
+const { data: chartAccounts } = await supabase
+  .from('chart_of_accounts')
+  .select('id, code, name, type')
+  .eq('is_active', true)
+  .eq('is_analytical', true);
+
+// Separar contas por tipo
+const revenueAccountIds = chartAccounts?.filter(a => a.code.startsWith('3')).map(a => a.id) || [];
+const expenseAccountIds = chartAccounts?.filter(a => a.code.startsWith('4')).map(a => a.id) || [];
+
+// Buscar lançamentos contábeis
+const { data: allLines } = await supabase
+  .from('accounting_entry_lines')
+  .select(`
+    debit,
+    credit,
+    account_id,
+    entry_id(entry_date, competence_date)
+  `);
+
+// Filtrar por período
+const periodLines = allLines?.filter((line: any) => {
+  const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+  return lineDate >= startDateStr && lineDate <= endDateStr;
+}) || [];
+
+// RECEITA = crédito - débito nas contas 3.x
+const totalRevenue = periodLines
+  .filter((line: any) => revenueAccountIds.includes(line.account_id))
+  .reduce((sum: number, line: any) => sum + (Number(line.credit) || 0) - (Number(line.debit) || 0), 0);
+
+// DESPESA = débito - crédito nas contas 4.x
+const totalExpenses = periodLines
+  .filter((line: any) => expenseAccountIds.includes(line.account_id))
+  .reduce((sum: number, line: any) => sum + (Number(line.debit) || 0) - (Number(line.credit) || 0), 0);
+```
+
+### Páginas Modificadas
+
+| Página | Antes | Depois | Status |
+|--------|-------|--------|--------|
+| `ExecutiveDashboard.tsx` | `invoices` + `expenses` | `accounting_entry_lines` | ✅ Atualizado |
+| `ProfitabilityAnalysis.tsx` | `invoices` + `expenses` | `accounting_entry_lines` | ✅ Atualizado |
+| `CashFlow.tsx` | `expenses` + `accounts_payable` | `accounting_entry_lines` + fallback | ✅ Atualizado |
+| `DRE.tsx` | Já usava contabilidade | Sem alteração | ✅ OK |
+| `Dashboard.tsx` | `bank_transactions` para "a classificar" | Sem alteração | ✅ OK (operacional) |
+| `Expenses.tsx` | Tabela `expenses` direta | Sem alteração | ✅ OK (gerencial) |
+
+### Páginas que Mantêm Comportamento Específico
+
+1. **Dashboard.tsx** - Mostra "Débitos a Classificar" de `bank_transactions` (débitos não conciliados)
+   - Correto porque é uma métrica operacional, não financeira
+
+2. **Expenses.tsx** - Gerencia cadastro de despesas na tabela `expenses`
+   - Correto porque é o ponto de entrada que alimenta a contabilidade
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/ExecutiveDashboard.tsx` | Usar `accounting_entry_lines` para KPIs e gráficos |
+| `src/pages/ProfitabilityAnalysis.tsx` | Usar `accounting_entry_lines` para lucro e margem |
+| `src/pages/CashFlow.tsx` | Adicionar busca em `accounting_entry_lines` para projeções |
+
+### Lições Aprendidas
+
+1. **Sempre usar competence_date OU entry_date** - A contabilidade usa competence_date quando disponível
+2. **Receitas = Contas 3.x** - Crédito aumenta, débito diminui
+3. **Despesas = Contas 4.x** - Débito aumenta, crédito diminui
+4. **Filtrar por is_analytical = true** - Só contas analíticas têm lançamentos
+5. **Manter tabelas operacionais separadas** - `expenses`, `invoices`, `bank_transactions` alimentam a contabilidade, mas relatórios lêem de `accounting_entry_lines`
+
+### Correção CashFlow.tsx (Duplicação Removida)
+
+O Fluxo de Caixa estava combinando 3 fontes de despesas criando duplicação:
+1. `accounting_entry_lines` (despesas contábeis)
+2. `accounts_payable` (contas a pagar)
+3. `expenses` (despesas)
+
+**Solução**: Fluxo de caixa é para **PROJEÇÃO FUTURA**, então usa apenas despesas **PENDENTES DE PAGAMENTO** da tabela `expenses`. A contabilidade registra despesas já realizadas, não serve para projeção.
+
+| Relatório | Fonte | Motivo |
+|-----------|-------|--------|
+| Dashboard Executivo | `accounting_entry_lines` | Valores realizados |
+| DRE | `accounting_entry_lines` | Valores realizados |
+| Fluxo de Caixa | `expenses` (pendentes) | Projeção futura |
+
+### Versão Final
+
+- **Anterior**: 1.25.0
+- **Atual**: 1.25.0 (sem bump - refatoração interna)
+- **Tipo**: Refatoração de arquitetura de dados
+
+---
+
+## Sessão 25 (11/12/2025) - Correção de Saldo Bancário e Transações
+
+### Contexto
+
+O saldo bancário no Balanço Patrimonial não correspondia ao extrato real do banco (OFX). O sistema mostrava valores incorretos tanto no saldo da conta quanto nas transações importadas.
+
+### Problemas Identificados
+
+1. **Transações com sinal invertido**: Ao importar do OFX, muitas transações de saída (PAGAMENTO PIX, LIQUIDAÇÃO BOLETO) foram registradas com valor positivo ao invés de negativo.
+
+2. **Saldo da conta bancária incorreto**: O `current_balance` em `bank_accounts` estava R$ 585.858,46, quando deveria ser R$ 18.553,58.
+
+3. **Lançamentos contábeis duplicados**: 38 lançamentos de receita foram criados para transações que na verdade eram saídas (após correção dos sinais).
+
+### Correções Realizadas
+
+#### 1. Correção dos Sinais das Transações (bank_transactions)
+
+**Transações corrigidas para negativo:**
+- 83 transações de "PAGAMENTO PIX-PIX_DEB"
+- 27 transações de "LIQUIDACAO BOLETO" (pagamentos de contas)
+- 2 transações de "PAGAMENTO PIX SICREDI"
+- 19 transações de "TARIFA"
+- 13 transações de "DEBITO CONVENIOS"
+- 7 transações de "MANUTENCAO DE TITULOS"
+- 1 transação de "DEBITO ARRECADACAO"
+
+**Resultado:**
+- Saldo Inicial: R$ 90.725,10
+- Movimentação: R$ -72.171,52
+- **Saldo Final: R$ 18.553,58** (OFX: R$ 18.553,54) ✅
+
+#### 2. Atualização do Saldo da Conta Bancária
+
+```sql
+UPDATE bank_accounts
+SET current_balance = 18553.58
+WHERE account_number = '39500000000278068';
+```
+
+#### 3. Remoção de Lançamentos Duplicados
+
+Removidos 38 lançamentos de `entry_type = 'receipt'` que apontavam para transações que agora são negativas (saídas).
+
+#### 4. Balanço Patrimonial - Filtro de Período
+
+Adicionado filtro de **Data Inicial** e **Data Final** na página `BalanceSheet.tsx`.
+
+### Validação Final
+
+| Métrica | Valor |
+|---------|-------|
+| Receitas (DRE) | R$ 136.821,59 ✅ |
+| Despesas (DRE) | R$ 137.297,65 ✅ |
+| Resultado | -R$ 476,06 ✅ |
+| Saldo Bancário | R$ 18.553,58 ✅ |
+
+### Lições Aprendidas
+
+1. **Importação OFX**: Verificar sempre o sinal das transações ao importar. "LIQUIDACAO BOLETO" pode ser tanto entrada quanto saída dependendo do tipo (pagamento de conta vs recebimento de cobrança).
+
+2. **Padrões de transações**:
+   - `RECEBIMENTO PIX` / `PIX_CRED` = entrada (positivo)
+   - `PAGAMENTO PIX` / `PIX_DEB` = saída (negativo)
+   - `LIQ.COBRANCA SIMPLES` = entrada (recebimento de boleto emitido)
+   - `LIQUIDACAO BOLETO` = saída (pagamento de boleto recebido)
+   - `TARIFA` / `DEBITO CONVENIOS` / `MANUTENCAO` = saída
+
+3. **Saldo de abertura em janeiro**: Conforme documentado anteriormente, entradas de dinheiro em janeiro são tratadas como saldo de abertura (baixa em Clientes a Receber), não como receita nova.
+
+### Migrations Criadas
+
+| Migration | Descrição |
+|-----------|-----------|
+| `20251211110000_verify_bank_ledger.sql` | Análise do razão contábil do banco |
+| `20251211160000_fix_transaction_signs.sql` | Correção de sinais (PAGAMENTO PIX, TARIFA, etc) |
+| `20251211190000_fix_all_liquidacao_boleto.sql` | Correção de LIQUIDACAO BOLETO |
+| `20251211210000_fix_bank_account_balance.sql` | Atualização do current_balance e limpeza de duplicados |
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/BalanceSheet.tsx` | Adicionado filtro de Data Inicial e Data Final |
+
+### Versão
+
+- **Anterior**: 1.25.0
+- **Atual**: 1.26.0
+- **Tipo**: PATCH (correção de dados)

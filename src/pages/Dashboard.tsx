@@ -1,23 +1,47 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye, Bot, Brain, Zap, FileText, Activity, CircleDot, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { useClient } from "@/contexts/ClientContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 import { useOfflineMode } from "@/hooks/useOfflineMode";
+import { cn } from "@/lib/utils";
+
+// Tipos para agentes IA
+interface AgentStatus {
+  name: string;
+  icon: any;
+  color: string;
+  bgColor: string;
+  status: 'active' | 'idle' | 'working';
+  tasksToday: number;
+  lastAction: string;
+  accuracy: number;
+}
+
+interface AgentTask {
+  id: string;
+  name: string;
+  agent: string;
+  status: 'pending' | 'running' | 'completed' | 'error';
+  progress: number;
+  message: string;
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { selectedClientId, selectedClientName, setSelectedClient } = useClient();
+  const { selectedYear, selectedMonth } = usePeriod();
   const { isOfflineMode, offlineData, saveOfflineData } = useOfflineMode();
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -32,6 +56,36 @@ const Dashboard = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+
+  // Estados dos agentes IA
+  const [isAutomationActive, setIsAutomationActive] = useState(true);
+  const [agentTasks, setAgentTasks] = useState<AgentTask[]>([]);
+  const [lastAgentUpdate, setLastAgentUpdate] = useState<Date>(new Date());
+  const [cycleCount, setCycleCount] = useState(0);
+  const automationRef = useRef<NodeJS.Timeout | null>(null);
+  const [agents, setAgents] = useState<AgentStatus[]>([
+    {
+      name: "Dr. Cícero",
+      icon: FileText,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+      status: 'idle',
+      tasksToday: 0,
+      lastAction: "Aguardando...",
+      accuracy: 98.5,
+    },
+    {
+      name: "Gestor IA",
+      icon: Brain,
+      color: "text-violet-600",
+      bgColor: "bg-violet-100",
+      status: 'idle',
+      tasksToday: 0,
+      lastAction: "Aguardando...",
+      accuracy: 97.2,
+    },
+  ]);
+
   const [detailDialog, setDetailDialog] = useState<{
     open: boolean;
     title: string;
@@ -71,7 +125,27 @@ const Dashboard = () => {
         .order("name");
 
       let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
-      let expensesQuery = supabase.from("expenses").select("*");
+
+      // Calcular período para filtro de despesas (usando bank_transactions como fonte de verdade)
+      const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+      const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0]; // Último dia do mês
+
+      // FONTE DE VERDADE: bank_transactions (débitos não conciliados do período)
+      let bankExpensesQuery = supabase
+        .from("bank_transactions")
+        .select("*")
+        .eq("type", "debit")
+        .eq("matched", false)
+        .gte("transaction_date", startDate)
+        .lte("transaction_date", endDate);
+
+      // Query legada de expenses (mantida para compatibilidade)
+      let expensesQuery = supabase
+        .from("expenses")
+        .select("*")
+        .gte("due_date", startDate)
+        .lte("due_date", endDate);
+
       let allInvoicesQuery = supabase.from("invoices").select("*");
       let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
 
@@ -82,6 +156,7 @@ const Dashboard = () => {
         expensesQuery = expensesQuery.eq("client_id", selectedClientId);
         allInvoicesQuery = allInvoicesQuery.eq("client_id", selectedClientId);
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
+        // bank_transactions não tem client_id diretamente
       }
 
       // Usar Promise.allSettled para não falhar se uma query falhar
@@ -91,6 +166,7 @@ const Dashboard = () => {
         expensesQuery,
         allInvoicesQuery,
         openingBalanceQuery,
+        bankExpensesQuery, // Nova query de transações bancárias (fonte de verdade)
       ]);
 
       // Extrair dados com fallback para array vazio
@@ -99,11 +175,12 @@ const Dashboard = () => {
       const expensesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
       const allInvoicesRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
       const openingBalanceRes = results[4].status === 'fulfilled' ? results[4].value : { data: [] };
+      const bankExpensesRes = results[5].status === 'fulfilled' ? results[5].value : { data: [] };
 
       // Logar erros se houver
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
-          const queryNames = ['clients', 'recentInvoices', 'expenses', 'allInvoices', 'openingBalance'];
+          const queryNames = ['clients', 'recentInvoices', 'expenses', 'allInvoices', 'openingBalance', 'bankExpenses'];
           console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
         }
       });
@@ -114,12 +191,16 @@ const Dashboard = () => {
       const clientsList = clientsRes.data || [];
       const allInvoices = allInvoicesRes.data || [];
       const openingBalances = openingBalanceRes.data || [];
+      const bankExpenses = bankExpensesRes.data || []; // Transações bancárias (débitos não conciliados)
 
       // CORRIGIDO: Calcular KPIs com TODAS as invoices + saldos de abertura
       // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
       const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
       const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
-      const pendingExpenses = expenses.filter((e) => e.status === "pending");
+
+      // FONTE DE VERDADE: Usar bank_transactions para despesas pendentes
+      // Débitos não conciliados do período = despesas que saíram do banco mas não foram classificadas
+      const pendingBankExpenses = bankExpenses; // Já filtrado na query (type=debit, matched=false)
 
       // Calcular saldos de abertura pendentes
       const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
@@ -148,8 +229,10 @@ const Dashboard = () => {
         overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
         totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
         totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
-        pendingExpenses: pendingExpenses.length,
-        totalExpenses: pendingExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
+        // FONTE DE VERDADE: Usar bank_transactions para despesas
+        // Débitos não conciliados = despesas que precisam ser classificadas
+        pendingExpenses: pendingBankExpenses.length,
+        totalExpenses: pendingBankExpenses.reduce((sum, e) => sum + Math.abs(Number(e.amount)), 0),
       });
 
       // Calcular saúde financeira de cada cliente (incluindo saldo de abertura)
@@ -227,11 +310,175 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId, saveOfflineData, offlineData]);
+  }, [selectedClientId, selectedYear, selectedMonth, saveOfflineData, offlineData]);
 
   useEffect(() => {
     loadDashboardData();
-  }, [loadDashboardData]); // Recarregar quando mudar o cliente selecionado
+  }, [loadDashboardData]); // Recarregar quando mudar o cliente ou período selecionado
+
+  // =====================================================
+  // AUTOMAÇÃO DOS AGENTES IA (executa a cada 60s)
+  // =====================================================
+  const updateAgent = useCallback((name: string, updates: Partial<AgentStatus>) => {
+    setAgents(prev => prev.map(agent =>
+      agent.name === name ? { ...agent, ...updates } : agent
+    ));
+  }, []);
+
+  const addTask = useCallback((task: Omit<AgentTask, 'id'>) => {
+    const newTask: AgentTask = { ...task, id: Math.random().toString(36).substr(2, 9) };
+    setAgentTasks(prev => [...prev, newTask]);
+    return newTask.id;
+  }, []);
+
+  const updateTask = useCallback((id: string, updates: Partial<AgentTask>) => {
+    setAgentTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, ...updates } : task
+    ));
+  }, []);
+
+  const runAgentCycle = useCallback(async () => {
+    if (!isAutomationActive) return;
+
+    setCycleCount(prev => prev + 1);
+
+    // Limpar tarefas antigas
+    setAgentTasks(prev => prev.filter(t => t.status !== 'completed'));
+
+    // 1. Dr. Cícero - Classificação e Conciliação
+    const drCiceroTaskId = addTask({
+      name: 'Classificação e Conciliação',
+      agent: 'Dr. Cícero',
+      status: 'running',
+      progress: 0,
+      message: 'Analisando transações...',
+    });
+
+    updateAgent('Dr. Cícero', { status: 'working', lastAction: 'Processando...' });
+
+    try {
+      // Buscar transações não conciliadas
+      const { data: pendingTx } = await supabase
+        .from('bank_transactions')
+        .select('id, description, amount, transaction_type, matched, ai_suggestion')
+        .eq('matched', false)
+        .is('ai_suggestion', null)
+        .limit(10);
+
+      updateTask(drCiceroTaskId, { progress: 50, message: `${pendingTx?.length || 0} transações pendentes` });
+
+      let processed = 0;
+      if (pendingTx && pendingTx.length > 0) {
+        // Regras de classificação automática
+        const rules = [
+          { pattern: /cemig|copel|light|enel|energia|eletric/i, category: 'Energia Elétrica', account: '4.1.03.01' },
+          { pattern: /copasa|sabesp|cedae|agua|sanea/i, category: 'Água e Esgoto', account: '4.1.03.02' },
+          { pattern: /vivo|tim|claro|telecom|internet/i, category: 'Telecomunicações', account: '4.1.03.03' },
+          { pattern: /aluguel|locacao/i, category: 'Aluguel', account: '4.1.03.04' },
+          { pattern: /darf|gps|inss|fgts|simples|das/i, category: 'Impostos', account: '4.1.04.01' },
+          { pattern: /tar.*bancaria|iof|ted|doc/i, category: 'Taxas Bancárias', account: '4.1.05.01' },
+        ];
+
+        for (const tx of pendingTx) {
+          for (const rule of rules) {
+            if (rule.pattern.test(tx.description || '')) {
+              await supabase
+                .from('bank_transactions')
+                .update({ ai_suggestion: `Dr. Cícero: ${rule.category} | ${rule.account}` })
+                .eq('id', tx.id);
+              processed++;
+              break;
+            }
+          }
+        }
+      }
+
+      updateTask(drCiceroTaskId, {
+        status: 'completed',
+        progress: 100,
+        message: `${processed} classificadas`
+      });
+
+      updateAgent('Dr. Cícero', {
+        status: 'active',
+        lastAction: `${processed} classificações`,
+        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + processed,
+      });
+
+    } catch (error) {
+      updateTask(drCiceroTaskId, { status: 'error', message: 'Erro no processamento' });
+      updateAgent('Dr. Cícero', { status: 'idle', lastAction: 'Erro' });
+    }
+
+    // 2. Gestor IA - Análise de indicadores
+    const gestorTaskId = addTask({
+      name: 'Análise de indicadores',
+      agent: 'Gestor IA',
+      status: 'running',
+      progress: 0,
+      message: 'Calculando métricas...',
+    });
+
+    updateAgent('Gestor IA', { status: 'working', lastAction: 'Analisando...' });
+
+    try {
+      updateTask(gestorTaskId, { progress: 50, message: 'Verificando inadimplência...' });
+
+      // Já temos os stats carregados
+      const taxaInadimplencia = stats.totalPending > 0
+        ? (stats.totalOverdue / stats.totalPending) * 100
+        : 0;
+
+      updateTask(gestorTaskId, {
+        status: 'completed',
+        progress: 100,
+        message: `Inadimplência: ${taxaInadimplencia.toFixed(1)}%`
+      });
+
+      updateAgent('Gestor IA', {
+        status: 'active',
+        lastAction: `Inadimp: ${taxaInadimplencia.toFixed(1)}%`,
+        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + 1,
+      });
+
+    } catch (error) {
+      updateTask(gestorTaskId, { status: 'error', message: 'Erro na análise' });
+      updateAgent('Gestor IA', { status: 'idle', lastAction: 'Erro' });
+    }
+
+    setLastAgentUpdate(new Date());
+
+    // Remover tarefas completadas após 5 segundos
+    setTimeout(() => {
+      setAgentTasks(prev => prev.filter(t => t.status !== 'completed'));
+    }, 5000);
+
+  }, [isAutomationActive, addTask, updateTask, updateAgent, stats]);
+
+  // Iniciar ciclo automático
+  useEffect(() => {
+    if (isAutomationActive && !loading) {
+      // Executar imediatamente
+      runAgentCycle();
+
+      // Configurar intervalo (60 segundos)
+      automationRef.current = setInterval(runAgentCycle, 60000);
+    }
+
+    return () => {
+      if (automationRef.current) {
+        clearInterval(automationRef.current);
+      }
+    };
+  }, [isAutomationActive, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getAgentStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'working': return 'bg-yellow-500 animate-pulse';
+      default: return 'bg-gray-400';
+    }
+  };
 
   const handleViewClient = (clientId: string, clientName: string) => {
     setSelectedClient(clientId, clientName);
@@ -356,27 +603,44 @@ const Dashboard = () => {
           type: "invoices",
         });
       } else if (type === "expenses") {
-        let expensesQuery = supabase
-          .from("expenses")
+        // FONTE DE VERDADE: Buscar débitos não conciliados do extrato bancário
+        const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+        const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
+
+        // Buscar transações bancárias (débitos não conciliados)
+        const { data: bankData, error: bankError } = await supabase
+          .from("bank_transactions")
           .select("*")
-          .eq("status", "pending")
-          .order("due_date", { ascending: true });
+          .eq("type", "debit")
+          .eq("matched", false)
+          .gte("transaction_date", startDate)
+          .lte("transaction_date", endDate)
+          .order("transaction_date", { ascending: false });
 
-        if (selectedClientId) {
-          expensesQuery = expensesQuery.eq("client_id", selectedClientId);
+        if (bankError) {
+          console.warn("Erro ao buscar transações bancárias:", bankError.message);
         }
 
-        const { data, error } = await expensesQuery;
+        // Transformar para formato compatível com o dialog
+        const formattedData = (bankData || []).map(tx => ({
+          id: tx.id,
+          description: tx.description,
+          amount: Math.abs(Number(tx.amount)),
+          due_date: tx.transaction_date,
+          category: tx.category || "Não classificado",
+          status: "pending",
+          // Campos extras para identificar como transação bancária
+          isBankTransaction: true,
+          bank_reference: tx.bank_reference,
+          fitid: tx.fitid,
+        }));
 
-        if (error) {
-          console.warn("Erro ao buscar despesas:", error.message);
-        }
-
+        const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         setDetailDialog({
           open: true,
-          title: selectedClientId ? `Despesas Pendentes - ${selectedClientName}` : "Despesas Pendentes",
-          description: `${data?.length || 0} despesas aguardando pagamento`,
-          data: data || [],
+          title: selectedClientId ? `Despesas Pendentes - ${selectedClientName}` : "Despesas Pendentes (Extrato)",
+          description: `${formattedData.length} débitos não conciliados em ${monthName} - Fonte: Extrato Bancário`,
+          data: formattedData,
           type: "expenses",
         });
       }
@@ -431,6 +695,85 @@ const Dashboard = () => {
 
         <PeriodFilter />
 
+        {/* ========== DASHBOARD DOS AGENTES IA ========== */}
+        <Card className="bg-gradient-to-r from-violet-50 to-blue-50 border-violet-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Bot className="h-6 w-6 text-violet-600" />
+                  <Zap className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Agentes IA</CardTitle>
+                  <CardDescription>
+                    Automação 100% - Ciclo #{cycleCount} | Atualizado: {lastAgentUpdate.toLocaleTimeString('pt-BR')}
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge
+                variant={isAutomationActive ? "default" : "secondary"}
+                className={cn(
+                  "px-3 py-1",
+                  isAutomationActive && "bg-green-600 animate-pulse"
+                )}
+              >
+                {isAutomationActive ? (
+                  <>
+                    <CircleDot className="h-3 w-3 mr-1 animate-pulse" />
+                    ATIVO
+                  </>
+                ) : "PAUSADO"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {agents.map((agent, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-3 border shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={cn("p-2 rounded-lg", agent.bgColor)}>
+                        <agent.icon className={cn("h-4 w-4", agent.color)} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm flex items-center gap-2">
+                          {agent.name}
+                          <span className={cn("w-2 h-2 rounded-full", getAgentStatusColor(agent.status))} />
+                        </div>
+                        <div className="text-xs text-muted-foreground">{agent.lastAction}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold">{agent.tasksToday}</div>
+                      <div className="text-[10px] text-muted-foreground">hoje</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tarefas em execução */}
+            {agentTasks.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {agentTasks.map((task) => (
+                  <div key={task.id} className="bg-white rounded-lg p-2 border">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium">{task.name}</span>
+                      <Badge variant="outline" className="text-[10px] px-1 py-0">{task.agent}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={task.progress} className="h-1.5 flex-1" />
+                      <span className="text-[10px] text-muted-foreground w-20 text-right">{task.message}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* ========== FIM DASHBOARD DOS AGENTES ========== */}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => showDetail("clients")} className="cursor-pointer">
             <MetricCard
@@ -466,12 +809,12 @@ const Dashboard = () => {
           </div>
           <div onClick={() => showDetail("expenses")} className="cursor-pointer">
             <MetricCard
-              title="Despesas Pendentes"
+              title="Débitos a Classificar"
               value={formatCurrency(stats.totalExpenses)}
               icon={TrendingDown}
               variant="warning"
               trend={{
-                value: `${stats.pendingExpenses} contas`,
+                value: `${stats.pendingExpenses} do extrato`,
                 isPositive: false,
               }}
             />

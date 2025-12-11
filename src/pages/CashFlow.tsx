@@ -21,9 +21,12 @@ import { useClient } from "@/contexts/ClientContext";
 
 interface BankAccount {
   id: string;
-  account_name: string;
-  balance: number;
-  balance_date: string;
+  name: string;
+  bank_name: string;
+  current_balance: number;
+  is_active: boolean;
+  account_type: string;
+  updated_at: string;
 }
 
 interface CashFlowProjection {
@@ -135,7 +138,7 @@ const CashFlow = () => {
     const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
 
     // Saldo inicial (soma de todas as contas)
-    const initialBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+    const initialBalance = accounts.reduce((sum, acc) => sum + Number(acc.current_balance), 0);
 
     const projectionData: CashFlowProjection[] = [];
     const alertsList: any[] = [];
@@ -201,39 +204,37 @@ const CashFlow = () => {
     try {
       setLoading(true);
 
-      // Buscar contas bancárias
+      // Buscar contas bancárias da tabela correta (bank_accounts)
       const { data: accountsData, error: accountsError } = await supabase
-        .from("bank_balance")
+        .from("bank_accounts")
         .select("*")
         .eq("is_active", true)
-        .order("created_at", { ascending: false });
+        .order("name", { ascending: true });
 
       if (accountsError) throw accountsError;
       setBankAccounts(accountsData || []);
+      console.log(`[CashFlow] Contas bancárias encontradas: ${accountsData?.length || 0}`);
 
-      // Buscar contas a pagar pendentes
-      let payablesQuery = supabase
-        .from("accounts_payable")
-        .select("*")
-        .in("status", ["pending", "approved"])
-        .order("due_date", { ascending: true });
+      // =====================================================
+      // FLUXO DE CAIXA: Usa despesas PENDENTES DE PAGAMENTO
+      // Filtrado pelo período selecionado (próximos X dias)
+      // =====================================================
 
-      // Aplicar filtro de cliente se selecionado
-      if (selectedClientId) {
-        payablesQuery = payablesQuery.eq("client_id", selectedClientId);
-      }
+      // Calcular período de projeção
+      const today = new Date();
+      const todayStr = format(today, "yyyy-MM-dd");
+      const endPeriod = addDays(today, selectedPeriod);
+      const endPeriodStr = format(endPeriod, "yyyy-MM-dd");
 
-      const { data: payablesData, error: payablesError } = await payablesQuery;
-      if (payablesError) throw payablesError;
-
-      // Buscar despesas pendentes (sem duplicar com accounts_payable)
+      // Buscar despesas pendentes COM FILTRO DE PERÍODO
       let expensesQuery = supabase
         .from("expenses")
         .select("*")
         .eq("status", "pending")
+        .gte("due_date", todayStr)  // A partir de hoje
+        .lte("due_date", endPeriodStr)  // Até o fim do período
         .order("due_date", { ascending: true });
 
-      // Aplicar filtro de cliente se selecionado
       if (selectedClientId) {
         expensesQuery = expensesQuery.eq("client_id", selectedClientId);
       }
@@ -241,21 +242,23 @@ const CashFlow = () => {
       const { data: expensesData, error: expensesError } = await expensesQuery;
       if (expensesError) throw expensesError;
 
+      console.log(`[CashFlow] Despesas pendentes de ${todayStr} até ${endPeriodStr}: ${expensesData?.length || 0}`);
+
       // Normalizar despesas para a estrutura de contas a pagar
       const normalizedExpenses = (expensesData || []).map((exp) => ({
         ...exp,
         supplier_name: exp.category || "Despesa",
       }));
 
-      const combinedPayables = [...(payablesData || []), ...normalizedExpenses];
+      // Usar apenas despesas pendentes do período
+      setAccountsPayable(normalizedExpenses);
 
-      setAccountsPayable(combinedPayables);
-
-      // Buscar faturas pendentes e vencidas (a receber)
+      // Buscar faturas pendentes e vencidas (a receber) - COM FILTRO DE PERÍODO
       let invoicesQuery = supabase
         .from("invoices")
         .select("*, clients(name)")
         .in("status", ["pending", "overdue"])
+        .lte("due_date", endPeriodStr)  // Até o fim do período
         .order("due_date", { ascending: true });
 
       // Aplicar filtro de cliente se selecionado
@@ -267,11 +270,14 @@ const CashFlow = () => {
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData || []);
 
-      // Buscar saldos de abertura pendentes (a receber)
+      console.log(`[CashFlow] Faturas a receber até ${endPeriodStr}: ${invoicesData?.length || 0}`);
+
+      // Buscar saldos de abertura pendentes (a receber) - COM FILTRO DE PERÍODO
       let openingBalanceQuery = supabase
         .from("client_opening_balance")
         .select("*, clients(name)")
-        .in("status", ["pending", "partial", "overdue"]);
+        .in("status", ["pending", "partial", "overdue"])
+        .lte("due_date", endPeriodStr);  // Até o fim do período
 
       // Aplicar filtro de cliente se selecionado
       if (selectedClientId) {
@@ -281,6 +287,8 @@ const CashFlow = () => {
       const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
       if (openingBalanceError) throw openingBalanceError;
       setOpeningBalances(openingBalanceData || []);
+
+      console.log(`[CashFlow] Saldos de abertura até ${endPeriodStr}: ${openingBalanceData?.length || 0}`);
 
       // Buscar transações de fluxo de caixa
       const { data: transactionsData, error: transactionsError } = await supabase
@@ -300,15 +308,15 @@ const CashFlow = () => {
 
       const combinedReceivables = [...(invoicesData || []), ...normalizedOpeningBalances];
 
-      // Calcular projeção
-      calculateProjection(accountsData || [], combinedPayables || [], combinedReceivables, transactionsData || []);
+      // Calcular projeção (usando despesas pendentes, não contabilidade)
+      calculateProjection(accountsData || [], normalizedExpenses || [], combinedReceivables, transactionsData || []);
     } catch (error: any) {
       console.error("Erro ao carregar fluxo de caixa:", error);
       toast.error("Erro ao carregar dados do fluxo de caixa");
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId, calculateProjection]);
+  }, [selectedClientId, selectedPeriod, calculateProjection]);
 
   useEffect(() => {
     loadCashFlowData();
@@ -357,7 +365,7 @@ const CashFlow = () => {
   };
 
   const getTotalBalance = () => {
-    return bankAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+    return bankAccounts.reduce((sum, acc) => sum + Number(acc.current_balance), 0);
   };
 
   const getTotalPayables = () => {
@@ -718,25 +726,25 @@ const CashFlow = () => {
                     <TableHead>Banco</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead className="text-right">Saldo</TableHead>
-                    <TableHead>Data</TableHead>
+                    <TableHead>Atualizado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {bankAccounts.map((account) => (
                     <TableRow key={account.id}>
-                      <TableCell className="font-medium">{account.account_name}</TableCell>
-                      <TableCell>{(account as any).bank_name || "-"}</TableCell>
+                      <TableCell className="font-medium">{account.name}</TableCell>
+                      <TableCell>{account.bank_name || "-"}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {(account as any).account_type === 'checking' ? 'Corrente' :
-                           (account as any).account_type === 'savings' ? 'Poupança' : 'Investimento'}
+                          {account.account_type === 'checking' ? 'Corrente' :
+                           account.account_type === 'savings' ? 'Poupança' : 'Investimento'}
                         </Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-bold ${account.balance < 0 ? 'text-destructive' : ''}`}>
-                        {formatCurrency(account.balance)}
+                      <TableCell className={`text-right font-bold ${account.current_balance < 0 ? 'text-destructive' : ''}`}>
+                        {formatCurrency(account.current_balance)}
                       </TableCell>
                       <TableCell>
-                        {format(parseISO(account.balance_date), "dd/MM/yyyy")}
+                        {format(parseISO(account.updated_at), "dd/MM/yyyy")}
                       </TableCell>
                     </TableRow>
                   ))}

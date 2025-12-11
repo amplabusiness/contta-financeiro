@@ -102,6 +102,9 @@ import HonorariosFlow from "./pages/HonorariosFlow";
 import ReconcileHonorarios from "./pages/ReconcileHonorarios";
 import Invoices from "./pages/Invoices";
 import RecurringExpenses from "./pages/RecurringExpenses";
+import ImportBoletosLiquidados from "./pages/ImportBoletosLiquidados";
+import BoletosComposicao from "./pages/BoletosComposicao";
+import AIAutomation from "./pages/AIAutomation";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
@@ -197,9 +200,10 @@ const App = () => (
   <TooltipProvider>
     <ClientProvider>
       <PeriodProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
+        <ExpenseUpdateProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -295,9 +299,13 @@ const App = () => (
             <Route path="/video-content" element={<VideoContent />} />
             <Route path="/pending-entities" element={<PendingEntities />} />
             <Route path="/incentives" element={<Incentives />} />
+            <Route path="/import-boletos-liquidados" element={<ImportBoletosLiquidados />} />
+            <Route path="/boletos-composicao" element={<BoletosComposicao />} />
+            <Route path="/ai-automation" element={<AIAutomation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </ExpenseUpdateProvider>
         </PeriodProvider>
       </ClientProvider>
     </TooltipProvider>

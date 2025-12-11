@@ -77,32 +77,8 @@ const ProfitabilityAnalysis = () => {
   const [clientRevenues, setClientRevenues] = useState<ClientRevenue[]>([]);
   const [top80PercentClients, setTop80PercentClients] = useState<number>(0);
 
-  const calculateProfitability = useCallback((invoices: Array<{ amount: number; status: string }>, expenses: Array<{ amount: number }>) => {
-    const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const totalReceived = invoices
-      .filter((inv) => inv.status === "paid")
-      .reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const totalPending = invoices
-      .filter((inv) => inv.status !== "paid")
-      .reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
-
-    const profitRealized = totalReceived - totalExpenses;
-    const profitTotal = totalRevenue - totalExpenses;
-    const marginRealized = totalReceived > 0 ? (profitRealized / totalReceived) * 100 : 0;
-    const marginTotal = totalRevenue > 0 ? (profitTotal / totalRevenue) * 100 : 0;
-
-    setProfitStats({
-      totalRevenue,
-      totalReceived,
-      totalPending,
-      totalExpenses,
-      profitRealized,
-      profitTotal,
-      marginRealized,
-      marginTotal,
-    });
-  }, []);
+  // Nota: A função calculateProfitability foi removida
+  // Agora os cálculos são feitos diretamente no fetchData usando a CONTABILIDADE como fonte única de verdade
 
   const calculateClientRepresentation = useCallback((invoices: Array<{ client_id: string; clients?: { name: string }; amount: number; status: string }>) => {
     // Group by client
@@ -164,7 +140,59 @@ const ProfitabilityAnalysis = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch invoices for the year
+      // =====================================================
+      // FONTE ÚNICA DE VERDADE: CONTABILIDADE
+      // Buscar receitas e despesas dos lançamentos contábeis
+      // =====================================================
+
+      // Buscar contas do plano de contas
+      const { data: chartAccounts, error: chartError } = await supabase
+        .from('chart_of_accounts')
+        .select('id, code, name, type')
+        .eq('is_active', true)
+        .eq('is_analytical', true);
+
+      if (chartError) throw chartError;
+
+      // Separar contas por tipo
+      const revenueAccountIds = chartAccounts?.filter(a => a.code.startsWith('3')).map(a => a.id) || [];
+      const expenseAccountIds = chartAccounts?.filter(a => a.code.startsWith('4')).map(a => a.id) || [];
+
+      // Buscar TODOS os lançamentos contábeis do ano
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
+
+      const { data: allLines, error: linesError } = await supabase
+        .from('accounting_entry_lines')
+        .select(`
+          debit,
+          credit,
+          account_id,
+          entry_id(entry_date, competence_date)
+        `);
+
+      if (linesError) throw linesError;
+
+      // Filtrar lançamentos do ano
+      const yearLines = (allLines || []).filter((line: any) => {
+        const lineDate = line.entry_id?.competence_date || line.entry_id?.entry_date;
+        if (!lineDate) return false;
+        return lineDate >= startDate && lineDate <= endDate;
+      });
+
+      // Calcular totais de RECEITA (contas 3.x - crédito aumenta receita)
+      const totalRevenueFromAccounting = yearLines
+        .filter((line: any) => revenueAccountIds.includes(line.account_id))
+        .reduce((sum: number, line: any) => sum + (Number(line.credit) || 0) - (Number(line.debit) || 0), 0);
+
+      // Calcular totais de DESPESA (contas 4.x - débito aumenta despesa)
+      const totalExpensesFromAccounting = yearLines
+        .filter((line: any) => expenseAccountIds.includes(line.account_id))
+        .reduce((sum: number, line: any) => sum + (Number(line.debit) || 0) - (Number(line.credit) || 0), 0);
+
+      console.log(`[ProfitabilityAnalysis] Contabilidade ${selectedYear} - Receitas: ${totalRevenueFromAccounting}, Despesas: ${totalExpensesFromAccounting}`);
+
+      // Fetch invoices for client representation (ainda precisa para análise de clientes)
       const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select(`
@@ -178,17 +206,33 @@ const ProfitabilityAnalysis = () => {
 
       if (invoicesError) throw invoicesError;
 
-      // Fetch expenses for the year
-      const { data: expensesData, error: expensesError } = await supabase
-        .from("expenses")
-        .select("amount")
-        .gte("due_date", `${selectedYear}-01-01`)
-        .lte("due_date", `${selectedYear}-12-31`);
+      // Calcular receita recebida (faturas pagas)
+      const totalReceived = (invoicesData || [])
+        .filter((inv) => inv.status === "paid")
+        .reduce((sum, inv) => sum + Number(inv.amount), 0);
 
-      if (expensesError) throw expensesError;
+      const totalPending = (invoicesData || [])
+        .filter((inv) => inv.status !== "paid")
+        .reduce((sum, inv) => sum + Number(inv.amount), 0);
 
-      // Calculate statistics
-      calculateProfitability(invoicesData || [], expensesData || []);
+      // Usar valores da CONTABILIDADE para lucro e margem
+      const profitRealized = totalReceived - totalExpensesFromAccounting;
+      const profitTotal = totalRevenueFromAccounting - totalExpensesFromAccounting;
+      const marginRealized = totalReceived > 0 ? (profitRealized / totalReceived) * 100 : 0;
+      const marginTotal = totalRevenueFromAccounting > 0 ? (profitTotal / totalRevenueFromAccounting) * 100 : 0;
+
+      setProfitStats({
+        totalRevenue: totalRevenueFromAccounting,
+        totalReceived,
+        totalPending,
+        totalExpenses: totalExpensesFromAccounting,
+        profitRealized,
+        profitTotal,
+        marginRealized,
+        marginTotal,
+      });
+
+      // Manter análise de representatividade por cliente (usa invoices)
       calculateClientRepresentation(invoicesData || []);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -200,7 +244,7 @@ const ProfitabilityAnalysis = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedYear, calculateProfitability, calculateClientRepresentation, toast]);
+  }, [selectedYear, calculateClientRepresentation, toast]);
 
   useEffect(() => {
     fetchData();

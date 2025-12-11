@@ -29,6 +29,7 @@ const BalanceSheet = () => {
   const [totalActive, setTotalActive] = useState(0);
   const [totalPassive, setTotalPassive] = useState(0);
   const [totalPL, setTotalPL] = useState(0);
+  const [startDate, setStartDate] = useState("2024-01-01");
   const [endDate, setEndDate] = useState(() => {
     const now = new Date();
     return now.toISOString().split('T')[0];
@@ -64,10 +65,13 @@ const BalanceSheet = () => {
 
       if (entriesError) throw entriesError;
 
-      // Filtrar por data em JavaScript (mais confiável)
+      // Filtrar por período em JavaScript (mais confiável)
       const filteredEntries = entries?.filter((entry: any) => {
-        if (!endDate || !entry.entry_id?.entry_date) return true;
-        return entry.entry_id.entry_date <= endDate;
+        if (!entry.entry_id?.entry_date) return true;
+        const entryDate = entry.entry_id.entry_date;
+        const afterStart = !startDate || entryDate >= startDate;
+        const beforeEnd = !endDate || entryDate <= endDate;
+        return afterStart && beforeEnd;
       }) || [];
 
       // Calcular saldos por conta usando os lançamentos filtrados
@@ -217,7 +221,7 @@ const BalanceSheet = () => {
     } finally {
       setLoading(false);
     }
-  }, [endDate]);
+  }, [startDate, endDate]);
 
   useEffect(() => {
     loadBalances();
@@ -305,12 +309,21 @@ const BalanceSheet = () => {
         <Card>
           <CardHeader>
             <CardTitle>Período</CardTitle>
-            <CardDescription>Posição patrimonial até a data selecionada</CardDescription>
+            <CardDescription>Posição patrimonial no período selecionado</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-4">
               <div>
-                <Label htmlFor="endDate">Data Base</Label>
+                <Label htmlFor="startDate">Data Inicial</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="endDate">Data Final</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -421,7 +434,7 @@ const BalanceSheet = () => {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Nota:</strong> Os valores refletem os lançamentos contábeis até {new Date(endDate).toLocaleDateString('pt-BR')}.
+            <strong>Nota:</strong> Os valores refletem os lançamentos contábeis de {new Date(startDate).toLocaleDateString('pt-BR')} até {new Date(endDate).toLocaleDateString('pt-BR')}.
             Equação fundamental: <strong>Ativo = Passivo + Patrimônio Líquido</strong>
           </AlertDescription>
         </Alert>

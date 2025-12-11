@@ -212,6 +212,7 @@ export function AppSidebar() {
     {
       label: "Ferramentas IA",
       items: [
+        { title: "Central IA (100%)", url: "/ai-automation", icon: Zap },
         { title: "Contador IA", url: "/ai-accountant", icon: Bot },
         { title: "Gestor IA", url: "/business-manager", icon: Brain },
         { title: "Treinar IA", url: "/pending-entities", icon: Target },

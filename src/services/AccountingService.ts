@@ -14,7 +14,7 @@
  * TIPOS DE LANÇAMENTO:
  * - receita_honorarios: Provisionamento de receita (D: Cliente, C: Receita)
  * - recebimento: Entrada de caixa (D: Caixa, C: Cliente)
- * - saldo_abertura: Saldo inicial de cliente (D: Cliente, C: Receita)
+ * - saldo_abertura: Saldo inicial de cliente (D: Cliente, C: Saldos de Abertura 5.2.1.02)
  * - despesa: Provisionamento de despesa (D: Despesa, C: Fornecedor)
  * - pagamento_despesa: Saída de caixa (D: Fornecedor, C: Caixa)
  * - transferencia_bancaria: Movimentação entre contas (D: Banco Dest, C: Banco Orig)
@@ -246,7 +246,8 @@ class AccountingService {
   /**
    * Registra saldo de abertura de cliente
    * D: Cliente a Receber
-   * C: Receita de Honorários (ou Saldos Iniciais)
+   * C: Saldos de Abertura (5.2.1.02 - Patrimônio Líquido)
+   * NOTA: Saldo de abertura NÃO é receita do período atual!
    */
   async registrarSaldoAbertura(params: {
     balanceId: string;

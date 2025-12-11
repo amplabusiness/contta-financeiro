@@ -27,7 +27,15 @@
       "Bash(gh run watch:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(npx supabase --version)",
+      "Bash(npx supabase:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)",
+      "Bash(npx supabase db push:*)"
     ],
     "deny": [],
     "ask": []

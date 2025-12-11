@@ -10,9 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Landmark, Plus, Edit, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Loader2, Landmark, Plus, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, FileText, Calculator } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface BankAccount {
   id: string;
@@ -29,6 +31,17 @@ interface BankAccount {
   updated_at: string;
 }
 
+interface LedgerEntry {
+  id: string;
+  entry_date: string;
+  description: string;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  entry_type: string;
+  source: 'accounting' | 'transaction';
+}
+
 const BankAccounts = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +52,19 @@ const BankAccounts = () => {
     activeAccounts: 0,
     totalBalance: 0
   });
+
+  // Estado para o extrato/razão
+  const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
+  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [selectedAccountForLedger, setSelectedAccountForLedger] = useState<BankAccount | null>(null);
+  const [ledgerSummary, setLedgerSummary] = useState({
+    openingBalance: 0, // Saldo de 31/12/2024
+    totalDebits: 0,
+    totalCredits: 0,
+    calculatedBalance: 0
+  });
+  const [selectedMonth, setSelectedMonth] = useState('2025-01'); // Filtro de mês
 
   const [formData, setFormData] = useState({
     name: "",
@@ -207,6 +233,272 @@ const BankAccounts = () => {
     return types[type] || type;
   };
 
+  // Função para carregar o extrato/razão da conta bancária
+  // Usa as TRANSAÇÕES BANCÁRIAS (bank_transactions) para bater com o extrato do banco
+  const loadLedger = async (account: BankAccount, month: string = selectedMonth) => {
+    setSelectedAccountForLedger(account);
+    setLedgerDialogOpen(true);
+    setLedgerLoading(true);
+
+    try {
+      // Calcular datas do período
+      const [year, monthNum] = month.split('-').map(Number);
+      const startOfMonth = `${month}-01`;
+      const endOfMonth = new Date(year, monthNum, 0).toISOString().split('T')[0]; // último dia do mês
+
+      // 1. Buscar TODAS as transações bancárias
+      const { data: allTransactions, error } = await supabase
+        .from('bank_transactions')
+        .select('*')
+        .order('transaction_date', { ascending: true });
+
+      if (error) throw error;
+
+      // 2. Calcular saldo de abertura (soma das transações ANTES do mês selecionado)
+      // Saldo de abertura em 01/01/2025: R$ 90.725,06 (conforme extrato bancário)
+      // Saldo final em 31/01/2025: R$ 18.553,54 (conforme LEDGERBAL do OFX)
+      const SALDO_ABERTURA_JAN_2025 = 90725.06;
+      let openingBalance = 0;
+
+      if (month === '2025-01') {
+        // Saldo inicial de 01/01/2025 conforme extrato bancário
+        openingBalance = SALDO_ABERTURA_JAN_2025;
+      } else {
+        // Para outros meses, calcular baseado nas transações anteriores + saldo inicial
+        openingBalance = SALDO_ABERTURA_JAN_2025; // Saldo base de 01/01/2025
+
+        // Função para inferir se é entrada baseado na descrição
+        const isEntryByDesc = (desc: string): boolean => {
+          const d = (desc || '').toUpperCase();
+          if (d.includes('RECEBIMENTO PIX') || d.includes('PIX_CRED') || d.includes('LIQ.COBRANCA')) return true;
+          return false;
+        };
+
+        for (const tx of allTransactions || []) {
+          if (tx.transaction_date < startOfMonth) {
+            const rawAmount = Number(tx.amount) || 0;
+            const amount = Math.abs(rawAmount);
+
+            // Determinar tipo: usa transaction_type se disponível, senão infere pela descrição
+            const txType = String(tx.transaction_type || '').toLowerCase().trim();
+            let isEntry = false;
+            if (txType === 'credit') {
+              isEntry = true;
+            } else if (txType === 'debit') {
+              isEntry = false;
+            } else {
+              isEntry = isEntryByDesc(tx.description);
+            }
+
+            if (isEntry) {
+              openingBalance += amount;
+            } else {
+              openingBalance -= amount;
+            }
+          }
+        }
+      }
+
+      // 3. Filtrar transações do mês selecionado
+      const monthEntries: LedgerEntry[] = [];
+
+      // Função para inferir se é entrada baseado na descrição
+      // IMPORTANTE: No OFX do Sicredi:
+      // - LIQ.COBRANCA SIMPLES = ENTRADA (recebimento de boleto emitido)
+      // - LIQUIDACAO BOLETO = SAÍDA (pagamento de boleto de terceiros)
+      // - RECEBIMENTO PIX / PIX_CRED = ENTRADA
+      // - PAGAMENTO PIX / PIX_DEB = SAÍDA
+      const isEntryByDescription = (desc: string): boolean => {
+        const d = (desc || '').toUpperCase();
+        // Padrões de ENTRADA (dinheiro entrando na conta)
+        if (d.includes('RECEBIMENTO PIX')) return true;
+        if (d.includes('PIX_CRED')) return true;
+        if (d.includes('LIQ.COBRANCA')) return true; // Liquidação de cobrança = recebimento
+        // Padrões de SAÍDA (dinheiro saindo da conta)
+        if (d.includes('LIQUIDACAO BOLETO')) return false; // Pagamento de boleto de terceiros
+        if (d.includes('PAGAMENTO PIX')) return false;
+        if (d.includes('PIX_DEB')) return false;
+        if (d.includes('TARIFA')) return false;
+        if (d.includes('DEB.CTA')) return false;
+        if (d.includes('DEBITO CONVENIOS')) return false;
+        if (d.includes('CESTA')) return false;
+        if (d.includes('MANUTENCAO')) return false;
+        // Default: se não conseguir inferir, considera saída
+        return false;
+      };
+
+      for (const tx of allTransactions || []) {
+        if (tx.transaction_date >= startOfMonth && tx.transaction_date <= endOfMonth) {
+          const rawAmount = Number(tx.amount) || 0;
+          const amount = Math.abs(rawAmount);
+
+          // Determinar se é entrada ou saída:
+          // 1. Primeiro tenta pelo transaction_type
+          // 2. Se não tiver, infere pela descrição
+          const txType = String(tx.transaction_type || '').toLowerCase().trim();
+          let isEntry = false;
+
+          if (txType === 'credit') {
+            isEntry = true;
+          } else if (txType === 'debit') {
+            isEntry = false;
+          } else {
+            // transaction_type não definido, inferir pela descrição
+            isEntry = isEntryByDescription(tx.description);
+          }
+
+          monthEntries.push({
+            id: tx.id,
+            entry_date: tx.transaction_date,
+            description: tx.description || 'Sem descrição',
+            debit: isEntry ? amount : 0, // Entrada (+) - dinheiro entrando
+            credit: isEntry ? 0 : amount, // Saída (-) - dinheiro saindo
+            running_balance: 0, // será calculado depois
+            entry_type: tx.matched ? 'CONCILIADO' : (isEntry ? 'ENTRADA' : 'SAÍDA'),
+            source: 'transaction'
+          });
+        }
+      }
+
+      // 4. Ordenar por data
+      monthEntries.sort((a, b) => new Date(a.entry_date).getTime() - new Date(b.entry_date).getTime());
+
+      // 5. Calcular saldo acumulado começando do saldo de abertura
+      let runningBalance = openingBalance;
+      for (const entry of monthEntries) {
+        runningBalance += entry.debit - entry.credit;
+        entry.running_balance = runningBalance;
+      }
+
+      setLedgerEntries(monthEntries);
+
+      // 6. Calcular totais do mês
+      const totalDebits = monthEntries.reduce((sum, e) => sum + e.debit, 0); // Entradas
+      const totalCredits = monthEntries.reduce((sum, e) => sum + e.credit, 0); // Saídas
+      const closingBalance = openingBalance + totalDebits - totalCredits;
+
+      setLedgerSummary({
+        openingBalance,
+        totalDebits,
+        totalCredits,
+        calculatedBalance: closingBalance
+      });
+
+    } catch (error: any) {
+      console.error('Erro ao carregar extrato:', error);
+      toast.error('Erro ao carregar extrato da conta');
+    } finally {
+      setLedgerLoading(false);
+    }
+  };
+
+  // Recarregar quando mudar o mês
+  const handleMonthChange = (newMonth: string) => {
+    setSelectedMonth(newMonth);
+    if (selectedAccountForLedger) {
+      loadLedger(selectedAccountForLedger, newMonth);
+    }
+  };
+
+  // Função para recalcular e atualizar o saldo da conta
+  const recalculateBalance = async () => {
+    if (!selectedAccountForLedger) return;
+
+    try {
+      const { error } = await supabase
+        .from('bank_accounts')
+        .update({
+          current_balance: ledgerSummary.calculatedBalance,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedAccountForLedger.id);
+
+      if (error) throw error;
+
+      toast.success(`Saldo atualizado para ${formatCurrency(ledgerSummary.calculatedBalance)}`);
+      setLedgerDialogOpen(false);
+      loadBankAccounts();
+    } catch (error: any) {
+      console.error('Erro ao atualizar saldo:', error);
+      toast.error('Erro ao atualizar saldo');
+    }
+  };
+
+  // Criar lançamento de saldo de abertura (31/12/2024)
+  const createOpeningBalanceEntry = async (amount: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      // 1. Buscar contas contábeis
+      const { data: contaBanco } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.02')
+        .single();
+
+      const { data: contaSaldoAbertura } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '5.2.1.02')
+        .single();
+
+      if (!contaBanco || !contaSaldoAbertura) {
+        toast.error('Contas contábeis não encontradas');
+        return;
+      }
+
+      // 2. Criar o lançamento contábil
+      const { data: entryData, error: entryError } = await supabase
+        .from('accounting_entries')
+        .insert({
+          entry_date: '2024-12-31',
+          competence_date: '2024-12-31',
+          description: 'Saldo inicial de disponibilidades - Abertura do exercício 2025',
+          history: 'Reconhecimento do saldo bancário existente em 31/12/2024 como saldo de abertura para o exercício de 2025',
+          entry_type: 'SALDO_ABERTURA',
+          document_type: 'ABERTURA',
+          created_by: user.id,
+          total_debit: amount,
+          total_credit: amount,
+        })
+        .select('id')
+        .single();
+
+      if (entryError) throw entryError;
+
+      // 3. Criar as partidas
+      // Débito no Banco (entrada de recursos)
+      await supabase.from('accounting_entry_items').insert({
+        entry_id: entryData.id,
+        account_id: contaBanco.id,
+        debit: amount,
+        credit: 0,
+        history: 'Saldo inicial de disponibilidades',
+      });
+
+      // Crédito em Saldos de Abertura (contrapartida PL)
+      await supabase.from('accounting_entry_items').insert({
+        entry_id: entryData.id,
+        account_id: contaSaldoAbertura.id,
+        debit: 0,
+        credit: amount,
+        history: 'Reconhecimento do saldo inicial de disponibilidades',
+      });
+
+      toast.success(`Saldo de abertura de ${formatCurrency(amount)} criado com sucesso!`);
+
+      // Recarregar o extrato
+      if (selectedAccountForLedger) {
+        loadLedger(selectedAccountForLedger, selectedMonth);
+      }
+
+    } catch (error: any) {
+      console.error('Erro ao criar saldo de abertura:', error);
+      toast.error('Erro ao criar saldo de abertura: ' + error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -346,6 +638,15 @@ const BankAccounts = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => loadLedger(account)}
+                              title="Ver extrato/razão"
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -489,6 +790,7 @@ const BankAccounts = () => {
                 <input
                   type="checkbox"
                   id="is_active"
+                  title="Conta Ativa"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   className="rounded border-gray-300"
@@ -506,6 +808,213 @@ const BankAccounts = () => {
               <Button onClick={handleSave}>
                 {editingAccount ? "Atualizar" : "Criar"} Conta
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog do Extrato/Razão */}
+        <Dialog open={ledgerDialogOpen} onOpenChange={setLedgerDialogOpen}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Extrato/Razão - {selectedAccountForLedger?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Composição do saldo bancário com todos os lançamentos contábeis
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Seletor de Mês */}
+            <div className="flex items-center gap-4 pb-2">
+              <Label>Período:</Label>
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => handleMonthChange(e.target.value)}
+                className="w-48"
+              />
+            </div>
+
+            {ledgerLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Cards de resumo - estilo extrato bancário */}
+                <div className="grid grid-cols-5 gap-3">
+                  <Card className="bg-slate-100">
+                    <CardContent className="pt-4">
+                      <div className="text-xs text-muted-foreground">Saldo Anterior</div>
+                      <div className="text-lg font-bold">
+                        {formatCurrency(ledgerSummary.openingBalance)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-xs text-muted-foreground">+ Entradas</div>
+                      <div className="text-lg font-bold text-green-600">
+                        {formatCurrency(ledgerSummary.totalDebits)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-xs text-muted-foreground">- Saídas</div>
+                      <div className="text-lg font-bold text-red-600">
+                        {formatCurrency(ledgerSummary.totalCredits)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50">
+                    <CardContent className="pt-4">
+                      <div className="text-xs text-muted-foreground">= Saldo Final</div>
+                      <div className="text-lg font-bold text-blue-600">
+                        {formatCurrency(ledgerSummary.calculatedBalance)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className={Math.abs((selectedAccountForLedger?.current_balance || 0) - ledgerSummary.calculatedBalance) > 0.01 ? 'bg-orange-50' : 'bg-green-50'}>
+                    <CardContent className="pt-4">
+                      <div className="text-xs text-muted-foreground">Saldo Sistema</div>
+                      <div className={`text-lg font-bold ${
+                        Math.abs((selectedAccountForLedger?.current_balance || 0) - ledgerSummary.calculatedBalance) > 0.01
+                          ? 'text-orange-600'
+                          : 'text-green-600'
+                      }`}>
+                        {formatCurrency(selectedAccountForLedger?.current_balance || 0)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Tabela de lançamentos - estilo extrato */}
+                <div className="border rounded-lg max-h-[400px] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background">
+                      <TableRow>
+                        <TableHead className="w-24">Data</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="w-24">Tipo</TableHead>
+                        <TableHead className="text-right w-32">Entrada (+)</TableHead>
+                        <TableHead className="text-right w-32">Saída (-)</TableHead>
+                        <TableHead className="text-right w-32">Saldo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {/* Linha de Saldo Anterior */}
+                      <TableRow className="bg-slate-50 font-medium">
+                        <TableCell className="whitespace-nowrap">
+                          {(() => {
+                            const [year, monthNum] = selectedMonth.split('-').map(Number);
+                            const lastDay = new Date(year, monthNum - 1, 0);
+                            return format(lastDay, 'dd/MM/yyyy', { locale: ptBR });
+                          })()}
+                        </TableCell>
+                        <TableCell colSpan={4}>
+                          <strong>SALDO ANTERIOR</strong>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold">
+                          {formatCurrency(ledgerSummary.openingBalance)}
+                        </TableCell>
+                      </TableRow>
+
+                      {ledgerEntries.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            Nenhum lançamento no período selecionado
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        ledgerEntries.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="whitespace-nowrap">
+                              {format(new Date(entry.entry_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="max-w-[300px] truncate" title={entry.description}>
+                              {entry.description}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {entry.entry_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-green-600 font-mono">
+                              {entry.debit > 0 ? formatCurrency(entry.debit) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right text-red-600 font-mono">
+                              {entry.credit > 0 ? formatCurrency(entry.credit) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-medium">
+                              {formatCurrency(entry.running_balance)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+
+                      {/* Linha de Saldo Final */}
+                      <TableRow className="bg-blue-50 font-medium">
+                        <TableCell className="whitespace-nowrap">
+                          {(() => {
+                            const [year, monthNum] = selectedMonth.split('-').map(Number);
+                            const lastDay = new Date(year, monthNum, 0);
+                            return format(lastDay, 'dd/MM/yyyy', { locale: ptBR });
+                          })()}
+                        </TableCell>
+                        <TableCell colSpan={2}>
+                          <strong>SALDO FINAL</strong>
+                        </TableCell>
+                        <TableCell className="text-right text-green-600 font-mono font-bold">
+                          {formatCurrency(ledgerSummary.totalDebits)}
+                        </TableCell>
+                        <TableCell className="text-right text-red-600 font-mono font-bold">
+                          {formatCurrency(ledgerSummary.totalCredits)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold text-blue-600">
+                          {formatCurrency(ledgerSummary.calculatedBalance)}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Informação sobre o cálculo */}
+                <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                  <strong>Fórmula:</strong> Saldo Anterior ({formatCurrency(ledgerSummary.openingBalance)})
+                  + Entradas ({formatCurrency(ledgerSummary.totalDebits)})
+                  - Saídas ({formatCurrency(ledgerSummary.totalCredits)})
+                  = <strong>Saldo Final ({formatCurrency(ledgerSummary.calculatedBalance)})</strong>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="flex justify-between">
+              <div className="text-sm text-muted-foreground">
+                {ledgerEntries.length} lançamentos em {format(new Date(selectedMonth + '-01'), 'MMMM/yyyy', { locale: ptBR })}
+              </div>
+              <div className="flex gap-2">
+                {/* Botão para criar saldo de abertura quando for janeiro e não houver saldo anterior */}
+                {selectedMonth === '2025-01' && ledgerSummary.openingBalance === 0 && (
+                  <Button
+                    onClick={() => createOpeningBalanceEntry(90725.10)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Criar Saldo Abertura R$ 90.725,10
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setLedgerDialogOpen(false)}>
+                  Fechar
+                </Button>
+                {Math.abs((selectedAccountForLedger?.current_balance || 0) - ledgerSummary.calculatedBalance) > 0.01 && (
+                  <Button onClick={recalculateBalance} className="bg-orange-600 hover:bg-orange-700">
+                    <Calculator className="h-4 w-4 mr-2" />
+                    Atualizar Saldo para {formatCurrency(ledgerSummary.calculatedBalance)}
+                  </Button>
+                )}
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>

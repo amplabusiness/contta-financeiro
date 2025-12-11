@@ -815,6 +815,134 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
       break;
     }
 
+    case 'adiantamento_socio': {
+      // ADIANTAMENTO A SÓCIO - NÃO É DESPESA!
+      // Débito: Adiantamentos a Sócios (1.1.3.04) - ATIVO
+      // Crédito: Banco (1.1.1.02) - ATIVO
+      // Isso NÃO afeta o DRE - é apenas uma troca entre ativos
+
+      const adiantamentoAccount = await ensureAccountExists(
+        supabase,
+        userId,
+        '1.1.3.04',
+        'Adiantamentos a Sócios',
+        'ATIVO',
+        true,
+        '1.1.3'
+      );
+      debitAccountId = adiantamentoAccount.id;
+
+      const { data: bankAccountAdv } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.02')
+        .single();
+
+      if (!bankAccountAdv) {
+        throw new Error('Conta bancária não encontrada');
+      }
+      creditAccountId = bankAccountAdv.id;
+      entryDescription = `Adiantamento a Sócio: ${description}`;
+      console.log('[smart-accounting] ADIANTAMENTO A SÓCIO criado - NÃO vai para DRE');
+      break;
+    }
+
+    case 'investimento': {
+      // INVESTIMENTO - NÃO É DESPESA!
+      // Débito: Investimentos (1.2.1.01) - ATIVO NÃO CIRCULANTE
+      // Crédito: Banco (1.1.1.02) - ATIVO
+      // Isso NÃO afeta o DRE
+
+      const investimentoAccount = await ensureAccountExists(
+        supabase,
+        userId,
+        '1.2.1.01',
+        'Investimentos - Ampla Saúde',
+        'ATIVO',
+        true,
+        '1.2.1'
+      );
+      debitAccountId = investimentoAccount.id;
+
+      const { data: bankAccountInv } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.02')
+        .single();
+
+      if (!bankAccountInv) {
+        throw new Error('Conta bancária não encontrada');
+      }
+      creditAccountId = bankAccountInv.id;
+      entryDescription = `Investimento: ${description}`;
+      console.log('[smart-accounting] INVESTIMENTO criado - NÃO vai para DRE');
+      break;
+    }
+
+    case 'transferencia_interna': {
+      // TRANSFERÊNCIA ENTRE CONTAS - NÃO É DESPESA!
+      // Débito: Conta destino (ex: Caixa 1.1.1.01)
+      // Crédito: Conta origem (ex: Banco 1.1.1.02)
+      // Isso NÃO afeta o DRE
+
+      const { data: destAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.01')
+        .single();
+
+      if (!destAccount) {
+        throw new Error('Conta de caixa não encontrada');
+      }
+      debitAccountId = destAccount.id;
+
+      const { data: origAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.02')
+        .single();
+
+      if (!origAccount) {
+        throw new Error('Conta bancária não encontrada');
+      }
+      creditAccountId = origAccount.id;
+      entryDescription = `Transferência entre contas: ${description}`;
+      console.log('[smart-accounting] TRANSFERÊNCIA INTERNA criada - NÃO vai para DRE');
+      break;
+    }
+
+    case 'pagamento_fornecedor': {
+      // PAGAMENTO DE FORNECEDOR - baixa de passivo
+      // Débito: Fornecedores a Pagar (2.1.1.01) - PASSIVO
+      // Crédito: Banco (1.1.1.02) - ATIVO
+      // Isso NÃO afeta o DRE (despesa já foi reconhecida no provisionamento)
+
+      const { data: fornecedorAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '2.1.1.01')
+        .single();
+
+      if (!fornecedorAccount) {
+        throw new Error('Conta de fornecedores não encontrada');
+      }
+      debitAccountId = fornecedorAccount.id;
+
+      const { data: bankAccountPag } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.1.02')
+        .single();
+
+      if (!bankAccountPag) {
+        throw new Error('Conta bancária não encontrada');
+      }
+      creditAccountId = bankAccountPag.id;
+      entryDescription = `Pagamento Fornecedor: ${description}`;
+      console.log('[smart-accounting] PAGAMENTO FORNECEDOR criado - baixa de passivo');
+      break;
+    }
+
     default:
       throw new Error(`Tipo de lançamento inválido: ${entry_type}`);
   }
@@ -1287,10 +1415,11 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
     for (const expense of expenses) {
       try {
         // Verificar se já existe lançamento - usar maybeSingle()
+        // IMPORTANTE: Verificar AMBOS os reference_types (singular e plural) para compatibilidade
         const { data: existingEntry, error: checkError } = await supabase
           .from('accounting_entries')
           .select('id')
-          .eq('reference_type', tableName)
+          .eq('reference_type', 'expenses') // Sempre verificar plural (padrão normalizado)
           .eq('reference_id', expense.id)
           .eq('entry_type', 'despesa')
           .maybeSingle();
@@ -1303,12 +1432,13 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
         }
 
         // Criar lançamento de despesa
+        // IMPORTANTE: Usar 'expenses' (plural) para reference_type para evitar duplicatas
         await createSmartAccountingEntry(supabase, userId, {
           entry_type: 'despesa',
           amount: expense.amount,
           date: expense.expense_date || expense.due_date || expense.created_at,
           description: expense.description,
-          reference_type: tableName,
+          reference_type: 'expenses', // Sempre plural para consistência
           reference_id: expense.id,
           expense_category: expense.category,
         });
@@ -1322,7 +1452,7 @@ async function generateRetroactiveEntries(supabase: any, userId: string, params:
             amount: expense.amount,
             date: expense.payment_date,
             description: `Pagamento: ${expense.description}`,
-            reference_type: `${tableName}_payment`,
+            reference_type: 'expenses_payment', // Sempre plural para consistência
             reference_id: expense.id,
           });
           results.created++;

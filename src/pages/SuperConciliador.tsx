@@ -35,8 +35,6 @@ interface BankTransaction {
   transaction_type: 'credit' | 'debit';
   matched: boolean;
   has_multiple_matches: boolean;
-  ai_confidence: number | null;
-  ai_suggestion: string | null;
   bank_reference: string | null;
   matches?: any[];
 }
@@ -690,9 +688,7 @@ const SuperConciliador = () => {
             .from("bank_transactions")
             .update({
               matched: true,
-              matched_invoice_id: bestMatch.id,
-              ai_confidence: bestDiff < 0.01 ? 1.0 : 0.9,
-              ai_suggestion: `Match por CPF/CNPJ: ${client.name}`
+              matched_invoice_id: bestMatch.id
             })
             .eq("id", tx.id);
 
@@ -772,7 +768,7 @@ const SuperConciliador = () => {
 
           await supabase
             .from("bank_transactions")
-            .update({ matched: true, matched_invoice_id: matchingInvoice.id, ai_confidence: 1.0 })
+            .update({ matched: true, matched_invoice_id: matchingInvoice.id })
             .eq("id", tx.id);
 
           await supabase
@@ -927,7 +923,127 @@ const SuperConciliador = () => {
     }
   };
 
-  // Processar todas transações pendentes com Dr. Cícero
+  // Processar TODAS as receitas de Janeiro/2025 como Saldo de Abertura (direto, sem perguntar)
+  const processJaneiro2025SaldoAbertura = async () => {
+    setProcessing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      // Filtrar transações de janeiro/2025 pendentes (créditos)
+      const janeiro2025 = transactions.filter(t =>
+        !t.matched &&
+        t.transaction_type === 'credit' &&
+        t.transaction_date.startsWith('2025-01')
+      );
+
+      if (janeiro2025.length === 0) {
+        toast.info('Não há transações de Janeiro/2025 pendentes');
+        return;
+      }
+
+      let processed = 0;
+      let errors = 0;
+
+      for (const tx of janeiro2025) {
+        try {
+          // 1. Criar lançamento contábil de Saldo de Abertura
+          // D: 1.1.1.02 (Banco) / C: 5.2.1.02 (Saldos de Abertura)
+          const { data: entryData, error: entryError } = await supabase
+            .from('accounting_entries')
+            .insert({
+              entry_date: tx.transaction_date,
+              competence_date: '2024-12-31', // Competência dezembro/2024 (anterior à abertura)
+              description: `Saldo de Abertura Jan/2025: ${tx.description}`,
+              history: `Recebimento de honorários de competências anteriores classificado como saldo de abertura. Transação: ${tx.id}`,
+              entry_type: 'SALDO_ABERTURA',
+              document_type: tx.description.toLowerCase().includes('pix') ? 'PIX' : 'BOLETO',
+              transaction_id: tx.id,
+              created_by: user.id,
+              total_debit: tx.amount,
+              total_credit: tx.amount,
+            })
+            .select('id')
+            .single();
+
+          if (entryError) {
+            console.error('Erro ao criar lançamento:', entryError);
+            errors++;
+            continue;
+          }
+
+          // 1.1. Criar as partidas (itens) do lançamento
+          // Buscar IDs das contas
+          const { data: contaBanco } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', '1.1.1.02')
+            .single();
+
+          const { data: contaSaldoAbertura } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', '5.2.1.02')
+            .single();
+
+          if (contaBanco && contaSaldoAbertura && entryData) {
+            // Débito no Banco
+            await supabase.from('accounting_entry_items').insert({
+              entry_id: entryData.id,
+              account_id: contaBanco.id,
+              debit: tx.amount,
+              credit: 0,
+              history: 'Entrada de recursos - Saldo de Abertura',
+            });
+
+            // Crédito em Saldos de Abertura
+            await supabase.from('accounting_entry_items').insert({
+              entry_id: entryData.id,
+              account_id: contaSaldoAbertura.id,
+              debit: 0,
+              credit: tx.amount,
+              history: 'Saldo de Abertura - Receitas de competências anteriores',
+            });
+          }
+
+          // 2. Marcar transação como conciliada
+          const { error: updateError } = await supabase
+            .from('bank_transactions')
+            .update({
+              matched: true
+            })
+            .eq('id', tx.id);
+
+          if (updateError) {
+            console.error('Erro ao atualizar transação:', updateError);
+            errors++;
+            continue;
+          }
+
+          processed++;
+        } catch (err) {
+          console.error('Erro processando transação:', tx.id, err);
+          errors++;
+        }
+      }
+
+      if (processed > 0) {
+        toast.success(`Janeiro/2025: ${processed} transações classificadas como Saldo de Abertura`);
+      }
+      if (errors > 0) {
+        toast.warning(`${errors} erros durante o processamento`);
+      }
+
+      await loadAllData();
+    } catch (error: any) {
+      console.error('Erro no processamento Janeiro/2025:', error);
+      toast.error('Erro: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Processar todas transações pendentes com Dr. Cícero (em lotes para evitar timeout)
   const processAllWithDrCicero = async () => {
     setProcessing(true);
     try {
@@ -953,25 +1069,64 @@ const SuperConciliador = () => {
         };
       });
 
-      const { data, error } = await supabase.functions.invoke('dr-cicero-contador', {
-        body: {
-          action: 'process_batch',
-          transactions: txData,
-          auto_approve_threshold: 0.85, // Auto-aprova apenas com 85%+ de confiança
+      // Processar em lotes de 5 para evitar timeout
+      const BATCH_SIZE = 5;
+      const batches = [];
+      for (let i = 0; i < txData.length; i += BATCH_SIZE) {
+        batches.push(txData.slice(i, i + BATCH_SIZE));
+      }
+
+      let totalApproved = 0;
+      let totalPendingReview = 0;
+      let totalErrors = 0;
+      const allPendingItems: any[] = [];
+
+      toast.info(`Dr. Cícero: Processando ${txData.length} transações em ${batches.length} lotes...`);
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+
+        try {
+          const { data, error } = await supabase.functions.invoke('dr-cicero-contador', {
+            body: {
+              action: 'process_batch',
+              transactions: batch,
+              auto_approve_threshold: 0.85,
+            }
+          });
+
+          if (error) {
+            console.error(`Erro no lote ${batchIndex + 1}:`, error);
+            totalErrors += batch.length;
+            continue;
+          }
+
+          totalApproved += data.auto_approved || 0;
+          totalPendingReview += data.pending_review || 0;
+          totalErrors += data.errors || 0;
+
+          // Coletar itens pendentes de revisão
+          const pendingItems = data.items?.filter((i: any) => i.status === 'pending_review') || [];
+          allPendingItems.push(...pendingItems);
+
+          // Atualizar progresso
+          const progress = Math.round(((batchIndex + 1) / batches.length) * 100);
+          toast.info(`Dr. Cícero: ${progress}% concluído (lote ${batchIndex + 1}/${batches.length})`);
+
+        } catch (batchError: any) {
+          console.error(`Erro no lote ${batchIndex + 1}:`, batchError);
+          totalErrors += batch.length;
         }
-      });
+      }
 
-      if (error) throw error;
-
-      toast.success(`Dr. Cícero: ${data.auto_approved} aprovadas automaticamente, ${data.pending_review} aguardando revisão`);
+      toast.success(`Dr. Cícero concluiu: ${totalApproved} aprovadas, ${totalPendingReview} para revisão, ${totalErrors} erros`);
 
       // Se há itens pendentes de revisão, abrir o primeiro
-      const pendingReview = data.items?.filter((i: any) => i.status === 'pending_review') || [];
-      if (pendingReview.length > 0) {
-        const firstPending = transactions.find(t => t.id === pendingReview[0].transaction_id);
+      if (allPendingItems.length > 0) {
+        const firstPending = transactions.find(t => t.id === allPendingItems[0].transaction_id);
         if (firstPending) {
           setDrCiceroTransaction(firstPending);
-          setDrCiceroClassification(pendingReview[0].classification);
+          setDrCiceroClassification(allPendingItems[0].classification);
           setDrCiceroDialog(true);
         }
       }
@@ -1030,10 +1185,15 @@ const SuperConciliador = () => {
               Dr. Cícero
             </Button>
             {receitasJaneiroPendentes.length > 0 && (
-              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-700">
-                <Calendar className="h-3 w-3 mr-1" />
-                {receitasJaneiroPendentes.length} receitas Jan/25
-              </Badge>
+              <Button
+                onClick={processJaneiro2025SaldoAbertura}
+                disabled={processing}
+                variant="default"
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Jan/25 → Saldo Abertura ({receitasJaneiroPendentes.length})
+              </Button>
             )}
           </div>
         </div>
