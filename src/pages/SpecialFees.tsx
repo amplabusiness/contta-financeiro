@@ -292,7 +292,10 @@ export default function SpecialFees() {
 
   // Carregar faturamentos do mês selecionado
   const loadMonthlyRevenues = async () => {
-    const referenceMonth = `${selectedMonth}-01`;
+    // Extrair ano e mês do formato YYYY-MM
+    const [year, month] = selectedMonth.split('-');
+    const referenceYear = parseInt(year);
+    const referenceMonth = parseInt(month);
 
     // Buscar clientes com honorário variável e seus faturamentos
     const { data: fees } = await supabase
@@ -310,6 +313,7 @@ export default function SpecialFees() {
     const { data: revenues } = await supabase
       .from('client_monthly_revenue')
       .select('*')
+      .eq('reference_year', referenceYear)
       .eq('reference_month', referenceMonth);
 
     // Combinar dados
@@ -337,16 +341,20 @@ export default function SpecialFees() {
   // Salvar faturamento mensal
   const saveMonthlyRevenue = async () => {
     try {
-      const referenceMonth = `${revenueForm.reference_month}-01`;
+      // Extrair ano e mês do formato YYYY-MM
+      const [year, month] = revenueForm.reference_month.split('-');
+      const referenceYear = parseInt(year);
+      const referenceMonth = parseInt(month);
 
       const { error } = await supabase
         .from('client_monthly_revenue')
         .upsert({
           client_id: revenueForm.client_id,
+          reference_year: referenceYear,
           reference_month: referenceMonth,
           gross_revenue: revenueForm.gross_revenue
         }, {
-          onConflict: 'client_id,reference_month'
+          onConflict: 'client_id,reference_year,reference_month'
         });
 
       if (error) throw error;
