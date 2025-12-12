@@ -119,6 +119,9 @@ export default function SpecialFees() {
   const [showIrpfDialog, setShowIrpfDialog] = useState(false);
   const [showRevenueDialog, setShowRevenueDialog] = useState(false);
 
+  // Estados para edição
+  const [editingVariableFee, setEditingVariableFee] = useState<VariableFee | null>(null);
+
   // Clientes para seleção
   const [clients, setClients] = useState<{id: string, name: string, cnpj?: string}[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -572,17 +575,48 @@ export default function SpecialFees() {
     }
   };
 
+  // Abrir edição de honorário variável
+  const openEditVariableFee = (fee: VariableFee) => {
+    setEditingVariableFee(fee);
+    setVariableFeeForm({
+      client_id: fee.client_id,
+      fee_name: fee.fee_name,
+      fee_type: fee.fee_type,
+      percentage_rate: fee.percentage_rate,
+      due_day: fee.due_day,
+      calculation_base: fee.calculation_base,
+      employee_commission_rate: (fee as any).employee_commission_rate || 0,
+      employee_name: (fee as any).employee_name || '',
+      employee_pix_key: (fee as any).employee_pix_key || '',
+      employee_pix_type: (fee as any).employee_pix_type || 'cpf'
+    });
+    setShowVariableFeeDialog(true);
+  };
+
   // Handlers de salvamento
   const saveVariableFee = async () => {
     try {
-      const { error } = await supabase
-        .from('client_variable_fees')
-        .insert(variableFeeForm);
+      if (editingVariableFee) {
+        // Atualizar existente
+        const { error } = await supabase
+          .from('client_variable_fees')
+          .update(variableFeeForm)
+          .eq('id', editingVariableFee.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success('Honorário variável atualizado!');
+      } else {
+        // Criar novo
+        const { error } = await supabase
+          .from('client_variable_fees')
+          .insert(variableFeeForm);
 
-      toast.success('Honorário variável cadastrado!');
+        if (error) throw error;
+        toast.success('Honorário variável cadastrado!');
+      }
+
       setShowVariableFeeDialog(false);
+      setEditingVariableFee(null);
       loadVariableFees();
     } catch (error: any) {
       toast.error('Erro ao salvar: ' + error.message);
@@ -858,7 +892,22 @@ export default function SpecialFees() {
                       Clientes com honorário baseado em % do faturamento
                     </CardDescription>
                   </div>
-                  <Button onClick={() => setShowVariableFeeDialog(true)}>
+                  <Button onClick={() => {
+                    setEditingVariableFee(null);
+                    setVariableFeeForm({
+                      client_id: '',
+                      fee_name: 'Honorário Variável',
+                      fee_type: 'percentage',
+                      percentage_rate: 2.87,
+                      due_day: 20,
+                      calculation_base: 'faturamento',
+                      employee_commission_rate: 1.25,
+                      employee_name: '',
+                      employee_pix_key: '',
+                      employee_pix_type: 'cpf'
+                    });
+                    setShowVariableFeeDialog(true);
+                  }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Honorário
                   </Button>
@@ -893,7 +942,11 @@ export default function SpecialFees() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditVariableFee(fee)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -1274,11 +1327,14 @@ export default function SpecialFees() {
         </Tabs>
       </div>
 
-      {/* Dialog: Novo Honorário Variável */}
-      <Dialog open={showVariableFeeDialog} onOpenChange={setShowVariableFeeDialog}>
+      {/* Dialog: Novo/Editar Honorário Variável */}
+      <Dialog open={showVariableFeeDialog} onOpenChange={(open) => {
+        setShowVariableFeeDialog(open);
+        if (!open) setEditingVariableFee(null);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Novo Honorário Variável</DialogTitle>
+            <DialogTitle>{editingVariableFee ? 'Editar Honorário Variável' : 'Novo Honorário Variável'}</DialogTitle>
             <DialogDescription>
               Configure um honorário baseado em % do faturamento do cliente
             </DialogDescription>
@@ -1402,7 +1458,9 @@ export default function SpecialFees() {
             <Button variant="outline" onClick={() => setShowVariableFeeDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={saveVariableFee}>Salvar</Button>
+            <Button onClick={saveVariableFee}>
+              {editingVariableFee ? 'Atualizar' : 'Salvar'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
