@@ -97,10 +97,10 @@ interface EsocialRubrica {
   id: string;
   codigo: string;
   descricao: string;
-  tipo: string;
-  incidencia_inss: boolean;
-  incidencia_irrf: boolean;
-  incidencia_fgts: boolean;
+  tipo_rubrica: string;
+  incide_inss: boolean;
+  incide_irrf: boolean;
+  incide_fgts: boolean;
   account_id: string | null;
   account_debit_id: string | null;
   account_credit_id: string | null;
@@ -240,10 +240,10 @@ const Payroll = () => {
           id,
           codigo,
           descricao,
-          tipo,
-          incidencia_inss,
-          incidencia_irrf,
-          incidencia_fgts,
+          tipo_rubrica,
+          incide_inss,
+          incide_irrf,
+          incide_fgts,
           account_id,
           account_debit_id,
           account_credit_id,
@@ -299,7 +299,7 @@ const Payroll = () => {
           payroll_id,
           rubrica_id,
           valor,
-          esocial_rubricas (codigo, descricao, tipo)
+          esocial_rubricas (codigo, descricao, tipo_rubrica)
         `)
         .eq("payroll_id", payrollId)
         .order("created_at", { ascending: true });
@@ -310,7 +310,7 @@ const Payroll = () => {
         ...e,
         rubrica_codigo: e.esocial_rubricas?.codigo,
         rubrica_descricao: e.esocial_rubricas?.descricao,
-        rubrica_tipo: e.esocial_rubricas?.tipo,
+        rubrica_tipo: e.esocial_rubricas?.tipo_rubrica,
       }));
       setPayrollEvents(events);
     } catch (error) {
@@ -935,26 +935,26 @@ const Payroll = () => {
                         </TableCell>
                         <TableCell>{rubrica.descricao}</TableCell>
                         <TableCell>
-                          <Badge variant={rubrica.tipo === "PROVENTO" ? "default" : "destructive"}>
-                            {rubrica.tipo === "PROVENTO" ? "Provento" : "Desconto"}
+                          <Badge variant={rubrica.tipo_rubrica === "PROVENTO" ? "default" : "destructive"}>
+                            {rubrica.tipo_rubrica === "PROVENTO" ? "Provento" : "Desconto"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
-                          {rubrica.incidencia_inss ? (
+                          {rubrica.incide_inss ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                           ) : (
                             <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          {rubrica.incidencia_irrf ? (
+                          {rubrica.incide_irrf ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                           ) : (
                             <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          {rubrica.incidencia_fgts ? (
+                          {rubrica.incide_fgts ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                           ) : (
                             <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
