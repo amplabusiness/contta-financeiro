@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-12-10 (Sessão 24)
+**Última Atualização**: 2025-12-12 (Sessão 27)
 
 ---
 
@@ -2434,3 +2434,168 @@ Movido R$ 868,11 de "Energia - Sergio" para Adiantamento a Sócios.
 - **Anterior**: 1.26.0
 - **Atual**: 1.27.0
 - **Tipo**: PATCH (correção de classificação contábil)
+
+---
+
+## Sessão 27 (11-12/12/2025) - Sistema de Rescisão + Correções DRE
+
+### Novas Funcionalidades
+
+#### 1. Sistema de Rescisão de Contrato (v1.28.0)
+
+**Implementação completa** de rescisão de funcionários CLT integrada com Dr. Advocato:
+
+**Tabela criada**: `employee_terminations`
+- Armazena dados completos da rescisão
+- Cálculo automático de todas as verbas rescisórias
+- Integração com Dr. Advocato para orientação jurídica
+
+**8 tipos de rescisão suportados**:
+1. `dispensa_sem_justa_causa` - Aviso prévio + multa 40% FGTS
+2. `dispensa_com_justa_causa` - Sem multa FGTS, sem aviso
+3. `pedido_demissao` - Sem multa FGTS
+4. `acordo_mutuo` - Multa 20% FGTS (CLT 484-A)
+5. `termino_contrato` - Contrato determinado
+6. `morte_empregado` - Rescisão por falecimento
+7. `rescisao_indireta` - Falta grave do empregador
+8. `aposentadoria` - Aposentadoria do empregado
+
+**Verbas calculadas automaticamente**:
+- Saldo de salário
+- Aviso prévio (indenizado ou trabalhado)
+- Férias vencidas + proporcionais + 1/3
+- 13º proporcional
+- Multa FGTS (40% ou 20%)
+- Descontos: INSS, IRRF
+
+**Funções PostgreSQL**:
+- `calcular_rescisao(employee_id, termination_date, last_working_day, termination_type, notice_type)`
+- `aprovar_rescisao(termination_id)` - Gera lançamentos contábeis
+- `pagar_rescisao(termination_id, payment_date, bank_account_id)`
+
+**Contas contábeis criadas**:
+- 2.1.2.10.xx - Rescisões a Pagar (Passivo)
+- 4.2.10.xx - Indenizações Trabalhistas (Despesa)
+
+**Rubricas eSocial para rescisão** (códigos 3000-4040):
+- 3000: Saldo de Salário
+- 3010: Aviso Prévio Indenizado
+- 3020-3025: Férias (vencidas, proporcionais, 1/3)
+- 3030: 13º Proporcional
+- 3040: Multa FGTS
+- 4000-4040: Descontos (INSS, IRRF, FGTS, Pensão)
+
+**Arquivos modificados**:
+- `src/pages/Payroll.tsx` - Dialog de rescisão, funções de cálculo/aprovação
+- `supabase/migrations/20251211300000_employee_termination_system.sql` - Tabelas, funções, rubricas
+
+#### 2. Edição de Honorário Variável (v1.28.1)
+
+**Problema**: Botão de edição não funcionava na página de Honorários Especiais
+
+**Correção em** `src/pages/SpecialFees.tsx`:
+- Adicionado estado `editingVariableFee`
+- Criada função `openEditVariableFee(fee)`
+- Dialog atualizado para mostrar "Editar" vs "Novo"
+- Botão "Atualizar" vs "Salvar" conforme contexto
+
+### Correções de DRE
+
+#### Reclassificação de AMPLA CONTABILIDADE
+
+**Problema identificado**: R$ 143.827,26 (R$ 70.000 + R$ 73.827,26) da AMPLA CONTABILIDADE estava em "Outras Despesas Administrativas" (4.1.2.99), mas são adiantamentos para Sergio Carneiro Leão.
+
+**Correção aplicada diretamente no banco**:
+- Movidas 2 linhas de `accounting_entry_lines`
+- De: 4.1.2.99 (Despesas)
+- Para: 1.1.3.04.01 (Adiantamentos - Sergio Carneiro Leão)
+
+**Resultado**:
+| Conta | Antes | Depois |
+|-------|-------|--------|
+| 4.1.2.99 - Outras Despesas | R$ 149.664,96 | R$ 5.837,70 |
+| 1.1.3.04.01 - Adiant. Sergio | - | +R$ 143.827,26 |
+
+#### Esclarecimentos sobre Despesas da Ampla
+
+**SÃO despesas legítimas da Ampla** (não são adiantamentos):
+- R$ 26.000 - Outsider Construtora (reforma prédio Ampla)
+- R$ 12.968 - Dep. Pessoal
+- R$ 11.338 - Dep. Contábil
+- R$ 10.500 - Dep. Fiscal
+- R$ 6.736 - Rescisão
+- Nayara: R$ 6.000/mês (salário - trabalha na Ampla)
+- Victor Hugo: R$ 6.000/mês (salário - trabalha na Ampla)
+
+**É adiantamento a sócio** (não é despesa):
+- Sérgio Augusto: R$ 6.000/mês (mesada - NÃO trabalha na Ampla)
+- AMPLA CONTABILIDADE: pagamentos → adiantamento Sergio Carneiro Leão
+
+**Pendente de verificação**:
+- R$ 8.499,64 - Sistemas/Aplicativos - Ampla (usuário vai investigar)
+
+### Correções Técnicas
+
+#### Migration de Rescisão (v1.28.2)
+
+**Problema**: Migration falhava ao inserir contas contábeis
+
+**Erros corrigidos**:
+1. `type` tinha check constraint - removido do INSERT (campo nullable)
+2. `account_type` deve ser MAIÚSCULO (PASSIVO, DESPESA)
+3. `nature` deve ser MAIÚSCULO (CREDORA, DEVEDORA)
+4. `level` é obrigatório (adicionado)
+5. `dependents` não existe em `employees` - substituído por 0
+
+### Commits Realizados
+
+| Hash | Mensagem | Versão |
+|------|----------|--------|
+| 353d7ed | feat: sistema de rescisão de contrato | v1.28.0 |
+| (fix) | fix: botão editar honorário variável | v1.28.1 |
+| 74424cf | fix: corrige colunas da migration de rescisão | v1.28.2 |
+
+### Estrutura da Família Leão (Atualizada)
+
+| Pessoa | Relação | Trabalha na Ampla | Tipo de Pagamento |
+|--------|---------|-------------------|-------------------|
+| Sergio Carneiro Leão | Fundador | Sim | Pró-labore |
+| Nayara | Filha | Sim (R$ 6.000/mês) | Salário |
+| Victor Hugo Leão | Filho | Sim (R$ 6.000/mês) | Salário |
+| Sérgio Augusto | Filho | **Não** | Mesada (Adiantamento) |
+| AMPLA CONTABILIDADE | Empresa relacionada | - | Adiantamento Sergio |
+
+### Lições Aprendidas
+
+1. **chart_of_accounts tem constraints rígidos**:
+   - `type` tem check constraint (valores específicos)
+   - `account_type` e `nature` devem ser MAIÚSCULAS
+   - Melhor não incluir `type` e deixar NULL
+
+2. **Separar despesas de adiantamentos**:
+   - Salários de quem trabalha = Despesa
+   - Pagamentos para quem não trabalha = Adiantamento a Sócios
+   - Pagamentos para empresas relacionadas a sócios = Adiantamento
+
+3. **AMPLA CONTABILIDADE** (CNPJ 23893032000169):
+   - É empresa dos sócios
+   - Pagamentos para ela são adiantamentos, não despesas
+
+### Arquivos Criados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `supabase/migrations/20251211300000_employee_termination_system.sql` | Sistema completo de rescisão |
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/Payroll.tsx` | Dialog de rescisão, estados, funções |
+| `src/pages/SpecialFees.tsx` | Edição de honorário variável |
+
+### Versão
+
+- **Anterior**: 1.27.0
+- **Atual**: 1.28.2
+- **Tipo**: FEAT (rescisão) + FIX (edição honorário + DRE)
