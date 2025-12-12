@@ -147,24 +147,46 @@ ON CONFLICT (codigo) DO NOTHING;
 -- =====================================================
 
 -- Adicionar contas para rescisão se não existirem
-INSERT INTO chart_of_accounts (code, name, type, parent_code, is_synthetic, description) VALUES
--- Passivo - Obrigações Trabalhistas Rescisórias
-('2.1.2.10', 'Rescisões a Pagar', 'liability', '2.1.2', true, 'Valores rescisórios a pagar'),
-('2.1.2.10.01', 'Saldo de Salário a Pagar', 'liability', '2.1.2.10', false, 'Saldo de salário da rescisão'),
-('2.1.2.10.02', 'Aviso Prévio a Pagar', 'liability', '2.1.2.10', false, 'Aviso prévio indenizado'),
-('2.1.2.10.03', 'Férias Rescisórias a Pagar', 'liability', '2.1.2.10', false, 'Férias vencidas e proporcionais'),
-('2.1.2.10.04', '13º Rescisório a Pagar', 'liability', '2.1.2.10', false, '13º proporcional rescisão'),
-('2.1.2.10.05', 'FGTS Rescisório a Recolher', 'liability', '2.1.2.10', false, 'FGTS sobre rescisão + multa'),
-('2.1.2.10.06', 'INSS Rescisório a Recolher', 'liability', '2.1.2.10', false, 'INSS sobre verbas rescisórias'),
+-- Nota: account_type e nature devem ser em MAIÚSCULAS, type pode ser NULL
+DO $$
+DECLARE
+  v_parent_id UUID;
+BEGIN
+  -- Passivo - Obrigações Trabalhistas Rescisórias (2.1.2.10)
+  SELECT id INTO v_parent_id FROM chart_of_accounts WHERE code = '2.1.2';
 
--- Despesas - Indenizações Trabalhistas
-('4.2.10', 'Indenizações Trabalhistas', 'expense', '4.2', true, 'Despesas com rescisões'),
-('4.2.10.01', 'Aviso Prévio Indenizado', 'expense', '4.2.10', false, 'Despesa com aviso prévio'),
-('4.2.10.02', 'Férias Indenizadas', 'expense', '4.2.10', false, 'Férias pagas na rescisão'),
-('4.2.10.03', '13º Salário Proporcional', 'expense', '4.2.10', false, '13º pago na rescisão'),
-('4.2.10.04', 'Multa FGTS', 'expense', '4.2.10', false, 'Multa 40% ou 20% FGTS'),
-('4.2.10.05', 'Outras Indenizações', 'expense', '4.2.10', false, 'Outras verbas indenizatórias')
-ON CONFLICT (code) DO NOTHING;
+  INSERT INTO chart_of_accounts (code, name, account_type, nature, level, parent_id, is_analytical, is_active, description)
+  VALUES ('2.1.2.10', 'Rescisões a Pagar', 'PASSIVO', 'CREDORA', 4, v_parent_id, false, true, 'Valores rescisórios a pagar')
+  ON CONFLICT (code) DO NOTHING;
+
+  SELECT id INTO v_parent_id FROM chart_of_accounts WHERE code = '2.1.2.10';
+
+  INSERT INTO chart_of_accounts (code, name, account_type, nature, level, parent_id, is_analytical, is_active, description) VALUES
+    ('2.1.2.10.01', 'Saldo de Salário a Pagar', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, 'Saldo de salário da rescisão'),
+    ('2.1.2.10.02', 'Aviso Prévio a Pagar', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, 'Aviso prévio indenizado'),
+    ('2.1.2.10.03', 'Férias Rescisórias a Pagar', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, 'Férias vencidas e proporcionais'),
+    ('2.1.2.10.04', '13º Rescisório a Pagar', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, '13º proporcional rescisão'),
+    ('2.1.2.10.05', 'FGTS Rescisório a Recolher', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, 'FGTS sobre rescisão + multa'),
+    ('2.1.2.10.06', 'INSS Rescisório a Recolher', 'PASSIVO', 'CREDORA', 5, v_parent_id, true, true, 'INSS sobre verbas rescisórias')
+  ON CONFLICT (code) DO NOTHING;
+
+  -- Despesas - Indenizações Trabalhistas (4.2.10)
+  SELECT id INTO v_parent_id FROM chart_of_accounts WHERE code = '4.2';
+
+  INSERT INTO chart_of_accounts (code, name, account_type, nature, level, parent_id, is_analytical, is_active, description)
+  VALUES ('4.2.10', 'Indenizações Trabalhistas', 'DESPESA', 'DEVEDORA', 3, v_parent_id, false, true, 'Despesas com rescisões')
+  ON CONFLICT (code) DO NOTHING;
+
+  SELECT id INTO v_parent_id FROM chart_of_accounts WHERE code = '4.2.10';
+
+  INSERT INTO chart_of_accounts (code, name, account_type, nature, level, parent_id, is_analytical, is_active, description) VALUES
+    ('4.2.10.01', 'Aviso Prévio Indenizado', 'DESPESA', 'DEVEDORA', 4, v_parent_id, true, true, 'Despesa com aviso prévio'),
+    ('4.2.10.02', 'Férias Indenizadas', 'DESPESA', 'DEVEDORA', 4, v_parent_id, true, true, 'Férias pagas na rescisão'),
+    ('4.2.10.03', '13º Salário Proporcional', 'DESPESA', 'DEVEDORA', 4, v_parent_id, true, true, '13º pago na rescisão'),
+    ('4.2.10.04', 'Multa FGTS', 'DESPESA', 'DEVEDORA', 4, v_parent_id, true, true, 'Multa 40% ou 20% FGTS'),
+    ('4.2.10.05', 'Outras Indenizações', 'DESPESA', 'DEVEDORA', 4, v_parent_id, true, true, 'Outras verbas indenizatórias')
+  ON CONFLICT (code) DO NOTHING;
+END $$;
 
 -- =====================================================
 -- FUNÇÃO: CALCULAR RESCISÃO
@@ -307,7 +329,7 @@ BEGIN
     v_desconto_inss := calcular_inss(v_saldo_salario + v_decimo_terceiro);
     v_desconto_irrf := calcular_irrf(
         v_saldo_salario + v_decimo_terceiro - v_desconto_inss,
-        COALESCE(v_employee.dependents, 0)
+        0  -- Número de dependentes (não temos essa informação na tabela atual)
     );
 
     -- ========== TOTAIS ==========
