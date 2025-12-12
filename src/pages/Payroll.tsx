@@ -130,6 +130,34 @@ interface PayrollEvent {
   rubrica_tipo?: string;
 }
 
+interface TerminationData {
+  id?: string;
+  employee_id: string;
+  termination_date: string;
+  last_working_day: string;
+  termination_type: string;
+  notice_type: string;
+  // Valores calculados
+  saldo_salario?: number;
+  aviso_previo?: number;
+  ferias_vencidas?: number;
+  ferias_proporcionais?: number;
+  terco_constitucional?: number;
+  decimo_terceiro_proporcional?: number;
+  multa_fgts?: number;
+  saldo_fgts?: number;
+  desconto_aviso?: number;
+  desconto_inss?: number;
+  desconto_irrf?: number;
+  total_proventos?: number;
+  total_descontos?: number;
+  valor_liquido?: number;
+  // Dr. Advocato
+  advocato_consultation?: string;
+  advocato_warnings?: string[];
+  status?: string;
+}
+
 const Payroll = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [alerts, setAlerts] = useState<LaborAlert[]>([]);
@@ -160,6 +188,18 @@ const Payroll = () => {
   });
   const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
   const [generatingPayroll, setGeneratingPayroll] = useState(false);
+
+  // Termination (Rescisão) states
+  const [showTerminationDialog, setShowTerminationDialog] = useState(false);
+  const [employeeToTerminate, setEmployeeToTerminate] = useState<Employee | null>(null);
+  const [terminationData, setTerminationData] = useState<TerminationData | null>(null);
+  const [calculatingTermination, setCalculatingTermination] = useState(false);
+  const [terminationForm, setTerminationForm] = useState({
+    termination_date: new Date().toISOString().split('T')[0],
+    last_working_day: new Date().toISOString().split('T')[0],
+    termination_type: 'dispensa_sem_justa_causa',
+    notice_type: 'indenizado',
+  });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -373,6 +413,96 @@ const Payroll = () => {
     }
   };
 
+  // ========== TERMINATION (RESCISÃO) FUNCTIONS ==========
+
+  const terminationTypes = [
+    { value: 'dispensa_sem_justa_causa', label: 'Dispensa sem Justa Causa' },
+    { value: 'dispensa_com_justa_causa', label: 'Dispensa com Justa Causa' },
+    { value: 'pedido_demissao', label: 'Pedido de Demissão' },
+    { value: 'acordo_mutuo', label: 'Acordo Mútuo (Art. 484-A CLT)' },
+    { value: 'termino_contrato', label: 'Término de Contrato' },
+    { value: 'aposentadoria', label: 'Aposentadoria' },
+    { value: 'falecimento', label: 'Falecimento' },
+    { value: 'rescisao_indireta', label: 'Rescisão Indireta' },
+  ];
+
+  const noticeTypes = [
+    { value: 'trabalhado', label: 'Aviso Trabalhado' },
+    { value: 'indenizado', label: 'Aviso Indenizado' },
+    { value: 'dispensado', label: 'Dispensado pelo Empregador' },
+    { value: 'nao_cumprido', label: 'Não Cumprido (Desconto)' },
+  ];
+
+  const openTerminationDialog = (employee: Employee) => {
+    setEmployeeToTerminate(employee);
+    setTerminationData(null);
+    setTerminationForm({
+      termination_date: new Date().toISOString().split('T')[0],
+      last_working_day: new Date().toISOString().split('T')[0],
+      termination_type: 'dispensa_sem_justa_causa',
+      notice_type: 'indenizado',
+    });
+    setShowTerminationDialog(true);
+  };
+
+  const calculateTermination = async () => {
+    if (!employeeToTerminate) return;
+
+    setCalculatingTermination(true);
+    try {
+      const { data, error } = await supabase.rpc("calcular_rescisao", {
+        p_employee_id: employeeToTerminate.id,
+        p_termination_date: terminationForm.termination_date,
+        p_last_working_day: terminationForm.last_working_day,
+        p_termination_type: terminationForm.termination_type,
+        p_notice_type: terminationForm.notice_type,
+      });
+
+      if (error) throw error;
+
+      // Buscar os dados calculados
+      const { data: termData, error: termError } = await supabase
+        .from("employee_terminations")
+        .select("*")
+        .eq("id", data)
+        .single();
+
+      if (termError) throw termError;
+
+      setTerminationData(termData);
+      toast.success("Rescisão calculada com sucesso!");
+    } catch (error: any) {
+      console.error("Error calculating termination:", error);
+      toast.error(error.message || "Erro ao calcular rescisão");
+    } finally {
+      setCalculatingTermination(false);
+    }
+  };
+
+  const approveTermination = async () => {
+    if (!terminationData?.id) return;
+
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("aprovar_rescisao", {
+        p_termination_id: terminationData.id,
+      });
+
+      if (error) throw error;
+
+      toast.success("Rescisão aprovada e lançamento contábil gerado!");
+      setShowTerminationDialog(false);
+      setTerminationData(null);
+      setEmployeeToTerminate(null);
+      loadData();
+    } catch (error: any) {
+      console.error("Error approving termination:", error);
+      toast.error(error.message || "Erro ao aprovar rescisão");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -536,7 +666,8 @@ const Payroll = () => {
     return { total_official, total_unofficial, total_encargos, risk_score };
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return "R$ 0,00";
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
@@ -881,6 +1012,15 @@ const Payroll = () => {
                                       </>
                                     )}
                                   </DropdownMenuItem>
+                                  {employee.is_active && employee.contract_type === 'CLT' && (
+                                    <DropdownMenuItem
+                                      onClick={() => openTerminationDialog(employee)}
+                                      className="text-orange-600"
+                                    >
+                                      <Scale className="h-4 w-4 mr-2" />
+                                      Rescindir Contrato
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-red-600"
@@ -1591,6 +1731,250 @@ const Payroll = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Termination Dialog */}
+        <Dialog open={showTerminationDialog} onOpenChange={setShowTerminationDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-orange-600">
+                <Scale className="h-5 w-5" />
+                Rescisão de Contrato - {employeeToTerminate?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Calcule os valores rescisórios com orientação do Dr. Advocato
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-6 py-4">
+              {/* Dados da Rescisão */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data da Rescisão</Label>
+                  <Input
+                    type="date"
+                    value={terminationForm.termination_date}
+                    onChange={(e) => setTerminationForm({...terminationForm, termination_date: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Último Dia Trabalhado</Label>
+                  <Input
+                    type="date"
+                    value={terminationForm.last_working_day}
+                    onChange={(e) => setTerminationForm({...terminationForm, last_working_day: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo de Rescisão</Label>
+                  <Select
+                    value={terminationForm.termination_type}
+                    onValueChange={(value) => setTerminationForm({...terminationForm, termination_type: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {terminationTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Aviso Prévio</Label>
+                  <Select
+                    value={terminationForm.notice_type}
+                    onValueChange={(value) => setTerminationForm({...terminationForm, notice_type: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {noticeTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button
+                onClick={calculateTermination}
+                disabled={calculatingTermination}
+                className="w-full"
+              >
+                {calculatingTermination ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Calculando...
+                  </>
+                ) : (
+                  <>
+                    <Calculator className="h-4 w-4 mr-2" />
+                    Calcular Rescisão
+                  </>
+                )}
+              </Button>
+
+              {/* Resultado do Cálculo */}
+              {terminationData && (
+                <>
+                  {/* Dr. Advocato Consultation */}
+                  <Card className="bg-red-50 border-red-200">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-red-700 text-base">
+                        <Scale className="h-5 w-5" />
+                        Dr. Advocato - Orientação Jurídica
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="whitespace-pre-wrap text-sm text-red-900 font-mono">
+                        {terminationData.advocato_consultation}
+                      </pre>
+                      {terminationData.advocato_warnings && terminationData.advocato_warnings.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <p className="font-semibold text-red-700">⚠️ Alertas Importantes:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {terminationData.advocato_warnings.map((warning, idx) => (
+                              <li key={idx} className="text-sm text-red-800">{warning}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Valores Calculados */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Proventos */}
+                    <Card className="bg-green-50 border-green-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-green-700 text-base">Proventos</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Saldo de Salário:</span>
+                          <span className="font-medium">{formatCurrency(terminationData.saldo_salario)}</span>
+                        </div>
+                        {(terminationData.aviso_previo ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>Aviso Prévio:</span>
+                            <span className="font-medium">{formatCurrency(terminationData.aviso_previo)}</span>
+                          </div>
+                        )}
+                        {(terminationData.ferias_vencidas ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>Férias Vencidas:</span>
+                            <span className="font-medium">{formatCurrency(terminationData.ferias_vencidas)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>Férias Proporcionais:</span>
+                          <span className="font-medium">{formatCurrency(terminationData.ferias_proporcionais)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>1/3 Constitucional:</span>
+                          <span className="font-medium">{formatCurrency(terminationData.terco_constitucional)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>13º Proporcional:</span>
+                          <span className="font-medium">{formatCurrency(terminationData.decimo_terceiro_proporcional)}</span>
+                        </div>
+                        {(terminationData.multa_fgts ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>Multa FGTS:</span>
+                            <span className="font-medium">{formatCurrency(terminationData.multa_fgts)}</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-2 flex justify-between font-bold text-green-700">
+                          <span>Total Proventos:</span>
+                          <span>{formatCurrency(terminationData.total_proventos)}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Descontos */}
+                    <Card className="bg-red-50 border-red-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-red-700 text-base">Descontos</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        {(terminationData.desconto_aviso ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>Aviso Não Cumprido:</span>
+                            <span className="font-medium">{formatCurrency(terminationData.desconto_aviso)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>INSS:</span>
+                          <span className="font-medium">{formatCurrency(terminationData.desconto_inss)}</span>
+                        </div>
+                        {(terminationData.desconto_irrf ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>IRRF:</span>
+                            <span className="font-medium">{formatCurrency(terminationData.desconto_irrf)}</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-2 flex justify-between font-bold text-red-700">
+                          <span>Total Descontos:</span>
+                          <span>{formatCurrency(terminationData.total_descontos)}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Total Líquido */}
+                  <Card className="bg-blue-50 border-blue-200">
+                    <CardContent className="py-4">
+                      <div className="flex justify-between items-center text-xl font-bold">
+                        <span>Valor Líquido a Pagar:</span>
+                        <span className="text-blue-700">{formatCurrency(terminationData.valor_liquido)}</span>
+                      </div>
+                      {(terminationData.saldo_fgts ?? 0) > 0 && (
+                        <div className="flex justify-between items-center text-sm text-gray-600 mt-2">
+                          <span>Saldo FGTS para saque (aproximado):</span>
+                          <span>{formatCurrency(terminationData.saldo_fgts)}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowTerminationDialog(false)}>
+                Cancelar
+              </Button>
+              {terminationData && (
+                <Button
+                  onClick={approveTermination}
+                  disabled={saving}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Aprovando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Aprovar e Gerar Lançamento Contábil
+                    </>
+                  )}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
