@@ -112,9 +112,9 @@ interface PayrollRecord {
   id: string;
   employee_id: string;
   competencia: string;
-  total_proventos: number;
-  total_descontos: number;
-  liquido: number;
+  total_proventos_oficial: number;
+  total_descontos_oficial: number;
+  liquido_oficial: number;
   status: string;
   employee_name?: string;
   employee_role?: string;
@@ -267,9 +267,9 @@ const Payroll = () => {
           id,
           employee_id,
           competencia,
-          total_proventos,
-          total_descontos,
-          liquido,
+          total_proventos_oficial,
+          total_descontos_oficial,
+          liquido_oficial,
           status,
           employees (name, role)
         `)
@@ -1048,13 +1048,13 @@ const Payroll = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right text-green-600 font-medium">
-                            {formatCurrency(record.total_proventos)}
+                            {formatCurrency(record.total_proventos_oficial)}
                           </TableCell>
                           <TableCell className="text-right text-red-600 font-medium">
-                            {formatCurrency(record.total_descontos)}
+                            {formatCurrency(record.total_descontos_oficial)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(record.liquido)}
+                            {formatCurrency(record.liquido_oficial)}
                           </TableCell>
                           <TableCell>
                             <Badge variant={record.status === "FINALIZADO" ? "default" : "secondary"}>
@@ -1145,7 +1145,7 @@ const Payroll = () => {
                           <TableRow className="bg-green-50 font-bold">
                             <TableCell colSpan={2}>Total Proventos</TableCell>
                             <TableCell className="text-right text-green-700">
-                              {formatCurrency(selectedPayroll.total_proventos)}
+                              {formatCurrency(selectedPayroll.total_proventos_oficial)}
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -1182,7 +1182,7 @@ const Payroll = () => {
                           <TableRow className="bg-red-50 font-bold">
                             <TableCell colSpan={2}>Total Descontos</TableCell>
                             <TableCell className="text-right text-red-700">
-                              {formatCurrency(selectedPayroll.total_descontos)}
+                              {formatCurrency(selectedPayroll.total_descontos_oficial)}
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -1197,7 +1197,7 @@ const Payroll = () => {
                     <div className="flex items-center justify-between text-xl font-bold">
                       <span>Liquido a Receber:</span>
                       <span className="text-blue-600">
-                        {formatCurrency(selectedPayroll.liquido)}
+                        {formatCurrency(selectedPayroll.liquido_oficial)}
                       </span>
                     </div>
                   </CardContent>
