@@ -273,7 +273,7 @@ const Payroll = () => {
           status,
           employees (name, role)
         `)
-        .eq("competencia", selectedCompetencia)
+        .eq("competencia", `${selectedCompetencia}-01`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -340,7 +340,7 @@ const Payroll = () => {
     try {
       const { data, error } = await supabase.rpc("gerar_folha_funcionario", {
         p_employee_id: employeeId,
-        p_competencia: selectedCompetencia,
+        p_competencia: `${selectedCompetencia}-01`,
       });
 
       if (error) throw error;
@@ -359,7 +359,7 @@ const Payroll = () => {
     setGeneratingPayroll(true);
     try {
       const { data, error } = await supabase.rpc("gerar_folha_mensal", {
-        p_competencia: selectedCompetencia,
+        p_competencia: `${selectedCompetencia}-01`,
       });
 
       if (error) throw error;
