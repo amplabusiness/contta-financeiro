@@ -41,7 +41,8 @@
       "Bash(node -e:*)",
       "Bash(node scripts/analyze-dre-deep.mjs:*)",
       "Bash(node -e \"\nconst { createClient } = require(''@supabase/supabase-js'');\nconst supabase = createClient(\n  ''https://xdtlhzysrpoinqtsglmr.supabase.co'',\n  ''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdGxoenlzcnBvaW5xdHNnbG1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzEyNzQ0OSwiZXhwIjoyMDc4NzAzNDQ5fQ.VRFn_C-S01Pt4uBp_ZzdB6ZmsRSP0-oKGXru73qSSQI''\n);\n\nasync function run() {\n  // Testar tabela esocial_rubricas\n  const { data: rubricas, error: rubricasErr } = await supabase\n    .from(''esocial_rubricas'')\n    .select(''*'')\n    .limit(1);\n\n  if (rubricasErr) {\n    console.log(''esocial_rubricas erro:'', rubricasErr.message);\n  } else {\n    console.log(''esocial_rubricas OK, colunas:'', Object.keys(rubricas?.[0] || {}));\n  }\n\n  // Testar tabela payroll\n  const { data: payroll, error: payrollErr } = await supabase\n    .from(''payroll'')\n    .select(''*'')\n    .limit(1);\n\n  if (payrollErr) {\n    console.log(''payroll erro:'', payrollErr.message);\n  } else {\n    console.log(''payroll OK, colunas:'', Object.keys(payroll?.[0] || {}));\n  }\n}\n\nrun();\n\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []
