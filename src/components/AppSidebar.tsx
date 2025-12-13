@@ -286,13 +286,13 @@ export function AppSidebar() {
         {collapsed ? (
           <div className="flex flex-col items-center gap-1">
             <AITeamBadge variant="minimal" className="justify-center" />
-            <span className="text-[10px] text-muted-foreground/60" title="Versão 1.22.0">v1.22</span>
+            <span className="text-[10px] text-muted-foreground/60" title="Versão 1.28.2">v1.28</span>
           </div>
         ) : (
           <div className="flex flex-col gap-1">
             <AITeamBadge variant="compact" />
             <div className="flex items-center justify-between px-2">
-              <span className="text-[10px] text-muted-foreground/60">Ampla Sistema v1.22.0</span>
+              <span className="text-[10px] text-muted-foreground/60">Ampla Sistema v1.28.2</span>
             </div>
           </div>
         )}
