@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-12-12 (Sessão 27)
+**Última Atualização**: 2025-12-15 (Sessão 28)
 
 ---
 
@@ -2599,3 +2599,138 @@ Movido R$ 868,11 de "Energia - Sergio" para Adiantamento a Sócios.
 - **Anterior**: 1.27.0
 - **Atual**: 1.28.2
 - **Tipo**: FEAT (rescisão) + FIX (edição honorário + DRE)
+
+---
+
+## Sessão 28 (15/12/2025) - Sistema NFS-e Completo
+
+### Resumo
+
+Implementação completa do sistema de emissão de NFS-e (Nota Fiscal de Serviços Eletrônica) para a Ampla Contabilidade, incluindo:
+- Integração com webservice ABRASF 2.04
+- ISS Fixo (Sociedade de Profissionais)
+- Simples Nacional (sem retenções federais)
+- Códigos de serviço LC 116/2003
+- Referência à Reforma Tributária LC 214/2025
+
+### Regras Tributárias da Ampla
+
+| Aspecto | Configuração |
+|---------|--------------|
+| **Regime Tributário** | Simples Nacional |
+| **ISS** | Fixo mensal (Sociedade de Profissionais - Art. 9º, §3º DL 406/68) |
+| **ExigibilidadeISS** | 4 (ISS Fixo) |
+| **valor_iss na nota** | R$ 0,00 (pago mensalmente ao município) |
+| **aliquota na nota** | 0% |
+| **Retenções PIS/COFINS/CSLL/IR** | R$ 0,00 (Simples Nacional não sofre retenção) |
+| **valor_liquido** | = valor_servicos (sem deduções) |
+| **Aviso obrigatório** | "DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL" |
+
+### Tabelas Criadas
+
+| Tabela | Descrição |
+|--------|-----------|
+| `nfse` | Notas fiscais emitidas |
+| `nfse_config` | Configuração do prestador (CNPJ 23893032000169) |
+| `nfse_log` | Log de comunicação com webservice |
+| `codigos_servico_lc116` | 200 códigos de serviço da LC 116/2003 |
+
+### Migrations Aplicadas
+
+| Migration | Descrição |
+|-----------|-----------|
+| `20251215000000_nfse_system.sql` | Sistema base NFS-e |
+| `20251215000001_nfse_iss_fixo.sql` | Campos ISS Fixo |
+| `20251215000002_codigos_servico_lc116.sql` | Códigos de serviço |
+| `20251215000003_retencoes_federais.sql` | Configuração Simples Nacional |
+
+### Configuração da Ampla no nfse_config
+
+```json
+{
+  "prestador_cnpj": "23893032000169",
+  "prestador_razao_social": "AMPLA CONTABILIDADE LTDA",
+  "prestador_inscricao_municipal": "6241034",
+  "optante_simples_nacional": true,
+  "regime_tributario": "simples_nacional",
+  "usar_iss_fixo": true,
+  "iss_fixo": 70.00,
+  "ambiente": "homologacao"
+}
+```
+
+### Discriminação Padrão da NFS-e
+
+```
+SERVIÇOS DE CONTABILIDADE - COMPETÊNCIA DEZEMBRO/2025
+
+Serviços prestados conforme contrato de prestação de serviços contábeis:
+- Escrituração contábil e fiscal
+- Apuração de impostos federais e municipais
+- Elaboração de balancetes e demonstrações contábeis
+- Obrigações acessórias (SPED, DCTFWeb, EFD, etc.)
+- Assessoria e consultoria contábil
+
+Código do Serviço: 17.18 - Contabilidade, inclusive serviços técnicos e auxiliares
+CNAE: 6920602
+
+DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL
+NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI/IBS/CBS E ISS
+ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68
+Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)
+```
+
+### Edge Function nfse-emitir
+
+Localização: `supabase/functions/nfse-emitir/index.ts`
+
+Gera XML no padrão ABRASF 2.04 com:
+- ExigibilidadeISS = 4 (ISS Fixo)
+- ValorIss = 0
+- Aliquota = 0
+- IssRetido = 2 (não retido)
+- ItemListaServico (sem ponto: 1718)
+- CodigoCnae
+- Envelope SOAP para RecepcionarLoteRps
+
+### Commits Realizados
+
+| Hash | Mensagem | Versão |
+|------|----------|--------|
+| 733ec85 | feat: sistema completo NFS-e | v1.29.0 |
+| 7d25f9c | feat: ISS fixo e códigos LC 116 | v1.29.1 |
+| 0e93474 | fix: ISS Fixo Sociedade Profissionais | v1.29.2 |
+| 79a2de7 | feat: Simples Nacional e Reforma Tributária | v1.29.3 |
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/NFSe.tsx` | Página completa de emissão/consulta NFS-e |
+| `src/components/NFSeWidget.tsx` | Widget para dashboard |
+| `supabase/functions/nfse-emitir/index.ts` | Edge Function emissão |
+| `scripts/run-nfse-migration.mjs` | Script verificação tabelas |
+
+### Lições Aprendidas
+
+1. **Simples Nacional não sofre retenção**:
+   - PIS, COFINS, CSLL, IR = 0
+   - Tributação via DAS mensal, não por nota
+
+2. **ISS Fixo (Sociedade de Profissionais)**:
+   - ExigibilidadeISS = 4
+   - valor_iss = 0 na nota
+   - ISS é pago mensalmente ao município
+
+3. **supabase db push com migrations antigas**:
+   - Use `--include-all` para aplicar migrations com timestamp anterior
+
+4. **Códigos LC 116/2003**:
+   - 17.18 = Contabilidade
+   - Remover ponto no XML: 1718
+
+### Versão
+
+- **Anterior**: 1.28.2
+- **Atual**: 1.29.3
+- **Tipo**: FEAT (NFS-e completo)
