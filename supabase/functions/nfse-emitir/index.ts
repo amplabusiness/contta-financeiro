@@ -22,6 +22,10 @@ interface RpsData {
   codigo_municipio: string
   valor_servicos: number
   aliquota: number
+  valor_iss: number
+  exigibilidade_iss: number
+  item_lista_servico: string
+  codigo_cnae: string
   numero_rps: string
   serie_rps: string
   competencia: string
@@ -29,9 +33,17 @@ interface RpsData {
 
 // Gera XML do RPS no padrão ABRASF 2.04
 function buildRpsXml(data: RpsData): string {
-  const valorIss = (data.valor_servicos * data.aliquota).toFixed(2)
   const loteId = `L${data.numero_rps}`
   const rpsId = `R${data.numero_rps}`
+
+  // ExigibilidadeISS:
+  // 1 = Exigível
+  // 2 = Não incidência
+  // 3 = Isenção
+  // 4 = Exportação (ou ISS Fixo - Sociedade de Profissionais)
+  // 5 = Imunidade
+  // 6 = Exigibilidade suspensa por decisão judicial
+  // 7 = Exigibilidade suspensa por processo administrativo
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <EnviarLoteRpsEnvio xmlns="${NAMESPACE}">
@@ -54,12 +66,15 @@ function buildRpsXml(data: RpsData): string {
           <Servico>
             <Valores>
               <ValorServicos>${data.valor_servicos.toFixed(2)}</ValorServicos>
+              <ValorIss>${data.valor_iss.toFixed(2)}</ValorIss>
               <IssRetido>2</IssRetido>
               <Aliquota>${data.aliquota.toFixed(4)}</Aliquota>
             </Valores>
-            <ItemListaServico>1701</ItemListaServico>
+            <ItemListaServico>${data.item_lista_servico.replace('.', '')}</ItemListaServico>
+            <CodigoCnae>${data.codigo_cnae}</CodigoCnae>
             <Discriminacao>${escapeXml(data.discriminacao)}</Discriminacao>
             <CodigoMunicipio>${data.codigo_municipio}</CodigoMunicipio>
+            <ExigibilidadeISS>${data.exigibilidade_iss}</ExigibilidadeISS>
           </Servico>
           <Prestador>
             <Cnpj>${data.prestador_cnpj}</Cnpj>
@@ -168,7 +183,11 @@ serve(async (req) => {
       discriminacao: nfse.discriminacao,
       codigo_municipio: nfse.codigo_municipio || '5208707',
       valor_servicos: parseFloat(nfse.valor_servicos),
-      aliquota: parseFloat(nfse.aliquota),
+      aliquota: parseFloat(nfse.aliquota || '0'),
+      valor_iss: parseFloat(nfse.valor_iss || '0'),
+      exigibilidade_iss: nfse.exigibilidade_iss || 4, // 4 = ISS Fixo (Sociedade de Profissionais)
+      item_lista_servico: nfse.item_lista_servico || '17.18',
+      codigo_cnae: nfse.codigo_cnae || '6920602',
       numero_rps: nfse.numero_rps,
       serie_rps: nfse.serie_rps || 'A',
       competencia: nfse.competencia

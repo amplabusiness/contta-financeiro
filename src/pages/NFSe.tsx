@@ -151,10 +151,8 @@ export default function NFSe() {
   const [formData, setFormData] = useState({
     client_id: '',
     valor_servicos: '',
-    valor_iss: '70.00', // ISS fixo padrão
     discriminacao: '',
     competencia: format(new Date(), 'yyyy-MM-dd'),
-    aliquota: '0.02',
     codigo_servico: '17.18' // 17.18 = Contabilidade, inclusive serviços técnicos e auxiliares
   });
 
@@ -175,9 +173,7 @@ export default function NFSe() {
         setConfig(configData);
         setFormData(prev => ({
           ...prev,
-          discriminacao: configData.descricao_servico_padrao || '',
-          aliquota: String(configData.aliquota_padrao || 0.02),
-          valor_iss: configData.usar_iss_fixo && configData.iss_fixo ? String(configData.iss_fixo) : '70.00'
+          discriminacao: configData.descricao_servico_padrao || ''
         }));
       }
 
@@ -258,9 +254,10 @@ export default function NFSe() {
       const numeroRps = String(rpsData || 1);
       const valorServicos = client.monthly_fee;
 
-      // ISS FIXO - usar valor fixo configurado ao invés de calcular pela alíquota
-      const valorIss = config.usar_iss_fixo && config.iss_fixo ? config.iss_fixo : 70.00;
-      const aliquota = valorServicos > 0 ? valorIss / valorServicos : 0.02; // Alíquota efetiva para o XML
+      // ISS FIXO (Sociedade de Profissionais) - ExigibilidadeISS = 4
+      // O ISS é recolhido mensalmente ao município em valor fixo, não por nota
+      const valorIss = 0; // ISS não é cobrado na nota individual
+      const aliquota = 0; // Alíquota zero pois é regime de ISS Fixo
 
       // Buscar código de serviço 17.18 (Contabilidade) do banco ou usar o padrão
       const codigoContabilidade = codigosServico.find(c => c.codigo === '17.18') || SERVICO_CONTABILIDADE;
@@ -280,7 +277,7 @@ Serviços prestados conforme contrato de prestação de serviços contábeis:
 Código do Serviço: ${codigoContabilidade.codigo} - ${codigoContabilidade.descricao?.substring(0, 50)}...
 CNAE: ${codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602'}
 
-ISS Fixo: R$ ${valorIss.toFixed(2)}`;
+ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68`;
 
       // Criar registro da NFS-e
       const { data: nfse, error: insertError } = await supabase
@@ -305,10 +302,11 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
           valor_servicos: valorServicos,
           aliquota: aliquota,
           valor_iss: valorIss,
-          valor_liquido: valorServicos - valorIss,
+          valor_liquido: valorServicos, // Valor líquido = valor total (ISS fixo não deduz)
           item_lista_servico: codigoContabilidade.codigo,
           codigo_cnae: codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
+          exigibilidade_iss: 4, // 4 = ISS Fixo (Sociedade de Profissionais)
           client_id: client.id
         })
         .select()
@@ -318,7 +316,7 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
 
       toast({
         title: 'NFS-e criada',
-        description: `RPS ${numeroRps} - ${client.name}`
+        description: `RPS ${numeroRps} - ${client.name} (ISS Fixo)`
       });
 
       // Chamar Edge Function para enviar ao webservice
@@ -469,9 +467,9 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
       const numeroRps = String(rpsData || 1);
       const valorServicos = parseFloat(formData.valor_servicos);
 
-      // ISS FIXO - usar o valor do formulário (que pode ser editado)
-      const valorIss = parseFloat(formData.valor_iss || '70.00');
-      const aliquota = valorServicos > 0 ? valorIss / valorServicos : 0.02; // Alíquota efetiva
+      // ISS FIXO (Sociedade de Profissionais) - ExigibilidadeISS = 4
+      const valorIss = 0; // ISS não é cobrado na nota individual
+      const aliquota = 0; // Alíquota zero pois é regime de ISS Fixo
 
       // Buscar código de serviço selecionado - primeiro do banco, depois dos estáticos
       const servicoSelecionado = codigosServico.find(s => s.codigo === formData.codigo_servico)
@@ -500,10 +498,11 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
           valor_servicos: valorServicos,
           aliquota: aliquota,
           valor_iss: valorIss,
-          valor_liquido: valorServicos - valorIss,
+          valor_liquido: valorServicos, // Valor líquido = valor total (ISS fixo não deduz)
           item_lista_servico: servicoSelecionado.codigo,
           codigo_cnae: ('cnae_principal' in servicoSelecionado ? servicoSelecionado.cnae_principal : servicoSelecionado.cnae) || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
+          exigibilidade_iss: 4, // 4 = ISS Fixo (Sociedade de Profissionais)
           client_id: client.id
         })
         .select()
@@ -513,7 +512,7 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
 
       toast({
         title: 'NFS-e criada',
-        description: `RPS ${numeroRps} criado. Enviando para o webservice...`
+        description: `RPS ${numeroRps} - ${client.name} (ISS Fixo)`
       });
 
       try {
@@ -535,10 +534,8 @@ ISS Fixo: R$ ${valorIss.toFixed(2)}`;
       setFormData({
         client_id: '',
         valor_servicos: '',
-        valor_iss: config?.usar_iss_fixo && config?.iss_fixo ? String(config.iss_fixo) : '70.00',
         discriminacao: config?.descricao_servico_padrao || '',
         competencia: format(new Date(), 'yyyy-MM-dd'),
-        aliquota: String(config?.aliquota_padrao || 0.02),
         codigo_servico: '17.18'
       });
       loadData();
