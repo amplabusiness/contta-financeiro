@@ -105,6 +105,7 @@ import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportBoletosLiquidados from "./pages/ImportBoletosLiquidados";
 import BoletosComposicao from "./pages/BoletosComposicao";
 import AIAutomation from "./pages/AIAutomation";
+import NFSe from "./pages/NFSe";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
@@ -302,6 +303,7 @@ const App = () => (
             <Route path="/import-boletos-liquidados" element={<ImportBoletosLiquidados />} />
             <Route path="/boletos-composicao" element={<BoletosComposicao />} />
             <Route path="/ai-automation" element={<AIAutomation />} />
+            <Route path="/nfse" element={<NFSe />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
