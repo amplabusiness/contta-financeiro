@@ -48,3 +48,8 @@ dist-ssr
 .vercel
 nul
 .env*.local
+
+# NFS-e Python local
+nfes_servico/
+"Informações sobre Integração de NFS-e/"
+certificado/
