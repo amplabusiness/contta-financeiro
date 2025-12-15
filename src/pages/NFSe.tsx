@@ -149,6 +149,7 @@ export default function NFSe() {
   // Filtros
   const [filtroStatus, setFiltroStatus] = useState<string>('all');
   const [filtroCompetencia, setFiltroCompetencia] = useState<string>(format(new Date(), 'yyyy-MM'));
+  const [filtroEmissaoRapida, setFiltroEmissaoRapida] = useState<string>('');
 
   // Form de emissão manual
   const [formData, setFormData] = useState({
@@ -576,6 +577,49 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
       title: 'Consultando...',
       description: `Consultando status da NFS-e ${nfse.numero_rps}`
     });
+
+    try {
+      // Chamar Edge Function para consultar status no webservice
+      const { data: funcData, error: funcError } = await supabase.functions.invoke('nfse-consultar', {
+        body: { nfse_id: nfse.id, protocolo: nfse.protocolo }
+      });
+
+      if (funcError) {
+        // Se a função não existir ou der erro, mostrar instruções
+        toast({
+          title: 'Consulta Manual Necessária',
+          description: 'Acesse o portal da prefeitura para verificar o status da NFS-e. O XML RPS está disponível para download.',
+          variant: 'default'
+        });
+        return;
+      }
+
+      if (funcData?.numero_nfse) {
+        // NFS-e autorizada!
+        toast({
+          title: 'NFS-e Autorizada!',
+          description: `Número: ${funcData.numero_nfse} - Código: ${funcData.codigo_verificacao}`,
+        });
+        loadData(); // Recarregar dados
+      } else if (funcData?.status === 'processing') {
+        toast({
+          title: 'Em Processamento',
+          description: 'A NFS-e ainda está sendo processada pela prefeitura'
+        });
+      } else if (funcData?.error) {
+        toast({
+          title: 'Erro no Processamento',
+          description: funcData.error,
+          variant: 'destructive'
+        });
+      }
+    } catch (err: any) {
+      // Sem integração real - instruções para verificação manual
+      toast({
+        title: 'Verificação Manual',
+        description: 'Acesse https://nfse.goiania.go.gov.br para verificar o status. XML RPS disponível para download.',
+      });
+    }
   };
 
   const cancelarNFSe = async (nfse: NFSe) => {
@@ -904,6 +948,15 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
     return !nfses.some(n => n.client_id === c.id && n.competencia.startsWith(mesAtual));
   });
 
+  // Clientes sem nota filtrados pela busca
+  const clientesSemNotaFiltrados = filtroEmissaoRapida
+    ? clientesSemNota.filter(c =>
+        c.name.toLowerCase().includes(filtroEmissaoRapida.toLowerCase()) ||
+        (c.cnpj && c.cnpj.includes(filtroEmissaoRapida)) ||
+        (c.cpf && c.cpf.includes(filtroEmissaoRapida))
+      )
+    : clientesSemNota;
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -1013,9 +1066,31 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
               Clique no cliente para emitir automaticamente com valor do honorário
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Campo de busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cliente por nome ou CNPJ/CPF..."
+                value={filtroEmissaoRapida}
+                onChange={(e) => setFiltroEmissaoRapida(e.target.value)}
+                className="pl-10 bg-white"
+              />
+              {filtroEmissaoRapida && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                  onClick={() => setFiltroEmissaoRapida('')}
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Lista de clientes */}
             <div className="flex flex-wrap gap-2">
-              {clientesSemNota.slice(0, 10).map(client => (
+              {clientesSemNotaFiltrados.slice(0, filtroEmissaoRapida ? 20 : 10).map(client => (
                 <Button
                   key={client.id}
                   variant="outline"
@@ -1025,14 +1100,20 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
                   className="bg-white"
                 >
                   <Zap className="h-3 w-3 mr-1" />
-                  {client.name.substring(0, 25)}...
+                  {client.name.substring(0, 25)}{client.name.length > 25 ? '...' : ''}
                   <Badge variant="secondary" className="ml-2">{formatCurrency(client.monthly_fee)}</Badge>
                 </Button>
               ))}
-              {clientesSemNota.length > 10 && (
+              {!filtroEmissaoRapida && clientesSemNota.length > 10 && (
                 <Button variant="outline" size="sm" onClick={() => setShowEmitirLoteDialog(true)}>
                   +{clientesSemNota.length - 10} mais...
                 </Button>
+              )}
+              {filtroEmissaoRapida && clientesSemNotaFiltrados.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum cliente encontrado para "{filtroEmissaoRapida}"</p>
+              )}
+              {filtroEmissaoRapida && clientesSemNotaFiltrados.length > 20 && (
+                <p className="text-sm text-muted-foreground">+{clientesSemNotaFiltrados.length - 20} resultados (refine sua busca)</p>
               )}
             </div>
           </CardContent>

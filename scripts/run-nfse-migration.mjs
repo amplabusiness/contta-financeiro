@@ -78,6 +78,32 @@ CREATE POLICY "Allow public access" ON codigos_servico_lc116 FOR ALL USING (true
     console.log('   ❌ Tabela nfse_log NÃO existe - precisa criar manualmente');
   }
 
+  // Verificar/criar bucket de documentos
+  console.log('\n5. Verificando bucket de storage "documentos"...');
+  const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+
+  if (bucketsError) {
+    console.log('   ⚠️ Erro ao listar buckets:', bucketsError.message);
+  } else {
+    const documentosBucket = buckets?.find(b => b.name === 'documentos');
+    if (documentosBucket) {
+      console.log('   ✅ Bucket "documentos" existe');
+    } else {
+      console.log('   ⏳ Criando bucket "documentos"...');
+      const { error: createError } = await supabase.storage.createBucket('documentos', {
+        public: false,
+        fileSizeLimit: 10485760, // 10MB
+        allowedMimeTypes: ['application/xml', 'text/xml', 'application/pdf']
+      });
+
+      if (createError) {
+        console.log('   ❌ Erro ao criar bucket:', createError.message);
+      } else {
+        console.log('   ✅ Bucket "documentos" criado com sucesso');
+      }
+    }
+  }
+
   console.log('\n✅ Verificação concluída!');
   console.log('\n📝 Se alguma tabela estiver faltando, execute o SQL do arquivo:');
   console.log('   supabase/migrations/EXECUTAR_NFSE_COMPLETO.sql');

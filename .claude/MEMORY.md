@@ -2734,3 +2734,83 @@ Gera XML no padrão ABRASF 2.04 com:
 - **Anterior**: 1.28.2
 - **Atual**: 1.29.3
 - **Tipo**: FEAT (NFS-e completo)
+
+---
+
+## Sessão 28.2 (15/12/2025) - Portal Nacional NFS-e (SEFIN)
+
+### Contexto
+
+Após a implementação do sistema ABRASF, foi necessário verificar se a Ampla poderia emitir pelo **Portal Nacional da NFS-e** (gov.br/nfse), que usa um formato diferente (DPS - Declaração de Prestação de Serviço) em vez do RPS tradicional.
+
+### Descoberta Importante: Goiânia NÃO está no Portal Nacional
+
+**Goiânia (cód. IBGE 5208707) NÃO está conveniada ao Portal Nacional NFS-e.**
+
+A partir de outubro/2025, Goiânia adotou o sistema **SGISS (ISSNet Online)** com padrão **ABRASF 2.04**, que é um sistema municipal próprio, não o Portal Nacional da Receita Federal.
+
+### Diferença entre os Sistemas
+
+| Aspecto | Portal Nacional (SEFIN) | ABRASF Municipal |
+|---------|-------------------------|------------------|
+| **Endpoint** | sefin.nfse.gov.br | nfse.goiania.go.gov.br |
+| **Documento** | DPS (Declaração de Prestação de Serviço) | RPS (Recibo Provisório de Serviço) |
+| **ID Formato** | TSIdDPS (45 chars): DPS + cMun(7) + tipo(1) + CNPJ(14) + serie(5) + num(15) | LoteID |
+| **Layout** | XSD Nacional v1.00 | ABRASF 2.04 |
+| **Assinatura** | RSA-SHA256 | RSA-SHA1 |
+| **Payload** | JSON com XML GZip+Base64 | SOAP Envelope |
+
+### Código Desenvolvido (Para Referência Futura)
+
+O código para integração com o Portal Nacional foi desenvolvido e está funcional, apenas aguardando a adesão de Goiânia ao convênio:
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `nfes_servico/nfse/dps_builder.py` | Construtor do XML DPS v1.00 |
+| `nfes_servico/nfse/client_nacional.py` | Cliente API SEFIN Nacional |
+| `nfes_servico/nfse/cli_nacional.py` | CLI para testes |
+
+### Erros Resolvidos Durante Desenvolvimento
+
+| Erro | Causa | Solução |
+|------|-------|---------|
+| E6154 | XML sem declaração UTF-8 | Adicionado `xml_declaration=True` no signer |
+| RNG9997 TSIdDPS | ID com 37 chars, precisava 45 | Adicionado cMun(7) + tipoInsc(1) |
+| RNG9997 serie | "UNICA" inválido | Alterado para numérico "80000" |
+| RNG9997 dhEmi | Faltava timezone | Adicionado "-03:00" |
+| RNG9997 cLocEmi | Campo obrigatório faltando | Adicionado antes de prest |
+| RNG9997 cLocPrestacao | cMun errado | Renomeado para cLocPrestacao |
+| RNG9997 cServ/xDescServ | xDescServ fora de cServ | Movido para dentro de cServ |
+| RNG9997 vServPrest | Estrutura errada | Adicionado vServ dentro de vServPrest |
+| RNG9997 exigISS | Campo inexistente | Removido, adicionado tpRetISSQN |
+| **E0037** | Município não conveniado | **GOIÂNIA NÃO ESTÁ NO PORTAL NACIONAL** |
+
+### APIs do Portal Nacional (Para Futuro)
+
+| Ambiente | URL |
+|----------|-----|
+| Produção | https://sefin.nfse.gov.br/SefinNacional |
+| Homologação | https://sefin.producaorestrita.nfse.gov.br/SefinNacional |
+| Swagger | https://www.producaorestrita.nfse.gov.br/swagger/contribuintesissqn/ |
+
+### Municípios de GO Conveniados (Para Referência)
+
+Anápolis e Aparecida de Goiânia já utilizam sistema integrado.
+
+### Conclusão
+
+**Para a Ampla Contabilidade em Goiânia, deve-se usar o sistema ABRASF municipal (ISSNet Online), não o Portal Nacional.**
+
+O código para o Portal Nacional está pronto para quando/se Goiânia aderir ao convênio federal.
+
+### Links Importantes
+
+- Portal Nacional: https://www.gov.br/nfse/pt-br
+- ISSNet Goiânia: https://www.issnetonline.com.br/goiania/Online/
+- Biblioteca nfelib: https://github.com/akretion/nfelib
+
+### Versão
+
+- **Anterior**: 1.29.3
+- **Atual**: 1.29.3 (sem mudança de versão, apenas documentação)
+- **Tipo**: RESEARCH (Portal Nacional)
