@@ -93,12 +93,15 @@ interface NFSe {
 interface Client {
   id: string;
   name: string;
-  document: string;
+  cnpj: string | null;
+  cpf: string | null;
   email: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  zip_code: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  bairro: string | null;
+  municipio: string | null;
+  uf: string | null;
+  cep: string | null;
   monthly_fee: number;
   status: string;
 }
@@ -213,7 +216,7 @@ export default function NFSe() {
       // Carregar clientes ativos (sem filtro de monthly_fee no banco para evitar erro 400)
       const { data: clientsData } = await supabase
         .from('clients')
-        .select('id, name, document, email, address, city, state, zip_code, monthly_fee, status')
+        .select('id, name, cnpj, cpf, email, logradouro, numero, bairro, municipio, uf, cep, monthly_fee, status')
         .eq('status', 'active')
         .order('name');
 
@@ -294,13 +297,13 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
           prestador_cnpj: config.prestador_cnpj,
           prestador_inscricao_municipal: config.prestador_inscricao_municipal,
           prestador_razao_social: config.prestador_razao_social,
-          tomador_cnpj: client.document?.replace(/\D/g, ''),
+          tomador_cnpj: (client.cnpj || client.cpf)?.replace(/\D/g, ''),
           tomador_razao_social: client.name,
           tomador_email: client.email,
-          tomador_endereco: client.address,
-          tomador_cidade: client.city,
-          tomador_uf: client.state,
-          tomador_cep: client.zip_code?.replace(/\D/g, ''),
+          tomador_endereco: client.logradouro ? `${client.logradouro}${client.numero ? ', ' + client.numero : ''}${client.bairro ? ' - ' + client.bairro : ''}` : null,
+          tomador_cidade: client.municipio,
+          tomador_uf: client.uf,
+          tomador_cep: client.cep?.replace(/\D/g, ''),
           discriminacao: discriminacao,
           valor_servicos: valorServicos,
           aliquota: aliquota,
@@ -497,13 +500,13 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
           prestador_cnpj: config?.prestador_cnpj || '23893032000169',
           prestador_inscricao_municipal: config?.prestador_inscricao_municipal || '6241034',
           prestador_razao_social: config?.prestador_razao_social || 'AMPLA CONTABILIDADE LTDA',
-          tomador_cnpj: client.document?.replace(/\D/g, ''),
+          tomador_cnpj: (client.cnpj || client.cpf)?.replace(/\D/g, ''),
           tomador_razao_social: client.name,
           tomador_email: client.email,
-          tomador_endereco: client.address,
-          tomador_cidade: client.city,
-          tomador_uf: client.state,
-          tomador_cep: client.zip_code?.replace(/\D/g, ''),
+          tomador_endereco: client.logradouro ? `${client.logradouro}${client.numero ? ', ' + client.numero : ''}${client.bairro ? ' - ' + client.bairro : ''}` : null,
+          tomador_cidade: client.municipio,
+          tomador_uf: client.uf,
+          tomador_cep: client.cep?.replace(/\D/g, ''),
           discriminacao: formData.discriminacao,
           valor_servicos: valorServicos,
           aliquota: aliquota,
@@ -1208,7 +1211,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
                     />
                     <div className="flex-1">
                       <div className="font-medium">{client.name}</div>
-                      <div className="text-xs text-muted-foreground">{formatCNPJ(client.document)}</div>
+                      <div className="text-xs text-muted-foreground">{formatCNPJ(client.cnpj || client.cpf || '')}</div>
                     </div>
                     <Badge variant="outline">{formatCurrency(client.monthly_fee)}</Badge>
                   </div>
