@@ -113,6 +113,18 @@ interface NFSeConfig {
   aliquota_padrao: number;
   descricao_servico_padrao: string;
   ultimo_numero_rps: number;
+  iss_fixo: number | null;
+  usar_iss_fixo: boolean;
+}
+
+interface CodigoServicoLC116 {
+  id: number;
+  codigo: string;
+  descricao: string;
+  cnae_principal: string | null;
+  aliquota_minima: number;
+  aliquota_maxima: number;
+  ativo: boolean;
 }
 
 export default function NFSe() {
@@ -121,6 +133,7 @@ export default function NFSe() {
   const [nfses, setNfses] = useState<NFSe[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [config, setConfig] = useState<NFSeConfig | null>(null);
+  const [codigosServico, setCodigosServico] = useState<CodigoServicoLC116[]>([]);
   const [showEmitirDialog, setShowEmitirDialog] = useState(false);
   const [showEmitirLoteDialog, setShowEmitirLoteDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -138,10 +151,11 @@ export default function NFSe() {
   const [formData, setFormData] = useState({
     client_id: '',
     valor_servicos: '',
+    valor_iss: '70.00', // ISS fixo padrão
     discriminacao: '',
     competencia: format(new Date(), 'yyyy-MM-dd'),
     aliquota: '0.02',
-    codigo_servico: '17.19'
+    codigo_servico: '17.18' // 17.18 = Contabilidade, inclusive serviços técnicos e auxiliares
   });
 
   useEffect(() => {
@@ -162,8 +176,20 @@ export default function NFSe() {
         setFormData(prev => ({
           ...prev,
           discriminacao: configData.descricao_servico_padrao || '',
-          aliquota: String(configData.aliquota_padrao || 0.02)
+          aliquota: String(configData.aliquota_padrao || 0.02),
+          valor_iss: configData.usar_iss_fixo && configData.iss_fixo ? String(configData.iss_fixo) : '70.00'
         }));
+      }
+
+      // Carregar códigos de serviço da LC 116
+      const { data: codigosData } = await supabase
+        .from('codigos_servico_lc116')
+        .select('*')
+        .eq('ativo', true)
+        .order('codigo');
+
+      if (codigosData) {
+        setCodigosServico(codigosData);
       }
 
       // Carregar NFS-e
@@ -188,15 +214,14 @@ export default function NFSe() {
       if (error) throw error;
       setNfses(nfseData || []);
 
-      // Carregar clientes com honorário > 0
+      // Carregar clientes ativos (sem filtro de monthly_fee no banco para evitar erro 400)
       const { data: clientsData } = await supabase
         .from('clients')
         .select('id, name, document, email, address, city, state, zip_code, monthly_fee, status')
         .eq('status', 'active')
-        .not('monthly_fee', 'is', null)
         .order('name');
 
-      // Filtrar clientes com honorário > 0
+      // Filtrar clientes com honorário > 0 em JavaScript
       const clientesComHonorario = (clientsData || []).filter(c => c.monthly_fee && c.monthly_fee > 0);
       setClients(clientesComHonorario);
 
@@ -232,11 +257,15 @@ export default function NFSe() {
 
       const numeroRps = String(rpsData || 1);
       const valorServicos = client.monthly_fee;
-      const aliquota = config.aliquota_padrao;
-      const valorIss = valorServicos * aliquota;
+
+      // ISS FIXO - usar valor fixo configurado ao invés de calcular pela alíquota
+      const valorIss = config.usar_iss_fixo && config.iss_fixo ? config.iss_fixo : 70.00;
+      const aliquota = valorServicos > 0 ? valorIss / valorServicos : 0.02; // Alíquota efetiva para o XML
+
+      // Buscar código de serviço 17.18 (Contabilidade) do banco ou usar o padrão
+      const codigoContabilidade = codigosServico.find(c => c.codigo === '17.18') || SERVICO_CONTABILIDADE;
 
       // Discriminação automática detalhada
-      const competenciaAtual = format(new Date(), 'MM/yyyy');
       const mesExtenso = format(new Date(), 'MMMM', { locale: ptBR }).toUpperCase();
       const anoAtual = format(new Date(), 'yyyy');
       const discriminacao = `SERVIÇOS DE CONTABILIDADE - COMPETÊNCIA ${mesExtenso}/${anoAtual}
@@ -248,8 +277,10 @@ Serviços prestados conforme contrato de prestação de serviços contábeis:
 - Obrigações acessórias (SPED, DCTFWeb, EFD, etc.)
 - Assessoria e consultoria contábil
 
-Código do Serviço: ${SERVICO_CONTABILIDADE.codigo}
-CNAE: ${SERVICO_CONTABILIDADE.cnae}`;
+Código do Serviço: ${codigoContabilidade.codigo} - ${codigoContabilidade.descricao?.substring(0, 50)}...
+CNAE: ${codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602'}
+
+ISS Fixo: R$ ${valorIss.toFixed(2)}`;
 
       // Criar registro da NFS-e
       const { data: nfse, error: insertError } = await supabase
@@ -275,8 +306,8 @@ CNAE: ${SERVICO_CONTABILIDADE.cnae}`;
           aliquota: aliquota,
           valor_iss: valorIss,
           valor_liquido: valorServicos - valorIss,
-          item_lista_servico: SERVICO_CONTABILIDADE.codigo,
-          codigo_cnae: SERVICO_CONTABILIDADE.cnae,
+          item_lista_servico: codigoContabilidade.codigo,
+          codigo_cnae: codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
           client_id: client.id
         })
@@ -437,11 +468,15 @@ CNAE: ${SERVICO_CONTABILIDADE.cnae}`;
 
       const numeroRps = String(rpsData || 1);
       const valorServicos = parseFloat(formData.valor_servicos);
-      const aliquota = parseFloat(formData.aliquota);
-      const valorIss = valorServicos * aliquota;
 
-      // Buscar código de serviço selecionado
-      const servicoSelecionado = CODIGOS_SERVICO.find(s => s.codigo === formData.codigo_servico) || SERVICO_CONTABILIDADE;
+      // ISS FIXO - usar o valor do formulário (que pode ser editado)
+      const valorIss = parseFloat(formData.valor_iss || '70.00');
+      const aliquota = valorServicos > 0 ? valorIss / valorServicos : 0.02; // Alíquota efetiva
+
+      // Buscar código de serviço selecionado - primeiro do banco, depois dos estáticos
+      const servicoSelecionado = codigosServico.find(s => s.codigo === formData.codigo_servico)
+        || CODIGOS_SERVICO.find(s => s.codigo === formData.codigo_servico)
+        || SERVICO_CONTABILIDADE;
 
       const { data: nfse, error: insertError } = await supabase
         .from('nfse')
@@ -467,7 +502,7 @@ CNAE: ${SERVICO_CONTABILIDADE.cnae}`;
           valor_iss: valorIss,
           valor_liquido: valorServicos - valorIss,
           item_lista_servico: servicoSelecionado.codigo,
-          codigo_cnae: servicoSelecionado.cnae,
+          codigo_cnae: ('cnae_principal' in servicoSelecionado ? servicoSelecionado.cnae_principal : servicoSelecionado.cnae) || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
           client_id: client.id
         })
@@ -500,10 +535,11 @@ CNAE: ${SERVICO_CONTABILIDADE.cnae}`;
       setFormData({
         client_id: '',
         valor_servicos: '',
+        valor_iss: config?.usar_iss_fixo && config?.iss_fixo ? String(config.iss_fixo) : '70.00',
         discriminacao: config?.descricao_servico_padrao || '',
         competencia: format(new Date(), 'yyyy-MM-dd'),
         aliquota: String(config?.aliquota_padrao || 0.02),
-        codigo_servico: '17.19'
+        codigo_servico: '17.18'
       });
       loadData();
 

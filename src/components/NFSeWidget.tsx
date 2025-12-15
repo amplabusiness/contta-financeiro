@@ -55,12 +55,11 @@ export function NFSeWidget() {
         .gte('competencia', inicioMes)
         .order('created_at', { ascending: false });
 
-      // Buscar clientes ativos com honorário
+      // Buscar clientes ativos (sem filtro de monthly_fee no banco para evitar erro 400)
       const { data: clientesAtivos } = await supabase
         .from('clients')
         .select('id, monthly_fee')
-        .eq('status', 'active')
-        .not('monthly_fee', 'is', null);
+        .eq('status', 'active');
 
       const totalClientes = (clientesAtivos || []).filter(c => c.monthly_fee && c.monthly_fee > 0).length;
 
