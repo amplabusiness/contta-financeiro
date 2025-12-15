@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EnviarLoteRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <LoteRps Id="L1" versao="2.04">
+    <NumeroLote>1</NumeroLote>
+    <Prestador>
+      <CpfCnpj>
+        <Cnpj>23893032000169</Cnpj>
+      </CpfCnpj>
+      <InscricaoMunicipal>6241034</InscricaoMunicipal>
+    </Prestador>
+    <QuantidadeRps>1</QuantidadeRps>
+    <ListaRps>
+      <Rps>
+        <InfDeclaracaoPrestacaoServico Id="RPS1">
+          <Rps>
+            <IdentificacaoRps>
+              <Numero>1</Numero>
+              <Serie>8</Serie>
+              <Tipo>1</Tipo>
+            </IdentificacaoRps>
+            <DataEmissao>2025-12-15</DataEmissao>
+            <Status>1</Status>
+          </Rps>
+          <Competencia>2025-12-15</Competencia>
+          <Servico>
+            <Valores>
+              <ValorServicos>5000.00</ValorServicos>
+            </Valores>
+            <IssRetido>2</IssRetido>
+            <ItemListaServico>17.18</ItemListaServico>
+            <CodigoCnae>6920602</CodigoCnae>
+            <Discriminacao>SERVIÇOS DE CONTABILIDADE - COMPETÊNCIA DEZEMBRO/2025
+
+Serviços prestados conforme contrato de prestação de serviços contábeis:
+- Escrituração contábil e fiscal
+- Apuração de impostos federais e municipais
+- Elaboração de balancetes e demonstrações contábeis
+- Obrigações acessórias (SPED, DCTFWeb, EFD, etc.)
+- Assessoria e consultoria contábil
+
+Código do Serviço: 17.18 - Contabilidade, inclusive serviços técnicos e auxil...
+CNAE: 6920602
+
+DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL
+NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI/IBS/CBS E ISS
+ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68
+Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)</Discriminacao>
+            <CodigoMunicipio>5002704</CodigoMunicipio>
+            <ExigibilidadeISS>1</ExigibilidadeISS>
+            <MunicipioIncidencia>5002704</MunicipioIncidencia>
+          </Servico>
+          <Prestador>
+            <CpfCnpj>
+              <Cnpj>23893032000169</Cnpj>
+            </CpfCnpj>
+            <InscricaoMunicipal>6241034</InscricaoMunicipal>
+          </Prestador>
+          <TomadorServico>
+            <IdentificacaoTomador>
+              <CpfCnpj>
+                <Cnpj>24544420000105</Cnpj>
+              </CpfCnpj>
+            </IdentificacaoTomador>
+            <RazaoSocial>AVIZ ALIMENTOS LTDA</RazaoSocial>
+            <Endereco>
+              <Endereco>WALTER SANTOS, 100 - SET COIMBRA</Endereco>
+              <Numero>100</Numero>
+              <Bairro>SET COIMBRA</Bairro>
+              <CodigoMunicipio>5002704</CodigoMunicipio>
+              <Uf>MS</Uf>
+              <Cep>74533250</Cep>
+            </Endereco>
+          </TomadorServico>
+          <RegimeEspecialTributacao>3</RegimeEspecialTributacao>
+          <OptanteSimplesNacional>1</OptanteSimplesNacional>
+          <IncentivoFiscal>2</IncentivoFiscal>
+        </InfDeclaracaoPrestacaoServico><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI="#RPS1"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>1aY4FTOs5NI+5i++V4TsXkfDXXQ=</DigestValue></Reference></SignedInfo><SignatureValue>FXt7fM83LngQeuLfG7PZdNVwL3DbYmv5R2rImGtEhd6/5rvt1wISu+kJs+IdlN2UxhhFeaH4SkfZz3xb968PpByKRhjkotLSNtRBU9DOsBBWwm1/hAs9ZH1+pQPq3wabH1rbW8cOtmTt/RfGKCQ26xRSHGnuCxj/Onjk7/2fJ2SyGVF0qonh0QOmkXar0/Vl4FDS7OwZ9tQBMqfF/tBGkT9ux6UBUR+Vovou1Mnt8AR2JW+Mw/3lqdnnY5TY2CEOMmwhABVySPE/Z/mXjBZyrolbmjuvUtV6qO4KCCfkxCtW1nqOkJhoK7O4cBDZEmng4ouT47eAfXtE0EWcIOObUA==</SignatureValue><KeyInfo><X509Data/></KeyInfo></Signature>
+      </Rps>
+    </ListaRps>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI="#L1"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>EeOOKryBQyhhq8wRi09MN3V0h48=</DigestValue></Reference></SignedInfo><SignatureValue>caqb4kjVL6xwhXKd5qp3qzAbMxEXViQJyrFlQTRGhUx+sa5DVtRirCd9DzGlLUR3gM0xNdTUdLRGsC8zK5F/oZ4DxVUri2YklxMsZUKV/GT/HVL7Keu50tMzNNlsQkV983fs6qYvkbHgTqkR+4PKzUaIecovnJ7v3NGYdvVrErNELyPf9k8nDyPSnS5Pmzs/p0Q7Uigv2sDcVELiidWfEJy/8Axg8TXmZ90xxyJMBZ2F6TrDDQwnVnkSgq51bMfIOjlnujayOTsbGwMgVxMk6EJAFteDcSuvnn91USYWNSZGQZPHGnnNFo10oE/rLoI1KxSlUwSlLQQY/oJBcYyvqQ==</SignatureValue><KeyInfo><X509Data/></KeyInfo></Signature></LoteRps>
+</EnviarLoteRpsEnvio>

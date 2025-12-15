@@ -44,7 +44,14 @@
       "Bash(findstr:*)",
       "Bash(git push)",
       "Bash(pip install:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node scripts/run-nfse-migration.mjs:*)",
+      "Bash(where:*)",
+      "Bash(ls \"c:\\Users\\ampla\\OneDrive\\Documentos\\financeiro\\data-bling-sheets-3122699b-1\\certificado\"\" 2>/dev/null || echo \"pasta certificado nao existe \")",
+      "Bash(node scripts/testar-xml-nfse.mjs:*)",
+      "Bash(dir:*)",
+      "Bash(node scripts/enviar-nfse-assinada.mjs:*)",
+      "Bash(node scripts/consultar-nfse.mjs:*)"
     ],
     "deny": [],
     "ask": []

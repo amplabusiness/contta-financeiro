@@ -189,6 +189,18 @@ const Payroll = () => {
   const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
   const [generatingPayroll, setGeneratingPayroll] = useState(false);
 
+  // Add Event states (para adicionar eventos manuais na folha)
+  const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+  const [addingEvent, setAddingEvent] = useState(false);
+  const [newEventForm, setNewEventForm] = useState({
+    rubrica_codigo: "",
+    descricao: "",
+    referencia: "",
+    valor: 0,
+    is_desconto: false,
+    observacao: "",
+  });
+
   // Termination (Rescisão) states
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [employeeToTerminate, setEmployeeToTerminate] = useState<Employee | null>(null);
@@ -337,8 +349,13 @@ const Payroll = () => {
         .select(`
           id,
           payroll_id,
-          rubrica_id,
+          rubrica_codigo,
+          descricao,
+          referencia,
           valor,
+          is_oficial,
+          is_desconto,
+          observacao,
           esocial_rubricas (codigo, descricao, tipo_rubrica)
         `)
         .eq("payroll_id", payrollId)
@@ -348,8 +365,8 @@ const Payroll = () => {
 
       const events = (data || []).map((e: any) => ({
         ...e,
-        rubrica_codigo: e.esocial_rubricas?.codigo,
-        rubrica_descricao: e.esocial_rubricas?.descricao,
+        rubrica_codigo: e.rubrica_codigo || e.esocial_rubricas?.codigo,
+        rubrica_descricao: e.descricao || e.esocial_rubricas?.descricao,
         rubrica_tipo: e.esocial_rubricas?.tipo_rubrica,
       }));
       setPayrollEvents(events);
@@ -410,6 +427,144 @@ const Payroll = () => {
       toast.error(error.message || "Erro ao gerar folha");
     } finally {
       setGeneratingPayroll(false);
+    }
+  };
+
+  // ========== ADD EVENT FUNCTIONS ==========
+
+  const openAddEventDialog = () => {
+    if (!selectedPayroll) {
+      toast.error("Selecione uma folha primeiro");
+      return;
+    }
+    setNewEventForm({
+      rubrica_codigo: "",
+      descricao: "",
+      referencia: "",
+      valor: 0,
+      is_desconto: false,
+      observacao: "",
+    });
+    setShowAddEventDialog(true);
+  };
+
+  const handleAddEvent = async () => {
+    if (!selectedPayroll) {
+      toast.error("Selecione uma folha primeiro");
+      return;
+    }
+
+    if (!newEventForm.descricao || newEventForm.valor <= 0) {
+      toast.error("Preencha a descrição e o valor");
+      return;
+    }
+
+    setAddingEvent(true);
+    try {
+      // Inserir evento na folha
+      const { error: insertError } = await supabase
+        .from("payroll_events")
+        .insert({
+          payroll_id: selectedPayroll.id,
+          rubrica_codigo: newEventForm.rubrica_codigo || null,
+          descricao: newEventForm.descricao,
+          referencia: newEventForm.referencia || null,
+          valor: newEventForm.valor,
+          is_oficial: false, // Eventos manuais não são oficiais
+          is_desconto: newEventForm.is_desconto,
+          observacao: newEventForm.observacao || null,
+        });
+
+      if (insertError) throw insertError;
+
+      // Recalcular totais da folha
+      const { data: events, error: eventsError } = await supabase
+        .from("payroll_events")
+        .select("*")
+        .eq("payroll_id", selectedPayroll.id);
+
+      if (eventsError) throw eventsError;
+
+      let totalProventos = 0;
+      let totalDescontos = 0;
+
+      events?.forEach((e: any) => {
+        if (e.is_desconto) {
+          totalDescontos += parseFloat(e.valor);
+        } else {
+          totalProventos += parseFloat(e.valor);
+        }
+      });
+
+      const liquido = totalProventos - totalDescontos;
+
+      // Atualizar folha com novos totais
+      const { error: updateError } = await supabase
+        .from("payroll")
+        .update({
+          total_proventos_oficial: totalProventos,
+          total_descontos_oficial: totalDescontos,
+          liquido_oficial: liquido,
+        })
+        .eq("id", selectedPayroll.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Evento adicionado com sucesso!");
+      setShowAddEventDialog(false);
+      loadPayrollEvents(selectedPayroll.id);
+      loadPayrollRecords();
+    } catch (error: any) {
+      console.error("Error adding event:", error);
+      toast.error(error.message || "Erro ao adicionar evento");
+    } finally {
+      setAddingEvent(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!selectedPayroll) return;
+
+    try {
+      const { error } = await supabase
+        .from("payroll_events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+
+      // Recalcular totais
+      const { data: events } = await supabase
+        .from("payroll_events")
+        .select("*")
+        .eq("payroll_id", selectedPayroll.id);
+
+      let totalProventos = 0;
+      let totalDescontos = 0;
+
+      events?.forEach((e: any) => {
+        if (e.is_desconto) {
+          totalDescontos += parseFloat(e.valor);
+        } else {
+          totalProventos += parseFloat(e.valor);
+        }
+      });
+
+      await supabase
+        .from("payroll")
+        .update({
+          total_proventos_oficial: totalProventos,
+          total_descontos_oficial: totalDescontos,
+          liquido_oficial: totalProventos - totalDescontos,
+        })
+        .eq("id", selectedPayroll.id);
+
+      toast.success("Evento removido!");
+      loadPayrollEvents(selectedPayroll.id);
+      loadPayrollRecords();
+    } catch (error: any) {
+      console.error("Error deleting event:", error);
+      toast.error("Erro ao remover evento");
     }
   };
 
@@ -1248,9 +1403,15 @@ const Payroll = () => {
                           Detalhamento de proventos e descontos
                         </CardDescription>
                       </div>
-                      <Button variant="outline" onClick={() => setSelectedPayroll(null)}>
-                        Voltar
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={openAddEventDialog}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Adicionar Evento
+                        </Button>
+                        <Button variant="outline" onClick={() => setSelectedPayroll(null)}>
+                          Voltar
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>
@@ -1268,22 +1429,35 @@ const Payroll = () => {
                             <TableHead>Codigo</TableHead>
                             <TableHead>Descricao</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
+                            <TableHead className="w-10"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {payrollEvents
-                            .filter((e) => e.rubrica_tipo === "PROVENTO")
+                            .filter((e) => e.rubrica_tipo === "PROVENTO" || (!e.rubrica_tipo && !(e as any).is_desconto))
                             .map((event) => (
                               <TableRow key={event.id}>
-                                <TableCell className="font-mono">{event.rubrica_codigo}</TableCell>
-                                <TableCell>{event.rubrica_descricao}</TableCell>
+                                <TableCell className="font-mono">{event.rubrica_codigo || "-"}</TableCell>
+                                <TableCell>{event.rubrica_descricao || (event as any).descricao}</TableCell>
                                 <TableCell className="text-right text-green-600 font-medium">
                                   {formatCurrency(event.valor)}
+                                </TableCell>
+                                <TableCell>
+                                  {!(event as any).is_oficial && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                      onClick={() => handleDeleteEvent(event.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
                           <TableRow className="bg-green-50 font-bold">
-                            <TableCell colSpan={2}>Total Proventos</TableCell>
+                            <TableCell colSpan={3}>Total Proventos</TableCell>
                             <TableCell className="text-right text-green-700">
                               {formatCurrency(selectedPayroll.total_proventos_oficial)}
                             </TableCell>
@@ -1305,22 +1479,35 @@ const Payroll = () => {
                             <TableHead>Codigo</TableHead>
                             <TableHead>Descricao</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
+                            <TableHead className="w-10"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {payrollEvents
-                            .filter((e) => e.rubrica_tipo === "DESCONTO")
+                            .filter((e) => e.rubrica_tipo === "DESCONTO" || (!e.rubrica_tipo && (e as any).is_desconto))
                             .map((event) => (
                               <TableRow key={event.id}>
-                                <TableCell className="font-mono">{event.rubrica_codigo}</TableCell>
-                                <TableCell>{event.rubrica_descricao}</TableCell>
+                                <TableCell className="font-mono">{event.rubrica_codigo || "-"}</TableCell>
+                                <TableCell>{event.rubrica_descricao || (event as any).descricao}</TableCell>
                                 <TableCell className="text-right text-red-600 font-medium">
                                   {formatCurrency(event.valor)}
+                                </TableCell>
+                                <TableCell>
+                                  {!(event as any).is_oficial && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                      onClick={() => handleDeleteEvent(event.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
                           <TableRow className="bg-red-50 font-bold">
-                            <TableCell colSpan={2}>Total Descontos</TableCell>
+                            <TableCell colSpan={3}>Total Descontos</TableCell>
                             <TableCell className="text-right text-red-700">
                               {formatCurrency(selectedPayroll.total_descontos_oficial)}
                             </TableCell>
@@ -1972,6 +2159,117 @@ const Payroll = () => {
                   )}
                 </Button>
               )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para adicionar evento na folha */}
+        <Dialog open={showAddEventDialog} onOpenChange={setShowAddEventDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adicionar Evento na Folha</DialogTitle>
+              <DialogDescription>
+                Inclua um evento avulso na folha de pagamento. Eventos manuais podem ser removidos.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label>Descrição *</Label>
+                <Input
+                  placeholder="Ex: Vale Transporte, Hora Extra, Adiantamento..."
+                  value={newEventForm.descricao}
+                  onChange={(e) => setNewEventForm({ ...newEventForm, descricao: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Valor *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={newEventForm.valor || ""}
+                    onChange={(e) => setNewEventForm({ ...newEventForm, valor: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <Label>Tipo</Label>
+                  <Select
+                    value={newEventForm.is_desconto ? "desconto" : "provento"}
+                    onValueChange={(v) => setNewEventForm({ ...newEventForm, is_desconto: v === "desconto" })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="provento">Provento (+)</SelectItem>
+                      <SelectItem value="desconto">Desconto (-)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Código da Rubrica (opcional)</Label>
+                <Select
+                  value={newEventForm.rubrica_codigo}
+                  onValueChange={(v) => setNewEventForm({ ...newEventForm, rubrica_codigo: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar rubrica (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sem rubrica</SelectItem>
+                    {rubricas
+                      .filter(r => r.is_active)
+                      .map((r) => (
+                        <SelectItem key={r.codigo} value={r.codigo}>
+                          {r.codigo} - {r.descricao}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Referência (opcional)</Label>
+                <Input
+                  placeholder="Ex: 30 dias, 8 horas, 50%..."
+                  value={newEventForm.referencia}
+                  onChange={(e) => setNewEventForm({ ...newEventForm, referencia: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label>Observação (opcional)</Label>
+                <Input
+                  placeholder="Observação adicional"
+                  value={newEventForm.observacao}
+                  onChange={(e) => setNewEventForm({ ...newEventForm, observacao: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAddEventDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddEvent} disabled={addingEvent}>
+                {addingEvent ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adicionando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Evento
+                  </>
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

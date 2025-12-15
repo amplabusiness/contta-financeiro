@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EnviarLoteRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <LoteRps Id="L1" versao="2.04">
+    <NumeroLote>1</NumeroLote>
+    <Prestador>
+      <CpfCnpj>
+        <Cnpj>23893032000169</Cnpj>
+      </CpfCnpj>
+      <InscricaoMunicipal>6241034</InscricaoMunicipal>
+    </Prestador>
+    <QuantidadeRps>1</QuantidadeRps>
+    <ListaRps>
+      <Rps>
+        <InfDeclaracaoPrestacaoServico Id="RPS1">
+          <Rps>
+            <IdentificacaoRps>
+              <Numero>1</Numero>
+              <Serie>8</Serie>
+              <Tipo>1</Tipo>
+            </IdentificacaoRps>
+            <DataEmissao>2024-12-15</DataEmissao>
+            <Status>1</Status>
+          </Rps>
+          <Competencia>2024-12-01</Competencia>
+          <Servico>
+            <Valores>
+              <ValorServicos>1500.00</ValorServicos>
+              
+              <Aliquota>0.0200</Aliquota>
+            </Valores>
+            <IssRetido>2</IssRetido>
+            <ItemListaServico>1718</ItemListaServico>
+            <CodigoCnae>6920602</CodigoCnae>
+            <Discriminacao>Serviços contábeis mensais referente ao mês 12/2024 conforme contrato de prestação de serviços.</Discriminacao>
+            <CodigoMunicipio>5208707</CodigoMunicipio>
+            <ExigibilidadeISS>1</ExigibilidadeISS>
+            <MunicipioIncidencia>5208707</MunicipioIncidencia>
+          </Servico>
+          <Prestador>
+            <CpfCnpj>
+              <Cnpj>23893032000169</Cnpj>
+            </CpfCnpj>
+            <InscricaoMunicipal>6241034</InscricaoMunicipal>
+          </Prestador>
+          <TomadorServico>
+            <IdentificacaoTomador>
+              <CpfCnpj>
+                <Cnpj>12345678000199</Cnpj>
+              </CpfCnpj>
+            </IdentificacaoTomador>
+            <RazaoSocial>EMPRESA CLIENTE TESTE LTDA</RazaoSocial>
+            <Endereco>
+              <Endereco>Avenida Teste</Endereco>
+              <Numero>1000</Numero>
+              <Complemento>Sala 101</Complemento>
+              <Bairro>Setor Central</Bairro>
+              <CodigoMunicipio>5208707</CodigoMunicipio>
+              <Uf>GO</Uf>
+              <Cep>74000000</Cep>
+            </Endereco>
+            <Contato>
+              <Telefone>6232123456</Telefone>
+              <Email>cliente@teste.com.br</Email>
+            </Contato>
+          </TomadorServico>
+          <RegimeEspecialTributacao>3</RegimeEspecialTributacao>
+          <OptanteSimplesNacional>2</OptanteSimplesNacional>
+          <IncentivoFiscal>2</IncentivoFiscal>
+        </InfDeclaracaoPrestacaoServico>
+      </Rps>
+    </ListaRps>
+  </LoteRps>
+</EnviarLoteRpsEnvio>
