@@ -269,7 +269,7 @@ export default function NFSe() {
 
 Serviços prestados conforme contrato de prestação de serviços contábeis:
 - Escrituração contábil e fiscal
-- Apuração de impostos (IRPJ, CSLL, PIS, COFINS, ISS)
+- Apuração de impostos federais e municipais
 - Elaboração de balancetes e demonstrações contábeis
 - Obrigações acessórias (SPED, DCTFWeb, EFD, etc.)
 - Assessoria e consultoria contábil
@@ -277,7 +277,10 @@ Serviços prestados conforme contrato de prestação de serviços contábeis:
 Código do Serviço: ${codigoContabilidade.codigo} - ${codigoContabilidade.descricao?.substring(0, 50)}...
 CNAE: ${codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602'}
 
-ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68`;
+DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL
+NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI/IBS/CBS E ISS
+ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68
+Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
 
       // Criar registro da NFS-e
       const { data: nfse, error: insertError } = await supabase
@@ -302,11 +305,18 @@ ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406
           valor_servicos: valorServicos,
           aliquota: aliquota,
           valor_iss: valorIss,
-          valor_liquido: valorServicos, // Valor líquido = valor total (ISS fixo não deduz)
+          valor_pis: 0, // Simples Nacional - não há retenção
+          valor_cofins: 0, // Simples Nacional - não há retenção
+          valor_csll: 0, // Simples Nacional - não há retenção
+          valor_ir: 0, // Simples Nacional - não há retenção
+          valor_inss: 0,
+          outras_retencoes: 0,
+          valor_liquido: valorServicos, // Valor líquido = valor total (sem retenções)
           item_lista_servico: codigoContabilidade.codigo,
           codigo_cnae: codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
           exigibilidade_iss: 4, // 4 = ISS Fixo (Sociedade de Profissionais)
+          optante_simples_nacional: true, // Ampla é Simples Nacional
           client_id: client.id
         })
         .select()
@@ -498,11 +508,18 @@ ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406
           valor_servicos: valorServicos,
           aliquota: aliquota,
           valor_iss: valorIss,
-          valor_liquido: valorServicos, // Valor líquido = valor total (ISS fixo não deduz)
+          valor_pis: 0, // Simples Nacional - não há retenção
+          valor_cofins: 0, // Simples Nacional - não há retenção
+          valor_csll: 0, // Simples Nacional - não há retenção
+          valor_ir: 0, // Simples Nacional - não há retenção
+          valor_inss: 0,
+          outras_retencoes: 0,
+          valor_liquido: valorServicos, // Valor líquido = valor total (sem retenções)
           item_lista_servico: servicoSelecionado.codigo,
           codigo_cnae: ('cnae_principal' in servicoSelecionado ? servicoSelecionado.cnae_principal : servicoSelecionado.cnae) || '6920602',
           codigo_municipio: MUNICIPIO_GOIANIA.codigo,
           exigibilidade_iss: 4, // 4 = ISS Fixo (Sociedade de Profissionais)
+          optante_simples_nacional: true, // Ampla é Simples Nacional
           client_id: client.id
         })
         .select()
