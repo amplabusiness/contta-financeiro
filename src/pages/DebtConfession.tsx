@@ -86,6 +86,7 @@ interface PendingInvoice {
   due_date: string;
   days_overdue: number;
   selected?: boolean;
+  source?: "invoice" | "opening_balance"; // Origem do débito
 }
 
 // Dados do escritório
@@ -143,23 +144,61 @@ const DebtConfession = () => {
 
   const fetchPendingInvoices = useCallback(async (clientId: string) => {
     try {
-      const { data, error } = await supabase
+      const today = new Date();
+
+      // Buscar faturas pendentes
+      const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", clientId)
         .eq("status", "pending")
         .order("due_date", { ascending: true });
 
-      if (error) throw error;
+      if (invoicesError) throw invoicesError;
 
-      const today = new Date();
-      const invoicesWithDays = (data || []).map(invoice => ({
+      // Buscar honorários de abertura pendentes
+      const { data: openingBalanceData, error: openingBalanceError } = await supabase
+        .from("client_opening_balance")
+        .select("*")
+        .eq("client_id", clientId)
+        .neq("status", "paid")
+        .order("due_date", { ascending: true });
+
+      if (openingBalanceError) throw openingBalanceError;
+
+      // Mapear faturas
+      const invoicesWithDays = (invoicesData || []).map(invoice => ({
         ...invoice,
         days_overdue: Math.floor((today.getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)),
         selected: false,
+        source: "invoice" as const,
       }));
 
-      setPendingInvoices(invoicesWithDays);
+      // Mapear honorários de abertura
+      const openingBalanceWithDays = (openingBalanceData || []).map(balance => ({
+        id: balance.id,
+        client_id: balance.client_id,
+        invoice_number: `SAB-${balance.competence?.replace("/", "-") || "N/A"}`,
+        reference_month: balance.competence || "N/A",
+        amount: balance.amount - (balance.paid_amount || 0), // Valor pendente
+        due_date: balance.due_date || "",
+        days_overdue: balance.due_date
+          ? Math.floor((today.getTime() - new Date(balance.due_date).getTime()) / (1000 * 60 * 60 * 24))
+          : 0,
+        selected: false,
+        source: "opening_balance" as const,
+      }));
+
+      // Combinar e ordenar por data de vencimento
+      const allPendingDebts = [...invoicesWithDays, ...openingBalanceWithDays]
+        .filter(item => item.amount > 0) // Apenas itens com valor pendente
+        .sort((a, b) => {
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        });
+
+      setPendingInvoices(allPendingDebts);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       setPendingInvoices([]);
@@ -786,11 +825,12 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                           </p>
                         </div>
                       ) : (
-                        <div className="border rounded-lg max-h-64 overflow-y-auto">
+                        <div className="border rounded-lg max-h-80 overflow-y-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
                                 <TableHead className="w-12"></TableHead>
+                                <TableHead>Tipo</TableHead>
                                 <TableHead>Competência</TableHead>
                                 <TableHead>Vencimento</TableHead>
                                 <TableHead>Dias Atraso</TableHead>
@@ -806,11 +846,24 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                                       onCheckedChange={() => handleInvoiceToggle(invoice.id)}
                                     />
                                   </TableCell>
-                                  <TableCell>{invoice.reference_month}</TableCell>
-                                  <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
                                   <TableCell>
-                                    <Badge variant={invoice.days_overdue > 60 ? "destructive" : "outline"}>
-                                      {invoice.days_overdue} dias
+                                    <Badge
+                                      variant="outline"
+                                      className={invoice.source === "opening_balance"
+                                        ? "bg-purple-100 text-purple-800 border-purple-300"
+                                        : "bg-blue-100 text-blue-800 border-blue-300"
+                                      }
+                                    >
+                                      {invoice.source === "opening_balance" ? "Hon. Abertura" : "Fatura"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="font-medium">{invoice.reference_month}</TableCell>
+                                  <TableCell>
+                                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("pt-BR") : "-"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={invoice.days_overdue > 60 ? "destructive" : invoice.days_overdue > 0 ? "outline" : "secondary"}>
+                                      {invoice.days_overdue > 0 ? `${invoice.days_overdue} dias` : "Em dia"}
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="text-right font-medium">
