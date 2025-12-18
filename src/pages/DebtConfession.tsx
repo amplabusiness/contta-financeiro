@@ -44,6 +44,7 @@ import {
   Calculator,
   DollarSign,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -599,6 +600,35 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
     });
   };
 
+  const handleDeleteConfession = async (confessionId: string, confessionNumber: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o rascunho ${confessionNumber}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("debt_confessions")
+        .delete()
+        .eq("id", confessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Rascunho excluído",
+        description: `Documento ${confessionNumber} foi excluído com sucesso.`,
+      });
+
+      fetchConfessions();
+    } catch (error) {
+      console.error("Error deleting confession:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       client_id: "",
@@ -760,12 +790,23 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                           <TableCell>{getStatusBadge(confession.status)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-1 justify-end">
-                              <Button size="sm" variant="ghost">
+                              <Button size="sm" variant="ghost" title="Visualizar">
                                 <Eye className="w-3 h-3" />
                               </Button>
-                              <Button size="sm" variant="ghost">
+                              <Button size="sm" variant="ghost" title="Enviar">
                                 <Send className="w-3 h-3" />
                               </Button>
+                              {confession.status === "draft" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title="Excluir rascunho"
+                                  onClick={() => handleDeleteConfession(confession.id, confession.confession_number)}
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
