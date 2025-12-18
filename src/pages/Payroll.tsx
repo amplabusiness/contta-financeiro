@@ -199,7 +199,41 @@ const Payroll = () => {
     valor: 0,
     is_desconto: false,
     observacao: "",
+    variable_type: "", // Tipo de variável pré-definida
   });
+
+  // Variáveis pré-definidas comuns na folha de pagamento
+  const commonVariables = [
+    { value: "hora_extra_50", label: "Hora Extra 50%", is_desconto: false, rubrica: "1003" },
+    { value: "hora_extra_100", label: "Hora Extra 100%", is_desconto: false, rubrica: "1004" },
+    { value: "adicional_noturno", label: "Adicional Noturno", is_desconto: false, rubrica: "1005" },
+    { value: "produtividade", label: "Produtividade/Comissão", is_desconto: false, rubrica: "1010" },
+    { value: "bonus", label: "Bônus/Gratificação", is_desconto: false, rubrica: "1011" },
+    { value: "premio", label: "Prêmio", is_desconto: false, rubrica: "1012" },
+    { value: "periculosidade", label: "Adicional Periculosidade", is_desconto: false, rubrica: "1006" },
+    { value: "insalubridade", label: "Adicional Insalubridade", is_desconto: false, rubrica: "1007" },
+    { value: "ajuda_custo", label: "Ajuda de Custo", is_desconto: false, rubrica: "1020" },
+    { value: "reembolso", label: "Reembolso de Despesas", is_desconto: false, rubrica: "1021" },
+    { value: "falta", label: "Falta (desconto)", is_desconto: true, rubrica: "2010" },
+    { value: "atraso", label: "Atraso (desconto)", is_desconto: true, rubrica: "2011" },
+    { value: "adiantamento", label: "Adiantamento Salarial", is_desconto: true, rubrica: "2020" },
+    { value: "vale_transporte", label: "Vale Transporte (6%)", is_desconto: true, rubrica: "2030" },
+    { value: "vale_refeicao", label: "Vale Refeição (desconto)", is_desconto: true, rubrica: "2031" },
+    { value: "plano_saude", label: "Plano de Saúde", is_desconto: true, rubrica: "2040" },
+    { value: "emprestimo", label: "Empréstimo Consignado", is_desconto: true, rubrica: "2050" },
+    { value: "pensao", label: "Pensão Alimentícia", is_desconto: true, rubrica: "2060" },
+    { value: "dsr_desconto", label: "DSR s/ Faltas/Atrasos", is_desconto: true, rubrica: "2012" },
+    { value: "outros_provento", label: "Outros (Provento)", is_desconto: false, rubrica: "" },
+    { value: "outros_desconto", label: "Outros (Desconto)", is_desconto: true, rubrica: "" },
+  ];
+
+  // Variáveis para rescisão
+  const [terminationVariables, setTerminationVariables] = useState<Array<{
+    descricao: string;
+    valor: number;
+    is_desconto: boolean;
+    referencia?: string;
+  }>>([]);
 
   // Termination (Rescisão) states
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
@@ -444,8 +478,63 @@ const Payroll = () => {
       valor: 0,
       is_desconto: false,
       observacao: "",
+      variable_type: "",
     });
     setShowAddEventDialog(true);
+  };
+
+  // Handler para quando seleciona uma variável pré-definida
+  const handleVariableTypeChange = (value: string) => {
+    const variable = commonVariables.find(v => v.value === value);
+    if (variable) {
+      setNewEventForm({
+        ...newEventForm,
+        variable_type: value,
+        descricao: variable.label,
+        is_desconto: variable.is_desconto,
+        rubrica_codigo: variable.rubrica || "",
+      });
+    } else {
+      setNewEventForm({
+        ...newEventForm,
+        variable_type: value,
+        descricao: "",
+        is_desconto: false,
+        rubrica_codigo: "",
+      });
+    }
+  };
+
+  // Adicionar variável na rescisão
+  const addTerminationVariable = () => {
+    setTerminationVariables([
+      ...terminationVariables,
+      { descricao: "", valor: 0, is_desconto: false, referencia: "" }
+    ]);
+  };
+
+  const updateTerminationVariable = (index: number, field: string, value: any) => {
+    const updated = [...terminationVariables];
+    updated[index] = { ...updated[index], [field]: value };
+    setTerminationVariables(updated);
+  };
+
+  const removeTerminationVariable = (index: number) => {
+    setTerminationVariables(terminationVariables.filter((_, i) => i !== index));
+  };
+
+  // Aplicar variável pré-definida na rescisão
+  const applyTerminationVariableType = (index: number, value: string) => {
+    const variable = commonVariables.find(v => v.value === value);
+    if (variable) {
+      const updated = [...terminationVariables];
+      updated[index] = {
+        ...updated[index],
+        descricao: variable.label,
+        is_desconto: variable.is_desconto,
+      };
+      setTerminationVariables(updated);
+    }
   };
 
   const handleAddEvent = async () => {
@@ -591,6 +680,7 @@ const Payroll = () => {
   const openTerminationDialog = (employee: Employee) => {
     setEmployeeToTerminate(employee);
     setTerminationData(null);
+    setTerminationVariables([]); // Limpa variáveis anteriores
     setTerminationForm({
       termination_date: new Date().toISOString().split('T')[0],
       last_working_day: new Date().toISOString().split('T')[0],
@@ -624,8 +714,53 @@ const Payroll = () => {
 
       if (termError) throw termError;
 
-      setTerminationData(termData);
-      toast.success("Rescisão calculada com sucesso!");
+      // Aplicar variáveis adicionais ao cálculo
+      let adjustedTermData = { ...termData };
+
+      if (terminationVariables.length > 0) {
+        // Calcular totais das variáveis adicionais
+        const additionalProventos = terminationVariables
+          .filter(v => !v.is_desconto)
+          .reduce((sum, v) => sum + v.valor, 0);
+
+        const additionalDescontos = terminationVariables
+          .filter(v => v.is_desconto)
+          .reduce((sum, v) => sum + v.valor, 0);
+
+        // Atualizar os valores da rescisão com as variáveis
+        const currentProventos = parseFloat(adjustedTermData.total_proventos || 0);
+        const currentDescontos = parseFloat(adjustedTermData.total_descontos || 0);
+
+        adjustedTermData.total_proventos = currentProventos + additionalProventos;
+        adjustedTermData.total_descontos = currentDescontos + additionalDescontos;
+        adjustedTermData.valor_liquido = adjustedTermData.total_proventos - adjustedTermData.total_descontos;
+
+        // Adicionar detalhes das variáveis ao objeto para exibição
+        adjustedTermData.variaveis_adicionais = terminationVariables.map(v => ({
+          descricao: v.descricao,
+          valor: v.valor,
+          tipo: v.is_desconto ? 'Desconto' : 'Provento',
+          referencia: v.referencia || '',
+        }));
+
+        // Atualizar no banco de dados
+        const { error: updateError } = await supabase
+          .from("employee_terminations")
+          .update({
+            total_proventos: adjustedTermData.total_proventos,
+            total_descontos: adjustedTermData.total_descontos,
+            valor_liquido: adjustedTermData.valor_liquido,
+            variaveis_adicionais: adjustedTermData.variaveis_adicionais,
+          })
+          .eq("id", termData.id);
+
+        if (updateError) {
+          console.warn("Não foi possível salvar variáveis adicionais:", updateError);
+        }
+      }
+
+      setTerminationData(adjustedTermData);
+      toast.success("Rescisão calculada com sucesso!" + (terminationVariables.length > 0 ? ` (${terminationVariables.length} variável(eis) incluída(s))` : ""));
     } catch (error: any) {
       console.error("Error calculating termination:", error);
       toast.error(error.message || "Erro ao calcular rescisão");
@@ -1992,6 +2127,163 @@ const Payroll = () => {
                 </div>
               </div>
 
+              {/* Seção de Variáveis Manuais para Rescisão */}
+              <Card className="border-dashed border-2 border-blue-300 bg-blue-50/50">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Variáveis Adicionais (Opcional)
+                    </CardTitle>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTerminationVariable}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
+                  <CardDescription>
+                    Inclua horas extras, faltas, produtividade, adiantamentos e outras variáveis antes de calcular a rescisão.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {terminationVariables.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      Nenhuma variável adicionada. Clique em "Adicionar" para incluir horas extras, faltas, produtividade, etc.
+                    </p>
+                  ) : (
+                    terminationVariables.map((variable, index) => (
+                      <div key={index} className="flex gap-2 items-end p-3 bg-white rounded-lg border">
+                        <div className="flex-1">
+                          <Label className="text-xs">Tipo</Label>
+                          <Select
+                            value=""
+                            onValueChange={(v) => applyTerminationVariableType(index, v)}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Selecionar tipo..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">PROVENTOS</div>
+                              {commonVariables.filter(v => !v.is_desconto).map((v) => (
+                                <SelectItem key={v.value} value={v.value}>
+                                  <span className="flex items-center gap-1 text-xs">
+                                    <TrendingUp className="h-3 w-3 text-green-600" />
+                                    {v.label}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">DESCONTOS</div>
+                              {commonVariables.filter(v => v.is_desconto).map((v) => (
+                                <SelectItem key={v.value} value={v.value}>
+                                  <span className="flex items-center gap-1 text-xs">
+                                    <TrendingDown className="h-3 w-3 text-red-600" />
+                                    {v.label}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-[2]">
+                          <Label className="text-xs">Descrição</Label>
+                          <Input
+                            className="h-8"
+                            placeholder="Ex: Hora Extra, Falta, Produtividade..."
+                            value={variable.descricao}
+                            onChange={(e) => updateTerminationVariable(index, "descricao", e.target.value)}
+                          />
+                        </div>
+                        <div className="w-28">
+                          <Label className="text-xs">Valor</Label>
+                          <Input
+                            className="h-8"
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={variable.valor || ""}
+                            onChange={(e) => updateTerminationVariable(index, "valor", parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
+                        <div className="w-24">
+                          <Label className="text-xs">Ref.</Label>
+                          <Input
+                            className="h-8"
+                            placeholder="Ex: 10h"
+                            value={variable.referencia || ""}
+                            onChange={(e) => updateTerminationVariable(index, "referencia", e.target.value)}
+                          />
+                        </div>
+                        <div className="w-28">
+                          <Label className="text-xs">Tipo</Label>
+                          <Select
+                            value={variable.is_desconto ? "desconto" : "provento"}
+                            onValueChange={(v) => updateTerminationVariable(index, "is_desconto", v === "desconto")}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="provento">
+                                <span className="flex items-center gap-1 text-xs">
+                                  <TrendingUp className="h-3 w-3 text-green-600" /> +
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="desconto">
+                                <span className="flex items-center gap-1 text-xs">
+                                  <TrendingDown className="h-3 w-3 text-red-600" /> -
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                          onClick={() => removeTerminationVariable(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+
+                  {/* Resumo das variáveis */}
+                  {terminationVariables.length > 0 && (
+                    <div className="mt-3 pt-3 border-t flex justify-between text-sm">
+                      <div className="flex gap-4">
+                        <span className="text-green-600 font-medium">
+                          Proventos: {formatCurrency(
+                            terminationVariables
+                              .filter(v => !v.is_desconto)
+                              .reduce((sum, v) => sum + (v.valor || 0), 0)
+                          )}
+                        </span>
+                        <span className="text-red-600 font-medium">
+                          Descontos: {formatCurrency(
+                            terminationVariables
+                              .filter(v => v.is_desconto)
+                              .reduce((sum, v) => sum + (v.valor || 0), 0)
+                          )}
+                        </span>
+                      </div>
+                      <span className="font-bold">
+                        Líquido: {formatCurrency(
+                          terminationVariables.reduce((sum, v) =>
+                            v.is_desconto ? sum - (v.valor || 0) : sum + (v.valor || 0), 0
+                          )
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <Button
                 onClick={calculateTermination}
                 disabled={calculatingTermination}
@@ -2005,7 +2297,7 @@ const Payroll = () => {
                 ) : (
                   <>
                     <Calculator className="h-4 w-4 mr-2" />
-                    Calcular Rescisão
+                    Calcular Rescisão {terminationVariables.length > 0 && `(com ${terminationVariables.length} variável${terminationVariables.length > 1 ? 'eis' : ''})`}
                   </>
                 )}
               </Button>
@@ -2117,6 +2409,38 @@ const Payroll = () => {
                     </Card>
                   </div>
 
+                  {/* Variáveis Adicionais - se houver */}
+                  {terminationData.variaveis_adicionais && terminationData.variaveis_adicionais.length > 0 && (
+                    <Card className="bg-purple-50 border-purple-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-purple-700 text-base flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Variáveis Adicionais Incluídas
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        {terminationData.variaveis_adicionais.map((variavel: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <span className="flex-1">
+                              {variavel.descricao}
+                              {variavel.referencia && (
+                                <span className="text-gray-500 text-xs ml-1">({variavel.referencia})</span>
+                              )}
+                            </span>
+                            <span className={`font-medium ${variavel.tipo === 'Desconto' ? 'text-red-600' : 'text-green-600'}`}>
+                              {variavel.tipo === 'Desconto' ? '-' : '+'} {formatCurrency(variavel.valor)}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="border-t pt-2 text-xs text-gray-500">
+                          Total Proventos Adicionais: {formatCurrency(terminationData.variaveis_adicionais.filter((v: any) => v.tipo === 'Provento').reduce((sum: number, v: any) => sum + v.valor, 0))}
+                          {' | '}
+                          Total Descontos Adicionais: {formatCurrency(terminationData.variaveis_adicionais.filter((v: any) => v.tipo === 'Desconto').reduce((sum: number, v: any) => sum + v.valor, 0))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Total Líquido */}
                   <Card className="bg-blue-50 border-blue-200">
                     <CardContent className="py-4">
@@ -2165,92 +2489,160 @@ const Payroll = () => {
 
         {/* Dialog para adicionar evento na folha */}
         <Dialog open={showAddEventDialog} onOpenChange={setShowAddEventDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Adicionar Evento na Folha</DialogTitle>
+              <DialogTitle>Adicionar Variável na Folha</DialogTitle>
               <DialogDescription>
-                Inclua um evento avulso na folha de pagamento. Eventos manuais podem ser removidos.
+                Inclua variáveis como horas extras, faltas, produtividade, etc. na folha de pagamento.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
+              {/* Seleção de variável pré-definida */}
               <div>
-                <Label>Descrição *</Label>
-                <Input
-                  placeholder="Ex: Vale Transporte, Hora Extra, Adiantamento..."
-                  value={newEventForm.descricao}
-                  onChange={(e) => setNewEventForm({ ...newEventForm, descricao: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Valor *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={newEventForm.valor || ""}
-                    onChange={(e) => setNewEventForm({ ...newEventForm, valor: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div>
-                  <Label>Tipo</Label>
-                  <Select
-                    value={newEventForm.is_desconto ? "desconto" : "provento"}
-                    onValueChange={(v) => setNewEventForm({ ...newEventForm, is_desconto: v === "desconto" })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="provento">Provento (+)</SelectItem>
-                      <SelectItem value="desconto">Desconto (-)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label>Código da Rubrica (opcional)</Label>
+                <Label className="text-base font-semibold">Tipo de Variável</Label>
                 <Select
-                  value={newEventForm.rubrica_codigo}
-                  onValueChange={(v) => setNewEventForm({ ...newEventForm, rubrica_codigo: v })}
+                  value={newEventForm.variable_type}
+                  onValueChange={handleVariableTypeChange}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar rubrica (opcional)" />
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o tipo de variável..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sem rubrica</SelectItem>
-                    {rubricas
-                      .filter(r => r.is_active)
-                      .map((r) => (
-                        <SelectItem key={r.codigo} value={r.codigo}>
-                          {r.codigo} - {r.descricao}
-                        </SelectItem>
-                      ))}
+                    <SelectItem value="" disabled>-- Selecione --</SelectItem>
+                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">PROVENTOS</div>
+                    {commonVariables.filter(v => !v.is_desconto).map((v) => (
+                      <SelectItem key={v.value} value={v.value}>
+                        <span className="flex items-center gap-2">
+                          <TrendingUp className="h-3 w-3 text-green-600" />
+                          {v.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">DESCONTOS</div>
+                    {commonVariables.filter(v => v.is_desconto).map((v) => (
+                      <SelectItem key={v.value} value={v.value}>
+                        <span className="flex items-center gap-2">
+                          <TrendingDown className="h-3 w-3 text-red-600" />
+                          {v.label}
+                        </span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <Label>Referência (opcional)</Label>
-                <Input
-                  placeholder="Ex: 30 dias, 8 horas, 50%..."
-                  value={newEventForm.referencia}
-                  onChange={(e) => setNewEventForm({ ...newEventForm, referencia: e.target.value })}
-                />
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Label>Descrição *</Label>
+                    <Input
+                      placeholder="Ex: Hora Extra, Produtividade, Falta..."
+                      value={newEventForm.descricao}
+                      onChange={(e) => setNewEventForm({ ...newEventForm, descricao: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Valor *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={newEventForm.valor || ""}
+                      onChange={(e) => setNewEventForm({ ...newEventForm, valor: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Referência</Label>
+                    <Input
+                      placeholder="Ex: 10 horas, 2 dias, 5%..."
+                      value={newEventForm.referencia}
+                      onChange={(e) => setNewEventForm({ ...newEventForm, referencia: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <Label>Tipo</Label>
+                    <Select
+                      value={newEventForm.is_desconto ? "desconto" : "provento"}
+                      onValueChange={(v) => setNewEventForm({ ...newEventForm, is_desconto: v === "desconto" })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="provento">
+                          <span className="flex items-center gap-2">
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                            Provento (+)
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="desconto">
+                          <span className="flex items-center gap-2">
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                            Desconto (-)
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Rubrica (opcional)</Label>
+                    <Select
+                      value={newEventForm.rubrica_codigo}
+                      onValueChange={(v) => setNewEventForm({ ...newEventForm, rubrica_codigo: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sem rubrica" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Sem rubrica</SelectItem>
+                        {rubricas
+                          .filter(r => r.is_active)
+                          .map((r) => (
+                            <SelectItem key={r.codigo} value={r.codigo}>
+                              {r.codigo} - {r.descricao}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <Label>Observação (opcional)</Label>
+                  <Input
+                    placeholder="Observação adicional"
+                    value={newEventForm.observacao}
+                    onChange={(e) => setNewEventForm({ ...newEventForm, observacao: e.target.value })}
+                  />
+                </div>
               </div>
 
-              <div>
-                <Label>Observação (opcional)</Label>
-                <Input
-                  placeholder="Observação adicional"
-                  value={newEventForm.observacao}
-                  onChange={(e) => setNewEventForm({ ...newEventForm, observacao: e.target.value })}
-                />
-              </div>
+              {/* Preview do valor */}
+              {newEventForm.valor > 0 && (
+                <div className={cn(
+                  "p-3 rounded-lg flex items-center justify-between",
+                  newEventForm.is_desconto ? "bg-red-50 border border-red-200" : "bg-green-50 border border-green-200"
+                )}>
+                  <span className="font-medium">
+                    {newEventForm.descricao || "Evento"}
+                    {newEventForm.referencia && ` (${newEventForm.referencia})`}
+                  </span>
+                  <span className={cn(
+                    "font-bold text-lg",
+                    newEventForm.is_desconto ? "text-red-600" : "text-green-600"
+                  )}>
+                    {newEventForm.is_desconto ? "-" : "+"}{formatCurrency(newEventForm.valor)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
@@ -2266,7 +2658,7 @@ const Payroll = () => {
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Evento
+                    Adicionar Variável
                   </>
                 )}
               </Button>
