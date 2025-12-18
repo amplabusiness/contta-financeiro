@@ -312,7 +312,7 @@ DÉBITOS CONFESSADOS:
 Nº     │ Competência      │ Vencimento    │ Dias Atraso  │ Valor
 ─────────────────────────────────────────────────────────────────────────────
 ${selectedItems.map((inv, idx) =>
-  `${String(idx + 1).padStart(2, "0")}     │ ${inv.reference_month.padEnd(16)} │ ${new Date(inv.due_date).toLocaleDateString("pt-BR").padEnd(13)} │ ${String(inv.days_overdue).padStart(12)} │ ${Number(inv.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+  `${String(idx + 1).padStart(2, "0")}     │ ${(inv.reference_month || 'N/A').padEnd(16)} │ ${(inv.due_date ? new Date(inv.due_date).toLocaleDateString("pt-BR") : 'N/A').padEnd(13)} │ ${String(inv.days_overdue || 0).padStart(12)} │ ${Number(inv.amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
 ).join("\n")}
 ─────────────────────────────────────────────────────────────────────────────
 TOTAL DA DÍVIDA ORIGINAL: ${totals.totalDebt.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
