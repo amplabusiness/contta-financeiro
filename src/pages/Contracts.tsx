@@ -393,23 +393,34 @@ const Contracts = () => {
       const client = selectedClients[i];
 
       try {
-        // Validar e mapear o tipo de contrato para valores aceitos pelo banco
-        const validContractTypes = ["full_accounting", "payroll", "tax", "consulting", "service"];
-        let contractType = client.contract_type || "full_accounting";
+        // Mapear tipo de contrato do frontend para tipos válidos no banco
+        // Banco aceita: 'service', 'consulting', 'partnership', 'opening', 'irpf', 'special'
+        const contractTypeMapping: Record<string, string> = {
+          full_accounting: "service",
+          payroll: "service",
+          tax: "service",
+          consulting: "consulting",
+          service: "service",
+          partnership: "partnership",
+          opening: "opening",
+          irpf: "irpf",
+          special: "special",
+        };
 
-        // Se o tipo não for válido, usar full_accounting como padrão
-        if (!validContractTypes.includes(contractType)) {
-          contractType = "full_accounting";
-        }
+        // Tipo interno para buscar serviços
+        const internalType = client.contract_type || "full_accounting";
 
-        const services = contractServices[contractType as keyof typeof contractServices] || contractServices.full_accounting;
+        // Tipo para o banco de dados
+        const dbContractType = contractTypeMapping[internalType] || "service";
+
+        const services = contractServices[internalType as keyof typeof contractServices] || contractServices.full_accounting;
 
         // Gerar conteúdo do contrato
-        const content = generateContractContentForClient(client, contractType, services);
+        const content = generateContractContentForClient(client, internalType, services);
 
         const contractData = {
           client_id: client.id,
-          contract_type: contractType,
+          contract_type: dbContractType,
           start_date: new Date().toISOString().split("T")[0],
           monthly_fee: client.monthly_fee || 0,
           payment_day: 10,
@@ -849,9 +860,24 @@ legal apresentada na Cláusula 1ª. A utilização dos serviços configura aceit
       const contractContent = generateContractContent(formData.contract_type);
       const services = contractServices[formData.contract_type as keyof typeof contractServices] || [];
 
+      // Mapear tipo de contrato do frontend para tipos válidos no banco
+      // Banco aceita: 'service', 'consulting', 'partnership', 'opening', 'irpf', 'special'
+      const contractTypeMapping: Record<string, string> = {
+        full_accounting: "service",
+        payroll: "service",
+        tax: "service",
+        consulting: "consulting",
+        service: "service",
+        partnership: "partnership",
+        opening: "opening",
+        irpf: "irpf",
+        special: "special",
+      };
+      const dbContractType = contractTypeMapping[formData.contract_type] || "service";
+
       const contractData = {
         client_id: formData.client_id,
-        contract_type: formData.contract_type,
+        contract_type: dbContractType,
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         monthly_fee: parseFloat(formData.monthly_fee),
