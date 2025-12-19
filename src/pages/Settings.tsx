@@ -78,11 +78,12 @@ const USER_ROLES = [
   { value: "viewer", label: "Visualizador", description: "Apenas consulta" },
 ];
 
-// Interface para dados da empresa via Brasil API
+// Interface para dados da empresa via Edge Function lookup-cnpj
 interface CompanyData {
+  source: string;
+  cnpj: string;
   razao_social: string;
   nome_fantasia: string;
-  cnpj: string;
   logradouro: string;
   numero: string;
   complemento: string;
@@ -91,7 +92,25 @@ interface CompanyData {
   uf: string;
   cep: string;
   email: string;
-  ddd_telefone_1: string;
+  telefone: string;
+  porte: string;
+  natureza_juridica: string;
+  capital_social: number;
+  data_abertura: string;
+  situacao: string;
+  atividade_principal: {
+    codigo: number;
+    descricao: string;
+  };
+  simples_nacional?: boolean;
+  mei?: boolean;
+  socios?: Array<{
+    nome: string;
+    qualificacao: string;
+    data_entrada: string;
+    cpf?: string;
+  }>;
+  inscricao_estadual?: string;
 }
 
 const Settings = () => {
@@ -701,28 +720,32 @@ const Settings = () => {
       .slice(0, 18);
   };
 
-  // Buscar dados do CNPJ na Brasil API
+  // Buscar dados do CNPJ via Edge Function (usa CNPJa com fallback para Brasil API)
   const fetchCnpjData = async (cnpj: string) => {
     const cleanCnpj = cnpj.replace(/\D/g, "");
     if (cleanCnpj.length !== 14) return;
 
     setIsLoadingCnpj(true);
     try {
-      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      // Chamar Edge Function lookup-cnpj
+      const { data: responseData, error } = await supabase.functions.invoke('lookup-cnpj', {
+        body: { cnpj: cleanCnpj }
+      });
 
-      if (!response.ok) {
-        throw new Error("CNPJ não encontrado");
+      if (error) {
+        throw new Error(error.message || "Erro ao buscar CNPJ");
       }
 
-      const data: CompanyData = await response.json();
+      if (!responseData?.success || !responseData?.data) {
+        throw new Error(responseData?.error || "CNPJ não encontrado");
+      }
 
-      // Formatar telefone
-      let phone = "";
-      if (data.ddd_telefone_1) {
-        const phoneClean = data.ddd_telefone_1.replace(/\D/g, "");
-        if (phoneClean.length >= 10) {
-          phone = `(${phoneClean.slice(0, 2)}) ${phoneClean.slice(2, 6)}-${phoneClean.slice(6, 10)}`;
-        }
+      const data: CompanyData = responseData.data;
+
+      // Formatar CEP se necessário
+      let formattedCep = data.cep || "";
+      if (formattedCep && !formattedCep.includes("-")) {
+        formattedCep = formattedCep.replace(/(\d{5})(\d{3})/, "$1-$2");
       }
 
       // Atualizar formulário com dados da API
@@ -731,22 +754,25 @@ const Settings = () => {
         razaoSocial: data.razao_social || prev.razaoSocial,
         nomeFantasia: data.nome_fantasia || data.razao_social || prev.nomeFantasia,
         email: data.email || prev.email,
-        phone: phone || prev.phone,
+        phone: data.telefone || prev.phone,
         address: data.logradouro || prev.address,
         number: data.numero || prev.number,
+        bairro: data.bairro || prev.bairro,
         city: data.municipio || prev.city,
         state: data.uf || prev.state,
-        zip: data.cep ? data.cep.replace(/(\d{5})(\d{3})/, "$1-$2") : prev.zip,
+        zip: formattedCep || prev.zip,
       }));
 
+      const sourceText = data.source === 'cnpja' ? 'CNPJa' : 'Brasil API';
       toast({
         title: "Dados carregados",
-        description: `Dados de ${data.razao_social} preenchidos automaticamente.`,
+        description: `Dados de ${data.razao_social} preenchidos automaticamente via ${sourceText}.`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erro ao buscar CNPJ:", error);
       toast({
         title: "Erro ao buscar CNPJ",
-        description: "Não foi possível encontrar dados para este CNPJ. Verifique e tente novamente.",
+        description: error.message || "Não foi possível encontrar dados para este CNPJ. Verifique e tente novamente.",
         variant: "destructive",
       });
     } finally {

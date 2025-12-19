@@ -33,6 +33,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Plus,
   Eye,
   FileText,
@@ -44,7 +61,9 @@ import {
   Calculator,
   DollarSign,
   Calendar,
+  MoreHorizontal,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -87,23 +106,38 @@ interface PendingInvoice {
   due_date: string;
   days_overdue: number;
   selected?: boolean;
-  source?: "invoice" | "opening_balance"; // Origem do débito
 }
 
-// Dados do escritório
-const officeData = {
-  name: "AMPLA ASSESSORIA CONTABIL LTDA",
-  tradeName: "Ampla Business",
-  cnpj: "21.565.040/0001-07",
-  crc: "CRC/GO 007640/O",
-  address: "Rua 1, Qd. 24, Lt. 08, S/N - Setor Maracanã",
+// Interface para dados do escritório
+interface OfficeData {
+  name: string;
+  tradeName: string;
+  cnpj: string;
+  crc: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  phone: string;
+  accountant: string;
+  accountantCrc: string;
+}
+
+// Dados padrão do escritório (fallback)
+const defaultOfficeData: OfficeData = {
+  name: "AMPLA CONTABILIDADE LTDA",
+  tradeName: "Ampla Contabilidade",
+  cnpj: "23.893.032/0001-69",
+  crc: "",
+  address: "",
   city: "Goiânia",
   state: "GO",
-  zip: "74.680-320",
-  email: "contato@amplabusiness.com.br",
-  phone: "(62) 3932-1365",
-  accountant: "Sérgio Rosa de Carvalho",
-  accountantCrc: "CRC/GO 024.270/O-5",
+  zip: "",
+  email: "",
+  phone: "",
+  accountant: "Sergio Carneiro Leão",
+  accountantCrc: "",
 };
 
 const DebtConfession = () => {
@@ -112,10 +146,14 @@ const DebtConfession = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<PendingInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showNewConfession, setShowNewConfession] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [confessionToDelete, setConfessionToDelete] = useState<DebtConfession | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [confessionPreview, setConfessionPreview] = useState("");
+  const [officeData, setOfficeData] = useState<OfficeData>(defaultOfficeData);
 
   const [formData, setFormData] = useState({
     client_id: "",
@@ -127,6 +165,41 @@ const DebtConfession = () => {
   });
 
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
+
+  const fetchOfficeData = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("accounting_office")
+        .select("*")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.log("Usando dados padrão do escritório");
+        return;
+      }
+
+      if (data) {
+        setOfficeData({
+          name: data.razao_social || defaultOfficeData.name,
+          tradeName: data.nome_fantasia || defaultOfficeData.tradeName,
+          cnpj: data.cnpj || defaultOfficeData.cnpj,
+          crc: data.crc_number ? `CRC/${data.crc_state} ${data.crc_number}` : "",
+          address: `${data.endereco || ""}, ${data.numero || "S/N"} - ${data.bairro || ""}`.trim(),
+          city: data.cidade || defaultOfficeData.city,
+          state: data.estado || defaultOfficeData.state,
+          zip: data.cep || "",
+          email: data.email || "",
+          phone: data.telefone || "",
+          accountant: data.responsavel_tecnico || defaultOfficeData.accountant,
+          accountantCrc: data.responsavel_crc || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching office data:", error);
+    }
+  }, []);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -145,61 +218,23 @@ const DebtConfession = () => {
 
   const fetchPendingInvoices = useCallback(async (clientId: string) => {
     try {
-      const today = new Date();
-
-      // Buscar faturas pendentes
-      const { data: invoicesData, error: invoicesError } = await supabase
+      const { data, error } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", clientId)
         .eq("status", "pending")
         .order("due_date", { ascending: true });
 
-      if (invoicesError) throw invoicesError;
+      if (error) throw error;
 
-      // Buscar honorários de abertura pendentes
-      const { data: openingBalanceData, error: openingBalanceError } = await supabase
-        .from("client_opening_balance")
-        .select("*")
-        .eq("client_id", clientId)
-        .neq("status", "paid")
-        .order("due_date", { ascending: true });
-
-      if (openingBalanceError) throw openingBalanceError;
-
-      // Mapear faturas
-      const invoicesWithDays = (invoicesData || []).map(invoice => ({
+      const today = new Date();
+      const invoicesWithDays = (data || []).map(invoice => ({
         ...invoice,
         days_overdue: Math.floor((today.getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)),
         selected: false,
-        source: "invoice" as const,
       }));
 
-      // Mapear honorários de abertura
-      const openingBalanceWithDays = (openingBalanceData || []).map(balance => ({
-        id: balance.id,
-        client_id: balance.client_id,
-        invoice_number: `SAB-${balance.competence?.replace("/", "-") || "N/A"}`,
-        reference_month: balance.competence || "N/A",
-        amount: balance.amount - (balance.paid_amount || 0), // Valor pendente
-        due_date: balance.due_date || "",
-        days_overdue: balance.due_date
-          ? Math.floor((today.getTime() - new Date(balance.due_date).getTime()) / (1000 * 60 * 60 * 24))
-          : 0,
-        selected: false,
-        source: "opening_balance" as const,
-      }));
-
-      // Combinar e ordenar por data de vencimento
-      const allPendingDebts = [...invoicesWithDays, ...openingBalanceWithDays]
-        .filter(item => item.amount > 0) // Apenas itens com valor pendente
-        .sort((a, b) => {
-          if (!a.due_date) return 1;
-          if (!b.due_date) return -1;
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-        });
-
-      setPendingInvoices(allPendingDebts);
+      setPendingInvoices(invoicesWithDays);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       setPendingInvoices([]);
@@ -227,9 +262,10 @@ const DebtConfession = () => {
   }, []);
 
   useEffect(() => {
+    fetchOfficeData();
     fetchClients();
     fetchConfessions();
-  }, [fetchClients, fetchConfessions]);
+  }, [fetchOfficeData, fetchClients, fetchConfessions]);
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
@@ -352,7 +388,7 @@ DÉBITOS CONFESSADOS:
 Nº     │ Competência      │ Vencimento    │ Dias Atraso  │ Valor
 ─────────────────────────────────────────────────────────────────────────────
 ${selectedItems.map((inv, idx) =>
-  `${String(idx + 1).padStart(2, "0")}     │ ${(inv.reference_month || 'N/A').padEnd(16)} │ ${(inv.due_date ? new Date(inv.due_date).toLocaleDateString("pt-BR") : 'N/A').padEnd(13)} │ ${String(inv.days_overdue || 0).padStart(12)} │ ${Number(inv.amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+  `${String(idx + 1).padStart(2, "0")}     │ ${inv.reference_month.padEnd(16)} │ ${new Date(inv.due_date).toLocaleDateString("pt-BR").padEnd(13)} │ ${String(inv.days_overdue).padStart(12)} │ ${Number(inv.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
 ).join("\n")}
 ─────────────────────────────────────────────────────────────────────────────
 TOTAL DA DÍVIDA ORIGINAL: ${totals.totalDebt.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
@@ -600,35 +636,6 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
     });
   };
 
-  const handleDeleteConfession = async (confessionId: string, confessionNumber: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o rascunho ${confessionNumber}?`)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("debt_confessions")
-        .delete()
-        .eq("id", confessionId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Rascunho excluído",
-        description: `Documento ${confessionNumber} foi excluído com sucesso.`,
-      });
-
-      fetchConfessions();
-    } catch (error) {
-      console.error("Error deleting confession:", error);
-      toast({
-        title: "Erro ao excluir",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       client_id: "",
@@ -642,6 +649,43 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
     setSelectedInvoices([]);
     setPendingInvoices([]);
     setConfessionPreview("");
+  };
+
+  const handleDeleteConfession = (confession: DebtConfession) => {
+    setConfessionToDelete(confession);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteConfession = async () => {
+    if (!confessionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("debt_confessions")
+        .delete()
+        .eq("id", confessionToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Confissão excluída",
+        description: `Documento ${confessionToDelete.confession_number} foi excluído.`,
+      });
+
+      setShowDeleteDialog(false);
+      setConfessionToDelete(null);
+      fetchConfessions();
+    } catch (error) {
+      console.error("Error deleting confession:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -789,25 +833,41 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                           </TableCell>
                           <TableCell>{getStatusBadge(confession.status)}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex gap-1 justify-end">
-                              <Button size="sm" variant="ghost" title="Visualizar">
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                              <Button size="sm" variant="ghost" title="Enviar">
-                                <Send className="w-3 h-3" />
-                              </Button>
-                              {confession.status === "draft" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  title="Excluir rascunho"
-                                  onClick={() => handleDeleteConfession(confession.id, confession.confession_number)}
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="w-3 h-3" />
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
-                              )}
-                            </div>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Visualizar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Copiar Documento
+                                </DropdownMenuItem>
+                                {confession.status !== "completed" && (
+                                  <DropdownMenuItem>
+                                    <Send className="h-4 w-4 mr-2" />
+                                    Enviar ao Cliente
+                                  </DropdownMenuItem>
+                                )}
+                                {confession.status === "draft" && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteConfession(confession)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Excluir Rascunho
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -866,12 +926,11 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                           </p>
                         </div>
                       ) : (
-                        <div className="border rounded-lg max-h-80 overflow-y-auto">
+                        <div className="border rounded-lg max-h-64 overflow-y-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
                                 <TableHead className="w-12"></TableHead>
-                                <TableHead>Tipo</TableHead>
                                 <TableHead>Competência</TableHead>
                                 <TableHead>Vencimento</TableHead>
                                 <TableHead>Dias Atraso</TableHead>
@@ -887,24 +946,11 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                                       onCheckedChange={() => handleInvoiceToggle(invoice.id)}
                                     />
                                   </TableCell>
+                                  <TableCell>{invoice.reference_month}</TableCell>
+                                  <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
                                   <TableCell>
-                                    <Badge
-                                      variant="outline"
-                                      className={invoice.source === "opening_balance"
-                                        ? "bg-purple-100 text-purple-800 border-purple-300"
-                                        : "bg-blue-100 text-blue-800 border-blue-300"
-                                      }
-                                    >
-                                      {invoice.source === "opening_balance" ? "Hon. Abertura" : "Fatura"}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="font-medium">{invoice.reference_month}</TableCell>
-                                  <TableCell>
-                                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("pt-BR") : "-"}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Badge variant={invoice.days_overdue > 60 ? "destructive" : invoice.days_overdue > 0 ? "outline" : "secondary"}>
-                                      {invoice.days_overdue > 0 ? `${invoice.days_overdue} dias` : "Em dia"}
+                                    <Badge variant={invoice.days_overdue > 60 ? "destructive" : "outline"}>
+                                      {invoice.days_overdue} dias
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="text-right font-medium">
@@ -1040,6 +1086,39 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir Confissão de Dívida</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja excluir o documento "{confessionToDelete?.confession_number}"?
+                    Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={confirmDeleteConfession}
+                    className="bg-red-600 hover:bg-red-700"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Excluindo...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </>
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>
