@@ -124,20 +124,20 @@ interface OfficeData {
   accountantCrc: string;
 }
 
-// Dados padrão do escritório (fallback)
+// Dados padrão do escritório (fallback) - CNPJ CORRETO: 21.565.040/0001-07
 const defaultOfficeData: OfficeData = {
-  name: "AMPLA CONTABILIDADE LTDA",
-  tradeName: "Ampla Contabilidade",
-  cnpj: "23.893.032/0001-69",
-  crc: "",
-  address: "",
+  name: "AMPLA ASSESSORIA CONTABIL LTDA",
+  tradeName: "Ampla Business",
+  cnpj: "21.565.040/0001-07",
+  crc: "CRC/GO 007640/O",
+  address: "Rua 1, Qd. 24, Lt. 08, S/N - Setor Maracanã",
   city: "Goiânia",
   state: "GO",
-  zip: "",
-  email: "",
-  phone: "",
+  zip: "74.680-320",
+  email: "contato@amplabusiness.com.br",
+  phone: "(62) 3932-1365",
   accountant: "Sergio Carneiro Leão",
-  accountantCrc: "",
+  accountantCrc: "CRC/GO 007640/O",
 };
 
 const DebtConfession = () => {

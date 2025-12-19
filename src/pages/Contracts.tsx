@@ -142,28 +142,28 @@ interface AccountingOffice {
   website: string | null;
 }
 
-// Dados padrão do escritório (usado como fallback) - CNPJ CORRETO: 23.893.032/0001-69
+// Dados padrão do escritório (usado como fallback) - CNPJ CORRETO: 21.565.040/0001-07
 const defaultOfficeData: AccountingOffice = {
   id: "",
-  razao_social: "AMPLA CONTABILIDADE LTDA",
-  nome_fantasia: "Ampla Contabilidade",
-  cnpj: "23.893.032/0001-69",
-  crc_number: "",
+  razao_social: "AMPLA ASSESSORIA CONTABIL LTDA",
+  nome_fantasia: "Ampla Business",
+  cnpj: "21.565.040/0001-07",
+  crc_number: "CRC/GO 007640/O",
   crc_state: "GO",
   responsavel_tecnico: "Sergio Carneiro Leão",
-  responsavel_crc: "",
+  responsavel_crc: "CRC/GO 007640/O",
   responsavel_cpf: null,
-  endereco: "",
-  numero: "",
-  complemento: null,
-  bairro: "",
+  endereco: "Rua 1, Qd. 24, Lt. 08, S/N",
+  numero: "S/N",
+  complemento: "Setor Maracanã",
+  bairro: "Setor Maracanã",
   cidade: "Goiânia",
   estado: "GO",
-  cep: "",
-  telefone: "",
+  cep: "74.680-320",
+  telefone: "(62) 3932-1365",
   celular: null,
-  email: "",
-  website: "",
+  email: "contato@amplabusiness.com.br",
+  website: "www.amplabusiness.com.br",
 };
 
 // Serviços por tipo de contrato
