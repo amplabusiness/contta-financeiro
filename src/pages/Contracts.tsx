@@ -393,7 +393,15 @@ const Contracts = () => {
       const client = selectedClients[i];
 
       try {
-        const contractType = client.contract_type || "full_accounting";
+        // Validar e mapear o tipo de contrato para valores aceitos pelo banco
+        const validContractTypes = ["full_accounting", "payroll", "tax", "consulting", "service"];
+        let contractType = client.contract_type || "full_accounting";
+
+        // Se o tipo não for válido, usar full_accounting como padrão
+        if (!validContractTypes.includes(contractType)) {
+          contractType = "full_accounting";
+        }
+
         const services = contractServices[contractType as keyof typeof contractServices] || contractServices.full_accounting;
 
         // Gerar conteúdo do contrato
