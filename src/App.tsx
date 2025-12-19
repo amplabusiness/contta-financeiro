@@ -106,6 +106,7 @@ import ImportBoletosLiquidados from "./pages/ImportBoletosLiquidados";
 import BoletosComposicao from "./pages/BoletosComposicao";
 import AIAutomation from "./pages/AIAutomation";
 import NFSe from "./pages/NFSe";
+import MonthlyClosing from "./pages/MonthlyClosing";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
@@ -304,6 +305,7 @@ const App = () => (
             <Route path="/boletos-composicao" element={<BoletosComposicao />} />
             <Route path="/ai-automation" element={<AIAutomation />} />
             <Route path="/nfse" element={<NFSe />} />
+            <Route path="/monthly-closing" element={<MonthlyClosing />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
