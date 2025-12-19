@@ -150,7 +150,9 @@ const DebtConfession = () => {
   const [showNewConfession, setShowNewConfession] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const [confessionToDelete, setConfessionToDelete] = useState<DebtConfession | null>(null);
+  const [confessionToView, setConfessionToView] = useState<DebtConfession | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [confessionPreview, setConfessionPreview] = useState("");
   const [officeData, setOfficeData] = useState<OfficeData>(defaultOfficeData);
@@ -636,6 +638,46 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
     });
   };
 
+  // Funções para ações da tabela
+  const handleViewConfession = (confession: DebtConfession) => {
+    setConfessionToView(confession);
+    setShowViewDialog(true);
+  };
+
+  const handleCopyConfessionDocument = (confession: DebtConfession) => {
+    if (confession.content) {
+      navigator.clipboard.writeText(confession.content);
+      toast({
+        title: "Documento copiado",
+        description: "O texto foi copiado para a área de transferência.",
+      });
+    } else {
+      toast({
+        title: "Documento não disponível",
+        description: "Esta confissão não possui conteúdo gerado.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendToClient = async (confession: DebtConfession) => {
+    const client = clients.find(c => c.id === confession.client_id);
+    if (!client?.email) {
+      toast({
+        title: "E-mail não encontrado",
+        description: "O cliente não possui e-mail cadastrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simulação de envio - integrar com sistema de e-mail posteriormente
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: `O documento será enviado para ${client.email} em breve.`,
+    });
+  };
+
   const resetForm = () => {
     setFormData({
       client_id: "",
@@ -840,16 +882,16 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewConfession(confession)}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   Visualizar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleCopyConfessionDocument(confession)}>
                                   <Copy className="h-4 w-4 mr-2" />
                                   Copiar Documento
                                 </DropdownMenuItem>
                                 {confession.status !== "completed" && (
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSendToClient(confession)}>
                                     <Send className="h-4 w-4 mr-2" />
                                     Enviar ao Cliente
                                   </DropdownMenuItem>
@@ -1082,6 +1124,77 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                   <Button onClick={handleSaveConfession}>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Salvar Documento
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* View Confession Dialog */}
+            <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    {confessionToView?.confession_number}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Confissão de Dívida - {confessionToView?.clients?.name}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {/* Resumo */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Valor Original</p>
+                      <p className="font-semibold">
+                        R$ {Number(confessionToView?.original_amount || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Valor Final</p>
+                      <p className="font-semibold">
+                        R$ {Number(confessionToView?.final_amount || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Parcelas</p>
+                      <p className="font-semibold">
+                        {confessionToView?.installments}x de R$ {Number(confessionToView?.installment_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      {confessionToView && getStatusBadge(confessionToView.status)}
+                    </div>
+                  </div>
+
+                  {/* Documento */}
+                  <div className="border rounded-lg p-4 bg-white">
+                    <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
+                      {confessionToView?.content || "Documento não disponível"}
+                    </pre>
+                  </div>
+                </div>
+
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (confessionToView?.content) {
+                        navigator.clipboard.writeText(confessionToView.content);
+                        toast({
+                          title: "Documento copiado",
+                          description: "O texto foi copiado para a área de transferência.",
+                        });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar
+                  </Button>
+                  <Button onClick={() => setShowViewDialog(false)}>
+                    Fechar
                   </Button>
                 </DialogFooter>
               </DialogContent>
