@@ -142,12 +142,12 @@ interface AccountingOffice {
   website: string | null;
 }
 
-// Dados padrão do escritório (usado como fallback) - CNPJ CORRETO: 21.565.040/0001-07
+// Dados padrão do escritório (usado como fallback) - CNPJ CORRETO: 23.893.032/0001-69
 const defaultOfficeData: AccountingOffice = {
   id: "",
   razao_social: "AMPLA ASSESSORIA CONTABIL LTDA",
   nome_fantasia: "Ampla Business",
-  cnpj: "21.565.040/0001-07",
+  cnpj: "23.893.032/0001-69",
   crc_number: "CRC/GO 007640/O",
   crc_state: "GO",
   responsavel_tecnico: "Sergio Carneiro Leão",

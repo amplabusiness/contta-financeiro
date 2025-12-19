@@ -124,11 +124,11 @@ interface OfficeData {
   accountantCrc: string;
 }
 
-// Dados padrão do escritório (fallback) - CNPJ CORRETO: 21.565.040/0001-07
+// Dados padrão do escritório (fallback) - CNPJ CORRETO: 23.893.032/0001-69
 const defaultOfficeData: OfficeData = {
   name: "AMPLA ASSESSORIA CONTABIL LTDA",
   tradeName: "Ampla Business",
-  cnpj: "21.565.040/0001-07",
+  cnpj: "23.893.032/0001-69",
   crc: "CRC/GO 007640/O",
   address: "Rua 1, Qd. 24, Lt. 08, S/N - Setor Maracanã",
   city: "Goiânia",

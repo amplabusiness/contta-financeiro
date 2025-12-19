@@ -31,7 +31,7 @@ INSERT INTO accounting_office (
 ) VALUES (
   'AMPLA ASSESSORIA CONTABIL LTDA',
   'Ampla Business',
-  '21.565.040/0001-07',
+  '23.893.032/0001-69',
   'CRC/GO 007640/O',
   'GO',
   'Sergio Carneiro Leão',
@@ -52,4 +52,4 @@ INSERT INTO accounting_office (
 );
 
 -- Comentário para referência
-COMMENT ON TABLE accounting_office IS 'Dados do escritório contábil AMPLA ASSESSORIA CONTABIL LTDA - CNPJ 21.565.040/0001-07 - CRC/GO 007640/O';
+COMMENT ON TABLE accounting_office IS 'Dados do escritório contábil AMPLA ASSESSORIA CONTABIL LTDA - CNPJ 23.893.032/0001-69 - CRC/GO 007640/O';
