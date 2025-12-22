@@ -161,20 +161,20 @@ const MonthlyClosing = () => {
       const startStr = format(startDate, "yyyy-MM-dd");
       const endStr = format(endDate, "yyyy-MM-dd");
 
-      // Buscar receitas do período
+      // Buscar receitas do período (paid_date é a coluna correta)
       const { data: paidInvoices } = await supabase
         .from("invoices")
         .select("amount")
-        .gte("payment_date", startStr)
-        .lte("payment_date", endStr)
+        .gte("paid_date", startStr)
+        .lte("paid_date", endStr)
         .eq("status", "paid");
 
-      // Buscar despesas pagas do período
+      // Buscar despesas pagas do período (paid_date é a coluna correta)
       const { data: paidExpenses } = await supabase
         .from("expenses")
         .select("amount")
-        .gte("payment_date", startStr)
-        .lte("payment_date", endStr)
+        .gte("paid_date", startStr)
+        .lte("paid_date", endStr)
         .eq("status", "paid");
 
       // Buscar invoices pendentes
