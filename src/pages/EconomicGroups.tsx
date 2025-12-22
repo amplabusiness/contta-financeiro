@@ -93,8 +93,7 @@ export default function EconomicGroups() {
           main_payer_client_id,
           total_monthly_fee,
           payment_day,
-          is_active,
-          clients!economic_groups_main_payer_client_id_fkey(name)
+          is_active
         `)
         .eq('is_active', true)
         .order('name');
@@ -111,6 +110,13 @@ export default function EconomicGroups() {
         `);
 
       if (membersError) throw membersError;
+
+      // Buscar nomes dos pagadores principais
+      const mainPayerIds = (groupsData || []).map(g => g.main_payer_client_id).filter(Boolean);
+      const { data: payersData } = mainPayerIds.length > 0
+        ? await supabase.from('clients').select('id, name').in('id', mainPayerIds)
+        : { data: [] };
+      const payerNames = new Map((payersData || []).map(p => [p.id, p.name]));
 
       const consolidatedGroups: EconomicGroup[] = (groupsData || []).map(group => {
         const groupMembers = (membersData || [])
@@ -131,7 +137,7 @@ export default function EconomicGroups() {
           payment_day: group.payment_day,
           is_active: group.is_active,
           member_count: groupMembers.length,
-          main_payer_name: (group.clients as any)?.name || 'Nome não disponível',
+          main_payer_name: payerNames.get(group.main_payer_client_id) || 'Nome não disponível',
           members: groupMembers
         };
       });

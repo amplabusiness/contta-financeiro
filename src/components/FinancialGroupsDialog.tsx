@@ -70,8 +70,7 @@ export function FinancialGroupsDialog({ open, onOpenChange }: FinancialGroupsDia
           main_payer_client_id,
           total_monthly_fee,
           payment_day,
-          is_active,
-          clients!economic_groups_main_payer_client_id_fkey(name)
+          is_active
         `)
         .eq('is_active', true)
         .order('name');

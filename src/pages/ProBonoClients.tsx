@@ -123,25 +123,33 @@ const ProBonoClients = () => {
         .from('economic_group_members')
         .select(`
           client_id,
-          economic_groups!inner (
+          economic_groups (
             id,
             name,
-            main_payer_client_id,
-            clients!economic_groups_main_payer_client_id_fkey (
-              name
-            )
+            main_payer_client_id
           )
         `);
+
+      // Buscar nomes dos pagadores principais
+      const mainPayerIds = [...new Set((groupMembersData || [])
+        .map((m: any) => m.economic_groups?.main_payer_client_id)
+        .filter(Boolean))];
+      const { data: payersData } = mainPayerIds.length > 0
+        ? await supabase.from('clients').select('id, name').in('id', mainPayerIds)
+        : { data: [] };
+      const payerNames = new Map((payersData || []).map((p: any) => [p.id, p.name]));
 
       // Criar mapa de membros de grupos
       const memberships = new Map<string, { groupName: string; mainPayerName: string; isMainPayer: boolean }>();
       (groupMembersData || []).forEach((member: any) => {
         const group = member.economic_groups;
-        memberships.set(member.client_id, {
-          groupName: group.name,
-          mainPayerName: group.clients?.name || 'Desconhecido',
-          isMainPayer: group.main_payer_client_id === member.client_id
-        });
+        if (group) {
+          memberships.set(member.client_id, {
+            groupName: group.name || 'Grupo',
+            mainPayerName: payerNames.get(group.main_payer_client_id) || 'Desconhecido',
+            isMainPayer: group.main_payer_client_id === member.client_id
+          });
+        }
       });
       setGroupMemberships(memberships);
 

@@ -47,37 +47,45 @@ export function FinancialGroupBadge({ clientId }: FinancialGroupBadgeProps) {
 
   const loadGroupInfo = useCallback(async () => {
     try {
-      // Buscar se o cliente pertence a algum grupo financeiro
+      // Primeiro, buscar se o cliente pertence a algum grupo financeiro
       const { data: memberData, error: memberError } = await supabase
         .from('economic_group_members')
         .select(`
           economic_group_id,
-          economic_groups!inner (
+          economic_groups (
             id,
             name,
             main_payer_client_id,
-            group_color,
-            clients!economic_groups_main_payer_client_id_fkey (
-              name
-            )
+            group_color
           )
         `)
         .eq('client_id', clientId)
-        .single();
+        .maybeSingle();
 
-      if (memberError || !memberData) {
+      if (memberError || !memberData || !memberData.economic_groups) {
         setGroupInfo(null);
         return;
       }
 
       const group = memberData.economic_groups as any;
-      const groupNumber = parseInt(group.name.replace(/\D/g, '')) || 1;
-      
+      const groupNumber = parseInt(group.name?.replace(/\D/g, '')) || 1;
+
+      // Buscar nome do pagador principal separadamente
+      let mainPayerName = 'Desconhecido';
+      if (group.main_payer_client_id) {
+        const { data: payerData } = await supabase
+          .from('clients')
+          .select('name')
+          .eq('id', group.main_payer_client_id)
+          .single();
+        mainPayerName = payerData?.name || 'Desconhecido';
+      }
+
       setGroupInfo({
         groupId: group.id,
-        groupName: group.name,
+        groupName: group.name || 'Grupo',
         groupNumber: groupNumber,
-        mainPayerName: group.clients?.name || 'Desconhecido',
+        mainPayerName: mainPayerName,
         isMainPayer: group.main_payer_client_id === clientId,
         groupColor: group.group_color
       });

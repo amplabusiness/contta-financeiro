@@ -28,12 +28,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     // Suporte a múltiplas APIs de IA - prioriza Gemini
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    const aiProvider = geminiApiKey ? 'gemini' : 'lovable';
-    const aiKey = geminiApiKey || geminiApiKey;
+    const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
+    const aiProvider = geminiApiKey ? 'gemini' : (claudeApiKey ? 'claude' : 'none');
+    const aiKey = geminiApiKey || claudeApiKey;
 
     if (!aiKey) {
-      throw new Error('AI API key not configured (GEMINI_API_KEY or GEMINI_API_KEY)');
+      throw new Error('AI API key not configured (GEMINI_API_KEY or CLAUDE_API_KEY)');
     }
 
     console.log(`[AI-Accountant] Using ${aiProvider} provider`);
