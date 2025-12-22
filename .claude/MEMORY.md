@@ -1,6 +1,6 @@
 # Ampla Contabilidade - Memória do Projeto
 
-**Última Atualização**: 2025-12-15 (Sessão 28)
+**Última Atualização**: 2025-12-15 (Sessão 31)
 
 ---
 
@@ -2814,3 +2814,208 @@ O código para o Portal Nacional está pronto para quando/se Goiânia aderir ao 
 - **Anterior**: 1.29.3
 - **Atual**: 1.29.3 (sem mudança de versão, apenas documentação)
 - **Tipo**: RESEARCH (Portal Nacional)
+---
+
+## Sessão 29 (15/12/2025) - Eventos Manuais na Folha de Pagamento
+
+### Contexto
+
+O usuário precisava de flexibilidade para adicionar eventos manuais na folha de pagamento que não estavam contemplados nas rubricas padrão do eSocial. Além disso, foi identificado um erro na função `aprovar_rescisao` que impedia a aprovação de rescisões.
+
+### Problemas Identificados
+
+1. **Folha de Pagamento Rígida**: Não havia forma de adicionar eventos personalizados além das rubricas do eSocial
+2. **Erro aprovar_rescisao**: Função retornava `column "history" of relation "accounting_entry_lines" does not exist`
+
+### Soluções Implementadas
+
+#### 1. Feature "Adicionar Evento" na Folha de Pagamento
+
+**Arquivo modificado**: `src/pages/Payroll.tsx`
+
+**Novos estados adicionados**:
+```typescript
+const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+const [addingEvent, setAddingEvent] = useState(false);
+const [newEventForm, setNewEventForm] = useState({
+  tipo: 'provento' as 'provento' | 'desconto',
+  descricao: '',
+  valor: '',
+  observacao: ''
+});
+```
+
+**Novas funções**:
+- `openAddEventDialog()` - Abre modal para adicionar evento
+- `handleAddEvent()` - Salva o evento manual na tabela `payroll_events`
+- `handleDeleteEvent()` - Exclui eventos manuais (apenas para eventos com `is_oficial=false`)
+
+**Funcionalidades**:
+- Botão "Adicionar Evento" na tela de detalhes da folha
+- Modal com seleção de tipo (Provento +/Desconto -)
+- Campo para descrição e valor
+- Campo opcional para observações
+- Eventos manuais podem ser excluídos (botão X vermelho)
+- Eventos oficiais (eSocial) não podem ser excluídos
+- Recálculo automático dos totais após adicionar/excluir eventos
+
+**Campos utilizados na tabela `payroll_events`**:
+- `is_oficial` (boolean) - false para eventos manuais
+- `is_desconto` (boolean) - true para descontos
+- `descricao` (text) - descrição do evento
+- `observacao` (text) - observações opcionais
+
+#### 2. Correção da Função aprovar_rescisao
+
+**Arquivo criado**: `supabase/migrations/20251215190000_fix_aprovar_rescisao_function.sql`
+
+**Problema**: A função tentava inserir na coluna `history` que não existe em `accounting_entry_lines`
+
+**Solução**: Alterado para usar a coluna correta `description`:
+```sql
+INSERT INTO accounting_entry_lines (..., description)
+VALUES (..., v_description);
+```
+
+**Status**: Após testes, verificou-se que a função já estava corrigida em produção (retornou "Rescisão não encontrada" em vez do erro de coluna).
+
+### Commit e Deploy
+
+- **Commit**: `3ea64bb` - "feat: adicionar eventos manuais na folha de pagamento e corrigir funcao aprovar_rescisao"
+- **Push**: origin/main
+- **Deploy Vercel**: https://data-bling-sheets-3122699b-n1isrpmx7.vercel.app
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/Payroll.tsx` | Adicionada feature completa de eventos manuais |
+| `supabase/migrations/20251215190000_fix_aprovar_rescisao_function.sql` | Correção da função (column history → description) |
+
+### Análise de Despesas dos Sócios (Contexto Adicional)
+
+Durante a sessão, foi analisado o tratamento contábil das despesas pessoais dos sócios:
+- **184 despesas** na categoria "Despesa Particular Socio" totalizando **R$ 482.520,67**
+- **26 entradas existentes** na conta Adiantamento Sergio (código 100107) com **R$ 76.358,82**
+- **177 despesas** precisariam de lançamentos contábeis (R$ 467.907,49)
+- **Decisão**: Não criar os lançamentos agora - despesas estão provisionadas até 2027 conforme acordo com sócios
+
+### Versão
+
+- **Anterior**: 1.29.3
+- **Atual**: 1.29.4
+- **Tipo**: FEATURE (Eventos Manuais Folha) + BUGFIX (aprovar_rescisao)
+
+---
+
+## Sessão 30 (15/12/2025) - Portal Nacional NFS-e (SEFIN): testes reais + divergências RTC/Produção
+
+### Contexto
+
+Foi executado o fluxo fim-a-fim de emissão no **Portal Nacional NFS-e (SEFIN Nacional)** usando certificado **A1 (PFX)** via **mTLS**, com payload **DPS XML** em **GZIP+Base64** enviado em JSON.
+
+Esta sessão atualiza e complementa a Sessão 28.2 com o estado real dos testes e a descoberta de divergências entre **Homologação (Produção Restrita / RTC)** e **Produção**.
+
+### Descobertas / Comportamento por Ambiente
+
+1. **Versão do layout (atributo `versao`) diverge por ambiente**
+  - **Homologação/RTC**: aceita/valida **apenas 1.01** (mudança reportada em 10/12/2025)
+  - **Produção**: validação observada exigindo **1.00** (1.01 falhou em validação de schema/pattern)
+
+2. **Produção retorna E0037 para Goiânia (IBGE 5208707)**
+  - Erro: `E0037 - Município emissor inexistente no cadastro de convênio municipal do sistema nacional`
+  - Interpretação prática: reforça a conclusão de que **Goiânia não está habilitada/conveniada** no backend do Portal Nacional para emissão via API.
+
+3. **Endpoint de parâmetros do município retorna 404 para 5208707**
+  - O endpoint auxiliar de “consultar parâmetros do município” retornou **HTTP 404** em **Homologação e Produção** para o município informado.
+
+4. **Homologação/RTC ainda retorna E0004 (ID divergente)**
+  - Erro: `E0004 - ID da DPS difere da concatenação dos campos`
+  - Apesar de validação local confirmar que o `Id` bate com a regra de concatenação, o backend continua acusando divergência.
+
+### Ajustes Implementados no Código (DPS/ID/ambiente)
+
+1. **Validação e formatação estrita do TSIdDPS**
+  - `numero_dps`: 15 dígitos e não pode começar com 0
+  - `serie_dps`: numérico, 1 a 5 dígitos, não pode ser “00000”; padding para 5 dígitos
+  - A `serie` agora é emitida no XML já **padded** (consistente com a montagem do ID)
+
+2. **Alinhamento de município de emissão entre `Id` e XML**
+  - Adicionado suporte a `codigo_municipio_emissao` para garantir que o município usado no `Id` seja o mesmo usado em `<cLocEmi>`
+
+3. **`tpAmb` e `versao` agora dependem do ambiente**
+  - `ambiente=producao` → `tpAmb=1` e `versao=1.00`
+  - `ambiente=homologacao` → `tpAmb=2` e `versao=1.01`
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `nfes_servico/nfse/dps_builder.py` | Validações/normalizações do `TSIdDPS`, `tpAmb`, `versao`, `cLocEmi` |
+| `nfes_servico/test_nacional.py` | Teste e2e com troca de ambiente via `NFSE_AMBIENTE` |
+| `nfes_servico/debug_id.py` | Debug local para decompor `Id` e comparar com campos do XML |
+| `nfes_servico/nfse/client_nacional.py` | Cliente REST mTLS para SEFIN (confirmado operacional para requests) |
+
+### Como Reproduzir (sem expor segredos)
+
+- Usar variáveis de ambiente (não commitar senha/certificado no repositório):
+  - `NFSE_AMBIENTE=homologacao|producao`
+  - `NFSE_CERT_PATH=.../certificados/...pfx`
+  - `NFSE_CERT_PASSWORD=...`
+- Executar o teste e2e (script Python do projeto): `python nfes_servico/test_nacional.py`
+
+### Estado Atual / Próximos Passos
+
+1. **Produção (Goiânia)**: sem convênio no cadastro nacional → caminho mais realista continua sendo **NFS-e municipal (ABRASF/ISSNet/SGISS)**.
+2. **Homologação (E0004)**: investigar hipótese de divergência de regra no backend (ex.: campo de município esperado, normalização de série/número, ou leitura de outro campo para concatenação).
+
+### Lições Aprendidas
+
+1. Não assumir que **Produção** e **RTC** compartilham a mesma versão de XSD (na prática, não compartilham).
+2. Sempre normalizar `serie`/`nDPS` para evitar discrepâncias invisíveis em validações de ID.
+3. Evitar gravar segredos (senha PFX, tokens) na memória do projeto; usar env vars/secret manager local.
+
+---
+
+## Sessão 31 (15/12/2025) - Integração municipal Goiânia (ABRASF 2.04) via SOAP + mTLS + assinatura
+
+### Contexto
+
+Como Goiânia não está conveniada ao Portal Nacional NFS-e (SEFIN), foi iniciada a integração **direta** com o webservice municipal (padrão **ABRASF 2.04**), usando:
+- **SOAP** (`nfse.asmx`)
+- **mTLS** com certificado **A1 (PFX)**
+- **Assinatura XML** (RSA-SHA1) dos elementos obrigatórios
+
+### Principais Decisões Técnicas
+
+1. **Não usar Supabase Edge Function para mTLS**
+  - As Edge Functions estavam simulando homologação e falhando em produção por ausência de mTLS.
+  - A emissão/consulta passou a ser feita por **Vercel Serverless Functions** em `/api`, com suporte a `https.request` + `pfx`.
+
+2. **Certificado via env vars (sem arquivo no repo)**
+  - O PFX deve ser fornecido ao backend via `NFSE_CERT_PFX_B64` e `NFSE_CERT_PASSWORD`.
+
+3. **Assinatura conforme validação real (Goiânia/ISSNet/SGISS)**
+  - Assina `InfDeclaracaoPrestacaoServico` com assinatura inserida **after** (irmão do elemento)
+  - Assina `LoteRps` com assinatura inserida **append** (dentro do elemento)
+
+### Arquivos Criados/Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `api/_shared/nfse-abrasf204.js` | Builder do XML ABRASF 2.04 + assinatura + envio SOAP mTLS + parsers |
+| `api/nfse/emitir.js` | Endpoint `/api/nfse/emitir`: gera XML, assina, envia, atualiza `nfse` e `nfse_log` |
+| `api/nfse/consultar.js` | Endpoint `/api/nfse/consultar`: consulta (por lote ou RPS), atualiza status |
+| `src/pages/NFSe.tsx` | Troca de chamadas: `supabase.functions.invoke(...)` → `fetch('/api/nfse/...')` com Bearer token |
+
+### Observações Importantes
+
+1. **Em dev local (`npm run dev`) os endpoints `/api` não existem** (só no deploy Vercel ou via `vercel dev`).
+2. O endpoint escolhe automaticamente:
+  - **Homologação**: ISSNet Online (base `issnetonline.com.br/...`) com SOAPAction ABRASF
+  - **Produção**: Goiânia (base `nfse.goiania.go.gov.br/ws`) com namespace/soapAction específicos
+
+### Próximos Passos
+
+1. Configurar as variáveis de ambiente no Vercel (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NFSE_CERT_PFX_B64`, `NFSE_CERT_PASSWORD`).
+2. Ajustar/confirmar parâmetros de produção (série RPS, IM, itemListaServico, etc.) de acordo com o cadastro no portal de Goiânia.

@@ -185,7 +185,21 @@ const Invoices = () => {
         }
 
         const paymentDay = client.payment_day || 10;
-        const clientDueDate = `${selectedYear}-${monthStr}-${paymentDay.toString().padStart(2, "0")}`;
+
+        // Calcular data de vencimento: MÊS SEGUINTE à competência
+        // Ex: Competência 01/2025 -> Vencimento em Fevereiro/2025 dia X
+        const competenceMonth = parseInt(monthStr); // 1-12
+        const competenceYear = parseInt(selectedYear);
+        let dueMonth = competenceMonth + 1; // Mês seguinte
+        let dueYear = competenceYear;
+
+        // Se passar de dezembro, vai para janeiro do próximo ano
+        if (dueMonth > 12) {
+          dueMonth = 1;
+          dueYear = competenceYear + 1;
+        }
+
+        const clientDueDate = `${dueYear}-${dueMonth.toString().padStart(2, "0")}-${paymentDay.toString().padStart(2, "0")}`;
 
         console.log(`Criando honorário para ${client.name}: R$ ${client.monthly_fee}, venc: ${clientDueDate}, comp: ${competence}`);
 

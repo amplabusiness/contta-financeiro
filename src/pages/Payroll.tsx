@@ -189,9 +189,10 @@ const Payroll = () => {
   const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
   const [generatingPayroll, setGeneratingPayroll] = useState(false);
 
-  // Add Event states (para adicionar eventos manuais na folha)
+  // Add/Edit Event states (para adicionar/editar eventos manuais na folha)
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
   const [addingEvent, setAddingEvent] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [newEventForm, setNewEventForm] = useState({
     rubrica_codigo: "",
     descricao: "",
@@ -464,13 +465,14 @@ const Payroll = () => {
     }
   };
 
-  // ========== ADD EVENT FUNCTIONS ==========
+  // ========== ADD/EDIT EVENT FUNCTIONS ==========
 
   const openAddEventDialog = () => {
     if (!selectedPayroll) {
       toast.error("Selecione uma folha primeiro");
       return;
     }
+    setEditingEventId(null);
     setNewEventForm({
       rubrica_codigo: "",
       descricao: "",
@@ -478,6 +480,21 @@ const Payroll = () => {
       valor: 0,
       is_desconto: false,
       observacao: "",
+      variable_type: "",
+    });
+    setShowAddEventDialog(true);
+  };
+
+  // Abrir dialog para editar evento existente
+  const openEditEventDialog = (event: any) => {
+    setEditingEventId(event.id);
+    setNewEventForm({
+      rubrica_codigo: event.rubrica_codigo || "",
+      descricao: event.descricao || event.rubrica_descricao || "",
+      referencia: event.referencia || "",
+      valor: parseFloat(event.valor) || 0,
+      is_desconto: event.is_desconto || false,
+      observacao: event.observacao || "",
       variable_type: "",
     });
     setShowAddEventDialog(true);
@@ -550,21 +567,38 @@ const Payroll = () => {
 
     setAddingEvent(true);
     try {
-      // Inserir evento na folha
-      const { error: insertError } = await supabase
-        .from("payroll_events")
-        .insert({
-          payroll_id: selectedPayroll.id,
-          rubrica_codigo: newEventForm.rubrica_codigo || null,
-          descricao: newEventForm.descricao,
-          referencia: newEventForm.referencia || null,
-          valor: newEventForm.valor,
-          is_oficial: false, // Eventos manuais não são oficiais
-          is_desconto: newEventForm.is_desconto,
-          observacao: newEventForm.observacao || null,
-        });
+      if (editingEventId) {
+        // Atualizar evento existente
+        const { error: updateEventError } = await supabase
+          .from("payroll_events")
+          .update({
+            rubrica_codigo: newEventForm.rubrica_codigo || null,
+            descricao: newEventForm.descricao,
+            referencia: newEventForm.referencia || null,
+            valor: newEventForm.valor,
+            is_desconto: newEventForm.is_desconto,
+            observacao: newEventForm.observacao || null,
+          })
+          .eq("id", editingEventId);
 
-      if (insertError) throw insertError;
+        if (updateEventError) throw updateEventError;
+      } else {
+        // Inserir novo evento na folha
+        const { error: insertError } = await supabase
+          .from("payroll_events")
+          .insert({
+            payroll_id: selectedPayroll.id,
+            rubrica_codigo: newEventForm.rubrica_codigo || null,
+            descricao: newEventForm.descricao,
+            referencia: newEventForm.referencia || null,
+            valor: newEventForm.valor,
+            is_oficial: false, // Eventos manuais não são oficiais
+            is_desconto: newEventForm.is_desconto,
+            observacao: newEventForm.observacao || null,
+          });
+
+        if (insertError) throw insertError;
+      }
 
       // Recalcular totais da folha
       const { data: events, error: eventsError } = await supabase
@@ -599,12 +633,13 @@ const Payroll = () => {
 
       if (updateError) throw updateError;
 
-      toast.success("Evento adicionado com sucesso!");
+      toast.success(editingEventId ? "Evento atualizado com sucesso!" : "Evento adicionado com sucesso!");
       setShowAddEventDialog(false);
+      setEditingEventId(null);
       loadPayrollEvents(selectedPayroll.id);
       loadPayrollRecords();
     } catch (error: any) {
-      console.error("Error adding event:", error);
+      console.error("Error saving event:", error);
       toast.error(error.message || "Erro ao adicionar evento");
     } finally {
       setAddingEvent(false);
@@ -1573,21 +1608,40 @@ const Payroll = () => {
                             .map((event) => (
                               <TableRow key={event.id}>
                                 <TableCell className="font-mono">{event.rubrica_codigo || "-"}</TableCell>
-                                <TableCell>{event.rubrica_descricao || (event as any).descricao}</TableCell>
+                                <TableCell>
+                                  {event.rubrica_descricao || (event as any).descricao}
+                                  {(event as any).referencia && (
+                                    <span className="text-xs text-gray-500 ml-1">({(event as any).referencia})</span>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right text-green-600 font-medium">
                                   {formatCurrency(event.valor)}
                                 </TableCell>
                                 <TableCell>
-                                  {!(event as any).is_oficial && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                      onClick={() => handleDeleteEvent(event.id)}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
+                                  <div className="flex gap-1">
+                                    {!(event as any).is_oficial && (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                                          onClick={() => openEditEventDialog(event)}
+                                          title="Editar"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                          onClick={() => handleDeleteEvent(event.id)}
+                                          title="Excluir"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -1614,7 +1668,7 @@ const Payroll = () => {
                             <TableHead>Codigo</TableHead>
                             <TableHead>Descricao</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
-                            <TableHead className="w-10"></TableHead>
+                            <TableHead className="w-16"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1623,21 +1677,40 @@ const Payroll = () => {
                             .map((event) => (
                               <TableRow key={event.id}>
                                 <TableCell className="font-mono">{event.rubrica_codigo || "-"}</TableCell>
-                                <TableCell>{event.rubrica_descricao || (event as any).descricao}</TableCell>
+                                <TableCell>
+                                  {event.rubrica_descricao || (event as any).descricao}
+                                  {(event as any).referencia && (
+                                    <span className="text-xs text-gray-500 ml-1">({(event as any).referencia})</span>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right text-red-600 font-medium">
                                   {formatCurrency(event.valor)}
                                 </TableCell>
                                 <TableCell>
-                                  {!(event as any).is_oficial && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                      onClick={() => handleDeleteEvent(event.id)}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
+                                  <div className="flex gap-1">
+                                    {!(event as any).is_oficial && (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                                          onClick={() => openEditEventDialog(event)}
+                                          title="Editar"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                          onClick={() => handleDeleteEvent(event.id)}
+                                          title="Excluir"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -2487,13 +2560,19 @@ const Payroll = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog para adicionar evento na folha */}
-        <Dialog open={showAddEventDialog} onOpenChange={setShowAddEventDialog}>
+        {/* Dialog para adicionar/editar evento na folha */}
+        <Dialog open={showAddEventDialog} onOpenChange={(open) => {
+          setShowAddEventDialog(open);
+          if (!open) setEditingEventId(null);
+        }}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Adicionar Variável na Folha</DialogTitle>
+              <DialogTitle>{editingEventId ? "Editar Variável" : "Adicionar Variável na Folha"}</DialogTitle>
               <DialogDescription>
-                Inclua variáveis como horas extras, faltas, produtividade, etc. na folha de pagamento.
+                {editingEventId
+                  ? "Altere os valores da variável selecionada."
+                  : "Inclua variáveis como horas extras, faltas, produtividade, etc. na folha de pagamento."
+                }
               </DialogDescription>
             </DialogHeader>
 
@@ -2646,19 +2725,31 @@ const Payroll = () => {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAddEventDialog(false)}>
+              <Button variant="outline" onClick={() => {
+                setShowAddEventDialog(false);
+                setEditingEventId(null);
+              }}>
                 Cancelar
               </Button>
               <Button onClick={handleAddEvent} disabled={addingEvent}>
                 {addingEvent ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adicionando...
+                    {editingEventId ? "Salvando..." : "Adicionando..."}
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Variável
+                    {editingEventId ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Salvar Alterações
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Variável
+                      </>
+                    )}
                   </>
                 )}
               </Button>
