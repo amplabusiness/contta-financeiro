@@ -166,11 +166,12 @@ const SuperConciliador = () => {
       return;
     }
 
-    // Mapear 'type' do banco para 'transaction_type' esperado pela interface
-    // E garantir que os sinais estão corretos para exibição
+    // Mapear os dados do banco para a interface
+    // A tabela tem coluna 'transaction_type' (preferencial) e 'type' (legado)
     const mappedData = (data || []).map(tx => ({
       ...tx,
-      transaction_type: tx.type as 'credit' | 'debit',
+      // Usa transaction_type se existir, senão usa type como fallback
+      transaction_type: (tx.transaction_type || tx.type || 'debit') as 'credit' | 'debit',
       // Garante valor positivo para display (o sinal é mostrado baseado no tipo)
       amount: Math.abs(tx.amount)
     }));
