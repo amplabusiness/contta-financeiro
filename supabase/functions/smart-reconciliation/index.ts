@@ -36,9 +36,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     // Suporte a múltiplas APIs de IA - prioriza Gemini
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const AI_PROVIDER = GEMINI_API_KEY ? 'gemini' : 'lovable';
-    const AI_KEY = GEMINI_API_KEY || GEMINI_API_KEY;
+    const AI_KEY = GEMINI_API_KEY;
 
     const { action, transaction, filters } = await req.json();
 
