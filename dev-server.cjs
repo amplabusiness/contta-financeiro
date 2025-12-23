@@ -119,6 +119,12 @@ app.post('/nfse/cancelar', async (req, res) => {
   await handleApiRequest(filePath, req, res);
 });
 
+// Importar XMLs de NFS-e tomadas
+app.post('/nfse/importar-xml', async (req, res) => {
+  const filePath = path.resolve(__dirname, './api/nfse/importar-xml.js');
+  await handleApiRequest(filePath, req, res);
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() });
@@ -134,6 +140,7 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log(`   POST /nfse/servicos-prestados  - Consultar notas emitidas`);
   console.log(`   POST /nfse/servicos-tomados    - Consultar notas recebidas (despesas)`);
   console.log(`   POST /nfse/cancelar            - Cancelar NFS-e`);
+  console.log(`   POST /nfse/importar-xml        - Importar XMLs de NFS-e tomadas`);
   console.log(`   GET  /nfse/diagnostico         - Diagnóstico do sistema`);
   console.log(`   GET  /health                   - Health check`);
 });
