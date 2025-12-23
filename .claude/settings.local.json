@@ -51,7 +51,14 @@
       "Bash(node scripts/testar-xml-nfse.mjs:*)",
       "Bash(dir:*)",
       "Bash(node scripts/enviar-nfse-assinada.mjs:*)",
-      "Bash(node scripts/consultar-nfse.mjs:*)"
+      "Bash(node scripts/consultar-nfse.mjs:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx supabase db execute:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: adicionar handlers onClick nos botões de ação da Confissão de Dívida\n\n- Adicionado handleViewConfession para visualizar documento\n- Adicionado handleCopyConfessionDocument para copiar documento\n- Adicionado handleSendToClient para enviar ao cliente\n- Criado Dialog de visualização com resumo e documento completo\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git reset:*)",
+      "Bash(for id in \"8d3e909c-c598-4a98-9a9c-c296d9eb1ce9\" \"caa9ed8d-e53b-4f29-b9be-716639adb647\" \"f7a4c53a-fcd6-4c67-8633-cfe9b9f3ee9a\" \"96e59324-fbca-4557-8f68-0d465516e255\" \"e247a0ae-4eb2-40ef-9c88-5283d2e347bf\" \"657f820c-ec49-4f03-94f4-0c859446d7a2\" \"1ce07174-a7b9-4b65-9f63-c47f0a631c14\" \"18c1a41d-3a24-4210-8af0-e9e8e5142e44\" \"bc68a34f-31d9-45eb-b60e-9c9b9fa74bd6\")",
+      "Bash(do curl -s \"https://xdtlhzysrpoinqtsglmr.supabase.co/rest/v1/rpc/gerar_folha_funcionario\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdGxoenlzcnBvaW5xdHNnbG1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzEyNzQ0OSwiZXhwIjoyMDc4NzAzNDQ5fQ.VRFn_C-S01Pt4uBp_ZzdB6ZmsRSP0-oKGXru73qSSQI\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdGxoenlzcnBvaW5xdHNnbG1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzEyNzQ0OSwiZXhwIjoyMDc4NzAzNDQ5fQ.VRFn_C-S01Pt4uBp_ZzdB6ZmsRSP0-oKGXru73qSSQI\" -H \"Content-Type: application/json\" -d \"{\"\"p_employee_id\"\":\"\"$id\"\",\"\"p_competencia\"\":\"\"2025-01-01\"\"}\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

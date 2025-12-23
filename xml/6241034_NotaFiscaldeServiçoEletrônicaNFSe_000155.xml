@@ -1,0 +1,101 @@
+<ConsultarNfseServicoPrestadoResposta xmlns="http://www.abrasf.org.br/nfse.xsd">
+  <ListaNfse>
+    <CompNfse>
+      <Nfse versao="2.04">
+        <InfNfse>
+          <Numero>155</Numero>
+          <CodigoVerificacao>544343FAE</CodigoVerificacao>
+          <DataEmissao>2025-11-07T12:38:46.123</DataEmissao>
+          <OutrasInformacoes>I - "DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL"; e II - "NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI."</OutrasInformacoes>
+          <ValoresNfse>
+            <BaseCalculo>450.00</BaseCalculo>
+            <ValorLiquidoNfse>450.00</ValorLiquidoNfse>
+          </ValoresNfse>
+          <DescricaoCodigoTributacaoMunicípio>07.02 - Execução, por administração, empreitada ou subempreitada, de obras de construção civil, hidráulica ou elétrica e de outras obras semelhantes, inclusive sondagem, perfuração de poços, escavação, drenagem e irrigação, terraplanagem, pavimentação, concretagem e a instalação e montagem de produtos, peças e equipamentos (exceto o fornecimento de mercadorias produzidas pelo prestador de serviços fora do local da prestação dos serviços, que fica sujeito ao ICMS).</DescricaoCodigoTributacaoMunicípio>
+          <ValorCredito>0.00</ValorCredito>
+          <PrestadorServico>
+            <RazaoSocial>Axe Manutencao e Modernizacao de Elevadores Ltda</RazaoSocial>
+            <NomeFantasia>Axetec Elevadores</NomeFantasia>
+            <Endereco>
+              <Endereco>Rua 12</Endereco>
+              <Numero>104</Numero>
+              <Complemento>Lote: 05 - Quadra: 22</Complemento>
+              <Bairro>Jardim Santo Antônio</Bairro>
+              <CodigoMunicipio>5208707</CodigoMunicipio>
+              <Uf>GO</Uf>
+              <Cep>74853250</Cep>
+            </Endereco>
+            <Contato>
+              <Telefone>6239962872</Telefone>
+              <Email>assessoriaempresa.cont@gmail.com</Email>
+            </Contato>
+          </PrestadorServico>
+          <OrgaoGerador>
+            <CodigoMunicipio>5208707</CodigoMunicipio>
+            <Uf>GO</Uf>
+          </OrgaoGerador>
+          <DeclaracaoPrestacaoServico>
+            <InfDeclaracaoPrestacaoServico Id="155">
+              <Competencia>2025-11-07</Competencia>
+              <Servico>
+                <Valores>
+                  <ValorServicos>450.00</ValorServicos>
+                  <ValorDeducoes>0.00</ValorDeducoes>
+                  <ValorPis>0.00</ValorPis>
+                  <ValorCofins>0.00</ValorCofins>
+                  <ValorInss>0.00</ValorInss>
+                  <ValorIr>0.00</ValorIr>
+                  <ValorCsll>0.00</ValorCsll>
+                  <OutrasRetencoes>0.00</OutrasRetencoes>
+                  <ValorIss>21.33</ValorIss>
+                  <Aliquota>4.74</Aliquota>
+                  <DescontoIncondicionado>0.00</DescontoIncondicionado>
+                  <DescontoCondicionado>0.00</DescontoCondicionado>
+                </Valores>
+                <IssRetido>2</IssRetido>
+                <ItemListaServico>07.02</ItemListaServico>
+                <CodigoCnae>4329103</CodigoCnae>
+                <CodigoTributacaoMunicipio>702</CodigoTributacaoMunicipio>
+                <Discriminacao>MANUTENÇÃO PREVENTIVA MENSAL REFERENTE AO MES DE NOVEMBRO</Discriminacao>
+                <CodigoMunicipio>5208707</CodigoMunicipio>
+                <ExigibilidadeISS>1</ExigibilidadeISS>
+                <MunicipioIncidencia>5208707</MunicipioIncidencia>
+              </Servico>
+              <Prestador>
+                <CpfCnpj>
+                  <Cnpj>32738375000140</Cnpj>
+                </CpfCnpj>
+                <InscricaoMunicipal>4758595</InscricaoMunicipal>
+              </Prestador>
+              <TomadorServico>
+                <IdentificacaoTomador>
+                  <CpfCnpj>
+                    <Cnpj>23893032000169</Cnpj>
+                  </CpfCnpj>
+                  <InscricaoMunicipal>6241034</InscricaoMunicipal>
+                </IdentificacaoTomador>
+                <RazaoSocial>Ampla Contabilidade Ltda</RazaoSocial>
+                <Endereco>
+                  <Endereco>Rua P 25</Endereco>
+                  <Numero>931</Numero>
+                  <Complemento>Lote: 4445 - Quadra: P</Complemento>
+                  <Bairro>Setor dos Funcionários</Bairro>
+                  <CodigoMunicipio>5208707</CodigoMunicipio>
+                  <Uf>GO</Uf>
+                  <Cep>74543395</Cep>
+                </Endereco>
+                <Contato>
+                  <Telefone>6232338888</Telefone>
+                  <Email>legalizacao@amplabusiness.com.br</Email>
+                </Contato>
+              </TomadorServico>
+              <OptanteSimplesNacional>1</OptanteSimplesNacional>
+              <IncentivoFiscal>2</IncentivoFiscal>
+            </InfDeclaracaoPrestacaoServico>
+          </DeclaracaoPrestacaoServico>
+        </InfNfse>
+      </Nfse>
+    </CompNfse>
+    <Pagina>1</Pagina>
+  </ListaNfse>
+</ConsultarNfseServicoPrestadoResposta>

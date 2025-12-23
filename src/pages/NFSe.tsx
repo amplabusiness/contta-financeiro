@@ -209,6 +209,7 @@ export default function NFSe() {
   const [filtroCompetencia, setFiltroCompetencia] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [filtroEmissaoRapida, setFiltroEmissaoRapida] = useState<string>('');
   const [filtroStatusTomadas, setFiltroStatusTomadas] = useState<string>('all');
+  const [filtroMesTomadas, setFiltroMesTomadas] = useState<string>('all');
 
   // Form de emissão manual
   const [formData, setFormData] = useState({
@@ -843,6 +844,29 @@ export default function NFSe() {
     valorTotal: nfsesTomadas.reduce((sum, n) => sum + (n.valor_servicos || 0), 0)
   };
 
+  // Agrupar NFS-e tomadas por mês
+  const getMesDaData = (dataStr: string | null): string => {
+    if (!dataStr) return 'sem-data';
+    const data = new Date(dataStr);
+    return format(data, 'yyyy-MM');
+  };
+
+  const mesesDisponiveis = Array.from(new Set(
+    nfsesTomadas.map(n => getMesDaData(n.data_emissao))
+  )).sort().reverse();
+
+  const nfsesTomadasFiltradas = nfsesTomadas
+    .filter(n => filtroStatusTomadas === 'all' || n.status === filtroStatusTomadas)
+    .filter(n => filtroMesTomadas === 'all' || getMesDaData(n.data_emissao) === filtroMesTomadas);
+
+  // Agrupar por mês para exibição
+  const nfsesTomadasPorMes = nfsesTomadasFiltradas.reduce((acc, n) => {
+    const mes = getMesDaData(n.data_emissao);
+    if (!acc[mes]) acc[mes] = [];
+    acc[mes].push(n);
+    return acc;
+  }, {} as Record<string, NFSeTomada[]>);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -1189,7 +1213,7 @@ export default function NFSe() {
           {/* Filtros */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex gap-4 items-end">
+              <div className="flex gap-4 items-end flex-wrap">
                 <div className="w-48">
                   <Label>Status</Label>
                   <Select value={filtroStatusTomadas} onValueChange={setFiltroStatusTomadas}>
@@ -1201,6 +1225,22 @@ export default function NFSe() {
                       <SelectItem value="pendente">Pendente</SelectItem>
                       <SelectItem value="lancada">Lançada</SelectItem>
                       <SelectItem value="ignorada">Ignorada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-48">
+                  <Label>Mês</Label>
+                  <Select value={filtroMesTomadas} onValueChange={setFiltroMesTomadas}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os meses</SelectItem>
+                      {mesesDisponiveis.map(mes => (
+                        <SelectItem key={mes} value={mes}>
+                          {mes === 'sem-data' ? 'Sem data' : format(new Date(mes + '-01'), 'MMMM/yyyy', { locale: ptBR })}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1216,94 +1256,113 @@ export default function NFSe() {
             </CardContent>
           </Card>
 
-          {/* Tabela de NFS-e Recebidas */}
-          <Card>
-            <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>NFS-e</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Prestador (Fornecedor)</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
-                        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                        Carregando...
-                      </TableCell>
-                    </TableRow>
-                  ) : nfsesTomadas.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        <ArrowDownToLine className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                        Nenhuma NFS-e recebida
-                        <div className="mt-2">
-                          <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Importar XMLs
-                          </Button>
+          {/* Tabela de NFS-e Recebidas - Agrupado por Mês */}
+          {loading ? (
+            <Card>
+              <CardContent className="pt-6 text-center py-8">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                Carregando...
+              </CardContent>
+            </Card>
+          ) : nfsesTomadasFiltradas.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center py-8 text-muted-foreground">
+                <ArrowDownToLine className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                Nenhuma NFS-e recebida
+                <div className="mt-2">
+                  <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar XMLs
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(nfsesTomadasPorMes)
+              .sort(([a], [b]) => b.localeCompare(a))
+              .map(([mes, notas]) => {
+                const valorMes = notas.reduce((sum, n) => sum + (n.valor_servicos || 0), 0);
+                const mesLabel = mes === 'sem-data' ? 'Sem data' : format(new Date(mes + '-01'), 'MMMM/yyyy', { locale: ptBR });
+
+                return (
+                  <Card key={mes}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2 capitalize">
+                          <Hash className="h-4 w-4" />
+                          {mesLabel}
+                          <Badge variant="secondary">{notas.length} nota{notas.length > 1 ? 's' : ''}</Badge>
+                        </CardTitle>
+                        <div className="text-lg font-bold text-red-600">
+                          {formatCurrency(valorMes)}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    nfsesTomadas
-                      .filter(n => filtroStatusTomadas === 'all' || n.status === filtroStatusTomadas)
-                      .map((nfse) => (
-                        <TableRow key={nfse.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
-                          setSelectedNFSeTomada(nfse);
-                          setShowDetalhesTomadaDialog(true);
-                        }}>
-                          <TableCell>
-                            <div className="font-medium">NFS-e {nfse.numero_nfse}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {nfse.codigo_verificacao || '-'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {nfse.data_emissao ? format(new Date(nfse.data_emissao), 'dd/MM/yyyy') : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium max-w-[200px] truncate">
-                              {nfse.prestador_razao_social || 'Fornecedor'}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {formatCNPJ(nfse.prestador_cnpj)}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium text-red-600">
-                            {formatCurrency(nfse.valor_servicos)}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(nfse.status)}</TableCell>
-                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex gap-1 justify-end">
-                              {nfse.status === 'pendente' && (
-                                <>
-                                  <Button variant="ghost" size="icon" onClick={() => processarNFSeTomada(nfse)} title="Lançar em contas a pagar">
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>NFS-e</TableHead>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Prestador (Fornecedor)</TableHead>
+                            <TableHead>Valor</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {notas.map((nfse) => (
+                            <TableRow key={nfse.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
+                              setSelectedNFSeTomada(nfse);
+                              setShowDetalhesTomadaDialog(true);
+                            }}>
+                              <TableCell>
+                                <div className="font-medium">NFS-e {nfse.numero_nfse}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {nfse.codigo_verificacao || '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {nfse.data_emissao ? format(new Date(nfse.data_emissao), 'dd/MM/yyyy') : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium max-w-[200px] truncate">
+                                  {nfse.prestador_razao_social || 'Fornecedor'}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {formatCNPJ(nfse.prestador_cnpj)}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium text-red-600">
+                                {formatCurrency(nfse.valor_servicos)}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(nfse.status)}</TableCell>
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex gap-1 justify-end">
+                                  {nfse.status === 'pendente' && (
+                                    <>
+                                      <Button variant="ghost" size="icon" onClick={() => processarNFSeTomada(nfse)} title="Lançar em contas a pagar">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" onClick={() => ignorarNFSeTomada(nfse)} title="Ignorar">
+                                        <FileX className="h-4 w-4 text-gray-600" />
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button variant="ghost" size="icon" onClick={() => excluirNFSeTomada(nfse)} title="Excluir">
+                                    <Trash2 className="h-4 w-4 text-red-600" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => ignorarNFSeTomada(nfse)} title="Ignorar">
-                                    <FileX className="h-4 w-4 text-gray-600" />
-                                  </Button>
-                                </>
-                              )}
-                              <Button variant="ghost" size="icon" onClick={() => excluirNFSeTomada(nfse)} title="Excluir">
-                                <Trash2 className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })
+          )}
         </TabsContent>
 
         {/* Tab: Upload XMLs */}
