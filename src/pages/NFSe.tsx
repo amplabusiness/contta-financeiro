@@ -400,8 +400,20 @@ export default function NFSe() {
     loadData();
   };
 
+  // Abrir seletor de arquivos
+  const openFileSelector = () => {
+    console.log('openFileSelector chamado, ref:', fileInputRef.current);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    } else {
+      console.error('fileInputRef não está disponível');
+      toast({ title: 'Erro', description: 'Seletor de arquivos não disponível', variant: 'destructive' });
+    }
+  };
+
   // Upload de XMLs
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleFileSelect chamado', event.target.files);
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -1329,22 +1341,27 @@ export default function NFSe() {
               </div>
 
               {/* Área de upload */}
-              <div
-                className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary cursor-pointer transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
+              <div className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary transition-colors">
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".xml"
                   multiple
                   className="hidden"
+                  title="Selecionar arquivos XML"
                   onChange={handleFileSelect}
                 />
                 <FileUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">Clique para selecionar arquivos XML</p>
-                <p className="text-sm text-muted-foreground mt-1">ou arraste e solte aqui</p>
-                <p className="text-xs text-muted-foreground mt-4">Suporta múltiplos arquivos XML de NFS-e</p>
+                <p className="text-lg font-medium mb-4">Selecione arquivos XML de NFS-e</p>
+                <Button
+                  type="button"
+                  onClick={openFileSelector}
+                  className="mb-4"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Escolher Arquivos
+                </Button>
+                <p className="text-sm text-muted-foreground">Suporta múltiplos arquivos XML de NFS-e</p>
               </div>
 
               {/* Progress */}
@@ -1445,13 +1462,26 @@ export default function NFSe() {
             </div>
 
             {/* Upload área */}
-            <div
-              className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+              <input
+                type="file"
+                accept=".xml"
+                multiple
+                className="hidden"
+                id="xml-upload-dialog"
+                title="Selecionar arquivos XML"
+                onChange={handleFileSelect}
+              />
               <FileUp className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">Clique para selecionar XMLs</p>
-              <p className="text-sm text-muted-foreground">Suporta múltiplos arquivos</p>
+              <p className="font-medium mb-3">Selecione arquivos XML</p>
+              <Button
+                type="button"
+                onClick={() => document.getElementById('xml-upload-dialog')?.click()}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Escolher Arquivos
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2">Suporta múltiplos arquivos</p>
             </div>
 
             {uploading && (

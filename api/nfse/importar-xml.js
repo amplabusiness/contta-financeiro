@@ -39,9 +39,109 @@ function extractNestedTag(xml, container, tagName) {
 }
 
 /**
- * Extrai todos os dados de uma NFS-e do XML
+ * Detecta o formato do XML (ABRASF ou Portal Nacional)
  */
-function parseNFSeXml(xml) {
+function detectXmlFormat(xml) {
+  if (xml.includes('xmlns="http://www.sped.fazenda.gov.br/nfse"') || xml.includes('<infNFSe')) {
+    return 'portal_nacional';
+  }
+  if (xml.includes('xmlns="http://www.abrasf.org.br/nfse.xsd"') || xml.includes('<CompNfse') || xml.includes('<InfNfse')) {
+    return 'abrasf';
+  }
+  return 'unknown';
+}
+
+/**
+ * Parse XML do Portal Nacional da NFS-e
+ */
+function parsePortalNacional(xml) {
+  // Extrair bloco infNFSe
+  const infNfseMatch = xml.match(/<infNFSe[^>]*>([\s\S]*?)<\/infNFSe>/i);
+  const nfseBlock = infNfseMatch ? infNfseMatch[0] : xml;
+
+  // Dados básicos
+  const numero = extractTag(nfseBlock, 'nNFSe') || extractTag(nfseBlock, 'nDFSe');
+  const dataEmissaoRaw = extractTag(nfseBlock, 'dhProc') || extractTag(nfseBlock, 'dhEmi');
+  const dataEmissao = dataEmissaoRaw ? dataEmissaoRaw.split('T')[0] : null;
+  const competencia = extractTag(nfseBlock, 'dCompet');
+
+  // Emitente (prestador - fornecedor)
+  const emitMatch = nfseBlock.match(/<emit>([\s\S]*?)<\/emit>/i);
+  const emitBlock = emitMatch ? emitMatch[1] : '';
+  const prestadorCnpj = extractTag(emitBlock, 'CNPJ');
+  const prestadorIM = extractTag(emitBlock, 'IM');
+  const prestadorRazaoSocial = extractTag(emitBlock, 'xNome');
+
+  // Endereço do emitente
+  const enderEmitMatch = emitBlock.match(/<enderNac>([\s\S]*?)<\/enderNac>/i);
+  const enderEmitBlock = enderEmitMatch ? enderEmitMatch[1] : '';
+  const prestadorEndereco = [
+    extractTag(enderEmitBlock, 'xLgr'),
+    extractTag(enderEmitBlock, 'nro'),
+    extractTag(enderEmitBlock, 'xBairro'),
+  ].filter(Boolean).join(', ');
+  const prestadorMunicipio = extractTag(enderEmitBlock, 'cMun');
+  const prestadorUf = extractTag(enderEmitBlock, 'UF');
+
+  // Tomador
+  const tomaMatch = nfseBlock.match(/<toma>([\s\S]*?)<\/toma>/i);
+  const tomaBlock = tomaMatch ? tomaMatch[1] : '';
+  const tomadorCnpj = extractTag(tomaBlock, 'CNPJ');
+  const tomadorCpf = extractTag(tomaBlock, 'CPF');
+  const tomadorRazaoSocial = extractTag(tomaBlock, 'xNome');
+
+  // Valores
+  const valoresMatch = nfseBlock.match(/<valores>([\s\S]*?)<\/valores>/i);
+  const valoresBlock = valoresMatch ? valoresMatch[1] : '';
+  const valorServicos = parseFloat(extractTag(valoresBlock, 'vServ') || extractTag(valoresBlock, 'vLiq') || '0');
+  const valorIss = parseFloat(extractTag(valoresBlock, 'vISSQN') || '0');
+  const aliquota = parseFloat(extractTag(valoresBlock, 'pAliqAplic') || extractTag(valoresBlock, 'pAliq') || '0');
+  const valorLiquido = parseFloat(extractTag(valoresBlock, 'vLiq') || '0');
+
+  // Serviço
+  const servMatch = nfseBlock.match(/<serv>([\s\S]*?)<\/serv>/i);
+  const servBlock = servMatch ? servMatch[1] : '';
+  const discriminacao = extractTag(servBlock, 'xDescServ') || extractTag(nfseBlock, 'xTribNac');
+  const codigoMunicipio = extractTag(servBlock, 'cLocPrestacao') || extractTag(nfseBlock, 'cLocIncid');
+
+  return {
+    numero_nfse: numero,
+    codigo_verificacao: null, // Portal Nacional não usa código de verificação da mesma forma
+    data_emissao: dataEmissao,
+    competencia,
+    prestador_cnpj: prestadorCnpj?.replace(/\D/g, ''),
+    prestador_cpf: null,
+    prestador_razao_social: prestadorRazaoSocial,
+    prestador_inscricao_municipal: prestadorIM,
+    prestador_endereco: prestadorEndereco || null,
+    prestador_municipio: prestadorMunicipio,
+    prestador_uf: prestadorUf,
+    tomador_cnpj: tomadorCnpj?.replace(/\D/g, ''),
+    tomador_cpf: tomadorCpf?.replace(/\D/g, ''),
+    tomador_razao_social: tomadorRazaoSocial,
+    valor_servicos: valorServicos,
+    valor_deducoes: 0,
+    valor_pis: 0,
+    valor_cofins: 0,
+    valor_inss: 0,
+    valor_ir: 0,
+    valor_csll: 0,
+    valor_iss: valorIss,
+    outras_retencoes: 0,
+    aliquota,
+    valor_liquido: valorLiquido || valorServicos,
+    discriminacao,
+    item_lista_servico: null,
+    codigo_cnae: null,
+    codigo_municipio: codigoMunicipio,
+    xml_nfse: xml,
+  };
+}
+
+/**
+ * Parse XML ABRASF (Goiânia e outros)
+ */
+function parseAbrasf(xml) {
   // Tentar encontrar o bloco CompNfse ou Nfse
   const nfseMatch = xml.match(/<(?:CompNfse|Nfse)[^>]*>([\s\S]*?)<\/(?:CompNfse|Nfse)>/i);
   const nfseBlock = nfseMatch ? nfseMatch[0] : xml;
@@ -136,6 +236,19 @@ function parseNFSeXml(xml) {
     codigo_municipio: codigoMunicipio,
     xml_nfse: xml,
   };
+}
+
+/**
+ * Extrai todos os dados de uma NFS-e do XML (detecta formato automaticamente)
+ */
+function parseNFSeXml(xml) {
+  const format = detectXmlFormat(xml);
+
+  if (format === 'portal_nacional') {
+    return parsePortalNacional(xml);
+  }
+
+  return parseAbrasf(xml);
 }
 
 export default async function handler(req, res) {
