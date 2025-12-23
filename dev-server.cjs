@@ -3,6 +3,11 @@
  * Development API Server para NFS-e
  * Roda na porta 8082 enquanto Vite roda na 8080/8081
  */
+
+// Carregar variáveis de ambiente
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
