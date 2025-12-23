@@ -42,6 +42,7 @@ import {
   Receipt,
   Play,
   Eye,
+  Upload,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -247,6 +248,20 @@ const Payroll = () => {
     termination_type: 'dispensa_sem_justa_causa',
     notice_type: 'indenizado',
   });
+
+  // Import state
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importingEmployees, setImportingEmployees] = useState(false);
+  
+  // Dados para importação (extraídos da folha de pagamento)
+  const employeesToImport = [
+    { name: 'DEUZA RESENDE DE JESUS', role: 'ANALISTA DE DEPARTAMENTO PESSOAL', department: 'Operacional', contract_type: 'CLT', official_salary: 3000.00, hire_date: '2024-12-03', work_area: '413105' },
+    { name: 'FABIANA MARIA DA SILVA MENDONCA', role: 'BABA', department: 'Administrativo', contract_type: 'CLT', official_salary: 2300.00, hire_date: '2024-08-20', work_area: '516205' },
+    { name: 'JOSIMAR DOS SANTOS MOTA', role: 'COORDENADOR CONTABIL', department: 'Operacional', contract_type: 'CLT', official_salary: 3762.00, hire_date: '2023-07-27', work_area: '252210' },
+    { name: 'RAIMUNDO PEREIRA MOREIRA', role: 'CASEIRO', department: 'Administrativo', contract_type: 'CLT', official_salary: 2687.50, hire_date: '2024-02-22', work_area: '514325' },
+    { name: 'SERGIO AUGUSTO DE OLIVEIRA LEAO', role: 'AUXILIAR ADMINISTRATIVO', department: 'Administrativo', contract_type: 'CLT', official_salary: 2950.00, hire_date: '2022-10-03', work_area: '411010' },
+    { name: 'THAYNARA CONCEICAO DE MELO', role: 'ANALISTA CONTABIL', department: 'Operacional', contract_type: 'CLT', official_salary: 3727.75, hire_date: '2024-05-02', work_area: '252210' },
+  ];
 
   // Form states
   const [formData, setFormData] = useState({
@@ -828,6 +843,70 @@ const Payroll = () => {
     }
   };
 
+  // IMPORT EMPLOYEES
+  const handleImportEmployees = async () => {
+    setImportingEmployees(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const emp of employeesToImport) {
+        try {
+          // Verificar se funcionário já existe
+          const { data: existing } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('name', emp.name)
+            .single();
+
+          if (existing) {
+            console.log(`⊘ ${emp.name} já existe`);
+            continue;
+          }
+
+          // Inserir novo funcionário
+          const { data, error } = await supabase
+            .from('employees')
+            .insert([
+              {
+                name: emp.name,
+                role: emp.role,
+                department: emp.department,
+                contract_type: emp.contract_type,
+                official_salary: emp.official_salary,
+                unofficial_salary: 0,
+                hire_date: emp.hire_date,
+                work_area: emp.work_area,
+                is_active: true,
+              }
+            ])
+            .select();
+
+          if (error) {
+            console.error(`✗ Erro ao cadastrar ${emp.name}: ${error.message}`);
+            errorCount++;
+          } else {
+            console.log(`✓ ${emp.name} importado com sucesso!`);
+            successCount++;
+          }
+        } catch (error) {
+          console.error(`✗ Erro inesperado ao cadastrar ${emp.name}:`, error);
+          errorCount++;
+        }
+      }
+
+      const message = `Importação concluída! ${successCount} funcionários cadastrados, ${errorCount} erros.`;
+      toast.success(message);
+      setShowImportDialog(false);
+      loadData();
+    } catch (error: any) {
+      console.error("Error importing employees:", error);
+      toast.error(error.message || "Erro ao importar funcionários");
+    } finally {
+      setImportingEmployees(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -1085,6 +1164,14 @@ const Payroll = () => {
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Funcionario
+            </Button>
+            <Button 
+              onClick={() => setShowImportDialog(true)}
+              variant="outline"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Importar da Folha
             </Button>
           </div>
         </div>
@@ -2750,6 +2837,77 @@ const Payroll = () => {
                         Adicionar Variável
                       </>
                     )}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Importação de Funcionários */}
+        <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Importar Funcionários da Folha de Pagamento</DialogTitle>
+              <DialogDescription>
+                Importar {employeesToImport.length} funcionários extraídos da folha de janeiro de 2025
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <span className="font-semibold">ℹ Aviso:</span> Funcionários que já existem no sistema serão ignorados.
+                </p>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Departamento</TableHead>
+                    <TableHead className="text-right">Salário</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employeesToImport.map((emp, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium">{emp.name}</TableCell>
+                      <TableCell>{emp.role}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{emp.department}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        R$ {emp.official_salary.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowImportDialog(false)}
+                disabled={importingEmployees}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleImportEmployees}
+                disabled={importingEmployees}
+              >
+                {importingEmployees ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar Funcionários
                   </>
                 )}
               </Button>

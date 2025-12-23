@@ -1,0 +1,68 @@
+[
+  {
+    "name": "DEUZA RESENDE DE JESUS",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "department": "Operacional",
+    "contract_type": "CLT",
+    "official_salary": 3000.0,
+    "unofficial_salary": 0,
+    "hire_date": "2024-12-03",
+    "work_area": "413105",
+    "is_active": true
+  },
+  {
+    "name": "FABIANA MARIA DA SILVA MENDONCA",
+    "role": "BABA",
+    "department": "Administrativo",
+    "contract_type": "CLT",
+    "official_salary": 2300.0,
+    "unofficial_salary": 0,
+    "hire_date": "2024-08-20",
+    "work_area": "516205",
+    "is_active": true
+  },
+  {
+    "name": "JOSIMAR DOS SANTOS MOTA",
+    "role": "COORDENADOR CONTABIL",
+    "department": "Operacional",
+    "contract_type": "CLT",
+    "official_salary": 3762.0,
+    "unofficial_salary": 0,
+    "hire_date": "2023-07-27",
+    "work_area": "252210",
+    "is_active": true
+  },
+  {
+    "name": "RAIMUNDO PEREIRA MOREIRA",
+    "role": "CASEIRO",
+    "department": "Administrativo",
+    "contract_type": "CLT",
+    "official_salary": 2687.5,
+    "unofficial_salary": 0,
+    "hire_date": "2024-02-22",
+    "work_area": "514325",
+    "is_active": true
+  },
+  {
+    "name": "SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "role": "AUXILIAR ADMINISTRATIVO",
+    "department": "Administrativo",
+    "contract_type": "CLT",
+    "official_salary": 2950.0,
+    "unofficial_salary": 0,
+    "hire_date": "2022-10-03",
+    "work_area": "411010",
+    "is_active": true
+  },
+  {
+    "name": "THAYNARA CONCEICAO DE MELO",
+    "role": "ANALISTA CONTABIL",
+    "department": "Operacional",
+    "contract_type": "CLT",
+    "official_salary": 3727.75,
+    "unofficial_salary": 0,
+    "hire_date": "2024-05-02",
+    "work_area": "252210",
+    "is_active": true
+  }
+]
