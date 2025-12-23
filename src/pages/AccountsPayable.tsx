@@ -374,13 +374,26 @@ const AccountsPayable = () => {
     return true;
   });
 
+  const isAdiantamento = (category: string) => {
+    return category && category.toLowerCase().includes("adiantamento");
+  };
+
+  const realExpenses = accounts.filter(a => !isAdiantamento(a.category));
+  const adiantamentos = accounts.filter(a => isAdiantamento(a.category));
+  const expensesPaid = realExpenses.filter(a => a.status === "paid");
+  const expensesPending = realExpenses.filter(a => a.status === "pending");
+
   const stats = {
     total: accounts.length,
-    pending: accounts.filter(a => a.status === "pending").length,
+    pending: expensesPending.length,
     flagged: accounts.filter(a => a.approval_status === "flagged").length,
     highRisk: accounts.filter(a => (a.ai_fraud_score || 0) >= 50).length,
     totalAmount: accounts.reduce((sum, a) => sum + a.amount, 0),
-    pendingAmount: accounts.filter(a => a.status === "pending").reduce((sum, a) => sum + a.amount, 0)
+    pendingAmount: expensesPending.reduce((sum, a) => sum + a.amount, 0),
+    paidAmount: expensesPaid.reduce((sum, a) => sum + a.amount, 0),
+    adiantamentosAmount: adiantamentos.reduce((sum, a) => sum + a.amount, 0),
+    realExpensesCount: realExpenses.length,
+    adiantamentosCount: adiantamentos.length
   };
 
   if (loading && accounts.length === 0) {
@@ -417,7 +430,56 @@ const AccountsPayable = () => {
         </div>
 
         {/* Cards de Estatísticas */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          {/* Despesas a Pagar */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Despesas a Pagar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats.pending}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formatCurrency(stats.pendingAmount)}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">pendente(s)</p>
+            </CardContent>
+          </Card>
+
+          {/* Despesas Pagas */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Despesas Pagas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{expensesPaid.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formatCurrency(stats.paidAmount)}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">paga(s)</p>
+            </CardContent>
+          </Card>
+
+          {/* Adiantamentos a Sócios */}
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-blue-900">
+                💼 Adiantamentos a Sócios
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{stats.adiantamentosCount}</div>
+              <p className="text-xs text-blue-700 mt-1">
+                {formatCurrency(stats.adiantamentosAmount)}
+              </p>
+              <p className="text-xs text-blue-600 mt-2 font-medium">NÃO é despesa</p>
+            </CardContent>
+          </Card>
+
+          {/* Total Geral */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -432,44 +494,17 @@ const AccountsPayable = () => {
             </CardContent>
           </Card>
 
+          {/* Requerem Revisão */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pendentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {formatCurrency(stats.pendingAmount)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Requerem Revisão
+                Flagadas pela IA
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-500">{stats.flagged}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Flagadas pela IA
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Alto Risco
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{stats.highRisk}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Score ≥ 50
+                Requerem Revisão
               </p>
             </CardContent>
           </Card>
@@ -484,9 +519,22 @@ const AccountsPayable = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Aviso sobre Adiantamentos */}
+            {stats.adiantamentosCount > 0 && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex gap-3">
+                  <div className="text-blue-600 font-bold">⚠️</div>
+                  <div>
+                    <p className="text-sm text-blue-900 font-medium mb-1">Nota: {stats.adiantamentosCount} item(s) são Adiantamentos a Sócios</p>
+                    <p className="text-sm text-blue-700">{formatCurrency(stats.adiantamentosAmount)} - não são despesas da empresa e não afetam o DRE.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Tabs value={filterTab} onValueChange={setFilterTab} className="mb-4">
               <TabsList>
-                <TabsTrigger value="all">Todas ({stats.total})</TabsTrigger>
+                <TabsTrigger value="all">Todas ({stats.realExpensesCount})</TabsTrigger>
                 <TabsTrigger value="pending">Pendentes ({stats.pending})</TabsTrigger>
                 <TabsTrigger value="flagged">Flagadas ({stats.flagged})</TabsTrigger>
                 <TabsTrigger value="high_risk">Alto Risco ({stats.highRisk})</TabsTrigger>
