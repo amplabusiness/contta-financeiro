@@ -3019,3 +3019,95 @@ Como Goiânia não está conveniada ao Portal Nacional NFS-e (SEFIN), foi inicia
 
 1. Configurar as variáveis de ambiente no Vercel (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NFSE_CERT_PFX_B64`, `NFSE_CERT_PASSWORD`).
 2. Ajustar/confirmar parâmetros de produção (série RPS, IM, itemListaServico, etc.) de acordo com o cadastro no portal de Goiânia.
+---
+
+## Sessão 32 (22/12/2025) - Correções de saldo bancário, folha de pagamento e classificação de despesas
+
+### Contexto
+
+Sessão focada em corrigir problemas de saldo bancário, reverter lançamentos duplicados de folha de pagamento e classificar despesas corretamente.
+
+### Problemas Identificados e Corrigidos
+
+#### 1. Lançamentos Duplicados da Folha de Pagamento
+- **Problema**: 34 lançamentos contábeis e 15 registros de folha foram criados automaticamente, mas a folha já havia sido lançada manualmente via conciliação bancária
+- **Solução**: Deletados todos os registros de `accounting_entries` e `payroll` criados em 22/12/2025
+- **Impacto**: A DRE voltou ao valor correto
+
+#### 2. Saldo Bancário Incorreto
+- **Problema**: O saldo mostrava R$ 192.646,32, mas o extrato de Janeiro/2025 mostra R$ 18.553,54
+- **Solução**: Ajustado `current_balance` para R$ 18.553,54 (valor do extrato OFX de Jan/2025)
+- **Data do saldo**: 31/01/2025 (período que está sendo fechado)
+- **Nota**: Quando mudar para outro mês, precisa atualizar o saldo conforme o extrato daquele mês
+
+#### 3. Classificação da Despesa de Água Mineral
+- **Problema**: 2 despesas de R$ 96,00 (água mineral) estavam em "Outras Despesas Administrativas"
+- **Solução**: Movidas para conta **4.1.2.07 - Água Mineral**
+- **Categoria**: Copa e Cozinha → Água Mineral
+- **Marcadas como recorrentes**
+
+### Cadastro no Módulo de Estoque e Compras
+
+#### Produto Cadastrado
+- **Código**: ALIM010
+- **Nome**: Galão Água Mineral 20L
+- **Fornecedor**: LUIZ ALVES TAVEIRA
+- **Preço unitário**: R$ 9,60
+- **Quantidade por compra**: 10 galões
+- **Total por compra**: R$ 96,00
+- **Frequência**: Quinzenal (2x por mês)
+- **Estoque**: Mínimo 5, Ideal 15, Atual 10
+
+#### Movimentações Registradas
+- Compra 1 - Janeiro/2025: 10 galões
+- Compra 2 - Janeiro/2025: 10 galões
+
+### Nova Tela Criada: Conciliação de Saldo de Abertura
+
+**Rota**: `/opening-balance-reconciliation`
+
+**Funcionalidades**:
+1. Lista entradas de Janeiro/2025 (saldo de abertura) pendentes de conciliação
+2. Permite selecionar múltiplos honorários de clientes para cada depósito consolidado
+3. Auto-identificação de cliente via CPF/CNPJ extraído do PIX
+4. Validação de diferença zerada antes de confirmar
+5. Registro no razão do cliente e atualização do saldo de abertura
+
+**Arquivos criados**:
+- `src/pages/OpeningBalanceReconciliation.tsx`
+- `supabase/migrations/20251222191000_opening_balance_january.sql`
+
+### Commits Realizados
+
+| Hash | Descrição |
+|------|-----------|
+| `e2a1e6e` | feat: adicionar tela de Conciliação de Saldo de Abertura |
+
+### Saldos Bancários por Mês (Referência OFX)
+
+| Mês | Saldo Final |
+|-----|-------------|
+| Jan/2025 | R$ 18.553,54 |
+| Fev/2025 | R$ 2.578,93 |
+| Mar/2025 | R$ 28.082,64 |
+| Abr/2025 | R$ 5.533,07 |
+| Mai/2025 | R$ 10.119,92 |
+| Jun/2025 | R$ 2.696,75 |
+| Jul/2025 | R$ 8.462,05 |
+| Ago/2025 | R$ 10.251,53 |
+| Set/2025 | R$ 14.796,07 |
+| Nov/2025 | R$ 54.849,25 |
+
+### Lições Aprendidas
+
+1. **Folha de pagamento já conciliada manualmente**: Não gerar lançamentos automáticos quando já existe lançamento manual via conciliação bancária
+2. **Saldo bancário deve vir do extrato**: Nunca calcular/adivinhar saldo - sempre usar o valor do extrato OFX
+3. **Saldo muda por período**: O current_balance deve refletir o saldo do período que está sendo fechado
+4. **Classificação de despesas recorrentes**: Identificar e classificar corretamente despesas recorrentes como água mineral no módulo de estoque
+
+### Pendências para Próxima Sessão
+
+1. Continuar fechamento de Janeiro/2025
+2. Importar extratos OFX faltantes (Out/2025 está junto com Nov/2025)
+3. Verificar se há mais despesas classificadas incorretamente
+4. Configurar alerta de estoque mínimo para água mineral

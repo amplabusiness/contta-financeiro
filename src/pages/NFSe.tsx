@@ -90,6 +90,18 @@ interface NFSe {
   created_at: string;
 }
 
+interface InvoiceForNFSe {
+  id: string;
+  client_id: string;
+  competence: string; // MM/YYYY
+  amount: number;
+  status: string;
+  due_date: string | null;
+  paid_date: string | null;
+  created_by?: string | null;
+  client?: Client | null;
+}
+
 interface Client {
   id: string;
   name: string;
@@ -135,6 +147,7 @@ export default function NFSe() {
   const [loading, setLoading] = useState(true);
   const [nfses, setNfses] = useState<NFSe[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceForNFSe[]>([]);
   const [config, setConfig] = useState<NFSeConfig | null>(null);
   const [codigosServico, setCodigosServico] = useState<CodigoServicoLC116[]>([]);
   const [showEmitirDialog, setShowEmitirDialog] = useState(false);
@@ -143,7 +156,7 @@ export default function NFSe() {
   const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
   const [selectedNFSe, setSelectedNFSe] = useState<NFSe | null>(null);
   const [emitting, setEmitting] = useState(false);
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Filtros
@@ -225,6 +238,21 @@ export default function NFSe() {
       const clientesComHonorario = (clientsData || []).filter(c => c.monthly_fee && c.monthly_fee > 0);
       setClients(clientesComHonorario);
 
+      // Carregar honorários (invoices) do mês selecionado para emissão de NFS-e
+      if (filtroCompetencia) {
+        const [ano, mes] = filtroCompetencia.split('-');
+        const competenciaInvoice = `${mes}/${ano}`; // MM/YYYY
+        const { data: invoicesData, error: invoicesError } = await supabase
+          .from('invoices')
+          .select('id, client_id, competence, amount, status, due_date, paid_date, created_by, client:clients(id, name, cnpj, cpf, email, logradouro, numero, bairro, municipio, uf, cep, monthly_fee, status)')
+          .eq('competence', competenciaInvoice);
+
+        if (invoicesError) throw invoicesError;
+        setInvoices((invoicesData || []) as any);
+      } else {
+        setInvoices([]);
+      }
+
     } catch (error: any) {
       toast({
         title: 'Erro ao carregar dados',
@@ -237,7 +265,7 @@ export default function NFSe() {
   };
 
   // Emissão automática - só seleciona o cliente e emite
-  const emitirAutomatico = async (client: Client) => {
+  const emitirAutomatico = async (invoice: InvoiceForNFSe) => {
     if (!config) {
       toast({
         title: 'Erro',
@@ -249,111 +277,31 @@ export default function NFSe() {
 
     setEmitting(true);
     try {
-      // Gerar próximo número de RPS
-      const { data: rpsData, error: rpsError } = await supabase
-        .rpc('proximo_numero_rps', { p_prestador_cnpj: config.prestador_cnpj });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Sessão expirada. Faça login novamente.');
 
-      if (rpsError) throw rpsError;
-
-      const numeroRps = String(rpsData || 1);
-      const valorServicos = client.monthly_fee;
-
-      // ISS FIXO (Sociedade de Profissionais) - ExigibilidadeISS = 4
-      // O ISS é recolhido mensalmente ao município em valor fixo, não por nota
-      const valorIss = 0; // ISS não é cobrado na nota individual
-      const aliquota = 0; // Alíquota zero pois é regime de ISS Fixo
-
-      // Buscar código de serviço 17.18 (Contabilidade) do banco ou usar o padrão
-      const codigoContabilidade = codigosServico.find(c => c.codigo === '17.18') || SERVICO_CONTABILIDADE;
-
-      // Discriminação automática detalhada
-      const mesExtenso = format(new Date(), 'MMMM', { locale: ptBR }).toUpperCase();
-      const anoAtual = format(new Date(), 'yyyy');
-      const discriminacao = `SERVIÇOS DE CONTABILIDADE - COMPETÊNCIA ${mesExtenso}/${anoAtual}
-
-Serviços prestados conforme contrato de prestação de serviços contábeis:
-- Escrituração contábil e fiscal
-- Apuração de impostos federais e municipais
-- Elaboração de balancetes e demonstrações contábeis
-- Obrigações acessórias (SPED, DCTFWeb, EFD, etc.)
-- Assessoria e consultoria contábil
-
-Código do Serviço: ${codigoContabilidade.codigo} - ${codigoContabilidade.descricao?.substring(0, 50)}...
-CNAE: ${codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602'}
-
-DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL
-NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI/IBS/CBS E ISS
-ISS: Regime de ISS Fixo (Sociedade de Profissionais) - Art. 9º, §3º do DL 406/68
-Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
-
-      // Criar registro da NFS-e
-      const { data: nfse, error: insertError } = await supabase
-        .from('nfse')
-        .insert({
-          numero_rps: numeroRps,
-          serie_rps: config.serie_rps_padrao || 'A',
-          status: 'pending',
-          data_emissao: new Date().toISOString().split('T')[0],
-          competencia: format(new Date(), 'yyyy-MM-dd'),
-          prestador_cnpj: config.prestador_cnpj,
-          prestador_inscricao_municipal: config.prestador_inscricao_municipal,
-          prestador_razao_social: config.prestador_razao_social,
-          tomador_cnpj: (client.cnpj || client.cpf)?.replace(/\D/g, ''),
-          tomador_razao_social: client.name,
-          tomador_email: client.email,
-          tomador_endereco: client.logradouro ? `${client.logradouro}${client.numero ? ', ' + client.numero : ''}${client.bairro ? ' - ' + client.bairro : ''}` : null,
-          tomador_cidade: client.municipio,
-          tomador_uf: client.uf,
-          tomador_cep: client.cep?.replace(/\D/g, ''),
-          discriminacao: discriminacao,
-          valor_servicos: valorServicos,
-          aliquota: aliquota,
-          valor_iss: valorIss,
-          valor_pis: 0, // Simples Nacional - não há retenção
-          valor_cofins: 0, // Simples Nacional - não há retenção
-          valor_csll: 0, // Simples Nacional - não há retenção
-          valor_ir: 0, // Simples Nacional - não há retenção
-          valor_inss: 0,
-          outras_retencoes: 0,
-          valor_liquido: valorServicos, // Valor líquido = valor total (sem retenções)
-          item_lista_servico: codigoContabilidade.codigo,
-          codigo_cnae: codigoContabilidade.cnae_principal || codigoContabilidade.cnae || '6920602',
-          codigo_municipio: MUNICIPIO_GOIANIA.codigo,
-          exigibilidade_iss: 4, // 4 = ISS Fixo (Sociedade de Profissionais)
-          optante_simples_nacional: true, // Ampla é Simples Nacional
-          client_id: client.id
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: 'NFS-e criada',
-        description: `RPS ${numeroRps} - ${client.name} (ISS Fixo)`
+      const resp = await fetch('/api/nfse/emitir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ invoice_id: invoice.id }),
       });
 
-      // Chamar Edge Function para enviar ao webservice
-      try {
-        const { data: funcData, error: funcError } = await supabase.functions.invoke('nfse-emitir', {
-          body: { nfse_id: nfse.id }
-        });
-
-        if (funcData?.protocolo) {
-          // Salvar XML no Storage
-          if (funcData.xml_rps) {
-            await salvarXmlStorage(nfse.id, numeroRps, funcData.xml_rps, 'rps');
-          }
-          toast({
-            title: 'Lote enviado',
-            description: `Protocolo: ${funcData.protocolo}`
-          });
-        }
-      } catch (funcErr: any) {
-        console.error('Erro ao chamar Edge Function:', funcErr);
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok || payload?.success === false) {
+        const msg = payload?.error || payload?.errors?.map((e: any) => `${e.codigo}: ${e.mensagem}`).join('; ') || 'Falha ao emitir NFS-e';
+        throw new Error(msg);
       }
 
-      return nfse;
+      toast({
+        title: 'Emissão iniciada',
+        description: payload?.protocolo ? `Protocolo: ${payload.protocolo}` : 'Solicitação enviada ao webservice',
+      });
+
+      return payload?.nfse_id || true;
 
     } catch (error: any) {
       toast({
@@ -369,7 +317,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
 
   // Emissão em lote
   const emitirEmLote = async () => {
-    if (selectedClients.length === 0) {
+    if (selectedInvoices.length === 0) {
       toast({
         title: 'Selecione clientes',
         description: 'Selecione ao menos um cliente para emitir',
@@ -382,10 +330,10 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
     let sucesso = 0;
     let erro = 0;
 
-    for (const clientId of selectedClients) {
-      const client = clients.find(c => c.id === clientId);
-      if (client) {
-        const result = await emitirAutomatico(client);
+    for (const invoiceId of selectedInvoices) {
+      const invoice = invoices.find(i => i.id === invoiceId);
+      if (invoice) {
+        const result = await emitirAutomatico(invoice);
         if (result) {
           sucesso++;
         } else {
@@ -400,7 +348,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
     });
 
     setShowEmitirLoteDialog(false);
-    setSelectedClients([]);
+    setSelectedInvoices([]);
     setEmitting(false);
     loadData();
   };
@@ -537,14 +485,33 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
       });
 
       try {
-        const { data: funcData, error: funcError } = await supabase.functions.invoke('nfse-emitir', {
-          body: { nfse_id: nfse.id }
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+
+        const resp = await fetch('/api/nfse/emitir', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          },
+          body: JSON.stringify({ nfse_id: nfse.id })
         });
 
-        if (funcData?.protocolo) {
+        const apiData = await resp.json();
+
+        if (!resp.ok) {
+          throw new Error(apiData?.error || apiData?.errors?.[0]?.mensagem || 'Erro ao enviar NFS-e');
+        }
+
+        if (apiData?.protocolo) {
           toast({
             title: 'Lote enviado',
-            description: `Protocolo: ${funcData.protocolo}`
+            description: `Protocolo: ${apiData.protocolo}`
+          });
+        } else if (apiData?.numero_nfse) {
+          toast({
+            title: 'NFS-e Autorizada!',
+            description: `Número: ${apiData.numero_nfse}`
           });
         }
       } catch (funcErr: any) {
@@ -579,37 +546,40 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
     });
 
     try {
-      // Chamar Edge Function para consultar status no webservice
-      const { data: funcData, error: funcError } = await supabase.functions.invoke('nfse-consultar', {
-        body: { nfse_id: nfse.id, protocolo: nfse.protocolo }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const resp = await fetch('/api/nfse/consultar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({ nfse_id: nfse.id, protocolo: nfse.protocolo })
       });
 
-      if (funcError) {
-        // Se a função não existir ou der erro, mostrar instruções
-        toast({
-          title: 'Consulta Manual Necessária',
-          description: 'Acesse o portal da prefeitura para verificar o status da NFS-e. O XML RPS está disponível para download.',
-          variant: 'default'
-        });
-        return;
+      const apiData = await resp.json();
+
+      if (!resp.ok) {
+        throw new Error(apiData?.error || apiData?.errors?.[0]?.mensagem || 'Erro ao consultar NFS-e');
       }
 
-      if (funcData?.numero_nfse) {
+      if (apiData?.numero_nfse) {
         // NFS-e autorizada!
         toast({
           title: 'NFS-e Autorizada!',
-          description: `Número: ${funcData.numero_nfse} - Código: ${funcData.codigo_verificacao}`,
+          description: `Número: ${apiData.numero_nfse} - Código: ${apiData.codigo_verificacao}`,
         });
         loadData(); // Recarregar dados
-      } else if (funcData?.status === 'processing') {
+      } else if (apiData?.status === 'processing') {
         toast({
           title: 'Em Processamento',
           description: 'A NFS-e ainda está sendo processada pela prefeitura'
         });
-      } else if (funcData?.error) {
+      } else if (apiData?.error) {
         toast({
           title: 'Erro no Processamento',
-          description: funcData.error,
+          description: apiData.error,
           variant: 'destructive'
         });
       }
@@ -942,20 +912,30 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
     });
   };
 
-  // Clientes que ainda não têm nota no mês atual
-  const clientesSemNota = clients.filter(c => {
-    const mesAtual = format(new Date(), 'yyyy-MM');
-    return !nfses.some(n => n.client_id === c.id && n.competencia.startsWith(mesAtual));
-  });
+  // Honorários (invoices) do mês selecionado que ainda não têm NFS-e
+  const [anoFiltro, mesFiltro] = (filtroCompetencia || format(new Date(), 'yyyy-MM')).split('-');
+  const competenciaNfsePrefix = `${anoFiltro}-${mesFiltro}`;
+
+  const invoicesSemNota = invoices
+    .filter(i => Number(i.amount || 0) > 0)
+    .filter(i => {
+      const jaTemPorInvoice = nfses.some(n => n.invoice_id === i.id);
+      const jaTemPorClienteMes = nfses.some(n => n.client_id === i.client_id && n.competencia?.startsWith(competenciaNfsePrefix));
+      return !jaTemPorInvoice && !jaTemPorClienteMes;
+    });
 
   // Clientes sem nota filtrados pela busca
-  const clientesSemNotaFiltrados = filtroEmissaoRapida
-    ? clientesSemNota.filter(c =>
-        c.name.toLowerCase().includes(filtroEmissaoRapida.toLowerCase()) ||
-        (c.cnpj && c.cnpj.includes(filtroEmissaoRapida)) ||
-        (c.cpf && c.cpf.includes(filtroEmissaoRapida))
-      )
-    : clientesSemNota;
+  const invoicesSemNotaFiltradas = filtroEmissaoRapida
+    ? invoicesSemNota.filter((inv) => {
+        const c = inv.client;
+        const term = filtroEmissaoRapida.toLowerCase();
+        return (
+          (c?.name || '').toLowerCase().includes(term) ||
+          (c?.cnpj && c.cnpj.includes(filtroEmissaoRapida)) ||
+          (c?.cpf && c.cpf.includes(filtroEmissaoRapida))
+        );
+      })
+    : invoicesSemNota;
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -1035,7 +1015,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {clientesSemNota.length}
+              {invoicesSemNota.length}
             </div>
           </CardContent>
         </Card>
@@ -1055,12 +1035,12 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
       </div>
 
       {/* Emissão Rápida - Clientes sem nota */}
-      {clientesSemNota.length > 0 && (
+      {invoicesSemNota.length > 0 && (
         <Card className="border-blue-200 bg-blue-50/50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Zap className="h-5 w-5 text-blue-600" />
-              Emissão Rápida - Clientes sem nota em {format(new Date(), 'MMMM/yyyy', { locale: ptBR })}
+              Emissão Rápida - Clientes sem nota em {mesFiltro}/{anoFiltro}
             </CardTitle>
             <CardDescription>
               Clique no cliente para emitir automaticamente com valor do honorário
@@ -1090,30 +1070,30 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
 
             {/* Lista de clientes */}
             <div className="flex flex-wrap gap-2">
-              {clientesSemNotaFiltrados.slice(0, filtroEmissaoRapida ? 20 : 10).map(client => (
+              {invoicesSemNotaFiltradas.slice(0, filtroEmissaoRapida ? 20 : 10).map(inv => (
                 <Button
-                  key={client.id}
+                  key={inv.id}
                   variant="outline"
                   size="sm"
-                  onClick={() => emitirAutomatico(client).then(() => loadData())}
+                  onClick={() => emitirAutomatico(inv).then(() => loadData())}
                   disabled={emitting}
                   className="bg-white"
                 >
                   <Zap className="h-3 w-3 mr-1" />
-                  {client.name.substring(0, 25)}{client.name.length > 25 ? '...' : ''}
-                  <Badge variant="secondary" className="ml-2">{formatCurrency(client.monthly_fee)}</Badge>
+                  {(inv.client?.name || 'Cliente').substring(0, 25)}{(inv.client?.name || '').length > 25 ? '...' : ''}
+                  <Badge variant="secondary" className="ml-2">{formatCurrency(Number(inv.amount || 0))}</Badge>
                 </Button>
               ))}
-              {!filtroEmissaoRapida && clientesSemNota.length > 10 && (
+              {!filtroEmissaoRapida && invoicesSemNota.length > 10 && (
                 <Button variant="outline" size="sm" onClick={() => setShowEmitirLoteDialog(true)}>
-                  +{clientesSemNota.length - 10} mais...
+                  +{invoicesSemNota.length - 10} mais...
                 </Button>
               )}
-              {filtroEmissaoRapida && clientesSemNotaFiltrados.length === 0 && (
+              {filtroEmissaoRapida && invoicesSemNotaFiltradas.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum cliente encontrado para "{filtroEmissaoRapida}"</p>
               )}
-              {filtroEmissaoRapida && clientesSemNotaFiltrados.length > 20 && (
-                <p className="text-sm text-muted-foreground">+{clientesSemNotaFiltrados.length - 20} resultados (refine sua busca)</p>
+              {filtroEmissaoRapida && invoicesSemNotaFiltradas.length > 20 && (
+                <p className="text-sm text-muted-foreground">+{invoicesSemNotaFiltradas.length - 20} resultados (refine sua busca)</p>
               )}
             </div>
           </CardContent>
@@ -1264,52 +1244,52 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
           <div className="py-4">
             <div className="flex items-center gap-2 mb-4">
               <Checkbox
-                checked={selectedClients.length === clientesSemNota.length && clientesSemNota.length > 0}
+                checked={selectedInvoices.length === invoicesSemNota.length && invoicesSemNota.length > 0}
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setSelectedClients(clientesSemNota.map(c => c.id));
+                    setSelectedInvoices(invoicesSemNota.map(i => i.id));
                   } else {
-                    setSelectedClients([]);
+                    setSelectedInvoices([]);
                   }
                 }}
               />
-              <Label className="font-medium">Selecionar todos ({clientesSemNota.length} clientes sem nota)</Label>
+              <Label className="font-medium">Selecionar todos ({invoicesSemNota.length} clientes sem nota)</Label>
             </div>
 
             <ScrollArea className="h-[400px] border rounded-lg p-4">
               <div className="space-y-2">
-                {clientesSemNota.map(client => (
-                  <div key={client.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg">
+                {invoicesSemNota.map(inv => (
+                  <div key={inv.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg">
                     <Checkbox
-                      checked={selectedClients.includes(client.id)}
+                      checked={selectedInvoices.includes(inv.id)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedClients([...selectedClients, client.id]);
+                          setSelectedInvoices([...selectedInvoices, inv.id]);
                         } else {
-                          setSelectedClients(selectedClients.filter(id => id !== client.id));
+                          setSelectedInvoices(selectedInvoices.filter(id => id !== inv.id));
                         }
                       }}
                     />
                     <div className="flex-1">
-                      <div className="font-medium">{client.name}</div>
-                      <div className="text-xs text-muted-foreground">{formatCNPJ(client.cnpj || client.cpf || '')}</div>
+                      <div className="font-medium">{inv.client?.name || 'Cliente'}</div>
+                      <div className="text-xs text-muted-foreground">{formatCNPJ(inv.client?.cnpj || inv.client?.cpf || '')}</div>
                     </div>
-                    <Badge variant="outline">{formatCurrency(client.monthly_fee)}</Badge>
+                    <Badge variant="outline">{formatCurrency(Number(inv.amount || 0))}</Badge>
                   </div>
                 ))}
               </div>
             </ScrollArea>
 
-            {selectedClients.length > 0 && (
+            {selectedInvoices.length > 0 && (
               <div className="mt-4 p-3 bg-muted rounded-lg">
                 <div className="flex justify-between">
                   <span>Clientes selecionados:</span>
-                  <span className="font-bold">{selectedClients.length}</span>
+                  <span className="font-bold">{selectedInvoices.length}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Valor total:</span>
                   <span className="font-bold text-green-600">
-                    {formatCurrency(clients.filter(c => selectedClients.includes(c.id)).reduce((sum, c) => sum + c.monthly_fee, 0))}
+                    {formatCurrency(invoices.filter(i => selectedInvoices.includes(i.id)).reduce((sum, i) => sum + Number(i.amount || 0), 0))}
                   </span>
                 </div>
               </div>
@@ -1320,7 +1300,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
             <Button variant="outline" onClick={() => setShowEmitirLoteDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={emitirEmLote} disabled={emitting || selectedClients.length === 0}>
+            <Button onClick={emitirEmLote} disabled={emitting || selectedInvoices.length === 0}>
               {emitting ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1329,7 +1309,7 @@ Ref: LC 116/2003, LC 214/2025 (Reforma Tributária)`;
               ) : (
                 <>
                   <Zap className="h-4 w-4 mr-2" />
-                  Emitir {selectedClients.length} Notas
+                  Emitir {selectedInvoices.length} Notas
                 </>
               )}
             </Button>
