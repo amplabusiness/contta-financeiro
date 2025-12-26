@@ -3111,3 +3111,79 @@ Sessão focada em corrigir problemas de saldo bancário, reverter lançamentos d
 2. Importar extratos OFX faltantes (Out/2025 está junto com Nov/2025)
 3. Verificar se há mais despesas classificadas incorretamente
 4. Configurar alerta de estoque mínimo para água mineral
+
+---
+
+## Sessão 33 (26/12/2025) - Correção de Despesas Deletadas no DRE + Auditoria de Dependências
+
+### Contexto
+
+Sessão focada em dois problemas: corrigir bug onde despesas deletadas continuavam aparecendo no DRE e realizar auditoria completa das dependências do projeto.
+
+### Problema Principal: Despesas Deletadas no DRE
+
+#### Causa Raiz
+Quando uma despesa era deletada da tabela `expenses`, os lançamentos contábeis associados em `accounting_entries` e `accounting_entry_lines` permaneciam. Como o DRE lê de `accounting_entry_lines` (fonte única da verdade), a despesa deletada continuava aparecendo.
+
+**Fluxo antes da correção:**
+1. Criar despesa → `registrarDespesa()` → cria lançamento em `accounting_entries`
+2. Deletar despesa → deleta apenas de `expenses` → **lançamento permanece**
+3. DRE lê de `accounting_entry_lines` → **despesa "fantasma" aparece**
+
+#### Solução Implementada
+
+1. **Novo método no AccountingService** (`src/services/AccountingService.ts`):
+   - `deletarLancamentoPorReferencia()` - deleta lançamentos por reference_type e reference_id
+   - `deletarLancamentosDespesa()` - deleta provisionamento + pagamento de uma despesa
+
+2. **Novo método no hook useAccounting** (`src/hooks/useAccounting.ts`):
+   - Expõe `deletarLancamentosDespesa` e `deletarLancamentoPorReferencia`
+
+3. **Modificações em Expenses.tsx** (`src/pages/Expenses.tsx`):
+   - `handleDelete` agora chama `deletarLancamentosDespesa()` antes de deletar
+   - `handleRecurringAction` também deleta lançamentos ao excluir despesas recorrentes
+
+### Auditoria de Dependências
+
+Criado relatório completo (`DEPENDENCY_AUDIT.md`) identificando:
+
+#### Vulnerabilidades de Segurança (5 total)
+| Severidade | Pacote | Problema |
+|------------|--------|----------|
+| **ALTA** | `xlsx` | Prototype Pollution + ReDoS - sem correção |
+| **ALTA** | `glob` | Injeção de comando |
+| **MODERADA** | `esbuild` (via vite) | Vulnerabilidade dev server |
+| **MODERADA** | `mdast-util-to-hast` | Classe não sanitizada |
+
+#### Dependências Não Utilizadas (12 pacotes, ~540KB)
+- `@dnd-kit/*` (drag-and-drop não usado)
+- `react-hot-toast` (duplicado - sonner é usado)
+- `axios`, `crypto-js`, `zustand`, etc.
+
+### Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/services/AccountingService.ts` | +90 linhas: métodos de exclusão de lançamentos |
+| `src/hooks/useAccounting.ts` | +25 linhas: exposição dos métodos de exclusão |
+| `src/pages/Expenses.tsx` | Modificado handleDelete e handleRecurringAction |
+| `DEPENDENCY_AUDIT.md` | Novo arquivo: relatório de auditoria |
+
+### Commits Realizados
+
+| Hash | Descrição |
+|------|-----------|
+| `f59347a` | docs: add comprehensive dependency audit report |
+| `890bc98` | fix: deletar lançamentos contábeis ao excluir despesas |
+
+### Lições Aprendidas
+
+1. **Integridade contábil**: Ao deletar registros operacionais (expenses, invoices), SEMPRE deletar os lançamentos contábeis associados
+2. **Fonte única da verdade**: O DRE lê de `accounting_entry_lines`, não de `expenses` - manter consistência
+3. **xlsx tem vulnerabilidades críticas**: Considerar migração para `exceljs`
+
+### Próximos Passos
+
+1. Remover dependências não utilizadas (`npm uninstall react-hot-toast ...`)
+2. Rodar `npm audit fix` para corrigir vulnerabilidades automáticas
+3. Avaliar substituição do pacote `xlsx` por alternativa segura

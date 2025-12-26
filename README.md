@@ -16,6 +16,7 @@ Sistema completo e profissional de gestão de honorários contábeis com integra
 - [Stack Tecnológico](#-stack-tecnológico)
 - [Instalação](#-instalação)
 - [Integrações](#-integrações)
+- [MCP Financeiro](#-mcp-financeiro)
 - [AI Agents](#-ai-agents)
 - [Componentes](#-componentes)
 - [Edge Functions](#-edge-functions)
@@ -195,6 +196,9 @@ EVOLUTION_API_URL=https://your-evolution-instance.com
 EVOLUTION_API_KEY=your-evolution-key
 TWILIO_ACCOUNT_SID=your-twilio-sid
 TWILIO_AUTH_TOKEN=your-twilio-token
+
+# Serper.dev (pesquisa Econet)
+SERPER_API_KEY=your-serper-key
 ```
 
 ### 4. Execute as migrations
@@ -272,6 +276,22 @@ await supabase.functions.invoke('notification-dispatcher', {
     channels: ['email', 'whatsapp']
   }
 })
+```
+
+---
+
+## 🔧 MCP Financeiro
+
+Este projeto inclui o MCP Financeiro para expor dados e regras contábeis via Model Context Protocol.
+
+### Ferramentas de Conhecimento
+- `consultar_conhecimento` - Base interna (contábil, fiscal, DP, auditoria, NFSe, PIX, Ampla)
+- `pesquisar_econet_contabil` - Pesquisa regras contábeis na Econet Editora via Serper.dev
+
+### Variáveis de ambiente MCP
+```env
+# Serper.dev (pesquisa em econeteditora.com.br)
+SERPER_API_KEY=your-serper-key
 ```
 
 ---
