@@ -3,6 +3,21 @@
  *
  * Este arquivo contém toda a inteligência de negócio da Ampla Contabilidade,
  * incluindo regras contábeis (NBC/CFC), fiscais, departamento pessoal e auditoria.
+ *
+ * IMPORTANTE - POLÍTICA DE DADOS:
+ * ================================
+ * - TODOS os dados financeiros DEVEM vir do Supabase (banco de dados real)
+ * - NÃO usar dados mockados ou hardcoded em produção
+ * - Arquivo src/data/expensesData.ts contém APENAS funções utilitárias (formatCurrency, formatPercentage)
+ * - Fontes de verdade:
+ *   - Clientes: tabela "clients"
+ *   - Honorários: tabela "invoices"
+ *   - Despesas: tabela "expenses" + "bank_transactions" (débitos não conciliados)
+ *   - Contabilidade: tabela "accounting_entry_lines" (partida dobrada)
+ *   - Plano de Contas: tabela "chart_of_accounts"
+ *
+ * @see src/integrations/supabase/client.ts - Cliente Supabase
+ * @see src/pages/Dashboard.tsx - Exemplo de consumo de dados reais
  */
 
 // ============================================
