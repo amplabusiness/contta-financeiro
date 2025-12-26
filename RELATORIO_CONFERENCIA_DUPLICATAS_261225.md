@@ -1,5 +1,6 @@
 # 🔍 RELATÓRIO DE CONFERÊNCIA: DUPLICATAS E INTEGRIDADE DO SISTEMA
 **Data:** 26 de Dezembro de 2025  
+\n**ATENCAO:** Este relatorio foi gerado com base no projeto xdtlhzysrpoinqtsglmr (dev). Para resultados validos de producao, refazer a conferencia no projeto **honorario**.\n
 **Horário:** Conferência em tempo real  
 **Status:** ✅ COMPLETO
 
@@ -289,3 +290,4 @@ Todas as proteções estão ativadas
 **Validado por:** Sistema Automático  
 **Próxima Revisão:** Quando começarem os lançamentos  
 **Contato:** Contador da empresa (para conformidade)
+

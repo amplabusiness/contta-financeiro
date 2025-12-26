@@ -1,5 +1,6 @@
 # 📊 CONFERÊNCIA GERAL - RELATÓRIO EXECUTIVO
 
+\n**ATENCAO:** Este relatorio foi gerado com base no projeto xdtlhzysrpoinqtsglmr (dev). Para resultados validos de producao, refazer a conferencia no projeto **honorario**.\n
 **Data:** 26 de Dezembro de 2025  
 **Solicitação:** Verificar duplicação de lançamentos (relatos dos funcionários)  
 **Responsável:** Sistema Automático
@@ -294,3 +295,4 @@ Todos commitados em: **bae3150**
 *Conferência automática realizada em 26/12/2025*  
 *Commit: bae3150*  
 *Status: ✅ Verificado e Aprovado*
+

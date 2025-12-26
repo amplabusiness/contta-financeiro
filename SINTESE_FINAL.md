@@ -1,5 +1,6 @@
 # 📋 SÍNTESE FINAL: Conferência de Duplicatas + Investigação
 
+\n**ATENCAO:** Este relatorio foi gerado com base no projeto xdtlhzysrpoinqtsglmr (dev). Para resultados validos de producao, refazer a conferencia no projeto **honorario**.\n
 **Data:** 26 de Dezembro de 2025  
 **Status:** ✅ Conferência Concluída | ❓ Origem dos Dados Investigada
 
@@ -305,3 +306,4 @@ Próximo:
 **Responsável:** Sistema Automático  
 **Data:** 26 de Dezembro de 2025  
 **Status:** ✅ Pronto para Próxima Fase
+

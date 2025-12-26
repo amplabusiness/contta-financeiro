@@ -1,5 +1,6 @@
 # 🔍 ACHADO IMPORTANTE: Dados Vêm de Outra Fonte
 
+\n**ATENCAO:** Este relatorio foi gerado com base no projeto xdtlhzysrpoinqtsglmr (dev). Para resultados validos de producao, refazer a conferencia no projeto **honorario**.\n
 **Data:** 26 de Dezembro de 2025  
 **Análise:** Verificação de Origem dos Dados de Janeiro/2025
 
@@ -274,3 +275,4 @@ INVESTIGAR E DESCOBRIR:
 **Próximo Passo:** Investigar origem dos dados  
 **Referência:** Network tab do navegador (F12)  
 **Responsável:** Arquiteto da aplicação
+

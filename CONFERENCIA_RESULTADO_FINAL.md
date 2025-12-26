@@ -1,5 +1,6 @@
 # 🎯 CONFERÊNCIA GERAL - RESULTADO FINAL
 
+\n**ATENCAO:** Este relatorio foi gerado com base no projeto xdtlhzysrpoinqtsglmr (dev). Para resultados validos de producao, refazer a conferencia no projeto **honorario**.\n
 **Data:** 26 de Dezembro de 2025  
 **Hora:** Conferência Completa  
 **Status:** ✅ **SISTEMA SEGURO E OPERACIONAL**
@@ -276,3 +277,4 @@ Pode usar o sistema SEM MEDO.
 **Próxima Revisão:** Quando começarem os lançamentos  
 
 Qualquer dúvida, execute um dos scripts de diagnóstico!
+

@@ -49,6 +49,7 @@ import { gerarDashboardOKR, formatarDashboardOKR, metasPadraoContabilidade, cria
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+const SERPER_API_KEY = process.env.SERPER_API_KEY || "";
 
 let supabase: SupabaseClient;
 
@@ -85,6 +86,44 @@ function getCompetenceRange(competence: string): { start: string; end: string } 
   return {
     start: format(startOfMonth(date), "yyyy-MM-dd"),
     end: format(endOfMonth(date), "yyyy-MM-dd"),
+  };
+}
+
+async function pesquisarEconetSerper(pergunta: string, maxResultados = 5) {
+  if (!SERPER_API_KEY) {
+    throw new Error("SERPER_API_KEY nao configurada");
+  }
+
+  const query = `site:econeteditora.com.br ${pergunta}`;
+  const response = await fetch("https://google.serper.dev/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": SERPER_API_KEY,
+    },
+    body: JSON.stringify({
+      q: query,
+      gl: "br",
+      hl: "pt",
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erro Serper: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  const organic = Array.isArray(data.organic) ? data.organic.slice(0, maxResultados) : [];
+
+  return {
+    query,
+    totalResultados: data?.searchInformation?.totalResults ?? null,
+    resultados: organic.map((item: any) => ({
+      titulo: item.title,
+      link: item.link,
+      resumo: item.snippet,
+    })),
   };
 }
 
@@ -634,6 +673,18 @@ const TOOLS = [
         topico: { type: "string", description: "Tópico específico (opcional)" },
       },
       required: ["area"],
+    },
+  },
+  {
+    name: "pesquisar_econet_contabil",
+    description: "Pesquisa regras contabeis na Econet Editora via Serper.dev",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        pergunta: { type: "string", description: "Pergunta ou tema contabel" },
+        max_resultados: { type: "number", description: "Maximo de resultados (padrao: 5)" },
+      },
+      required: ["pergunta"],
     },
   },
   {
@@ -1718,6 +1769,11 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       };
 
       return conhecimento[area] || { erro: "Área não encontrada" };
+    }
+    case "pesquisar_econet_contabil": {
+      const pergunta = args.pergunta as string;
+      const maxResultados = (args.max_resultados as number) || 5;
+      return pesquisarEconetSerper(pergunta, maxResultados);
     }
 
     case "calcular_retencoes_nfse": {

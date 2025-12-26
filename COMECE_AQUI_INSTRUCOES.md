@@ -61,7 +61,7 @@
 
 ```bash
 # Conectar ao banco
-psql -h db.honorario.supabase.co -U postgres -d postgres
+psql -h db.xdtlhzysrpoinqtsglmr.supabase.co -U postgres -d postgres
 
 # Executar:
 # (copiar todo o conteúdo de REMEDIACAO_SEGURANCA.sql)
@@ -298,3 +298,5 @@ Quando tudo acima estiver pronto:
 **Responsável:** Você (CTO/DBA/DevOps)  
 
 **Começar? Siga os 5 passos acima! 🚀**
+
+
