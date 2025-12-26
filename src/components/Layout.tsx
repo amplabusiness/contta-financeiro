@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
 import { useAccountingHealth } from "@/hooks/useAccountingHealth";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { MCPFinanceiroChat } from "@/components/MCPFinanceiroChat";
 
 interface LayoutProps {
   children: ReactNode;
@@ -225,6 +226,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </div>
       <ConnectionStatus />
+      <MCPFinanceiroChat />
     </SidebarProvider>
   );
 }

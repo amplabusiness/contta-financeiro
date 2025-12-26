@@ -435,6 +435,105 @@ class AccountingService {
     const key = category?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || 'default';
     return EXPENSE_ACCOUNT_MAP[key] || EXPENSE_ACCOUNT_MAP['default'];
   }
+
+  /**
+   * Deleta lançamentos contábeis por referência
+   * Usado quando uma despesa/fatura é excluída para manter consistência
+   */
+  async deletarLancamentoPorReferencia(params: {
+    referenceType: string;
+    referenceId: string;
+  }): Promise<AccountingResult> {
+    console.log('[AccountingService] Deleting entries for reference:', params);
+
+    try {
+      // Buscar todos os lançamentos relacionados a esta referência
+      const { data: entries, error: fetchError } = await supabase
+        .from('accounting_entries')
+        .select('id')
+        .eq('reference_type', params.referenceType)
+        .eq('reference_id', params.referenceId);
+
+      if (fetchError) {
+        console.error('[AccountingService] Error fetching entries:', fetchError);
+        return { success: false, error: fetchError.message };
+      }
+
+      if (!entries || entries.length === 0) {
+        console.log('[AccountingService] No entries found for reference');
+        return { success: true, message: 'Nenhum lançamento encontrado' };
+      }
+
+      const entryIds = entries.map(e => e.id);
+      console.log('[AccountingService] Found entries to delete:', entryIds);
+
+      // Primeiro deletar as linhas (accounting_entry_lines)
+      const { error: linesError } = await supabase
+        .from('accounting_entry_lines')
+        .delete()
+        .in('entry_id', entryIds);
+
+      if (linesError) {
+        console.error('[AccountingService] Error deleting entry lines:', linesError);
+        return { success: false, error: linesError.message };
+      }
+
+      // Depois deletar os lançamentos principais
+      const { error: entriesError } = await supabase
+        .from('accounting_entries')
+        .delete()
+        .in('id', entryIds);
+
+      if (entriesError) {
+        console.error('[AccountingService] Error deleting entries:', entriesError);
+        return { success: false, error: entriesError.message };
+      }
+
+      console.log('[AccountingService] Successfully deleted', entryIds.length, 'entries');
+      return {
+        success: true,
+        message: `${entryIds.length} lançamento(s) contábil(is) excluído(s)`
+      };
+
+    } catch (error: any) {
+      console.error('[AccountingService] Unexpected error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Deleta lançamento de despesa e seu pagamento (se houver)
+   */
+  async deletarLancamentosDespesa(expenseId: string): Promise<AccountingResult> {
+    console.log('[AccountingService] Deleting expense entries for:', expenseId);
+
+    // Deletar lançamento de provisionamento (despesa)
+    const provisionResult = await this.deletarLancamentoPorReferencia({
+      referenceType: 'expense',
+      referenceId: expenseId,
+    });
+
+    if (!provisionResult.success) {
+      return provisionResult;
+    }
+
+    // Deletar lançamento de pagamento (se existir)
+    const paymentResult = await this.deletarLancamentoPorReferencia({
+      referenceType: 'expense_payment',
+      referenceId: `${expenseId}_payment`,
+    });
+
+    // Também tentar com o ID direto (alguns pagamentos usam o expenseId como referenceId)
+    await this.deletarLancamentoPorReferencia({
+      referenceType: 'expense_payment',
+      referenceId: expenseId,
+    });
+
+    return {
+      success: true,
+      message: 'Lançamentos contábeis da despesa excluídos'
+    };
+  }
 }
 
 // Exportar instância singleton

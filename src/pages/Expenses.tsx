@@ -28,7 +28,7 @@ import { RecurringExpenseDialog } from "@/components/RecurringExpenseDialog";
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
-  const { registrarDespesa, registrarPagamentoDespesa } = useAccounting({ showToasts: false });
+  const { registrarDespesa, registrarPagamentoDespesa, deletarLancamentosDespesa } = useAccounting({ showToasts: false });
   const { notifyExpenseChange } = useExpenseUpdate();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -682,13 +682,19 @@ const Expenses = () => {
     if (!confirm("Tem certeza que deseja excluir esta despesa?")) return;
 
     try {
+      // Primeiro deletar os lançamentos contábeis associados
+      const accountingResult = await deletarLancamentosDespesa(id);
+      if (!accountingResult.success) {
+        console.warn("Aviso ao excluir lançamentos contábeis:", accountingResult.error);
+      }
+
       const response = await supabase.from("expenses").delete().eq("id", id);
 
       if (response.error) {
         console.error("Erro ao excluir despesa");
         throw new Error("Erro ao excluir despesa");
       }
-      toast.success("Despesa excluída com sucesso!");
+      toast.success("Despesa e lançamentos contábeis excluídos com sucesso!");
       notifyExpenseChange();
       loadExpenses();
     } catch (error: any) {
@@ -982,6 +988,23 @@ const Expenses = () => {
         if (updateAll) {
           const parentId = expense.parent_expense_id || expense.id;
 
+          // Buscar todas as despesas futuras para deletar seus lançamentos contábeis
+          const { data: futureExpenses } = await supabase
+            .from("expenses")
+            .select("id")
+            .eq("parent_expense_id", parentId)
+            .gt("due_date", expense.due_date);
+
+          // Deletar lançamentos contábeis da despesa atual
+          await deletarLancamentosDespesa(pendingRecurringAction.id);
+
+          // Deletar lançamentos contábeis das despesas futuras
+          if (futureExpenses && futureExpenses.length > 0) {
+            for (const futureExpense of futureExpenses) {
+              await deletarLancamentosDespesa(futureExpense.id);
+            }
+          }
+
           // Delete the current expense
           await supabase
             .from("expenses")
@@ -995,14 +1018,17 @@ const Expenses = () => {
             .eq("parent_expense_id", parentId)
             .gt("due_date", expense.due_date);
 
-          toast.success("Despesa e recorrências futuras excluídas!");
+          toast.success("Despesa, recorrências futuras e lançamentos contábeis excluídos!");
         } else {
+          // Deletar lançamentos contábeis apenas desta despesa
+          await deletarLancamentosDespesa(pendingRecurringAction.id);
+
           await supabase
             .from("expenses")
             .delete()
             .eq("id", pendingRecurringAction.id);
 
-          toast.success("Apenas esta despesa foi excluída!");
+          toast.success("Despesa e lançamentos contábeis excluídos!");
         }
 
         notifyExpenseChange();

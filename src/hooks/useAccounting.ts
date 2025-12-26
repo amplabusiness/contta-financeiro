@@ -260,6 +260,29 @@ export function useAccounting(options: UseAccountingOptions = {}) {
     }
   }, []);
 
+  /**
+   * Deleta lançamentos contábeis de uma despesa (provisionamento + pagamento)
+   */
+  const deletarLancamentosDespesa = useCallback(async (expenseId: string) => {
+    return executeOperation(
+      () => accountingService.deletarLancamentosDespesa(expenseId),
+      'Lançamentos da despesa excluídos'
+    );
+  }, [executeOperation]);
+
+  /**
+   * Deleta lançamentos contábeis por referência genérica
+   */
+  const deletarLancamentoPorReferencia = useCallback(async (params: {
+    referenceType: string;
+    referenceId: string;
+  }) => {
+    return executeOperation(
+      () => accountingService.deletarLancamentoPorReferencia(params),
+      'Lançamento excluído'
+    );
+  }, [executeOperation]);
+
   return {
     // Estado
     loading,
@@ -279,6 +302,10 @@ export function useAccounting(options: UseAccountingOptions = {}) {
     criarLancamento,
     initializeChart,
     getDebugStatus,
+
+    // Métodos de exclusão
+    deletarLancamentosDespesa,
+    deletarLancamentoPorReferencia,
 
     // Acesso direto ao serviço (para casos especiais)
     service: accountingService,
