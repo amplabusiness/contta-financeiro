@@ -1,0 +1,4315 @@
+{
+  "dataSincronizacao": "2025-12-26T18:19:56.270Z",
+  "resumo": {
+    "totalClientes": 0,
+    "totalContasAtivas": 360,
+    "totalDespesas": 96,
+    "totalNotas": 0,
+    "totalFuncionarios": 0
+  },
+  "dados": {
+    "clientes": [],
+    "planoContas": [
+      {
+        "id": "caa061d1-ecad-4d91-b873-96dfc268b158",
+        "code": "1",
+        "name": "ATIVO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Ativo Total"
+      },
+      {
+        "id": "a2be26db-c7a8-45a6-8e68-5006cde22db9",
+        "code": "1.1",
+        "name": "ATIVO CIRCULANTE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Bens e direitos realizáveis no curto prazo"
+      },
+      {
+        "id": "0205596e-e618-4236-9735-dd2dce2124c9",
+        "code": "1.1.1",
+        "name": "Caixa e Equivalentes",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "05190443-cdc1-4222-87e7-358b1feacbd1",
+        "code": "1.1.1.02",
+        "name": "Bancos Conta Movimento",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7cbe17a8-9c27-4ce2-b5ae-9006ac42cc50",
+        "code": "1.1.1.03",
+        "name": "Banco do Brasil",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "797b040b-e02e-4030-9ae5-e85bf1140380",
+        "code": "1.1.1.04",
+        "name": "Aplicações Financeiras",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3bf3f172-ed8d-4b04-883d-8b4bd6a0dd15",
+        "code": "1.1.2",
+        "name": "Créditos a Receber",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "12cb93f6-daef-4e2d-bfa9-db9850fdc781",
+        "code": "1.1.2.01",
+        "name": "Clientes a Receber",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "739e9ba4-ba24-4fdb-a271-4d065e481fc3",
+        "code": "1.1.2.01.001",
+        "name": "Cliente: JULLYANA MENDONCA RODRIGUES SILVA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4c57bdbe-c2ac-441a-8bfc-757c03b46c25",
+        "code": "1.1.2.01.002",
+        "name": "Cliente: QUICK COMERCIO DE PECAS PARA VEICULOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "076bf4af-6b89-45f5-9843-ab95ff214b7b",
+        "code": "1.1.2.01.003",
+        "name": "Cliente: CRYSTAL PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "dfcc826b-65ee-4bac-86d7-845403987e49",
+        "code": "1.1.2.01.004",
+        "name": "Cliente: RESTAURANTE IUVACI LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0d00fdcb-c921-4225-bd52-0630796ac060",
+        "code": "1.1.2.01.005",
+        "name": "Cliente: ECD CONSTRUTORA INCORPORADORA EIRELI",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a7106b1f-18ce-40ce-8b9d-261060259531",
+        "code": "1.1.2.01.006",
+        "name": "Cliente: TIMES NEGOCIOS IMOBILIARIOS LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3d939b65-e30c-4656-b174-d85291b3e25d",
+        "code": "1.1.2.01.007",
+        "name": "Cliente: VERDI E ECD EMPREENDIMENTOS IMOBILIARIOS SPE LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "083699b1-690d-4e13-ae58-34dd960880c9",
+        "code": "1.1.2.01.008",
+        "name": "Cliente: CENTRO MEDICO MILHOMEM LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "376dfbb6-5225-4f2d-8e14-7d9d557272d7",
+        "code": "1.1.2.01.009",
+        "name": "Cliente: COVALE USINAGEM INDUSTRIA E COMERCIO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4750c0f6-7ebb-497d-9674-924e3594bafd",
+        "code": "1.1.2.01.010",
+        "name": "Cliente: DIAS FERNANDES ELETRODOMESTICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0a53b6dc-a90f-4f0e-ae5c-03a290bfd94f",
+        "code": "1.1.2.01.011",
+        "name": "Cliente: EXPRESS RIOVERDENSE LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "18c21d7d-90ab-4eb9-9706-7643c18e46b3",
+        "code": "1.1.2.01.012",
+        "name": "Cliente: FORMA COMUNICACAO VISUAL LTDA-ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b85e3e71-6f01-452d-b7af-35cd2e9ac4e2",
+        "code": "1.1.2.01.013",
+        "name": "Cliente: HOLDINGS BCS GUIMARAES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1c9f116d-33cf-45bb-a808-970ebf1860f9",
+        "code": "1.1.2.01.014",
+        "name": "Cliente: KRYAS CONSTRUCAO E MAQUINAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3ca016aa-0834-480e-820f-979e09b0b3eb",
+        "code": "1.1.2.01.015",
+        "name": "Cliente: LAJES NUNES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "cff00beb-05b4-47b3-bbd2-165a54cfddd9",
+        "code": "1.1.2.01.016",
+        "name": "Cliente: M.M LANCHES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "776ba207-9e67-4330-b057-237c80de1219",
+        "code": "1.1.2.01.017",
+        "name": "Cliente: MARIO LUCIO PINHEIRO MILAZZO - FAZ",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "acc84d1a-62cc-4670-a831-584b20866d47",
+        "code": "1.1.2.01.018",
+        "name": "Cliente: SOLUTTI TECNOLOGIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b0afecca-f156-435a-98df-b166b7e8bcb1",
+        "code": "1.1.2.01.019",
+        "name": "Cliente: WESLEY MARTINS DE MOURA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "379b2c90-d2e6-412d-805a-5562aa9cc971",
+        "code": "1.1.2.01.020",
+        "name": "Cliente: ADMIR DE OLIVEIRA ALVES",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "764233be-6853-4b9f-984c-703f1f884482",
+        "code": "1.1.2.01.021",
+        "name": "Cliente: ACTION SERVICOS INDUSTRIAIS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "eebdc088-6dba-45fa-94b2-1c9f4796c420",
+        "code": "1.1.2.01.022",
+        "name": "Cliente: AGROPECUARIA ADM LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a959e613-5b0f-4c9d-81dc-f7ba5e96a664",
+        "code": "1.1.2.01.023",
+        "name": "Cliente: CONTRONWEB TECNOLOGIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "924f3f32-092d-4b20-8e1b-18ccca9d0239",
+        "code": "1.1.2.01.024",
+        "name": "Cliente: MG MECANICA INDUSTRIAL LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "75517799-59fb-4abe-ac41-086e23775a92",
+        "code": "1.1.2.01.025",
+        "name": "Cliente: ACAI DO MADRUGA CAMPINAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7f89d242-845e-4ec0-8263-8881c75b8444",
+        "code": "1.1.2.01.026",
+        "name": "Cliente: AGROPECUARIA SCA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "03aa439d-06dc-4279-840f-478c49803cad",
+        "code": "1.1.2.01.027",
+        "name": "Cliente: ALLIANCE EMPREENDIMENTOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "63b9bcf8-f602-45c8-9e26-033e5cf5d87f",
+        "code": "1.1.2.01.028",
+        "name": "Cliente: AMAGU FESTAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b5a880c0-60d9-4514-9974-1d49988a0349",
+        "code": "1.1.2.01.029",
+        "name": "Cliente: AMETISTA GESTAO EMPRESARIAL LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5e6fce4c-1506-4837-b281-3ac90abdd2e6",
+        "code": "1.1.2.01.030",
+        "name": "Cliente: AMG INDUSTRIA E COMERCIO DE GESSO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7e04e823-3cdd-4bdc-99e9-21195b29f0e2",
+        "code": "1.1.2.01.031",
+        "name": "Cliente: PET SHOP E CAOPANHIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "171ba339-bcc9-48f7-8294-6ddaf79863bd",
+        "code": "1.1.2.01.032",
+        "name": "Cliente: SHARKSAPACE GASTRO PARK LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "aac7c0d1-8b0d-443e-92d3-1347f2998618",
+        "code": "1.1.2.01.033",
+        "name": "Cliente: ANAPOLIS SERVICOS DE VISTORIAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "96789ae7-c9bf-462c-a882-62d7bc35ccff",
+        "code": "1.1.2.01.034",
+        "name": "Cliente: ARANTES NEGOCIOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a7dc7766-adda-4e6f-a698-8dce49658ea7",
+        "code": "1.1.2.01.035",
+        "name": "Cliente: L.A.R. CONSTRUTORA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "bf168a59-5c9c-4305-9260-1fab894be553",
+        "code": "1.1.2.01.036",
+        "name": "Cliente: PORTO FINO MAQUINAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b54a2576-9dab-4e7c-8620-21b3ff656c8a",
+        "code": "1.1.2.01.037",
+        "name": "Cliente: CANAL PET DISTRIBUIDORA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "02a45234-42ad-4b84-9c00-ed709f964212",
+        "code": "1.1.2.01.038",
+        "name": "Cliente: COLLOR GEL COMERCIO E INDUSTRIA DE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "63c36e0c-e173-4dc7-b6bf-40172b38e25c",
+        "code": "1.1.2.01.039",
+        "name": "Cliente: KOPA REVESTIMENTOS DE MADEIRAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "874c542e-7d02-4c83-8235-9022f1415711",
+        "code": "1.1.2.01.040",
+        "name": "Cliente: LAJES MORADA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "2d5e77c8-93d2-4ef3-822d-d6447f02a46b",
+        "code": "1.1.2.01.041",
+        "name": "Cliente: MOTTA COMERCIO DE INFORMATICA LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d9d5cf7e-0726-4a03-9891-d9116775259b",
+        "code": "1.1.2.01.042",
+        "name": "Cliente: CENTRO OESTE SERVICOS DE VISTORIAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "95cc7411-f21b-411c-84c9-e2fe352fb529",
+        "code": "1.1.2.01.043",
+        "name": "Cliente: DEL PAPA ARQUITETURA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f8e8ffb7-3cec-43fe-a135-e3b4bd8805c8",
+        "code": "1.1.2.01.044",
+        "name": "Cliente: LEMS HOLDINGS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d94ef0b5-362d-452f-b86a-7933b5773256",
+        "code": "1.1.2.01.045",
+        "name": "Cliente: LOPES CONSULTORIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f286a277-c874-40ae-aaa4-1f163340c8bf",
+        "code": "1.1.2.01.046",
+        "name": "Cliente: MARIAH PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "88b7fda6-8e22-4e6a-bc6e-6813b03bb24c",
+        "code": "1.1.2.01.047",
+        "name": "Cliente: AVIZ ALIMENTOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "25a08282-23b8-4b03-9366-a7247179299f",
+        "code": "1.1.2.01.048",
+        "name": "Cliente: CHRISTIANE RODRIGUES MACHADO LOPES",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c3ff27db-9e5f-430d-b4a5-1994dde92f69",
+        "code": "1.1.2.01.049",
+        "name": "Cliente: PREMIER SOLUCOES INDUSTRIAIS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0e4b2340-b005-412e-8661-6ac8f0eab753",
+        "code": "1.1.2.01.050",
+        "name": "Cliente: BCS GOIAS SERVICOS MEDICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "aba1dab7-3e02-4663-8113-d41a0d7b3235",
+        "code": "1.1.2.01.051",
+        "name": "Cliente: M L PINHEIRO MILAZZO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4050fdd7-f069-411c-8493-49eb89f33dc0",
+        "code": "1.1.2.01.052",
+        "name": "Cliente: PM ADMINISTRACAO E SERVICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "627a228b-6bfc-4f37-a395-55349e50646e",
+        "code": "1.1.2.01.053",
+        "name": "Cliente: RODRIGO AUGUSTO RODRIGUES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f834bc20-a5cc-451d-a7bf-2c12ebbc5326",
+        "code": "1.1.2.01.054",
+        "name": "Cliente: LIVRE VISTORIA VEICULAR LTDA - ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d720e9e8-b956-4413-9976-645cc456ef3b",
+        "code": "1.1.2.01.055",
+        "name": "Cliente: STAR EMPORIO DE BEBIDAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b61b93eb-624a-4085-aaad-55670a944ecc",
+        "code": "1.1.2.01.056",
+        "name": "Cliente: COMERCIAL DINIZ EIRELI - ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "8d22a2c0-1f7f-4057-b4d8-c688ebdc7c03",
+        "code": "1.1.2.01.057",
+        "name": "Cliente: EVEREST GESTAO E ADMINISTRACAO DE P",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a34e602c-947e-4a52-b381-0b28ff5a27f4",
+        "code": "1.1.2.01.058",
+        "name": "Cliente: LEM ESCOLA DE IDIOMAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c102c854-6edf-432c-80e5-38af684a9995",
+        "code": "1.1.2.01.059",
+        "name": "Cliente: VR CONSULTORIA LTDA - ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1db78627-2f6e-4691-b3fe-5d114af3f629",
+        "code": "1.1.2.01.060",
+        "name": "Cliente: BCS MINAS SERVICOS MEDICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6e7d0b09-0998-452f-8d32-33f87a2f7739",
+        "code": "1.1.2.01.061",
+        "name": "Cliente: CASA NOVA TINTAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6ebaf185-249e-4dc8-825e-1a6dd41c57c2",
+        "code": "1.1.2.01.062",
+        "name": "Cliente: CDC PLAYGROUND E BRINQUEDOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "cb1f4349-e5cd-4d88-9b57-4b521c8ff0a6",
+        "code": "1.1.2.01.063",
+        "name": "Cliente: FAZENDA DA TOCA PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "96a7ef04-da4a-4f3f-8f8a-d803b04fd999",
+        "code": "1.1.2.01.064",
+        "name": "Cliente: ROSELIS TORMIN MUNDIM - FAZENDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "17a356fc-b929-4e97-b24a-6221d243f082",
+        "code": "1.1.2.01.065",
+        "name": "Cliente: C D C OLIVEIRA - ESTACAO DA ALEGRIA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c8d4765c-5961-450a-b958-d2364961d444",
+        "code": "1.1.2.01.066",
+        "name": "Cliente: RAMAYOLE CASA DOS SALGADOS EIRELI - ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0b39d316-682c-4dc9-9b0f-d5e59d25d334",
+        "code": "1.1.2.01.067",
+        "name": "Cliente: SAO LUIS INDUSTRIA E COMERCIO DE AGUA MINERAL LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "cbe3b8c6-bb19-4b16-b0b9-632c696e1fc8",
+        "code": "1.1.2.01.068",
+        "name": "Cliente: CARLA DAIANE CASTRO OLIVEIRA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "8db40463-dd98-41af-890d-ce2028291010",
+        "code": "1.1.2.01.069",
+        "name": "Cliente: C.R.J MANUTENCAO EM AR CONDICIONADO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4863f02d-0336-4294-af45-011f499b683d",
+        "code": "1.1.2.01.070",
+        "name": "Cliente: D'ANGE COMERCIO DE BICHO DE PELUCIA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b636a2f8-6bc5-4496-9daa-d31c6ce95de4",
+        "code": "1.1.2.01.071",
+        "name": "Cliente: MARCUS VINICIUS LEAL PIRES",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7476aed9-4922-4465-9047-e88db5f0cdf5",
+        "code": "1.1.2.01.072",
+        "name": "Cliente: TANNUS E MOTA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4c5e2fc9-119a-457a-b362-6dd02c159936",
+        "code": "1.1.2.01.073",
+        "name": "Cliente: MARCUS ABDULMASSIH DEL PAPA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d1d821ef-7d47-4032-9cf4-9b8d4ae80952",
+        "code": "1.1.2.01.074",
+        "name": "Cliente: CARRO DE OURO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "18057a8c-3372-4531-9db2-5abb12d088f6",
+        "code": "1.1.2.01.075",
+        "name": "Cliente: MARIO CESAR PEREIRA DA SILVA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6cb5ff0f-6b14-401a-847d-4e600f1873f6",
+        "code": "1.1.2.01.076",
+        "name": "Cliente: MURANO ADMINISTRACAO E PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "987c0eec-d9c3-4b2f-aa01-393944448a1a",
+        "code": "1.1.2.01.077",
+        "name": "Cliente: SUITE MOTEL LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "48ebae23-70a5-44ab-8ae5-2740dcb6bb26",
+        "code": "1.1.2.01.078",
+        "name": "Cliente: TAISSA TORMIN MUNDIM",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6a675186-6a79-42e4-b24d-e14a29fc8dc5",
+        "code": "1.1.2.01.079",
+        "name": "Cliente: CARVALHO E MELO ADM. E PARTICIPACAO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d44a25fe-119f-4339-8a72-aa7d036c36aa",
+        "code": "1.1.2.01.080",
+        "name": "Cliente: COVAS SERVICOS DE PINTURAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "76df674c-ab24-43d6-9e19-d6b541b74fd6",
+        "code": "1.1.2.01.081",
+        "name": "Cliente: TEREZA CRISTINA DA SILVA PAES FERREIRA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c7225606-4869-4a1f-a7a4-f6c9946bf41a",
+        "code": "1.1.2.01.082",
+        "name": "Cliente: D'ANGE2 COMERCIO DE BICHO DE PELUCIA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "cc444743-52db-4d36-ac1e-5fd9fa8c87fb",
+        "code": "1.1.2.01.083",
+        "name": "Cliente: ELETROSOL ENERGIA SOLAR LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e1e5ff62-d5f2-4e98-a0e8-e4d4fb2940f0",
+        "code": "1.1.2.01.084",
+        "name": "Cliente: DR BERNARDO GUIMARAES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7ad0aa2f-1dc9-4c90-8ce9-d52ec2d75937",
+        "code": "1.1.2.01.085",
+        "name": "Cliente: FE CONSULTORIA JURIDICA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5c39f08a-ca29-4956-9cfd-50c6407a7f8b",
+        "code": "1.1.2.01.086",
+        "name": "Cliente: MATA PRAGAS CONTROLE DE PRAGAS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ab759552-6b71-46f7-84d9-f3175c2f9b62",
+        "code": "1.1.2.01.087",
+        "name": "Cliente: MV LG CLINICA VETERINARIA PET FERA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "8d0291fa-1fba-4457-bfa1-8910e2e0dbc3",
+        "code": "1.1.2.01.088",
+        "name": "Cliente: ELETROSOL SOLUCOES EM ENERGIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "79962d22-31fd-40ba-8f5f-fb95592ea22b",
+        "code": "1.1.2.01.089",
+        "name": "Cliente: HOLDING BOM FUTURO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5e5ce45a-be53-4aae-9ec9-a63f7fd4176d",
+        "code": "1.1.2.01.090",
+        "name": "Cliente: MEDITERRANE SERVICOS DE COWORKING LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c9f7cd3d-dcbe-4ac1-a71f-c22f0f28714f",
+        "code": "1.1.2.01.091",
+        "name": "Cliente: FERNANDA COVAS DO VALE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "dc96b3d1-656f-4b8e-afd0-f57b577df25d",
+        "code": "1.1.2.01.092",
+        "name": "Cliente: FUTURA AGROPECUARIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3f1d1fd3-9edf-492a-97f8-17b3529afb8d",
+        "code": "1.1.2.01.093",
+        "name": "Cliente: KORSICA COMERCIO ATACADISTA DE PNEUS LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b2a38bd2-5ecd-4bd3-b30d-4e91ada01f9c",
+        "code": "1.1.2.01.094",
+        "name": "Cliente: NUNES MOTA AGROPECUARIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e550ee47-e747-47b8-835d-6d75b7dc905e",
+        "code": "1.1.2.01.095",
+        "name": "Cliente: KROVER ENGENHARIA E SERVICOS LTDA ME",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b448f150-3d0c-4d82-86a1-af59b0c34612",
+        "code": "1.1.2.01.096",
+        "name": "Cliente: NUTRYMED INDUSTRIA FARMACEUTICA E ALIMENTICIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9a18502e-9b6d-4bd6-9918-ac4bc535e8ff",
+        "code": "1.1.2.01.097",
+        "name": "Cliente: JR SOLUCOES INDUSTRIAIS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "00802792-4d8d-4ab8-99b9-059d92a3c783",
+        "code": "1.1.2.01.098",
+        "name": "Cliente: OURO CAR SERVICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c7e28057-f0f7-4530-9f0f-5932b358d1e4",
+        "code": "1.1.2.01.099",
+        "name": "Cliente: R&P AVIACAO COMERCIO IMPORTACAO E EXPORTACAO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9974c3db-bba8-46ff-bf2e-65d5fc07b6b0",
+        "code": "1.1.2.01.100",
+        "name": "Cliente: JJC PRESTADORA DE SERVICOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9c32cf2c-08e5-409d-ace8-5af33645c04e",
+        "code": "1.1.2.01.101",
+        "name": "Cliente: UNICAIXAS DESPACHANTE LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "991d40e6-3bad-49fe-93c6-565287030ce3",
+        "code": "1.1.2.01.102",
+        "name": "Cliente: JPL AGROPECUARIA LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "78d3d5e7-f5e6-49e5-a98f-e3c1f3c39e73",
+        "code": "1.1.2.01.103",
+        "name": "Cliente: JULIANO SOUZA GARROTE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "820852de-0ea4-4cf8-9e80-b6dd7328ff5f",
+        "code": "1.1.2.01.104",
+        "name": "Cliente: MUNDIM SA E GUIMARAES ADVOGADOS ASSOCIADOS S/S",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "989bbced-f674-4bda-8b3d-19f275c8d79a",
+        "code": "1.1.2.01.105",
+        "name": "Cliente: HOKMA ELETROMONTAGEM LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a834a12e-de08-4918-8bff-cc2154382b55",
+        "code": "1.1.2.01.106",
+        "name": "Cliente: FGS COMERCIO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "879a91fa-eb13-4104-a402-2a4f3d0f6768",
+        "code": "1.1.2.01.107",
+        "name": "Cliente: FFA PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "72c820c7-337e-4ffe-9046-c10fba595c55",
+        "code": "1.1.2.01.108",
+        "name": "Cliente: 60.489.571 MONICA LOPES TEIXEIRA BORGES",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d22a854c-d2f3-4cb5-b645-2351a21823d0",
+        "code": "1.1.2.01.109",
+        "name": "Cliente: MINERACAO SERRANO LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b1ef0df4-89e2-4294-800b-c6f294588229",
+        "code": "1.1.2.01.110",
+        "name": "Cliente: DSL HOLDING LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "26e4dd21-0929-414c-a3e4-a5841afb956b",
+        "code": "1.1.2.01.111",
+        "name": "Cliente: DSL MARKETING DIGITAL LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "381d985f-6ea0-4c58-9cc8-2c3ecbfd9465",
+        "code": "1.1.2.01.112",
+        "name": "Cliente: DSL PARTICIPACOES LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "44de2dbe-4099-4270-a22b-907b5dfe4522",
+        "code": "1.1.2.01.113",
+        "name": "Cliente: SUPERAMED DISTRIBUIDORA DE MEDICAMENTOS LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "25dba1e3-4ee8-4e7a-8c3e-0d7bc179f1db",
+        "code": "1.1.2.01.114",
+        "name": "Cliente: PROMERCANTIL LTDA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e0c196d5-51ec-481b-a451-653b8df63b45",
+        "code": "1.1.2.01.115",
+        "name": "Cliente: ADMIR OLIVEIRA ALVES - DOMESTICA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "74426a32-b531-423e-b043-4b293feb57c8",
+        "code": "1.1.2.01.116",
+        "name": "Cliente: MARO - INVESTIMENTOS E PARTICIPACOES S/A",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "2e15c694-666f-4925-bdb3-20cd6f184c33",
+        "code": "1.1.2.02",
+        "name": "Duplicatas a Receber",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "39eeba1a-6f6c-422a-8280-4386bec90cac",
+        "code": "1.1.2.03",
+        "name": "Cheques a Receber",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ca0eedc6-7d19-4b44-b4d2-5be02ff9dfa7",
+        "code": "1.1.2.04",
+        "name": "(-) Provisão para Créditos de Liquidação Duvidosa",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f8f4918b-0f60-4f3c-a885-f2d80f5c4ef0",
+        "code": "1.1.3",
+        "name": "OUTROS CRÉDITOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4dcebb4b-8a92-4010-a957-9940dbc02509",
+        "code": "1.1.3.01",
+        "name": "Impostos a Recuperar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0233dc27-3ea6-4e7b-a933-0f0790af29a4",
+        "code": "1.1.3.02",
+        "name": "Adiantamentos a Fornecedores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "32436d81-8b2a-4f12-80e7-f1a51790b2b2",
+        "code": "1.1.3.03",
+        "name": "Outros Valores a Recuperar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0744ea7d-07a7-48cd-9b8b-7247b8710d2d",
+        "code": "1.1.3.04",
+        "name": "Adiantamentos a Sócios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b2845989-75af-4466-b3fb-473fb58e90a2",
+        "code": "1.1.3.04.01",
+        "name": "Adiantamentos - Sergio Carneiro Leão",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "463118a0-1608-4b82-b544-8f1d9ce85569",
+        "code": "1.1.3.04.02",
+        "name": "Adiantamentos - Outros Sócios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "27aa1a52-ddb4-4143-8984-dc7ba95ce562",
+        "code": "1.1.3.04.03",
+        "name": "Adiantamentos - Victor Hugo",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e796f6f4-c491-4e38-807f-0a5a5d837b84",
+        "code": "1.1.3.04.04",
+        "name": "Adiantamentos - Nayara",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "143a5ffc-0b6b-4ee6-b09d-8f077bccd658",
+        "code": "1.1.3.04.05",
+        "name": "Adiantamentos - Sérgio Augusto",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3e1fd22f-fba2-4cc2-b628-9d729233bca0",
+        "code": "1.1.9.01",
+        "name": "Pendente de Classificação - Débitos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Conta temporária para débitos aguardando classificação. Dr. Cícero monitora esta conta."
+      },
+      {
+        "id": "9fcc44ef-cf40-4d5e-8462-4cc334949b27",
+        "code": "1.2",
+        "name": "ATIVO NÃO CIRCULANTE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "546eb5fe-a590-4089-a6a0-03eae7b3c666",
+        "code": "1.2.1",
+        "name": "ATIVO IMOBILIZADO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ddda6932-4594-4205-9115-ed168d1831ae",
+        "code": "1.2.1.01",
+        "name": "Móveis e Utensílios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "02ec2937-4d8f-45f6-825c-8149b7e9525c",
+        "code": "1.2.1.02",
+        "name": "Equipamentos de Informática",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b6dd8d45-855f-4e47-807c-f940388d84cf",
+        "code": "1.2.1.03",
+        "name": "Veículos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b94fdfbc-dc5b-4b48-8d16-66947a037699",
+        "code": "1.2.1.04",
+        "name": "(-) Depreciação Acumulada",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "88f95e91-cd1b-47fc-83c1-260a0ea7f88b",
+        "code": "2",
+        "name": "PASSIVO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Passivo Total"
+      },
+      {
+        "id": "913e3b8b-a47d-4c0b-ac4a-c99b3d09abeb",
+        "code": "2.1",
+        "name": "PASSIVO CIRCULANTE",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Obrigações de curto prazo"
+      },
+      {
+        "id": "aaddc26d-e8a4-4b37-8e28-75be338a02ff",
+        "code": "2.1.01",
+        "name": "FORNECEDORES",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Valores a pagar a fornecedores"
+      },
+      {
+        "id": "452e2339-d85d-4d62-82a8-f2649e460401",
+        "code": "2.1.01.001",
+        "name": "Fornecedores Nacionais",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Fornecedores do Brasil"
+      },
+      {
+        "id": "76c03141-4b0d-44bf-88b8-ed1a33418e1c",
+        "code": "2.1.02",
+        "name": "OBRIGAÇÕES TRIBUTÁRIAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Tributos a recolher"
+      },
+      {
+        "id": "4cc53836-8736-415d-8aac-2bd22e95be5a",
+        "code": "2.1.02.001",
+        "name": "IRPJ a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Imposto de Renda Pessoa Jurídica"
+      },
+      {
+        "id": "08df1de5-9c41-43b0-872d-0240adf2fa63",
+        "code": "2.1.02.002",
+        "name": "CSLL a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Contribuição Social sobre Lucro Líquido"
+      },
+      {
+        "id": "7634df23-66cc-487a-9d40-ec7caee3f446",
+        "code": "2.1.02.003",
+        "name": "PIS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "PIS a Recolher"
+      },
+      {
+        "id": "52dbcfca-6e62-43ed-8ef5-ae18aa603cfc",
+        "code": "2.1.02.004",
+        "name": "COFINS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "COFINS a Recolher"
+      },
+      {
+        "id": "a979ce35-4038-46a0-be40-002bbef59d83",
+        "code": "2.1.02.005",
+        "name": "ISS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Imposto Sobre Serviços"
+      },
+      {
+        "id": "3dde85a8-2b44-4fe4-9b76-33616971a4ea",
+        "code": "2.1.1",
+        "name": "Fornecedores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0fce710f-5bb5-433f-bd64-56ab99465a54",
+        "code": "2.1.1.01",
+        "name": "Fornecedores a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1f922116-e595-454c-bc73-b57fb173d949",
+        "code": "2.1.1.02",
+        "name": "Contribuições a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9e57466c-1b48-4891-afe5-55c4c2b2f3de",
+        "code": "2.1.1.03",
+        "name": "FGTS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6daaa238-197b-4caf-b145-4509ed7aff0a",
+        "code": "2.1.1.04",
+        "name": "IRRF a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a8de97fd-61a6-48a9-ac0e-c35857ac3bf8",
+        "code": "2.1.1.05",
+        "name": "Contribuição Sindical a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b57a27db-d49d-4e05-a041-ea591460a6ca",
+        "code": "2.1.1.06",
+        "name": "Pensão Alimentícia a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5becd6c9-b782-42e8-a79e-9b028265e378",
+        "code": "2.1.1.07",
+        "name": "Provisão de Férias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "46e619b3-9165-4bf1-b090-314ea767433d",
+        "code": "2.1.1.08",
+        "name": "Provisão de 13º Salário",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "84f8b19a-789d-4480-8a96-acdd0d33c9c8",
+        "code": "2.1.1.09",
+        "name": "Vale Transporte a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "47ab0688-4a33-4935-8b2d-887c714eede7",
+        "code": "2.1.1.10",
+        "name": "Vale Refeição a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "78fe791e-9f01-4374-8132-0abaab8f9056",
+        "code": "2.1.1.11",
+        "name": "Plano de Saúde a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b99f5f1c-8d0f-4a52-a9d2-9c076fe4632c",
+        "code": "2.1.1.12",
+        "name": "Empréstimo Consignado a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "709ae331-8eb3-458d-9c52-bc7907760ce8",
+        "code": "2.1.2",
+        "name": "Obrigações Trabalhistas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d5c04379-4919-4859-a84a-fb292a5bb047",
+        "code": "2.1.2.01",
+        "name": "Salários a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "82bd81fc-c2fa-4bf3-ab2c-c0b49d03959f",
+        "code": "2.1.2.02",
+        "name": "Férias a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ebcfcb58-1475-4c9b-97a8-ade8f4c43637",
+        "code": "2.1.2.03",
+        "name": "13º Salário a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a1c6aacf-f344-4fb9-a091-851de6998672",
+        "code": "2.1.2.04",
+        "name": "FGTS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6b72cfdd-c05b-4c9d-8a6e-0cf76236d4ee",
+        "code": "2.1.2.05",
+        "name": "INSS a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "eb126beb-eaeb-4467-a771-de2598b73b83",
+        "code": "2.1.2.10",
+        "name": "Rescisões a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Valores rescisórios a pagar"
+      },
+      {
+        "id": "7c0d8605-8319-4bdb-8cd8-05e56bcbf8c4",
+        "code": "2.1.2.10.01",
+        "name": "Saldo de Salário a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Saldo de salário da rescisão"
+      },
+      {
+        "id": "ff5b2edf-765d-451a-94eb-0a895db50319",
+        "code": "2.1.2.10.02",
+        "name": "Aviso Prévio a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Aviso prévio indenizado"
+      },
+      {
+        "id": "23c4826f-4884-43c5-90c9-02595a107f6e",
+        "code": "2.1.2.10.03",
+        "name": "Férias Rescisórias a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Férias vencidas e proporcionais"
+      },
+      {
+        "id": "37e16584-002e-47a7-a601-f0ab4c8915a0",
+        "code": "2.1.2.10.04",
+        "name": "13º Rescisório a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "13º proporcional rescisão"
+      },
+      {
+        "id": "b144df8e-f2e5-4af9-a207-7c4ec7c25fe3",
+        "code": "2.1.2.10.05",
+        "name": "FGTS Rescisório a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "FGTS sobre rescisão + multa"
+      },
+      {
+        "id": "52756f11-5bb9-4def-a14b-06b8ca3851f7",
+        "code": "2.1.2.10.06",
+        "name": "INSS Rescisório a Recolher",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "INSS sobre verbas rescisórias"
+      },
+      {
+        "id": "3990b3da-d562-4502-b79a-02e1487d8653",
+        "code": "2.1.3",
+        "name": "Obrigações Tributárias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9d9bf5a2-21cd-4d2a-b60a-771da9bab652",
+        "code": "2.1.3.01",
+        "name": "Fornecedores Nacionais",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "47340a5e-f788-4468-a441-f7ec77a9136c",
+        "code": "2.1.3.02",
+        "name": "Contas a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ba23772b-8947-4134-83bf-912ca23c4c77",
+        "code": "2.1.3.03",
+        "name": "Comissões a Pagar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9021a460-5346-4ef3-9369-1dd0d06467e9",
+        "code": "2.1.4",
+        "name": "OBRIGAÇÕES COM SÓCIOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "03c8a6c3-d2f6-4aa8-bb3b-d8e2bc39a8cd",
+        "code": "2.1.4.01",
+        "name": "AFAC - Sergio Carneiro Leão",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "45d6dbad-5626-4a7e-8aa6-d0c42949bc97",
+        "code": "2.1.4.02",
+        "name": "AFAC - Outros Sócios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "815bd89d-c13b-4538-8e6c-289162b2e464",
+        "code": "2.1.4.03",
+        "name": "Empréstimos de Sócios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "730aa0cb-b955-43c4-9fe3-51432fd1373f",
+        "code": "2.1.4.04",
+        "name": "Lucros a Distribuir",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "28085461-9e5a-4fb4-847d-c9fc047fe0a1",
+        "code": "2.1.9.01",
+        "name": "Pendente de Classificação - Créditos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Conta temporária para créditos aguardando classificação. Dr. Cícero monitora esta conta."
+      },
+      {
+        "id": "e495e022-c144-49af-a2e8-66fa170da6fa",
+        "code": "2.2",
+        "name": "PATRIMÔNIO LÍQUIDO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Recursos próprios"
+      },
+      {
+        "id": "53da66bb-d0d8-40b9-a15f-c5d73e88f37e",
+        "code": "2.2.01",
+        "name": "CAPITAL SOCIAL",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Capital subscrito"
+      },
+      {
+        "id": "0156e62c-53e4-4cec-a173-081437dd0236",
+        "code": "2.2.01.001",
+        "name": "Capital Social Integralizado",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Capital efetivamente integralizado"
+      },
+      {
+        "id": "ec991575-d174-4fa0-8a4c-0f5c3a99b073",
+        "code": "2.2.02",
+        "name": "RESERVAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Reservas de lucros"
+      },
+      {
+        "id": "338e56d7-30a9-445a-8b99-f647dc0a9ece",
+        "code": "2.2.02.001",
+        "name": "Reservas de Lucros",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Lucros retidos"
+      },
+      {
+        "id": "e2445117-85b1-4aba-9ce0-d556b23a5259",
+        "code": "2.2.03",
+        "name": "LUCROS ACUMULADOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Resultado do período"
+      },
+      {
+        "id": "eae75373-5b60-4a98-b80a-d9c09e558162",
+        "code": "2.2.03.001",
+        "name": "Lucros/Prejuízos Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Resultado acumulado"
+      },
+      {
+        "id": "98e0252d-ec5d-4a36-b850-0b9e1216cf6f",
+        "code": "3",
+        "name": "RECEITAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Receitas Operacionais"
+      },
+      {
+        "id": "a1a1c5a9-0064-4248-83f1-408f2a10a63e",
+        "code": "3.1",
+        "name": "RECEITA BRUTA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Receita de serviços prestados"
+      },
+      {
+        "id": "a1c80c1c-e522-4d5d-a161-cde1e66cb1ed",
+        "code": "3.1.01",
+        "name": "RECEITA DE SERVIÇOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Prestação de serviços contábeis"
+      },
+      {
+        "id": "55e1874e-108d-4124-ae1e-b2e383e3a590",
+        "code": "3.1.01.001",
+        "name": "Honorários Contábeis",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Receita de honorários contábeis"
+      },
+      {
+        "id": "63497850-679b-4ec1-91db-65855ae12449",
+        "code": "3.1.01.002",
+        "name": "Serviços de Consultoria",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Receita de consultoria"
+      },
+      {
+        "id": "dc0f75c4-9919-4014-bf45-f94e51743e74",
+        "code": "3.1.01.003",
+        "name": "Serviços Extraordinários",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Serviços fora do contrato"
+      },
+      {
+        "id": "496e2b79-6c1d-4ae8-8c44-4cb71c6c709b",
+        "code": "3.1.1",
+        "name": "Receita de Honorários",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3273fd5b-a16f-4a10-944e-55c8cb27f363",
+        "code": "3.1.1.01",
+        "name": "Honorários Contábeis",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9bc20196-973c-47d2-b080-cd4f191ab5f4",
+        "code": "3.1.1.02",
+        "name": "Honorários Fiscais",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "019911b2-36c7-4cf6-b7aa-88201c885de4",
+        "code": "3.1.1.03",
+        "name": "Honorários Trabalhistas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3c04a2df-a552-411a-9783-6863eb1533b8",
+        "code": "3.1.2",
+        "name": "Outras Receitas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b2d635c5-c83f-4b90-9373-74d2a2f2296b",
+        "code": "3.2",
+        "name": "DEDUÇÕES DA RECEITA",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Impostos e deduções"
+      },
+      {
+        "id": "b5b03884-1133-4aa3-bfe8-f04ddc973bce",
+        "code": "3.2.01",
+        "name": "IMPOSTOS SOBRE SERVIÇOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Tributos sobre receita"
+      },
+      {
+        "id": "fe361812-029f-494b-9335-b80adc0bae14",
+        "code": "3.2.01.001",
+        "name": "ISS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Imposto Sobre Serviços"
+      },
+      {
+        "id": "03320c37-6010-4968-8f84-39727d0fcc3d",
+        "code": "3.2.01.002",
+        "name": "PIS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "PIS sobre faturamento"
+      },
+      {
+        "id": "1b961355-1c6d-4139-8116-fed3648db952",
+        "code": "3.2.01.003",
+        "name": "COFINS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "COFINS sobre faturamento"
+      },
+      {
+        "id": "69808194-00e3-42a4-9671-3c4157cca14f",
+        "code": "3.2.02",
+        "name": "Juros Ativos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b643ba04-6c2e-41a7-ad6f-b13ac2904f9c",
+        "code": "4",
+        "name": "DESPESAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas Operacionais"
+      },
+      {
+        "id": "de0b254e-7f6f-4c7e-8955-b7754933d78c",
+        "code": "4.1",
+        "name": "DESPESAS ADMINISTRATIVAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas administrativas"
+      },
+      {
+        "id": "6495f15d-bf45-4d1b-a2de-56f15a8e8424",
+        "code": "4.1.01",
+        "name": "PESSOAL",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas com pessoal"
+      },
+      {
+        "id": "35b4e03d-45b8-46f4-9dad-bb1d1451a590",
+        "code": "4.1.01.001",
+        "name": "Salários",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Salários de funcionários"
+      },
+      {
+        "id": "af7de400-5f45-4f50-ba44-2bd8b653d2a9",
+        "code": "4.1.01.002",
+        "name": "Encargos Sociais",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "INSS, FGTS, etc"
+      },
+      {
+        "id": "e1d44980-5e57-4cca-bf84-5cab4075554e",
+        "code": "4.1.01.003",
+        "name": "Férias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Férias de funcionários"
+      },
+      {
+        "id": "dabccf67-a4fd-41fa-af58-3f683d475461",
+        "code": "4.1.01.004",
+        "name": "13º Salário",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Décimo terceiro salário"
+      },
+      {
+        "id": "788ce045-0f77-4e40-9f35-166e50d09f4c",
+        "code": "4.1.01.005",
+        "name": "Adiantamentos a Sócios",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e3822441-c812-45a4-810d-3a04183bc7c4",
+        "code": "4.1.01.005.01",
+        "name": "Adiantamentos - Sergio Carneiro Leão",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1392a95e-ece3-4a77-bddc-a33820c15985",
+        "code": "4.1.02",
+        "name": "OCUPAÇÃO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas com ocupação"
+      },
+      {
+        "id": "35d2c737-2f51-4008-ae70-8bfc11fc7d21",
+        "code": "4.1.02.001",
+        "name": "Aluguel",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Aluguel do escritório"
+      },
+      {
+        "id": "9d5d96af-9fa9-453f-9738-e76e404dd8fd",
+        "code": "4.1.02.002",
+        "name": "Energia Elétrica",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Conta de luz"
+      },
+      {
+        "id": "ba006f88-9c82-4bfd-93d3-6e6e75c1e955",
+        "code": "4.1.02.004",
+        "name": "Telefone/Internet",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Telecomunicações"
+      },
+      {
+        "id": "9c0887ac-65c0-4a99-ad83-0e1d3c8bc0b9",
+        "code": "4.1.03",
+        "name": "GERAIS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas gerais"
+      },
+      {
+        "id": "4a7fa35f-942f-485c-a303-cf92c6912ae6",
+        "code": "4.1.03.001",
+        "name": "Material de Escritório",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Papelaria e materiais"
+      },
+      {
+        "id": "9560a004-8e41-48df-927c-2c4271cd1102",
+        "code": "4.1.03.002",
+        "name": "Softwares e Licenças",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Sistemas e licenças"
+      },
+      {
+        "id": "2ed7bb92-14ff-47f5-8597-6a197855f87b",
+        "code": "4.1.03.003",
+        "name": "Manutenção e Conservação",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Manutenção do escritório"
+      },
+      {
+        "id": "4e9ae306-41f1-4881-b98a-aa6bb86bb0a8",
+        "code": "4.1.04",
+        "name": "Água e Esgoto",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6685cae1-8147-4105-89f2-948422248310",
+        "code": "4.1.05",
+        "name": "Telefone e Internet",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "30a62676-e8de-4c3a-827f-9b033bef5c3c",
+        "code": "4.1.06",
+        "name": "Material de Escritório",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4d67c3d0-9562-498b-9e64-14d0ef2dc5e8",
+        "code": "4.1.07",
+        "name": "Correios e Transportes",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e843b932-ec5b-4a89-95c5-753a1e6a921a",
+        "code": "4.1.08",
+        "name": "Manutenção e Reparos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "856cfbbe-27da-4fd0-ae28-55c029a57790",
+        "code": "4.1.09",
+        "name": "Seguros",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e0a30983-2bda-42d4-8480-ba87d8ef2d4c",
+        "code": "4.1.1",
+        "name": "Despesas com Pessoal",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3ac8f548-9487-4ac1-8f01-49597b18afbc",
+        "code": "4.1.1.01",
+        "name": "Salários e Ordenados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "95961910-1cc5-40e1-9391-6d0fde5f00c4",
+        "code": "4.1.1.01.01",
+        "name": "Salário Base - CLT",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ab4244e8-7958-41be-a098-6693c4732651",
+        "code": "4.1.1.01.02",
+        "name": "Horas Extras",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7b282689-8432-4af1-a41c-ae2c75757bbd",
+        "code": "4.1.1.01.03",
+        "name": "DSR - Descanso Semanal",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "bf3dc887-1c5b-47e5-a592-9cf887494ad8",
+        "code": "4.1.1.01.04",
+        "name": "Adicional Noturno",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "668cc263-02ea-4086-9f79-790458e1b637",
+        "code": "4.1.1.01.05",
+        "name": "Adicional Insalubridade",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6815ffa5-afbd-4902-8aa5-803d2bbbd73c",
+        "code": "4.1.1.01.06",
+        "name": "Adicional Periculosidade",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9ca575ed-1d95-4219-96e2-43cde07e60d9",
+        "code": "4.1.1.01.07",
+        "name": "Comissões",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f7c4c28f-cff6-49bb-b4d8-62c405819ed5",
+        "code": "4.1.1.01.08",
+        "name": "Gratificações",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e0e7b67d-e7df-4834-bea5-694f46ebf2ab",
+        "code": "4.1.1.02",
+        "name": "Encargos Sociais",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "96eb3ee0-9c76-4f4d-8064-1f3009158fbd",
+        "code": "4.1.1.02.01",
+        "name": "INSS Patronal",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ea79712e-9f21-466b-a2c5-e6f302f7e9d0",
+        "code": "4.1.1.02.02",
+        "name": "FGTS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "bdb08333-26f4-4512-934c-5ad106c0871a",
+        "code": "4.1.1.02.03",
+        "name": "RAT/SAT",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "41db7c69-3a74-4219-8d12-396410d780aa",
+        "code": "4.1.1.02.04",
+        "name": "Terceiros (Sistema S)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0ff347d3-0f77-4568-aedf-0ef8e9f49d1b",
+        "code": "4.1.1.03",
+        "name": "Vale Alimentação/Transporte",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "afbc9c83-d2f4-413f-b77e-3a1960f9ef2d",
+        "code": "4.1.1.04",
+        "name": "Plano de Saúde",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d6733af7-ec4a-405a-ad5e-f3f213ad4bc7",
+        "code": "4.1.1.05",
+        "name": "Rescisões Trabalhistas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d74b8c9d-cd9d-4d5a-b154-3c73afe80a19",
+        "code": "4.1.1.06",
+        "name": "Comissões",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e1919ce3-b78d-4863-94a6-2758f4ab5a4a",
+        "code": "4.1.1.07",
+        "name": "Férias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a07652a1-105e-47b3-9957-982508d0eeeb",
+        "code": "4.1.1.08",
+        "name": "13º Salário",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "352b93b8-8d6e-4b64-9ecb-6a0a49f1c303",
+        "code": "4.1.1.09",
+        "name": "Vale Transporte",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b5797663-abac-45d4-88f2-26739bcb7209",
+        "code": "4.1.1.10",
+        "name": "Vale Refeição/Alimentação",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d68b32b1-98fc-48ff-aab7-72073f0c2c9c",
+        "code": "4.1.1.11",
+        "name": "Plano de Saúde (empresa)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "def8c125-78b7-4fa3-9d47-1081f60e63fa",
+        "code": "4.1.1.12",
+        "name": "Seguro de Vida",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "03f80478-9632-4ff6-8893-b0633b4d579e",
+        "code": "4.1.10",
+        "name": "Despesas Bancárias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c5abd23e-bb66-4499-a8f8-7282c74463a7",
+        "code": "4.1.11",
+        "name": "Tarifas e Taxas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "620e4802-2e6d-4318-9e27-5b7453e8df33",
+        "code": "4.1.12",
+        "name": "Outras Despesas Administrativas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ca989f37-7cc7-4081-85eb-ac4e8a8a25a4",
+        "code": "4.1.2",
+        "name": "Despesas Administrativas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7054c1bb-961c-4db3-af7c-cce5bfb3dbd4",
+        "code": "4.1.2.01",
+        "name": "Aluguel",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f85ab464-2851-4f9d-a5a2-1fc2a46ba3b5",
+        "code": "4.1.2.02",
+        "name": "Energia Elétrica",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b17cc315-c9d3-4188-9322-b77fbda7ba16",
+        "code": "4.1.2.03",
+        "name": "Telefone e Internet",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "75d6f8f0-20a6-4e21-93d0-7d1104e6678c",
+        "code": "4.1.2.04",
+        "name": "Telefone e Comunicação",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "81e15db0-3356-4a35-93ae-77b9d731ef0a",
+        "code": "4.1.2.05",
+        "name": "Internet",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1e05fa02-26a2-4a3d-95f0-3e7970f14716",
+        "code": "4.1.2.06",
+        "name": "Gás",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ddd41cda-b2c0-4a89-94c1-8bd1efba665f",
+        "code": "4.1.2.07",
+        "name": "Água Mineral",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5036cd60-037c-44d3-afa7-3f07f13d4515",
+        "code": "4.1.2.08",
+        "name": "Material de Limpeza",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "724a8fc9-e1d1-4718-a9b4-55f1023b7696",
+        "code": "4.1.2.09",
+        "name": "Copa e Cozinha",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "74a74ed2-9b7b-44a2-97f9-e0367103945e",
+        "code": "4.1.2.11",
+        "name": "Obras e Reformas Sede",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "241b0a47-d34e-46aa-b2d1-9923ebb3ae89",
+        "code": "4.1.2.12",
+        "name": "Software e Sistemas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "90db6d42-57f7-458e-8127-52c42b6bedcd",
+        "code": "4.1.2.13",
+        "name": "Serviços Terceirizados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": true,
+        "description": null
+      },
+      {
+        "id": "42ee0c3c-5d82-4e09-ac7a-dd8f406218c4",
+        "code": "4.1.2.13.01",
+        "name": "Dep. Pessoal (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "85f3e7b6-5a25-4207-ba17-c8e1cd14fbd2",
+        "code": "4.1.2.13.02",
+        "name": "Dep. Contábil (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "562a030b-df41-49f1-aa64-01f5a0c50d12",
+        "code": "4.1.2.13.03",
+        "name": "Dep. Fiscal (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b9319cca-d8df-4d62-89fd-8ad604b0228d",
+        "code": "4.1.2.13.04",
+        "name": "Dep. Financeiro (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9c21a929-68a6-457c-bb20-306f496d3c53",
+        "code": "4.1.2.13.05",
+        "name": "Dep. Legalização (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "606319ea-c5bc-4bdb-b996-cb4c2be096dc",
+        "code": "4.1.2.13.06",
+        "name": "Dep. Limpeza (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0f42b96e-6052-40e3-83eb-eb353f639b5c",
+        "code": "4.1.2.13.07",
+        "name": "Dep. Psicologia (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "271c887f-662f-4a81-9574-181cbc4bb9f2",
+        "code": "4.1.2.13.09",
+        "name": "Andrea Leone (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "a0cab4a5-9503-4aff-a9e4-d4aa13a8c1ae",
+        "code": "4.1.2.13.10",
+        "name": "Andreia (Terceirizado)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4de6203d-e087-4273-946e-5bc93ef158ee",
+        "code": "4.1.2.13.99",
+        "name": "Outros Terceirizados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5de8a6e8-5c6b-4b31-b8cd-ec088a1372fb",
+        "code": "4.1.2.14",
+        "name": "Material de Papelaria",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "28e0fd19-e033-4765-9c58-0616a8a40636",
+        "code": "4.1.2.15",
+        "name": "Manutenção de Equipamentos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "b8548598-aa08-4598-b6d7-d2af0511da20",
+        "code": "4.1.2.99",
+        "name": "Outras Despesas Administrativas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3338258f-3cbb-472a-8d18-89e6f2ff83fa",
+        "code": "4.1.3",
+        "name": "Despesas Financeiras",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d389527e-3bcb-4a4c-826d-a24fad8d9b45",
+        "code": "4.1.3.01",
+        "name": "Juros e Multas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3bf3b44b-8f3c-4a86-9fdb-4cc104a5f59c",
+        "code": "4.1.3.02",
+        "name": "Tarifas Bancárias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "8d885b7e-1989-4db0-a6a2-1d0efa7b29e8",
+        "code": "4.1.3.03",
+        "name": "Manutenção de Conta Bancária",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0e518b34-63c0-45c4-aabf-f8bb5ac921b5",
+        "code": "4.1.4",
+        "name": "Impostos e Taxas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3906c1fd-ccee-4d0c-9f78-0ffae18c03cd",
+        "code": "4.1.4.01",
+        "name": "Simples Nacional",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "df2d9678-6655-4a93-b05c-dcc66e52e2b8",
+        "code": "4.1.4.02",
+        "name": "ISS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "7dbea8aa-a458-4d51-87a1-9aeb323c443e",
+        "code": "4.1.4.03",
+        "name": "IPTU Sede",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "89b48c73-5f65-4e76-a55a-782c84d151e8",
+        "code": "4.1.4.04",
+        "name": "Taxas e Licenças (CRC, etc)",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ca4ac975-a9ab-4d24-ab96-a74e074f75b7",
+        "code": "4.2",
+        "name": "DESPESAS COM PESSOAL",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d505075e-a2fa-4f8d-aef2-c7822d1d871e",
+        "code": "4.2.01",
+        "name": "Salários e Ordenados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "85a83d24-ec94-4444-b5f6-47250408d471",
+        "code": "4.2.02",
+        "name": "Férias",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "ce970b9e-704a-4722-9f00-3951461cffa7",
+        "code": "4.2.03",
+        "name": "13º Salário",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e3efe2fa-1c00-4b08-9158-659e3774aa30",
+        "code": "4.2.04",
+        "name": "FGTS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "91875f30-72a3-4085-b65f-3fcf43de0a6f",
+        "code": "4.2.05",
+        "name": "INSS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "773012b8-8ef8-4c49-bd35-e9ca39e9fd1f",
+        "code": "4.2.06",
+        "name": "Vale Transporte",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "50cba6ab-b216-4a0c-8a5f-8710340068d6",
+        "code": "4.2.07",
+        "name": "Vale Alimentação",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d6f5841f-1dc3-499b-873f-b8c60032c93e",
+        "code": "4.2.08",
+        "name": "Outras Despesas com Pessoal",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "fc053cac-f493-45a2-adf4-ff3e620fffca",
+        "code": "4.2.10",
+        "name": "Indenizações Trabalhistas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesas com rescisões"
+      },
+      {
+        "id": "695aa24f-d4a8-4cfa-ae88-77c06497ef6e",
+        "code": "4.2.10.01",
+        "name": "Aviso Prévio Indenizado",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Despesa com aviso prévio"
+      },
+      {
+        "id": "1d1e9a1d-96cb-440e-ae26-1df8c810e58c",
+        "code": "4.2.10.02",
+        "name": "Férias Indenizadas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Férias pagas na rescisão"
+      },
+      {
+        "id": "3821d792-43f9-458b-a8a6-0858a1a96a8e",
+        "code": "4.2.10.03",
+        "name": "13º Salário Proporcional",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "13º pago na rescisão"
+      },
+      {
+        "id": "43a7b0d8-eee2-4c70-bdfb-95ce0368bf5e",
+        "code": "4.2.10.04",
+        "name": "Multa FGTS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Multa 40% ou 20% FGTS"
+      },
+      {
+        "id": "9e364acd-eb28-4823-a7cb-bc5dcfb3c2e9",
+        "code": "4.2.10.05",
+        "name": "Outras Indenizações",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": "Outras verbas indenizatórias"
+      },
+      {
+        "id": "6fb2fc50-313b-4320-b4f1-1c5ea9cb34c2",
+        "code": "4.3",
+        "name": "DESPESAS TRIBUTÁRIAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "c4f929fb-8671-42e6-96fb-8eb0865c12ba",
+        "code": "4.3.01",
+        "name": "ISS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0c79fe92-4703-41b7-952e-4caa22c92c1c",
+        "code": "4.3.02",
+        "name": "PIS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "963c102e-e315-4b72-ad2c-2349882199a0",
+        "code": "4.3.03",
+        "name": "COFINS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "07a72327-921f-4a4e-ae69-c3f4d3b44058",
+        "code": "4.3.04",
+        "name": "IRPJ",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "140c5c21-66f9-4654-843f-bf3ee933404b",
+        "code": "4.3.05",
+        "name": "CSLL",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9dc580a3-b47b-4fc5-81ec-c7ceac24330c",
+        "code": "4.3.06",
+        "name": "Outros Impostos e Taxas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "d884c2ea-655c-4f91-b43d-a841e6240bc4",
+        "code": "4.4",
+        "name": "DESPESAS FINANCEIRAS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5c5cdc4d-53f2-4c9f-8999-df0aae6a33c1",
+        "code": "4.4.01",
+        "name": "Juros Passivos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "dbccb69b-6ea2-4695-a140-c597dff894a4",
+        "code": "4.4.02",
+        "name": "Multas",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3614646b-8a6d-4ac7-a8d5-21bc597a0e14",
+        "code": "4.4.03",
+        "name": "IOF",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "acfc487f-afe3-4301-9c3c-7d5edc2ff823",
+        "code": "4.5",
+        "name": "CUSTO DOS SERVIÇOS VENDIDOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "5fd4779d-237e-48d7-8efb-f28b09cc6e00",
+        "code": "4.5.1",
+        "name": "CUSTOS DIRETOS COM SERVIÇOS",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "74ad8dcb-30f9-4d2b-a742-ea804ccfa28c",
+        "code": "4.5.1.01",
+        "name": "Comissão sobre Honorários Variáveis",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "bf2a1eec-a3f2-4521-b5ce-2abcd890df62",
+        "code": "4.5.1.02",
+        "name": "Custos de Terceirização de Serviços",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "28291171-804d-4be3-912b-c8523e8ad1bd",
+        "code": "4.5.1.03",
+        "name": "Outros Custos Diretos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "266dbe01-7097-4a8f-90e0-1dff4aa8620d",
+        "code": "5",
+        "name": "PATRIMÔNIO LÍQUIDO",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "0e9faefa-a44d-42ef-86b4-be95b8b257f1",
+        "code": "5.1",
+        "name": "Apuração do Resultado do Exercício",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "35c08ac8-8c09-4e88-b68f-5035afb222aa",
+        "code": "5.1.01",
+        "name": "Capital Social Subscrito",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "25b9b723-6ac5-4d70-bac2-ca50f72c3bf2",
+        "code": "5.1.02",
+        "name": "Capital Social a Integralizar",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "4a804ee7-22b9-4bff-8977-6b22cb24a15f",
+        "code": "5.1.03",
+        "name": "Capital Social Integralizado",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "54daa9bb-c3ff-4af9-8e52-b5a518dbc241",
+        "code": "5.1.1",
+        "name": "Capital Integralizado",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e81a9666-65b3-4975-8ee3-c843061c1c4f",
+        "code": "5.1.1.01",
+        "name": "Capital Social",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "bcb24d73-f16d-4d21-b39a-f5ed478db355",
+        "code": "5.2",
+        "name": "Lucros Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "55bfcd95-1c9c-40ae-9fa2-d4f8dbe6d71b",
+        "code": "5.2.01",
+        "name": "Reserva Legal",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "3bd83d8e-2075-4c62-9c4a-5e01581f02d3",
+        "code": "5.2.02",
+        "name": "Reserva Estatutária",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "2ebdb02f-c80c-4f33-a49f-2a6cd106784d",
+        "code": "5.2.03",
+        "name": "Reserva para Contingências",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "38545fe4-2d52-476c-9e87-61f57068050d",
+        "code": "5.2.1",
+        "name": "Resultados Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "10bb6118-8d0f-41ac-934c-87a174af2432",
+        "code": "5.2.1.01",
+        "name": "Lucros Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f17f0858-d08d-4e19-ae75-1058b398f109",
+        "code": "5.2.1.02",
+        "name": "Saldos de Abertura",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "f18456d4-4ec1-42de-bdf4-f6e0a2fd8255",
+        "code": "5.3",
+        "name": "Prejuízos Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "12b15b84-c43e-4a5b-a7c7-46d5e9f7a03d",
+        "code": "5.3.01",
+        "name": "Lucros Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "9fb51d60-d34f-4245-b523-d8929d689e6a",
+        "code": "5.3.01.01",
+        "name": "Lucros Acumulados de Períodos Anteriores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "42603df0-905e-49d0-a92f-177552e4a059",
+        "code": "5.3.01.02",
+        "name": "Lucros Acumulados do Período Corrente",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "599941e2-fbf7-4455-a6ad-7650f3dfa330",
+        "code": "5.3.02",
+        "name": "Saldos de Abertura",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "472f4798-ebab-4eb3-bb33-ccc0144a0dd2",
+        "code": "5.3.02.01",
+        "name": "Saldo de Abertura - Disponibilidades",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "be15a798-3caa-489e-8b7c-af6b7a51385f",
+        "code": "5.3.02.02",
+        "name": "Saldo de Abertura - Clientes",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "03e0002d-dc0d-41b3-8898-d3e50350c9e0",
+        "code": "5.3.02.03",
+        "name": "Saldo de Abertura - Outros Ativos",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "2ecbe30a-c184-4bce-86ae-55e092988b20",
+        "code": "5.3.03",
+        "name": "Ajustes de Exercícios Anteriores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "68b1179a-cf7f-44b5-a11d-0bf4a28322b7",
+        "code": "5.3.03.01",
+        "name": "Ajustes Positivos de Exercícios Anteriores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "6316ff02-c494-40d9-b668-06e2d71003e7",
+        "code": "5.3.03.02",
+        "name": "Ajustes Negativos de Exercícios Anteriores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "8802a5a1-1f8f-497f-bf37-7c02f2bfcb9d",
+        "code": "5.3.04",
+        "name": "Prejuízos Acumulados",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "e695dbd2-8399-49e3-b7ab-d22709bf2e1d",
+        "code": "5.3.04.01",
+        "name": "Prejuízos Acumulados de Períodos Anteriores",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "05f5aa50-c431-4414-869c-4b92e02e0a77",
+        "code": "5.3.04.02",
+        "name": "Prejuízos Acumulados do Período Corrente",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      },
+      {
+        "id": "1926df15-5abc-4e43-b5f1-0f75de4373b1",
+        "code": "5.4",
+        "name": "Capital Social",
+        "type": null,
+        "is_active": true,
+        "is_synthetic": false,
+        "description": null
+      }
+    ],
+    "despesas": [
+      {
+        "id": "54e00554-7688-4060-a5b4-140b43644f2b",
+        "description": "Vale Alimentação - Ampla",
+        "category": "Vale alimentacao",
+        "amount": 600,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-30",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "4225034b-40a6-46be-bfff-538aaa36d8c7",
+        "description": "NB TECHNOLOGY",
+        "category": "Software/Sistemas",
+        "amount": 314.55,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "1e2cbaee-04cc-495f-9db4-db20c004cb97",
+        "description": "Anuidade CRC - Ampla",
+        "category": "Taxas e Licenças Profissionais",
+        "amount": 597,
+        "due_date": "2025-01-31",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "2b168048-73eb-48a9-b519-c2ab5075b410",
+        "description": "Condomínio Galeria Nacional",
+        "category": "Despesa Particular Socio",
+        "amount": 1127.59,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "edf2e760-033f-4a8f-bba2-42bbd66ce23a",
+        "description": "Condomínio Mundi ",
+        "category": "Despesa Particular Socio",
+        "amount": 3047.13,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "2f1de0fe-e118-4f81-9e5d-e65ce72b4944",
+        "description": "IPVA BIZ - Sergio",
+        "category": "IPVA",
+        "amount": 1000,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "5689e962-2fbd-4748-826f-c2679d671884",
+        "description": "Anuidade CRC - Sergio",
+        "category": "Taxas e Licenças Profissionais",
+        "amount": 528,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "a3547314-3a5c-4cdf-a22b-c532405cae3e",
+        "description": "DATAUNIQUE",
+        "category": "Software/Sistemas",
+        "amount": 1410,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "23d4d438-9cb3-409f-8afd-dbe30e6319b8",
+        "description": "IPVA CG - Sergio",
+        "category": "IPVA",
+        "amount": 1500,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "ca0bf1c3-6372-4b8a-868c-4867a9514fea",
+        "description": "OBJETIVA EDICOES",
+        "category": "Software/Sistemas",
+        "amount": 423.6,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "c6daa1ed-18c6-4cdf-924d-0443b83983cc",
+        "description": "Dominio Sistemas",
+        "category": "Software/Sistemas",
+        "amount": 2278.8,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "1c9c3736-7caf-4854-abdc-53234bb26b61",
+        "description": "Energia - Sergio",
+        "category": "Despesa Particular Socio",
+        "amount": 868.11,
+        "due_date": "2025-01-24",
+        "payment_date": "2025-01-24",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "829bef58-ef63-4622-a509-fa8ee57d395c",
+        "description": "CONTUS TECNOLOGIA",
+        "category": "Software/Sistemas",
+        "amount": 777.75,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "3ae86d84-47d2-472a-b75f-2f0f55637afb",
+        "description": "Nayara - Adiantamento",
+        "category": "Adiantamento Nayara",
+        "amount": 5731.03,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "67c398c7-1729-4310-b2d3-d58897957cea",
+        "description": "Sérgio Augusto - Adiantamento",
+        "category": "Adiantamento Sergio Augusto",
+        "amount": 18257.04,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "591919de-4596-419e-a002-24c723f530c3",
+        "description": "ISS Prórprio - Ampla",
+        "category": "Imposto ISS",
+        "amount": 624.42,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "a6119f34-1302-4e01-a344-234e143c3ade",
+        "description": "Papelaria - Ampla",
+        "category": "Materiais de Papelaria",
+        "amount": 21,
+        "due_date": "2025-01-01",
+        "payment_date": "2025-01-01",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "b90c9da4-efed-41d5-b80c-24d5f1d4fdc0",
+        "description": "Obras Lago - Sergio",
+        "category": "Obras/Reforma",
+        "amount": 1723.8,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "15944f5a-a0e9-4279-8998-fdd6e3e46574",
+        "description": "Energia - Ampla",
+        "category": "Energia",
+        "amount": 1675.46,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "e7ba53f2-9c3f-4976-a002-b537fac550bc",
+        "description": "Internet - Ampla",
+        "category": "Internet",
+        "amount": 326.09,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "99f2618c-e6ee-4306-aaac-d752460da6e4",
+        "description": "Telefone Celular - Ampla ",
+        "category": "Pano Telefone",
+        "amount": 181.96,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "d3a8540b-fca5-46b3-b874-124f3defa332",
+        "description": "Gás - Sergio",
+        "category": "Gas",
+        "amount": 121.25,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "f61b316d-bd96-4e78-8dde-9ebee839f7db",
+        "description": "IPVA BMW - Victor",
+        "category": "Adiantamento Victor",
+        "amount": 7000,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "5e49e179-e1ff-49ed-8f78-77bc9599d460",
+        "description": "Plano de Saúde - Sergio",
+        "category": "Despesa Particular Socio",
+        "amount": 4295.62,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "aee86183-0ff9-421a-bde5-08f9aed276d4",
+        "description": "Internet - Sergio",
+        "category": "Internet",
+        "amount": 106.58,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "bb33baed-e2dd-481c-9146-b412fdb7067e",
+        "description": "Telefone Fixo - Ampla",
+        "category": "Plano Telefone",
+        "amount": 137.68,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "5af47b9e-08e4-443f-9ccf-bfd7b7d7e736",
+        "description": "CLICKSIGN",
+        "category": "Software/Sistemas",
+        "amount": 69,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "ccbcc71c-89d8-482c-917b-2844c2488306",
+        "description": "CR SISTEMA",
+        "category": "Software/Sistemas",
+        "amount": 733.96,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "a9b465e7-c79a-40ff-9cc3-37ee164a772e",
+        "description": "Comissão - Ampla",
+        "category": "Servicos Terceiros",
+        "amount": 2278.62,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-01",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "cd120140-43d3-46b6-a03c-a6544069e2cd",
+        "description": "Tharson Diego - Reforma Casa Lago das Brisas (Sergio Carneiro Leao)",
+        "category": "Despesa Particular Socio",
+        "amount": 399.51,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "f56a96db-e610-4069-85f9-cc91d489d88d",
+        "description": "INSS e IRRF - Ampla",
+        "category": "Encargos de salários",
+        "amount": 2323.28,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "65f7a170-6dff-48f1-8ba5-6494f767248a",
+        "description": "FGTS - Ampla",
+        "category": "Encargos de salários",
+        "amount": 2118.34,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "af04e186-b4d0-4d19-a37d-e29ac97eace5",
+        "description": "Victor Hugo - Adiantamento",
+        "category": "Adiantamento Victor",
+        "amount": 6504.53,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "892245c4-c001-4dbb-9b0d-f7dccf90bd7f",
+        "description": "Empréstimos - Scala",
+        "category": "Adiantamento Sergio",
+        "amount": 1000,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "75e63ab7-f8af-441f-b209-9f0061054dd3",
+        "description": "Água Mineral - Ampla",
+        "category": "Agua Funcionarios",
+        "amount": 192,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "9cfe923c-0500-4f0a-9130-fd16ea1b3eb3",
+        "description": "Condomínio Lago",
+        "category": "Despesa Particular Socio",
+        "amount": 3931.86,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "7d9638e3-a525-4dd9-af74-11198d1060c0",
+        "description": "Babá - Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 2114.77,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "be41241c-9e9c-46f7-9212-ecc16eb5298f",
+        "description": "Pao de queijo e cha - Ampla",
+        "category": "Suprimentos para Copa/Cozinha",
+        "amount": 81.45,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "adff2e73-5b4c-4f3b-9836-ba24eeb04546",
+        "description": "Café - Ampla",
+        "category": "Suprimentos para Copa/Cozinha",
+        "amount": 291.79,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "1b5ba1ba-c0e6-47e0-8baa-a496f2a94668",
+        "description": "Antônio Leandro - Personal - Sergio",
+        "category": "Adiantamento Sergio",
+        "amount": 800,
+        "due_date": "2025-01-02",
+        "payment_date": "2025-01-02",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": ""
+      },
+      {
+        "id": "ac75e6d0-1c16-4a21-9919-52cf2d84c0c1",
+        "description": "IPTU 2022 - Ampla",
+        "category": "IPTU",
+        "amount": 583.84,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "e226afb0-740c-4006-891c-3a0e8faabc12",
+        "description": "Vale Transporte - Ampla",
+        "category": "Vale alimentacao",
+        "amount": 174.3,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-30",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "40b5b836-3085-4819-8637-8130d04ffc8c",
+        "description": "IPTU 2018 - Ampla",
+        "category": "IPTU",
+        "amount": 3076.13,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-11",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "a0745038-dfac-4ddf-8ed8-1fb8be5eb64c",
+        "description": "Outsider Construtora - Ampla",
+        "category": "Obras/Reforma",
+        "amount": 26000,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "c9a34ff5-b94c-4974-9b48-0f7906456378",
+        "description": "Dep. Limpeza - Ampla",
+        "category": "Servicos Terceiros",
+        "amount": 2612.5,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "44e70918-6f7a-4496-b751-6426093924d2",
+        "description": "Dep. Fiscal - Ampla",
+        "category": "Servicos Terceiros",
+        "amount": 10500,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "098aa03c-0e7b-4a3a-9cc4-b1e49aa811f6",
+        "description": "Dep. Financeiro - Ampla",
+        "category": "Folha de Pagamento",
+        "amount": 3500,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "866f1f98-a127-4347-991f-581e36ddb020",
+        "description": "Dep. Legalização - Ampla",
+        "category": "Servicos Terceiros",
+        "amount": 3465,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "43e520d3-f1a7-4f98-85e5-99762f0a3785",
+        "description": "Dep. Psicologia - Ampla",
+        "category": "Servicos Terceiros",
+        "amount": 1518,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "fcdc73d7-a834-4bf9-a152-b4e84bfad8f6",
+        "description": "Material de Limpeza - Ampla",
+        "category": "Materiais de Limpeza/Higiene",
+        "amount": 756.23,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "606258e1-8fda-4374-9132-f56ca4f61c06",
+        "description": "SISTEMA ONEFLOW",
+        "category": "Software/Sistemas",
+        "amount": 138.22,
+        "due_date": "2025-01-31",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "81e8e0ad-1d6c-4dd4-ae8f-acfff0aa1e65",
+        "description": "Acessorias sistemas",
+        "category": "Software/Sistemas",
+        "amount": 469.9,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "886567f9-85f5-4e36-bc3b-8c7b39e91982",
+        "description": "SISTEMA VERI SOLUÇÕES",
+        "category": "Software/Sistemas",
+        "amount": 418,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "863f7ca1-e127-4d2d-8c1c-c3cb89898307",
+        "description": "IPVA Carretinha - Sergio",
+        "category": "IPVA",
+        "amount": 1551.39,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "b9452d0e-7f18-44de-97be-64f3b4b2863a",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 9.45,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-22",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "f07dab2e-6ad8-4c8c-ad90-3e75e3b76f99",
+        "description": "adiantamento Victor",
+        "category": "Adiantamento Victor",
+        "amount": 1461.98,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-12-09",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "21b1b3bc-7d39-4858-98fd-80e49c7f5b9b",
+        "description": "SISTEMA SITTAX",
+        "category": "Software/Sistemas",
+        "amount": 865.86,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "b1e50070-95da-48ff-8432-cc524d59e89d",
+        "description": "Agua Mineral Ampla (10 galoes 20L) - Forn: LUIZ ALVES TAVEIRA",
+        "category": "Agua Mineral",
+        "amount": 96,
+        "due_date": "2025-01-12",
+        "payment_date": "2025-01-13",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "88945aa0-f586-43a7-9710-9fc8514fa424",
+        "description": "DEUZA RESENDE DE JESUS",
+        "category": "Encargos de salários",
+        "amount": 5901.92,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "340ea68d-7667-41ee-932b-7372df53b53c",
+        "description": "Anuidade CRC - Carla",
+        "category": "Taxas e Licenças Profissionais",
+        "amount": 597,
+        "due_date": "2025-01-31",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "f8a73a0e-4ed1-4650-9f13-2b2b63ef92d8",
+        "description": "Anuidade CRC - Ampla",
+        "category": "Taxas e Licenças Profissionais",
+        "amount": 296,
+        "due_date": "2025-01-31",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      },
+      {
+        "id": "bba92ff9-101b-4ba4-9370-33192b87554a",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 3.78,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "ff1348d9-cd8d-45e1-85b2-cdd6224b84ca",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 3.78,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-20",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "04d2bc80-e513-44e9-822c-369f19ff06a1",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 3.78,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-16",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "d365e086-9ea6-4abb-875e-71792e90b52d",
+        "description": "CAIXA ECONOMICA FEDERAL",
+        "category": "Antigo",
+        "amount": 834.46,
+        "due_date": "2025-01-29",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "70a15d00-3129-4ab1-ad6c-3b14cc193ccf",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 3931.89,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-31",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "72007a51-196a-41c5-ae1a-4b642b3f7c72",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 311.86,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-24",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "7ddc120e-f6d9-4ee5-b5a9-92d1eb80d68f",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 411.64,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-21",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "44aa3531-4da8-41d3-a027-d9962ae40604",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 311.63,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-17",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "e795a613-4774-4762-a681-efeb959ccc99",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 4893,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "322514ec-a72b-44f9-9dfa-347d3dd82578",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 402.88,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-10",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "076a06e7-cd4a-48a8-9a46-782838642552",
+        "description": "adiantamento Nayara",
+        "category": "Adiantamento Nayara",
+        "amount": 328,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-03",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "eed30662-a25e-4d14-9a62-56b66237c701",
+        "description": "adiantamento Sergio",
+        "category": "Adiantamento Sergio",
+        "amount": 13698.01,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-02",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "2ab63cfe-2a45-40c6-88b1-ccde138c3393",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 9.45,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-14",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "d22399a2-f709-4081-92ca-7599bf91457a",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 9.45,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-08",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "765bbe4c-1511-460b-90a5-6baece3a36a4",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 9.45,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-06",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "037bd66c-f9d7-44a0-8b78-577b1bb878f7",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 9.45,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-02",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "84adc05c-56a7-4d0d-acbc-5a3464db9da1",
+        "description": "Tarifa Boleto",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 149.2,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "b9f5b88e-30b2-4416-b7a4-64c4f5493a3e",
+        "description": "Obras Ampla",
+        "category": "Obras/Reforma",
+        "amount": 1964,
+        "due_date": "2025-01-01",
+        "payment_date": "2025-01-03",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "10339f90-615d-44cd-923a-0322203b70b9",
+        "description": "SISTEMA AUTMAIS",
+        "category": "Software/Sistemas",
+        "amount": 222,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "76330493-b128-41b6-8d64-c1861b81b511",
+        "description": "AMPLA CONTABILIDADE",
+        "category": "Adiantamento Sergio",
+        "amount": 70000,
+        "due_date": "2025-01-07",
+        "payment_date": "2025-01-08",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "37578edf-3075-44b7-8c43-5fac08278e6c",
+        "description": "SISTEMA CATHO",
+        "category": "Software/Sistemas",
+        "amount": 178,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-30",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "2a2081b9-10de-4164-9498-843411e3f222",
+        "description": "MIGUEL CARVALHO DE OLIVEIRA",
+        "category": "Antigo",
+        "amount": 220,
+        "due_date": "2025-01-29",
+        "payment_date": "2025-01-06",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "01dd3de2-3129-438a-adcf-3ffe93046fe8",
+        "description": "manutenção conta",
+        "category": "Manutencao de conta",
+        "amount": 59.28,
+        "due_date": "2025-01-07",
+        "payment_date": "2025-01-06",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "7f3eab54-4b05-485e-93d1-69bc1a82e31a",
+        "description": "FABRICIO SOARES BOMFIM",
+        "category": "Despesa Particular Socio",
+        "amount": 3800,
+        "due_date": "2025-01-07",
+        "payment_date": "2025-01-06",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "1c337433-1312-472f-be01-e6ce3e9276a2",
+        "description": "Vonoria Amélia da Conc",
+        "category": "Despesa Particular Socio",
+        "amount": 380,
+        "due_date": "2025-01-08",
+        "payment_date": "2025-01-07",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "c3026a82-180d-445e-9020-9cf404f6c58e",
+        "description": "A F DE OLIVEIRA - F",
+        "category": "Antigo",
+        "amount": 1709.4,
+        "due_date": "2025-01-10",
+        "payment_date": "2025-01-09",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "46c0173f-7d73-47bc-b8ff-3331b63b0135",
+        "description": "manutenção de títulos",
+        "category": "Taxa/Manutencao Boleto",
+        "amount": 62.37,
+        "due_date": "2025-01-21",
+        "payment_date": "2025-01-20",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "cc4c24be-a11a-4510-8c40-f6283f7e4d2c",
+        "description": "Vonoria Amélia da Conc",
+        "category": "Despesa Particular Socio",
+        "amount": 210,
+        "due_date": "2025-01-05",
+        "payment_date": "2025-01-29",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "afbfbf56-8bd4-46c6-985c-697d854e0830",
+        "description": "AMPLA CONTABILIDADE",
+        "category": "Adiantamento Sergio",
+        "amount": 73827.26,
+        "due_date": "2025-01-22",
+        "payment_date": "2025-01-22",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "58c37b82-ff84-4b7e-8616-67386fcbdc04",
+        "description": "FATURA MENSAL-096541455",
+        "category": "Adiantamento Sergio",
+        "amount": 5756.25,
+        "due_date": "2025-01-13",
+        "payment_date": "2025-01-13",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "ecc992fa-0e8a-4f67-be96-f7b15317ad8a",
+        "description": "ANDREA LEONE BASTOS",
+        "category": "Servicos Terceiros",
+        "amount": 6000,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-14",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "4b163c42-da35-412d-a0c0-56ca0f0f8636",
+        "description": "ANDREIA",
+        "category": "Servicos Terceiros",
+        "amount": 1500,
+        "due_date": "2025-01-15",
+        "payment_date": "2025-01-14",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "ae74f074-6f68-40ec-80a9-697dbdcb8577",
+        "description": "Simples Nacional",
+        "category": "Simples Nacional",
+        "amount": 2960.08,
+        "due_date": "2025-01-21",
+        "payment_date": "2025-01-20",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "91821916-17b5-40a5-9acd-af434562f1f5",
+        "description": "IPTU 2020",
+        "category": "IPTU",
+        "amount": 3684.74,
+        "due_date": "2025-01-05",
+        "payment_date": "2025-01-15",
+        "status": "paid",
+        "is_recurring": false,
+        "cost_center": null
+      },
+      {
+        "id": "ebe11bfd-85ff-42c8-849a-954395897e52",
+        "description": "Agua Mineral Ampla - LUIZ ALVES TAVEIRA",
+        "category": "Agua Mineral",
+        "amount": 96,
+        "due_date": "2025-01-30",
+        "payment_date": "2025-01-24",
+        "status": "paid",
+        "is_recurring": true,
+        "cost_center": null
+      }
+    ],
+    "notas": [],
+    "funcionarios": []
+  }
+}

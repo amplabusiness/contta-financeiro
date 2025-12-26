@@ -1,0 +1,364 @@
+{
+  "banco": "Ampla Contabilidade - Supabase PostgreSQL",
+  "dataMapeamento": "2025-12-26T18:21:00.083Z",
+  "tabelas": {
+    "clients": {
+      "nome": "clients",
+      "totalRegistros": 219,
+      "descricao": "Cadastro de clientes/empresas que contratam serviços",
+      "proposito": "CRM - Gestão de relacionamento com clientes",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "invoices": {
+      "nome": "invoices",
+      "totalRegistros": 110,
+      "descricao": "Notas Fiscais Eletrônicas (RPS) emitidas",
+      "proposito": "Faturamento - Emissão de RPS e recebimento",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "expenses": {
+      "nome": "expenses",
+      "totalRegistros": 631,
+      "descricao": "Despesas operacionais e contas a pagar",
+      "proposito": "Contas a pagar - Gestão de despesas",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "employees": {
+      "nome": "employees",
+      "totalRegistros": 22,
+      "descricao": "Funcionários e folha de pagamento",
+      "proposito": "Folha de pagamento - ESOCIAL",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "bank_accounts": {
+      "nome": "bank_accounts",
+      "totalRegistros": 1,
+      "descricao": "Contas bancárias cadastradas",
+      "proposito": "Tesouraria - Controle de contas",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "bank_transactions": {
+      "nome": "bank_transactions",
+      "totalRegistros": 393,
+      "descricao": "Movimentações de extrato bancário",
+      "proposito": "Conciliação bancária automática",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "bank_imports": {
+      "nome": "bank_imports",
+      "totalRegistros": 11,
+      "descricao": "Importações de arquivos OFX/CSV",
+      "proposito": "Importação de extratos",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "chart_of_accounts": {
+      "nome": "chart_of_accounts",
+      "totalRegistros": 372,
+      "descricao": "Plano de contas contábil",
+      "proposito": "Estrutura contábil - Base para DRE e Balanço",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "accounting_entries": {
+      "nome": "accounting_entries",
+      "totalRegistros": 474,
+      "descricao": "Lançamentos contábeis (diário)",
+      "proposito": "Diário contábil - Partidas dobradas",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "accounting_entry_lines": {
+      "nome": "accounting_entry_lines",
+      "totalRegistros": 806,
+      "descricao": "Linhas de débito/crédito dos lançamentos",
+      "proposito": "Linhas do diário",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "cost_center_mapping": {
+      "nome": "cost_center_mapping",
+      "totalRegistros": 0,
+      "descricao": "Mapeamento despesa → centro de custo",
+      "proposito": "Departamentalização de custos",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "recurring_expenses": {
+      "nome": "recurring_expenses",
+      "totalRegistros": 0,
+      "descricao": "Despesas que se repetem mensalmente",
+      "proposito": "Automação de despesas mensais",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "revenue_categories": {
+      "nome": "revenue_categories",
+      "totalRegistros": 7,
+      "descricao": "Categorias de receita",
+      "proposito": "Classificação de receitas",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "expense_categories": {
+      "nome": "expense_categories",
+      "totalRegistros": 39,
+      "descricao": "Categorias de despesa",
+      "proposito": "Classificação de despesas",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "cost_centers": {
+      "nome": "cost_centers",
+      "totalRegistros": 13,
+      "descricao": "Centros de custo (departamentos)",
+      "proposito": "Centros de responsabilidade",
+      "colunas": [],
+      "tiposColuna": {}
+    },
+    "debt_confessions": {
+      "nome": "debt_confessions",
+      "totalRegistros": 0,
+      "descricao": "Acordos de renegociação de dívidas",
+      "proposito": "Renegociação com devedores",
+      "colunas": [],
+      "tiposColuna": {}
+    }
+  },
+  "relacionamentos": [
+    {
+      "tabela1": "clients",
+      "tabela2": "invoices",
+      "relacao": "1-N",
+      "descricao": "Um cliente pode ter múltiplas notas fiscais"
+    },
+    {
+      "tabela1": "clients",
+      "tabela2": "chart_of_accounts",
+      "relacao": "N-1",
+      "descricao": "Clientes vinculados a contas a receber"
+    },
+    {
+      "tabela1": "expenses",
+      "tabela2": "cost_centers",
+      "relacao": "N-1",
+      "descricao": "Despesas classificadas por centro de custo"
+    },
+    {
+      "tabela1": "expenses",
+      "tabela2": "accounting_entries",
+      "relacao": "1-N",
+      "descricao": "Cada despesa gera lançamentos contábeis"
+    },
+    {
+      "tabela1": "bank_transactions",
+      "tabela2": "bank_accounts",
+      "relacao": "N-1",
+      "descricao": "Transações associadas a contas bancárias"
+    },
+    {
+      "tabela1": "bank_transactions",
+      "tabela2": "accounting_entries",
+      "relacao": "1-N",
+      "descricao": "Transações bancárias geram lançamentos"
+    },
+    {
+      "tabela1": "employees",
+      "tabela2": "accounting_entries",
+      "relacao": "1-N",
+      "descricao": "Folha de pagamento cria lançamentos contábeis"
+    }
+  ],
+  "fluxosDados": {
+    "honorarios": {
+      "nome": "Fluxo de Honorários",
+      "descricao": "Processo completo de faturamento e recebimento",
+      "passos": [
+        "1. Client registrado em clients (CNPJ, endereço, email)",
+        "2. Invoice criada em invoices (RPS emitida)",
+        "3. Lançamento: D: Cliente a Receber | C: Receita em accounting_entries",
+        "4. Bank_transaction registra o pagamento",
+        "5. Lançamento de recebimento feito automaticamente"
+      ]
+    },
+    "despesas": {
+      "nome": "Fluxo de Despesas",
+      "descricao": "Gestão de contas a pagar",
+      "passos": [
+        "1. Despesa registrada em expenses",
+        "2. Classificação em expense_categories e cost_centers",
+        "3. Lançamento automático: D: Despesa | C: Contas a Pagar",
+        "4. Ao pagar: D: Banco | C: Contas a Pagar",
+        "5. Bank_transaction marca como processada"
+      ]
+    },
+    "folhaPagamento": {
+      "nome": "Fluxo de Folha de Pagamento",
+      "descricao": "Processamento de salários e encargos",
+      "passos": [
+        "1. Employees cadastrados com dados de salário",
+        "2. Folha mensal gerada",
+        "3. Lançamentos em accounting_entries para salários",
+        "4. Descontos (INSS, IR) registrados",
+        "5. Bank_transactions para pagamento via transferência"
+      ]
+    },
+    "bancaria": {
+      "nome": "Fluxo de Conciliação Bancária",
+      "descricao": "Reconciliação de extratos bancários",
+      "passos": [
+        "1. Bank_import recebe arquivo de extrato (OFX)",
+        "2. Bank_transactions criadas para cada movimento",
+        "3. Matching com despesas e receitas",
+        "4. Lançamentos contábeis automáticos",
+        "5. DRE atualizada em tempo real"
+      ]
+    }
+  },
+  "metricas": {
+    "totalTabelas": 16,
+    "totalRegistros": 3098,
+    "totalClientes": 219,
+    "totalDespesas": 631,
+    "totalReceitaNota": 136821.59000000003
+  },
+  "dicionarioDados": {
+    "clients": {
+      "descricao": "Cadastro de clientes/leads que contratam serviços de contabilidade",
+      "campos": {
+        "id": "UUID único do cliente",
+        "name": "Razão social ou nome completo",
+        "cnpj": "CNPJ ou CPF (14 ou 11 dígitos)",
+        "phone": "Telefone para contato",
+        "email": "Email para correspondência",
+        "status": "ativo/inativo/prospect",
+        "opening_balance": "Saldo inicial de contas a receber",
+        "opening_balance_date": "Data de abertura da conta",
+        "monthly_revenue": "Faturamento mensal estimado",
+        "contract_status": "Situação do contrato",
+        "notes": "Observações sobre o cliente"
+      }
+    },
+    "invoices": {
+      "descricao": "Notas Fiscais Eletrônicas (NFS-e / RPS) emitidas",
+      "campos": {
+        "id": "UUID único da nota",
+        "invoice_number": "Número sequencial da RPS",
+        "client_id": "Referência ao cliente",
+        "amount": "Valor total do serviço",
+        "issued_date": "Data de emissão",
+        "due_date": "Data de vencimento",
+        "status": "emitida/paga/cancelada",
+        "service_description": "Descrição dos serviços prestados",
+        "tax_amount": "ISS retido na fonte",
+        "created_at": "Data de registro no sistema"
+      }
+    },
+    "expenses": {
+      "descricao": "Despesas operacionais e investimentos",
+      "campos": {
+        "id": "UUID único",
+        "description": "O que foi gasto",
+        "category": "Categoria (aluguel, energia, etc)",
+        "amount": "Valor em reais",
+        "due_date": "Data de vencimento",
+        "payment_date": "Quando foi pago",
+        "status": "aberta/paga/cancelada",
+        "is_recurring": "Se é gasto mensal automático",
+        "cost_center": "Centro de custo para departamentalização",
+        "supplier": "Quem forneceu o serviço/produto"
+      }
+    },
+    "bank_accounts": {
+      "descricao": "Contas bancárias da empresa",
+      "campos": {
+        "id": "UUID",
+        "bank_name": "Nome do banco (Sicredi, etc)",
+        "account_number": "Número da conta",
+        "agency": "Número da agência",
+        "account_type": "Corrente ou poupança",
+        "balance": "Saldo atualizado",
+        "currency": "BRL, USD, etc",
+        "is_active": "Conta ativa ou não"
+      }
+    },
+    "bank_transactions": {
+      "descricao": "Movimentações bancárias (extratos)",
+      "campos": {
+        "id": "UUID",
+        "transaction_date": "Data do movimento",
+        "description": "Descrição da transação",
+        "amount": "Valor movimentado",
+        "type": "débito ou crédito",
+        "reference": "Número do cheque, PIX, etc",
+        "matched": "Se foi conciliado com despesa/receita",
+        "created_at": "Data de importação"
+      }
+    },
+    "chart_of_accounts": {
+      "descricao": "Plano de contas - estrutura contábil completa",
+      "campos": {
+        "id": "UUID",
+        "code": "Código hierárquico (1.1.1.01)",
+        "name": "Nome da conta",
+        "type": "ativo/passivo/receita/despesa/patrimônio",
+        "is_synthetic": "Se é conta de agrupamento",
+        "is_active": "Se está em uso",
+        "description": "Detalhamento da conta"
+      }
+    },
+    "accounting_entries": {
+      "descricao": "Lançamentos contábeis (diário)",
+      "campos": {
+        "id": "UUID",
+        "entry_date": "Data do lançamento",
+        "competence_date": "Mês ao qual pertence (para accrual)",
+        "description": "Motivo do lançamento",
+        "reference_type": "expense/invoice/bank_transaction/payroll",
+        "reference_id": "ID do documento que originou",
+        "total_debit": "Soma dos débitos",
+        "total_credit": "Soma dos créditos"
+      }
+    },
+    "accounting_entry_lines": {
+      "descricao": "Linhas individuais de cada lançamento (débito/crédito)",
+      "campos": {
+        "id": "UUID",
+        "entry_id": "Referência ao lançamento",
+        "account_id": "Conta contábil afetada",
+        "debit": "Valor débito (positivo)",
+        "credit": "Valor crédito (positivo)",
+        "description": "Descrição adicional"
+      }
+    },
+    "employees": {
+      "descricao": "Funcionários/colaboradores",
+      "campos": {
+        "id": "UUID",
+        "name": "Nome completo",
+        "role": "Cargo/função",
+        "cpf": "CPF para ESOCIAL",
+        "hire_date": "Data de admissão",
+        "monthly_salary": "Salário bruto mensal",
+        "status": "ativo/inativo/rescindido",
+        "department": "Setor/departamento"
+      }
+    },
+    "cost_centers": {
+      "descricao": "Centros de custo para departamentalização",
+      "campos": {
+        "id": "UUID",
+        "code": "Código do centro (CC-001)",
+        "name": "Nome do departamento",
+        "manager": "Responsável",
+        "budget": "Orçamento mensal"
+      }
+    }
+  }
+}
