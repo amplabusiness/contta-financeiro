@@ -682,19 +682,50 @@ const Expenses = () => {
     if (!confirm("Tem certeza que deseja excluir esta despesa?")) return;
 
     try {
-      // Primeiro deletar os lançamentos contábeis associados
-      const accountingResult = await deletarLancamentosDespesa(id);
-      if (!accountingResult.success) {
-        console.warn("Aviso ao excluir lançamentos contábeis:", accountingResult.error);
+      // Primeiro, deletar os lançamentos contábeis associados a esta despesa
+      try {
+        const { data: entriesToDelete, error: selectError } = await supabase
+          .from('accounting_entries')
+          .select('id')
+          .eq('reference_type', 'expense')
+          .eq('reference_id', id);
+
+        if (!selectError && entriesToDelete && entriesToDelete.length > 0) {
+          const entryIds = entriesToDelete.map(e => e.id);
+          
+          // Deletar as linhas contábeis
+          const { error: linesError } = await supabase
+            .from('accounting_entry_lines')
+            .delete()
+            .in('entry_id', entryIds);
+
+          if (linesError) {
+            console.warn('Erro ao deletar linhas contábeis:', linesError);
+          }
+
+          // Deletar as entradas contábeis
+          const { error: entriesError } = await supabase
+            .from('accounting_entries')
+            .delete()
+            .in('id', entryIds);
+
+          if (entriesError) {
+            console.warn('Erro ao deletar entradas contábeis:', entriesError);
+          }
+        }
+      } catch (accountingError) {
+        console.warn('Erro ao processar lançamentos contábeis:', accountingError);
+        // Continuar com a deleção mesmo se houver erro nos lançamentos
       }
 
+      // Depois, deletar a despesa
       const response = await supabase.from("expenses").delete().eq("id", id);
 
       if (response.error) {
         console.error("Erro ao excluir despesa");
         throw new Error("Erro ao excluir despesa");
       }
-      toast.success("Despesa e lançamentos contábeis excluídos com sucesso!");
+      toast.success("Despesa excluída com sucesso! (Lançamentos contábeis também foram removidos)");
       notifyExpenseChange();
       loadExpenses();
     } catch (error: any) {
