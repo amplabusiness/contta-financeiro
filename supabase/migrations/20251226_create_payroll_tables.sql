@@ -8,8 +8,8 @@
 CREATE TABLE IF NOT EXISTS payrolls (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   
-  -- Identificação da folha
-  company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
+  -- Identificação da folha (referencia clients que representa as empresas)
+  company_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
   month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
   year INTEGER NOT NULL,
   
