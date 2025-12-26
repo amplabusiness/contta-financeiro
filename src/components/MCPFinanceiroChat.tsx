@@ -14,14 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
   MessageCircle,
   Send,
   X,
@@ -41,6 +33,7 @@ import {
   BarChart3,
   DollarSign,
   Building2,
+  GripVertical,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -535,6 +528,66 @@ export function MCPFinanceiroChat() {
   const [activeTab, setActiveTab] = useState("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Estado para arrastar
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Handlers de drag
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    setIsDragging(true);
+    const rect = cardRef.current.getBoundingClientRect();
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+    e.preventDefault();
+  }, []);
+
+  const handleDrag = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    const newX = e.clientX - dragOffset.current.x;
+    const newY = e.clientY - dragOffset.current.y;
+
+    // Limitar dentro da tela
+    const maxX = window.innerWidth - (cardRef.current?.offsetWidth || 420);
+    const maxY = window.innerHeight - (cardRef.current?.offsetHeight || 600);
+
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY)),
+    });
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Listeners globais para drag
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleDrag);
+      window.addEventListener("mouseup", handleDragEnd);
+      return () => {
+        window.removeEventListener("mousemove", handleDrag);
+        window.removeEventListener("mouseup", handleDragEnd);
+      };
+    }
+  }, [isDragging, handleDrag, handleDragEnd]);
+
+  // Resetar posição ao abrir
+  useEffect(() => {
+    if (isOpen && position.x === 0 && position.y === 0) {
+      // Posição inicial: canto inferior direito
+      setPosition({
+        x: window.innerWidth - 440,
+        y: window.innerHeight - 620,
+      });
+    }
+  }, [isOpen]);
 
   // Auto-scroll para última mensagem
   useEffect(() => {
@@ -626,23 +679,36 @@ export function MCPFinanceiroChat() {
       {/* Chat Window */}
       {isOpen && (
         <Card
-          className={`fixed z-50 shadow-2xl transition-all duration-300 ${
+          ref={cardRef}
+          className={`fixed z-50 shadow-2xl ${
+            isDragging ? "" : "transition-all duration-300"
+          } ${
             isMinimized
-              ? "bottom-6 right-6 w-80 h-14"
-              : "bottom-6 right-6 w-[420px] h-[600px] max-h-[80vh]"
+              ? "w-80 h-14"
+              : "w-[420px] h-[600px] max-h-[80vh]"
           }`}
+          style={{
+            left: position.x,
+            top: position.y,
+            cursor: isDragging ? "grabbing" : "default",
+          }}
         >
-          {/* Header */}
-          <CardHeader className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+          {/* Header - Arrastável */}
+          <CardHeader
+            className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg select-none"
+            onMouseDown={handleDragStart}
+            style={{ cursor: isDragging ? "grabbing" : "grab" }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                <GripVertical className="h-4 w-4 opacity-50" />
                 <Bot className="h-5 w-5" />
                 <CardTitle className="text-sm font-medium">Assistente Financeiro</CardTitle>
                 <Badge variant="secondary" className="bg-white/20 text-white text-xs">
                   IA
                 </Badge>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
                 <Button
                   variant="ghost"
                   size="icon"
