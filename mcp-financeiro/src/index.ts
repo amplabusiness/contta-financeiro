@@ -31,6 +31,18 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Importar módulos de conhecimento e operacionais
+import { regrasContabeis, regrasFiscais, regrasDepartamentoPessoal, regrasAuditoria, regrasAmplaContabilidade } from "./knowledge/base-conhecimento.js";
+import { ehPIX, extrairDadosPIX as extrairDadosPIXKnowledge, calcularScoreMatch, padroesPIX, regrasInadimplencia } from "./knowledge/pix-identificacao.js";
+import { calcularRetencoes, codigosServico, passoAPassoEmissao, goianiaNFSe } from "./knowledge/nfse-emissao.js";
+import { escritorioAmpla, familiaLeao, periodoAbertura, licoesAprendidas } from "./knowledge/memoria-ampla.js";
+import { templatesWhatsApp, reguaCobranca, determinarFaseCobranca, montarMensagem } from "./modules/whatsapp-cobranca.js";
+import { gerarPrevisaoFluxoCaixa, gerarRelatorioResumo as gerarResumoFluxo, configPrevisao, gerarDespesasFixasMes } from "./modules/previsao-fluxo-caixa.js";
+import { calcularScoreChurn, analisarChurnGeral, gerarRelatorioChurn, configChurn } from "./modules/analise-churn.js";
+import { analisarHonorario, gerarComparativoGeral, gerarRelatorioComparativo, tabelaReferenciaGoiania, custosOperacionais } from "./modules/comparativo-honorarios.js";
+import { identificarTipoTransacao, extrairDadosPIX as extrairDadosPIXConciliacao, conciliarAutomaticamente, formatarRelatorioConciliacao } from "./modules/conciliacao-bancaria.js";
+import { gerarDashboardOKR, formatarDashboardOKR, metasPadraoContabilidade, criarObjetivoPadrao } from "./modules/dashboard-metas.js";
+
 // ============================================
 // CONFIGURAÇÃO
 // ============================================
@@ -375,6 +387,280 @@ const TOOLS = [
         },
       },
       required: ["topico"],
+    },
+  },
+
+  // === WHATSAPP COBRANÇA ===
+  {
+    name: "enviar_cobranca_whatsapp",
+    description: "Envia mensagem de cobrança via WhatsApp para cliente inadimplente",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        cliente_id: { type: "string", description: "ID do cliente" },
+        telefone: { type: "string", description: "Telefone do cliente (com DDD)" },
+        template: {
+          type: "string",
+          enum: ["lembrete", "cobranca_amigavel", "cobranca_firme", "negociacao", "suspensao"],
+          description: "Template de mensagem"
+        },
+        competencia: { type: "string", description: "Competência da cobrança (MM/YYYY)" },
+        valor: { type: "number", description: "Valor devido" },
+      },
+      required: ["cliente_id", "telefone", "template"],
+    },
+  },
+  {
+    name: "listar_templates_cobranca",
+    description: "Lista todos os templates de mensagens de cobrança disponíveis",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+    },
+  },
+  {
+    name: "regua_cobranca_cliente",
+    description: "Determina a fase da régua de cobrança para um cliente baseado nos dias de atraso",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        dias_atraso: { type: "number", description: "Dias de atraso do pagamento" },
+      },
+      required: ["dias_atraso"],
+    },
+  },
+
+  // === PREVISÃO DE FLUXO DE CAIXA ===
+  {
+    name: "previsao_fluxo_caixa",
+    description: "Gera previsão detalhada de fluxo de caixa para os próximos N dias",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        dias: { type: "number", description: "Dias para projeção (padrão: 30)" },
+        saldo_inicial: { type: "number", description: "Saldo inicial (opcional, busca do banco)" },
+      },
+    },
+  },
+  {
+    name: "alertas_fluxo_caixa",
+    description: "Lista alertas críticos do fluxo de caixa (saldo negativo, cobertura baixa)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+    },
+  },
+  {
+    name: "indicadores_fluxo_caixa",
+    description: "Retorna indicadores do fluxo de caixa (cobertura operacional, tendência)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        dias: { type: "number", description: "Período de análise em dias" },
+      },
+    },
+  },
+
+  // === ANÁLISE DE CHURN ===
+  {
+    name: "analise_churn_cliente",
+    description: "Calcula score de risco de churn para um cliente específico",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        cliente_id: { type: "string", description: "ID do cliente" },
+      },
+      required: ["cliente_id"],
+    },
+  },
+  {
+    name: "analise_churn_geral",
+    description: "Análise geral de risco de churn da carteira de clientes",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+    },
+  },
+  {
+    name: "clientes_risco_churn",
+    description: "Lista clientes com maior risco de churn (score alto)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        limite: { type: "number", description: "Quantidade de clientes (padrão: 10)" },
+        risco_minimo: { type: "string", enum: ["baixo", "medio", "alto", "critico"], description: "Filtrar por risco mínimo" },
+      },
+    },
+  },
+
+  // === COMPARATIVO DE HONORÁRIOS ===
+  {
+    name: "analise_honorario_cliente",
+    description: "Analisa honorário de um cliente comparando com mercado e custos",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        cliente_id: { type: "string", description: "ID do cliente" },
+      },
+      required: ["cliente_id"],
+    },
+  },
+  {
+    name: "comparativo_honorarios_geral",
+    description: "Comparativo geral de honorários com referência de mercado",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+    },
+  },
+  {
+    name: "oportunidades_reajuste",
+    description: "Lista clientes com oportunidade de reajuste de honorário",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        limite: { type: "number", description: "Quantidade de clientes (padrão: 10)" },
+      },
+    },
+  },
+  {
+    name: "tabela_referencia_mercado",
+    description: "Consulta tabela de referência de honorários do mercado",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        regime: { type: "string", enum: ["mei", "simples", "presumido", "real"], description: "Regime tributário" },
+      },
+    },
+  },
+
+  // === CONCILIAÇÃO BANCÁRIA ===
+  {
+    name: "conciliar_extrato",
+    description: "Realiza conciliação automática de transações bancárias com lançamentos",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        competencia: { type: "string", description: "Competência no formato MM/YYYY" },
+        confianca_minima: { type: "number", description: "Confiança mínima para match (0-100, padrão: 80)" },
+      },
+    },
+  },
+  {
+    name: "identificar_transacao",
+    description: "Identifica tipo e classifica uma transação bancária pela descrição",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        descricao: { type: "string", description: "Descrição da transação" },
+        valor: { type: "number", description: "Valor da transação" },
+      },
+      required: ["descricao", "valor"],
+    },
+  },
+  {
+    name: "extrair_dados_pix",
+    description: "Extrai dados (nome, CPF/CNPJ) de uma descrição de PIX",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        descricao: { type: "string", description: "Descrição do PIX" },
+      },
+      required: ["descricao"],
+    },
+  },
+
+  // === DASHBOARD DE METAS / OKRs ===
+  {
+    name: "dashboard_okrs",
+    description: "Gera dashboard completo de OKRs com progresso e alertas",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        periodo: { type: "string", description: "Período (ex: 2025-T1, 2025)" },
+      },
+    },
+  },
+  {
+    name: "criar_objetivo",
+    description: "Cria um novo objetivo (OKR)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        titulo: { type: "string", description: "Título do objetivo" },
+        area: { type: "string", enum: ["comercial", "operacional", "financeiro", "pessoas", "qualidade", "tecnologia"], description: "Área do negócio" },
+        responsavel: { type: "string", description: "Responsável pelo objetivo" },
+        data_inicio: { type: "string", description: "Data de início (YYYY-MM-DD)" },
+        data_fim: { type: "string", description: "Data de fim (YYYY-MM-DD)" },
+      },
+      required: ["titulo", "area", "responsavel"],
+    },
+  },
+  {
+    name: "atualizar_key_result",
+    description: "Atualiza o valor atual de um Key Result",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        kr_id: { type: "string", description: "ID do Key Result" },
+        valor_atual: { type: "number", description: "Novo valor atual" },
+      },
+      required: ["kr_id", "valor_atual"],
+    },
+  },
+  {
+    name: "metas_padrao_contabilidade",
+    description: "Lista metas padrão sugeridas para escritório de contabilidade",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        area: { type: "string", enum: ["comercial", "operacional", "financeiro", "pessoas", "qualidade", "tecnologia", "todas"], description: "Área do negócio" },
+      },
+    },
+  },
+
+  // === BASE DE CONHECIMENTO ===
+  {
+    name: "consultar_conhecimento",
+    description: "Consulta a base de conhecimento contábil, fiscal, DP e auditoria",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        area: {
+          type: "string",
+          enum: ["contabil", "fiscal", "departamento_pessoal", "auditoria", "nfse", "pix", "ampla"],
+          description: "Área de conhecimento"
+        },
+        topico: { type: "string", description: "Tópico específico (opcional)" },
+      },
+      required: ["area"],
+    },
+  },
+  {
+    name: "calcular_retencoes_nfse",
+    description: "Calcula retenções (ISS, IRRF, CSRF, INSS) para emissão de NFS-e",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        valor_servico: { type: "number", description: "Valor do serviço" },
+        retencao_iss: { type: "boolean", description: "Reter ISS?" },
+        aliquota_iss: { type: "number", description: "Alíquota ISS (0.02 a 0.05)" },
+        simples_nacional: { type: "boolean", description: "Prestador é Simples Nacional?" },
+        cessao_mao_obra: { type: "boolean", description: "É cessão de mão de obra?" },
+      },
+      required: ["valor_servico"],
+    },
+  },
+  {
+    name: "identificar_pagador_pix",
+    description: "Identifica o cliente pagador a partir de dados de um PIX",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        descricao_pix: { type: "string", description: "Descrição completa do PIX" },
+        valor: { type: "number", description: "Valor recebido" },
+      },
+      required: ["descricao_pix"],
     },
   },
 ];
@@ -977,6 +1263,528 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       };
 
       return regras[topico] || { erro: "Tópico não encontrado" };
+    }
+
+    // === WHATSAPP COBRANÇA ===
+    case "listar_templates_cobranca": {
+      return {
+        templates: Object.entries(templatesWhatsApp).map(([key, template]) => ({
+          id: key,
+          titulo: template.titulo,
+          variaveis: template.variaveis,
+          preview: template.mensagem.substring(0, 100) + "...",
+        })),
+        regua_cobranca: reguaCobranca,
+      };
+    }
+
+    case "regua_cobranca_cliente": {
+      const diasAtraso = args.dias_atraso as number;
+      const fase = determinarFaseCobranca(diasAtraso);
+
+      return {
+        dias_atraso: diasAtraso,
+        fase: fase ? {
+          dias: fase.dias,
+          nome: fase.fase,
+          acao: fase.acao,
+          canal: fase.canal,
+          template: fase.template,
+        } : null,
+        proxima_acao: fase?.acao || "Sem ação prevista",
+        regua_completa: reguaCobranca,
+      };
+    }
+
+    case "enviar_cobranca_whatsapp": {
+      // Nota: Esta tool prepara a mensagem mas não envia diretamente
+      // O envio real requer configuração do WhatsApp Cloud API
+      const template = args.template as string;
+      const templateKey = `template_${template}` as keyof typeof templatesWhatsApp;
+
+      const mensagem = montarMensagem(templateKey, {
+        cliente: "{{cliente}}",
+        competencia: (args.competencia as string) || "{{competencia}}",
+        valor: (args.valor as number)?.toLocaleString("pt-BR") || "{{valor}}",
+        dias: "{{dias}}",
+        pix: escritorioAmpla.contato.email,
+      });
+
+      return {
+        status: "preparado",
+        mensagem_preview: mensagem,
+        template_usado: template,
+        nota: "Para envio real, configure WHATSAPP_ACCESS_TOKEN",
+      };
+    }
+
+    // === PREVISÃO DE FLUXO DE CAIXA ===
+    case "previsao_fluxo_caixa": {
+      const dias = (args.dias as number) || 30;
+      const saldoInicial = (args.saldo_inicial as number) || 10000; // Default
+
+      // Buscar receitas previstas
+      const { data: faturas } = await supabase
+        .from("invoices")
+        .select("id, amount, due_date, status, client_id")
+        .eq("status", "pending")
+        .gte("due_date", format(new Date(), "yyyy-MM-dd"));
+
+      const receitas = faturas?.map(f => ({
+        clienteId: f.client_id,
+        clienteNome: "Cliente",
+        valor: f.amount || 0,
+        dataVencimento: f.due_date,
+        probabilidadeRecebimento: 0.8,
+        historicoPagamento: "eventual" as const,
+      })) || [];
+
+      // Gerar despesas fixas
+      const hoje = new Date();
+      const despesas = gerarDespesasFixasMes(hoje.getFullYear(), hoje.getMonth() + 1);
+
+      const previsao = gerarPrevisaoFluxoCaixa(saldoInicial, receitas, despesas, dias);
+
+      return {
+        resumo: gerarResumoFluxo(previsao),
+        indicadores: previsao.indicadores,
+        alertas: previsao.alertas,
+        resumo_semanal: previsao.resumoSemanal,
+      };
+    }
+
+    case "alertas_fluxo_caixa": {
+      const saldoInicial = 10000;
+      const previsao = gerarPrevisaoFluxoCaixa(saldoInicial, [], [], 30);
+
+      return {
+        total_alertas: previsao.alertas.length,
+        alertas: previsao.alertas,
+        indicadores: previsao.indicadores,
+      };
+    }
+
+    case "indicadores_fluxo_caixa": {
+      const dias = (args.dias as number) || 30;
+      const previsao = gerarPrevisaoFluxoCaixa(10000, [], [], dias);
+
+      return {
+        periodo_dias: dias,
+        indicadores: previsao.indicadores,
+        configuracao: configPrevisao,
+      };
+    }
+
+    // === ANÁLISE DE CHURN ===
+    case "analise_churn_cliente": {
+      const clienteId = args.cliente_id as string;
+
+      const { data: cliente } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("id", clienteId)
+        .single();
+
+      if (!cliente) throw new Error("Cliente não encontrado");
+
+      // Buscar histórico de pagamentos
+      const { data: faturas } = await supabase
+        .from("invoices")
+        .select("amount, status, due_date, paid_at")
+        .eq("client_id", clienteId);
+
+      const faturasVencidas = faturas?.filter(f => f.status !== "paid") || [];
+      const mediaAtraso = faturasVencidas.length > 0 ? 15 : 0; // Simplificado
+
+      const clienteAnalise = {
+        id: cliente.id,
+        nome: cliente.name,
+        cnpj: cliente.document || "",
+        dataInicio: cliente.created_at || new Date().toISOString(),
+        honorarioMensal: cliente.monthly_fee || 0,
+        mediaAtraso,
+        ticketsAbertos: 0,
+        reclamacoesUltimos6Meses: 0,
+        tempoRelacionamentoMeses: Math.floor((Date.now() - new Date(cliente.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24 * 30)),
+        regime: "simples" as const,
+        complexidadeFiscal: "media" as const,
+      };
+
+      const score = calcularScoreChurn(clienteAnalise);
+
+      return {
+        cliente: cliente.name,
+        score: score.score,
+        risco: score.risco,
+        probabilidade_churn: `${(score.probabilidadeChurn * 100).toFixed(1)}%`,
+        fatores: score.fatores,
+        acao_recomendada: score.acaoRecomendada,
+        impacto_financeiro: formatCurrency(score.impactoFinanceiro),
+      };
+    }
+
+    case "analise_churn_geral": {
+      const { data: clientes } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true);
+
+      const clientesAnalise = clientes?.map(c => ({
+        id: c.id,
+        nome: c.name,
+        cnpj: c.document || "",
+        dataInicio: c.created_at || new Date().toISOString(),
+        honorarioMensal: c.monthly_fee || 0,
+        mediaAtraso: 0,
+        ticketsAbertos: 0,
+        reclamacoesUltimos6Meses: 0,
+        tempoRelacionamentoMeses: Math.floor((Date.now() - new Date(c.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24 * 30)),
+        regime: "simples" as const,
+        complexidadeFiscal: "media" as const,
+      })) || [];
+
+      const analise = analisarChurnGeral(clientesAnalise);
+
+      return {
+        relatorio: gerarRelatorioChurn(analise),
+        dados: {
+          total_clientes: analise.totalClientes,
+          em_risco: analise.clientesEmRisco,
+          receita_em_risco: formatCurrency(analise.receitaEmRisco),
+          distribuicao: analise.distribuicaoRisco,
+        },
+        acoes: analise.acoesRecomendadas,
+      };
+    }
+
+    case "clientes_risco_churn": {
+      const limite = (args.limite as number) || 10;
+      const riscoMinimo = args.risco_minimo as string;
+
+      const { data: clientes } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true);
+
+      const scores = clientes?.map(c => {
+        const analise = {
+          id: c.id,
+          nome: c.name,
+          cnpj: c.document || "",
+          dataInicio: c.created_at || new Date().toISOString(),
+          honorarioMensal: c.monthly_fee || 0,
+          mediaAtraso: 0,
+          ticketsAbertos: 0,
+          reclamacoesUltimos6Meses: 0,
+          tempoRelacionamentoMeses: Math.floor((Date.now() - new Date(c.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24 * 30)),
+          regime: "simples" as const,
+          complexidadeFiscal: "media" as const,
+        };
+        return calcularScoreChurn(analise);
+      }) || [];
+
+      let filtrados = scores;
+      if (riscoMinimo) {
+        const ordem = ["baixo", "medio", "alto", "critico"];
+        const indiceMinimo = ordem.indexOf(riscoMinimo);
+        filtrados = scores.filter(s => ordem.indexOf(s.risco) >= indiceMinimo);
+      }
+
+      return {
+        clientes: filtrados
+          .sort((a, b) => b.score - a.score)
+          .slice(0, limite)
+          .map(s => ({
+            nome: s.clienteNome,
+            score: s.score,
+            risco: s.risco,
+            acao: s.acaoRecomendada,
+          })),
+      };
+    }
+
+    // === COMPARATIVO DE HONORÁRIOS ===
+    case "tabela_referencia_mercado": {
+      const regime = args.regime as string;
+
+      const tabela = regime
+        ? tabelaReferenciaGoiania.filter(t => t.regime === regime)
+        : tabelaReferenciaGoiania;
+
+      return {
+        tabela: tabela.map(t => ({
+          regime: t.regime,
+          funcionarios: `${t.faixaFuncionarios.min}-${t.faixaFuncionarios.max}`,
+          faturamento: `${formatCurrency(t.faixaFaturamento.min)} - ${formatCurrency(t.faixaFaturamento.max)}`,
+          honorario_minimo: formatCurrency(t.honorarioMinimo),
+          honorario_medio: formatCurrency(t.honorarioMedio),
+          honorario_maximo: formatCurrency(t.honorarioMaximo),
+        })),
+        custos_operacionais: custosOperacionais,
+      };
+    }
+
+    case "comparativo_honorarios_geral": {
+      const { data: clientes } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true);
+
+      const clientesHonorario = clientes?.map(c => ({
+        id: c.id,
+        nome: c.name,
+        cnpj: c.document || "",
+        regime: "simples" as const,
+        honorarioAtual: c.monthly_fee || 0,
+        funcionarios: 0,
+        faturamentoMensal: 50000,
+        notasFiscaisMes: 20,
+        complexidadeFiscal: "media" as const,
+        temCertificado: true,
+        temFolha: false,
+        temFiscal: true,
+        temContabilidade: true,
+        servicosExtras: [],
+        dataInicio: c.created_at || new Date().toISOString(),
+      })) || [];
+
+      const comparativo = gerarComparativoGeral(clientesHonorario);
+
+      return {
+        relatorio: gerarRelatorioComparativo(comparativo),
+        dados: {
+          total_clientes: comparativo.totalClientes,
+          receita_mensal: formatCurrency(comparativo.receitaMensal),
+          honorario_medio: formatCurrency(comparativo.honorarioMedio),
+          distribuicao: comparativo.distribuicao,
+          receita_potencial: formatCurrency(comparativo.receitaPotencial),
+        },
+      };
+    }
+
+    case "oportunidades_reajuste": {
+      const limite = (args.limite as number) || 10;
+
+      const { data: clientes } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true);
+
+      const analises = clientes?.map(c => {
+        const clienteHonorario = {
+          id: c.id,
+          nome: c.name,
+          cnpj: c.document || "",
+          regime: "simples" as const,
+          honorarioAtual: c.monthly_fee || 0,
+          funcionarios: 0,
+          faturamentoMensal: 50000,
+          notasFiscaisMes: 20,
+          complexidadeFiscal: "media" as const,
+          temCertificado: true,
+          temFolha: false,
+          temFiscal: true,
+          temContabilidade: true,
+          servicosExtras: [],
+          dataInicio: c.created_at || new Date().toISOString(),
+        };
+        return analisarHonorario(clienteHonorario);
+      }) || [];
+
+      const oportunidades = analises
+        .filter(a => a.reajusteSugerido.valor > 0)
+        .sort((a, b) => b.reajusteSugerido.valor - a.reajusteSugerido.valor)
+        .slice(0, limite);
+
+      return {
+        oportunidades: oportunidades.map(o => ({
+          cliente: o.cliente.nome,
+          honorario_atual: formatCurrency(o.cliente.honorarioAtual),
+          honorario_sugerido: formatCurrency(o.cliente.honorarioAtual + o.reajusteSugerido.valor),
+          reajuste_valor: formatCurrency(o.reajusteSugerido.valor),
+          reajuste_percentual: `${o.reajusteSugerido.percentual.toFixed(1)}%`,
+          justificativa: o.reajusteSugerido.justificativa,
+          margem_atual: `${(o.margemLucro * 100).toFixed(1)}%`,
+        })),
+        receita_potencial_total: formatCurrency(oportunidades.reduce((sum, o) => sum + o.reajusteSugerido.valor, 0)),
+      };
+    }
+
+    // === CONCILIAÇÃO BANCÁRIA ===
+    case "identificar_transacao": {
+      const descricao = args.descricao as string;
+      const valor = args.valor as number;
+
+      const identificacao = identificarTipoTransacao(descricao, valor);
+
+      return {
+        descricao_original: descricao,
+        valor,
+        identificacao: {
+          tipo: identificacao.tipo,
+          categoria: identificacao.categoria,
+          confianca: `${identificacao.confianca}%`,
+        },
+        eh_pix: ehPIX(descricao),
+      };
+    }
+
+    case "extrair_dados_pix": {
+      const descricao = args.descricao as string;
+      const dados = extrairDadosPIXConciliacao(descricao);
+
+      return {
+        descricao_original: descricao,
+        dados_extraidos: dados,
+        eh_pix: ehPIX(descricao),
+      };
+    }
+
+    case "conciliar_extrato": {
+      // Simplificado - em produção buscaria do banco
+      return {
+        status: "simulado",
+        mensagem: "Conciliação bancária disponível via importação de OFX",
+        instrucoes: [
+          "1. Importe o arquivo OFX do extrato bancário",
+          "2. O sistema identificará automaticamente as transações",
+          "3. Matches serão sugeridos com base em valor e data",
+          "4. Revise e confirme as conciliações sugeridas",
+        ],
+      };
+    }
+
+    // === DASHBOARD DE METAS / OKRs ===
+    case "metas_padrao_contabilidade": {
+      const area = args.area as string;
+
+      if (area === "todas" || !area) {
+        return { metas: metasPadraoContabilidade };
+      }
+
+      return {
+        area,
+        metas: metasPadraoContabilidade[area as keyof typeof metasPadraoContabilidade] || [],
+      };
+    }
+
+    case "dashboard_okrs": {
+      const periodo = (args.periodo as string) || format(new Date(), "yyyy");
+
+      // Em produção, buscaria objetivos do banco
+      // Por enquanto, retorna estrutura de exemplo
+      return {
+        periodo,
+        status: "modelo",
+        estrutura_okr: {
+          objetivo: {
+            titulo: "Exemplo de Objetivo",
+            key_results: [
+              { metrica: "Receita mensal", meta: 100000, atual: 85000 },
+              { metrica: "Taxa de inadimplência", meta: 5, atual: 8 },
+            ],
+          },
+        },
+        metas_sugeridas: metasPadraoContabilidade,
+        instrucoes: "Use 'criar_objetivo' para criar novos OKRs",
+      };
+    }
+
+    // === BASE DE CONHECIMENTO ===
+    case "consultar_conhecimento": {
+      const area = args.area as string;
+
+      const conhecimento: Record<string, any> = {
+        contabil: regrasContabeis,
+        fiscal: regrasFiscais,
+        departamento_pessoal: regrasDepartamentoPessoal,
+        auditoria: regrasAuditoria,
+        nfse: {
+          codigos_servico: codigosServico,
+          passo_a_passo: passoAPassoEmissao,
+          goiania: goianiaNFSe,
+        },
+        pix: {
+          padroes: padroesPIX,
+          regras_inadimplencia: regrasInadimplencia,
+        },
+        ampla: {
+          escritorio: escritorioAmpla,
+          familia_leao: familiaLeao,
+          periodo_abertura: periodoAbertura,
+          licoes_aprendidas: licoesAprendidas,
+          regras: regrasAmplaContabilidade,
+        },
+      };
+
+      return conhecimento[area] || { erro: "Área não encontrada" };
+    }
+
+    case "calcular_retencoes_nfse": {
+      const valorServico = args.valor_servico as number;
+
+      const retencoes = calcularRetencoes(valorServico, {
+        retencaoISS: args.retencao_iss as boolean,
+        aliquotaISS: args.aliquota_iss as number,
+        simplesNacional: args.simples_nacional as boolean,
+        cessaoMaoObra: args.cessao_mao_obra as boolean,
+      });
+
+      return {
+        valor_bruto: formatCurrency(retencoes.valorBruto),
+        retencoes: {
+          ISS: formatCurrency(retencoes.ISS),
+          IRRF: formatCurrency(retencoes.IRRF),
+          PIS: formatCurrency(retencoes.PIS),
+          COFINS: formatCurrency(retencoes.COFINS),
+          CSLL: formatCurrency(retencoes.CSLL),
+          INSS: formatCurrency(retencoes.INSS),
+        },
+        total_retencoes: formatCurrency(retencoes.totalRetencoes),
+        valor_liquido: formatCurrency(retencoes.valorLiquido),
+      };
+    }
+
+    case "identificar_pagador_pix": {
+      const descricao = args.descricao_pix as string;
+      const valor = args.valor as number;
+
+      const dados = extrairDadosPIXKnowledge(descricao);
+
+      // Buscar cliente pelo CPF/CNPJ ou nome
+      let cliente = null;
+      if (dados.cpfCnpj) {
+        const { data } = await supabase
+          .from("clients")
+          .select("id, name, document, monthly_fee")
+          .eq("document", dados.cpfCnpj)
+          .single();
+        cliente = data;
+      }
+
+      if (!cliente && dados.nomeCompleto) {
+        const { data } = await supabase
+          .from("clients")
+          .select("id, name, document, monthly_fee")
+          .ilike("name", `%${dados.nomeCompleto}%`)
+          .limit(1)
+          .single();
+        cliente = data;
+      }
+
+      return {
+        dados_extraidos: dados,
+        cliente_identificado: cliente ? {
+          id: cliente.id,
+          nome: cliente.name,
+          documento: cliente.document,
+          honorario: formatCurrency(cliente.monthly_fee || 0),
+        } : null,
+        valor_recebido: valor ? formatCurrency(valor) : null,
+        sugestao: cliente
+          ? "Cliente identificado - vincular ao recebimento"
+          : "Cliente não encontrado - verificar manualmente",
+      };
     }
 
     default:
