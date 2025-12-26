@@ -6,11 +6,21 @@
  * - Salários a Pagar (Passivo) = Valor Líquido
  * - INSS a Recolher (Passivo) = INSS retido
  * - IRRF a Recolher (Passivo) = IRRF retido
+ * 
+ * Integra sistema de rastreamento para evitar duplicatas:
+ * - Cada lançamento recebe código único (TIPO_YYYYMM_SEQ_HASH)
+ * - Validação automática de duplicatas
+ * - Histórico de rastreamento para auditoria
  */
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  gerarCodigoRastreamento,
+  validarDuplicata,
+  registrarRastreamento,
+} from '@/services/RastreamentoService';
 
 export interface FolhaDetalhe {
   employeeId: string;
@@ -90,9 +100,36 @@ export function usePayrollAccounting() {
           };
         }
 
+        // ✅ NOVO: Gerar código único de rastreamento
+        const rastreamento = await gerarCodigoRastreamento(
+          supabase,
+          'FOLD',
+          {
+            totalBruto,
+            totalINSS,
+            totalIRRF,
+            totalLiquido,
+            funcionarios: folha.funcionarios.length
+          },
+          folha.ano,
+          folha.mes
+        );
+
+        // ✅ NOVO: Validar se já existe (evita duplicatas)
+        const { isDuplicata, message: duplicataMsg } = await validarDuplicata(
+          supabase,
+          rastreamento.codigoRastreamento,
+          rastreamento.referenceId
+        );
+
+        if (isDuplicata) {
+          return {
+            success: false,
+            error: `Lançamento duplicado detectado! ${duplicataMsg}`
+          };
+        }
+
         // Preparar lançamento contábil
-        const referenceId = `payroll_${folha.ano}${String(folha.mes).padStart(2, '0')}`;
-        
         const linhas = [
           {
             account_id: contaDespesa.id,
@@ -101,7 +138,7 @@ export function usePayrollAccounting() {
             account_type: 'Expense',
             debit: totalBruto,
             credit: 0,
-            description: `Folha de Pagamento - ${String(folha.mes).padStart(2, '0')}/${folha.ano}. Bruto total: R$ ${totalBruto.toFixed(2)}`
+            description: `Folha de Pagamento - ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`
           },
           {
             account_code: '2.1.2.01',
@@ -117,7 +154,7 @@ export function usePayrollAccounting() {
             account_type: 'Liability',
             debit: 0,
             credit: totalINSS,
-            description: `INSS descontado de funcionários`
+            description: `INSS descontado [${rastreamento.codigoRastreamento}]`
           },
           {
             account_code: '2.1.2.03',
@@ -125,7 +162,7 @@ export function usePayrollAccounting() {
             account_type: 'Liability',
             debit: 0,
             credit: totalIRRF,
-            description: `IRRF descontado de funcionários`
+            description: `IRRF descontado [${rastreamento.codigoRastreamento}]`
           }
         ];
 
@@ -135,9 +172,9 @@ export function usePayrollAccounting() {
           .insert([
             {
               entry_date: folha.dataFolha,
-              description: `Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} - ${folha.funcionarios.length} funcionários`,
+              description: `Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
               reference_type: 'payroll',
-              reference_id: referenceId,
+              reference_id: rastreamento.referenceId,
               competence_month: folha.mes,
               competence_year: folha.ano,
             }
@@ -165,9 +202,20 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar linhas: ${linhasError.message}` };
         }
 
+        // ✅ NOVO: Registrar rastreamento (auditoria)
+        await registrarRastreamento(supabase, rastreamento, entry.id, {
+          totalBruto,
+          totalINSS,
+          totalIRRF,
+          totalLiquido,
+          funcionarios: folha.funcionarios.length,
+          dataFolha: folha.dataFolha
+        });
+
         return { 
           success: true,
-          entryId: entry.id
+          entryId: entry.id,
+          codigoRastreamento: rastreamento.codigoRastreamento
         };
 
       } catch (error: any) {
