@@ -489,19 +489,27 @@ const Payroll = () => {
           console.warn("⚠️ RPC retornou 0 funcionários, tentando método direto...");
         }
 
-        // Buscar funcionários CLT ativos
+        // Calcular último dia da competência para filtrar por data de admissão
+        const competenciaDate = new Date(`${selectedCompetencia}-01`);
+        const ultimoDiaCompetencia = new Date(competenciaDate.getFullYear(), competenciaDate.getMonth() + 1, 0);
+        const dataLimiteAdmissao = ultimoDiaCompetencia.toISOString().split('T')[0];
+
+        console.log("📅 Competência:", selectedCompetencia, "- Admitidos até:", dataLimiteAdmissao);
+
+        // Buscar funcionários CLT ativos admitidos até a competência
         const { data: funcionariosCLT, error: empError } = await supabase
           .from("employees")
-          .select("id, name, department, official_salary, unofficial_salary")
+          .select("id, name, department, official_salary, unofficial_salary, hire_date")
           .eq("is_active", true)
-          .ilike("contract_type", "%clt%");
+          .ilike("contract_type", "%clt%")
+          .lte("hire_date", dataLimiteAdmissao);
 
-        console.log("👥 Funcionários CLT encontrados:", funcionariosCLT?.length, funcionariosCLT);
+        console.log("👥 Funcionários CLT encontrados (admitidos até", dataLimiteAdmissao, "):", funcionariosCLT?.length);
 
         if (empError) throw empError;
 
         if (!funcionariosCLT || funcionariosCLT.length === 0) {
-          toast.error("Nenhum funcionário CLT ativo encontrado");
+          toast.error(`Nenhum funcionário CLT ativo admitido até ${dataLimiteAdmissao}`);
           return;
         }
 
@@ -531,7 +539,7 @@ const Payroll = () => {
           const liquido = salarioBruto - inss - irrf;
 
           // Inserir ou atualizar folha
-          const { error: upsertError } = await supabase
+          const { data: payrollData, error: upsertError } = await supabase
             .from("payroll")
             .upsert({
               employee_id: emp.id,
@@ -545,13 +553,39 @@ const Payroll = () => {
               data_calculo: new Date().toISOString(),
             }, {
               onConflict: "employee_id,competencia"
-            });
+            })
+            .select("id")
+            .single();
 
           if (upsertError) {
             console.error("Erro ao inserir folha para", emp.name, ":", upsertError);
           } else {
             qtdCriados++;
-            console.log("✅ Folha criada para:", emp.name, "Bruto:", salarioBruto, "INSS:", inss.toFixed(2), "IRRF:", irrf.toFixed(2), "Líquido:", liquido.toFixed(2));
+            console.log("✅ Folha criada para:", emp.name, "(admissão:", emp.hire_date, ") Bruto:", salarioBruto, "INSS:", inss.toFixed(2), "IRRF:", irrf.toFixed(2), "Líquido:", liquido.toFixed(2));
+
+            // Criar eventos/rubricas da folha
+            if (payrollData?.id) {
+              const eventos = [
+                // Proventos
+                { payroll_id: payrollData.id, rubrica_codigo: "1000", descricao: "Salário Mensal", valor: salarioBruto, is_desconto: false, is_oficial: true, referencia: "30d" },
+                // Descontos
+                { payroll_id: payrollData.id, rubrica_codigo: "9201", descricao: "INSS", valor: inss, is_desconto: true, is_oficial: true, referencia: null },
+              ];
+
+              // Só adicionar IRRF se maior que zero
+              if (irrf > 0) {
+                eventos.push({ payroll_id: payrollData.id, rubrica_codigo: "9203", descricao: "IRRF", valor: irrf, is_desconto: true, is_oficial: true, referencia: null });
+              }
+
+              // Deletar eventos antigos e inserir novos
+              await supabase.from("payroll_events").delete().eq("payroll_id", payrollData.id);
+              const { error: evtError } = await supabase.from("payroll_events").insert(eventos);
+              if (evtError) {
+                console.warn("⚠️ Erro ao criar eventos para", emp.name, ":", evtError.message);
+              } else {
+                console.log("  📝 Eventos criados: Salário, INSS" + (irrf > 0 ? ", IRRF" : ""));
+              }
+            }
           }
         }
 
@@ -586,7 +620,7 @@ const Payroll = () => {
 
       if (detalhesError) {
         console.error("Erro ao buscar detalhes:", detalhesError);
-        toast.success(`Folha gerada para ${qtdFuncionarios} funcionários! (sem provisão contábil)`);
+        toast.success("Folha gerada! (sem provisão contábil)");
         return;
       }
 
