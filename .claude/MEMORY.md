@@ -22,7 +22,7 @@
 
 ### Por que isso é importante:
 - Evita que IAs "delirem" ou esqueçam o contexto
-- Mantém histórico completo de todas as mudanças
+- Mantém histórico completo de todas as mudanças 
 - Permite que qualquer IA continue o trabalho sem perder informações
 - Facilita debugging e rollback de alterações
 
