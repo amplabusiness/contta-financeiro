@@ -132,8 +132,6 @@ export function usePayrollAccounting() {
               description: `Provisão Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
               reference_type: 'payroll',
               reference_id: rastreamento.referenceId,
-              competence_month: folha.mes,
-              competence_year: folha.ano,
             }
           ])
           .select()
