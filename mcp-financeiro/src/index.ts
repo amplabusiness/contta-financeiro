@@ -16,6 +16,34 @@
  * - Análises e Relatórios
  */
 
+// Carregar variáveis de ambiente do projeto pai
+import * as fs from "fs";
+import * as path from "path";
+
+function loadEnvFile(filePath: string) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, "utf-8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+          const [key, ...valueParts] = trimmed.split("=");
+          const value = valueParts.join("=").replace(/^["']|["']$/g, "");
+          if (!process.env[key]) {
+            process.env[key] = value;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignora erros de leitura
+  }
+}
+
+// Carregar .env.local e .env do diretório pai
+loadEnvFile(path.resolve(__dirname, "../../.env.local"));
+loadEnvFile(path.resolve(__dirname, "../../.env"));
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -32,23 +60,23 @@ import { format, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { ptBR } from "date-fns/locale";
 
 // Importar módulos de conhecimento e operacionais
-import { regrasContabeis, regrasFiscais, regrasDepartamentoPessoal, regrasAuditoria, regrasAmplaContabilidade } from "./knowledge/base-conhecimento.js";
-import { ehPIX, extrairDadosPIX as extrairDadosPIXKnowledge, calcularScoreMatch, padroesPIX, regrasInadimplencia } from "./knowledge/pix-identificacao.js";
-import { calcularRetencoes, codigosServico, passoAPassoEmissao, goianiaNFSe } from "./knowledge/nfse-emissao.js";
-import { escritorioAmpla, familiaLeao, periodoAbertura, licoesAprendidas } from "./knowledge/memoria-ampla.js";
-import { templatesWhatsApp, reguaCobranca, determinarFaseCobranca, montarMensagem } from "./modules/whatsapp-cobranca.js";
-import { gerarPrevisaoFluxoCaixa, gerarRelatorioResumo as gerarResumoFluxo, configPrevisao, gerarDespesasFixasMes } from "./modules/previsao-fluxo-caixa.js";
-import { calcularScoreChurn, analisarChurnGeral, gerarRelatorioChurn, configChurn } from "./modules/analise-churn.js";
-import { analisarHonorario, gerarComparativoGeral, gerarRelatorioComparativo, tabelaReferenciaGoiania, custosOperacionais } from "./modules/comparativo-honorarios.js";
-import { identificarTipoTransacao, extrairDadosPIX as extrairDadosPIXConciliacao, conciliarAutomaticamente, formatarRelatorioConciliacao } from "./modules/conciliacao-bancaria.js";
-import { gerarDashboardOKR, formatarDashboardOKR, metasPadraoContabilidade, criarObjetivoPadrao } from "./modules/dashboard-metas.js";
+import { regrasContabeis, regrasFiscais, regrasDepartamentoPessoal, regrasAuditoria, regrasAmplaContabilidade } from "./knowledge/base-conhecimento";
+import { ehPIX, extrairDadosPIX as extrairDadosPIXKnowledge, calcularScoreMatch, padroesPIX, regrasInadimplencia } from "./knowledge/pix-identificacao";
+import { calcularRetencoes, codigosServico, passoAPassoEmissao, goianiaNFSe } from "./knowledge/nfse-emissao";
+import { escritorioAmpla, familiaLeao, periodoAbertura, licoesAprendidas } from "./knowledge/memoria-ampla";
+import { templatesWhatsApp, reguaCobranca, determinarFaseCobranca, montarMensagem } from "./modules/whatsapp-cobranca";
+import { gerarPrevisaoFluxoCaixa, gerarRelatorioResumo as gerarResumoFluxo, configPrevisao, gerarDespesasFixasMes } from "./modules/previsao-fluxo-caixa";
+import { calcularScoreChurn, analisarChurnGeral, gerarRelatorioChurn, configChurn } from "./modules/analise-churn";
+import { analisarHonorario, gerarComparativoGeral, gerarRelatorioComparativo, tabelaReferenciaGoiania, custosOperacionais } from "./modules/comparativo-honorarios";
+import { identificarTipoTransacao, extrairDadosPIX as extrairDadosPIXConciliacao, conciliarAutomaticamente, formatarRelatorioConciliacao } from "./modules/conciliacao-bancaria";
+import { gerarDashboardOKR, formatarDashboardOKR, metasPadraoContabilidade, criarObjetivoPadrao } from "./modules/dashboard-metas";
 
 // ============================================
 // CONFIGURAÇÃO
 // ============================================
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
 const SERPER_API_KEY = process.env.SERPER_API_KEY || "";
 
 let supabase: SupabaseClient;
@@ -113,7 +141,7 @@ async function pesquisarEconetSerper(pergunta: string, maxResultados = 5) {
     throw new Error(`Erro Serper: ${response.status} ${errorText}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as { organic?: any[]; searchInformation?: { totalResults?: string } };
   const organic = Array.isArray(data.organic) ? data.organic.slice(0, maxResultados) : [];
 
   return {
@@ -1056,8 +1084,9 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         `);
 
       // Filtrar por período
-      const lancamentosFiltrados = lancamentos?.filter(l => {
-        const data = l.entry?.competence_date || l.entry?.entry_date;
+      const lancamentosFiltrados = lancamentos?.filter((l: any) => {
+        const entry = l.entry as { competence_date?: string; entry_date?: string } | null;
+        const data = entry?.competence_date || entry?.entry_date;
         return data && data >= start && data <= end;
       }) || [];
 
@@ -1110,8 +1139,9 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
           entry:accounting_entries(entry_date)
         `);
 
-      const lancamentosFiltrados = lancamentos?.filter(l => {
-        const data = l.entry?.entry_date;
+      const lancamentosFiltrados = lancamentos?.filter((l: any) => {
+        const entry = l.entry as { entry_date?: string } | null;
+        const data = entry?.entry_date;
         return data && data <= end;
       }) || [];
 
@@ -1806,23 +1836,24 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       const valor = args.valor as number;
 
       const dados = extrairDadosPIXKnowledge(descricao);
+      const documento = dados.cnpj || dados.cpf;
 
       // Buscar cliente pelo CPF/CNPJ ou nome
-      let cliente = null;
-      if (dados.cpfCnpj) {
+      let cliente: { id: string; name: string; document: string; monthly_fee: number } | null = null;
+      if (documento) {
         const { data } = await supabase
           .from("clients")
           .select("id, name, document, monthly_fee")
-          .eq("document", dados.cpfCnpj)
+          .eq("document", documento)
           .single();
         cliente = data;
       }
 
-      if (!cliente && dados.nomeCompleto) {
+      if (!cliente && dados.nome) {
         const { data } = await supabase
           .from("clients")
           .select("id, name, document, monthly_fee")
-          .ilike("name", `%${dados.nomeCompleto}%`)
+          .ilike("name", `%${dados.nome}%`)
           .limit(1)
           .single();
         cliente = data;

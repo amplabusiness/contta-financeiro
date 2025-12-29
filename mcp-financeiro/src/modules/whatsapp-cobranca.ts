@@ -328,7 +328,7 @@ export async function enviarTextoCloudAPI(
       }
     );
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (!response.ok) {
       return { sucesso: false, erro: data.error?.message || "Erro ao enviar" };
@@ -380,7 +380,7 @@ export async function enviarTemplateCloudAPI(
       }
     );
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (!response.ok) {
       return { sucesso: false, erro: data.error?.message || "Erro ao enviar template" };
@@ -457,7 +457,7 @@ export async function enviarInterativaCloudAPI(
       }
     );
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (!response.ok) {
       return { sucesso: false, erro: data.error?.message || "Erro ao enviar" };
@@ -504,7 +504,7 @@ export async function enviarDocumentoCloudAPI(
       }
     );
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (!response.ok) {
       return { sucesso: false, erro: data.error?.message || "Erro ao enviar documento" };
