@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -219,6 +219,162 @@ const HonorariosFlow = () => {
     }
   };
 
+  // Sincronizar pagamentos com transações bancárias
+  const handleSyncPayments = async () => {
+    setLoading(true);
+    let syncCount = 0;
+
+    try {
+      // Buscar honorários pendentes
+      const pendingHonorarios = honorarios.filter(h => h.status === "pending");
+      if (pendingHonorarios.length === 0) {
+        toast.info("Nenhum honorário pendente para sincronizar");
+        return;
+      }
+
+      // Buscar transações bancárias de crédito (entradas) do SICREDI
+      const { data: bankTransactions, error: txError } = await supabase
+        .from("bank_transactions")
+        .select("id, amount, transaction_date, description, matched")
+        .eq("transaction_type", "credit")
+        .eq("matched", false)
+        .order("transaction_date", { ascending: false });
+
+      if (txError) throw txError;
+
+      if (!bankTransactions || bankTransactions.length === 0) {
+        toast.info("Nenhuma transação bancária não conciliada encontrada");
+        return;
+      }
+
+      console.log(`[HonorariosFlow] Sincronizando ${pendingHonorarios.length} honorários com ${bankTransactions.length} transações`);
+
+      // Para cada honorário pendente, tentar encontrar uma transação correspondente
+      for (const honorario of pendingHonorarios) {
+        const client = clients.find(c => c.id === honorario.client_id);
+        const clientName = client?.name?.toUpperCase() || "";
+
+        // Buscar transação que corresponda ao valor (tolerância de R$ 0.10)
+        const matchingTx = bankTransactions.find(tx => {
+          const amountMatch = Math.abs(tx.amount - honorario.amount) < 0.10;
+          const descMatch = clientName && tx.description?.toUpperCase().includes(clientName.substring(0, 15));
+
+          // Match por valor exato ou valor + parte do nome do cliente na descrição
+          return amountMatch && (descMatch || !clientName);
+        });
+
+        if (matchingTx) {
+          // Marcar honorário como pago
+          const paymentDate = matchingTx.transaction_date;
+
+          const { error: updateError } = await supabase
+            .from("invoices")
+            .update({ status: "paid", payment_date: paymentDate })
+            .eq("id", honorario.id);
+
+          if (updateError) {
+            console.error(`Erro ao baixar honorário ${honorario.id}:`, updateError);
+            continue;
+          }
+
+          // Marcar transação como conciliada
+          await supabase
+            .from("bank_transactions")
+            .update({ matched: true, matched_invoice_id: honorario.id })
+            .eq("id", matchingTx.id);
+
+          // Registrar lançamento contábil
+          if (bankAccountId) {
+            await registrarRecebimento({
+              paymentId: `sync_${honorario.id}_${paymentDate}`,
+              invoiceId: honorario.id,
+              clientId: honorario.client_id,
+              clientName: client?.name || "Cliente",
+              amount: honorario.amount,
+              paymentDate: paymentDate,
+              bankAccountId: bankAccountId,
+              description: `Recebimento sincronizado - ${client?.name} - Honorários ${honorario.competence}`,
+            });
+          }
+
+          syncCount++;
+          // Remove a transação usada para não reutilizar
+          const txIndex = bankTransactions.findIndex(t => t.id === matchingTx.id);
+          if (txIndex > -1) bankTransactions.splice(txIndex, 1);
+        }
+      }
+
+      if (syncCount > 0) {
+        toast.success(`${syncCount} honorário(s) baixado(s) automaticamente!`);
+        await loadData();
+      } else {
+        toast.info("Nenhum match encontrado entre honorários e transações bancárias");
+      }
+    } catch (error: any) {
+      console.error("[HonorariosFlow] Sync error:", error);
+      toast.error("Erro ao sincronizar pagamentos: " + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Marcar todos os vencidos como pagos (baixa manual em lote)
+  const handleBaixarVencidos = async () => {
+    const vencidos = honorarios.filter(h => {
+      if (h.status !== "pending") return false;
+      const dueDate = new Date(h.due_date);
+      const today = new Date();
+      return dueDate < today;
+    });
+
+    if (vencidos.length === 0) {
+      toast.info("Nenhum honorário vencido pendente");
+      return;
+    }
+
+    if (!confirm(`Baixar ${vencidos.length} honorário(s) vencido(s) como pagos?`)) return;
+
+    setLoading(true);
+    let baixados = 0;
+
+    try {
+      for (const honorario of vencidos) {
+        const paymentDate = new Date().toISOString().split("T")[0];
+
+        const { error } = await supabase
+          .from("invoices")
+          .update({ status: "paid", payment_date: paymentDate })
+          .eq("id", honorario.id);
+
+        if (error) continue;
+
+        // Registrar recebimento contábil
+        if (bankAccountId) {
+          const client = clients.find(c => c.id === honorario.client_id);
+          await registrarRecebimento({
+            paymentId: `batch_${honorario.id}_${paymentDate}`,
+            invoiceId: honorario.id,
+            clientId: honorario.client_id,
+            clientName: client?.name || "Cliente",
+            amount: honorario.amount,
+            paymentDate: paymentDate,
+            bankAccountId: bankAccountId,
+            description: `Baixa em lote - ${client?.name} - Honorários ${honorario.competence}`,
+          });
+        }
+
+        baixados++;
+      }
+
+      toast.success(`${baixados} honorário(s) baixado(s)!`);
+      await loadData();
+    } catch (error: any) {
+      toast.error("Erro ao baixar honorários: " + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async (honorarioId: string) => {
     if (!confirm("Deletar este honorário? Isto vai remover os lançamentos contábeis também.")) return;
 
@@ -278,13 +434,32 @@ const HonorariosFlow = () => {
               Gerenciamento completo de honorários com lançamentos contábeis automáticos
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Honorário
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSyncPayments}
+              disabled={loading}
+              title="Sincronizar com transações bancárias e baixar pagos"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Sincronizar Pagamentos
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleBaixarVencidos}
+              disabled={loading}
+              title="Baixar todos os vencidos como pagos"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Baixar Vencidos
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Honorário
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
@@ -374,7 +549,8 @@ const HonorariosFlow = () => {
                 </DialogFooter>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats */}
