@@ -193,6 +193,7 @@ const Payroll = () => {
   });
   const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
   const [generatingPayroll, setGeneratingPayroll] = useState(false);
+  const [activeTab, setActiveTab] = useState("employees");
 
   // Add/Edit Event states (para adicionar/editar eventos manuais na folha)
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
@@ -1484,7 +1485,7 @@ const Payroll = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="employees" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="employees">
               <Users className="h-4 w-4 mr-2" />
@@ -1832,7 +1833,10 @@ const Payroll = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setSelectedPayroll(record)}
+                              onClick={() => {
+                                setSelectedPayroll(record);
+                                setActiveTab("detalhamento");
+                              }}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Ver
@@ -1880,7 +1884,10 @@ const Payroll = () => {
                           <Plus className="h-4 w-4 mr-1" />
                           Adicionar Evento
                         </Button>
-                        <Button variant="outline" onClick={() => setSelectedPayroll(null)}>
+                        <Button variant="outline" onClick={() => {
+                          setSelectedPayroll(null);
+                          setActiveTab("folha");
+                        }}>
                           Voltar
                         </Button>
                       </div>
