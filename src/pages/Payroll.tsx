@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { usePayrollAccounting, FolhaPagamento, FolhaDetalhe } from "@/hooks/usePayrollAccounting";
 import { toast } from "sonner";
 import {
   Users,
@@ -160,6 +161,9 @@ interface TerminationData {
 }
 
 const Payroll = () => {
+  // Hook de contabilidade para provisão da folha
+  const { registrarFolhaProvisao } = usePayrollAccounting();
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [alerts, setAlerts] = useState<LaborAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -470,8 +474,92 @@ const Payroll = () => {
       });
 
       if (error) throw error;
-      toast.success(`Folha gerada para ${data} funcionarios!`);
-      loadPayrollRecords();
+
+      // Recarregar registros da folha
+      await loadPayrollRecords();
+
+      // Buscar dados detalhados da folha gerada para provisão contábil
+      const { data: folhaDetalhes, error: detalhesError } = await supabase
+        .from("payroll")
+        .select(`
+          id,
+          employee_id,
+          competencia,
+          total_proventos_oficial,
+          total_descontos_oficial,
+          liquido_oficial,
+          employees (id, name, department)
+        `)
+        .eq("competencia", `${selectedCompetencia}-01`);
+
+      if (detalhesError) {
+        console.error("Erro ao buscar detalhes:", detalhesError);
+        toast.success(`Folha gerada para ${data} funcionários! (sem provisão contábil)`);
+        return;
+      }
+
+      // Preparar dados para provisão contábil
+      if (folhaDetalhes && folhaDetalhes.length > 0) {
+        const [ano, mes] = selectedCompetencia.split('-').map(Number);
+
+        // Buscar eventos (descontos) para obter INSS e IRRF
+        const payrollIds = folhaDetalhes.map((f: any) => f.id);
+        const { data: eventos } = await supabase
+          .from("payroll_events")
+          .select("payroll_id, rubrica_codigo, valor, is_desconto")
+          .in("payroll_id", payrollIds)
+          .eq("is_desconto", true);
+
+        // Mapear descontos por payroll_id
+        const descontosPorFolha: Record<string, { inss: number; irrf: number }> = {};
+        if (eventos) {
+          eventos.forEach((e: any) => {
+            if (!descontosPorFolha[e.payroll_id]) {
+              descontosPorFolha[e.payroll_id] = { inss: 0, irrf: 0 };
+            }
+            // Rubrica 9201 = INSS, 9203 = IRRF (padrão eSocial)
+            if (e.rubrica_codigo === '9201' || e.rubrica_codigo?.toLowerCase().includes('inss')) {
+              descontosPorFolha[e.payroll_id].inss += e.valor || 0;
+            } else if (e.rubrica_codigo === '9203' || e.rubrica_codigo?.toLowerCase().includes('irrf')) {
+              descontosPorFolha[e.payroll_id].irrf += e.valor || 0;
+            }
+          });
+        }
+
+        const funcionarios: FolhaDetalhe[] = folhaDetalhes.map((f: any) => {
+          const descontos = descontosPorFolha[f.id] || { inss: 0, irrf: 0 };
+          return {
+            employeeId: f.employee_id,
+            employeeName: f.employees?.name || 'Funcionário',
+            salarioBruto: f.total_proventos_oficial || 0,
+            inssRetido: descontos.inss,
+            irrfRetido: descontos.irrf,
+            salarioLiquido: f.liquido_oficial || 0,
+          };
+        });
+
+        const folhaPagamento: FolhaPagamento = {
+          mes,
+          ano,
+          dataFolha: `${selectedCompetencia}-01`,
+          funcionarios,
+        };
+
+        // Registrar provisão contábil (D-Despesa / C-Salários a Pagar)
+        const resultado = await registrarFolhaProvisao(folhaPagamento);
+
+        if (resultado.success) {
+          toast.success(`Folha gerada para ${data} funcionários e provisionada na contabilidade!`);
+        } else {
+          console.warn("Aviso na provisão:", resultado.error);
+          toast.success(`Folha gerada para ${data} funcionários!`);
+          if (resultado.error && !resultado.error.includes('duplicado')) {
+            toast.warning(`Provisão: ${resultado.error}`);
+          }
+        }
+      } else {
+        toast.success(`Folha gerada para ${data} funcionários!`);
+      }
     } catch (error: any) {
       console.error("Error generating payroll:", error);
       toast.error(error.message || "Erro ao gerar folha");
