@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download, Upload, FileSpreadsheet } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download, Upload, FileSpreadsheet, Layers, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +54,14 @@ interface BoletoZebrinha {
   nossoNumero: string;
 }
 
+// Interface para transações consolidadas (LIQ.SIMPLES)
+interface TransacaoConsolidada {
+  id: string;
+  transaction_date: string;
+  amount: number;
+  description: string;
+}
+
 const HonorariosFlow = () => {
   const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false });
   const [honorarios, setHonorarios] = useState<HonorarioRecord[]>([]);
@@ -62,6 +72,12 @@ const HonorariosFlow = () => {
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importResult, setImportResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
+
+  // Estados para composição manual de LIQ.SIMPLES
+  const [showComposicaoDialog, setShowComposicaoDialog] = useState(false);
+  const [transacoesConsolidadas, setTransacoesConsolidadas] = useState<TransacaoConsolidada[]>([]);
+  const [selectedTransacao, setSelectedTransacao] = useState<TransacaoConsolidada | null>(null);
+  const [selectedHonorariosIds, setSelectedHonorariosIds] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     client_id: "",
@@ -566,6 +582,128 @@ const HonorariosFlow = () => {
     e.target.value = "";
   };
 
+  // Abrir dialog de composição manual (para LIQ.SIMPLES sem Zebrinha)
+  const handleOpenComposicaoManual = async () => {
+    setLoading(true);
+    try {
+      // Buscar transações consolidadas não conciliadas (LIQ.COBRANCA ou valores altos)
+      const { data: transacoes, error } = await supabase
+        .from("bank_transactions")
+        .select("id, transaction_date, amount, description")
+        .eq("transaction_type", "credit")
+        .eq("matched", false)
+        .gt("amount", 500) // Valores acima de R$ 500 provavelmente são consolidados
+        .order("transaction_date", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Filtrar apenas as que parecem ser consolidadas (LIQ.COBRANCA ou valores muito altos)
+      const consolidadas = (transacoes || []).filter(tx =>
+        tx.description?.toUpperCase().includes("LIQ") ||
+        tx.description?.toUpperCase().includes("COBRANCA") ||
+        tx.amount > 2000
+      );
+
+      setTransacoesConsolidadas(consolidadas);
+      setSelectedTransacao(null);
+      setSelectedHonorariosIds([]);
+      setShowComposicaoDialog(true);
+    } catch (error: any) {
+      toast.error("Erro ao carregar transações: " + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Selecionar/deselecionar honorário para composição
+  const toggleHonorarioSelection = (honorarioId: string) => {
+    setSelectedHonorariosIds(prev =>
+      prev.includes(honorarioId)
+        ? prev.filter(id => id !== honorarioId)
+        : [...prev, honorarioId]
+    );
+  };
+
+  // Calcular total dos honorários selecionados
+  const totalSelecionado = honorarios
+    .filter(h => selectedHonorariosIds.includes(h.id))
+    .reduce((sum, h) => sum + h.amount, 0);
+
+  // Confirmar composição manual e baixar honorários
+  const handleConfirmarComposicao = async () => {
+    if (!selectedTransacao) {
+      toast.error("Selecione uma transação consolidada");
+      return;
+    }
+
+    if (selectedHonorariosIds.length === 0) {
+      toast.error("Selecione pelo menos um honorário");
+      return;
+    }
+
+    // Verificar se o total bate (tolerância de R$ 10)
+    const diferenca = Math.abs(totalSelecionado - selectedTransacao.amount);
+    if (diferenca > 10) {
+      if (!confirm(`O total selecionado (${formatCurrency(totalSelecionado)}) difere do valor da transação (${formatCurrency(selectedTransacao.amount)}) em ${formatCurrency(diferenca)}. Deseja continuar mesmo assim?`)) {
+        return;
+      }
+    }
+
+    setLoading(true);
+    try {
+      const paymentDate = selectedTransacao.transaction_date.split("T")[0];
+      let baixados = 0;
+
+      for (const honorarioId of selectedHonorariosIds) {
+        const honorario = honorarios.find(h => h.id === honorarioId);
+        if (!honorario) continue;
+
+        // Baixar o honorário
+        const { error: updateError } = await supabase
+          .from("invoices")
+          .update({ status: "paid", payment_date: paymentDate })
+          .eq("id", honorarioId);
+
+        if (updateError) continue;
+
+        // Registrar lançamento contábil
+        if (bankAccountId) {
+          const client = clients.find(c => c.id === honorario.client_id);
+          await registrarRecebimento({
+            paymentId: `composicao_${honorarioId}_${paymentDate}`,
+            invoiceId: honorarioId,
+            clientId: honorario.client_id,
+            clientName: client?.name || "Cliente",
+            amount: honorario.amount,
+            paymentDate: paymentDate,
+            bankAccountId: bankAccountId,
+            description: `Composição manual LIQ.SIMPLES - ${client?.name}`,
+          });
+        }
+
+        baixados++;
+      }
+
+      // Marcar transação como conciliada (parcial ou total)
+      await supabase
+        .from("bank_transactions")
+        .update({
+          matched: true,
+          has_multiple_matches: true,
+        })
+        .eq("id", selectedTransacao.id);
+
+      toast.success(`${baixados} honorário(s) baixado(s) com sucesso!`);
+      setShowComposicaoDialog(false);
+      await loadData();
+    } catch (error: any) {
+      toast.error("Erro ao processar composição: " + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async (honorarioId: string) => {
     if (!confirm("Deletar este honorário? Isto vai remover os lançamentos contábeis também.")) return;
 
@@ -664,6 +802,15 @@ const HonorariosFlow = () => {
             >
               <Download className="mr-2 h-4 w-4" />
               Baixar Vencidos
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleOpenComposicaoManual}
+              disabled={loading}
+              title="Compor manualmente valores consolidados (LIQ.SIMPLES)"
+            >
+              <Layers className="mr-2 h-4 w-4" />
+              Composição Manual
             </Button>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
@@ -961,6 +1108,156 @@ const HonorariosFlow = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Dialog de Composição Manual */}
+        <Dialog open={showComposicaoDialog} onOpenChange={setShowComposicaoDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                Composição Manual de LIQ.SIMPLES
+              </DialogTitle>
+              <DialogDescription>
+                Selecione uma transação consolidada e marque os honorários que compõem o valor
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Coluna da esquerda - Transações consolidadas */}
+              <div className="space-y-2">
+                <Label className="font-semibold">1. Selecione a transação consolidada:</Label>
+                <ScrollArea className="h-[300px] border rounded-md p-2">
+                  {transacoesConsolidadas.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      Nenhuma transação consolidada encontrada
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {transacoesConsolidadas.map((tx) => (
+                        <div
+                          key={tx.id}
+                          className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                            selectedTransacao?.id === tx.id
+                              ? "border-primary bg-primary/10"
+                              : "hover:bg-muted"
+                          }`}
+                          onClick={() => {
+                            setSelectedTransacao(tx);
+                            setSelectedHonorariosIds([]);
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="text-sm font-medium truncate max-w-[200px]">
+                              {tx.description}
+                            </div>
+                            <Badge variant="secondary" className="font-mono">
+                              {formatCurrency(tx.amount)}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {new Date(tx.transaction_date).toLocaleDateString("pt-BR")}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+                {selectedTransacao && (
+                  <Alert className="bg-primary/5 border-primary/20">
+                    <AlertDescription>
+                      <strong>Selecionado:</strong> {formatCurrency(selectedTransacao.amount)}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              {/* Coluna da direita - Honorários pendentes */}
+              <div className="space-y-2">
+                <Label className="font-semibold">2. Marque os honorários que compõem:</Label>
+                <ScrollArea className="h-[300px] border rounded-md p-2">
+                  {honorarios.filter(h => h.status === "pending").length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      Nenhum honorário pendente
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {honorarios
+                        .filter(h => h.status === "pending")
+                        .map((honorario) => (
+                          <div
+                            key={honorario.id}
+                            className={`p-2 border rounded-md cursor-pointer transition-colors flex items-center gap-2 ${
+                              selectedHonorariosIds.includes(honorario.id)
+                                ? "border-green-500 bg-green-50"
+                                : "hover:bg-muted"
+                            }`}
+                            onClick={() => toggleHonorarioSelection(honorario.id)}
+                          >
+                            <Checkbox
+                              checked={selectedHonorariosIds.includes(honorario.id)}
+                              onCheckedChange={() => toggleHonorarioSelection(honorario.id)}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">
+                                {honorario.client_name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {honorario.competence}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="font-mono shrink-0">
+                              {formatCurrency(honorario.amount)}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </ScrollArea>
+
+                {/* Resumo da seleção */}
+                <Alert className={
+                  selectedTransacao && Math.abs(totalSelecionado - selectedTransacao.amount) < 10
+                    ? "bg-green-50 border-green-200"
+                    : "bg-yellow-50 border-yellow-200"
+                }>
+                  <AlertDescription className="flex justify-between items-center">
+                    <div>
+                      <strong>Total selecionado:</strong> {formatCurrency(totalSelecionado)}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({selectedHonorariosIds.length} honorário(s))
+                      </span>
+                    </div>
+                    {selectedTransacao && (
+                      <div className="text-sm">
+                        Diferença:{" "}
+                        <span className={
+                          Math.abs(totalSelecionado - selectedTransacao.amount) < 10
+                            ? "text-green-600 font-medium"
+                            : "text-red-600 font-medium"
+                        }>
+                          {formatCurrency(Math.abs(totalSelecionado - selectedTransacao.amount))}
+                        </span>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowComposicaoDialog(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmarComposicao}
+                disabled={loading || !selectedTransacao || selectedHonorariosIds.length === 0}
+              >
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                Confirmar e Baixar ({selectedHonorariosIds.length})
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
