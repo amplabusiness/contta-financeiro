@@ -469,18 +469,106 @@ const Payroll = () => {
   const handleGenerateAllPayroll = async () => {
     setGeneratingPayroll(true);
     try {
-      // O RPC retorna uma tabela com os funcionários processados
-      const { data: rpcResult, error } = await supabase.rpc("gerar_folha_mensal", {
+      console.log("🔄 Gerando folha para competência:", `${selectedCompetencia}-01`);
+
+      // Primeiro, tentar o RPC
+      const { data: rpcResult, error: rpcError } = await supabase.rpc("gerar_folha_mensal", {
         p_competencia: `${selectedCompetencia}-01`,
       });
 
-      if (error) throw error;
+      console.log("📊 Resultado do RPC gerar_folha_mensal:", { rpcResult, rpcError });
 
-      // Contar quantos funcionários foram processados
-      const qtdFuncionarios = Array.isArray(rpcResult) ? rpcResult.length : 0;
+      // Verificar se RPC funcionou e processou funcionários
+      const qtdRPC = Array.isArray(rpcResult) ? rpcResult.length : 0;
+
+      // Se RPC falhar OU retornar vazio, criar registros manualmente
+      if (rpcError || qtdRPC === 0) {
+        if (rpcError) {
+          console.warn("⚠️ RPC falhou:", rpcError.message);
+        } else {
+          console.warn("⚠️ RPC retornou 0 funcionários, tentando método direto...");
+        }
+
+        // Buscar funcionários CLT ativos
+        const { data: funcionariosCLT, error: empError } = await supabase
+          .from("employees")
+          .select("id, name, department, official_salary, unofficial_salary")
+          .eq("is_active", true)
+          .ilike("contract_type", "%clt%");
+
+        console.log("👥 Funcionários CLT encontrados:", funcionariosCLT?.length, funcionariosCLT);
+
+        if (empError) throw empError;
+
+        if (!funcionariosCLT || funcionariosCLT.length === 0) {
+          toast.error("Nenhum funcionário CLT ativo encontrado");
+          return;
+        }
+
+        // Criar registro de folha para cada funcionário CLT
+        let qtdCriados = 0;
+        for (const emp of funcionariosCLT) {
+          const salarioBruto = emp.official_salary || 0;
+          if (salarioBruto === 0) continue; // Pular funcionários sem salário
+
+          // Cálculos de INSS progressivo 2025
+          let inss = 0;
+          if (salarioBruto <= 1518.00) inss = salarioBruto * 0.075;
+          else if (salarioBruto <= 2793.88) inss = 113.85 + (salarioBruto - 1518.00) * 0.09;
+          else if (salarioBruto <= 4190.83) inss = 228.62 + (salarioBruto - 2793.88) * 0.12;
+          else if (salarioBruto <= 8157.41) inss = 396.26 + (salarioBruto - 4190.83) * 0.14;
+          else inss = 951.01; // Teto
+
+          // Cálculos de IRRF 2025
+          const baseIRRF = salarioBruto - inss;
+          let irrf = 0;
+          if (baseIRRF > 4664.68) irrf = baseIRRF * 0.275 - 896.00;
+          else if (baseIRRF > 3751.05) irrf = baseIRRF * 0.225 - 662.77;
+          else if (baseIRRF > 2826.65) irrf = baseIRRF * 0.15 - 381.44;
+          else if (baseIRRF > 2259.20) irrf = baseIRRF * 0.075 - 169.44;
+          irrf = Math.max(0, irrf);
+
+          const liquido = salarioBruto - inss - irrf;
+
+          // Inserir ou atualizar folha
+          const { error: upsertError } = await supabase
+            .from("payroll")
+            .upsert({
+              employee_id: emp.id,
+              competencia: `${selectedCompetencia}-01`,
+              status: "calculada",
+              total_proventos_oficial: salarioBruto,
+              total_descontos_oficial: inss + irrf,
+              liquido_oficial: liquido,
+              total_por_fora: emp.unofficial_salary || 0,
+              liquido_total_real: liquido + (emp.unofficial_salary || 0),
+              data_calculo: new Date().toISOString(),
+            }, {
+              onConflict: "employee_id,competencia"
+            });
+
+          if (upsertError) {
+            console.error("Erro ao inserir folha para", emp.name, ":", upsertError);
+          } else {
+            qtdCriados++;
+            console.log("✅ Folha criada para:", emp.name, "Bruto:", salarioBruto, "INSS:", inss.toFixed(2), "IRRF:", irrf.toFixed(2), "Líquido:", liquido.toFixed(2));
+          }
+        }
+
+        if (qtdCriados > 0) {
+          toast.success(`Folha gerada para ${qtdCriados} funcionários CLT!`);
+        } else {
+          toast.error("Não foi possível criar registros de folha");
+          return;
+        }
+      } else {
+        // RPC funcionou e processou funcionários
+        console.log("✅ RPC processou", qtdRPC, "funcionários");
+      }
 
       // Recarregar registros da folha
       await loadPayrollRecords();
+      console.log("📋 Folha recarregada, registros:", payrollRecords.length);
 
       // Buscar dados detalhados da folha gerada para provisão contábil
       const { data: folhaDetalhes, error: detalhesError } = await supabase
@@ -563,7 +651,7 @@ const Payroll = () => {
           }
         }
       } else {
-        toast.success(`Folha gerada para ${qtdFuncionarios} funcionários!`);
+        toast.warning("Nenhum registro de folha encontrado após geração.");
       }
     } catch (error: any) {
       console.error("Error generating payroll:", error);
