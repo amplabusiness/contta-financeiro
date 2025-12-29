@@ -200,7 +200,7 @@ const Payroll = () => {
   const [addingEvent, setAddingEvent] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [newEventForm, setNewEventForm] = useState({
-    rubrica_codigo: "",
+    rubrica_codigo: "none",
     descricao: "",
     referencia: "",
     valor: 0,
@@ -705,7 +705,7 @@ const Payroll = () => {
     }
     setEditingEventId(null);
     setNewEventForm({
-      rubrica_codigo: "",
+      rubrica_codigo: "none",
       descricao: "",
       referencia: "",
       valor: 0,
@@ -720,7 +720,7 @@ const Payroll = () => {
   const openEditEventDialog = (event: any) => {
     setEditingEventId(event.id);
     setNewEventForm({
-      rubrica_codigo: event.rubrica_codigo || "",
+      rubrica_codigo: event.rubrica_codigo || "none",
       descricao: event.descricao || event.rubrica_descricao || "",
       referencia: event.referencia || "",
       valor: parseFloat(event.valor) || 0,
@@ -740,7 +740,7 @@ const Payroll = () => {
         variable_type: value,
         descricao: variable.label,
         is_desconto: variable.is_desconto,
-        rubrica_codigo: variable.rubrica || "",
+        rubrica_codigo: variable.rubrica || "none",
       });
     } else {
       setNewEventForm({
@@ -748,7 +748,7 @@ const Payroll = () => {
         variable_type: value,
         descricao: "",
         is_desconto: false,
-        rubrica_codigo: "",
+        rubrica_codigo: "none",
       });
     }
   };
@@ -803,7 +803,7 @@ const Payroll = () => {
         const { error: updateEventError } = await supabase
           .from("payroll_events")
           .update({
-            rubrica_codigo: newEventForm.rubrica_codigo || null,
+            rubrica_codigo: newEventForm.rubrica_codigo && newEventForm.rubrica_codigo !== "none" ? newEventForm.rubrica_codigo : null,
             descricao: newEventForm.descricao,
             referencia: newEventForm.referencia || null,
             valor: newEventForm.valor,
@@ -819,7 +819,7 @@ const Payroll = () => {
           .from("payroll_events")
           .insert({
             payroll_id: selectedPayroll.id,
-            rubrica_codigo: newEventForm.rubrica_codigo || null,
+            rubrica_codigo: newEventForm.rubrica_codigo && newEventForm.rubrica_codigo !== "none" ? newEventForm.rubrica_codigo : null,
             descricao: newEventForm.descricao,
             referencia: newEventForm.referencia || null,
             valor: newEventForm.valor,
@@ -2897,7 +2897,6 @@ const Payroll = () => {
                     <SelectValue placeholder="Selecione o tipo de variável..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" disabled>-- Selecione --</SelectItem>
                     <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">PROVENTOS</div>
                     {commonVariables.filter(v => !v.is_desconto).map((v) => (
                       <SelectItem key={v.value} value={v.value}>
@@ -2990,7 +2989,7 @@ const Payroll = () => {
                         <SelectValue placeholder="Sem rubrica" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sem rubrica</SelectItem>
+                        <SelectItem value="none">Sem rubrica</SelectItem>
                         {rubricas
                           .filter(r => r.is_active)
                           .map((r) => (
