@@ -1272,10 +1272,16 @@ const Payroll = () => {
   };
 
   const calculateSummary = (): PayrollSummary => {
-    const total_official = employees.reduce((sum, e) => sum + (e.official_salary || 0), 0);
-    const total_unofficial = employees.reduce((sum, e) => sum + (e.unofficial_salary || 0), 0);
+    // Filtrar funcionários admitidos até a competência para o cálculo do resumo
+    const competenciaDate = new Date(`${selectedCompetencia}-01`);
+    const ultimoDiaCompetencia = new Date(competenciaDate.getFullYear(), competenciaDate.getMonth() + 1, 0);
+    const dataLimiteAdmissao = ultimoDiaCompetencia.toISOString().split('T')[0];
+    const employeesNaCompetencia = employees.filter(e => !e.hire_date || e.hire_date <= dataLimiteAdmissao);
+
+    const total_official = employeesNaCompetencia.reduce((sum, e) => sum + (e.official_salary || 0), 0);
+    const total_unofficial = employeesNaCompetencia.reduce((sum, e) => sum + (e.unofficial_salary || 0), 0);
     // Encargos aproximados: ~68% sobre CLT
-    const clt_employees = employees.filter(e => e.contract_type === "CLT");
+    const clt_employees = employeesNaCompetencia.filter(e => e.contract_type === "CLT");
     const total_clt = clt_employees.reduce((sum, e) => sum + (e.official_salary || 0), 0);
     const total_encargos = total_clt * 0.68;
 
@@ -1344,7 +1350,14 @@ const Payroll = () => {
   const filteredEmployees = employees.filter((e) => {
     const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = selectedDepartment === "all" || e.department === selectedDepartment;
-    return matchesSearch && matchesDepartment;
+
+    // Filtrar por data de admissão - só mostra funcionários admitidos até o último dia da competência
+    const competenciaDate = new Date(`${selectedCompetencia}-01`);
+    const ultimoDiaCompetencia = new Date(competenciaDate.getFullYear(), competenciaDate.getMonth() + 1, 0);
+    const dataLimiteAdmissao = ultimoDiaCompetencia.toISOString().split('T')[0];
+    const admitidoAteCompetencia = !e.hire_date || e.hire_date <= dataLimiteAdmissao;
+
+    return matchesSearch && matchesDepartment && admitidoAteCompetencia;
   });
 
   const summary = calculateSummary();
