@@ -469,11 +469,15 @@ const Payroll = () => {
   const handleGenerateAllPayroll = async () => {
     setGeneratingPayroll(true);
     try {
-      const { data, error } = await supabase.rpc("gerar_folha_mensal", {
+      // O RPC retorna uma tabela com os funcionários processados
+      const { data: rpcResult, error } = await supabase.rpc("gerar_folha_mensal", {
         p_competencia: `${selectedCompetencia}-01`,
       });
 
       if (error) throw error;
+
+      // Contar quantos funcionários foram processados
+      const qtdFuncionarios = Array.isArray(rpcResult) ? rpcResult.length : 0;
 
       // Recarregar registros da folha
       await loadPayrollRecords();
@@ -494,7 +498,7 @@ const Payroll = () => {
 
       if (detalhesError) {
         console.error("Erro ao buscar detalhes:", detalhesError);
-        toast.success(`Folha gerada para ${data} funcionários! (sem provisão contábil)`);
+        toast.success(`Folha gerada para ${qtdFuncionarios} funcionários! (sem provisão contábil)`);
         return;
       }
 
@@ -531,6 +535,7 @@ const Payroll = () => {
           return {
             employeeId: f.employee_id,
             employeeName: f.employees?.name || 'Funcionário',
+            department: f.employees?.department || 'Geral', // Departamento para provisão
             salarioBruto: f.total_proventos_oficial || 0,
             inssRetido: descontos.inss,
             irrfRetido: descontos.irrf,
@@ -545,20 +550,20 @@ const Payroll = () => {
           funcionarios,
         };
 
-        // Registrar provisão contábil (D-Despesa / C-Salários a Pagar)
+        // Registrar provisão contábil por departamento (D-Despesa / C-Salários a Pagar)
         const resultado = await registrarFolhaProvisao(folhaPagamento);
 
         if (resultado.success) {
-          toast.success(`Folha gerada para ${data} funcionários e provisionada na contabilidade!`);
+          toast.success(`Folha gerada para ${folhaDetalhes.length} funcionários e provisionada na contabilidade!`);
         } else {
           console.warn("Aviso na provisão:", resultado.error);
-          toast.success(`Folha gerada para ${data} funcionários!`);
+          toast.success(`Folha gerada para ${folhaDetalhes.length} funcionários!`);
           if (resultado.error && !resultado.error.includes('duplicado')) {
             toast.warning(`Provisão: ${resultado.error}`);
           }
         }
       } else {
-        toast.success(`Folha gerada para ${data} funcionários!`);
+        toast.success(`Folha gerada para ${qtdFuncionarios} funcionários!`);
       }
     } catch (error: any) {
       console.error("Error generating payroll:", error);

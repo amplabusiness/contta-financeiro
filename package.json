@@ -1,7 +1,7 @@
 {
   "name": "ampla-contabilidade",
   "private": true,
-  "version": "1.30.0",
+  "version": "1.30.1",
   "description": "Sistema financeiro de Contas a Pagar e Receber para empresas contábeis - Ampla Contabilidade",
   "author": "Ampla Business <sergio@amplabusiness.com.br>",
   "repository": {
