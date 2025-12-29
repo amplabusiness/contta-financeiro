@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download, Upload, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
@@ -40,6 +41,17 @@ interface Client {
   monthly_fee: number;
 }
 
+// Interface para boletos do relatório Zebrinha SICREDI
+interface BoletoZebrinha {
+  pagador: string;
+  dataVencimento: string;
+  dataLiquidacao: string;
+  valor: number;
+  valorLiquidacao: number;
+  situacao: string;
+  nossoNumero: string;
+}
+
 const HonorariosFlow = () => {
   const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false });
   const [honorarios, setHonorarios] = useState<HonorarioRecord[]>([]);
@@ -48,6 +60,8 @@ const HonorariosFlow = () => {
   const [open, setOpen] = useState(false);
   const [editingHonorario, setEditingHonorario] = useState<HonorarioRecord | null>(null);
   const [bankAccountId, setBankAccountId] = useState<string>("");
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importResult, setImportResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
 
   const [formData, setFormData] = useState({
     client_id: "",
@@ -375,6 +389,183 @@ const HonorariosFlow = () => {
     }
   };
 
+  // Importar relatório Zebrinha do SICREDI e baixar honorários automaticamente
+  const handleImportZebrinha = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setImportResult(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = event.target?.result;
+          const workbook = XLSX.read(data, { type: "binary" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          // Encontrar a linha de cabeçalho (Cart | Nº Doc | Nosso Nº | ...)
+          let headerRowIndex = -1;
+          for (let i = 0; i < Math.min(rows.length, 30); i++) {
+            const row = rows[i];
+            if (row && row[0]?.toString().includes("Cart") && row[4]?.toString().includes("Pagador")) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+
+          if (headerRowIndex === -1) {
+            toast.error("Formato do relatório não reconhecido. Verifique se é o relatório de boletos do SICREDI.");
+            setLoading(false);
+            return;
+          }
+
+          // Parsear boletos liquidados
+          const boletosLiquidados: BoletoZebrinha[] = [];
+          for (let i = headerRowIndex + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || !row[4]) continue;
+
+            const situacao = row[9]?.toString() || "";
+            // Só considerar LIQUIDADO (pagamento confirmado via boleto)
+            // BAIXADO POR SOLICITACAO pode ser PIX - precisa confirmar separadamente
+            if (!situacao.includes("LIQUIDADO")) continue;
+
+            // Parsear data de liquidação
+            let dataLiquidacao = "";
+            if (row[6]) {
+              const rawDate = row[6].toString();
+              // Formato DD/MM/YYYY
+              if (rawDate.includes("/")) {
+                const [d, m, y] = rawDate.split("/");
+                dataLiquidacao = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+              }
+            }
+
+            // Se BAIXADO POR SOLICITACAO não tem data de liquidação, usar data de vencimento
+            if (!dataLiquidacao && situacao.includes("BAIXADO")) {
+              const rawDate = row[5]?.toString() || "";
+              if (rawDate.includes("/")) {
+                const [d, m, y] = rawDate.split("/");
+                dataLiquidacao = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+              }
+            }
+
+            if (!dataLiquidacao) continue;
+
+            // Parsear valor
+            let valor = 0;
+            const valorStr = row[7]?.toString().replace(/\./g, "").replace(",", ".") || "0";
+            valor = parseFloat(valorStr) || 0;
+
+            // Extrair nome do pagador (remover CNPJ do início)
+            let pagador = row[4]?.toString() || "";
+            // Remove CNPJ/CPF do início (ex: "60.489.571 MONICA LOPES...")
+            pagador = pagador.replace(/^[\d./-]+\s*/, "").trim();
+
+            boletosLiquidados.push({
+              pagador,
+              dataVencimento: row[5]?.toString() || "",
+              dataLiquidacao,
+              valor,
+              valorLiquidacao: parseFloat(row[8]?.toString().replace(/\./g, "").replace(",", ".") || "0") || valor,
+              situacao,
+              nossoNumero: row[2]?.toString() || "",
+            });
+          }
+
+          console.log(`[Zebrinha] ${boletosLiquidados.length} boletos liquidados encontrados`);
+
+          // Cruzar com honorários pendentes
+          const pendingHonorarios = honorarios.filter(h => h.status === "pending");
+          let matched = 0;
+          const unmatched: string[] = [];
+
+          for (const boleto of boletosLiquidados) {
+            // Buscar honorário correspondente por nome do cliente + valor (tolerância R$ 1)
+            const honorario = pendingHonorarios.find(h => {
+              const client = clients.find(c => c.id === h.client_id);
+              if (!client) return false;
+
+              // Normalizar nomes para comparação
+              const clientName = client.name.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              const pagadorName = boleto.pagador.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+              // Verificar se o nome do cliente está contido no pagador ou vice-versa
+              const nameMatch = clientName.substring(0, 20) === pagadorName.substring(0, 20) ||
+                                pagadorName.includes(clientName.substring(0, 15)) ||
+                                clientName.includes(pagadorName.substring(0, 15));
+
+              // Verificar valor com tolerância
+              const valorMatch = Math.abs(h.amount - boleto.valor) < 1;
+
+              return nameMatch && valorMatch;
+            });
+
+            if (honorario) {
+              // Baixar o honorário
+              const { error: updateError } = await supabase
+                .from("invoices")
+                .update({ status: "paid", payment_date: boleto.dataLiquidacao })
+                .eq("id", honorario.id);
+
+              if (!updateError) {
+                // Registrar lançamento contábil
+                if (bankAccountId) {
+                  const client = clients.find(c => c.id === honorario.client_id);
+                  await registrarRecebimento({
+                    paymentId: `zebrinha_${honorario.id}_${boleto.dataLiquidacao}`,
+                    invoiceId: honorario.id,
+                    clientId: honorario.client_id,
+                    clientName: client?.name || boleto.pagador,
+                    amount: boleto.valorLiquidacao || honorario.amount,
+                    paymentDate: boleto.dataLiquidacao,
+                    bankAccountId: bankAccountId,
+                    description: `Recebimento SICREDI - ${client?.name || boleto.pagador} - ${boleto.situacao}`,
+                  });
+                }
+
+                matched++;
+                // Remover da lista de pendentes para não duplicar
+                const idx = pendingHonorarios.findIndex(h => h.id === honorario.id);
+                if (idx > -1) pendingHonorarios.splice(idx, 1);
+              }
+            } else {
+              // Não encontrou match
+              unmatched.push(`${boleto.pagador} - R$ ${boleto.valor.toFixed(2)} (${boleto.dataLiquidacao})`);
+            }
+          }
+
+          setImportResult({ matched, unmatched: unmatched.slice(0, 20) }); // Mostrar só os 20 primeiros
+
+          if (matched > 0) {
+            toast.success(`${matched} honorário(s) baixado(s) automaticamente!`);
+            await loadData();
+          } else {
+            toast.info("Nenhum honorário foi baixado. Verifique se os clientes estão cadastrados corretamente.");
+          }
+
+          setLoading(false);
+        } catch (parseError: any) {
+          console.error("[Zebrinha] Parse error:", parseError);
+          toast.error("Erro ao processar arquivo: " + parseError.message);
+          setLoading(false);
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    } catch (error: any) {
+      console.error("[Zebrinha] Import error:", error);
+      toast.error("Erro ao importar: " + getErrorMessage(error));
+      setLoading(false);
+    }
+
+    // Limpar input para permitir reimportar o mesmo arquivo
+    e.target.value = "";
+  };
+
   const handleDelete = async (honorarioId: string) => {
     if (!confirm("Deletar este honorário? Isto vai remover os lançamentos contábeis também.")) return;
 
@@ -434,15 +625,36 @@ const HonorariosFlow = () => {
               Gerenciamento completo de honorários com lançamentos contábeis automáticos
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {/* Importar Zebrinha SICREDI */}
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept=".xls,.xlsx"
+                className="hidden"
+                onChange={handleImportZebrinha}
+                disabled={loading}
+              />
+              <Button
+                variant="default"
+                disabled={loading}
+                asChild
+                title="Importar relatório de boletos do SICREDI (Zebrinha) para baixar honorários"
+              >
+                <span>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Importar Zebrinha SICREDI
+                </span>
+              </Button>
+            </label>
             <Button
               variant="outline"
               onClick={handleSyncPayments}
               disabled={loading}
-              title="Sincronizar com transações bancárias e baixar pagos"
+              title="Sincronizar com transações bancárias (PIX) e baixar pagos"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Sincronizar Pagamentos
+              Sincronizar PIX
             </Button>
             <Button
               variant="outline"
@@ -605,6 +817,38 @@ const HonorariosFlow = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Resultado da importação Zebrinha */}
+        {importResult && (
+          <Alert className={importResult.matched > 0 ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"}>
+            <FileSpreadsheet className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex flex-col gap-2">
+                <div className="font-medium">
+                  Importação concluída: {importResult.matched} honorário(s) baixado(s) automaticamente
+                </div>
+                {importResult.unmatched.length > 0 && (
+                  <div className="text-sm">
+                    <strong>Boletos sem match ({importResult.unmatched.length}):</strong>
+                    <ul className="list-disc ml-4 mt-1 max-h-40 overflow-y-auto">
+                      {importResult.unmatched.map((item, i) => (
+                        <li key={i} className="text-xs text-muted-foreground">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => setImportResult(null)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Table */}
         <Card>
