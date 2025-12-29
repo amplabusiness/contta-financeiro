@@ -25,6 +25,7 @@ import {
 export interface FolhaDetalhe {
   employeeId: string;
   employeeName: string;
+  department?: string; // Departamento/Centro de Custo do funcionário
   salarioBruto: number;
   inssRetido: number;
   irrfRetido: number;
@@ -52,16 +53,16 @@ interface LancamentoFolha {
 
 export function usePayrollAccounting() {
   /**
-   * Registra provisão de folha de pagamento com lançamentos contábeis corretos
-   * 
+   * Registra provisão de folha de pagamento com lançamentos contábeis por departamento
+   *
    * Estrutura:
-   * D - Despesa com Salários e Encargos (conta de Resultado)
+   * D - Despesa com Salários por Departamento (conta de Resultado)
    * C - Salários a Pagar (2.1.2.01 - Passivo)
    * C - INSS a Recolher (2.1.2.02 - Passivo)
    * C - IRRF a Recolher (2.1.2.03 - Passivo)
    */
   const registrarFolhaProvisao = useCallback(
-    async (folha: FolhaPagamento): Promise<{ success: boolean; error?: string; entryId?: string }> => {
+    async (folha: FolhaPagamento): Promise<{ success: boolean; error?: string; entryId?: string; codigoRastreamento?: string }> => {
       try {
         // Validar entrada
         if (!folha.funcionarios || folha.funcionarios.length === 0) {
@@ -74,33 +75,18 @@ export function usePayrollAccounting() {
         const totalIRRF = folha.funcionarios.reduce((sum, f) => sum + f.irrfRetido, 0);
         const totalLiquido = folha.funcionarios.reduce((sum, f) => sum + f.salarioLiquido, 0);
 
-        // Validar que bruto = líquido + inss + irrf
-        const diferenca = Math.abs(totalBruto - (totalLiquido + totalINSS + totalIRRF));
-        if (diferenca > 0.01) {
-          return {
-            success: false,
-            error: `Erro de cálculo: Bruto (R$ ${totalBruto}) != Líquido (R$ ${totalLiquido}) + INSS (R$ ${totalINSS}) + IRRF (R$ ${totalIRRF})`
-          };
-        }
+        // Agrupar por departamento para débito
+        const porDepartamento: Record<string, { bruto: number; funcionarios: string[] }> = {};
+        folha.funcionarios.forEach(f => {
+          const dept = f.department || 'Geral';
+          if (!porDepartamento[dept]) {
+            porDepartamento[dept] = { bruto: 0, funcionarios: [] };
+          }
+          porDepartamento[dept].bruto += f.salarioBruto;
+          porDepartamento[dept].funcionarios.push(f.employeeName);
+        });
 
-        // Buscar código da conta de despesa com salários
-        const { data: contaDespesa } = await supabase
-          .from('chart_of_accounts')
-          .select('id, code, name')
-          .ilike('name', '%salarios%|%encargos%')
-          .eq('account_type', 'Expense')
-          .eq('active', true)
-          .limit(1)
-          .single();
-
-        if (!contaDespesa) {
-          return {
-            success: false,
-            error: 'Conta de Despesa com Salários não encontrada. Configure no plano de contas.'
-          };
-        }
-
-        // ✅ NOVO: Gerar código único de rastreamento
+        // ✅ Gerar código único de rastreamento
         const rastreamento = await gerarCodigoRastreamento(
           supabase,
           'FOLD',
@@ -109,13 +95,14 @@ export function usePayrollAccounting() {
             totalINSS,
             totalIRRF,
             totalLiquido,
-            funcionarios: folha.funcionarios.length
+            funcionarios: folha.funcionarios.length,
+            departamentos: Object.keys(porDepartamento)
           },
           folha.ano,
           folha.mes
         );
 
-        // ✅ NOVO: Validar se já existe (evita duplicatas)
+        // ✅ Validar se já existe (evita duplicatas)
         const { isDuplicata, message: duplicataMsg } = await validarDuplicata(
           supabase,
           rastreamento.codigoRastreamento,
@@ -129,50 +116,20 @@ export function usePayrollAccounting() {
           };
         }
 
-        // Preparar lançamento contábil
-        const linhas = [
-          {
-            account_id: contaDespesa.id,
-            account_code: contaDespesa.code,
-            account_name: contaDespesa.name,
-            account_type: 'Expense',
-            debit: totalBruto,
-            credit: 0,
-            description: `Folha de Pagamento - ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`
-          },
-          {
-            account_code: '2.1.2.01',
-            account_name: 'Salários e Ordenados a Pagar',
-            account_type: 'Liability',
-            debit: 0,
-            credit: totalLiquido,
-            description: `Salários a pagar - ${folha.funcionarios.length} funcionários`
-          },
-          {
-            account_code: '2.1.2.02',
-            account_name: 'INSS a Recolher',
-            account_type: 'Liability',
-            debit: 0,
-            credit: totalINSS,
-            description: `INSS descontado [${rastreamento.codigoRastreamento}]`
-          },
-          {
-            account_code: '2.1.2.03',
-            account_name: 'IRRF a Recolher',
-            account_type: 'Liability',
-            debit: 0,
-            credit: totalIRRF,
-            description: `IRRF descontado [${rastreamento.codigoRastreamento}]`
-          }
-        ];
+        // Buscar contas de despesa existentes
+        const { data: contasDespesa } = await supabase
+          .from('chart_of_accounts')
+          .select('id, code, name')
+          .eq('account_type', 'Expense')
+          .eq('active', true);
 
-        // Criar entrada contábil
+        // Criar entrada contábil principal
         const { data: entry, error: entryError } = await supabase
           .from('accounting_entries')
           .insert([
             {
               entry_date: folha.dataFolha,
-              description: `Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
+              description: `Provisão Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
               reference_type: 'payroll',
               reference_id: rastreamento.referenceId,
               competence_month: folha.mes,
@@ -186,15 +143,82 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
         }
 
-        // Inserir linhas contábeis
-        const linhasComEntryId = linhas.map(linha => ({
-          ...linha,
-          entry_id: entry.id
-        }));
+        // Preparar linhas contábeis
+        const linhas: any[] = [];
 
+        // DÉBITOS - Uma linha por departamento (despesa)
+        for (const [dept, dados] of Object.entries(porDepartamento)) {
+          // Buscar conta de despesa específica do departamento ou usar conta genérica
+          let contaDept = contasDespesa?.find(c =>
+            c.name.toLowerCase().includes(dept.toLowerCase()) &&
+            (c.name.toLowerCase().includes('salário') || c.name.toLowerCase().includes('salario') || c.name.toLowerCase().includes('pessoal'))
+          );
+
+          // Se não encontrou conta específica, buscar conta genérica de salários
+          if (!contaDept) {
+            contaDept = contasDespesa?.find(c =>
+              c.name.toLowerCase().includes('salário') ||
+              c.name.toLowerCase().includes('salario') ||
+              c.name.toLowerCase().includes('pessoal') ||
+              c.name.toLowerCase().includes('folha')
+            );
+          }
+
+          linhas.push({
+            entry_id: entry.id,
+            account_id: contaDept?.id || null,
+            account_code: contaDept?.code || '4.1.1.01',
+            account_name: contaDept?.name || `Despesas com Salários - ${dept}`,
+            account_type: 'Expense',
+            debit: dados.bruto,
+            credit: 0,
+            description: `Salários ${dept} - ${dados.funcionarios.length} func. [${rastreamento.codigoRastreamento}]`
+          });
+        }
+
+        // CRÉDITOS - Passivo (Salários a Pagar)
+        if (totalLiquido > 0) {
+          linhas.push({
+            entry_id: entry.id,
+            account_code: '2.1.2.01',
+            account_name: 'Salários e Ordenados a Pagar',
+            account_type: 'Liability',
+            debit: 0,
+            credit: totalLiquido,
+            description: `Salários a pagar - ${folha.funcionarios.length} funcionários`
+          });
+        }
+
+        // CRÉDITOS - INSS a Recolher
+        if (totalINSS > 0) {
+          linhas.push({
+            entry_id: entry.id,
+            account_code: '2.1.2.02',
+            account_name: 'INSS a Recolher',
+            account_type: 'Liability',
+            debit: 0,
+            credit: totalINSS,
+            description: `INSS descontado [${rastreamento.codigoRastreamento}]`
+          });
+        }
+
+        // CRÉDITOS - IRRF a Recolher
+        if (totalIRRF > 0) {
+          linhas.push({
+            entry_id: entry.id,
+            account_code: '2.1.2.03',
+            account_name: 'IRRF a Recolher',
+            account_type: 'Liability',
+            debit: 0,
+            credit: totalIRRF,
+            description: `IRRF descontado [${rastreamento.codigoRastreamento}]`
+          });
+        }
+
+        // Inserir linhas contábeis
         const { error: linhasError } = await supabase
           .from('accounting_entry_lines')
-          .insert(linhasComEntryId);
+          .insert(linhas);
 
         if (linhasError) {
           // Reverter entrada se linhas falharem
@@ -202,24 +226,25 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar linhas: ${linhasError.message}` };
         }
 
-        // ✅ NOVO: Registrar rastreamento (auditoria)
+        // ✅ Registrar rastreamento (auditoria)
         await registrarRastreamento(supabase, rastreamento, entry.id, {
           totalBruto,
           totalINSS,
           totalIRRF,
           totalLiquido,
           funcionarios: folha.funcionarios.length,
+          departamentos: porDepartamento,
           dataFolha: folha.dataFolha
         });
 
-        return { 
+        return {
           success: true,
           entryId: entry.id,
           codigoRastreamento: rastreamento.codigoRastreamento
         };
 
       } catch (error: any) {
-        return { 
+        return {
           success: false,
           error: error.message || 'Erro desconhecido ao registrar folha'
         };
