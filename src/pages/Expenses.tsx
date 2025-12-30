@@ -226,9 +226,16 @@ const Expenses = () => {
       const { data, error } = await query;
 
       if (error) {
-        // Se a tabela não existir (42P01 PostgreSQL ou 404 HTTP), apenas continua
-        if (error.code === '42P01' || error.message?.includes('does not exist') || (error as any).status === 404) {
-          console.log("Tabela cash_entries não existe ainda - execute a migração para habilitá-la");
+        // Se a tabela não existir (PGRST205, 42P01, ou 404), apenas continua silenciosamente
+        const isTableNotFound =
+          error.code === 'PGRST205' ||
+          error.code === '42P01' ||
+          error.message?.includes('does not exist') ||
+          error.message?.includes('Could not find') ||
+          (error as any).status === 404;
+
+        if (isTableNotFound) {
+          // Silencioso - a tabela será criada quando a migração for executada
           setCashEntries([]);
           return;
         }
@@ -238,7 +245,13 @@ const Expenses = () => {
       setCashEntries(data || []);
     } catch (error: any) {
       // Silenciar erros de tabela não existente
-      if (error?.message?.includes('does not exist') || error?.status === 404) {
+      const isTableNotFound =
+        error?.code === 'PGRST205' ||
+        error?.message?.includes('does not exist') ||
+        error?.message?.includes('Could not find') ||
+        error?.status === 404;
+
+      if (isTableNotFound) {
         setCashEntries([]);
         return;
       }
