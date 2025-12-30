@@ -123,22 +123,10 @@ const Expenses = () => {
     try {
       setLoadingTransactions(true);
 
+      // Query simples sem JOINs para evitar erro 400
       let query = supabase
         .from("bank_transactions")
-        .select(`
-          id,
-          transaction_date,
-          description,
-          amount,
-          type,
-          category,
-          cost_center_id,
-          account_id,
-          bank_account_id,
-          bank_accounts!bank_transactions_bank_account_id_fkey(bank_name, account_number),
-          chart_of_accounts!bank_transactions_account_id_fkey(code, name),
-          cost_centers!bank_transactions_cost_center_id_fkey(code, name)
-        `)
+        .select("*")
         .eq("type", "DEBIT")
         .in("category", ["despesa", "investimento"])
         .order("transaction_date", { ascending: false });
@@ -156,6 +144,41 @@ const Expenses = () => {
 
       if (error) throw error;
 
+      // Buscar dados relacionados (contas e centros de custo)
+      const accountIds = [...new Set((data || []).filter(t => t.account_id).map(t => t.account_id))];
+      const costCenterIds = [...new Set((data || []).filter(t => t.cost_center_id).map(t => t.cost_center_id))];
+      const bankAccountIds = [...new Set((data || []).filter(t => t.bank_account_id).map(t => t.bank_account_id))];
+
+      // Buscar contas contábeis
+      let accountsMap: Record<string, any> = {};
+      if (accountIds.length > 0) {
+        const { data: accountsData } = await supabase
+          .from("chart_of_accounts")
+          .select("id, code, name")
+          .in("id", accountIds);
+        accountsMap = (accountsData || []).reduce((acc, a) => ({ ...acc, [a.id]: a }), {});
+      }
+
+      // Buscar centros de custo
+      let costCentersMap: Record<string, any> = {};
+      if (costCenterIds.length > 0) {
+        const { data: ccData } = await supabase
+          .from("cost_centers")
+          .select("id, code, name")
+          .in("id", costCenterIds);
+        costCentersMap = (ccData || []).reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+      }
+
+      // Buscar contas bancárias
+      let bankAccountsMap: Record<string, any> = {};
+      if (bankAccountIds.length > 0) {
+        const { data: baData } = await supabase
+          .from("bank_accounts")
+          .select("id, bank_name, account_number")
+          .in("id", bankAccountIds);
+        bankAccountsMap = (baData || []).reduce((acc, b) => ({ ...acc, [b.id]: b }), {});
+      }
+
       // Mapear os dados para a interface
       const transactions: BankTransaction[] = (data || []).map((t: any) => ({
         id: t.id,
@@ -167,9 +190,9 @@ const Expenses = () => {
         cost_center_id: t.cost_center_id,
         account_id: t.account_id,
         bank_account_id: t.bank_account_id,
-        bank_account: t.bank_accounts,
-        chart_account: t.chart_of_accounts,
-        cost_center: t.cost_centers,
+        bank_account: bankAccountsMap[t.bank_account_id] || null,
+        chart_account: accountsMap[t.account_id] || null,
+        cost_center: costCentersMap[t.cost_center_id] || null,
       }));
 
       setBankTransactions(transactions);
@@ -203,9 +226,9 @@ const Expenses = () => {
       const { data, error } = await query;
 
       if (error) {
-        // Se a tabela não existir, apenas loga e continua
-        if (error.code === '42P01') {
-          console.log("Tabela cash_entries não existe ainda");
+        // Se a tabela não existir (42P01 PostgreSQL ou 404 HTTP), apenas continua
+        if (error.code === '42P01' || error.message?.includes('does not exist') || (error as any).status === 404) {
+          console.log("Tabela cash_entries não existe ainda - execute a migração para habilitá-la");
           setCashEntries([]);
           return;
         }
@@ -214,6 +237,11 @@ const Expenses = () => {
 
       setCashEntries(data || []);
     } catch (error: any) {
+      // Silenciar erros de tabela não existente
+      if (error?.message?.includes('does not exist') || error?.status === 404) {
+        setCashEntries([]);
+        return;
+      }
       console.error("Erro ao carregar lançamentos de caixa:", error);
     } finally {
       setLoadingCash(false);
