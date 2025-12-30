@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Download, Calendar, Brain, BookOpen, MessageCircle } from "lucide-react";
+import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Download, Calendar, Brain, BookOpen, MessageCircle, Pencil, Save } from "lucide-react";
 import { readOFXFile, OFXStatement, OFXTransaction } from "@/lib/ofxParser";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
@@ -68,6 +68,28 @@ interface PendingTransaction {
   };
 }
 
+interface CostCenter {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface ChartAccount {
+  id: string;
+  code: string;
+  name: string;
+  account_type: string;
+  nature: string;
+}
+
+interface TransactionClassification {
+  fitid: string;
+  category: 'despesa' | 'investimento' | 'receita' | 'transferencia' | '';
+  cost_center_id: string;
+  account_id: string;
+  notes: string;
+}
+
 const BankImport = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<string>("");
@@ -88,10 +110,31 @@ const BankImport = () => {
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
   const [currentImportId, setCurrentImportId] = useState<string>("");
 
+  // Estados para classificação inline
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+  const [chartAccounts, setChartAccounts] = useState<ChartAccount[]>([]);
+  const [classifications, setClassifications] = useState<Record<string, TransactionClassification>>({});
+  const [showInlineClassification, setShowInlineClassification] = useState(false);
+
   useEffect(() => {
     loadBankAccounts();
     loadRecentImports();
+    loadCostCentersAndAccounts();
   }, []);
+
+  const loadCostCentersAndAccounts = async () => {
+    try {
+      const [centersRes, accountsRes] = await Promise.all([
+        supabase.from("cost_centers").select("id, name, code").eq("is_active", true).order("code"),
+        supabase.from("chart_of_accounts").select("id, code, name, account_type, nature").eq("is_active", true).order("code")
+      ]);
+
+      if (centersRes.data) setCostCenters(centersRes.data);
+      if (accountsRes.data) setChartAccounts(accountsRes.data);
+    } catch (error) {
+      console.error("Erro ao carregar centros de custo e contas:", error);
+    }
+  };
 
   const loadBankAccounts = async () => {
     try {
@@ -439,6 +482,48 @@ const BankImport = () => {
     }
   };
 
+  // Função para atualizar classificação de uma transação
+  const updateClassification = (fitid: string, field: keyof TransactionClassification, value: string) => {
+    setClassifications(prev => ({
+      ...prev,
+      [fitid]: {
+        ...prev[fitid],
+        fitid,
+        [field]: value
+      }
+    }));
+  };
+
+  // Sugerir conta contábil baseado na categoria
+  const suggestAccountByCategory = (category: string, type: string): string => {
+    if (type === 'CREDIT') {
+      // Entradas
+      if (category === 'receita') return chartAccounts.find(a => a.code.startsWith('3.1'))?.id || '';
+      if (category === 'transferencia') return chartAccounts.find(a => a.code.startsWith('1.1'))?.id || '';
+    } else {
+      // Saídas
+      if (category === 'despesa') return chartAccounts.find(a => a.code.startsWith('4.1'))?.id || '';
+      if (category === 'investimento') return chartAccounts.find(a => a.code.startsWith('1.2'))?.id || '';
+      if (category === 'transferencia') return chartAccounts.find(a => a.code.startsWith('1.1'))?.id || '';
+    }
+    return '';
+  };
+
+  // Filtrar contas por categoria selecionada
+  const getFilteredAccounts = (category: string, type: string) => {
+    if (!category) return chartAccounts;
+
+    if (type === 'CREDIT') {
+      if (category === 'receita') return chartAccounts.filter(a => a.account_type === 'Revenue' || a.code.startsWith('3'));
+      if (category === 'transferencia') return chartAccounts.filter(a => a.account_type === 'Asset' || a.code.startsWith('1'));
+    } else {
+      if (category === 'despesa') return chartAccounts.filter(a => a.account_type === 'Expense' || a.code.startsWith('4'));
+      if (category === 'investimento') return chartAccounts.filter(a => a.account_type === 'Asset' || a.code.startsWith('1.2'));
+      if (category === 'transferencia') return chartAccounts.filter(a => a.account_type === 'Asset' || a.code.startsWith('1'));
+    }
+    return chartAccounts;
+  };
+
   // Função para abrir classificação manual de todas as transações do preview
   const openManualClassification = () => {
     if (!parsedData) return;
@@ -588,38 +673,144 @@ const BankImport = () => {
                 </div>
               </div>
 
-              <div className="max-h-96 overflow-y-auto">
+              {/* Toggle para mostrar classificação inline */}
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Classificação Manual Inline</span>
+                  <span className="text-xs text-muted-foreground">(categorize cada transação antes de importar)</span>
+                </div>
+                <Switch
+                  checked={showInlineClassification}
+                  onCheckedChange={setShowInlineClassification}
+                />
+              </div>
+
+              <div className="max-h-[500px] overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="w-[90px]">Data</TableHead>
+                      <TableHead className="w-[80px]">Tipo</TableHead>
+                      <TableHead className="min-w-[200px]">Descrição</TableHead>
+                      <TableHead className="text-right w-[100px]">Valor</TableHead>
+                      {showInlineClassification && (
+                        <>
+                          <TableHead className="w-[130px]">Categoria</TableHead>
+                          <TableHead className="w-[150px]">Centro Custo</TableHead>
+                          <TableHead className="w-[200px]">Conta Contábil</TableHead>
+                        </>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {parsedData.transactions.map((txn, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{formatDate(txn.date)}</TableCell>
-                        <TableCell>
-                          <Badge variant={txn.type === 'CREDIT' ? 'default' : 'secondary'}>
-                            {txn.type === 'CREDIT' ? 'Crédito' : 'Débito'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-md truncate">
-                          {txn.description}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={txn.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
-                            {txn.type === 'CREDIT' ? '+' : '-'}{formatCurrency(txn.amount)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {parsedData.transactions.map((txn, idx) => {
+                      const classification: Partial<TransactionClassification> = classifications[txn.fitid] || {};
+                      const filteredAccounts = getFilteredAccounts(classification.category || '', txn.type);
+
+                      return (
+                        <TableRow key={idx}>
+                          <TableCell className="text-xs">{formatDate(txn.date)}</TableCell>
+                          <TableCell>
+                            <Badge variant={txn.type === 'CREDIT' ? 'default' : 'secondary'} className="text-xs">
+                              {txn.type === 'CREDIT' ? 'Crédito' : 'Débito'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-sm" title={txn.description}>
+                            {txn.description}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className={`font-mono text-sm ${txn.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
+                              {txn.type === 'CREDIT' ? '+' : '-'}{formatCurrency(txn.amount)}
+                            </span>
+                          </TableCell>
+                          {showInlineClassification && (
+                            <>
+                              <TableCell>
+                                <Select
+                                  value={classification.category || ''}
+                                  onValueChange={(value) => {
+                                    updateClassification(txn.fitid, 'category', value as any);
+                                    // Auto-sugerir conta contábil
+                                    const suggestedAccount = suggestAccountByCategory(value, txn.type);
+                                    if (suggestedAccount) {
+                                      updateClassification(txn.fitid, 'account_id', suggestedAccount);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Categoria" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {txn.type === 'DEBIT' ? (
+                                      <>
+                                        <SelectItem value="despesa">Despesa</SelectItem>
+                                        <SelectItem value="investimento">Investimento</SelectItem>
+                                        <SelectItem value="transferencia">Transferência</SelectItem>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <SelectItem value="receita">Receita</SelectItem>
+                                        <SelectItem value="transferencia">Transferência</SelectItem>
+                                      </>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={classification.cost_center_id || ''}
+                                  onValueChange={(value) => updateClassification(txn.fitid, 'cost_center_id', value)}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Centro Custo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {costCenters.map(cc => (
+                                      <SelectItem key={cc.id} value={cc.id} className="text-xs">
+                                        {cc.code}. {cc.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={classification.account_id || ''}
+                                  onValueChange={(value) => updateClassification(txn.fitid, 'account_id', value)}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Conta" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {filteredAccounts.map(acc => (
+                                      <SelectItem key={acc.id} value={acc.id} className="text-xs">
+                                        {acc.code} - {acc.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Resumo das classificações */}
+              {showInlineClassification && Object.keys(classifications).length > 0 && (
+                <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <Save className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {Object.keys(classifications).length} transação(ões) classificada(s) manualmente
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Barra de progresso IA */}
               {aiProcessing && (
