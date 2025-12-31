@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ClientProvider } from "@/contexts/ClientContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import { ExpenseUpdateProvider } from "@/contexts/ExpenseUpdateContext";
+import { OfficeProvider } from "@/contexts/OfficeContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
@@ -18,7 +19,6 @@ import Reports from "./pages/Reports";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
 import DRE from "./pages/DRE";
 import RevenueTypes from "./pages/RevenueTypes";
-import BankReconciliation from "./pages/BankReconciliation";
 import PixReconciliation from "./pages/PixReconciliation";
 import BoletoGapsAnalysis from "./pages/BoletoGapsAnalysis";
 import ClientLedger from "./pages/ClientLedger";
@@ -87,7 +87,6 @@ import ClientComparisonVerification from "./pages/ClientComparisonVerification";
 import ClientSpreadsheetVerification from "./pages/ClientSpreadsheetVerification";
 import ClientOpeningBalance from "./pages/ClientOpeningBalance";
 import BankFolderImport from "./pages/BankFolderImport";
-import SuperConciliador from "./pages/SuperConciliador";
 import FeeAdjustment from "./pages/FeeAdjustment";
 import DebtNegotiation from "./pages/DebtNegotiation";
 import InitialLoad from "./pages/InitialLoad";
@@ -108,6 +107,11 @@ import AIAutomation from "./pages/AIAutomation";
 import NFSe from "./pages/NFSe";
 import MonthlyClosing from "./pages/MonthlyClosing";
 import OpeningBalanceReconciliation from "./pages/OpeningBalanceReconciliation";
+import CashFlowStatement from "./pages/CashFlowStatement";
+import PeriodClosing from "./pages/PeriodClosing";
+import AIChat from "./pages/AIChat";
+import AIWorkspace from "./pages/AIWorkspace";
+import CodeEditor from "./pages/CodeEditor";
 import NotFound from "./pages/NotFound";
 
 const appRoutes = [
@@ -125,7 +129,6 @@ const appRoutes = [
   { path: "/bank-accounts", element: <BankAccounts /> },
   { path: "/bank-folder-import", element: <BankFolderImport /> },
   { path: "/bank-import", element: <BankImport /> },
-  { path: "/bank-reconciliation", element: <BankReconciliation /> },
   { path: "/barter-clients", element: <BarterClients /> },
   { path: "/batch-enrichment", element: <BatchEnrichment /> },
   { path: "/boleto-gaps", element: <BoletoGapsAnalysis /> },
@@ -193,7 +196,6 @@ const appRoutes = [
   { path: "/reports", element: <Reports /> },
   { path: "/revenue-types", element: <RevenueTypes /> },
   { path: "/settings", element: <Settings /> },
-  { path: "/super-conciliador", element: <SuperConciliador /> },
   { path: "/trial-balance", element: <TrialBalance /> },
   { path: "/unmatched-pix-report", element: <UnmatchedPixReport /> },
   { path: "/video-content", element: <VideoContent /> },
@@ -201,12 +203,13 @@ const appRoutes = [
 
 const App = () => (
   <TooltipProvider>
-    <ClientProvider>
-      <PeriodProvider>
-        <ExpenseUpdateProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
+    <OfficeProvider>
+      <ClientProvider>
+        <PeriodProvider>
+          <ExpenseUpdateProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -228,8 +231,7 @@ const App = () => (
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
             <Route path="/dre" element={<DRE />} />
             <Route path="/revenue-types" element={<RevenueTypes />} />
-            <Route path="/bank-reconciliation" element={<BankReconciliation />} />
-            <Route path="/pix-reconciliation" element={<PixReconciliation />} />
+                        <Route path="/pix-reconciliation" element={<PixReconciliation />} />
             <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
             <Route path="/trial-balance" element={<TrialBalance />} />
             <Route path="/balance-sheet" element={<BalanceSheet />} />
@@ -293,8 +295,7 @@ const App = () => (
           <Route path="/client-spreadsheet-verification" element={<ClientSpreadsheetVerification />} />
           <Route path="/client-opening-balance" element={<ClientOpeningBalance />} />
           <Route path="/bank-folder-import" element={<BankFolderImport />} />
-          <Route path="/super-conciliador" element={<SuperConciliador />} />
-          <Route path="/initial-load" element={<InitialLoad />} />
+                    <Route path="/initial-load" element={<InitialLoad />} />
             <Route path="/feature-requests" element={<FeatureRequests />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/payroll" element={<Payroll />} />
@@ -308,13 +309,19 @@ const App = () => (
             <Route path="/nfse" element={<NFSe />} />
             <Route path="/monthly-closing" element={<MonthlyClosing />} />
             <Route path="/opening-balance-reconciliation" element={<OpeningBalanceReconciliation />} />
+            <Route path="/cash-flow-statement" element={<CashFlowStatement />} />
+            <Route path="/period-closing" element={<PeriodClosing />} />
+            <Route path="/ai-chat" element={<AIChat />} />
+            <Route path="/ai-workspace" element={<AIWorkspace />} />
+            <Route path="/code-editor" element={<CodeEditor />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </ExpenseUpdateProvider>
+          </ExpenseUpdateProvider>
         </PeriodProvider>
       </ClientProvider>
-    </TooltipProvider>
-  );
+    </OfficeProvider>
+  </TooltipProvider>
+);
 
 export default App;

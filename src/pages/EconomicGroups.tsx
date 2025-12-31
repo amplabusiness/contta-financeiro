@@ -614,60 +614,60 @@ export default function EconomicGroups() {
               onOpenChange={() => toggleGroup(group.id)}
             >
               <Card>
-                <CollapsibleTrigger className="w-full">
-                  <div className="p-6 flex items-center justify-between hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-primary/10 rounded-lg">
-                        <Building2 className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold text-lg">{group.name}</h3>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            Pagadora: <strong>{group.main_payer_name}</strong>
-                          </span>
-                          <Badge variant="outline">
-                            {group.member_count} {group.member_count === 1 ? 'empresa' : 'empresas'}
-                          </Badge>
-                          <Badge variant="secondary">
-                            Vencimento: Dia {group.payment_day}
-                          </Badge>
-                        </div>
+                <div className="p-6 flex items-center justify-between hover:bg-accent/50 transition-colors">
+                  <CollapsibleTrigger className="flex items-center gap-4 flex-1 cursor-pointer">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <Building2 className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-lg">{group.name}</h3>
+                      <div className="flex items-center gap-4 mt-1">
+                        <span className="text-sm text-muted-foreground">
+                          Pagadora: <strong>{group.main_payer_name}</strong>
+                        </span>
+                        <Badge variant="outline">
+                          {group.member_count} {group.member_count === 1 ? 'empresa' : 'empresas'}
+                        </Badge>
+                        <Badge variant="secondary">
+                          Vencimento: Dia {group.payment_day}
+                        </Badge>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Honorário Total</p>
-                        <p className="text-lg font-bold text-primary">
-                          {formatCurrency(group.total_monthly_fee)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditGroup(group)}
-                          title="Editar grupo"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteGroup(group.id)}
-                          title="Excluir grupo"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                  </CollapsibleTrigger>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Honorário Total</p>
+                      <p className="text-lg font-bold text-primary">
+                        {formatCurrency(group.total_monthly_fee)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditGroup(group)}
+                        title="Editar grupo"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteGroup(group.id)}
+                        title="Excluir grupo"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <CollapsibleTrigger className="cursor-pointer p-2 hover:bg-accent rounded">
                       <ChevronDown
                         className={`h-5 w-5 transition-transform ${
                           expandedGroups.has(group.id) ? 'transform rotate-180' : ''
                         }`}
                       />
-                    </div>
+                    </CollapsibleTrigger>
                   </div>
-                </CollapsibleTrigger>
+                </div>
 
                 <CollapsibleContent>
                   <div className="px-6 pb-6 border-t">

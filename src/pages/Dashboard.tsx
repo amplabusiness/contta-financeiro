@@ -16,6 +16,7 @@ import { usePeriod } from "@/contexts/PeriodContext";
 import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 import { useOfflineMode } from "@/hooks/useOfflineMode";
 import { cn } from "@/lib/utils";
+import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
 
 // Tipos para agentes IA
 interface AgentStatus {
@@ -52,6 +53,27 @@ const Dashboard = () => {
     pendingExpenses: 0,
     totalExpenses: 0,
   });
+  // Saldos contabeis (fonte da verdade) - formato de razão
+  const [accountingBalances, setAccountingBalances] = useState<{
+    bank_balance: number;
+    accounts_receivable: number;
+    partner_advances: number;
+    total_revenue: number;
+    total_expenses: number;
+    // Formato de razão: SI + D - C = SF
+    banco?: {
+      saldoInicial: number;
+      debitos: number;
+      creditos: number;
+      saldoFinal: number;
+    };
+    receber?: {
+      saldoInicial: number;
+      debitos: number;
+      creditos: number;
+      saldoFinal: number;
+    };
+  } | null>(null);
   const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
@@ -126,25 +148,7 @@ const Dashboard = () => {
 
       let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
 
-      // Calcular período para filtro de despesas (usando bank_transactions como fonte de verdade)
-      const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-      const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0]; // Último dia do mês
-
-      // FONTE DE VERDADE: bank_transactions (débitos não conciliados do período)
-      let bankExpensesQuery = supabase
-        .from("bank_transactions")
-        .select("*")
-        .eq("type", "debit")
-        .eq("matched", false)
-        .gte("transaction_date", startDate)
-        .lte("transaction_date", endDate);
-
-      // Query legada de expenses (mantida para compatibilidade)
-      let expensesQuery = supabase
-        .from("expenses")
-        .select("*")
-        .gte("due_date", startDate)
-        .lte("due_date", endDate);
+      // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
 
       let allInvoicesQuery = supabase.from("invoices").select("*");
       let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
@@ -153,54 +157,61 @@ const Dashboard = () => {
       if (selectedClientId) {
         clientsQuery = clientsQuery.eq("id", selectedClientId);
         recentInvoicesQuery = recentInvoicesQuery.eq("client_id", selectedClientId);
-        expensesQuery = expensesQuery.eq("client_id", selectedClientId);
         allInvoicesQuery = allInvoicesQuery.eq("client_id", selectedClientId);
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
-        // bank_transactions não tem client_id diretamente
       }
 
       // Usar Promise.allSettled para não falhar se uma query falhar
       const results = await Promise.allSettled([
         clientsQuery,
         recentInvoicesQuery,
-        expensesQuery,
         allInvoicesQuery,
         openingBalanceQuery,
-        bankExpensesQuery, // Nova query de transações bancárias (fonte de verdade)
       ]);
+
+      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
+      // Cada tela consulta a conta que precisa - alteração reflete imediato
+      const dashboardBalances = await getDashboardBalances(selectedYear, selectedMonth);
+      const adiantamentos = await getAdiantamentosSocios(selectedYear, selectedMonth);
+
+      setAccountingBalances({
+        bank_balance: dashboardBalances.saldoBanco,
+        accounts_receivable: dashboardBalances.contasReceber,
+        partner_advances: adiantamentos.total,
+        total_revenue: dashboardBalances.totalReceitas,
+        total_expenses: dashboardBalances.totalDespesas,
+        // Formato de razão: SI + D - C = SF
+        banco: dashboardBalances.banco,
+        receber: dashboardBalances.receber,
+      });
 
       // Extrair dados com fallback para array vazio
       const clientsRes = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: [] };
       const recentInvoicesRes = results[1].status === 'fulfilled' ? results[1].value : { data: [] };
-      const expensesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
-      const allInvoicesRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
-      const openingBalanceRes = results[4].status === 'fulfilled' ? results[4].value : { data: [] };
-      const bankExpensesRes = results[5].status === 'fulfilled' ? results[5].value : { data: [] };
+      const allInvoicesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
+      const openingBalanceRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
 
       // Logar erros se houver
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
-          const queryNames = ['clients', 'recentInvoices', 'expenses', 'allInvoices', 'openingBalance', 'bankExpenses'];
+          const queryNames = ['clients', 'recentInvoices', 'allInvoices', 'openingBalance'];
           console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
         }
       });
 
+      // FONTE DA VERDADE: Buscar despesas da contabilidade (grupo 4.*)
+      const expensesData = await getExpenses(selectedYear, selectedMonth);
+
       const totalClients = clientsRes.count || 0;
       const recentInvoices = recentInvoicesRes.data || [];
-      const expenses = expensesRes.data || [];
       const clientsList = clientsRes.data || [];
       const allInvoices = allInvoicesRes.data || [];
       const openingBalances = openingBalanceRes.data || [];
-      const bankExpenses = bankExpensesRes.data || []; // Transações bancárias (débitos não conciliados)
 
       // CORRIGIDO: Calcular KPIs com TODAS as invoices + saldos de abertura
       // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
       const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
       const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
-
-      // FONTE DE VERDADE: Usar bank_transactions para despesas pendentes
-      // Débitos não conciliados do período = despesas que saíram do banco mas não foram classificadas
-      const pendingBankExpenses = bankExpenses; // Já filtrado na query (type=debit, matched=false)
 
       // Calcular saldos de abertura pendentes
       const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
@@ -229,10 +240,9 @@ const Dashboard = () => {
         overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
         totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
         totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
-        // FONTE DE VERDADE: Usar bank_transactions para despesas
-        // Débitos não conciliados = despesas que precisam ser classificadas
-        pendingExpenses: pendingBankExpenses.length,
-        totalExpenses: pendingBankExpenses.reduce((sum, e) => sum + Math.abs(Number(e.amount)), 0),
+        // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
+        pendingExpenses: expensesData.entries.length,
+        totalExpenses: expensesData.totalExpenses,
       });
 
       // Calcular saúde financeira de cada cliente (incluindo saldo de abertura)
@@ -357,52 +367,24 @@ const Dashboard = () => {
     updateAgent('Dr. Cícero', { status: 'working', lastAction: 'Processando...' });
 
     try {
-      // Buscar transações não conciliadas
-      const { data: pendingTx } = await supabase
-        .from('bank_transactions')
-        .select('id, description, amount, transaction_type, matched, ai_suggestion')
-        .eq('matched', false)
-        .is('ai_suggestion', null)
-        .limit(10);
+      // FONTE DA VERDADE: Buscar lançamentos contábeis para análise
+      const expensesData = await getExpenses(selectedYear, selectedMonth);
 
-      updateTask(drCiceroTaskId, { progress: 50, message: `${pendingTx?.length || 0} transações pendentes` });
+      updateTask(drCiceroTaskId, { progress: 50, message: `${expensesData.entries.length} lançamentos analisados` });
 
-      let processed = 0;
-      if (pendingTx && pendingTx.length > 0) {
-        // Regras de classificação automática
-        const rules = [
-          { pattern: /cemig|copel|light|enel|energia|eletric/i, category: 'Energia Elétrica', account: '4.1.03.01' },
-          { pattern: /copasa|sabesp|cedae|agua|sanea/i, category: 'Água e Esgoto', account: '4.1.03.02' },
-          { pattern: /vivo|tim|claro|telecom|internet/i, category: 'Telecomunicações', account: '4.1.03.03' },
-          { pattern: /aluguel|locacao/i, category: 'Aluguel', account: '4.1.03.04' },
-          { pattern: /darf|gps|inss|fgts|simples|das/i, category: 'Impostos', account: '4.1.04.01' },
-          { pattern: /tar.*bancaria|iof|ted|doc/i, category: 'Taxas Bancárias', account: '4.1.05.01' },
-        ];
-
-        for (const tx of pendingTx) {
-          for (const rule of rules) {
-            if (rule.pattern.test(tx.description || '')) {
-              await supabase
-                .from('bank_transactions')
-                .update({ ai_suggestion: `Dr. Cícero: ${rule.category} | ${rule.account}` })
-                .eq('id', tx.id);
-              processed++;
-              break;
-            }
-          }
-        }
-      }
+      // Calcular estatísticas das despesas
+      const categorizedCount = expensesData.summary.length;
 
       updateTask(drCiceroTaskId, {
         status: 'completed',
         progress: 100,
-        message: `${processed} classificadas`
+        message: `${categorizedCount} categorias`
       });
 
       updateAgent('Dr. Cícero', {
         status: 'active',
-        lastAction: `${processed} classificações`,
-        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + processed,
+        lastAction: `${categorizedCount} categorias`,
+        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + 1,
       });
 
     } catch (error) {
@@ -603,43 +585,26 @@ const Dashboard = () => {
           type: "invoices",
         });
       } else if (type === "expenses") {
-        // FONTE DE VERDADE: Buscar débitos não conciliados do extrato bancário
-        const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-        const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
-
-        // Buscar transações bancárias (débitos não conciliados)
-        const { data: bankData, error: bankError } = await supabase
-          .from("bank_transactions")
-          .select("*")
-          .eq("type", "debit")
-          .eq("matched", false)
-          .gte("transaction_date", startDate)
-          .lte("transaction_date", endDate)
-          .order("transaction_date", { ascending: false });
-
-        if (bankError) {
-          console.warn("Erro ao buscar transações bancárias:", bankError.message);
-        }
+        // FONTE DA VERDADE: Buscar despesas da contabilidade (accounting_entries)
+        const expensesData = await getExpenses(selectedYear, selectedMonth);
 
         // Transformar para formato compatível com o dialog
-        const formattedData = (bankData || []).map(tx => ({
-          id: tx.id,
-          description: tx.description,
-          amount: Math.abs(Number(tx.amount)),
-          due_date: tx.transaction_date,
-          category: tx.category || "Não classificado",
-          status: "pending",
-          // Campos extras para identificar como transação bancária
-          isBankTransaction: true,
-          bank_reference: tx.bank_reference,
-          fitid: tx.fitid,
+        const formattedData = expensesData.entries.map(entry => ({
+          id: entry.id,
+          description: entry.description,
+          amount: entry.amount,
+          due_date: entry.date,
+          category: entry.accountName,
+          status: "completed",
+          accountCode: entry.accountCode,
+          costCenterName: entry.costCenterName,
         }));
 
         const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         setDetailDialog({
           open: true,
-          title: selectedClientId ? `Despesas Pendentes - ${selectedClientName}` : "Despesas Pendentes (Extrato)",
-          description: `${formattedData.length} débitos não conciliados em ${monthName} - Fonte: Extrato Bancário`,
+          title: selectedClientId ? `Despesas - ${selectedClientName}` : "Despesas do Período",
+          description: `${formattedData.length} lançamentos em ${monthName} - Fonte: Contabilidade (accounting_entries)`,
           data: formattedData,
           type: "expenses",
         });
@@ -774,6 +739,139 @@ const Dashboard = () => {
         </Card>
         {/* ========== FIM DASHBOARD DOS AGENTES ========== */}
 
+        {/* Saldos Contábeis - Formato Razão (SI + D - C = SF) */}
+        {accountingBalances && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Saldo Banco */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Saldo Banco (Razão)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {accountingBalances.banco ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Saldo Inicial:</span>
+                      <span>{formatCurrency(accountingBalances.banco.saldoInicial)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-green-600">
+                      <span>+ Débitos:</span>
+                      <span>{formatCurrency(accountingBalances.banco.debitos)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-red-600">
+                      <span>- Créditos:</span>
+                      <span>{formatCurrency(accountingBalances.banco.creditos)}</span>
+                    </div>
+                    <div className="border-t pt-1 flex justify-between font-bold">
+                      <span className="text-xs">= Saldo Final:</span>
+                      <span className={cn("text-lg", accountingBalances.banco.saldoFinal < 0 && "text-destructive")}>
+                        {formatCurrency(accountingBalances.banco.saldoFinal)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(accountingBalances.bank_balance)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Contas a Receber */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  A Receber (Razão)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {accountingBalances.receber ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Saldo Inicial:</span>
+                      <span>{formatCurrency(accountingBalances.receber.saldoInicial)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-green-600">
+                      <span>+ Débitos:</span>
+                      <span>{formatCurrency(accountingBalances.receber.debitos)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-red-600">
+                      <span>- Créditos:</span>
+                      <span>{formatCurrency(accountingBalances.receber.creditos)}</span>
+                    </div>
+                    <div className="border-t pt-1 flex justify-between font-bold">
+                      <span className="text-xs">= Saldo Final:</span>
+                      <span className="text-lg text-green-500">
+                        {formatCurrency(accountingBalances.receber.saldoFinal)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-green-500">
+                    {formatCurrency(accountingBalances.accounts_receivable)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Adiantamentos a Sócios */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  Adiant. Sócios
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-500">
+                  {formatCurrency(accountingBalances.partner_advances)}
+                </div>
+                <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+              </CardContent>
+            </Card>
+
+            {/* Resultado do Período */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Resultado do Período
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>Receitas:</span>
+                    <span>{formatCurrency(accountingBalances.total_revenue)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-red-600">
+                    <span>Despesas:</span>
+                    <span>{formatCurrency(accountingBalances.total_expenses)}</span>
+                  </div>
+                  <div className="border-t pt-1 flex justify-between font-bold">
+                    <span className="text-xs">= Resultado:</span>
+                    <span className={cn(
+                      "text-lg",
+                      (accountingBalances.total_revenue - accountingBalances.total_expenses) >= 0
+                        ? "text-green-500"
+                        : "text-destructive"
+                    )}>
+                      {formatCurrency(accountingBalances.total_revenue - accountingBalances.total_expenses)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => showDetail("clients")} className="cursor-pointer">
             <MetricCard
@@ -809,12 +907,12 @@ const Dashboard = () => {
           </div>
           <div onClick={() => showDetail("expenses")} className="cursor-pointer">
             <MetricCard
-              title="Débitos a Classificar"
+              title="Despesas do Período"
               value={formatCurrency(stats.totalExpenses)}
               icon={TrendingDown}
-              variant="warning"
+              variant="default"
               trend={{
-                value: `${stats.pendingExpenses} do extrato`,
+                value: `${stats.pendingExpenses} lançamentos`,
                 isPositive: false,
               }}
             />

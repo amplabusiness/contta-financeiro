@@ -11,6 +11,7 @@ import {
   Users,
   Calendar,
   ArrowUpDown,
+  BookOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,7 +33,20 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useClient } from "@/contexts/ClientContext";
+import { usePeriod } from "@/contexts/PeriodContext";
+import { getReceivablesByClient, getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
+// Dados da Fonte da Verdade (accounting_entries)
+interface ClientReceivable {
+  clientId: string;
+  clientName: string;
+  openingBalance: number;  // Saldo inicial (antes do período)
+  debit: number;           // Débitos no período (novos valores a receber)
+  credit: number;          // Créditos no período (recebimentos)
+  balance: number;         // Saldo final (valor ainda a receber)
+}
+
+// Interface legada para compatibilidade
 interface ClientDefault {
   clientId: string;
   clientName: string;
@@ -51,10 +65,19 @@ interface ClientDefault {
 
 export default function DefaultAnalysis() {
   const { selectedClientId, selectedClientName } = useClient();
-  const [clients, setClients] = useState<ClientDefault[]>([]);
+  const { selectedYear, selectedMonth, getEndDate, getFormattedPeriod } = usePeriod();
+
+  // Dados da fonte da verdade (accounting_entries)
+  const [receivables, setReceivables] = useState<ClientReceivable[]>([]);
+  const [accountSummary, setAccountSummary] = useState({
+    openingBalance: 0,
+    debit: 0,
+    credit: 0,
+    balance: 0,
+  });
+
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"amount" | "days" | "count">("amount");
-  const [filterDays, setFilterDays] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"amount" | "opening" | "debit">("amount");
   const [stats, setStats] = useState({
     totalClients: 0,
     totalOverdue: 0,
@@ -67,179 +90,56 @@ export default function DefaultAnalysis() {
     try {
       setLoading(true);
 
-      // Get all overdue invoices AND opening balances
-      const today = new Date().toISOString().split("T")[0];
+      // =================================================================
+      // FONTE DA VERDADE: accounting_entries + accounting_entry_lines
+      // =================================================================
 
-      // Construir queries base
-      let invoicesQuery = supabase
-        .from("invoices")
-        .select(
-          `
-          id,
-          client_id,
-          amount,
-          due_date,
-          competence,
-          status,
-          clients (
-            id,
-            name
-          )
-        `
-        )
-        .or(`status.eq.overdue,and(status.eq.pending,due_date.lt.${today})`)
-        .order("due_date", { ascending: true });
+      // 1. Buscar saldo geral da conta 1.1.2.01 (Clientes a Receber)
+      const accountBalance = await getAccountBalance(
+        ACCOUNT_MAPPING.CONTAS_A_RECEBER,
+        selectedYear,
+        selectedMonth
+      );
 
-      let openingBalanceQuery = supabase
-        .from("client_opening_balance")
-        .select(
-          `
-          id,
-          client_id,
-          amount,
-          paid_amount,
-          due_date,
-          competence,
-          status,
-          clients (
-            id,
-            name
-          )
-        `
-        )
-        .in("status", ["pending", "partial", "overdue"])
-        .order("due_date", { ascending: true });
+      setAccountSummary({
+        openingBalance: accountBalance.openingBalance,
+        debit: accountBalance.debit,
+        credit: accountBalance.credit,
+        balance: accountBalance.balance,
+      });
 
-      // Aplicar filtro de cliente se selecionado
-      if (selectedClientId) {
-        invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
-        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
-      }
+      // 2. Buscar saldos por cliente da fonte da verdade
+      const receivablesData = await getReceivablesByClient(
+        selectedYear,
+        selectedMonth,
+        selectedClientId || undefined
+      );
 
-      const [invoicesRes, openingBalanceRes] = await Promise.all([
-        invoicesQuery,
-        openingBalanceQuery,
-      ]);
+      setReceivables(receivablesData.clients);
 
-      if (invoicesRes.error) throw invoicesRes.error;
-      if (openingBalanceRes.error) throw openingBalanceRes.error;
-
-      const invoices = invoicesRes.data || [];
-      const openingBalances = openingBalanceRes.data || [];
-
-      // Group by client
-      const clientMap = new Map<string, ClientDefault>();
-
-      // Processar faturas
-      for (const invoice of invoices) {
-        const client = invoice.clients as any;
-        if (!client) continue;
-
-        const daysLate = differenceInDays(new Date(), parseISO(invoice.due_date));
-        if (daysLate <= 0) continue; // Ignorar não vencidas
-
-        if (!clientMap.has(client.id)) {
-          clientMap.set(client.id, {
-            clientId: client.id,
-            clientName: client.name,
-            totalOverdue: 0,
-            overdueCount: 0,
-            oldestOverdue: invoice.due_date,
-            daysOverdue: daysLate,
-            invoices: [],
-          });
-        }
-
-        const clientData = clientMap.get(client.id)!;
-        clientData.totalOverdue += Number(invoice.amount);
-        clientData.overdueCount++;
-        clientData.invoices.push({
-          id: invoice.id,
-          amount: Number(invoice.amount),
-          dueDate: invoice.due_date,
-          competence: invoice.competence || "",
-          daysLate,
-        });
-
-        if (daysLate > clientData.daysOverdue) {
-          clientData.daysOverdue = daysLate;
-          clientData.oldestOverdue = invoice.due_date;
-        }
-      }
-
-      // Processar saldos de abertura vencidos
-      for (const ob of openingBalances) {
-        const client = ob.clients as any;
-        if (!client) continue;
-        if (!ob.due_date) continue;
-
-        const daysLate = differenceInDays(new Date(), parseISO(ob.due_date));
-        if (daysLate <= 0 && ob.status !== "overdue") continue; // Ignorar não vencidas (exceto status overdue)
-
-        const remainingAmount = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        if (remainingAmount <= 0) continue; // Já pago
-
-        if (!clientMap.has(client.id)) {
-          clientMap.set(client.id, {
-            clientId: client.id,
-            clientName: client.name,
-            totalOverdue: 0,
-            overdueCount: 0,
-            oldestOverdue: ob.due_date,
-            daysOverdue: Math.max(daysLate, 0),
-            invoices: [],
-          });
-        }
-
-        const clientData = clientMap.get(client.id)!;
-        clientData.totalOverdue += remainingAmount;
-        clientData.overdueCount++;
-        clientData.invoices.push({
-          id: ob.id,
-          amount: remainingAmount,
-          dueDate: ob.due_date,
-          competence: `SA ${ob.competence || ""}`, // SA = Saldo de Abertura
-          daysLate: Math.max(daysLate, 0),
-        });
-
-        if (daysLate > clientData.daysOverdue) {
-          clientData.daysOverdue = daysLate;
-          clientData.oldestOverdue = ob.due_date;
-        }
-      }
-
-      const clientsArray = Array.from(clientMap.values());
-
-      // Calculate stats
-      const totalOverdueAmount = clientsArray.reduce((sum, c) => sum + c.totalOverdue, 0);
-      const totalOverdueInvoices = clientsArray.reduce((sum, c) => sum + c.overdueCount, 0);
-      const avgDays =
-        clientsArray.reduce((sum, c) => sum + c.daysOverdue, 0) / (clientsArray.length || 1);
-
-      // Get total active clients for default rate
+      // 3. Calcular estatísticas
       const { count: totalActiveClients } = await supabase
         .from("clients")
         .select("*", { count: "exact", head: true })
         .eq("is_active", true);
 
       setStats({
-        totalClients: clientsArray.length,
-        totalOverdue: totalOverdueAmount,
-        totalInvoices: totalOverdueInvoices,
-        averageDaysLate: Math.round(avgDays),
+        totalClients: receivablesData.clients.length,
+        totalOverdue: receivablesData.totalBalance,
+        totalInvoices: receivablesData.clients.length, // Cada cliente = 1 posição
+        averageDaysLate: 0, // Removido - não faz sentido na visão contábil
         defaultRate: totalActiveClients
-          ? (clientsArray.length / totalActiveClients) * 100
+          ? (receivablesData.clients.length / totalActiveClients) * 100
           : 0,
       });
 
-      setClients(clientsArray);
     } catch (error: any) {
       console.error("Error loading default data:", error);
       toast.error("Erro ao carregar dados de inadimplência: " + error.message);
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId]);
+  }, [selectedClientId, selectedYear, selectedMonth]);
 
   useEffect(() => {
     loadDefaultData();
@@ -252,47 +152,43 @@ export default function DefaultAnalysis() {
     }).format(value);
   };
 
-  const getRiskBadge = (days: number) => {
-    if (days > 90)
+  const getBalanceBadge = (balance: number, openingBalance: number) => {
+    // Se saldo aumentou muito desde a abertura = Alto Risco
+    const increase = openingBalance > 0 ? ((balance - openingBalance) / openingBalance) * 100 : 0;
+
+    if (balance > 10000 || increase > 50) {
       return (
         <Badge variant="destructive" className="gap-1">
           <AlertTriangle className="h-3 w-3" />
-          Alto Risco
+          Alto Valor
         </Badge>
       );
-    if (days > 30)
+    }
+    if (balance > 5000) {
       return (
         <Badge variant="default" className="gap-1 bg-orange-500">
           <Clock className="h-3 w-3" />
-          Risco Médio
+          Médio
         </Badge>
       );
+    }
     return (
       <Badge variant="default" className="gap-1 bg-yellow-500">
         <Calendar className="h-3 w-3" />
-        Risco Baixo
+        Baixo
       </Badge>
     );
   };
 
-  const getSortedClients = () => {
-    let filtered = [...clients];
-
-    // Apply filter
-    if (filterDays !== "all") {
-      const days = parseInt(filterDays);
-      filtered = filtered.filter((c) => c.daysOverdue >= days);
-    }
-
-    // Apply sort
-    return filtered.sort((a, b) => {
+  const getSortedReceivables = () => {
+    return [...receivables].sort((a, b) => {
       switch (sortBy) {
         case "amount":
-          return b.totalOverdue - a.totalOverdue;
-        case "days":
-          return b.daysOverdue - a.daysOverdue;
-        case "count":
-          return b.overdueCount - a.overdueCount;
+          return b.balance - a.balance;
+        case "opening":
+          return b.openingBalance - a.openingBalance;
+        case "debit":
+          return b.debit - a.debit;
         default:
           return 0;
       }
@@ -309,32 +205,66 @@ export default function DefaultAnalysis() {
     );
   }
 
-  const sortedClients = getSortedClients();
+  const sortedReceivables = getSortedReceivables();
 
   return (
     <Layout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">
-            {selectedClientId ? `Inadimplência - ${selectedClientName}` : "Análise de Inadimplência"}
+            {selectedClientId ? `Clientes a Receber - ${selectedClientName}` : "Clientes a Receber"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {selectedClientId
-              ? "Inadimplência do cliente selecionado"
-              : "Visão completa dos clientes inadimplentes e indicadores de cobrança"
-            }
+            Conta 1.1.2.01 - {getFormattedPeriod()} • Fonte da Verdade: accounting_entries
           </p>
         </div>
 
+        {/* RAZÃO CONTÁBIL - Resumo da Conta 1.1.2.01 */}
+        <Card className="border-2 border-primary/20 bg-primary/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <CardTitle>Razão Contábil - Conta 1.1.2.01 (Clientes a Receber)</CardTitle>
+            </div>
+            <CardDescription>
+              Saldo Inicial + Débitos - Créditos = Saldo Final
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="text-center p-4 bg-background rounded-lg border">
+                <p className="text-sm text-muted-foreground mb-1">Saldo Inicial</p>
+                <p className="text-2xl font-bold">{formatCurrency(accountSummary.openingBalance)}</p>
+                <p className="text-xs text-muted-foreground">Até {selectedMonth > 1 ? `${selectedMonth - 1}/${selectedYear}` : '12/' + (selectedYear - 1)}</p>
+              </div>
+              <div className="text-center p-4 bg-background rounded-lg border">
+                <p className="text-sm text-muted-foreground mb-1">+ Débitos</p>
+                <p className="text-2xl font-bold text-blue-600">{formatCurrency(accountSummary.debit)}</p>
+                <p className="text-xs text-muted-foreground">Novas faturas</p>
+              </div>
+              <div className="text-center p-4 bg-background rounded-lg border">
+                <p className="text-sm text-muted-foreground mb-1">- Créditos</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(accountSummary.credit)}</p>
+                <p className="text-xs text-muted-foreground">Recebimentos</p>
+              </div>
+              <div className="text-center p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                <p className="text-sm text-muted-foreground mb-1">= Saldo Final</p>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(accountSummary.balance)}</p>
+                <p className="text-xs text-muted-foreground">A receber</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Clientes Inadimplentes</CardTitle>
+              <CardTitle className="text-sm font-medium">Clientes com Saldo</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">{stats.totalClients}</div>
+              <div className="text-2xl font-bold">{stats.totalClients}</div>
               <p className="text-xs text-muted-foreground">
                 {stats.defaultRate.toFixed(1)}% dos clientes ativos
               </p>
@@ -343,44 +273,33 @@ export default function DefaultAnalysis() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Valor em Atraso</CardTitle>
+              <CardTitle className="text-sm font-medium">Total a Receber</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">
+              <div className="text-2xl font-bold text-primary">
                 {formatCurrency(stats.totalOverdue)}
               </div>
-              <p className="text-xs text-muted-foreground">{stats.totalInvoices} faturas</p>
+              <p className="text-xs text-muted-foreground">Saldo contábil</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Média de Atraso</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.averageDaysLate} dias</div>
-              <p className="text-xs text-muted-foreground">Tempo médio de atraso</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alto Risco</CardTitle>
+              <CardTitle className="text-sm font-medium">Alto Valor (&gt;R$ 10k)</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {clients.filter((c) => c.daysOverdue > 90).length}
+                {receivables.filter((c) => c.balance > 10000).length}
               </div>
-              <p className="text-xs text-muted-foreground">Mais de 90 dias</p>
+              <p className="text-xs text-muted-foreground">Clientes prioritários</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Taxa de Inadimplência</CardTitle>
+              <CardTitle className="text-sm font-medium">Taxa de Clientes</CardTitle>
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -393,7 +312,7 @@ export default function DefaultAnalysis() {
         {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Filtros e Ordenação</CardTitle>
+            <CardTitle>Ordenação</CardTitle>
           </CardHeader>
           <CardContent className="flex gap-4">
             <div className="flex-1">
@@ -403,83 +322,67 @@ export default function DefaultAnalysis() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="amount">Maior Valor</SelectItem>
-                  <SelectItem value="days">Mais Dias em Atraso</SelectItem>
-                  <SelectItem value="count">Mais Faturas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Filtrar por atraso</label>
-              <Select value={filterDays} onValueChange={setFilterDays}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="1">1+ dias</SelectItem>
-                  <SelectItem value="30">30+ dias</SelectItem>
-                  <SelectItem value="60">60+ dias</SelectItem>
-                  <SelectItem value="90">90+ dias</SelectItem>
+                  <SelectItem value="amount">Maior Saldo Final</SelectItem>
+                  <SelectItem value="opening">Maior Saldo Inicial</SelectItem>
+                  <SelectItem value="debit">Mais Débitos no Período</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Clients Table */}
+        {/* Clients Table - Formato de Razão por Cliente */}
         <Card>
           <CardHeader>
-            <CardTitle>Clientes Inadimplentes</CardTitle>
+            <CardTitle>Razão por Cliente</CardTitle>
             <CardDescription>
-              {sortedClients.length} clientes com faturas em atraso
+              {sortedReceivables.length} clientes com saldo a receber
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {sortedClients.length === 0 ? (
+            {sortedReceivables.length === 0 ? (
               <div className="text-center py-12">
-                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhum cliente inadimplente encontrado</p>
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Nenhum cliente com saldo a receber encontrado</p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted/50">
                       <TableHead>Cliente</TableHead>
-                      <TableHead className="text-right">Valor em Atraso</TableHead>
-                      <TableHead className="text-center">Faturas</TableHead>
-                      <TableHead className="text-center">Dias em Atraso</TableHead>
-                      <TableHead className="text-center">Vencimento Mais Antigo</TableHead>
-                      <TableHead className="text-center">Risco</TableHead>
+                      <TableHead className="text-right">Saldo Inicial</TableHead>
+                      <TableHead className="text-right">+ Débitos</TableHead>
+                      <TableHead className="text-right">- Créditos</TableHead>
+                      <TableHead className="text-right">= Saldo Final</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
                       <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedClients.map((client) => (
+                    {sortedReceivables.map((client) => (
                       <TableRow key={client.clientId}>
                         <TableCell className="font-medium">{client.clientName}</TableCell>
-                        <TableCell className="text-right text-destructive font-semibold">
-                          {formatCurrency(client.totalOverdue)}
+                        <TableCell className="text-right">
+                          {formatCurrency(client.openingBalance)}
                         </TableCell>
-                        <TableCell className="text-center">{client.overdueCount}</TableCell>
-                        <TableCell className="text-center font-semibold">
-                          {client.daysOverdue} dias
+                        <TableCell className="text-right text-blue-600">
+                          {formatCurrency(client.debit)}
+                        </TableCell>
+                        <TableCell className="text-right text-green-600">
+                          {formatCurrency(client.credit)}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-primary">
+                          {formatCurrency(client.balance)}
                         </TableCell>
                         <TableCell className="text-center">
-                          {format(parseISO(client.oldestOverdue), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getRiskBadge(client.daysOverdue)}
+                          {getBalanceBadge(client.balance, client.openingBalance)}
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              // Navigate to client details or collection
                               window.location.href = `/client-dashboard?client=${client.clientId}`;
                             }}
                           >
@@ -495,21 +398,21 @@ export default function DefaultAnalysis() {
           </CardContent>
         </Card>
 
-        {/* Risk Distribution */}
+        {/* Distribution by Value */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Risco Baixo (1-30 dias)</CardTitle>
+              <CardTitle className="text-sm">Baixo Valor (até R$ 2.000)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {clients.filter((c) => c.daysOverdue <= 30).length}
+                {receivables.filter((c) => c.balance <= 2000).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(
-                  clients
-                    .filter((c) => c.daysOverdue <= 30)
-                    .reduce((sum, c) => sum + c.totalOverdue, 0)
+                  receivables
+                    .filter((c) => c.balance <= 2000)
+                    .reduce((sum, c) => sum + c.balance, 0)
                 )}
               </p>
             </CardContent>
@@ -517,17 +420,17 @@ export default function DefaultAnalysis() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Risco Médio (31-90 dias)</CardTitle>
+              <CardTitle className="text-sm">Médio Valor (R$ 2.001 - R$ 10.000)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {clients.filter((c) => c.daysOverdue > 30 && c.daysOverdue <= 90).length}
+                {receivables.filter((c) => c.balance > 2000 && c.balance <= 10000).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(
-                  clients
-                    .filter((c) => c.daysOverdue > 30 && c.daysOverdue <= 90)
-                    .reduce((sum, c) => sum + c.totalOverdue, 0)
+                  receivables
+                    .filter((c) => c.balance > 2000 && c.balance <= 10000)
+                    .reduce((sum, c) => sum + c.balance, 0)
                 )}
               </p>
             </CardContent>
@@ -535,17 +438,17 @@ export default function DefaultAnalysis() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Alto Risco (90+ dias)</CardTitle>
+              <CardTitle className="text-sm">Alto Valor (&gt; R$ 10.000)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {clients.filter((c) => c.daysOverdue > 90).length}
+                {receivables.filter((c) => c.balance > 10000).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(
-                  clients
-                    .filter((c) => c.daysOverdue > 90)
-                    .reduce((sum, c) => sum + c.totalOverdue, 0)
+                  receivables
+                    .filter((c) => c.balance > 10000)
+                    .reduce((sum, c) => sum + c.balance, 0)
                 )}
               </p>
             </CardContent>

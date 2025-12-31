@@ -2,14 +2,17 @@ import { ReactNode, useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, X, Check, ChevronsUpDown } from "lucide-react";
+import { LogOut, User, X, Check, ChevronsUpDown, CalendarDays, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useClient } from "@/contexts/ClientContext";
+import { usePeriod } from "@/contexts/PeriodContext";
+import { useOffice } from "@/contexts/OfficeContext";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
 import { useAccountingHealth } from "@/hooks/useAccountingHealth";
@@ -20,6 +23,31 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+// Gerar lista de meses para o seletor de período
+const generateMonthOptions = () => {
+  const months: { value: string; label: string }[] = [];
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  const startDate = new Date(2024, 0, 1); // Janeiro 2024
+  const endDate = new Date(); // Hoje
+
+  let current = startDate;
+  while (current <= endDate) {
+    const month = current.getMonth() + 1;
+    const year = current.getFullYear();
+    const value = `${month}-${year}`;
+    const label = `${monthNames[month - 1]} ${year}`;
+    months.push({ value, label });
+    current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+  }
+
+  return months.reverse(); // Mais recente primeiro
+};
+
+const MONTH_OPTIONS = generateMonthOptions();
+
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +57,8 @@ export function Layout({ children }: LayoutProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { selectedClientId, selectedClientName, setSelectedClient, clearSelectedClient } = useClient();
+  const { selectedYear, selectedMonth, setSelectedYear, setSelectedMonth, getFormattedPeriod } = usePeriod();
+  const { offices, selectedOfficeId, selectedOfficeName, setSelectedOffice } = useOffice();
 
   // Ref para prevenir múltiplas chamadas simultâneas
   const isLoadingClientsRef = useRef(false);
@@ -212,6 +242,66 @@ export function Layout({ children }: LayoutProps) {
                   </Popover>
                 </div>
               )}
+            </div>
+
+            {/* Seletor de Escritório Global */}
+            {offices.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                <Select
+                  value={selectedOfficeId || undefined}
+                  onValueChange={(value) => {
+                    const office = offices.find(o => o.id === value);
+                    if (office) {
+                      const name = office.nome_fantasia || office.razao_social;
+                      setSelectedOffice(office.id, name);
+                      toast.info(`Escritório: ${name}`, {
+                        description: "Todos os dados serão filtrados para este escritório"
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Escritório">
+                      {selectedOfficeName || "Selecione"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {offices.map((office) => (
+                      <SelectItem key={office.id} value={office.id}>
+                        {office.nome_fantasia || office.razao_social}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Seletor de Período Global */}
+            <div className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-muted-foreground" />
+              <Select
+                value={`${selectedMonth}-${selectedYear}`}
+                onValueChange={(value) => {
+                  const [month, year] = value.split("-").map(Number);
+                  setSelectedMonth(month);
+                  setSelectedYear(year);
+                  toast.info(`Período alterado para ${MONTH_OPTIONS.find(m => m.value === value)?.label}`, {
+                    description: "Todos os relatórios serão filtrados para este período"
+                  });
+                }}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTH_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Button variant="outline" size="sm" onClick={handleSignOut}>

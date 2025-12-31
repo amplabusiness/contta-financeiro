@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { Progress } from '@/components/ui/progress'
+import { parseCSV, parseBoletosCSV, parseExtratoBancarioCSV, parseBrazilianCurrency } from '@/lib/csvParser'
 
 interface ImportResult {
   success: boolean
@@ -74,10 +75,63 @@ export function FileImporter() {
         setImporting(false)
         return
       } else if (file.name.endsWith('.csv')) {
-        toast({
-          title: 'CSV import',
-          description: 'CSV import will be available soon'
-        })
+        // Processar CSV localmente usando o parser
+        const parseResult = parseCSV(content)
+
+        if (!parseResult.success) {
+          throw new Error(parseResult.error || 'Erro ao processar CSV')
+        }
+
+        // Detectar tipo de CSV (boletos ou extrato)
+        const headers = parseResult.headers.join(' ').toLowerCase()
+        const isBoleto = headers.includes('nosso') || headers.includes('sacado') || headers.includes('pagador')
+
+        if (isBoleto) {
+          const { boletos } = parseBoletosCSV(content)
+
+          // Enviar para edge function de processamento
+          const { data, error } = await supabase.functions.invoke('process-boletos-csv', {
+            body: { boletos }
+          })
+
+          if (error) throw error
+
+          clearInterval(progressInterval)
+          setProgress(100)
+          setResult({
+            success: true,
+            imported: data?.imported || boletos.length,
+            total: boletos.length
+          })
+
+          toast({
+            title: 'Boletos importados!',
+            description: `${boletos.length} boletos processados`
+          })
+        } else {
+          const { transacoes } = parseExtratoBancarioCSV(content)
+
+          // Enviar para edge function de processamento
+          const { data, error } = await supabase.functions.invoke('process-extrato-csv', {
+            body: { transacoes }
+          })
+
+          if (error) throw error
+
+          clearInterval(progressInterval)
+          setProgress(100)
+          setResult({
+            success: true,
+            imported: data?.imported || transacoes.length,
+            total: transacoes.length
+          })
+
+          toast({
+            title: 'Extrato importado!',
+            description: `${transacoes.length} transações processadas`
+          })
+        }
+
         setImporting(false)
         return
       }

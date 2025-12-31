@@ -86,9 +86,8 @@ const FeesAnalysis = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("all");
-  const [selectedMonth, setSelectedMonth] = useState<string>(
-    new Date().toISOString().slice(0, 7)
-  );
+  // Iniciar com janeiro/2025 que é o último mês com dados fechados
+  const [selectedMonth, setSelectedMonth] = useState<string>("2025-01");
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
   );
@@ -115,136 +114,6 @@ const FeesAnalysis = () => {
   const [proBonoClients, setProBonoClients] = useState<Client[]>([]);
   const [groupMemberIds, setGroupMemberIds] = useState<Set<string>>(new Set());
   const [mainPayerIds, setMainPayerIds] = useState<Set<string>>(new Set());
-
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Fetch all clients
-      const { data: clientsData, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("is_active", true)
-        .order("name");
-
-      if (clientsError) throw clientsError;
-      setClients(clientsData || []);
-
-      // Identify pro bono clients
-      const proBono = (clientsData || []).filter((c) => c.is_pro_bono);
-      setProBonoClients(proBono);
-
-      // Fetch economic group members (clients whose billing is handled by main payer)
-      const { data: groupMembersData } = await supabase
-        .from('economic_group_members')
-        .select(`
-          client_id,
-          economic_groups!inner (
-            id,
-            main_payer_client_id,
-            is_active
-          )
-        `);
-
-      // Build sets: all group members and main payers
-      const memberIds = new Set<string>();
-      const payerIds = new Set<string>();
-
-      (groupMembersData || []).forEach((member: any) => {
-        const group = member.economic_groups;
-        if (group && group.is_active) {
-          memberIds.add(member.client_id);
-          payerIds.add(group.main_payer_client_id);
-        }
-      });
-
-      setGroupMemberIds(memberIds);
-      setMainPayerIds(payerIds);
-
-      // Fetch invoices based on filters
-      let query = supabase
-        .from("invoices")
-        .select(`
-          *,
-          clients (
-            id,
-            name,
-            cnpj,
-            monthly_fee,
-            is_pro_bono
-          )
-        `)
-        .order("competence", { ascending: false });
-
-      // Apply filters
-      if (selectedClient !== "all") {
-        query = query.eq("client_id", selectedClient);
-      }
-
-      if (viewMode === "month") {
-        // Filter by specific month (competence format: "MM/YYYY")
-        const [year, month] = selectedMonth.split("-");
-        const competence = `${month}/${year}`;
-        query = query.eq("competence", competence);
-      } else {
-        // Filter by year
-        query = query.like("competence", `%/${selectedYear}`);
-      }
-
-      const { data: invoicesData, error: invoicesError } = await query;
-
-      if (invoicesError) throw invoicesError;
-      setInvoices(invoicesData || []);
-
-      // Fetch opening balances (saldo de abertura) - competence before 01/2025 is overdue
-      let openingBalanceQuery = supabase
-        .from("client_opening_balance")
-        .select(`
-          id,
-          client_id,
-          amount,
-          paid_amount,
-          due_date,
-          competence,
-          status,
-          clients (
-            id,
-            name
-          )
-        `)
-        .in("status", ["pending", "partial"])
-        .order("competence", { ascending: true });
-
-      // Filter by client if selected
-      if (selectedClient !== "all") {
-        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClient);
-      }
-
-      const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
-
-      if (openingBalanceError) {
-        console.warn("Error fetching opening balance:", openingBalanceError);
-      }
-
-      // Calculate statistics with opening balance
-      calculateStatistics(invoicesData || [], clientsData || [], openingBalanceData || []);
-
-      // Check for missing billings (pass group member info)
-      checkMissingBillings(clientsData || [], invoicesData || [], memberIds, payerIds);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast({
-        title: "Erro ao carregar dados",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-    } finally{
-      setIsLoading(false);
-    }
-  }, [selectedMonth, selectedYear, selectedClient, viewMode, toast, calculateStatistics, checkMissingBillings]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   interface OpeningBalance {
     id: string;
@@ -447,6 +316,136 @@ const FeesAnalysis = () => {
     const missing = activeClients.filter((client) => !clientsWithInvoices.has(client.id));
     setMissingBillings(missing);
   }, [viewMode, selectedMonth]);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch all clients
+      const { data: clientsData, error: clientsError } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+
+      if (clientsError) throw clientsError;
+      setClients(clientsData || []);
+
+      // Identify pro bono clients
+      const proBono = (clientsData || []).filter((c) => c.is_pro_bono);
+      setProBonoClients(proBono);
+
+      // Fetch economic group members (clients whose billing is handled by main payer)
+      const { data: groupMembersData } = await supabase
+        .from('economic_group_members')
+        .select(`
+          client_id,
+          economic_groups!inner (
+            id,
+            main_payer_client_id,
+            is_active
+          )
+        `);
+
+      // Build sets: all group members and main payers
+      const memberIds = new Set<string>();
+      const payerIds = new Set<string>();
+
+      (groupMembersData || []).forEach((member: any) => {
+        const group = member.economic_groups;
+        if (group && group.is_active) {
+          memberIds.add(member.client_id);
+          payerIds.add(group.main_payer_client_id);
+        }
+      });
+
+      setGroupMemberIds(memberIds);
+      setMainPayerIds(payerIds);
+
+      // Fetch invoices based on filters
+      let query = supabase
+        .from("invoices")
+        .select(`
+          *,
+          clients (
+            id,
+            name,
+            cnpj,
+            monthly_fee,
+            is_pro_bono
+          )
+        `)
+        .order("competence", { ascending: false });
+
+      // Apply filters
+      if (selectedClient !== "all") {
+        query = query.eq("client_id", selectedClient);
+      }
+
+      if (viewMode === "month") {
+        // Filter by specific month (competence format: "MM/YYYY")
+        const [year, month] = selectedMonth.split("-");
+        const competence = `${month}/${year}`;
+        query = query.eq("competence", competence);
+      } else {
+        // Filter by year
+        query = query.like("competence", `%/${selectedYear}`);
+      }
+
+      const { data: invoicesData, error: invoicesError } = await query;
+
+      if (invoicesError) throw invoicesError;
+      setInvoices(invoicesData || []);
+
+      // Fetch opening balances (saldo de abertura) - competence before 01/2025 is overdue
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select(`
+          id,
+          client_id,
+          amount,
+          paid_amount,
+          due_date,
+          competence,
+          status,
+          clients (
+            id,
+            name
+          )
+        `)
+        .in("status", ["pending", "partial"])
+        .order("competence", { ascending: true });
+
+      // Filter by client if selected
+      if (selectedClient !== "all") {
+        openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClient);
+      }
+
+      const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
+
+      if (openingBalanceError) {
+        console.warn("Error fetching opening balance:", openingBalanceError);
+      }
+
+      // Calculate statistics with opening balance
+      calculateStatistics(invoicesData || [], clientsData || [], openingBalanceData || []);
+
+      // Check for missing billings (pass group member info)
+      checkMissingBillings(clientsData || [], invoicesData || [], memberIds, payerIds);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally{
+      setIsLoading(false);
+    }
+  }, [selectedMonth, selectedYear, selectedClient, viewMode, toast, calculateStatistics, checkMissingBillings]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

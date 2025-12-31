@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { useClient } from "@/contexts/ClientContext";
+import { getDashboardBalances, getAdiantamentosSocios } from "@/lib/accountMapping";
 
 interface BankAccount {
   id: string;
@@ -48,6 +49,27 @@ const CashFlow = () => {
   const [cashFlowTransactions, setCashFlowTransactions] = useState<any[]>([]);
   const [projection, setProjection] = useState<CashFlowProjection[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
+  // Saldos contabeis (fonte da verdade) - formato de razão
+  const [accountingBalances, setAccountingBalances] = useState<{
+    bank_balance: number;
+    accounts_receivable: number;
+    partner_advances: number;
+    total_revenue: number;
+    total_expenses: number;
+    // Formato de razão: SI + D - C = SF
+    banco?: {
+      saldoInicial: number;
+      debitos: number;
+      creditos: number;
+      saldoFinal: number;
+    };
+    receber?: {
+      saldoInicial: number;
+      debitos: number;
+      creditos: number;
+      saldoFinal: number;
+    };
+  } | null>(null);
   const [open, setOpen] = useState(false);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
@@ -203,6 +225,27 @@ const CashFlow = () => {
   const loadCashFlowData = useCallback(async () => {
     try {
       setLoading(true);
+
+      // =====================================================
+      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
+      // Cada conta do plano de contas alimenta sua tela
+      // =====================================================
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const dashboardBalances = await getDashboardBalances(currentYear, currentMonth);
+      const adiantamentos = await getAdiantamentosSocios(currentYear, currentMonth);
+
+      setAccountingBalances({
+        bank_balance: dashboardBalances.saldoBanco,
+        accounts_receivable: dashboardBalances.contasReceber,
+        partner_advances: adiantamentos.total,
+        total_revenue: dashboardBalances.totalReceitas,
+        total_expenses: dashboardBalances.totalDespesas,
+        // Formato de razão: SI + D - C = SF
+        banco: dashboardBalances.banco,
+        receber: dashboardBalances.receber,
+      });
+      console.log(`[CashFlow] Saldos contábeis (contas diretas):`, dashboardBalances);
 
       // Buscar contas bancárias da tabela correta (bank_accounts)
       const { data: accountsData, error: accountsError } = await supabase
@@ -364,7 +407,15 @@ const CashFlow = () => {
     });
   };
 
+  // =====================================================
+  // FONTE DA VERDADE: Usar saldos da contabilidade
+  // =====================================================
   const getTotalBalance = () => {
+    // Prioriza saldo da contabilidade (fonte da verdade)
+    if (accountingBalances?.bank_balance !== undefined) {
+      return accountingBalances.bank_balance;
+    }
+    // Fallback para tabela bank_accounts
     return bankAccounts.reduce((sum, acc) => sum + Number(acc.current_balance), 0);
   };
 
@@ -373,9 +424,12 @@ const CashFlow = () => {
   };
 
   const getTotalReceivables = () => {
-    // Soma faturas pendentes
+    // Prioriza saldo da contabilidade (fonte da verdade)
+    if (accountingBalances?.accounts_receivable !== undefined) {
+      return accountingBalances.accounts_receivable;
+    }
+    // Fallback para calculo manual
     const invoicesTotal = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    // Soma saldos de abertura pendentes (valor restante)
     const openingBalanceTotal = openingBalances.reduce((sum, ob) => {
       const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
       return sum + remaining;
@@ -384,10 +438,8 @@ const CashFlow = () => {
   };
 
   const getTotalOpeningBalance = () => {
-    return openingBalances.reduce((sum, ob) => {
-      const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-      return sum + remaining;
-    }, 0);
+    // Saldos de abertura foram zerados - retorna 0
+    return 0;
   };
 
   const getProjectedBalance = () => {
@@ -597,16 +649,42 @@ const CashFlow = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                Saldo Atual
+                Saldo Banco (Razão)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${getTotalBalance() < 0 ? 'text-destructive' : ''}`}>
-                {formatCurrency(getTotalBalance())}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {bankAccounts.length} conta{bankAccounts.length !== 1 ? 's' : ''} ativa{bankAccounts.length !== 1 ? 's' : ''}
-              </p>
+              {accountingBalances?.banco ? (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Saldo Inicial:</span>
+                    <span>{formatCurrency(accountingBalances.banco.saldoInicial)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>+ Débitos:</span>
+                    <span>{formatCurrency(accountingBalances.banco.debitos)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-red-600">
+                    <span>- Créditos:</span>
+                    <span>{formatCurrency(accountingBalances.banco.creditos)}</span>
+                  </div>
+                  <div className="border-t pt-1 flex justify-between font-bold">
+                    <span className="text-xs">= Saldo Final:</span>
+                    <span className={`text-lg ${accountingBalances.banco.saldoFinal < 0 ? 'text-destructive' : ''}`}>
+                      {formatCurrency(accountingBalances.banco.saldoFinal)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+                </div>
+              ) : (
+                <div>
+                  <div className={`text-2xl font-bold ${getTotalBalance() < 0 ? 'text-destructive' : ''}`}>
+                    {formatCurrency(getTotalBalance())}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {bankAccounts.length} conta{bankAccounts.length !== 1 ? 's' : ''} ativa{bankAccounts.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -614,21 +692,42 @@ const CashFlow = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-green-500" />
-                A Receber
+                A Receber (Razão)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">
-                {formatCurrency(getTotalReceivables())}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                <p>{invoices.length} fatura{invoices.length !== 1 ? 's' : ''} pendente{invoices.length !== 1 ? 's' : ''}</p>
-                {openingBalances.length > 0 && (
-                  <p className="text-orange-600">
-                    + {openingBalances.length} saldo{openingBalances.length !== 1 ? 's' : ''} de abertura ({formatCurrency(getTotalOpeningBalance())})
+              {accountingBalances?.receber ? (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Saldo Inicial:</span>
+                    <span>{formatCurrency(accountingBalances.receber.saldoInicial)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>+ Débitos:</span>
+                    <span>{formatCurrency(accountingBalances.receber.debitos)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-red-600">
+                    <span>- Créditos:</span>
+                    <span>{formatCurrency(accountingBalances.receber.creditos)}</span>
+                  </div>
+                  <div className="border-t pt-1 flex justify-between font-bold">
+                    <span className="text-xs">= Saldo Final:</span>
+                    <span className="text-lg text-green-500">
+                      {formatCurrency(accountingBalances.receber.saldoFinal)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-2xl font-bold text-green-500">
+                    {formatCurrency(getTotalReceivables())}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {invoices.length} fatura{invoices.length !== 1 ? 's' : ''} pendente{invoices.length !== 1 ? 's' : ''}
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

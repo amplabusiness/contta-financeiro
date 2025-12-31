@@ -106,6 +106,8 @@ interface PendingInvoice {
   due_date: string;
   days_overdue: number;
   selected?: boolean;
+  source?: "invoice" | "accounting" | "opening_balance"; // Fonte do débito
+  description?: string; // Descrição do lançamento
 }
 
 // Interface para dados do escritório
@@ -220,23 +222,130 @@ const DebtConfession = () => {
 
   const fetchPendingInvoices = useCallback(async (clientId: string) => {
     try {
-      const { data, error } = await supabase
+      const today = new Date();
+      const allDebts: PendingInvoice[] = [];
+
+      // 1. Buscar invoices pendentes (método antigo)
+      const { data: invoicesData, error: invoicesError } = await supabase
         .from("invoices")
         .select("*")
         .eq("client_id", clientId)
         .eq("status", "pending")
         .order("due_date", { ascending: true });
 
-      if (error) throw error;
+      if (!invoicesError && invoicesData) {
+        invoicesData.forEach(invoice => {
+          allDebts.push({
+            ...invoice,
+            days_overdue: Math.floor((today.getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)),
+            selected: false,
+            source: "invoice",
+            description: `Honorários ${invoice.reference_month}`,
+          });
+        });
+      }
 
-      const today = new Date();
-      const invoicesWithDays = (data || []).map(invoice => ({
-        ...invoice,
-        days_overdue: Math.floor((today.getTime() - new Date(invoice.due_date).getTime()) / (1000 * 60 * 60 * 24)),
-        selected: false,
-      }));
+      // 2. Buscar o nome do cliente para encontrar a conta no plano de contas
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("name")
+        .eq("id", clientId)
+        .single();
 
-      setPendingInvoices(invoicesWithDays);
+      if (clientData?.name) {
+        // 3. Buscar a conta do cliente no plano de contas (1.1.2.01.xxx - Clientes a Receber)
+        const clientNameParts = clientData.name.split(" ");
+        const searchTerms = clientNameParts.slice(0, 2).join(" "); // Primeiras 2 palavras
+
+        const { data: clientAccounts } = await supabase
+          .from("chart_of_accounts")
+          .select("id, code, name")
+          .like("code", "1.1.2.01%")
+          .ilike("name", `%${searchTerms}%`);
+
+        if (clientAccounts && clientAccounts.length > 0) {
+          const accountIds = clientAccounts.map(a => a.id);
+
+          // 4. Buscar lançamentos de débito na conta do cliente
+          const { data: entries, error: entriesError } = await supabase
+            .from("accounting_entry_lines")
+            .select(`
+              id,
+              debit,
+              credit,
+              description,
+              accounting_entries!inner(
+                id,
+                entry_date,
+                description,
+                competence_date,
+                entry_type
+              )
+            `)
+            .in("account_id", accountIds)
+            .gt("debit", 0);
+
+          if (!entriesError && entries) {
+            // Agrupar por competência para calcular saldo
+            const balanceByCompetence: Record<string, { debit: number; credit: number; entries: any[] }> = {};
+
+            entries.forEach((entry: any) => {
+              // Formatar competence_date como MM/YYYY
+              const competenceDate = entry.accounting_entries?.competence_date;
+              let competence = "Abertura";
+              if (competenceDate) {
+                const date = new Date(competenceDate);
+                competence = `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+              }
+              if (!balanceByCompetence[competence]) {
+                balanceByCompetence[competence] = { debit: 0, credit: 0, entries: [] };
+              }
+              balanceByCompetence[competence].debit += Number(entry.debit) || 0;
+              balanceByCompetence[competence].credit += Number(entry.credit) || 0;
+              balanceByCompetence[competence].entries.push(entry);
+            });
+
+            // Criar débitos para cada competência com saldo positivo
+            Object.entries(balanceByCompetence).forEach(([competence, data]) => {
+              const saldo = data.debit - data.credit;
+              if (saldo > 0) {
+                // Verificar se já existe um invoice para esta competência
+                const existingInvoice = allDebts.find(d =>
+                  d.source === "invoice" && d.reference_month === competence
+                );
+
+                if (!existingInvoice) {
+                  const firstEntry = data.entries[0];
+                  const entryDate = firstEntry?.accounting_entries?.entry_date || new Date().toISOString();
+                  const isOpeningBalance = competence === "Abertura" ||
+                    firstEntry?.accounting_entries?.entry_type === "opening_balance" ||
+                    (firstEntry?.description || "").toLowerCase().includes("abertura");
+
+                  allDebts.push({
+                    id: `acc_${competence.replace(/\//g, "_")}_${clientId}`,
+                    client_id: clientId,
+                    invoice_number: isOpeningBalance ? "SALDO-ABERTURA" : `CONT-${competence.replace("/", "")}`,
+                    reference_month: competence,
+                    amount: saldo,
+                    due_date: entryDate,
+                    days_overdue: Math.floor((today.getTime() - new Date(entryDate).getTime()) / (1000 * 60 * 60 * 24)),
+                    selected: false,
+                    source: isOpeningBalance ? "opening_balance" : "accounting",
+                    description: isOpeningBalance
+                      ? "Saldo de Abertura - Clientes a Receber"
+                      : `Honorários contábeis ${competence}`,
+                  });
+                }
+              }
+            });
+          }
+        }
+      }
+
+      // Ordenar por data de vencimento
+      allDebts.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+
+      setPendingInvoices(allDebts);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       setPendingInvoices([]);
@@ -974,6 +1083,7 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                               <TableRow>
                                 <TableHead className="w-12"></TableHead>
                                 <TableHead>Competência</TableHead>
+                                <TableHead>Descrição</TableHead>
                                 <TableHead>Vencimento</TableHead>
                                 <TableHead>Dias Atraso</TableHead>
                                 <TableHead className="text-right">Valor</TableHead>
@@ -981,14 +1091,31 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                             </TableHeader>
                             <TableBody>
                               {pendingInvoices.map((invoice) => (
-                                <TableRow key={invoice.id}>
+                                <TableRow key={invoice.id} className={invoice.source === "opening_balance" ? "bg-yellow-50" : ""}>
                                   <TableCell>
                                     <Checkbox
                                       checked={selectedInvoices.includes(invoice.id)}
                                       onCheckedChange={() => handleInvoiceToggle(invoice.id)}
                                     />
                                   </TableCell>
-                                  <TableCell>{invoice.reference_month}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      {invoice.reference_month}
+                                      {invoice.source === "opening_balance" && (
+                                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
+                                          Abertura
+                                        </Badge>
+                                      )}
+                                      {invoice.source === "accounting" && (
+                                        <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                          Contábil
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {invoice.description || `Honorários ${invoice.reference_month}`}
+                                  </TableCell>
                                   <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
                                   <TableCell>
                                     <Badge variant={invoice.days_overdue > 60 ? "destructive" : "outline"}>

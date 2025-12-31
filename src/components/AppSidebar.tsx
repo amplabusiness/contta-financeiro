@@ -56,6 +56,7 @@ import {
   FileOutput,
   Shield,
   Lock,
+  Code2,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -135,7 +136,6 @@ export function AppSidebar() {
       items: [
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
-        { title: "Conciliador", url: "/super-conciliador", icon: Target },
         { title: "Aprovações", url: "/pending-reconciliations", icon: AlertTriangle },
       ],
     },
@@ -216,6 +216,7 @@ export function AppSidebar() {
       label: "Ferramentas IA",
       items: [
         { title: "Central IA (100%)", url: "/ai-automation", icon: Zap },
+        { title: "Code Editor", url: "/code-editor", icon: Code2 },
         { title: "Contador IA", url: "/ai-accountant", icon: Bot },
         { title: "Gestor IA", url: "/business-manager", icon: Brain },
         { title: "Treinar IA", url: "/pending-entities", icon: Target },

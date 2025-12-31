@@ -15,6 +15,7 @@ import { formatCurrency } from "@/data/expensesData";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
 interface BankAccount {
   id: string;
@@ -86,6 +87,7 @@ const BankAccounts = () => {
     try {
       setLoading(true);
 
+      // Buscar contas bancárias do cadastro
       const { data, error } = await supabase
         .from("bank_accounts")
         .select("*")
@@ -94,12 +96,37 @@ const BankAccounts = () => {
 
       if (error) throw error;
 
-      setAccounts(data || []);
+      // FONTE DA VERDADE: Usar a mesma função do Dashboard (getAccountBalance)
+      // Isso garante que o saldo será calculado da mesma forma em todas as telas
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
 
-      // Calculate stats
-      const totalAccounts = data?.length || 0;
-      const activeAccounts = data?.filter((a) => a.is_active).length || 0;
-      const totalBalance = data?.reduce((sum, a) => sum + (a.current_balance || 0), 0) || 0;
+      const saldoBanco = await getAccountBalance(
+        ACCOUNT_MAPPING.SALDO_BANCO_SICREDI,
+        currentYear,
+        currentMonth
+      );
+
+      // Atualizar saldo das contas com o valor contábil (fonte da verdade)
+      const accountsWithAccountingBalance = (data || []).map(account => {
+        // Se for Sicredi, usar saldo contábil calculado pela mesma função do Dashboard
+        if (account.name?.toLowerCase().includes('sicredi')) {
+          return {
+            ...account,
+            current_balance: saldoBanco.balance
+          };
+        }
+        return account;
+      });
+
+      setAccounts(accountsWithAccountingBalance);
+
+      // Calculate stats usando saldo contábil como fonte da verdade
+      const totalAccounts = accountsWithAccountingBalance?.length || 0;
+      const activeAccounts = accountsWithAccountingBalance?.filter((a) => a.is_active).length || 0;
+      // FONTE DA VERDADE: usar saldo contábil da mesma função do Dashboard
+      const totalBalance = saldoBanco.balance;
 
       setStats({ totalAccounts, activeAccounts, totalBalance });
     } catch (error: any) {

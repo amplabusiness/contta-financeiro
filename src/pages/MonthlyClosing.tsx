@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { getDashboardBalances, getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -161,43 +162,31 @@ const MonthlyClosing = () => {
       const startStr = format(startDate, "yyyy-MM-dd");
       const endStr = format(endDate, "yyyy-MM-dd");
 
-      // Buscar receitas do período (paid_date é a coluna correta)
-      const { data: paidInvoices } = await supabase
-        .from("invoices")
-        .select("amount")
-        .gte("paid_date", startStr)
-        .lte("paid_date", endStr)
-        .eq("status", "paid");
+      // =====================================================
+      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
+      // Cada tela consulta a conta que precisa
+      // =====================================================
+      const [dashboardBalances, saldoBanco, contasReceber] = await Promise.all([
+        getDashboardBalances(year, month),
+        getAccountBalance(ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, year, month),
+        getAccountBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month),
+      ]);
 
-      // Buscar despesas pagas do período (paid_date é a coluna correta)
-      const { data: paidExpenses } = await supabase
-        .from("expenses")
-        .select("amount")
-        .gte("paid_date", startStr)
-        .lte("paid_date", endStr)
-        .eq("status", "paid");
-
-      // Buscar invoices pendentes
+      // Buscar invoices pendentes (apenas para contagem, não para valores)
       const { data: pendingInvoices } = await supabase
         .from("invoices")
-        .select("id, amount, status")
+        .select("id, status")
         .lte("due_date", endStr)
         .in("status", ["pending", "overdue"]);
 
-      // Buscar despesas pendentes
+      // Buscar despesas pendentes (apenas para contagem)
       const { data: pendingExpenses } = await supabase
         .from("expenses")
-        .select("id, amount, status")
+        .select("id, status")
         .lte("due_date", endStr)
         .in("status", ["pending", "overdue"]);
 
-      // Buscar saldos bancários
-      const { data: bankAccounts } = await supabase
-        .from("bank_accounts")
-        .select("id, name, current_balance")
-        .eq("is_active", true);
-
-      // Buscar transações não conciliadas
+      // Buscar transações não conciliadas (para alerta)
       const { data: unreconciledTx } = await supabase
         .from("bank_transactions")
         .select("id")
@@ -205,10 +194,18 @@ const MonthlyClosing = () => {
         .lte("transaction_date", endStr)
         .eq("is_reconciled", false);
 
-      const totalRevenue = paidInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      const totalExpenses = paidExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-      const accountsReceivable = pendingInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      const accountsPayable = pendingExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+      // FONTE DA VERDADE: Valores das contas contábeis
+      const totalRevenue = dashboardBalances.totalReceitas;
+      const totalExpenses = dashboardBalances.totalDespesas;
+      const accountsReceivable = contasReceber.balance;
+
+      // Contas a pagar - usar expenses apenas como fallback
+      const { data: payableExpenses } = await supabase
+        .from("expenses")
+        .select("amount")
+        .lte("due_date", endStr)
+        .in("status", ["pending", "overdue"]);
+      const accountsPayable = payableExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
 
       setPeriodSummary({
         totalRevenue,
@@ -220,11 +217,11 @@ const MonthlyClosing = () => {
         overdueInvoices: pendingInvoices?.filter(i => i.status === "overdue").length || 0,
         pendingExpenses: pendingExpenses?.filter(e => e.status === "pending").length || 0,
         overdueExpenses: pendingExpenses?.filter(e => e.status === "overdue").length || 0,
-        bankBalances: bankAccounts?.map(ba => ({
-          id: ba.id,
-          name: ba.name,
-          balance: Number(ba.current_balance),
-        })) || [],
+        bankBalances: [{
+          id: "sicredi",
+          name: saldoBanco.name,
+          balance: saldoBanco.balance,
+        }],
         unreconciled: unreconciledTx?.length || 0,
       });
 
