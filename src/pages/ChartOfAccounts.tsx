@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Ban, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/utils";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 interface ChartAccount {
   id: string;
@@ -26,9 +27,20 @@ interface ChartAccount {
   is_active: boolean;
 }
 
+interface AccountBalance {
+  account_id: string;
+  opening_balance: number;
+  total_debits: number;
+  total_credits: number;
+  closing_balance: number;
+}
+
 const ChartOfAccounts = () => {
+  const { selectedYear, selectedMonth } = usePeriod();
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
+  const [balances, setBalances] = useState<Map<string, AccountBalance>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [loadingBalances, setLoadingBalances] = useState(false);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -45,6 +57,12 @@ const ChartOfAccounts = () => {
     loadAccounts();
   }, []);
 
+  useEffect(() => {
+    if (accounts.length > 0) {
+      loadBalances();
+    }
+  }, [selectedYear, selectedMonth, accounts]);
+
   const loadAccounts = async () => {
     try {
       const { data, error } = await supabase
@@ -58,6 +76,109 @@ const ChartOfAccounts = () => {
       toast.error("Erro ao carregar plano de contas");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBalances = async () => {
+    setLoadingBalances(true);
+    try {
+      const periodStart = new Date(selectedYear, selectedMonth - 1, 1);
+      const periodEnd = new Date(selectedYear, selectedMonth, 0);
+      const periodStartStr = periodStart.toISOString().split('T')[0];
+      const periodEndStr = periodEnd.toISOString().split('T')[0];
+
+      // Buscar saldos de abertura (lançamentos antes do período)
+      const { data: openingData, error: openingError } = await supabase
+        .from("accounting_entry_lines")
+        .select(`
+          account_id,
+          debit,
+          credit,
+          accounting_entries!inner(
+            competence_date,
+            status
+          )
+        `)
+        .lt("accounting_entries.competence_date", periodStartStr)
+        .eq("accounting_entries.status", "posted");
+
+      if (openingError) throw openingError;
+
+      // Buscar movimentação do período
+      const { data: periodData, error: periodError } = await supabase
+        .from("accounting_entry_lines")
+        .select(`
+          account_id,
+          debit,
+          credit,
+          accounting_entries!inner(
+            competence_date,
+            status
+          )
+        `)
+        .gte("accounting_entries.competence_date", periodStartStr)
+        .lte("accounting_entries.competence_date", periodEndStr)
+        .eq("accounting_entries.status", "posted");
+
+      if (periodError) throw periodError;
+
+      // Calcular saldos por conta
+      const balanceMap = new Map<string, AccountBalance>();
+
+      // Inicializar todas as contas
+      accounts.forEach(account => {
+        balanceMap.set(account.id, {
+          account_id: account.id,
+          opening_balance: 0,
+          total_debits: 0,
+          total_credits: 0,
+          closing_balance: 0
+        });
+      });
+
+      // Calcular saldo de abertura
+      (openingData || []).forEach((line: any) => {
+        const balance = balanceMap.get(line.account_id);
+        if (balance) {
+          const account = accounts.find(a => a.id === line.account_id);
+          const debit = Number(line.debit) || 0;
+          const credit = Number(line.credit) || 0;
+
+          // Contas devedoras: saldo = débitos - créditos
+          // Contas credoras: saldo = créditos - débitos
+          if (account?.nature === 'DEVEDORA') {
+            balance.opening_balance += debit - credit;
+          } else {
+            balance.opening_balance += credit - debit;
+          }
+        }
+      });
+
+      // Calcular movimentação do período
+      (periodData || []).forEach((line: any) => {
+        const balance = balanceMap.get(line.account_id);
+        if (balance) {
+          balance.total_debits += Number(line.debit) || 0;
+          balance.total_credits += Number(line.credit) || 0;
+        }
+      });
+
+      // Calcular saldo final
+      balanceMap.forEach((balance, accountId) => {
+        const account = accounts.find(a => a.id === accountId);
+        if (account?.nature === 'DEVEDORA') {
+          balance.closing_balance = balance.opening_balance + balance.total_debits - balance.total_credits;
+        } else {
+          balance.closing_balance = balance.opening_balance + balance.total_credits - balance.total_debits;
+        }
+      });
+
+      setBalances(balanceMap);
+    } catch (error: any) {
+      console.error("Erro ao carregar saldos:", error);
+      toast.error("Erro ao carregar saldos: " + getErrorMessage(error));
+    } finally {
+      setLoadingBalances(false);
     }
   };
 
@@ -171,180 +292,315 @@ const ChartOfAccounts = () => {
     return accounts.filter(acc => !acc.parent_id || acc.code.split('.').length < 3);
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const getMonthName = (month: number) => {
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    return months[month - 1];
+  };
+
+  // Calcular totais
+  const calculateTotals = () => {
+    let totalDebits = 0;
+    let totalCredits = 0;
+    let totalClosingDebit = 0;
+    let totalClosingCredit = 0;
+
+    accounts.forEach(account => {
+      const balance = balances.get(account.id);
+      if (balance) {
+        totalDebits += balance.total_debits;
+        totalCredits += balance.total_credits;
+
+        if (account.nature === 'DEVEDORA') {
+          if (balance.closing_balance > 0) totalClosingDebit += balance.closing_balance;
+          else totalClosingCredit += Math.abs(balance.closing_balance);
+        } else {
+          if (balance.closing_balance > 0) totalClosingCredit += balance.closing_balance;
+          else totalClosingDebit += Math.abs(balance.closing_balance);
+        }
+      }
+    });
+
+    return { totalDebits, totalCredits, totalClosingDebit, totalClosingCredit };
+  };
+
+  const totals = calculateTotals();
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Plano de Contas</h1>
-            <p className="text-muted-foreground">Gerencie as contas contábeis</p>
+            <p className="text-muted-foreground">
+              Período: {getMonthName(selectedMonth)}/{selectedYear} |
+              Total: {accounts.length} contas
+            </p>
           </div>
-          <Dialog open={open} onOpenChange={(value) => {
-            setOpen(value);
-            if (!value) {
-              setEditingAccount(null);
-              resetForm();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Conta
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingAccount ? "Editar Conta" : "Nova Conta"}</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados da conta contábil
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Código *</Label>
-                  <Input
-                    id="code"
-                    placeholder="Ex: 1.1.01"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="account_type">Tipo *</Label>
-                  <Select
-                    value={formData.account_type}
-                    onValueChange={(value) => setFormData({ ...formData, account_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ATIVO">Ativo</SelectItem>
-                      <SelectItem value="PASSIVO">Passivo</SelectItem>
-                      <SelectItem value="RECEITA">Receita</SelectItem>
-                      <SelectItem value="DESPESA">Despesa</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="parent_id">Conta Pai (opcional)</Label>
-                  <Select
-                    value={formData.parent_id}
-                    onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a conta pai" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getParentAccounts().map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.code} - {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Salvando..." : "Salvar"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadBalances}
+              disabled={loadingBalances}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loadingBalances ? 'animate-spin' : ''}`} />
+              Atualizar Saldos
+            </Button>
+            <Dialog open={open} onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) {
+                setEditingAccount(null);
+                resetForm();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Conta
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingAccount ? "Editar Conta" : "Nova Conta"}</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados da conta contábil
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="code">Código *</Label>
+                    <Input
+                      id="code"
+                      placeholder="Ex: 1.1.01"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="account_type">Tipo *</Label>
+                    <Select
+                      value={formData.account_type}
+                      onValueChange={(value) => setFormData({ ...formData, account_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ATIVO">Ativo</SelectItem>
+                        <SelectItem value="PASSIVO">Passivo</SelectItem>
+                        <SelectItem value="RECEITA">Receita</SelectItem>
+                        <SelectItem value="DESPESA">Despesa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parent_id">Conta Pai (opcional)</Label>
+                    <Select
+                      value={formData.parent_id}
+                      onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a conta pai" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getParentAccounts().map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.code} - {account.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Contas Cadastradas</CardTitle>
-            <CardDescription>Total: {accounts.length} contas</CardDescription>
+            <CardTitle>Contas Contábeis</CardTitle>
+            <CardDescription>
+              Saldo Inicial + Débitos - Créditos = Saldo Final (contas devedoras) |
+              Saldo Inicial + Créditos - Débitos = Saldo Final (contas credoras)
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {accounts.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                Carregando...
+              </div>
+            ) : accounts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 Nenhuma conta cadastrada ainda
               </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {accounts.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell className="font-mono font-medium">{account.code}</TableCell>
-                      <TableCell>{account.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          account.account_type === "DESPESA" ? "destructive" :
-                          account.account_type === "RECEITA" ? "default" :
-                          account.account_type === "ATIVO" ? "secondary" : "outline"
-                        }>
-                          {account.account_type === "DESPESA" ? "Despesa" :
-                           account.account_type === "RECEITA" ? "Receita" :
-                           account.account_type === "ATIVO" ? "Ativo" : "Passivo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={account.is_active ? "default" : "secondary"}>
-                          {account.is_active ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(account)}
-                            title="Editar"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleStatus(account)}
-                            title={account.is_active ? "Desativar" : "Ativar"}
-                          >
-                            {account.is_active ? (
-                              <Ban className="w-4 h-4 text-warning" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-success" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedAccountId(account.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-24">Código</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="w-20">Tipo</TableHead>
+                      <TableHead className="text-right w-28">Saldo Inicial</TableHead>
+                      <TableHead className="text-right w-28">Débitos</TableHead>
+                      <TableHead className="text-right w-28">Créditos</TableHead>
+                      <TableHead className="text-right w-28">Saldo Final</TableHead>
+                      <TableHead className="text-right w-24">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {accounts.map((account) => {
+                      const balance = balances.get(account.id);
+
+                      return (
+                        <TableRow key={account.id} className={!account.is_active ? "opacity-50" : ""}>
+                          <TableCell className="font-mono font-medium text-sm">
+                            {account.code}
+                          </TableCell>
+                          <TableCell
+                            className="text-sm"
+                            style={{ paddingLeft: `${(account.level - 1) * 16}px` }}
+                          >
+                            {account.name}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              account.account_type === "DESPESA" ? "destructive" :
+                              account.account_type === "RECEITA" ? "default" :
+                              account.account_type === "ATIVO" ? "secondary" : "outline"
+                            } className="text-xs">
+                              {account.account_type?.charAt(0)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={`text-right font-mono text-sm ${
+                            balance && balance.opening_balance < 0 ? 'text-red-600' : ''
+                          }`}>
+                            {balance ? formatCurrency(balance.opening_balance) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm text-blue-600">
+                            {balance && balance.total_debits > 0 ? formatCurrency(balance.total_debits) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm text-green-600">
+                            {balance && balance.total_credits > 0 ? formatCurrency(balance.total_credits) : '-'}
+                          </TableCell>
+                          <TableCell className={`text-right font-mono text-sm font-medium ${
+                            balance && balance.closing_balance < 0 ? 'text-red-600' : ''
+                          }`}>
+                            {balance ? formatCurrency(balance.closing_balance) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => handleEdit(account)}
+                                title="Editar"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => handleToggleStatus(account)}
+                                title={account.is_active ? "Desativar" : "Ativar"}
+                              >
+                                {account.is_active ? (
+                                  <Ban className="w-3 h-3 text-warning" />
+                                ) : (
+                                  <CheckCircle className="w-3 h-3 text-success" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  setSelectedAccountId(account.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-3 h-3 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {/* Linha de totais */}
+                    <TableRow className="bg-muted font-bold border-t-2">
+                      <TableCell colSpan={3} className="text-right">
+                        TOTAIS
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        -
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-blue-600">
+                        {formatCurrency(totals.totalDebits)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-green-600">
+                        {formatCurrency(totals.totalCredits)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        <div className="text-blue-600">{formatCurrency(totals.totalClosingDebit)} (D)</div>
+                        <div className="text-green-600">{formatCurrency(totals.totalClosingCredit)} (C)</div>
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                    {/* Verificação de equilíbrio */}
+                    <TableRow className="bg-muted/30">
+                      <TableCell colSpan={3} className="text-right text-sm">
+                        Diferença (Débitos - Créditos)
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        -
+                      </TableCell>
+                      <TableCell colSpan={2} className={`text-center font-mono text-sm font-bold ${
+                        Math.abs(totals.totalDebits - totals.totalCredits) > 0.01
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                      }`}>
+                        {formatCurrency(totals.totalDebits - totals.totalCredits)}
+                      </TableCell>
+                      <TableCell className={`text-right font-mono text-sm font-bold ${
+                        Math.abs(totals.totalClosingDebit - totals.totalClosingCredit) > 0.01
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                      }`}>
+                        {formatCurrency(totals.totalClosingDebit - totals.totalClosingCredit)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
