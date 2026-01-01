@@ -422,14 +422,91 @@ export const licoesAprendidas = [
 // ============================================
 
 export const versaoAtual = {
-  versao: "1.29.4",
-  data: "15/12/2025",
+  versao: "1.30.4",
+  data: "31/12/2024",
   ultimasFuncionalidades: [
-    "Sistema completo NFS-e",
-    "ISS Fixo Sociedade Profissionais",
-    "Eventos manuais na folha de pagamento",
-    "Correção de despesas deletadas no DRE"
+    "Contratos com Devedores Solidários (Art. 264-275, 827 CC)",
+    "Sistema de cobrança via WhatsApp com prazo 5 dias",
+    "Justificativa de data posterior em contratos",
+    "Grupos Econômicos por sócios em comum (client_partners)",
+    "DebtConfession usando Plano de Contas como fonte da verdade",
+    "80+ migrations para classificação Jan/2025",
+    "Novas páginas: AIChat, AIWorkspace, CashFlowStatement, PeriodClosing",
+    "Edge functions para IA e processamento de CSV"
   ]
+};
+
+// ============================================
+// CONTRATOS E COBRANÇA
+// ============================================
+
+export const contratosCobranca = {
+  devedoresSolidarios: {
+    descricao: "Sócios figuram como devedores solidários das obrigações contratuais",
+    fundamentoLegal: [
+      "Art. 264 CC - Solidariedade na obrigação",
+      "Art. 265 CC - Solidariedade não se presume",
+      "Art. 275 CC - Credor pode exigir dívida toda de qualquer devedor",
+      "Art. 827 CC - Renúncia ao benefício de ordem"
+    ],
+    clausulaContrato: "Cláusula 13ª - Dos Devedores Solidários"
+  },
+
+  justificativaDataPosterior: {
+    descricao: "Contratos emitidos após início da prestação de serviços",
+    clausulas: ["1.5", "1.6"],
+    motivo: "Ratifica relação contratual pré-existente"
+  },
+
+  notificacaoWhatsApp: {
+    prazo: 5, // dias úteis
+    conteudo: [
+      "Identificação do débito com valores e competências",
+      "Prazo para negociação",
+      "Lista de devedores solidários (sócios)",
+      "Ameaça de execução, protesto e negativação"
+    ]
+  }
+};
+
+// ============================================
+// AGENTES DE IA
+// ============================================
+
+export const agentesIA = {
+  especialistas: [
+    { id: "cicero", nome: "Dr. Cícero", especialidade: "Contabilidade, NBC, CFC" },
+    { id: "advocato", nome: "Dr. Advocato", especialidade: "Direito do Trabalho, CLT" },
+    { id: "helena", nome: "Dra. Helena", especialidade: "Gestão de Processos" },
+    { id: "milton", nome: "Prof. Milton", especialidade: "Finanças" },
+    { id: "empresario", nome: "Sr. Empresário", especialidade: "Estruturação Societária" },
+    { id: "vendedor", nome: "Sr. Vendedor", especialidade: "Vendas Consultivas" },
+    { id: "marketing", nome: "Sra. Marketing", especialidade: "Marketing e Comunicação" },
+    { id: "atlas", nome: "Atlas", especialidade: "Machine Learning" }
+  ],
+
+  edgeFunctions: [
+    { nome: "dr-cicero-brain", descricao: "Consulta contador IA com NBC" },
+    { nome: "ai-agent-orchestrator", descricao: "Orquestrador de agentes" },
+    { nome: "ai-web-search", descricao: "Busca na web (Serper.dev)" },
+    { nome: "ai-context-provider", descricao: "Contexto para agentes" },
+    { nome: "ai-dev-agent", descricao: "Agente de desenvolvimento" },
+    { nome: "ai-dev-agent-secure", descricao: "Agente DevOps seguro" },
+    { nome: "process-boletos-csv", descricao: "Processa CSV de boletos" },
+    { nome: "process-extrato-csv", descricao: "Processa CSV de extrato" }
+  ]
+};
+
+// ============================================
+// GRUPOS ECONÔMICOS
+// ============================================
+
+export const gruposEconomicos = {
+  conceito: "Empresas com sócios em comum (mesmo CPF)",
+  tabelaSocios: "client_partners",
+  campos: ["name", "cpf", "partner_type", "percentage", "is_administrator"],
+  scriptAtualizacao: "scripts/update_clients_cnpja.mjs",
+  apiExterna: "CNPJA (cnpja.com)"
 };
 
 export default {
@@ -443,5 +520,8 @@ export default {
   honorariosEspeciais,
   nfseGoiania,
   licoesAprendidas,
-  versaoAtual
+  versaoAtual,
+  contratosCobranca,
+  agentesIA,
+  gruposEconomicos
 };
