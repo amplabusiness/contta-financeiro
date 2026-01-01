@@ -180,6 +180,8 @@ const ChartOfAccounts = () => {
         });
       });
 
+      console.log('[ChartOfAccounts] Contas no balanceMap:', balanceMap.size);
+
       // Calcular saldo de abertura (lançamentos anteriores ao período)
       (openingData || []).forEach((line: any) => {
         const balance = balanceMap.get(line.account_id);
@@ -215,13 +217,19 @@ const ChartOfAccounts = () => {
       });
 
       // Calcular movimentação do período
+      let matchedLines = 0;
+      let unmatchedLines = 0;
       (periodData || []).forEach((line: any) => {
         const balance = balanceMap.get(line.account_id);
         if (balance) {
           balance.total_debits += Number(line.debit) || 0;
           balance.total_credits += Number(line.credit) || 0;
+          matchedLines++;
+        } else {
+          unmatchedLines++;
         }
       });
+      console.log('[ChartOfAccounts] Linhas associadas:', matchedLines, '| Não associadas:', unmatchedLines);
 
       // Calcular saldo final
       balanceMap.forEach((balance, accountId) => {
