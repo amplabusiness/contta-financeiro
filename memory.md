@@ -322,6 +322,78 @@ npx supabase secrets set SERPER_API_KEY=xxxxxxxxxxxxxxxx
 
 ---
 
+## REGRA GERAL DO FLUXO CONTÁBIL (Dr. Cícero)
+
+### TODO lançamento DEVE iniciar no Plano de Contas - SEM EXCEÇÃO
+
+```
+PLANO DE CONTAS → LIVRO DIÁRIO → LIVRO RAZÃO → BALANCETE → DRE → BALANÇO PATRIMONIAL
+```
+
+| Ordem | Etapa | Descrição | Tabela/Origem |
+|-------|-------|-----------|---------------|
+| 1 | **PLANO DE CONTAS** | Fonte da verdade. Todo lançamento inicia aqui. | `chart_of_accounts` |
+| 2 | **LIVRO DIÁRIO** | Registro cronológico de todos os lançamentos | `accounting_entries` + `accounting_entry_lines` |
+| 3 | **LIVRO RAZÃO** | Movimentação por conta contábil | Derivado do Diário |
+| 4 | **BALANCETE** | Saldos de todas as contas no período | Derivado do Razão |
+| 5 | **DRE** | Receitas - Despesas (grupos 3 e 4) | Derivado do Balancete |
+| 6 | **BALANÇO PATRIMONIAL** | Ativo = Passivo + PL (grupos 1, 2 e 5) | Derivado do Balancete + DRE |
+
+### Princípio Fundamental
+
+O **PLANO DE CONTAS** é a **FONTE DA VERDADE** de toda a aplicação.
+
+- Nenhum lançamento pode existir sem estar vinculado a uma conta do plano
+- **TODAS as telas e relatórios DEVEM buscar dados a partir do Plano de Contas**
+- Os lançamentos contábeis (accounting_entries + accounting_entry_lines) estão vinculados ao plano
+- Este fluxo é **INVIOLÁVEL** e segue as NBC TG 26 e ITG 2000
+
+### Validações Obrigatórias
+
+1. Não permitir lançamento sem `account_id` válido
+2. Não permitir conta sem código estruturado (ex: 1.1.1.01)
+3. Débitos SEMPRE devem igualar Créditos (partidas dobradas)
+4. Contas sintéticas NÃO recebem lançamentos diretos
+
+---
+
+## REGRA FUNDAMENTAL - DR. CÍCERO
+
+### OBRIGATÓRIO: Consultar Dr. Cícero para Questões Contábeis
+
+**NENHUMA questão contábil pode ser resolvida sem consultar o Dr. Cícero.**
+
+O Dr. Cícero é o agente especialista em contabilidade, NBC e CFC. Ele deve ser consultado para:
+
+1. **Classificação de Contas** - Onde lançar cada operação
+2. **Saldo de Abertura** - Contrapartidas corretas (PL, não Resultado)
+3. **Lançamentos Contábeis** - Débito/Crédito corretos
+4. **Fechamento de Período** - Apuração de resultado
+5. **Demonstrações Contábeis** - BP, DRE, DFC, DMPL
+6. **Regime de Competência** - Reconhecimento de receitas/despesas
+7. **Partidas Dobradas** - Verificação de equilíbrio
+8. **Correções Contábeis** - Estornos e reclassificações
+
+### Como Consultar
+```javascript
+// Via Edge Function
+const response = await supabase.functions.invoke('dr-cicero-brain', {
+  body: { question: 'Qual a contrapartida correta para saldo de abertura de ativo?' }
+});
+
+// Via Script de Verificação
+// Criar arquivo temp_consulta_dr_cicero_ASSUNTO.mjs
+// Incluir análise fundamentada nas NBC TG
+```
+
+### Fundamentação Legal do Dr. Cícero
+- NBC TG 00 - Estrutura Conceitual
+- NBC TG 26 - Apresentação das Demonstrações Contábeis
+- ITG 2000 - Escrituração Contábil
+- Código Civil - Art. 264-275 (Solidariedade), Art. 827 (Fiança)
+
+---
+
 ## NORMAS CONTÁBEIS (NBC)
 
 - **NBC TG 00** - Estrutura Conceitual
@@ -707,17 +779,262 @@ node scripts/update_clients_cnpja.mjs
 
 ---
 
+## CORREÇÃO CONCLUÍDA - SALDO DE ABERTURA (Dr. Cícero) ✅
+
+**Status:** CONCLUÍDO em 01/01/2025
+
+### Problema Identificado (RESOLVIDO)
+As contas de saldo de abertura estavam **incorretamente** no grupo 5 (Resultado):
+
+| Conta Atual | Nome | Problema |
+|-------------|------|----------|
+| 5.2.1.02 | Saldos de Abertura | Grupo 5 = Resultado |
+| 5.3.02.01 | Saldo de Abertura - Disponibilidades | Grupo 5 = Resultado |
+| 5.3.02.02 | Saldo de Abertura - Clientes | Grupo 5 = Resultado |
+
+### Impacto
+- **Total em contas 5.3.xx:** R$ 479.977,45
+- Este valor está **inflando o resultado** no DRE
+- O Patrimônio Líquido está **subestimado**
+
+### Correção Necessária (NBC TG 26)
+
+**INCORRETO (atual):**
+```
+D: 1.1.2.01 Clientes a Receber     R$ 298.527,29
+C: 5.3.02.02 Saldo de Abertura     R$ 298.527,29  ← RESULTADO!
+```
+
+**CORRETO:**
+```
+D: 1.1.2.01 Clientes a Receber     R$ 298.527,29
+C: 2.3.01 Lucros/Prejuízos Acum.   R$ 298.527,29  ← PATRIMÔNIO LÍQUIDO
+```
+
+### Ação Executada ✅
+1. ✅ Criadas contas 2.3.xx (Patrimônio Líquido)
+2. ✅ Reclassificadas 87 linhas de 5.x para 2.3.xx
+3. ✅ Contas antigas (5.2.1.02, 5.3.02.01, 5.3.02.02, 5.3.02.03) desativadas
+4. ✅ DRE verificado: Resultado Janeiro/2025 = Lucro R$ 2.474,28
+
+---
+
+## INADIMPLÊNCIA CLIENTES (Janeiro/2025)
+
+| Descrição | Valor |
+|-----------|-------|
+| Saldo de Abertura (31/12/2024) | R$ 298.527,29 |
+| Recebimentos em Janeiro | R$ 298.527,29 |
+| **Inadimplência Real** | **R$ 0,00** |
+
+**Nota:** Todo o saldo anterior foi quitado em janeiro/2025.
+Os R$ 136.821,59 de honorários de janeiro vencem em fevereiro.
+
+---
+
+## AUDITORIA DR. CÍCERO - PLANO DE CONTAS (01/01/2025)
+
+### Regra Suprema
+> **TODO lançamento DEVE ter DÉBITO e CRÉDITO com número da conta do Plano de Contas**
+
+### Páginas Corrigidas (usam useAccounting)
+| Página | Hook Usado | Status |
+|--------|------------|--------|
+| PixReconciliation.tsx | `registrarRecebimento()` | ✅ Corrigido |
+| ImportInvoices.tsx | `registrarHonorario()`, `registrarRecebimento()` | ✅ Corrigido |
+| RecurringExpenses.tsx | `registrarDespesa()` | ✅ Corrigido |
+| NFSe.tsx | `registrarHonorario()`, `registrarDespesa()` | ✅ Corrigido |
+
+### Páginas Corretas (já usavam useAccounting)
+- Invoices.tsx
+- Payroll.tsx
+- BankImport.tsx
+- ImportBoletos.tsx
+- ReconcileHonorarios.tsx
+- PendingReconciliations.tsx
+- HonorariosFlow.tsx
+- ClientOpeningBalance.tsx
+
+### Páginas Corrigidas (01/01/2025)
+- CashFlow.tsx - Transações manuais com lançamento D/C
+- DebtNegotiation.tsx - Negociações com desconto registram perdas
+- OpeningBalanceReconciliation.tsx - Conciliação com registrarRecebimento()
+
+---
+
+## SISTEMA DE RASTREABILIDADE INTERNO (Dr. Cícero)
+
+### Regra Suprema de Rastreabilidade
+
+> **NENHUM lançamento pode existir sem número de origem interna**
+
+Todo lançamento contábil DEVE ter:
+1. **referenceType** - Tipo de origem (invoice, expense, bank_transaction, etc)
+2. **referenceId** - ID único do registro de origem
+3. **internal_code** - Código automático gerado pelo banco (trigger)
+
+### Formato do internal_code
+```
+{source_type}:{YYYYMMDD}:{hash_12_chars}
+```
+Exemplo: `invoice:20250115:a1b2c3d4e5f6`
+
+### Implementação
+
+#### AccountingService.ts
+```typescript
+// Validação OBRIGATÓRIA de rastreabilidade
+if (!params.referenceType) {
+  return { success: false, error: 'VIOLAÇÃO CONTÁBIL: Todo lançamento DEVE ter referenceType' };
+}
+if (!params.referenceId) {
+  return { success: false, error: 'VIOLAÇÃO CONTÁBIL: Todo lançamento DEVE ter referenceId' };
+}
+```
+
+#### useAccounting Hook
+```typescript
+// Usar com sourceModule para identificar página de origem
+const { registrarHonorario } = useAccounting({
+  showToasts: false,
+  sourceModule: 'Invoices'  // Nome da página que gera o lançamento
+});
+```
+
+### Páginas com Rastreabilidade Implementada
+| Página | sourceModule |
+|--------|--------------|
+| PixReconciliation.tsx | 'PixReconciliation' |
+| ImportInvoices.tsx | 'ImportInvoices' |
+| RecurringExpenses.tsx | 'RecurringExpenses' |
+| NFSe.tsx | 'NFSe' |
+| Invoices.tsx | 'Invoices' |
+| HonorariosFlow.tsx | 'HonorariosFlow' |
+| ClientOpeningBalance.tsx | 'ClientOpeningBalance' |
+| ReconcileHonorarios.tsx | 'ReconcileHonorarios' |
+| CashFlow.tsx | 'CashFlow' |
+| DebtNegotiation.tsx | 'DebtNegotiation' |
+| OpeningBalanceReconciliation.tsx | 'OpeningBalanceReconciliation' |
+
+### Tabela accounting_entries - Colunas de Rastreabilidade
+```sql
+- internal_code: VARCHAR(100) UNIQUE  -- Código único gerado automaticamente
+- source_type: VARCHAR(50)            -- Tipo de origem (invoice, expense, etc)
+- source_id: UUID                     -- ID do registro de origem
+- source_hash: VARCHAR(64)            -- Hash para detecção de duplicatas
+- reference_type: TEXT                -- Tabela de origem
+- reference_id: UUID                  -- ID do registro original
+```
+
+### Trigger Automático (banco de dados)
+```sql
+-- Trigger tr_set_internal_code gera automaticamente o internal_code
+-- baseado em source_type, entry_date e hash do valor
+CREATE TRIGGER tr_set_internal_code
+    BEFORE INSERT ON accounting_entries
+    FOR EACH ROW
+    EXECUTE FUNCTION set_internal_code();
+```
+
+---
+
+## AUDITORIA DR. CÍCERO - RASTREABILIDADE (01/01/2026) ✅
+
+### Resultado da Auditoria
+```
+📊 SITUAÇÃO FINAL:
+   Total de lançamentos:   380
+   ✅ Com internal_code:   380 (100%)
+   ✅ Com reference_type:  380 (100%)
+   ✅ Com reference_id:    380 (100%)
+
+✅ AUDITORIA APROVADA!
+   Todos os lançamentos estão em conformidade com NBC TG 26 e ITG 2000.
+```
+
+### Scripts de Correção Executados
+1. `scripts/audit_internal_code.mjs` - Auditoria completa de rastreabilidade
+2. `scripts/fix_internal_code.mjs` - Correção de 86 lançamentos sem internal_code
+3. `scripts/fix_reference_final3.mjs` - Correção de 152 lançamentos sem reference_type e 183 sem reference_id
+
+### Descoberta: Sistema de Proteção de Período Fechado
+O sistema possui **DOIS** mecanismos de controle de período:
+1. `monthly_closings` - Controla fechamento via `is_period_closed()`
+2. `accounting_periods` - Controla via trigger `check_period_before_entry_trigger`
+
+**AMBOS** precisam estar com status 'open' para permitir modificações em lançamentos.
+
+---
+
+## AUDITORIA BALANÇO PATRIMONIAL - JANEIRO/2025 ✅
+
+### Resultado Final (01/01/2026)
+
+| Item | Valor |
+|------|-------|
+| **ATIVO** | R$ 391.726,63 |
+| **PASSIVO** | R$ 0,00 |
+| **PL (Saldos de Abertura)** | R$ 389.252,35 |
+| **RESULTADO DO EXERCÍCIO** | R$ 2.474,28 |
+| **PASSIVO + PL + RESULTADO** | R$ 391.726,63 |
+| **DIFERENÇA** | **R$ 0,00** ✅ |
+
+### Composição do Ativo
+- Banco Sicredi: R$ 18.553,54
+- Clientes a Receber: R$ 136.821,59
+- Adiantamentos a Sócios: R$ 236.351,50
+
+### Composição do PL
+- Saldo de Abertura Disponibilidades: R$ 90.725,06
+- Saldo de Abertura Clientes: R$ 298.527,29
+
+### Resultado do Exercício
+- Receitas (Honorários): R$ 136.821,59
+- Despesas: R$ 134.347,31
+- **Lucro: R$ 2.474,28**
+
+### Problemas Corrigidos
+1. ✅ **Saldo fantasma Bradesco R$ 90.725,10** - Deletado lançamento duplicado
+2. ✅ **Contas filhas duplicadas 1.1.2.01.xxx** - 84 entradas removidas, 116 contas desativadas
+3. ✅ **Conta inativa 4.1.2.10 com saldo R$ 1.127,59** - Reclassificada para 4.1.2.99
+
+### Scripts de Auditoria Criados
+- `scripts/audit_bradesco.mjs` - Detectar duplicatas no Bradesco
+- `scripts/fix_bradesco_duplicate.mjs` - Corrigir duplicata Bradesco
+- `scripts/audit_balance_sheet.mjs` - Auditar balanço patrimonial
+- `scripts/fix_account_types.mjs` - Corrigir tipos de contas
+- `scripts/fix_clients_structure.mjs` - Corrigir estrutura de clientes
+- `scripts/check_balance_equation.mjs` - Verificar equação contábil
+- `scripts/compare_opening_balance.mjs` - Comparar saldo de abertura
+
+---
+
 ## ÚLTIMA ATUALIZAÇÃO
-- **Data:** 31/12/2024
+- **Data:** 01/01/2026
 - **Por:** Claude Code + Dr. Cícero
-- **Versão:** 3.4
+- **Versão:** 4.0
 - **Alterações:**
+  - **BALANÇO EQUILIBRADO**: ATIVO = PASSIVO + PL + RESULTADO (diferença R$ 0,00)
+  - **AUDITORIA COMPLETA**: Detectados e corrigidos 3 problemas no balanço
+  - **SCRIPTS DE AUDITORIA**: 7 novos scripts para verificação contábil
+  - **CONTA INATIVA CORRIGIDA**: 4.1.2.10 reclassificada para 4.1.2.99
+  - **AUDITORIA 100% APROVADA**: 380/380 lançamentos com rastreabilidade completa
+  - **CORREÇÃO AUTOMÁTICA**: Scripts de auditoria e correção em `scripts/`
+  - **DESCOBERTA**: Sistema duplo de proteção de período (monthly_closings + accounting_periods)
+  - **AUDITORIA 100% COMPLETA**: Todas as páginas agora usam useAccounting() com lançamentos D/C
+  - **NOVAS CORREÇÕES**: CashFlow.tsx, DebtNegotiation.tsx, OpeningBalanceReconciliation.tsx
+  - **11 páginas** agora com rastreabilidade completa (sourceModule)
+  - **RASTREABILIDADE OBRIGATÓRIA**: Todo lançamento DEVE ter origem rastreável (internal_code)
+  - Validação no AccountingService.ts: referenceType e referenceId obrigatórios
+  - Hook useAccounting com sourceModule para identificar página de origem
+  - Trigger automático no banco gera internal_code único
+  - **AUDITORIA DR. CÍCERO**: Todo lançamento DEVE ter D/C com conta do Plano de Contas
+  - **CORREÇÃO SALDO ABERTURA**: 87 linhas reclassificadas de grupo 5 para 2.3.xx
+  - **PÁGINAS CORRIGIDAS**: PixReconciliation, ImportInvoices, RecurringExpenses, NFSe
+  - Regra fundamental: consultar Dr. Cícero para questões contábeis
   - Contratos com Devedores Solidários (Art. 264-275, 827 CC)
   - Sistema de cobrança via WhatsApp com prazo de 5 dias
-  - Justificativa de data posterior em contratos
   - DebtConfession usando Plano de Contas como fonte da verdade
   - Grupos Econômicos por sócios em comum (client_partners)
   - 80+ migrations para classificação Jan/2025
-  - Novas páginas: AIChat, AIWorkspace, CashFlowStatement, PeriodClosing
   - Edge functions para IA e processamento de CSV
-  - Script update_clients_cnpja.mjs para atualização via API
