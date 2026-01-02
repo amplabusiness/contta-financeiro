@@ -470,12 +470,118 @@ export const contratosCobranca = {
 };
 
 // ============================================
+// REGRA FUNDAMENTAL - DR. CÍCERO
+// ============================================
+
+export const regraFundamentalDrCicero = {
+  regra: "NENHUMA questão contábil pode ser resolvida sem consultar o Dr. Cícero",
+
+  obrigatorio: true,
+
+  assuntosQueExigemDrCicero: [
+    "Classificação de contas - onde lançar cada operação",
+    "Saldo de abertura - contrapartidas corretas (PL, não Resultado)",
+    "Lançamentos contábeis - débito/crédito corretos",
+    "Fechamento de período - apuração de resultado",
+    "Demonstrações contábeis - BP, DRE, DFC, DMPL",
+    "Regime de competência - reconhecimento de receitas/despesas",
+    "Partidas dobradas - verificação de equilíbrio",
+    "Correções contábeis - estornos e reclassificações"
+  ],
+
+  comoConsultar: {
+    viaEdgeFunction: `
+      const response = await supabase.functions.invoke('dr-cicero-brain', {
+        body: { question: 'Qual a contrapartida correta para saldo de abertura de ativo?' }
+      });
+    `,
+    viaScript: "Criar arquivo temp_consulta_dr_cicero_ASSUNTO.mjs com análise fundamentada nas NBC TG"
+  },
+
+  fundamentacaoLegal: [
+    "NBC TG 00 - Estrutura Conceitual",
+    "NBC TG 26 - Apresentação das Demonstrações Contábeis",
+    "ITG 2000 - Escrituração Contábil",
+    "Código Civil - Art. 264-275 (Solidariedade), Art. 827 (Fiança)"
+  ]
+};
+
+// ============================================
+// CORREÇÃO PENDENTE - SALDO DE ABERTURA
+// ============================================
+
+export const auditoriaBalancoJaneiro2025 = {
+  status: "CONCLUÍDA ✅",
+  dataAuditoria: "01/01/2026",
+
+  resultadoFinal: {
+    ativo: 391726.63,
+    passivo: 0,
+    pl: 389252.35,
+    resultadoExercicio: 2474.28,
+    passivoMaisPL: 391726.63,
+    diferenca: 0
+  },
+
+  composicaoAtivo: {
+    bancoSicredi: 18553.54,
+    clientesReceber: 136821.59,
+    adiantamentosSocios: 236351.50
+  },
+
+  composicaoPL: {
+    saldoAberturaDisponibilidades: 90725.06,
+    saldoAberturaClientes: 298527.29
+  },
+
+  resultadoExercicio: {
+    receitas: 136821.59,
+    despesas: 134347.31,
+    lucro: 2474.28
+  },
+
+  problemasCorrigidos: [
+    {
+      problema: "Saldo fantasma Bradesco R$ 90.725,10",
+      solucao: "Deletado lançamento duplicado",
+      script: "scripts/fix_bradesco_duplicate.mjs"
+    },
+    {
+      problema: "Contas filhas duplicadas 1.1.2.01.xxx",
+      solucao: "84 entradas removidas, 116 contas desativadas",
+      script: "scripts/fix_clients_structure.mjs"
+    },
+    {
+      problema: "Conta inativa 4.1.2.10 com saldo R$ 1.127,59",
+      solucao: "Reclassificada para 4.1.2.99",
+      script: "inline (01/01/2026)"
+    }
+  ],
+
+  scriptsAuditoria: [
+    "scripts/audit_bradesco.mjs",
+    "scripts/fix_bradesco_duplicate.mjs",
+    "scripts/audit_balance_sheet.mjs",
+    "scripts/fix_account_types.mjs",
+    "scripts/fix_clients_structure.mjs",
+    "scripts/check_balance_equation.mjs",
+    "scripts/compare_opening_balance.mjs"
+  ]
+};
+
+// ============================================
 // AGENTES DE IA
 // ============================================
 
 export const agentesIA = {
   especialistas: [
-    { id: "cicero", nome: "Dr. Cícero", especialidade: "Contabilidade, NBC, CFC" },
+    {
+      id: "cicero",
+      nome: "Dr. Cícero",
+      especialidade: "Contabilidade, NBC, CFC",
+      obrigatorio: true,
+      descricao: "DEVE ser consultado para QUALQUER questão contábil"
+    },
     { id: "advocato", nome: "Dr. Advocato", especialidade: "Direito do Trabalho, CLT" },
     { id: "helena", nome: "Dra. Helena", especialidade: "Gestão de Processos" },
     { id: "milton", nome: "Prof. Milton", especialidade: "Finanças" },
@@ -486,7 +592,7 @@ export const agentesIA = {
   ],
 
   edgeFunctions: [
-    { nome: "dr-cicero-brain", descricao: "Consulta contador IA com NBC" },
+    { nome: "dr-cicero-brain", descricao: "Consulta contador IA com NBC - OBRIGATÓRIO para questões contábeis" },
     { nome: "ai-agent-orchestrator", descricao: "Orquestrador de agentes" },
     { nome: "ai-web-search", descricao: "Busca na web (Serper.dev)" },
     { nome: "ai-context-provider", descricao: "Contexto para agentes" },
@@ -509,9 +615,110 @@ export const gruposEconomicos = {
   apiExterna: "CNPJA (cnpja.com)"
 };
 
+// ============================================
+// REGRA GERAL DO FLUXO CONTÁBIL (Dr. Cícero)
+// ============================================
+
+export const fluxoContabilGeral = {
+  regra: "TODO lançamento DEVE iniciar no Plano de Contas - SEM EXCEÇÃO",
+
+  fluxoObrigatorio: [
+    {
+      ordem: 1,
+      etapa: "PLANO DE CONTAS",
+      descricao: "Fonte da verdade. Todo lançamento inicia aqui.",
+      tabela: "chart_of_accounts",
+      obrigatorio: true
+    },
+    {
+      ordem: 2,
+      etapa: "LIVRO DIÁRIO",
+      descricao: "Registro cronológico de todos os lançamentos",
+      tabela: "accounting_entries + accounting_entry_lines",
+      obrigatorio: true
+    },
+    {
+      ordem: 3,
+      etapa: "LIVRO RAZÃO",
+      descricao: "Movimentação por conta contábil",
+      origem: "Derivado do Livro Diário",
+      obrigatorio: true
+    },
+    {
+      ordem: 4,
+      etapa: "BALANCETE",
+      descricao: "Saldos de todas as contas no período",
+      origem: "Derivado do Razão",
+      obrigatorio: true
+    },
+    {
+      ordem: 5,
+      etapa: "DRE",
+      descricao: "Demonstração do Resultado do Exercício (Receitas - Despesas)",
+      contas: "Grupos 3 (Receitas) e 4 (Despesas)",
+      origem: "Derivado do Balancete",
+      obrigatorio: true
+    },
+    {
+      ordem: 6,
+      etapa: "BALANÇO PATRIMONIAL",
+      descricao: "Posição patrimonial (Ativo = Passivo + PL)",
+      contas: "Grupos 1 (Ativo), 2 (Passivo) e 5 (Patrimônio Líquido)",
+      origem: "Derivado do Balancete + Resultado do DRE",
+      obrigatorio: true
+    }
+  ],
+
+  principioFundamental: `
+    O PLANO DE CONTAS é a FONTE DA VERDADE de toda a aplicação.
+
+    Nenhum lançamento pode existir sem estar vinculado a uma conta do plano.
+    Todas as telas e relatórios DEVEM buscar dados a partir dos lançamentos
+    contábeis (accounting_entries + accounting_entry_lines), que por sua vez
+    estão vinculados ao plano de contas (chart_of_accounts).
+
+    Este fluxo é INVIOLÁVEL e segue as NBC TG 26 e ITG 2000.
+  `,
+
+  validacoes: [
+    "Não permitir lançamento sem account_id válido",
+    "Não permitir conta sem código estruturado (ex: 1.1.1.01)",
+    "Débitos SEMPRE devem igualar Créditos (partidas dobradas)",
+    "Contas sintéticas NÃO recebem lançamentos diretos"
+  ],
+
+  fundamentacao: [
+    "NBC TG 26 - Apresentação das Demonstrações Contábeis",
+    "ITG 2000 - Escrituração Contábil",
+    "NBC TG 00 - Estrutura Conceitual"
+  ]
+};
+
+// ============================================
+// VERSÃO ATUALIZADA
+// ============================================
+
+export const versaoAtualizada = {
+  versao: "1.32.0",
+  data: "01/01/2026",
+  ultimasFuncionalidades: [
+    "BALANÇO EQUILIBRADO: ATIVO = PASSIVO + PL + RESULTADO (diferença R$ 0,00)",
+    "AUDITORIA COMPLETA: Detectados e corrigidos 3 problemas no balanço",
+    "SCRIPTS DE AUDITORIA: 7 novos scripts para verificação contábil",
+    "CONTA INATIVA CORRIGIDA: 4.1.2.10 reclassificada para 4.1.2.99",
+    "REGRA FUNDAMENTAL: Dr. Cícero OBRIGATÓRIO para questões contábeis",
+    "REGRA GERAL: Todo lançamento inicia no Plano de Contas",
+    "Fluxo: Plano → Diário → Razão → Balancete → DRE → BP",
+    "Contratos com Devedores Solidários (Art. 264-275, 827 CC)",
+    "Sistema de cobrança via WhatsApp com prazo 5 dias",
+    "Grupos Econômicos por sócios em comum (client_partners)"
+  ]
+};
+
 export default {
   escritorioAmpla,
   familiaLeao,
+  auditoriaBalancoJaneiro2025,
   periodoAbertura,
   saldosBancarios,
   padroesTransacoes,
@@ -523,5 +730,9 @@ export default {
   versaoAtual,
   contratosCobranca,
   agentesIA,
-  gruposEconomicos
+  gruposEconomicos,
+  regraFundamentalDrCicero,
+  correcaoPendenteSaldoAbertura,
+  fluxoContabilGeral,
+  versaoAtualizada
 };
