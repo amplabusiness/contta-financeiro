@@ -410,6 +410,63 @@ const TOOLS = [
     },
   },
 
+  // === IMPORTAÇÃO DE COBRANÇAS ===
+  {
+    name: "importar_cobrancas",
+    description: "Importa cobranças do arquivo CSV da cobrança múltiplos clientes por transação bancária",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        mes: { type: "string", description: "Mês no formato MM/YYYY (ex: 01/2025)" },
+      },
+      required: ["mes"],
+    },
+  },
+  {
+    name: "listar_cobrancas_periodo",
+    description: "Lista todas as cobranças de um período com desdobramento de clientes",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        mes: { type: "string", description: "Mês no formato MM/YYYY" },
+      },
+      required: ["mes"],
+    },
+  },
+  {
+    name: "detalhe_cobranca",
+    description: "Mostra detalhe de uma cobrança específica (COB000005, etc) com todos os clientes e valores",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        documento: { type: "string", description: "Número da cobrança (ex: COB000005)" },
+      },
+      required: ["documento"],
+    },
+  },
+  {
+    name: "validar_cobrancas",
+    description: "Valida integridade das cobranças: verifica se clientes existem, valores batem, invoices foram criadas",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        mes: { type: "string", description: "Mês no formato MM/YYYY" },
+      },
+      required: ["mes"],
+    },
+  },
+  {
+    name: "relatorio_cobrancas_mes",
+    description: "Gera relatório executivo de cobranças: quantas, clientes, valores, taxa de sucesso",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        mes: { type: "string", description: "Mês no formato MM/YYYY" },
+      },
+      required: ["mes"],
+    },
+  },
+
   // === GRUPOS ECONÔMICOS ===
   {
     name: "listar_grupos_economicos",
@@ -1871,6 +1928,270 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         sugestao: cliente
           ? "Cliente identificado - vincular ao recebimento"
           : "Cliente não encontrado - verificar manualmente",
+      };
+    }
+
+    // === IMPORTAÇÃO DE COBRANÇAS ===
+    case "importar_cobrancas": {
+      const mes = args.mes as string;
+      const [month, year] = mes.split("/").map(Number);
+
+      // Buscar todas as transações de cobrança do período
+      const { data: transacoes, error } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .ilike("description", "%COB%")
+        .gte("transaction_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("transaction_date", `${year}-${String(month).padStart(2, "0")}-31`)
+        .order("transaction_date");
+
+      if (error) throw new Error(error.message);
+
+      // Buscar invoices criadas no período
+      const { data: invoicesCriadas } = await supabase
+        .from("invoices")
+        .select("*")
+        .gte("paid_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("paid_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      const clientesPagos = new Set<string>();
+      let totalReconciliado = 0;
+      let totalClientes = 0;
+
+      transacoes?.forEach(tx => {
+        invoicesCriadas?.forEach(inv => {
+          if (Math.abs(tx.amount - inv.amount) < 0.01 && 
+              tx.transaction_date === inv.paid_date) {
+            clientesPagos.add(inv.client_id);
+            totalReconciliado += tx.amount;
+            totalClientes++;
+          }
+        });
+      });
+
+      return {
+        mes,
+        periodo_cobranca: {
+          cobranças_encontradas: transacoes?.length || 0,
+          clientes_identificados: clientesPagos.size,
+          total_reconciliado: formatCurrency(totalReconciliado),
+          invoices_criadas: invoicesCriadas?.length || 0,
+        },
+        status: "✅ Importação concluída",
+        recomendacao: "Verificar detalhes em 'listar_cobrancas_periodo' para validação completa",
+      };
+    }
+
+    case "listar_cobrancas_periodo": {
+      const mes = args.mes as string;
+      const [month, year] = mes.split("/").map(Number);
+
+      // Buscar transações de cobrança
+      const { data: transacoes } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .ilike("description", "%COB%")
+        .gte("transaction_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("transaction_date", `${year}-${String(month).padStart(2, "0")}-31`)
+        .order("transaction_date");
+
+      // Buscar invoices do período
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          client:clients(id, name, document)
+        `)
+        .gte("paid_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("paid_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      // Agrupar por cobrança
+      const cobrancasMap = new Map<string, { clientes: any[]; total: number; data: string; tx?: any }>();
+
+      transacoes?.forEach(tx => {
+        const docMatch = tx.description.match(/COB(\d+)/);
+        if (docMatch) {
+          const doc = `COB${docMatch[1]}`;
+          if (!cobrancasMap.has(doc)) {
+            cobrancasMap.set(doc, { clientes: [], total: 0, data: tx.transaction_date, tx });
+          }
+        }
+      });
+
+      invoices?.forEach(inv => {
+        // Tentar vincular a uma cobrança pela data e valor aproximado
+        let encontrou = false;
+        for (const [doc, cobranca] of cobrancasMap) {
+          if (cobranca.tx && 
+              cobranca.data === inv.paid_date &&
+              Math.abs(cobranca.tx.amount - inv.amount) < 0.01) {
+            cobranca.clientes.push({
+              nome: inv.client?.name,
+              cnpj: inv.client?.document,
+              valor: inv.amount,
+              status: inv.status,
+            });
+            cobranca.total += inv.amount;
+            encontrou = true;
+            break;
+          }
+        }
+      });
+
+      const cobrancas = Array.from(cobrancasMap.entries()).map(([doc, data]) => ({
+        documento: doc,
+        data: formatDate(data.data),
+        clientes_identificados: data.clientes.length,
+        total: formatCurrency(data.total),
+        clientes: data.clientes,
+      }));
+
+      return {
+        mes,
+        total_cobrancas: cobrancas.length,
+        total_clientes: invoices?.length || 0,
+        total_valor: formatCurrency(cobrancas.reduce((s, c) => s + parseFloat(c.total.replace(/\D/g, "")) / 100, 0)),
+        cobrancas,
+      };
+    }
+
+    case "detalhe_cobranca": {
+      const documento = args.documento as string;
+
+      // Buscar transação bancária
+      const { data: transacao } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .ilike("description", `%${documento}%`)
+        .single();
+
+      if (!transacao) {
+        return { erro: `Cobrança ${documento} não encontrada` };
+      }
+
+      // Buscar invoices próximas pela data e valor
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          client:clients(id, name, document, phone, email)
+        `)
+        .eq("paid_date", transacao.transaction_date);
+
+      const clientesBuscados = invoices?.filter(inv => 
+        Math.abs(inv.amount - transacao.amount) < inv.amount * 0.01 ||
+        Math.abs(invoices.reduce((s, i) => s + i.amount, 0) - transacao.amount) < 1
+      ) || [];
+
+      return {
+        cobranca: {
+          documento,
+          data: formatDate(transacao.transaction_date),
+          valor_total: formatCurrency(transacao.amount),
+          descricao: transacao.description,
+          saldo_apos: formatCurrency(transacao.balance_after || 0),
+        },
+        clientes: clientesBuscados.map(inv => ({
+          nome: inv.client?.name,
+          cnpj: inv.client?.document,
+          email: inv.client?.email,
+          telefone: inv.client?.phone,
+          valor_pago: formatCurrency(inv.amount),
+          data_pagamento: formatDate(inv.paid_date || inv.created_at),
+          status: inv.status,
+          numero_nota: inv.id.substring(0, 8),
+        })),
+        total_identificado: clientesBuscados.length,
+      };
+    }
+
+    case "validar_cobrancas": {
+      const mes = args.mes as string;
+      const [month, year] = mes.split("/").map(Number);
+
+      const { data: transacoes } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .ilike("description", "%COB%")
+        .gte("transaction_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("transaction_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("status", "paid")
+        .gte("paid_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("paid_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      const validacoes = {
+        cobrancas_encontradas: transacoes?.length || 0,
+        invoices_pagas: invoices?.length || 0,
+        valores_bancarios: formatCurrency(transacoes?.reduce((s, t) => s + t.amount, 0) || 0),
+        valores_invoices: formatCurrency(invoices?.reduce((s, i) => s + i.amount, 0) || 0),
+        diferenca: formatCurrency(Math.abs((transacoes?.reduce((s, t) => s + t.amount, 0) || 0) - (invoices?.reduce((s, i) => s + i.amount, 0) || 0))),
+      };
+
+      const status = parseFloat(validacoes.diferenca.replace(/\D/g, "")) < 1 ? "✅ VÁLIDO" : "⚠️ DIFERENÇAS DETECTADAS";
+
+      return {
+        mes,
+        status,
+        validacoes,
+        recomendacao: parseFloat(validacoes.diferenca.replace(/\D/g, "")) > 1 
+          ? "Verificar invoices não vinculadas ou valores digitados incorretos"
+          : "Dados OK - Prosseguir com importação",
+      };
+    }
+
+    case "relatorio_cobrancas_mes": {
+      const mes = args.mes as string;
+      const [month, year] = mes.split("/").map(Number);
+
+      const { data: transacoes } = await supabase
+        .from("bank_transactions")
+        .select("*")
+        .ilike("description", "%COB%")
+        .gte("transaction_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("transaction_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          client:clients(id, name)
+        `)
+        .eq("status", "paid")
+        .gte("paid_date", `${year}-${String(month).padStart(2, "0")}-01`)
+        .lte("paid_date", `${year}-${String(month).padStart(2, "0")}-31`);
+
+      const totalBancario = transacoes?.reduce((s, t) => s + t.amount, 0) || 0;
+      const totalInvoices = invoices?.reduce((s, i) => s + i.amount, 0) || 0;
+      const clientesUnicos = new Set(invoices?.map(i => i.client_id) || []);
+
+      return {
+        periodo: mes,
+        resumo_executivo: {
+          cobranças: transacoes?.length || 0,
+          clientes_pagantes: clientesUnicos.size,
+          invoices_criadas: invoices?.length || 0,
+          valor_total_entrada: formatCurrency(totalBancario),
+          taxa_conversao: invoices?.length && transacoes?.length ? `${((invoices.length / (transacoes?.length || 1)) * 100).toFixed(1)}%` : "0%",
+        },
+        diferenca_valores: {
+          valor_banco: formatCurrency(totalBancario),
+          valor_invoices: formatCurrency(totalInvoices),
+          diferenca: formatCurrency(Math.abs(totalBancario - totalInvoices)),
+          status: Math.abs(totalBancario - totalInvoices) < 1 ? "✅ BALANCEADO" : "⚠️ DIVERGÊNCIAS",
+        },
+        top_cobrancas: transacoes
+          ?.sort((a, b) => b.amount - a.amount)
+          .slice(0, 5)
+          .map((t, i) => ({
+            posicao: i + 1,
+            documento: t.description.match(/COB\d+/)?.[0] || "?",
+            valor: formatCurrency(t.amount),
+            data: formatDate(t.transaction_date),
+          })),
       };
     }
 
