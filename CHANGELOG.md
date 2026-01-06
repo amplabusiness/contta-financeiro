@@ -7,7 +7,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
-## [1.24.0] - 2026-01-06
+## [1.30.5] - 2026-01-06
 
 ### Corrigido
 - **Contabilidade Invertida**: Correção crítica na lógica de importação bancária. Pagamentos (débitos) estavam entrando como receitas (créditos) e vice-versa. Agora valida explicitamente o `transaction_type` ('credit'/'debit').
