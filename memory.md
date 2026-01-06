@@ -1038,3 +1038,26 @@ O sistema possui **DOIS** mecanismos de controle de período:
   - Grupos Econômicos por sócios em comum (client_partners)
   - 80+ migrations para classificação Jan/2025
   - Edge functions para IA e processamento de CSV
+
+---
+
+## CORREÇÃO CONTABILIDADE & CLASSIFICAÇÃO V2 - 06/01/2026
+
+### 1. Correção Lógica Contábil (Critico)
+- Identificado erro na funcão create_entry_from_bank_transaction onde **Pagamentos** estavam sendo tratados como Recebimentos devido a validacao simplista apenas por saldo positivo (banco armazena sempre positivo).
+- Nova lógica valida bank_transactions.transaction_type:
+  - credit = Recebimento (Débito Banco, Crédito Cliente)
+  - debit = Pagamento (Débito Despesa, Crédito Banco)
+
+### 2. Classificação Inteligente - Econet
+- Identificado que lançamentos 'ECONET' caiam na regra geral 'Outras Despesas'.
+- Criada conta analítica: 4.1.2.16 - Assinaturas Econet
+- Script atualizado para mapear automaticamente descrições contendo 'ECONET', 'REVISTA', 'PERIODICO' para esta conta.
+
+### 3. Scripts de Manutenção
+- force_full_refresh_fev2025_v2.sql: Script mestre que recriou a conta, atualizou a função e regenerou Fevereiro de 2025.
+- check_econet.mjs: Validador de classificação específica.
+
+### 4. Melhorias UX
+- SuperConciliação agora persiste o Mês/Ano selecionado no navegador, evitando reset indesejado ao atualizar a página.
+

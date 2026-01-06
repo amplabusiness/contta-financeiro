@@ -7,6 +7,18 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+## [1.24.0] - 2026-01-06
+
+### Corrigido
+- **Contabilidade Invertida**: Correção crítica na lógica de importação bancária. Pagamentos (débitos) estavam entrando como receitas (créditos) e vice-versa. Agora valida explicitamente o `transaction_type` ('credit'/'debit').
+- **Classificação Econet**: Transações "Econet" não caem mais na vala comum de "Outras Despesas". Criada conta específica `4.1.2.16 - Assinaturas Econet` e regra de mapeamento automática.
+- **Calendário SuperConciliação**: O seletor de Mês/Ano agora lembra a última seleção mesmo após recarregar a página (persistência via localStorage).
+
+### Dados
+- **Regeneração Fev/2025**: Todos os lançamentos de Fevereiro 2025 foram regenerados com a nova lógica e contas corretas.
+
+---
+
 ## [1.21.0] - 2025-12-10
 
 ### Adicionado
