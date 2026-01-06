@@ -732,7 +732,6 @@ export default {
   agentesIA,
   gruposEconomicos,
   regraFundamentalDrCicero,
-  correcaoPendenteSaldoAbertura,
   fluxoContabilGeral,
   versaoAtualizada
 };

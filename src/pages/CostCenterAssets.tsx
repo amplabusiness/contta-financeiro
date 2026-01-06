@@ -57,6 +57,7 @@ const CostCenterAssets = () => {
   const [editingCenterId, setEditingCenterId] = useState<string | null>(null);
   const [savingCenterId, setSavingCenterId] = useState<string | null>(null);
   const [centerAccounts, setCenterAccounts] = useState<Map<string, string[]>>(new Map());
+  const showMonthlyComparison = false;
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -732,7 +733,7 @@ const CostCenterAssets = () => {
           </CardContent>
         </Card>
 
-        {false && monthlyComparison.length > 0 && (
+        {showMonthlyComparison && monthlyComparison.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Evolução Mensal por Centro de Custo</CardTitle>

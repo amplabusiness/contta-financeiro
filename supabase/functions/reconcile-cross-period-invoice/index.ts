@@ -160,7 +160,7 @@ async function findPendingInvoices(
     const results = (invoices as Invoice[])
       .map((inv) => {
         let confidence = 0;
-        let reasons: string[] = [];
+        const reasons: string[] = [];
 
         // 1. Match por valor exato
         if (Math.abs(inv.amount - txAmount) < 0.01) {

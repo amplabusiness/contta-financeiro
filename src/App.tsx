@@ -98,6 +98,7 @@ import VideoContent from "./pages/VideoContent";
 import PendingEntities from "./pages/PendingEntities";
 import Incentives from "./pages/Incentives";
 import HonorariosFlow from "./pages/HonorariosFlow";
+import SuperConciliation from "./pages/SuperConciliation";
 import ReconcileHonorarios from "./pages/ReconcileHonorarios";
 import Invoices from "./pages/Invoices";
 import RecurringExpenses from "./pages/RecurringExpenses";
@@ -224,6 +225,7 @@ const App = () => (
             <Route path="/import-boleto-report" element={<ImportBoletoReport />} />
             <Route path="/import-honorarios" element={<ImportHonorarios />} />
             <Route path="/honorarios-flow" element={<HonorariosFlow />} />
+            <Route path="/super-conciliation" element={<SuperConciliation />} />
             <Route path="/reconcile-honorarios" element={<ReconcileHonorarios />} />
             <Route path="/boleto-reports-dashboard" element={<BoletoReportsDashboard />} />
             <Route path="/audit-logs" element={<AuditLogs />} />

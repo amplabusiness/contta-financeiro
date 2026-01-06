@@ -33,7 +33,8 @@ interface InvoiceMatch {
 }
 
 const ReconcileHonorarios = () => {
-  const { registrarRecebimento } = useAccounting({ showToasts: false });
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'ReconcileHonorarios' });
   const [loading, setLoading] = useState(false);
   const [transactionDate, setTransactionDate] = useState("");
   const [transactionAmount, setTransactionAmount] = useState("");

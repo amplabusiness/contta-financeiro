@@ -94,7 +94,7 @@ export default function ImportBoletosLiquidados() {
 
       if (parts.length < 8) {
         // Tentar outro formato
-        const regex = /^(\w+)\s+(\d+)\s+([\d\/\-]+)\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+([\d.,]+)\s+([\d.,]+)\s+(.+)$/;
+        const regex = /^(\w+)\s+(\d+)\s+([\d/-]+)\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+([\d.,]+)\s+([\d.,]+)\s+(.+)$/;
         const match = line.match(regex);
 
         if (match) {

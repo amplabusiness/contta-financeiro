@@ -63,7 +63,8 @@ interface TransacaoConsolidada {
 }
 
 const HonorariosFlow = () => {
-  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false });
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'HonorariosFlow' });
   const [honorarios, setHonorarios] = useState<HonorarioRecord[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);

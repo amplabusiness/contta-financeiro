@@ -26,7 +26,8 @@ import { getErrorMessage } from "@/lib/utils";
 const Invoices = () => {
   const { selectedYear, selectedMonth } = usePeriod();
   const { selectedClientId, selectedClientName } = useClient();
-  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false });
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'Invoices' });
   const [invoices, setInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

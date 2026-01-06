@@ -18,6 +18,7 @@ import {
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAccounting } from "@/hooks/useAccounting";
 
 interface BankTransaction {
   id: string;
@@ -56,6 +57,9 @@ const extractDocumentFromPix = (description: string): string | null => {
 };
 
 const OpeningBalanceReconciliation = () => {
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'OpeningBalanceReconciliation' });
+
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
@@ -224,20 +228,18 @@ const OpeningBalanceReconciliation = () => {
           })
           .eq("id", balanceId);
 
-        // Registrar no razão do cliente
-        await supabase
-          .from("client_ledger")
-          .insert({
-            client_id: balance.client_id,
-            transaction_date: selectedTransaction.transaction_date,
-            description: `Recebimento Saldo Abertura: ${balance.competence} - ${balance.description}`,
-            credit: balance.amount,
-            debit: 0,
-            balance: 0,
-            reference_type: 'opening_balance',
-            reference_id: balanceId,
-            created_by: user.id
-          });
+        // LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+        // D: Banco (1.1.1.xx) - entrada de dinheiro
+        // C: Clientes a Receber (1.1.2.01) - baixa do crédito de saldo de abertura
+        await registrarRecebimento({
+          paymentId: selectedTransaction.id,
+          invoiceId: balanceId, // Usando balanceId como referência
+          clientId: balance.client_id,
+          clientName: balance.clients?.name || 'Cliente',
+          amount: balance.amount,
+          paymentDate: selectedTransaction.transaction_date,
+          description: `Recebimento Saldo Abertura: ${balance.competence} - ${balance.description}`,
+        });
       }
 
       // Inserir matches se houver múltiplos

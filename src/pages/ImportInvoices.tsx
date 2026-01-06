@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 import { format, subMonths, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAccounting } from "@/hooks/useAccounting";
 
 interface ImportResult {
   success: number;
@@ -32,6 +33,9 @@ const ImportInvoices = () => {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
   const [result, setResult] = useState<ImportResult | null>(null);
+
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'ImportInvoices' });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -209,36 +213,36 @@ const ImportInvoices = () => {
               continue;
             }
 
-            // Se foi liquidado, registrar no razão do cliente
-            if (isLiquidado && invoice && paymentDate) {
-              // Lançamento de débito (aumento do saldo devedor)
-              await supabase.from("client_ledger").insert({
-                client_id: clientId,
-                transaction_date: dueDate.toISOString().split("T")[0],
+            // LANÇAMENTOS CONTÁBEIS OBRIGATÓRIOS (Dr. Cícero - NBC TG 26)
+            // Todo lançamento DEVE ter D/C com número da conta do Plano de Contas
+            if (invoice) {
+              // 1. LANÇAMENTO DE PROVISÃO (emissão do honorário)
+              // D: Clientes a Receber (1.1.2.01) - ativo aumenta
+              // C: Receita de Honorários (3.1.1.01) - receita aumenta
+              await registrarHonorario({
+                invoiceId: invoice.id,
+                clientId: clientId,
+                clientName: pagador,
+                amount: amount,
+                competence: competence,
+                dueDate: dueDate.toISOString().split("T")[0],
                 description: `Honorários ${competence}`,
-                debit: amount,
-                credit: 0,
-                balance: amount,
-                reference_type: "invoice",
-                reference_id: invoice.id,
-                invoice_id: invoice.id,
-                created_by: user.id,
               });
 
-              // Lançamento de crédito (pagamento)
-              await supabase.from("client_ledger").insert({
-                client_id: clientId,
-                transaction_date: paymentDate.toISOString().split("T")[0],
-                description: `Pagamento - Honorários ${competence}`,
-                debit: 0,
-                credit: liquidationAmount || amount,
-                balance: 0,
-                reference_type: "invoice",
-                reference_id: invoice.id,
-                invoice_id: invoice.id,
-                notes: liquidationAmount ? `Valor liquidado: ${formatCurrency(liquidationAmount)}` : null,
-                created_by: user.id,
-              });
+              // 2. Se foi liquidado, registrar RECEBIMENTO
+              // D: Banco (1.1.1.xx) - ativo aumenta
+              // C: Clientes a Receber (1.1.2.01) - ativo diminui
+              if (isLiquidado && paymentDate) {
+                await registrarRecebimento({
+                  paymentId: `import-${invoice.id}`,
+                  invoiceId: invoice.id,
+                  clientId: clientId,
+                  clientName: pagador,
+                  amount: liquidationAmount || amount,
+                  paymentDate: paymentDate.toISOString().split("T")[0],
+                  description: `Pagamento - Honorários ${competence}`,
+                });
+              }
             }
 
             importResult.success++;

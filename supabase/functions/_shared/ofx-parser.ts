@@ -69,8 +69,10 @@ export function parseOFX(content: string): OFXParseResult {
       // Determine description (use MEMO first, then NAME)
       const description = memo || name || checknum || 'Transação sem descrição'
 
+      const reference = fitid || `OFX-${Date.now()}-${Math.random()}`
+
       transactions.push({
-        bank_reference: fitid || `OFX-${Date.now()}-${Math.random()}`,
+        bank_reference: reference,
         transaction_date: formatOFXDate(date),
         amount: Math.abs(amount),
         description: description.trim(),
@@ -110,5 +112,8 @@ function formatOFXDate(ofxDate: string): string {
  * Validate OFX file structure
  */
 export function isValidOFX(content: string): boolean {
-  return content.includes('<OFX>') && content.includes('</OFX>')
+  if (!content) return false
+  const normalized = content.toUpperCase()
+  // Aceita OFX mesmo sem tag de fechamento em alguns bancos
+  return normalized.includes('<OFX')
 }

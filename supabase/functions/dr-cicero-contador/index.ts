@@ -1886,7 +1886,7 @@ function extractNamesFromDescription(description: string): string[] {
   // PIX_CRED SICREDI 99999999999 JOSE CARLOS
 
   // Remover prefixos comuns de PIX
-  let cleanDesc = desc
+  const cleanDesc = desc
     .replace(/PIX[\s_]?(RECEBIDO|ENVIADO|CRED|DEB)?[\s:-]*/gi, '')
     .replace(/TRANSF(ERENCIA)?[\s_]?(PIX)?[\s:-]*/gi, '')
     .replace(/TED[\s:-]*/gi, '')
@@ -1907,7 +1907,7 @@ function extractNamesFromDescription(description: string): string[] {
   }
 
   // Também tentar extrair partes do nome original
-  const parts = desc.split(/[\s\-\/]+/);
+  const parts = desc.split(/[\s/-]+/);
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     // Se parece um nome (começa com letra, tem tamanho razoável)
@@ -2199,10 +2199,10 @@ function extractCnpjFromDescription(description: string): string | null {
   }
 
   // Tentar formato com pontuação
-  const formattedMatch = description.match(/\b(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})\b/);
+  const formattedMatch = description.match(/\b(\d{2}\.?\d{3}\.?\d{3}\/\?\d{4}-?\d{2})\b/);
   if (formattedMatch) {
     // Remover pontuação para normalizar
-    return formattedMatch[1].replace(/[.\-\/]/g, '');
+    return formattedMatch[1].replace(new RegExp('[./-]', 'g'), '');
   }
 
   return null;

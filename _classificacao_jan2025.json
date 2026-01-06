@@ -1,0 +1,1066 @@
+{
+  "16366467152": {
+    "categoria": "adiantamento_socio",
+    "subconta": "sergio_carneiro",
+    "valor": 13698.01,
+    "data": "2025-01-02",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   48656488104 SERGIO CARNEIRO LEAO"
+  },
+  "16375753476": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 9.45,
+    "data": "2025-01-02",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000005"
+  },
+  "16383927171": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 328.0,
+    "data": "2025-01-03",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16383927176": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 328.0,
+    "data": "2025-01-03",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16383927207": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 10836.96,
+    "data": "2025-01-03",
+    "descricao": "LIQUIDACAO BOLETO-          44422513000166 FACULDADE DE MEDICINA DE ITUMBIARA LTDA"
+  },
+  "16384083278": {
+    "categoria": "obras",
+    "subconta": "construcao",
+    "valor": 11000.0,
+    "data": "2025-01-03",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA"
+  },
+  "16384614977": {
+    "categoria": "obras",
+    "subconta": "construcao",
+    "valor": 1964.0,
+    "data": "2025-01-03",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   11072084000195 IMPERMEAVEL DISTRIBUIDORA DE IMPERMEABILIZANTES EIRELI"
+  },
+  "16392976117": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 13.23,
+    "data": "2025-01-03",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000007"
+  },
+  "16393461702": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 9.45,
+    "data": "2025-01-06",
+    "descricao": "MANUTENCAO DE TITULOS-COB000005"
+  },
+  "16403349900": {
+    "categoria": "adiantamento_socio",
+    "subconta": "sergio_augusto",
+    "valor": 266.0,
+    "data": "2025-01-06",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO"
+  },
+  "16406213521": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 504.53,
+    "data": "2025-01-06",
+    "descricao": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO"
+  },
+  "16406215081": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 457.12,
+    "data": "2025-01-06",
+    "descricao": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO"
+  },
+  "16406215451": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 10843.02,
+    "data": "2025-01-06",
+    "descricao": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO"
+  },
+  "16406215488": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 1420.08,
+    "data": "2025-01-06",
+    "descricao": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO"
+  },
+  "16409677956": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 220.0,
+    "data": "2025-01-06",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   48541079104 MIGUEL CARVALHO DE OLIVEIRA"
+  },
+  "16411522181": {
+    "categoria": "servicos_terceiros",
+    "subconta": "prestadores",
+    "valor": 3800.0,
+    "data": "2025-01-06",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75619318168 FABRICIO SOARES BOMFIM JUNIOR"
+  },
+  "16411586747": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 608.61,
+    "data": "2025-01-06",
+    "descricao": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C"
+  },
+  "16413293436": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 59.28,
+    "data": "2025-01-06",
+    "descricao": "CESTA DE RELACIONAMENTO-"
+  },
+  "16419806061": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-06",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000001"
+  },
+  "16419806064": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 39.69,
+    "data": "2025-01-06",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000021"
+  },
+  "16422658129": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 380.0,
+    "data": "2025-01-07",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   97163988168 Vonoria AmÃ©lia da ConceiÃ§Ã£o"
+  },
+  "16426004085": {
+    "categoria": "adiantamento_socio",
+    "subconta": "sergio_augusto",
+    "valor": 55.0,
+    "data": "2025-01-07",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO"
+  },
+  "16434951570": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-07",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000001"
+  },
+  "16435802209": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-08",
+    "descricao": "MANUTENCAO DE TITULOS-COB000001"
+  },
+  "16439221351": {
+    "categoria": "adiantamento_socio",
+    "subconta": "via_empresa",
+    "valor": 70000.0,
+    "data": "2025-01-08",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA"
+  },
+  "16449172163": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 9.45,
+    "data": "2025-01-08",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000005"
+  },
+  "16455720026": {
+    "categoria": "aluguel",
+    "subconta": "locacoes",
+    "valor": 1709.4,
+    "data": "2025-01-09",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   10798029000114 A F DE OLIVEIRA - FRANCA LOCACOES EIRELI"
+  },
+  "16461884667": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 5.67,
+    "data": "2025-01-09",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000003"
+  },
+  "16463149964": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 11.34,
+    "data": "2025-01-10",
+    "descricao": "MANUTENCAO DE TITULOS-COB000006"
+  },
+  "16470701553": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 402.88,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16470701554": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 402.88,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16470701559": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 800.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   76625974153 ANTONIO LEANDRO DA SILVA FILHO"
+  },
+  "16470701564": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1518.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   79512801191 ANDREA FERREIRA FAGUNDES QUEIROZ"
+  },
+  "16470701566": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1617.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02926538162 CORACI ALINE DOS SANTOS"
+  },
+  "16470701572": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 1575.72,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE"
+  },
+  "16470701728": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 423.6,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          26659060000104 OBJETIVA EDICOES EMPRESARIAIS LTDA"
+  },
+  "16470701747": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 2278.8,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          00910509001305 THOMSON REUTERS BRAS"
+  },
+  "16470701758": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 69.0,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          12499520000170 CLICKSIGN GESTAO DE DOCUM SA"
+  },
+  "16470701805": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 200.0,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          07296500000161 ADV SYSTEM ELEVADORES LTDA"
+  },
+  "16470725889": {
+    "categoria": "servicos_terceiros",
+    "subconta": "prestadores",
+    "valor": 875.59,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103"
+  },
+  "16470725895": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 370.0,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1"
+  },
+  "16470725896": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 39.99,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16470725899": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 3773.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   05666515640 ALEXSSANDRA FERREIRA RAMOS"
+  },
+  "16470725903": {
+    "categoria": "adiantamento_socio",
+    "subconta": "sergio_augusto",
+    "valor": 6000.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO"
+  },
+  "16470725906": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 6000.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16470725921": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 4295.62,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          01418847000153 CAIXA DE ASSISTENCIA DOS ADVOGADOS DE GOIAS"
+  },
+  "16470725969": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 39.99,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16470726010": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 50.99,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16470726050": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 50.99,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16470726094": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 106.58,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16470726140": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 765.39,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          36859577000109 L ARGENT FACTORING FOMENTO MERCANTIL LTD"
+  },
+  "16470726181": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 121.25,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-X155      03795072000160 X155"
+  },
+  "16470726243": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 1471.41,
+    "data": "2025-01-10",
+    "descricao": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE"
+  },
+  "16470726246": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 312.21,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C"
+  },
+  "16470726309": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 312.21,
+    "data": "2025-01-10",
+    "descricao": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C"
+  },
+  "16470750905": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 35.98,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16470750925": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 5731.03,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16470750932": {
+    "categoria": "servicos_terceiros",
+    "subconta": "prestadores",
+    "valor": 10500.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103"
+  },
+  "16470750942": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 3465.0,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX SICREDI-CX387324  04947719176 DANIELLE RODRIGUES DE OLIVEIRA"
+  },
+  "16470791556": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 200.5,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16476124620": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 399.51,
+    "data": "2025-01-10",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   05746859109 Tharson Diego Dias De Souza"
+  },
+  "16479506128": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-10",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000001"
+  },
+  "16479506134": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 54.81,
+    "data": "2025-01-10",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000029"
+  },
+  "16488573481": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 160.0,
+    "data": "2025-01-13",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   99940892691 MARIA APARECIDA GOMES"
+  },
+  "16492636581": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 5756.25,
+    "data": "2025-01-13",
+    "descricao": "DEB.CTA.FATURA-096541455"
+  },
+  "16498897022": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 187.0,
+    "data": "2025-01-13",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   05384518000190 AGUA PURA COM DISTRIBUIDORA LTDA"
+  },
+  "16498928900": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 137.68,
+    "data": "2025-01-13",
+    "descricao": "DEBITO CONVENIOS-VIVO      02558157000162 VIVO"
+  },
+  "16498928904": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 96.0,
+    "data": "2025-01-13",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   43572456134 LUIZ ALVES TAVEIRA"
+  },
+  "16498928911": {
+    "categoria": "adiantamento_socio",
+    "subconta": "via_empresa",
+    "valor": 21.0,
+    "data": "2025-01-13",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   50464753000126 AMPLA SAUDE OCUPACIONAL"
+  },
+  "16511345117": {
+    "categoria": "adiantamento_socio",
+    "subconta": "sergio_augusto",
+    "valor": 90.0,
+    "data": "2025-01-14",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO"
+  },
+  "16512540404": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 6000.0,
+    "data": "2025-01-14",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   12962826865 ANDREA LEONE BASTOS"
+  },
+  "16512546155": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 1500.0,
+    "data": "2025-01-14",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   00834584506 ANDREIA"
+  },
+  "16517785649": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 9.45,
+    "data": "2025-01-14",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000005"
+  },
+  "16518676079": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 7.56,
+    "data": "2025-01-15",
+    "descricao": "MANUTENCAO DE TITULOS-COB000004"
+  },
+  "16524563658": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1045.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   71251537120 Lilian Moreira da Costa"
+  },
+  "16524563660": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 920.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a"
+  },
+  "16524563662": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1200.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   82817375149 DEUZA RESENDE DE JESUS"
+  },
+  "16524563663": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 132.17,
+    "data": "2025-01-15",
+    "descricao": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G"
+  },
+  "16524563668": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1491.1,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03924444102 Thaynara ConceiÃ§Ã£o de melo"
+  },
+  "16524563674": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 2232.28,
+    "data": "2025-01-15",
+    "descricao": "DEBITO ARRECADACAO-DARFC0385 00394460005887 DARFC0385"
+  },
+  "16524563677": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1504.8,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16524563685": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 99.9,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1"
+  },
+  "16524563690": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 1569.23,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA"
+  },
+  "16524563691": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 418.0,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          28408293000160 VERI SOLUCOES TECNOLOGICAS LTDA"
+  },
+  "16524563693": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 865.86,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          37411535000165 SITTAX"
+  },
+  "16524563696": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 222.0,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          50812771000151 AUTMAIS SOLUCOES E AUTOMACOES LTDA"
+  },
+  "16524563725": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 193.92,
+    "data": "2025-01-15",
+    "descricao": "DEBITO CONVENIOS-ALGARTE G 71208516000174 ALGARTE G"
+  },
+  "16524563781": {
+    "categoria": "imposto",
+    "subconta": "ipva_detran",
+    "valor": 3076.13,
+    "data": "2025-01-15",
+    "descricao": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C"
+  },
+  "16524563823": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 314.55,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          43961100000197 NB TECHNOLOGY LTDA"
+  },
+  "16524578028": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 2508.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   81875835172 ROSEMEIRE RODRIGUES"
+  },
+  "16524581307": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 4893.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16524627085": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1320.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva"
+  },
+  "16524627092": {
+    "categoria": "encargos",
+    "subconta": "fgts",
+    "valor": 2188.34,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   00360305000104 CAIXA ECONOMICA FEDERAL"
+  },
+  "16524627103": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 1410.0,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          42977999000173 DATAUNIQUE TECH LTDA"
+  },
+  "16524627117": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 251.25,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO"
+  },
+  "16524627163": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 777.75,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          42711893000123 CONTUS TECNOLOGIA DA INFORMACAO LTDA"
+  },
+  "16524627185": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 106.23,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA"
+  },
+  "16524627290": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 733.96,
+    "data": "2025-01-15",
+    "descricao": "LIQUIDACAO BOLETO-          14153062000148 CR SISTEMA E ANALISE EM ARQUIVOS MAGNETICOS LTDA"
+  },
+  "16524663904": {
+    "categoria": "obras",
+    "subconta": "construcao",
+    "valor": 1500.0,
+    "data": "2025-01-15",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA"
+  },
+  "16531111855": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 13.23,
+    "data": "2025-01-15",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000007"
+  },
+  "16542401702": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 3.78,
+    "data": "2025-01-16",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000002"
+  },
+  "16551589563": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 311.63,
+    "data": "2025-01-17",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16551610265": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 311.63,
+    "data": "2025-01-17",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16554020399": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 7.56,
+    "data": "2025-01-17",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000004"
+  },
+  "16554361524": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 37.8,
+    "data": "2025-01-20",
+    "descricao": "MANUTENCAO DE TITULOS-COB000020"
+  },
+  "16579368924": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 3.78,
+    "data": "2025-01-20",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000002"
+  },
+  "16582542085": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 411.64,
+    "data": "2025-01-21",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16582587425": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 411.64,
+    "data": "2025-01-21",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16594999910": {
+    "categoria": "servicos_terceiros",
+    "subconta": "prestadores",
+    "valor": 934.52,
+    "data": "2025-01-22",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103"
+  },
+  "16595053433": {
+    "categoria": "adiantamento_socio",
+    "subconta": "via_empresa",
+    "valor": 73827.26,
+    "data": "2025-01-22",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA"
+  },
+  "16601359558": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 9.45,
+    "data": "2025-01-22",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000005"
+  },
+  "16606739424": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 35.98,
+    "data": "2025-01-23",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16611922074": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 7.56,
+    "data": "2025-01-23",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000004"
+  },
+  "16614916872": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 311.86,
+    "data": "2025-01-24",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16614948024": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 96.0,
+    "data": "2025-01-24",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   43572456134 LUIZ ALVES TAVEIRA"
+  },
+  "16614970275": {
+    "categoria": "adiantamento_socio",
+    "subconta": "victor",
+    "valor": 311.86,
+    "data": "2025-01-24",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao"
+  },
+  "16614970294": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 868.11,
+    "data": "2025-01-24",
+    "descricao": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA"
+  },
+  "16622981376": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-24",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000001"
+  },
+  "16642454654": {
+    "categoria": "servicos_terceiros",
+    "subconta": "prestadores",
+    "valor": 370.75,
+    "data": "2025-01-27",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103"
+  },
+  "16642454657": {
+    "categoria": "adiantamento_socio",
+    "subconta": "via_empresa",
+    "valor": 29289.39,
+    "data": "2025-01-27",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA"
+  },
+  "16647400012": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-28",
+    "descricao": "MANUTENCAO DE TITULOS-COB000001"
+  },
+  "16653492217": {
+    "categoria": "fornecedores",
+    "subconta": "diversos",
+    "valor": 1302.3,
+    "data": "2025-01-28",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   11869122000135 NOVA VISAO IMPORTS"
+  },
+  "16653497024": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 255.8,
+    "data": "2025-01-28",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   10573521000191 PIX Marketplace"
+  },
+  "16653516515": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 81.46,
+    "data": "2025-01-28",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16666418979": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 210.0,
+    "data": "2025-01-29",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   97163988168 Vonoria AmÃ©lia da ConceiÃ§Ã£o"
+  },
+  "16668192424": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-29",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000001"
+  },
+  "16668997286": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 1.89,
+    "data": "2025-01-30",
+    "descricao": "MANUTENCAO DE TITULOS-COB000001"
+  },
+  "16675388889": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 2020.92,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03924444102 Thaynara ConceiÃ§Ã£o de melo"
+  },
+  "16675415826": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 600.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02535864000133 VR BENEF. SERV. PROC. SA"
+  },
+  "16675415831": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 1194.77,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a"
+  },
+  "16675415846": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 2180.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva"
+  },
+  "16675415889": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 178.0,
+    "data": "2025-01-30",
+    "descricao": "LIQUIDACAO BOLETO-          03753088000100 CATHO ON LINE LTDA"
+  },
+  "16675415949": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 435.45,
+    "data": "2025-01-30",
+    "descricao": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL"
+  },
+  "16675440153": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1567.5,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   71251537120 Lilian Moreira da Costa"
+  },
+  "16675440157": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 1813.22,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16675440164": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 2000.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16675440170": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 346.07,
+    "data": "2025-01-30",
+    "descricao": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL"
+  },
+  "16675440171": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 174.3,
+    "data": "2025-01-30",
+    "descricao": "LIQUIDACAO BOLETO-          10636142000101 REDEMOB CONSORCIO"
+  },
+  "16675440175": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 1000.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX SICREDI-CX299815  03832285000115 SCALA CONTABILIDADE EIRELI"
+  },
+  "16675440177": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 3870.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   81875835172 ROSEMEIRE RODRIGUES"
+  },
+  "16675440200": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 2508.0,
+    "data": "2025-01-30",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA"
+  },
+  "16675440244": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 346.07,
+    "data": "2025-01-30",
+    "descricao": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL"
+  },
+  "16683541461": {
+    "categoria": "outros",
+    "subconta": "a_classificar",
+    "valor": 421.5,
+    "data": "2025-01-31",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   16366409000166 CENTER LUZZ LTDA"
+  },
+  "16686085515": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 597.0,
+    "data": "2025-01-31",
+    "descricao": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS"
+  },
+  "16686108929": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 138.22,
+    "data": "2025-01-31",
+    "descricao": "LIQUIDACAO BOLETO-          34813747000180 ONEFLOW SA"
+  },
+  "16686108930": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 296.0,
+    "data": "2025-01-31",
+    "descricao": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS"
+  },
+  "16686108935": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 528.0,
+    "data": "2025-01-31",
+    "descricao": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS"
+  },
+  "16686108942": {
+    "categoria": "boleto_pago",
+    "subconta": "diversos",
+    "valor": 597.0,
+    "data": "2025-01-31",
+    "descricao": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS"
+  },
+  "16686152760": {
+    "categoria": "adiantamento_socio",
+    "subconta": "nayara",
+    "valor": 3931.89,
+    "data": "2025-01-31",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO"
+  },
+  "16686152761": {
+    "categoria": "encargos",
+    "subconta": "fgts",
+    "valor": 834.46,
+    "data": "2025-01-31",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   00360305000104 CAIXA ECONOMICA FEDERAL"
+  },
+  "16686152764": {
+    "categoria": "folha_terceiros",
+    "subconta": "rh",
+    "valor": 5901.92,
+    "data": "2025-01-31",
+    "descricao": "PAGAMENTO PIX-PIX_DEB   82817375149 DEUZA RESENDE DE JESUS"
+  },
+  "16692369572": {
+    "categoria": "taxa_bancaria",
+    "subconta": "banco",
+    "valor": 3.78,
+    "data": "2025-01-31",
+    "descricao": "TARIFA COM R LIQUIDACAO-COB000002"
+  }
+}

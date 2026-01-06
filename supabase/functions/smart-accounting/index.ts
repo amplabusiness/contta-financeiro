@@ -1099,9 +1099,17 @@ async function createSmartAccountingEntry(supabase: any, userId: string, params:
       });
   }
 
+  // DR. CÍCERO: Buscar o internal_code gerado pelo trigger
+  const { data: entryWithCode } = await supabase
+    .from('accounting_entries')
+    .select('internal_code')
+    .eq('id', entry.id)
+    .single();
+
   return {
     success: true,
     entry_id: entry.id,
+    internal_code: entryWithCode?.internal_code || null, // DR. CÍCERO: Código de rastreabilidade
     message: `Lançamento contábil criado com sucesso`
   };
 }

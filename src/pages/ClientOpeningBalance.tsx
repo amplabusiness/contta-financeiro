@@ -62,7 +62,8 @@ const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 const ClientOpeningBalance = () => {
   const { selectedClientId: globalClientId, selectedClientName: globalClientName } = useClient();
-  const { registrarSaldoAbertura } = useAccounting({ showToasts: false });
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarSaldoAbertura } = useAccounting({ showToasts: false, sourceModule: 'ClientOpeningBalance' });
   const [clients, setClients] = useState<Client[]>([]);
   const [balances, setBalances] = useState<OpeningBalance[]>([]);
   const [loading, setLoading] = useState(true);

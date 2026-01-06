@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAccounting } from "@/hooks/useAccounting";
 
 interface PixMatch {
   transaction: any;
@@ -24,6 +25,9 @@ const PixReconciliation = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [matches, setMatches] = useState<PixMatch[]>([]);
   const [unmatched, setUnmatched] = useState<any[]>([]);
+
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'PixReconciliation' });
 
   const analyzePixTransactions = useCallback(async () => {
     setAnalyzing(true);
@@ -267,23 +271,24 @@ const PixReconciliation = () => {
 
         if (invError) throw invError;
 
-        // Criar entrada no razão do cliente
-        const { error: ledgerError } = await supabase
-          .from("client_ledger")
-          .insert({
-            client_id: match.invoice.client_id,
-            transaction_date: match.transaction.transaction_date,
-            description: `Pagamento via PIX - ${match.invoice.description || 'Honorários'}`,
-            debit: 0,
-            credit: Math.abs(match.transaction.amount),
-            balance: 0,
-            invoice_id: match.invoice.id,
-            reference_type: "invoice",
-            notes: `Conciliado automaticamente. PIX: ${match.transaction.bank_reference || match.transaction.description}`,
-            created_by: user.id,
-          });
+        // LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+        // D: Banco (1.1.1.xx) - entrada de dinheiro
+        // C: Clientes a Receber (1.1.2.01) - baixa do crédito
+        const resultContabil = await registrarRecebimento({
+          paymentId: match.transaction.id,
+          invoiceId: match.invoice.id,
+          clientId: match.invoice.client_id,
+          clientName: match.invoice.clients?.name || 'Cliente',
+          amount: Math.abs(match.transaction.amount),
+          paymentDate: match.transaction.transaction_date,
+          bankAccountId: match.transaction.bank_account_id,
+          description: `Recebimento PIX - ${match.invoice.description || 'Honorários'} - ${match.transaction.bank_reference || ''}`,
+        });
 
-        if (ledgerError) throw ledgerError;
+        if (!resultContabil.success) {
+          console.error('[PixReconciliation] Erro ao criar lançamento contábil:', resultContabil.error);
+          // Não interrompe o fluxo, mas loga o erro
+        }
       }
 
       // Se houver divergências, criar log de auditoria

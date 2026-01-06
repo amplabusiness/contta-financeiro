@@ -981,7 +981,7 @@ const Payroll = () => {
       if (termError) throw termError;
 
       // Aplicar variáveis adicionais ao cálculo
-      let adjustedTermData = { ...termData };
+      const adjustedTermData = { ...termData };
 
       if (terminationVariables.length > 0) {
         // Calcular totais das variáveis adicionais

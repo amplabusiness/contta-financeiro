@@ -81,7 +81,7 @@ export function parseDate(value: string): Date | null {
   const cleaned = value.trim();
 
   // DD/MM/YYYY ou DD-MM-YYYY
-  const brMatch = cleaned.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  const brMatch = cleaned.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
   if (brMatch) {
     return new Date(parseInt(brMatch[3]), parseInt(brMatch[2]) - 1, parseInt(brMatch[1]));
   }

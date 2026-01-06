@@ -1,0 +1,2557 @@
+[
+  {
+    "id": "50ca29e1-7b6f-4751-af5a-c51ace87c902",
+    "entry_date": "2025-01-21",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 31458451000109 ACTION SOLUCOES INDU",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 74761.78
+  },
+  {
+    "id": "34986bba-0090-4b6e-bf83-f62628ee5693",
+    "entry_date": "2025-01-21",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 31458451000109 ACTION SOLUCOES INDU",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 74761.78
+  },
+  {
+    "id": "c0ebb480-c52a-40e0-9795-13c11c3b58e4",
+    "entry_date": "2025-01-22",
+    "description": "Pagamento: Pagamento: AMPLA CONTABILIDADE",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 73827.26
+  },
+  {
+    "id": "a7c44158-9531-4683-9365-041aead7dcb5",
+    "entry_date": "2025-01-22",
+    "description": "Pagamento: Pagamento: AMPLA CONTABILIDADE",
+    "entry_type": "transferencia_interna",
+    "total_debit": 73827.26
+  },
+  {
+    "id": "110083d8-ec91-4edb-9f0b-d16e303940b9",
+    "entry_date": "2025-01-22",
+    "description": "Provisionamento Despesa: AMPLA CONTABILIDADE",
+    "entry_type": "despesa",
+    "total_debit": 73827.26
+  },
+  {
+    "id": "167286e5-9b75-4ab5-b14f-31b2ba85343a",
+    "entry_date": "2025-01-07",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  31458451000109 ACTION SOLUCOES INDU",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 70046.9
+  },
+  {
+    "id": "38c9cd32-fb33-4be0-94d5-b1484f1b4860",
+    "entry_date": "2025-01-07",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  31458451000109 ACTION SOLUCOES INDU",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 70046.9
+  },
+  {
+    "id": "19577ef5-0892-4bad-b387-ace25ed07ebb",
+    "entry_date": "2025-01-08",
+    "description": "Pagamento: Pagamento: AMPLA CONTABILIDADE",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 70000.0
+  },
+  {
+    "id": "299127a5-1529-4710-8abc-fadfde00b56d",
+    "entry_date": "2025-01-08",
+    "description": "Pagamento: Pagamento: AMPLA CONTABILIDADE",
+    "entry_type": "transferencia_interna",
+    "total_debit": 70000.0
+  },
+  {
+    "id": "1f8b3299-8282-4b06-9ea8-02abf9273b80",
+    "entry_date": "2025-01-07",
+    "description": "Provisionamento Despesa: AMPLA CONTABILIDADE",
+    "entry_type": "despesa",
+    "total_debit": 70000.0
+  },
+  {
+    "id": "2c0bfed7-1b11-4eb4-a04e-f7713a2fa700",
+    "entry_date": "2025-01-13",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000030",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 44725.72
+  },
+  {
+    "id": "054e0aac-85a7-44df-8b5a-411ef9985675",
+    "entry_date": "2025-01-13",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000030",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 44725.72
+  },
+  {
+    "id": "7c540294-1faf-44e9-8223-71a92eb0e466",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 07119310000179 MATA PRAGAS CONTROLE DE PRAGAS",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 29660.14
+  },
+  {
+    "id": "b36d1ad9-9bc2-4f6e-919f-99f1b58e91c2",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 07119310000179 MATA PRAGAS CONTROLE DE PRAGAS",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 29660.14
+  },
+  {
+    "id": "d76ee2a8-b56c-4da8-8f3b-0619f1e7328e",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Outsider Construtora - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 26000.0
+  },
+  {
+    "id": "6cf6d0c4-df97-4b9e-8063-627aebb62314",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Outsider Construtora - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 26000.0
+  },
+  {
+    "id": "2abff113-0f55-450d-9bf4-26f8d362c572",
+    "entry_date": "2025-01-01",
+    "description": "Saldo de Abertura - Ampla Saúde (Créditos a Receber)",
+    "entry_type": "opening_balance",
+    "total_debit": 25000.0
+  },
+  {
+    "id": "4c07f150-6f6f-4b81-be19-25b1aeb910f7",
+    "entry_date": "2025-01-10",
+    "description": "Adiantamento: Sérgio Augusto - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 18257.04
+  },
+  {
+    "id": "329c28b2-8905-4251-ac7d-c7dd7b3f76c5",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Sérgio Augusto - Adiantamento",
+    "entry_type": "despesa",
+    "total_debit": 18257.04
+  },
+  {
+    "id": "cdb8c754-9695-4d47-a236-1f6922a683ad",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Sérgio Augusto - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 18257.04
+  },
+  {
+    "id": "838a6847-a152-4645-8257-b75f38fd60b7",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Sérgio Augusto - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 18257.04
+  },
+  {
+    "id": "292a9d99-f10d-44e8-a0c6-0d99fc2f4ccf",
+    "entry_date": "2025-01-07",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000022",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 17076.85
+  },
+  {
+    "id": "b33079a0-771d-435e-b9e3-bb95ca0241fc",
+    "entry_date": "2025-01-07",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000022",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 17076.85
+  },
+  {
+    "id": "8c35a2ed-61e4-4f8b-b234-7046be6c2843",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 13698.01
+  },
+  {
+    "id": "83be9677-57d7-48f0-a599-543db135eecd",
+    "entry_date": "2025-01-02",
+    "description": "Pagamento: Pagamento: adiantamento Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 13698.01
+  },
+  {
+    "id": "536b5427-9010-42cb-97a0-57ba044621d0",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - ACTION SERVICOS INDUSTRIAIS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 12143.72
+  },
+  {
+    "id": "b8389214-177a-463f-8e97-03d3b7021a87",
+    "entry_date": "2025-01-16",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000007",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 11018.83
+  },
+  {
+    "id": "62958005-68c6-4f0d-85f0-63849c66ffd2",
+    "entry_date": "2025-01-16",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000007",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 11018.83
+  },
+  {
+    "id": "9fbf5d0d-87aa-4f0e-8f09-c3767ba14b0f",
+    "entry_date": "2025-01-06",
+    "description": "IPVA/Licenciamento - DETRAN (veículo 1)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 10843.02
+  },
+  {
+    "id": "24d258be-fae5-42ba-b743-28d00ec24858",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 10590.9
+  },
+  {
+    "id": "7ab1ce9d-b2de-4cb2-bae6-63a0707a1f5f",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Dep. Fiscal - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 10500.0
+  },
+  {
+    "id": "3f7a9b35-0508-4d94-84c7-d212c1b9e55a",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Dep. Fiscal - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 10500.0
+  },
+  {
+    "id": "6eaae297-c0bc-44ee-ad33-644defb05e9c",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: MG MECANICA INDUSTRIAL LTDA ME - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 9479.11
+  },
+  {
+    "id": "7eea7198-3a0b-4276-904a-ff95654495ed",
+    "entry_date": "2025-01-15",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 7177.21
+  },
+  {
+    "id": "57ceae81-d985-4973-86e5-2f8d1132d637",
+    "entry_date": "2025-01-15",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 7177.21
+  },
+  {
+    "id": "471a7df4-9720-45f1-b28b-31e9b8c3294d",
+    "entry_date": "2025-01-10",
+    "description": "Adiantamento: Victor Hugo - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 6504.53
+  },
+  {
+    "id": "3e67e669-15b0-4de9-a985-41da1a202238",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Victor Hugo - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 6504.53
+  },
+  {
+    "id": "fefa9eb2-8c72-4c30-a302-2b4eb37ea782",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Victor Hugo - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 6504.53
+  },
+  {
+    "id": "cc9f6142-f9ff-4668-baf3-64185e14bc64",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Victor Hugo - Adiantamento",
+    "entry_type": "despesa",
+    "total_debit": 6504.53
+  },
+  {
+    "id": "5c008a74-aaa0-4489-bb35-7a11fee255fa",
+    "entry_date": "2025-01-15",
+    "description": "Provisionamento Despesa: ANDREA LEONE BASTOS",
+    "entry_type": "despesa",
+    "total_debit": 6000.0
+  },
+  {
+    "id": "674ff111-f09c-4a54-9598-9da1d91c40a0",
+    "entry_date": "2025-01-14",
+    "description": "Pagamento: Pagamento: ANDREA LEONE BASTOS",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 6000.0
+  },
+  {
+    "id": "e2d9fdf7-7540-4945-a207-a9efe7af1bcb",
+    "entry_date": "2025-01-03",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 5913.78
+  },
+  {
+    "id": "982ea656-192e-43dc-b09c-2380e928cde5",
+    "entry_date": "2025-01-03",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 5913.78
+  },
+  {
+    "id": "f16b8af3-041f-4c9c-ade6-8b903bea5db6",
+    "entry_date": "2025-01-31",
+    "description": "Rescisão: DEUZA RESENDE DE JESUS - Saída 24/01/2025",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 5901.92
+  },
+  {
+    "id": "1169265c-0986-44b3-bbb5-c50b16aaa488",
+    "entry_date": "2025-01-13",
+    "description": "Adiantamento: FATURA MENSAL-096541455",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 5756.25
+  },
+  {
+    "id": "2e4b236e-c3de-4c28-b5b9-4a9bf1a3b7c0",
+    "entry_date": "2025-01-13",
+    "description": "Provisionamento Despesa: FATURA MENSAL-096541455",
+    "entry_type": "despesa",
+    "total_debit": 5756.25
+  },
+  {
+    "id": "542d3c29-7669-4b72-a1d9-82c1f288c067",
+    "entry_date": "2025-01-13",
+    "description": "Pagamento: Pagamento: FATURA MENSAL-096541455",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 5756.25
+  },
+  {
+    "id": "ad205da7-99d3-4999-aaa5-161ef522aa45",
+    "entry_date": "2025-01-13",
+    "description": "Pagamento: Pagamento: FATURA MENSAL-096541455",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 5756.25
+  },
+  {
+    "id": "ab71e9d5-dda8-46b9-a711-ac09796828c0",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Nayara - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 5731.03
+  },
+  {
+    "id": "040e4d3e-6ce0-4542-8373-54a7639648d1",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Nayara - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 5731.03
+  },
+  {
+    "id": "4343559b-cda3-4a23-88eb-1a1064201041",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Nayara - Adiantamento",
+    "entry_type": "despesa",
+    "total_debit": 5731.03
+  },
+  {
+    "id": "602289af-caf0-44a3-89be-4e1f818ca6c5",
+    "entry_date": "2025-01-10",
+    "description": "Adiantamento: Nayara - Adiantamento",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 5731.03
+  },
+  {
+    "id": "3fe8eee4-2263-4485-8931-81fb95e537da",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: AVIZ ALIMENTOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 5000.0
+  },
+  {
+    "id": "b4b648fa-988c-4d79-aede-d3b2708eb228",
+    "entry_date": "2025-01-15",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 4893.0
+  },
+  {
+    "id": "35636541-07aa-4c2c-a477-5cd6fc2ce7b0",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 4893.0
+  },
+  {
+    "id": "a617ef55-2ee9-45a2-b44c-974afbb57509",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - R&P AVIACAO COMERCIO IMPORTACAO E EXPORTACAO LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 4554.0
+  },
+  {
+    "id": "19844be5-371d-4825-bfc5-c2ec3650178b",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: JPL AGROPECUARIA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 4346.3
+  },
+  {
+    "id": "63f195f3-ba44-4484-a548-2481fd31ec14",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Plano de Saúde - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 4295.62
+  },
+  {
+    "id": "6f4816e9-7dea-4e9a-a910-d83ff02a6760",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Plano de Saúde - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 4295.62
+  },
+  {
+    "id": "2e87c80d-a00c-4466-a8c7-d9d986ab3a45",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Plano de Saúde - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 4295.62
+  },
+  {
+    "id": "46f7d1fd-26ae-4329-974e-0546f7991986",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: MURANO ADMINISTRACAO E PARTICIPACOES LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 4244.67
+  },
+  {
+    "id": "c3748e32-59a5-4ad7-acf4-87161e4b50ee",
+    "entry_date": "2025-01-23",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4233.41
+  },
+  {
+    "id": "b045481c-0a5e-4a5c-8002-cc77a87ea9ec",
+    "entry_date": "2025-01-23",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4233.41
+  },
+  {
+    "id": "c2f44dfe-6f8e-43ee-b824-02b2652e3c69",
+    "entry_date": "2025-01-22",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 31092004149 JULIANA PERILLO M DE SA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4043.05
+  },
+  {
+    "id": "dff10c41-a4fa-4b8e-b7a4-92a5cfd62566",
+    "entry_date": "2025-01-22",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 31092004149 JULIANA PERILLO M DE SA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4043.05
+  },
+  {
+    "id": "5599f324-25f3-48fc-8fc7-311b8175e5fe",
+    "entry_date": "2025-01-28",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 03892392161 ENZO DE AQUINO ALVES DONADI",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4000.0
+  },
+  {
+    "id": "fd4cf98e-de8d-46f1-875f-fc1986b8bfbc",
+    "entry_date": "2025-01-28",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 03892392161 ENZO DE AQUINO ALVES DONADI",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 4000.0
+  },
+  {
+    "id": "9b47b1c4-56bc-4115-b518-ef70803acebe",
+    "entry_date": "2025-01-31",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 3931.89
+  },
+  {
+    "id": "d7a09b87-0fc8-469a-88fe-69d7ec89e002",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Condomínio Lago",
+    "entry_type": "despesa",
+    "total_debit": 3931.86
+  },
+  {
+    "id": "2b15a4c2-6b7c-4c60-913a-78ecfcea83ed",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Lago",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3931.86
+  },
+  {
+    "id": "505a8a81-ebc2-44ed-9522-b2fc73cc172b",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Lago",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 3931.86
+  },
+  {
+    "id": "84f00844-7f98-43f6-be83-c8d0ff295435",
+    "entry_date": "2025-01-30",
+    "description": "Salário: ROSEMEIRE RODRIGUES - Salário CLT",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3870.0
+  },
+  {
+    "id": "655c0a9a-cabf-4175-a106-e6e668f99c5e",
+    "entry_date": "2025-01-06",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000007",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 3833.05
+  },
+  {
+    "id": "ec35ea4e-c00e-4597-be36-f1f781df75d6",
+    "entry_date": "2025-01-06",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000007",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 3833.05
+  },
+  {
+    "id": "256c232f-fc66-4714-80c0-9d3ca36c69d2",
+    "entry_date": "2025-01-06",
+    "description": "Pagamento: Pagamento: FABRICIO SOARES BOMFIM",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 3800.0
+  },
+  {
+    "id": "2abcc958-baa0-45f7-9eb8-61c0cb81eb12",
+    "entry_date": "2025-01-06",
+    "description": "Pagamento: Pagamento: FABRICIO SOARES BOMFIM",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3800.0
+  },
+  {
+    "id": "856f9001-37b3-4001-9c29-13dc1104f43c",
+    "entry_date": "2025-01-07",
+    "description": "Provisionamento Despesa: FABRICIO SOARES BOMFIM",
+    "entry_type": "despesa",
+    "total_debit": 3800.0
+  },
+  {
+    "id": "fb62cc11-efc9-43b6-b619-397a70115533",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MATA PRAGAS CONTROLE DE PRAGAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 3556.72
+  },
+  {
+    "id": "255325c6-2752-45f4-a37d-28f92f67ea02",
+    "entry_date": "2025-01-21",
+    "description": "Honorários: CENTRO OESTE SERVICOS DE VISTORIAS - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 3500.0
+  },
+  {
+    "id": "2fd0244f-1285-45c4-8360-22e9e3a4bf94",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Dep. Legalização - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3465.0
+  },
+  {
+    "id": "b62d207c-cacf-42b9-8a51-c378d9dcbffd",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Dep. Legalização - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 3465.0
+  },
+  {
+    "id": "ff925c31-bd57-497f-a032-9b5e31d7b0cd",
+    "entry_date": "2025-01-15",
+    "description": "IPTU 2025 - Parcela 1/12 (PMGO)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3076.13
+  },
+  {
+    "id": "1f7f179d-e70d-4bfe-a44f-2cdbc1210a99",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Condomínio Mundi ",
+    "entry_type": "despesa",
+    "total_debit": 3047.13
+  },
+  {
+    "id": "2799c090-eb77-4222-a3c1-a5813e2a18f1",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Mundi ",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 3047.13
+  },
+  {
+    "id": "1ad8cc35-b2a6-4bfd-a7c7-9237d85ecf4d",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Mundi ",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3047.13
+  },
+  {
+    "id": "41ec4710-0391-42b3-8c64-359a8ffbb924",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - LAJES NUNES LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 3036.0
+  },
+  {
+    "id": "21b03709-c66a-4f75-bbc4-7de5b0be9851",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: MARIAH PARTICIPACOES LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 3036.0
+  },
+  {
+    "id": "8643f86b-bd97-4847-a2e1-1328bc1ef0f6",
+    "entry_date": "2025-01-21",
+    "description": "Provisionamento Despesa: Simples Nacional",
+    "entry_type": "despesa",
+    "total_debit": 2960.08
+  },
+  {
+    "id": "54b380e6-6486-4471-a019-38c8fc384763",
+    "entry_date": "2025-01-10",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000003",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2908.06
+  },
+  {
+    "id": "2e67c39a-bc7e-49be-97d2-9869bb642939",
+    "entry_date": "2025-01-10",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000003",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2908.06
+  },
+  {
+    "id": "7469ef2d-b767-43c7-9b73-4cda4ba3cb24",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MARO - INVESTIMENTOS E PARTICIPACOES S/A",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2879.9
+  },
+  {
+    "id": "36d4169f-0cf3-4fd3-8c08-71cc7be15b1c",
+    "entry_date": "2025-01-29",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 59153970187 IVAIR GONCALVES DA SILVA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2826.0
+  },
+  {
+    "id": "a748dc10-b263-4c8f-a1dd-0a01d546974a",
+    "entry_date": "2025-01-29",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 59153970187 IVAIR GONCALVES DA SILVA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2826.0
+  },
+  {
+    "id": "8270accf-a1c5-42fc-baf2-bc1f502ca496",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Dep. Limpeza - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 2612.5
+  },
+  {
+    "id": "ab33ad8a-cf2d-42f3-adfb-4772bd25346c",
+    "entry_date": "2025-01-15",
+    "description": "Salário: ROSEMEIRE RODRIGUES - Adiantamento CLT",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2508.0
+  },
+  {
+    "id": "3339e21d-4261-4f37-a8f3-831be5d815b1",
+    "entry_date": "2025-01-30",
+    "description": "Salário: JOSIMAR DOS SANTOS MOTA - Participação",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2508.0
+  },
+  {
+    "id": "4bbc52f6-6987-4bcb-a4f2-c6ec6faa8bb5",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: INSS e IRRF - Ampla",
+    "entry_type": "passivo_obrigacao",
+    "total_debit": 2323.28
+  },
+  {
+    "id": "3a12672f-a3e3-43c5-9447-8a0e448b8b5c",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: INSS e IRRF - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 2323.28
+  },
+  {
+    "id": "088af57f-f878-459b-8277-07ec0d8c4651",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: INSS e IRRF - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2323.28
+  },
+  {
+    "id": "742e4c7a-9b3e-4f86-b6c4-bf89417bb923",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: AMG INDUSTRIA E COMERCIO DE GESSO LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2322.8
+  },
+  {
+    "id": "d9017c1c-8972-4f17-bd7a-fb4272005a9f",
+    "entry_date": "2025-01-10",
+    "description": "Despesa: Dominio Sistemas",
+    "entry_type": "despesa",
+    "total_debit": 2278.8
+  },
+  {
+    "id": "af8f00e9-99e7-468a-ab10-489cd453e59e",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Comissão - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 2278.62
+  },
+  {
+    "id": "22538992-f328-4882-b553-cf9e04a62502",
+    "entry_date": "2025-01-01",
+    "description": "Pagamento: Pagamento: Comissão - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2278.62
+  },
+  {
+    "id": "6c467cec-4297-40b4-a888-0faec3b8b062",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: VERDI E ECD EMPREENDIMENTOS IMOBILIARIOS SPE LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2276.93
+  },
+  {
+    "id": "a758c646-349b-40ea-96ae-e60d904a8633",
+    "entry_date": "2025-01-15",
+    "description": "Honorários 01/2025 - NUTRYMED INDUSTRIA FARMACEUTICA E ALIMENTICIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2276.85
+  },
+  {
+    "id": "9a852fa0-9445-4852-938d-bef933e62a8f",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - SUITE MOTEL LTDA ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2250.0
+  },
+  {
+    "id": "12c621aa-8808-47fa-bf2d-1fbd9ae8118b",
+    "entry_date": "2025-01-15",
+    "description": "DAS Simples Nacional - Ampla Contabilidade",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2232.28
+  },
+  {
+    "id": "5ff17e82-8968-4c9b-b51d-e3405fa04198",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: MUNDIM SA E GUIMARAES ADVOGADOS ASSOCIADOS S/S - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2194.11
+  },
+  {
+    "id": "3bd30621-75a4-49eb-ac74-91a4f4162d15",
+    "entry_date": "2025-01-15",
+    "description": "FGTS: Folha Dezembro/2024 - CEF",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2188.34
+  },
+  {
+    "id": "0104139d-a232-4dea-add5-4b6c8cca7d85",
+    "entry_date": "2025-01-05",
+    "description": "Teste Manual",
+    "entry_type": "receita_honorarios",
+    "total_debit": 2182.01
+  },
+  {
+    "id": "10c7997a-267a-4088-ae9a-06ccc4f4953a",
+    "entry_date": "2025-01-16",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 24799541000190 EMILIA GONCALVES BAZILIO",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2118.0
+  },
+  {
+    "id": "339be699-3c2f-43ce-984c-94a661a10f8a",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  24799541000190 EMILIA GONCALVES BAZILIO",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2118.0
+  },
+  {
+    "id": "60a4d6cc-c0e3-45f5-bc6a-c7cd0f81db85",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  24799541000190 EMILIA GONCALVES BAZILIO",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2118.0
+  },
+  {
+    "id": "2ca1f1f6-f896-4ec8-97ea-32f3b709d75a",
+    "entry_date": "2025-01-16",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 24799541000190 EMILIA GONCALVES BAZILIO",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 2118.0
+  },
+  {
+    "id": "dc053e74-a9c2-4c82-a37f-498a90b11bfd",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Babá - Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 2114.77
+  },
+  {
+    "id": "11baca71-c2eb-4183-b16f-5a3ccb5df42c",
+    "entry_date": "2025-01-10",
+    "description": "Adiantamento: Babá - Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 2114.77
+  },
+  {
+    "id": "2edb8167-6e77-4831-a726-91f3b4caab23",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Babá - Nayara",
+    "entry_type": "despesa",
+    "total_debit": 2114.77
+  },
+  {
+    "id": "58f3d1ca-b676-4190-9785-788562435850",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Babá - Nayara",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2114.77
+  },
+  {
+    "id": "e2effc3b-0cac-4c22-bce9-69aed788a448",
+    "entry_date": "2025-01-30",
+    "description": "Salário: THAYNARA CONCEICAO DE MELO - Salário",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2020.92
+  },
+  {
+    "id": "c1c8e470-1c81-43da-a85d-26a9d385db85",
+    "entry_date": "2025-01-30",
+    "description": "Salário: JOSIMAR DOS SANTOS MOTA - Bonificação",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 2000.0
+  },
+  {
+    "id": "c2690674-e78f-4232-950e-f1436e796ecd",
+    "entry_date": "2025-01-03",
+    "description": "Pagamento: Pagamento: Obras Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1964.0
+  },
+  {
+    "id": "ed5e35f7-89de-477f-8808-8556bc16dbdd",
+    "entry_date": "2025-01-01",
+    "description": "Provisionamento Despesa: Obras Ampla",
+    "entry_type": "despesa",
+    "total_debit": 1964.0
+  },
+  {
+    "id": "d134570c-7ee9-405b-829d-19ec4f0d155a",
+    "entry_date": "2025-01-30",
+    "description": "Salário: JOSIMAR DOS SANTOS MOTA - Salário",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1813.22
+  },
+  {
+    "id": "edcb11d8-185c-4c29-9471-2fafd35aaf44",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - UNICAIXAS DESPACHANTE LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1725.0
+  },
+  {
+    "id": "bd55bbcc-bb65-4381-b731-b96ad29f761b",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Obras Lago - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1723.8
+  },
+  {
+    "id": "74aeb59d-9fa4-4995-bf59-2f5e75169453",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Obras Lago - Jan/2025",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1723.8
+  },
+  {
+    "id": "02d709e6-3586-4cfc-8d21-9632f682f41c",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Obras Lago - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 1723.8
+  },
+  {
+    "id": "8d1920e1-3545-4588-8543-a160621bc976",
+    "entry_date": "2025-01-28",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 03892392161 ENZO DE AQUINO ALVES DONADI",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1718.81
+  },
+  {
+    "id": "693d4b4c-7893-4cff-8732-3ed1d54f7f43",
+    "entry_date": "2025-01-28",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 03892392161 ENZO DE AQUINO ALVES DONADI",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1718.81
+  },
+  {
+    "id": "4e755389-4b7f-4afc-a79b-e83730361f99",
+    "entry_date": "2025-01-09",
+    "description": "Pagamento: Pagamento: A F DE OLIVEIRA - F",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1709.4
+  },
+  {
+    "id": "5f5131cf-bcc7-4dfa-adbb-23ec8ea11335",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: A F DE OLIVEIRA - F",
+    "entry_type": "despesa",
+    "total_debit": 1709.4
+  },
+  {
+    "id": "5e478df1-8679-47d3-8152-4c811aecd92a",
+    "entry_date": "2025-01-15",
+    "description": "Provisionamento Despesa: Energia - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 1675.46
+  },
+  {
+    "id": "32337b98-8260-418c-97e3-32c33dc53b88",
+    "entry_date": "2025-01-15",
+    "description": "Pagamento: Pagamento: Energia - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1675.46
+  },
+  {
+    "id": "4840bb72-9de1-4114-8b52-0b3e29415842",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - M L PINHEIRO MILAZZO LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1655.93
+  },
+  {
+    "id": "8cfa1778-e651-4673-9634-6d6df97a5262",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Dep. Pessoal - Coraci Aline (Terceira - Folha Clientes)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1617.0
+  },
+  {
+    "id": "267f7291-9f2c-443d-a843-c93907b6aff0",
+    "entry_date": "2025-01-30",
+    "description": "Salário: LILIAN MOREIRA DA COSTA - Salário",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1567.5
+  },
+  {
+    "id": "9e67628f-aaba-4bf9-abd9-3b18f4e4cfb7",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - COVALE USINAGEM INDUSTRIA E COMERCIO",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1525.86
+  },
+  {
+    "id": "f788160a-98a1-4d2c-ae28-f93a9548ece5",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - CENTRO MEDICO MILHOMEM LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "21ebed0d-85e5-4e41-98a7-4fff51f28c13",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: EVEREST GESTAO E ADMINISTRACAO DE P - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "46598c29-d688-4184-a8b8-c8baca2f8fb2",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - KRYAS CONSTRUCAO E MAQUINAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "4033642a-7523-4bd3-a6da-3f88509079bc",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: JR SOLUCOES INDUSTRIAIS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "0f37e89f-6358-47ea-97ae-e5006b6e9275",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - COLLOR GEL COMERCIO E INDUSTRIA DE",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "6bc24890-0deb-4b0d-b439-9ca352502e27",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: ALLIANCE EMPREENDIMENTOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "520faebb-5e5d-4687-8edd-66dfcc90677e",
+    "entry_date": "2025-01-30",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "2d28199c-b4fc-4dcb-b175-25b18bce005a",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - KOPA REVESTIMENTOS DE MADEIRAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "1a1fb3cb-aa44-4680-a420-4b5ec31ebe7c",
+    "entry_date": "2025-01-30",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "7c5727f7-6145-4e10-8965-fa33ab9196ed",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Dep. Psicologia - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "6f767eb0-6968-461b-8b8d-6b08ae7ceb51",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Dep. Psicologia - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "87fb9a05-55c3-4e31-8f63-cb0f16f58c0f",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - PET SHOP E CAOPANHIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1518.0
+  },
+  {
+    "id": "768558b1-0885-45cc-b09c-23ac8449591b",
+    "entry_date": "2025-01-15",
+    "description": "Salário: JOSIMAR DOS SANTOS MOTA - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1504.8
+  },
+  {
+    "id": "f90b9390-a253-4331-82b0-3f82391aca54",
+    "entry_date": "2025-01-15",
+    "description": "Provisionamento Despesa: ANDREIA",
+    "entry_type": "despesa",
+    "total_debit": 1500.0
+  },
+  {
+    "id": "557c63fe-530a-4aca-bc21-8197f0c43b29",
+    "entry_date": "2025-01-14",
+    "description": "Pagamento: Pagamento: ANDREIA",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1500.0
+  },
+  {
+    "id": "d7f837d6-e8f8-4caa-a5e7-77a8d025beea",
+    "entry_date": "2025-01-21",
+    "description": "Honorários 01/2025 - ANAPOLIS SERVICOS DE VISTORIAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1500.0
+  },
+  {
+    "id": "848ea62c-f297-4634-afb0-164093a66f35",
+    "entry_date": "2025-01-15",
+    "description": "Salário: THAYNARA CONCEICAO DE MELO - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1491.1
+  },
+  {
+    "id": "fa535476-db02-49af-9af1-13f759cbb0b7",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Victor",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1461.98
+  },
+  {
+    "id": "5ad6cf26-6f5f-4c2a-9ff1-1282f4f4b293",
+    "entry_date": "2025-01-24",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000004",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1443.91
+  },
+  {
+    "id": "400563ff-cc25-4896-82cc-518fb8847dd4",
+    "entry_date": "2025-01-24",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000004",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1443.91
+  },
+  {
+    "id": "0606a283-95d1-48cc-819b-599117b6c0ae",
+    "entry_date": "2025-01-20",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000004",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1426.62
+  },
+  {
+    "id": "b9c72234-5315-49a6-9120-f4e34b17fceb",
+    "entry_date": "2025-01-20",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000004",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1426.62
+  },
+  {
+    "id": "e77d31f1-c2c1-4419-bfc2-3c55ad153988",
+    "entry_date": "2025-01-21",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000002",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1423.25
+  },
+  {
+    "id": "888af1e5-53b8-4ca1-a194-0e06d0fb4955",
+    "entry_date": "2025-01-21",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000002",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1423.25
+  },
+  {
+    "id": "6e22ae11-b285-4798-8e83-bea1b430aae8",
+    "entry_date": "2025-01-06",
+    "description": "IPVA/Licenciamento - DETRAN (veículo 2)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1420.08
+  },
+  {
+    "id": "c127f5c4-c9ea-493e-b6ef-3e3982ed1f85",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: DATAUNIQUE",
+    "entry_type": "despesa",
+    "total_debit": 1410.0
+  },
+  {
+    "id": "14c8b391-7b2f-4b2b-94c7-f926a5cd3d10",
+    "entry_date": "2025-01-09",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1330.58
+  },
+  {
+    "id": "fab2781e-3044-4701-8363-5414594b99d8",
+    "entry_date": "2025-01-09",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000005",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 1330.58
+  },
+  {
+    "id": "1998b5c4-5499-4a9e-9853-b6814d8dd20c",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: ECD CONSTRUTORA INCORPORADORA EIRELI - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1214.35
+  },
+  {
+    "id": "249ad530-cb3d-4f0e-9af6-9cdb7c13b422",
+    "entry_date": "2025-01-15",
+    "description": "Salário: DEUZA RESENDE DE JESUS - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1200.0
+  },
+  {
+    "id": "3ed05613-f18d-4a32-b70c-04dffd61741a",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: LAJES MORADA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1138.48
+  },
+  {
+    "id": "3a4e8dcf-caa8-4c89-b19d-c178a60e667e",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: TIMES NEGOCIOS IMOBILIARIOS LTDA ME - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1130.3
+  },
+  {
+    "id": "7860e02b-823f-4ab3-9ca9-c93a95bad0b7",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Condomínio Galeria Nacional",
+    "entry_type": "despesa",
+    "total_debit": 1127.59
+  },
+  {
+    "id": "511af2b5-202b-4138-ae11-9a5087a51999",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Galeria Nacional",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1127.59
+  },
+  {
+    "id": "aa1c47e6-e531-4f51-a04f-dfb5fcbe6e21",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Condomínio Galeria Nacional",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1127.59
+  },
+  {
+    "id": "1e2d958e-a7d7-4b02-a3b9-a666f22175a6",
+    "entry_date": "2025-01-10",
+    "description": "Saldo de Abertura: Honorários de Dezembro/2024",
+    "entry_type": "saldo_abertura",
+    "total_debit": 1051.4
+  },
+  {
+    "id": "f5401a23-a5f0-4186-a4ce-2b685e900f3c",
+    "entry_date": "2025-01-15",
+    "description": "Salário: LILIAN MOREIRA DA COSTA - Adiantamento",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1045.0
+  },
+  {
+    "id": "5291d183-0e51-4aaf-a71b-c4437aa8c21f",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: C D C OLIVEIRA - ESTACAO DA ALEGRIA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1034.97
+  },
+  {
+    "id": "347903a3-1d01-453f-acb2-18ad543ba9ad",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: PM ADMINISTRACAO E SERVICOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1001.95
+  },
+  {
+    "id": "a72425bf-c1b0-41f3-8041-46b39da64181",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Empréstimos - Scala",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1000.0
+  },
+  {
+    "id": "c3eb880c-031f-4281-a1a3-2ba8872acd51",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Empréstimos - Scala",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 1000.0
+  },
+  {
+    "id": "60db9fde-5451-47b7-9f59-fab81392ed5a",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Empréstimos - Scala",
+    "entry_type": "despesa",
+    "total_debit": 1000.0
+  },
+  {
+    "id": "bab24a1f-34d7-4481-be7a-0b0acbbec5d0",
+    "entry_date": "2025-01-29",
+    "description": "Honorários 01/2025 - FFA PARTICIPACOES LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 1000.0
+  },
+  {
+    "id": "110a9f70-c611-40d8-9f2c-dc00b26a24cc",
+    "entry_date": "2025-01-10",
+    "description": "Adiantamento: Empréstimos - Scala",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 1000.0
+  },
+  {
+    "id": "aeb5d9c3-67d6-41b8-89cd-4c1606552eb9",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - BCS MINAS SERVICOS MEDICOS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 977.45
+  },
+  {
+    "id": "1c30fca2-a77f-4a08-aefc-3c18dbff6122",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: DR BERNARDO GUIMARAES LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 977.45
+  },
+  {
+    "id": "2412eeef-06dc-4c4a-81d1-fe51a8434072",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - HOLDINGS BCS GUIMARAES LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 977.45
+  },
+  {
+    "id": "72f5fc76-3e16-4f21-add0-61ee6951db4e",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: BCS GOIAS SERVICOS MEDICOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 977.45
+  },
+  {
+    "id": "baf1c2ce-add2-4ff7-ab37-25025a8d9933",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - EXPRESS RIOVERDENSE LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 963.1
+  },
+  {
+    "id": "6b7d2fae-4e77-4ae3-93f1-9a2553e7e519",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - KROVER ENGENHARIA E SERVICOS LTDA ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 963.1
+  },
+  {
+    "id": "4f10f47e-e776-4c1a-aa72-643dc6305e71",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: CARRO DE OURO LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 919.95
+  },
+  {
+    "id": "62bf683a-1626-418e-956d-ebebefe42ff6",
+    "entry_date": "2025-01-24",
+    "description": "Provisionamento Despesa: Energia - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 868.11
+  },
+  {
+    "id": "44acdd23-901b-45f7-bbaa-0c18f710aefd",
+    "entry_date": "2025-01-24",
+    "description": "Pagamento: Pagamento: Energia - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 868.11
+  },
+  {
+    "id": "270704b4-853c-4ebb-ba62-ee4bf9ae9bee",
+    "entry_date": "2025-01-24",
+    "description": "Pagamento: Pagamento: Energia - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 868.11
+  },
+  {
+    "id": "3f75937e-aab8-48f4-84c5-91b1ed0e543d",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: SISTEMA SITTAX",
+    "entry_type": "despesa",
+    "total_debit": 865.86
+  },
+  {
+    "id": "466f19d4-f78d-4b53-95fc-442a69725f69",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: MARIO CESAR PEREIRA DA SILVA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 860.0
+  },
+  {
+    "id": "50843d5c-f78c-4b47-bba9-8eaf435cf85d",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: CRYSTAL PARTICIPACOES LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 834.88
+  },
+  {
+    "id": "ef7c663a-a5e5-4f18-94dd-ca7a2c0fc635",
+    "entry_date": "2025-01-31",
+    "description": "FGTS: Multa Rescisória 40% - Deuza",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 834.46
+  },
+  {
+    "id": "3b4acf8b-cc27-480a-bc43-fbd68bb1d041",
+    "entry_date": "2025-01-02",
+    "description": "Adiantamento: Antônio Leandro - Personal - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 800.0
+  },
+  {
+    "id": "ae544b02-2c85-4ce2-85cf-42864e5931e3",
+    "entry_date": "2025-01-02",
+    "description": "Pagamento: Pagamento: Antônio Leandro - Personal - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 800.0
+  },
+  {
+    "id": "a0777fdb-37fd-4e06-95bc-95ab56ca5088",
+    "entry_date": "2025-01-02",
+    "description": "Provisionamento Despesa: Antônio Leandro - Personal - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 800.0
+  },
+  {
+    "id": "e8dda6dc-ca4e-49ca-bbe0-2abc5f5971cb",
+    "entry_date": "2025-01-02",
+    "description": "Pagamento: Pagamento: Antônio Leandro - Personal - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 800.0
+  },
+  {
+    "id": "dd5718f1-0e23-4a66-96ba-321c67bce14d",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: CONTUS TECNOLOGIA",
+    "entry_type": "despesa",
+    "total_debit": 777.75
+  },
+  {
+    "id": "4a0aa0eb-4023-45c7-96d3-c2ab4390e53e",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MOTTA COMERCIO DE INFORMATICA LTDA ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 767.58
+  },
+  {
+    "id": "61c32eb9-be7f-4ee6-8a60-12b4921a53f4",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - RESTAURANTE IUVACI LTDA ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 766.88
+  },
+  {
+    "id": "645b0e9f-4ae0-48f8-9da3-04fc34c0bc1f",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: WESLEY MARTINS DE MOURA ME - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 766.88
+  },
+  {
+    "id": "148fc3a7-de72-4a33-9f9b-56372590dfcf",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: ADMIR OLIVEIRA ALVES - DOMESTICA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 766.82
+  },
+  {
+    "id": "330a2bc0-d7a6-4809-b0c0-43ef7378575c",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: ADMIR DE OLIVEIRA ALVES - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 766.82
+  },
+  {
+    "id": "d8476e09-04e5-4d7b-b49e-1c572da7d19a",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - RAMAYOLE CASA DOS SALGADOS EIRELI - ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "5dc206fe-69e9-4afc-a50d-ab512229a858",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - AMAGU FESTAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "63547571-095a-4be2-b1aa-649dddd2e42a",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - ARANTES NEGOCIOS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "36c6786d-fae2-44ce-a46e-d5031287b3d3",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: CASA NOVA TINTAS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "737b058f-702d-485e-a6bf-7ca93db34399",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: QUICK COMERCIO DE PECAS PARA VEICULOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "2cada634-19b1-42f8-930b-560881dd2d76",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: JJC PRESTADORA DE SERVICOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "4e62c70c-d6f9-4449-a32d-c3d390d05b1f",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: FGS COMERCIO LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "6739da48-c109-4cc3-a333-c8bffefc0797",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: D'ANGE COMERCIO DE BICHO DE PELUCIA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "a0eeeecd-ea65-4d81-9605-756a5065d377",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - JULIANO SOUZA GARROTE",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "1ac1882c-a0e3-4d45-83aa-2def75dd4a50",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: SHARKSAPACE GASTRO PARK LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "71dc3fba-ff95-4096-a242-85ca47731265",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: L.A.R. CONSTRUTORA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "693df531-26c6-49c8-9816-8fc9fd2ad433",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: CANAL PET DISTRIBUIDORA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "913dc8b0-c38b-48bf-bf7c-c5aaf50400f8",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MEDITERRANE SERVICOS DE COWORKING LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "23657ab8-d74c-43ab-993d-a5d42be62f09",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: M.M LANCHES LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "4591ddbf-1ebd-43b0-9abc-2fed1e7c1970",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: D'ANGE2 COMERCIO DE BICHO DE PELUCIA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "3504966b-7627-4943-b0be-e9382691f908",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: ACAI DO MADRUGA CAMPINAS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "6de58654-fecc-4b5a-90bb-536f98a3c1d6",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: TANNUS E MOTA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "8c8463d6-b1a3-445d-9313-35cabe9bfd78",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - CONTRONWEB TECNOLOGIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 759.0
+  },
+  {
+    "id": "5b6badd2-2a6e-4137-b27d-6c078343dbc7",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Material de Limpeza - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 756.23
+  },
+  {
+    "id": "9a77de2b-75a4-401b-8e53-74bb649736d6",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Material de Limpeza - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 756.23
+  },
+  {
+    "id": "f987469a-1940-4eb9-88d6-4c09d2bd98f7",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: CR SISTEMA",
+    "entry_type": "despesa",
+    "total_debit": 733.96
+  },
+  {
+    "id": "e015ee2c-8b90-4c2d-91f5-58e47b6c89d7",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - SOLUTTI TECNOLOGIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 724.88
+  },
+  {
+    "id": "2ce17a9a-f585-4ce2-988d-53051f20f9be",
+    "entry_date": "2025-01-15",
+    "description": "Honorários 01/2025 - STAR EMPORIO DE BEBIDAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 709.5
+  },
+  {
+    "id": "9d8c3a65-0252-4aa3-b76b-b8e621326442",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX SICREDI-CX553033 51859330000178 CANAL PET",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 706.0
+  },
+  {
+    "id": "47dfe78c-1466-413e-99d1-b24a47c3a475",
+    "entry_date": "2025-01-10",
+    "description": "Saldo de Abertura: Honorários de Dezembro/2024",
+    "entry_type": "saldo_abertura",
+    "total_debit": 706.0
+  },
+  {
+    "id": "46679524-3d69-4aea-8c44-77876bc1d38b",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX SICREDI-CX553033 51859330000178 CANAL PET",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 706.0
+  },
+  {
+    "id": "d5e6864f-261d-4106-af3d-f93e277a9aee",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 706.0
+  },
+  {
+    "id": "f9649891-5469-42b6-bfb8-7c5fb1e33cc5",
+    "entry_date": "2025-01-08",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 706.0
+  },
+  {
+    "id": "06395f6e-427a-41a4-bf57-cef8fd4a21f9",
+    "entry_date": "2025-01-10",
+    "description": "Saldo de Abertura: Honorários de Dezembro/2024",
+    "entry_type": "saldo_abertura",
+    "total_debit": 647.5
+  },
+  {
+    "id": "b22798c7-c074-46f9-8bc4-2ad35e6da1c1",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - COMERCIAL DINIZ EIRELI - ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 637.8
+  },
+  {
+    "id": "91527d86-68c4-45fa-bc38-bf54e14c6a10",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: ISS Prórprio - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 624.42
+  },
+  {
+    "id": "24d4e0a9-b309-4b47-a2cc-6df9dbe0def8",
+    "entry_date": "2025-01-06",
+    "description": "ISS Fixo Mensal - Ampla (PMGO)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 608.61
+  },
+  {
+    "id": "44aa4997-e9c7-4856-a90a-7298a68d217c",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: LIVRE VISTORIA VEICULAR LTDA - ME - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 603.75
+  },
+  {
+    "id": "feb94559-e7ae-4bd4-9db8-3a1e0815d8f5",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - CDC PLAYGROUND E BRINQUEDOS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 603.73
+  },
+  {
+    "id": "561dd94a-42c5-4e20-89e1-897713afc3f1",
+    "entry_date": "2025-01-30",
+    "description": "Pagamento: Pagamento: Vale Alimentação - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 600.0
+  },
+  {
+    "id": "56c4608d-ca5b-4bf0-85c2-54fd3fa6416c",
+    "entry_date": "2025-01-31",
+    "description": "Pagamento: Pagamento: Anuidade CRC - Carla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 597.0
+  },
+  {
+    "id": "7545b50c-d1cb-4b28-a4c3-027a3a7cdb4e",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: DEL PAPA ARQUITETURA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 577.85
+  },
+  {
+    "id": "7e011544-d264-49d9-b663-e7cc33eb1697",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MV LG CLINICA VETERINARIA PET FERA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 574.96
+  },
+  {
+    "id": "a3e45ec9-d6ba-42ff-9418-3ef0e63340b9",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - HOKMA ELETROMONTAGEM LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 551.97
+  },
+  {
+    "id": "1c92d3a4-ed3e-4c83-b19c-27e8416ab323",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - AGROPECUARIA SCA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 537.5
+  },
+  {
+    "id": "b07b671d-9a8f-435f-8a38-87f5859e7bac",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - PORTO FINO MAQUINAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 537.5
+  },
+  {
+    "id": "575d9400-a9ef-4bc5-9b74-a65b91542c10",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - AGROPECUARIA ADM LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 537.5
+  },
+  {
+    "id": "1cabdeaa-f8c6-43f0-b741-996498b79174",
+    "entry_date": "2025-01-31",
+    "description": "Pagamento: Pagamento: Anuidade CRC - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 528.0
+  },
+  {
+    "id": "286dbc75-04d1-4596-b7f3-cb00d9e6c0a0",
+    "entry_date": "2025-01-06",
+    "description": "IPVA/Licenciamento - DETRAN (veículo 3)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 504.53
+  },
+  {
+    "id": "493e48b7-0cd1-4dfb-ba0f-11ce505cfa11",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - KORSICA COMERCIO ATACADISTA DE PNEUS LTDA ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 500.0
+  },
+  {
+    "id": "53cc8a82-7702-4da5-be93-61f7da807848",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: ROSELIS TORMIN MUNDIM - FAZENDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 500.0
+  },
+  {
+    "id": "0af9c85b-38fc-4f74-bf00-dee1e7db59ae",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: OURO CAR SERVICOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 500.0
+  },
+  {
+    "id": "10c61b73-212c-4ece-988e-dcb7c0e8e13e",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: DIAS FERNANDES ELETRODOMESTICOS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 485.77
+  },
+  {
+    "id": "fe34b8f9-76cf-45e6-bdf4-da20aedd8c0a",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - FE CONSULTORIA JURIDICA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 472.06
+  },
+  {
+    "id": "0df4ee3c-f2e7-4325-a490-fd6e14c944e2",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: Acessorias sistemas",
+    "entry_type": "despesa",
+    "total_debit": 469.9
+  },
+  {
+    "id": "cb40fac8-8b11-4cd5-9039-a6ad3908fe22",
+    "entry_date": "2025-01-06",
+    "description": "IPVA/Licenciamento - DETRAN (veículo 4)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 457.12
+  },
+  {
+    "id": "956af4e3-6f73-4c7d-81bd-786e94b9c1ff",
+    "entry_date": "2025-01-10",
+    "description": "Despesa: OBJETIVA EDICOES",
+    "entry_type": "despesa",
+    "total_debit": 423.6
+  },
+  {
+    "id": "4dda444c-a2ca-445f-a138-d6eebfb24d05",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: SISTEMA VERI SOLUÇÕES",
+    "entry_type": "despesa",
+    "total_debit": 418.0
+  },
+  {
+    "id": "61d65492-fa4b-488b-a9f5-2ed9be0b5d48",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 411.64
+  },
+  {
+    "id": "45fb61dc-88a5-472b-be21-ef058cd35f83",
+    "entry_date": "2025-01-21",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 411.64
+  },
+  {
+    "id": "9085026b-ced7-4b96-a13b-4aa7fa7c472a",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 402.88
+  },
+  {
+    "id": "90c3d2f2-119b-43ad-90aa-1e9baf7f45a8",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 402.88
+  },
+  {
+    "id": "3964fc4a-90fb-417a-ac77-387a80b1d40b",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Tharson Diego - Reforma Casa Lago das Brisas (Sergio Carneiro Leao)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 399.51
+  },
+  {
+    "id": "139a4c3e-2507-49df-a447-dc9ee4d0ca1d",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Tharson Diego - Reforma Casa Lago das Brisas (Sergio Carneiro Leao)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 399.51
+  },
+  {
+    "id": "44e87754-c4a7-4158-8642-80f72ddfac4a",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Tharson Diego - Reforma Casa Lago das Brisas (Sergio Carneiro Leao)",
+    "entry_type": "despesa",
+    "total_debit": 399.51
+  },
+  {
+    "id": "c2f8ed09-c75d-4e4f-9e31-914d303746a1",
+    "entry_date": "2025-01-07",
+    "description": "Pagamento: Pagamento: Vonoria Amélia da Conc",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 380.0
+  },
+  {
+    "id": "1506f592-dd29-4bce-9397-133735d12d68",
+    "entry_date": "2025-01-08",
+    "description": "Provisionamento Despesa: Vonoria Amélia da Conc",
+    "entry_type": "despesa",
+    "total_debit": 380.0
+  },
+  {
+    "id": "549f0dc4-8fe1-4599-9a7b-21c753bd1cef",
+    "entry_date": "2025-01-07",
+    "description": "Pagamento: Pagamento: Vonoria Amélia da Conc",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 380.0
+  },
+  {
+    "id": "0c0f9449-3e45-4b89-b3fe-db3e9bfd930e",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - COVAS SERVICOS DE PINTURAS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 379.5
+  },
+  {
+    "id": "af2d80cd-3323-45da-8e1e-26bbc85ea66a",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - FORMA COMUNICACAO VISUAL LTDA-ME",
+    "entry_type": "receita_honorarios",
+    "total_debit": 379.48
+  },
+  {
+    "id": "62b00ffe-1c69-43c1-ba99-4a5b9fe8df31",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: FERNANDA COVAS DO VALE - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 379.48
+  },
+  {
+    "id": "452b4c53-e36e-478e-9203-0679126d1b2a",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: LEM ESCOLA DE IDIOMAS LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 375.73
+  },
+  {
+    "id": "7022cf63-eb1c-43c7-aa22-b1d50e519802",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: AMETISTA GESTAO EMPRESARIAL LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 375.73
+  },
+  {
+    "id": "129a61f6-412c-40e8-a898-e7a8a1dcc4b2",
+    "entry_date": "2025-01-20",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "7840dbc8-125f-423f-bc58-e05ee07f1c01",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "2a7104a7-3995-4e0a-9b37-392d7cab47d0",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "97248925-e51b-46cd-89ce-831c0b63630a",
+    "entry_date": "2025-01-14",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "cd208028-e657-4e62-b90b-76f1931899e0",
+    "entry_date": "2025-01-20",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "cafc5fb4-8993-44ff-a300-6ffa8f3c074e",
+    "entry_date": "2025-01-14",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "2c3f3208-c8e5-4413-8048-cff8a0833d7f",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED 28792279000102 A.I EMPREENDIMENTOS LTDA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 375.0
+  },
+  {
+    "id": "71d54b6d-ccda-4d31-9a21-2489a9628757",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - PREMIER SOLUCOES INDUSTRIAIS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 344.98
+  },
+  {
+    "id": "5da3a745-cbae-485c-b76b-d22d990f2d1d",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: SAO LUIS INDUSTRIA E COMERCIO DE AGUA MINERAL LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 334.97
+  },
+  {
+    "id": "22760bb1-1a6e-45d9-862c-3c55ccaf7f16",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: LOPES CONSULTORIA LTDA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 330.0
+  },
+  {
+    "id": "40492b29-870f-42df-a53a-7bb446f1eab5",
+    "entry_date": "2025-01-03",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 328.0
+  },
+  {
+    "id": "e49ab8d8-629d-4d70-929c-56c44dc2981c",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 328.0
+  },
+  {
+    "id": "11ad4f8a-11de-4cfd-bd5b-6dbb1da6b003",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Internet - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 326.09
+  },
+  {
+    "id": "2cd8835e-b03e-4c4f-a604-853a74befff8",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Internet - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 326.09
+  },
+  {
+    "id": "52ea6378-ea16-4685-90d9-dd49b1abef92",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - ELETROSOL ENERGIA SOLAR LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 322.5
+  },
+  {
+    "id": "9c6baff7-11e3-4f43-93b0-15bc8164436f",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - NUNES MOTA AGROPECUARIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 322.5
+  },
+  {
+    "id": "bcd8e7b1-e5fc-4428-a066-1411ea884d47",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - ELETROSOL SOLUCOES EM ENERGIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 322.5
+  },
+  {
+    "id": "0d0702e5-05dd-4404-b7b1-265b59fc5adb",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: NB TECHNOLOGY",
+    "entry_type": "despesa",
+    "total_debit": 314.55
+  },
+  {
+    "id": "145a934a-3dea-4ff3-a93c-2ddc5cdb53e1",
+    "entry_date": "2025-01-10",
+    "description": "IPTU 2018 - Parcelamento (PMGO)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 312.21
+  },
+  {
+    "id": "05c8e65d-d9da-45d5-8f3d-d0e4b7e62773",
+    "entry_date": "2025-01-10",
+    "description": "IPTU 2022 - Parcelamento (PMGO)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 312.21
+  },
+  {
+    "id": "09ba06fd-114a-48b5-874a-897c48c12f6d",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 311.86
+  },
+  {
+    "id": "48e0378c-011b-4cbf-99a7-e55cc1c02c95",
+    "entry_date": "2025-01-24",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 311.86
+  },
+  {
+    "id": "1b500e62-ee6b-4a8b-ba3c-899386501c57",
+    "entry_date": "2025-01-17",
+    "description": "Pagamento: Pagamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 311.63
+  },
+  {
+    "id": "bdf1a9c2-2657-4465-bcfb-97f38d8490be",
+    "entry_date": "2025-01-30",
+    "description": "Adiantamento: adiantamento Nayara",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 311.63
+  },
+  {
+    "id": "22732e80-c11d-4ef1-9582-0c2de52312df",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: CARVALHO E MELO ADM. E PARTICIPACAO - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 301.41
+  },
+  {
+    "id": "95c77b0a-0177-414f-88b1-f991d3ff73bb",
+    "entry_date": "2025-01-25",
+    "description": "Honorários 01/2025 - FUTURA AGROPECUARIA LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 300.0
+  },
+  {
+    "id": "be6650ce-2ba7-4700-9899-4e9acb56806b",
+    "entry_date": "2025-01-15",
+    "description": "Honorários 01/2025 - 60.489.571 MONICA LOPES TEIXEIRA BORGES",
+    "entry_type": "receita_honorarios",
+    "total_debit": 300.0
+  },
+  {
+    "id": "ad24da95-c85e-4379-882d-3d54b3ea4d8d",
+    "entry_date": "2025-01-25",
+    "description": "Honorários 01/2025 - HOLDING BOM FUTURO LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 300.0
+  },
+  {
+    "id": "f154f9ee-5708-4f83-9493-0b8e06ab98c8",
+    "entry_date": "2025-01-17",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000002",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 298.35
+  },
+  {
+    "id": "c5b6e3ad-aaaa-4820-81e0-d78d9eb40f82",
+    "entry_date": "2025-01-17",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000002",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 298.35
+  },
+  {
+    "id": "704edda2-feb4-4069-a325-cf46a36da8e0",
+    "entry_date": "2025-01-31",
+    "description": "Pagamento: Pagamento: Anuidade CRC - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 296.0
+  },
+  {
+    "id": "4babc567-d4e1-410b-bc2e-36a8f944ad41",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Café - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 291.79
+  },
+  {
+    "id": "b3216c46-5d57-4c2a-a8dd-2b6596a0973f",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Café - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 291.79
+  },
+  {
+    "id": "6c00e18d-4d21-4f63-bbc7-029faec5cf31",
+    "entry_date": "2025-01-15",
+    "description": "Honorários 01/2025 - RODRIGO AUGUSTO RODRIGUES LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 275.98
+  },
+  {
+    "id": "31b1c1c4-8a1f-4bea-bd10-cdc9770e3335",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: CHRISTIANE RODRIGUES MACHADO LOPES - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 275.98
+  },
+  {
+    "id": "67ae4bc1-7d50-4c09-84d3-7a1e17f6a2f2",
+    "entry_date": "2025-01-15",
+    "description": "Saldo de Abertura: Honorários de Janeiro/2025",
+    "entry_type": "saldo_abertura",
+    "total_debit": 275.98
+  },
+  {
+    "id": "f1b64fda-ebc5-4661-aba4-63ea82c19240",
+    "entry_date": "2025-01-15",
+    "description": "Honorários 01/2025 - JULLYANA MENDONCA RODRIGUES SILVA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 275.98
+  },
+  {
+    "id": "5ee240a8-8c5b-4a52-bb38-b1ec5dfa8406",
+    "entry_date": "2025-01-15",
+    "description": "Honorários: C.R.J MANUTENCAO EM AR CONDICIONADO - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 275.98
+  },
+  {
+    "id": "e1e4e7d1-7c84-446b-ab69-154fca8e9dc3",
+    "entry_date": "2025-01-15",
+    "description": "IPVA/Licenciamento - DETRAN (veículo 5)",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 251.25
+  },
+  {
+    "id": "c3b29a09-7e67-4efe-8658-5856c4dfd66a",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - LEMS HOLDINGS LTDA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 250.0
+  },
+  {
+    "id": "3a936d05-f7e6-4863-9cdf-a31cb77cd9d6",
+    "entry_date": "2025-01-15",
+    "description": "Despesa: SISTEMA AUTMAIS",
+    "entry_type": "despesa",
+    "total_debit": 222.0
+  },
+  {
+    "id": "a782cf4e-0fd4-4070-98b9-4ad8cfe937ef",
+    "entry_date": "2025-01-06",
+    "description": "Pagamento: Pagamento: MIGUEL CARVALHO DE OLIVEIRA",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 220.0
+  },
+  {
+    "id": "914107d0-b583-4c44-9289-6e1417dec38e",
+    "entry_date": "2025-01-29",
+    "description": "Pagamento: Pagamento: Vonoria Amélia da Conc",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 210.0
+  },
+  {
+    "id": "fc776c52-664b-4022-a279-072711fb119f",
+    "entry_date": "2025-01-29",
+    "description": "Pagamento: Pagamento: Vonoria Amélia da Conc",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 210.0
+  },
+  {
+    "id": "118313b7-b167-4058-a64b-2873d3072aff",
+    "entry_date": "2025-01-05",
+    "description": "Provisionamento Despesa: Vonoria Amélia da Conc",
+    "entry_type": "despesa",
+    "total_debit": 210.0
+  },
+  {
+    "id": "a2bb237e-7f3d-4ee2-a08b-12fb643b6a8b",
+    "entry_date": "2025-01-03",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  83438718120 Paula Milhomem",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 200.0
+  },
+  {
+    "id": "27e5c3dd-5ddf-4673-82f0-517731e7238b",
+    "entry_date": "2025-01-03",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  83438718120 Paula Milhomem",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 200.0
+  },
+  {
+    "id": "75807204-5122-4c76-98cd-c5b449ceda2c",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Telefone Celular - Ampla ",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 181.96
+  },
+  {
+    "id": "aae10043-01f7-4d98-bc1e-03d3782d5d89",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Telefone Celular - Ampla ",
+    "entry_type": "despesa",
+    "total_debit": 181.96
+  },
+  {
+    "id": "5a843be2-fb1e-4068-abfe-dcd76ac41d98",
+    "entry_date": "2025-01-30",
+    "description": "Despesa: SISTEMA CATHO",
+    "entry_type": "despesa",
+    "total_debit": 178.0
+  },
+  {
+    "id": "4391911e-68bb-44be-9f09-5817a9771d55",
+    "entry_date": "2025-01-30",
+    "description": "Pagamento: Pagamento: Vale Transporte - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 174.3
+  },
+  {
+    "id": "1eb5bc4e-41ec-466b-b056-69837715b71d",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - TEREZA CRISTINA DA SILVA PAES FERREIRA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 172.5
+  },
+  {
+    "id": "b627e1d4-1e5f-4e09-88d2-19693ee5e670",
+    "entry_date": "2025-01-05",
+    "description": "Honorários 01/2025 - MARCUS ABDULMASSIH DEL PAPA",
+    "entry_type": "receita_honorarios",
+    "total_debit": 172.5
+  },
+  {
+    "id": "9444ea0a-5add-4806-a038-68551ef584c5",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 163.96
+  },
+  {
+    "id": "0a6fbd1d-ce46-408c-978b-1f58fbaf74cf",
+    "entry_date": "2025-01-27",
+    "description": "Saldo de Abertura Jan/2025: LIQ.COBRANCA SIMPLES-COB000001",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 163.96
+  },
+  {
+    "id": "1da2dbe1-52f8-4964-b0dd-ea0667aab2f9",
+    "entry_date": "2025-01-10",
+    "description": "Honorários: CARLA DAIANE CASTRO OLIVEIRA - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 162.0
+  },
+  {
+    "id": "0fa9b928-f969-49fd-8744-387e616a6ecb",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: VR CONSULTORIA LTDA - ME - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 162.0
+  },
+  {
+    "id": "2319c170-5799-49ee-b385-98087a7136f2",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: MARCUS VINICIUS LEAL PIRES - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 152.1
+  },
+  {
+    "id": "83f28d43-619a-4a80-a50d-acc2c68646ac",
+    "entry_date": "2025-01-15",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 149.2
+  },
+  {
+    "id": "c2933944-0a14-46e9-a6a6-3bb43f22b3fa",
+    "entry_date": "2025-01-31",
+    "description": "Despesa: SISTEMA ONEFLOW",
+    "entry_type": "despesa",
+    "total_debit": 138.22
+  },
+  {
+    "id": "3896eaff-1530-4cfb-910a-5a2739152b42",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Telefone Fixo - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 137.68
+  },
+  {
+    "id": "df6d57b9-6dc4-4585-a628-71ee4cc245f6",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Telefone Fixo - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 137.68
+  },
+  {
+    "id": "8b5b2c00-2de7-4176-8374-dc3d811ad7df",
+    "entry_date": "2025-01-10",
+    "description": "Honorários 01/2025 - MARIO LUCIO PINHEIRO MILAZZO - FAZ",
+    "entry_type": "receita_honorarios",
+    "total_debit": 125.25
+  },
+  {
+    "id": "8b9549cf-0cb6-45e2-bec6-14c1c8658284",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Gás - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 121.25
+  },
+  {
+    "id": "8130cc9d-59a0-4fb2-9e7d-d28739aa4a08",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Gás - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 121.25
+  },
+  {
+    "id": "69e951a8-0965-4e27-9431-9ca4efd6b167",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Gás - Sergio",
+    "entry_type": "adiantamento_socio",
+    "total_debit": 121.25
+  },
+  {
+    "id": "8dc90e1e-1eb9-4a0d-96c6-65a088189d27",
+    "entry_date": "2025-01-10",
+    "description": "Provisionamento Despesa: Internet - Sergio",
+    "entry_type": "despesa",
+    "total_debit": 106.58
+  },
+  {
+    "id": "40a656f5-9427-4e58-b285-466bbb515e7b",
+    "entry_date": "2025-01-10",
+    "description": "Pagamento: Pagamento: Internet - Sergio",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 106.58
+  },
+  {
+    "id": "45ee27be-8546-4e63-bc9a-cd8f67d95c53",
+    "entry_date": "2025-01-05",
+    "description": "Honorários: TAISSA TORMIN MUNDIM - 01/2025",
+    "entry_type": "receita_honorarios",
+    "total_debit": 100.0
+  },
+  {
+    "id": "ee6ac275-7edc-4468-af4b-7932d3c149b3",
+    "entry_date": "2025-01-13",
+    "description": "Copa: Água Mineral - Luiz Alves Taveira (10 galões)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 96.0
+  },
+  {
+    "id": "35078207-fb34-4f88-bdf9-6b2eb2e3823c",
+    "entry_date": "2025-01-24",
+    "description": "Copa: Água Mineral - Luiz Alves Taveira (10 galões)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 96.0
+  },
+  {
+    "id": "b0465887-231f-46b5-9fe2-2d52e13fc90c",
+    "entry_date": "2025-01-28",
+    "description": "Reembolso: Pão de Queijo - Josimar",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 81.46
+  },
+  {
+    "id": "ff1fccda-3286-4f40-a31f-d165094b3035",
+    "entry_date": "2025-01-10",
+    "description": "Copa: Pão de Queijo e Chá - Ampla",
+    "entry_type": "despesa",
+    "total_debit": 81.45
+  },
+  {
+    "id": "74eb0a87-d5ce-4b51-b42d-299c50c208cc",
+    "entry_date": "2025-01-10",
+    "description": "Copa: Pão de Queijo e Chá - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 81.45
+  },
+  {
+    "id": "6c86ee6f-0169-4f3d-8ac8-a22b88c7248a",
+    "entry_date": "2025-01-10",
+    "description": "Despesa: CLICKSIGN",
+    "entry_type": "despesa",
+    "total_debit": 69.0
+  },
+  {
+    "id": "ba9afc94-fbf7-4162-ae74-4a8b38e0455c",
+    "entry_date": "2025-01-20",
+    "description": "Tarifa: Manutenção de Títulos em Aberto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 62.37
+  },
+  {
+    "id": "17739273-c23a-4c31-bf4f-086622554b22",
+    "entry_date": "2025-01-21",
+    "description": "Provisionamento Despesa: manutenção de títulos",
+    "entry_type": "despesa",
+    "total_debit": 62.37
+  },
+  {
+    "id": "3220808c-4bae-446b-bb29-a8365795e1b0",
+    "entry_date": "2025-01-06",
+    "description": "Tarifa: Cesta de Relacionamento Bancário",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 59.28
+  },
+  {
+    "id": "0ce6be15-f321-49cb-be69-8db83e6f5170",
+    "entry_date": "2025-01-07",
+    "description": "Provisionamento Despesa: manutenção conta",
+    "entry_type": "despesa",
+    "total_debit": 59.28
+  },
+  {
+    "id": "bb5c2bb7-f76e-4144-ab8a-312851e79c77",
+    "entry_date": "2025-01-23",
+    "description": "Reembolso: Pão de Queijo - Josimar",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 35.98
+  },
+  {
+    "id": "be68434b-657f-4e6e-8074-274b0001ec16",
+    "entry_date": "2025-01-10",
+    "description": "Reembolso: Pão de Queijo - Josimar",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 35.98
+  },
+  {
+    "id": "6a09b9f3-f6a5-456b-a1ec-785ca06d6022",
+    "entry_date": "2025-01-01",
+    "description": "Material: Papelaria - Ampla",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 21.0
+  },
+  {
+    "id": "104cf0af-120e-4d08-8922-3169bdf9d448",
+    "entry_date": "2025-01-06",
+    "description": "Tarifa: Manutenção de Títulos (ajuste extrato)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 9.45
+  },
+  {
+    "id": "99245da1-5d39-46ff-98b1-df0805fd4239",
+    "entry_date": "2025-01-08",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 9.45
+  },
+  {
+    "id": "694e1f0a-cb49-4b74-9812-04454ab1fa5f",
+    "entry_date": "2025-01-22",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 9.45
+  },
+  {
+    "id": "e0773ef8-643a-44e8-8bba-d6b23dc13dc5",
+    "entry_date": "2025-01-06",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 9.45
+  },
+  {
+    "id": "25d05a19-d9be-44a7-ba7c-4eccb1cc88af",
+    "entry_date": "2025-01-14",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 9.45
+  },
+  {
+    "id": "81da3fe8-bfc0-4ffd-8997-093b7bdcb249",
+    "entry_date": "2025-01-06",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  05799682190 TAYLANE BELLE FERREIRA SARAIVA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 6.03
+  },
+  {
+    "id": "7d606d38-4a54-46e1-931a-b583a97247a9",
+    "entry_date": "2025-01-06",
+    "description": "Saldo de Abertura Jan/2025: RECEBIMENTO PIX-PIX_CRED  05799682190 TAYLANE BELLE FERREIRA SARAIVA",
+    "entry_type": "SALDO_ABERTURA",
+    "total_debit": 6.03
+  },
+  {
+    "id": "855e05e7-fbb0-4684-8927-f96c9b11ce15",
+    "entry_date": "2025-01-02",
+    "description": "Tarifa: Emissão de Boleto (ajuste extrato)",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 5.78
+  },
+  {
+    "id": "8a2f9e50-5924-44ea-b0c3-c3bbb0d66dee",
+    "entry_date": "2025-01-20",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3.78
+  },
+  {
+    "id": "95f28d29-9249-4352-93fd-6f0b67b28d0c",
+    "entry_date": "2025-01-16",
+    "description": "Tarifa: Emissão de Boleto",
+    "entry_type": "pagamento_despesa",
+    "total_debit": 3.78
+  }
+]

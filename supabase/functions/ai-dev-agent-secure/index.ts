@@ -205,7 +205,7 @@ serve(async (req) => {
       ip_address: req.headers.get('x-forwarded-for') || 'unknown'
     }).catch(() => {}); // Ignorar erro se tabela não existir
 
-    let response: any = { success: true, message: '', data: null };
+    const response: any = { success: true, message: '', data: null };
 
     switch (action) {
       // =============================================================================

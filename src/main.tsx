@@ -2,10 +2,16 @@ import { createRoot } from "react-dom/client";
 import "@/lib/patchFetchForVitePing";
 import { StrictMode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, BrowserRouterProps } from "react-router-dom";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import App from "./App.tsx";
 import "./index.css";
+
+// Fix React Router v7 future flags warnings
+const routerFutureFlags: any = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true
+};
 
 // Suppress ResizeObserver loop error (harmless warning)
 const resizeObserverErrorHandler = (e: ErrorEvent) => {
@@ -49,7 +55,7 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <PeriodProvider>
           <App />
         </PeriodProvider>

@@ -304,7 +304,7 @@ const AIChat = () => {
             // Executar ações pendentes
             const pendingActions = lastMessage.actions.filter(a => a.status === 'pending');
 
-            let executingMessage: Message = {
+            const executingMessage: Message = {
               id: (Date.now() + 1).toString(),
               role: 'assistant',
               content: `⏳ Executando ${pendingActions.length} lançamentos...`,

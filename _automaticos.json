@@ -1,0 +1,554 @@
+[
+  {
+    "date": "2025-01-02",
+    "amount": 9.45,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000005",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-03",
+    "amount": 328.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "desc_limpa": "Adiantamento Victor Hugo",
+    "cc_code": "3.4",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-03",
+    "amount": 11000.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA",
+    "desc_limpa": "Obras - Outsider Construtora",
+    "cc_code": "1.23",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-03",
+    "amount": 13.23,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000007",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-06",
+    "amount": 266.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "desc_limpa": "Adiantamento Sergio Augusto",
+    "cc_code": "3. SERGIO",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-06",
+    "amount": 1.89,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000001",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-06",
+    "amount": 39.69,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000021",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-07",
+    "amount": 55.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "desc_limpa": "Adiantamento Sergio Augusto",
+    "cc_code": "3. SERGIO",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-07",
+    "amount": 1.89,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000001",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-08",
+    "amount": 1.89,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000001",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-09",
+    "amount": 5.67,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000003",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 11.34,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000006",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 402.88,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "desc_limpa": "Adiantamento Victor Hugo",
+    "cc_code": "3.4",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 800.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   76625974153 ANTONIO LEANDRO DA SILVA FILHO",
+    "desc_limpa": "Personal Antonio Leandro - Sergio",
+    "cc_code": "3. SERGIO",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 1575.72,
+    "desc_original": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE",
+    "desc_limpa": "Condominio Mundi - Sergio",
+    "cc_code": "3.1",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 423.6,
+    "desc_original": "LIQUIDACAO BOLETO-          26659060000104 OBJETIVA EDICOES EMPRESARIAIS LTDA",
+    "desc_limpa": "Objetiva Edicoes (Publicacoes)",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 2278.8,
+    "desc_original": "LIQUIDACAO BOLETO-          00910509001305 THOMSON REUTERS BRAS",
+    "desc_limpa": "Sistema Dominio - Thomson Reuters",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 69.0,
+    "desc_original": "LIQUIDACAO BOLETO-          12499520000170 CLICKSIGN GESTAO DE DOCUM SA",
+    "desc_limpa": "Sistema Clicksign",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 200.0,
+    "desc_original": "LIQUIDACAO BOLETO-          07296500000161 ADV SYSTEM ELEVADORES LTDA",
+    "desc_limpa": "Manutencao Elevador - ADV System",
+    "cc_code": "1.12",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 370.0,
+    "desc_original": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1",
+    "desc_limpa": "Sistema PJBank",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 39.99,
+    "desc_original": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "desc_limpa": "Telefone Celular TIM",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 39.99,
+    "desc_original": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "desc_limpa": "Telefone Celular TIM",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 6000.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "desc_limpa": "Adiantamento Sergio Augusto",
+    "cc_code": "3. SERGIO",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 6000.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "desc_limpa": "Adiantamento Victor Hugo",
+    "cc_code": "3.4",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 50.99,
+    "desc_original": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "desc_limpa": "Telefone Celular TIM",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 50.99,
+    "desc_original": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "desc_limpa": "Telefone Celular TIM",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 765.39,
+    "desc_original": "LIQUIDACAO BOLETO-          36859577000109 L ARGENT FACTORING FOMENTO MERCANTIL LTD",
+    "desc_limpa": "Factoring - L Argent",
+    "cc_code": "1.22",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 1471.41,
+    "desc_original": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE",
+    "desc_limpa": "Condominio Mundi - Sergio",
+    "cc_code": "3.1",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 200.5,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "desc_limpa": "Adiantamento Victor Hugo",
+    "cc_code": "3.4",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 1.89,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000001",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 54.81,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000029",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-13",
+    "amount": 187.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   05384518000190 AGUA PURA COM DISTRIBUIDORA LTDA",
+    "desc_limpa": "Agua Mineral - Agua Pura",
+    "cc_code": "1.14.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-13",
+    "amount": 137.68,
+    "desc_original": "DEBITO CONVENIOS-VIVO      02558157000162 VIVO",
+    "desc_limpa": "Telefone Fixo VIVO",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-13",
+    "amount": 21.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   50464753000126 AMPLA SAUDE OCUPACIONAL",
+    "desc_limpa": "Material - Ampla Saude Ocupacional",
+    "cc_code": "1.21",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-14",
+    "amount": 90.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "desc_limpa": "Adiantamento Sergio Augusto",
+    "cc_code": "3. SERGIO",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 7.56,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000004",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 132.17,
+    "desc_original": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "desc_limpa": "Telefone Celular TIM",
+    "cc_code": "1.16",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 99.9,
+    "desc_original": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1",
+    "desc_limpa": "Sistema PJBank",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 1569.23,
+    "desc_original": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA",
+    "desc_limpa": "Energia Eletrica - Equatorial",
+    "cc_code": "1.15",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 418.0,
+    "desc_original": "LIQUIDACAO BOLETO-          28408293000160 VERI SOLUCOES TECNOLOGICAS LTDA",
+    "desc_limpa": "Sistema Veri Solucoes",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 865.86,
+    "desc_original": "LIQUIDACAO BOLETO-          37411535000165 SITTAX",
+    "desc_limpa": "Sistema SITTAX",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 222.0,
+    "desc_original": "LIQUIDACAO BOLETO-          50812771000151 AUTMAIS SOLUCOES E AUTOMACOES LTDA",
+    "desc_limpa": "Sistema AutMais",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 193.92,
+    "desc_original": "DEBITO CONVENIOS-ALGARTE G 71208516000174 ALGARTE G",
+    "desc_limpa": "Seguro - Algarte",
+    "cc_code": "1.24",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 314.55,
+    "desc_original": "LIQUIDACAO BOLETO-          43961100000197 NB TECHNOLOGY LTDA",
+    "desc_limpa": "Sistema NB Technology",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 1410.0,
+    "desc_original": "LIQUIDACAO BOLETO-          42977999000173 DATAUNIQUE TECH LTDA",
+    "desc_limpa": "Sistema DATAUNIQUE",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 777.75,
+    "desc_original": "LIQUIDACAO BOLETO-          42711893000123 CONTUS TECNOLOGIA DA INFORMACAO LTDA",
+    "desc_limpa": "Sistema Contus",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 106.23,
+    "desc_original": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA",
+    "desc_limpa": "Energia Eletrica - Equatorial",
+    "cc_code": "1.15",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 733.96,
+    "desc_original": "LIQUIDACAO BOLETO-          14153062000148 CR SISTEMA E ANALISE EM ARQUIVOS MAGNETICOS LTDA",
+    "desc_limpa": "Sistema CR Sistema",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 1500.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA",
+    "desc_limpa": "Obras - Outsider Construtora",
+    "cc_code": "1.23",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 13.23,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000007",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-17",
+    "amount": 311.63,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "desc_limpa": "Adiantamento Victor Hugo",
+    "cc_code": "3.4",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-17",
+    "amount": 7.56,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000004",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-20",
+    "amount": 37.8,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000020",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-21",
+    "amount": 411.64,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "desc_limpa": "Adiantamento Nayara",
+    "cc_code": "3.5",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-23",
+    "amount": 7.56,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000004",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-24",
+    "amount": 311.86,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "desc_limpa": "Adiantamento Nayara",
+    "cc_code": "3.5",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-24",
+    "amount": 1.89,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000001",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-28",
+    "amount": 1.89,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000001",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-29",
+    "amount": 1.89,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000001",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 1.89,
+    "desc_original": "MANUTENCAO DE TITULOS-COB000001",
+    "desc_limpa": "Manutencao Titulos - Sicredi",
+    "cc_code": "1.13.2",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 178.0,
+    "desc_original": "LIQUIDACAO BOLETO-          03753088000100 CATHO ON LINE LTDA",
+    "desc_limpa": "Sistema Catho (RH)",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 435.45,
+    "desc_original": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "desc_limpa": "Sistema Dominio - Thomson Reuters",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 346.07,
+    "desc_original": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "desc_limpa": "Sistema Dominio - Thomson Reuters",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 346.07,
+    "desc_original": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "desc_limpa": "Sistema Dominio - Thomson Reuters",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 1000.0,
+    "desc_original": "PAGAMENTO PIX SICREDI-CX299815  03832285000115 SCALA CONTABILIDADE EIRELI",
+    "desc_limpa": "Emprestimo - Scala Contabilidade",
+    "cc_code": "3.2",
+    "entry_type": "adiantamento_socio"
+  },
+  {
+    "date": "2025-01-31",
+    "amount": 421.5,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   16366409000166 CENTER LUZZ LTDA",
+    "desc_limpa": "Material Eletrico - Center Luzz",
+    "cc_code": "1.21",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-31",
+    "amount": 597.0,
+    "desc_original": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS",
+    "desc_limpa": "Anuidade CRC",
+    "cc_code": "1.18",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-31",
+    "amount": 138.22,
+    "desc_original": "LIQUIDACAO BOLETO-          34813747000180 ONEFLOW SA",
+    "desc_limpa": "Sistema Oneflow",
+    "cc_code": "1.17",
+    "entry_type": "pagamento_despesa"
+  },
+  {
+    "date": "2025-01-31",
+    "amount": 3.78,
+    "desc_original": "TARIFA COM R LIQUIDACAO-COB000002",
+    "desc_limpa": "Tarifa Boleto - Sicredi",
+    "cc_code": "1.13.1",
+    "entry_type": "pagamento_despesa"
+  }
+]

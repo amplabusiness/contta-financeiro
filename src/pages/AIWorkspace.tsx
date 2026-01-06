@@ -252,7 +252,7 @@ const AIWorkspace = () => {
           result = await query.insert(data).select();
           break;
 
-        case 'update':
+        case 'update': {
           let updateQuery = query.update(data);
           if (filters) {
             Object.entries(filters).forEach(([key, value]) => {
@@ -261,8 +261,9 @@ const AIWorkspace = () => {
           }
           result = await updateQuery.select();
           break;
+        }
 
-        case 'delete':
+        case 'delete': {
           let deleteQuery = query.delete();
           if (filters) {
             Object.entries(filters).forEach(([key, value]) => {
@@ -271,6 +272,7 @@ const AIWorkspace = () => {
           }
           result = await deleteQuery;
           break;
+        }
 
         default:
           throw new Error(`Operação desconhecida: ${operation}`);
@@ -469,7 +471,7 @@ const AIWorkspace = () => {
       const actions: AgentAction[] = [];
 
       switch (intent) {
-        case 'baixa_honorarios':
+        case 'baixa_honorarios': {
           if (pendingFile) {
             // Processar arquivo pendente
             const transacoes = await processBoletosCSV(pendingFile.content);
@@ -529,8 +531,9 @@ const AIWorkspace = () => {
             response = `Para fazer baixa de honorários, envie o arquivo CSV com os boletos liquidados.\n\nClique no 📎 para anexar o arquivo.`;
           }
           break;
+        }
 
-        case 'consultar_saldo':
+        case 'consultar_saldo': {
           log('Consultando saldo do banco...');
 
           // Buscar conta do banco
@@ -553,11 +556,11 @@ const AIWorkspace = () => {
             });
           }
           break;
+        }
 
-        case 'listar_inadimplentes':
+        case 'listar_inadimplentes': {
           log('Buscando clientes inadimplentes...');
 
-          const hoje = new Date().toISOString().split('T')[0];
           const inadimplentes = await executeQuery('invoices', 'select',
             'id, amount, due_date, clients!inner(name, nome_fantasia)',
             { status: 'overdue' }
@@ -586,24 +589,27 @@ const AIWorkspace = () => {
             response = `✅ Nenhum cliente inadimplente no momento!`;
           }
           break;
+        }
 
-        case 'classificar_despesa':
+        case 'classificar_despesa': {
           response = `Para classificar uma despesa, me diga:\n\n`;
           response += `1. **Descrição** (ex: "conta de luz da sede")\n`;
           response += `2. **Valor** (ex: "R$ 350,00")\n`;
           response += `3. **Data** (ex: "hoje" ou "15/01/2025")\n\n`;
           response += `Ou envie o extrato bancário que classifico automaticamente.`;
           break;
+        }
 
-        case 'importar_arquivo':
+        case 'importar_arquivo': {
           response = `📁 Para importar um arquivo:\n\n`;
           response += `1. Clique no 📎 para anexar\n`;
           response += `2. Formatos aceitos: CSV, OFX, XLSX\n`;
           response += `3. Eu identifico automaticamente os campos\n\n`;
           response += `Após anexar, me diga o que fazer com ele.`;
           break;
+        }
 
-        default:
+        default: {
           // Tentar consultar o Dr. Cícero
           try {
             const { data } = await supabase.functions.invoke('dr-cicero-brain', {
@@ -624,6 +630,7 @@ const AIWorkspace = () => {
               `- 🏷️ Classificar despesas\n\n` +
               `O que você precisa fazer?`;
           }
+        }
       }
 
       const assistantMsg: Message = {

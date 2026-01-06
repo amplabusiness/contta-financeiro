@@ -1,20 +1,24 @@
 /**
  * useAccounting - Hook React para Contabilidade Integrada
  *
+ * DR. CÍCERO - NBC TG 26: REGRA SUPREMA
+ * Todo lançamento DEVE ter origem rastreável (referenceType + referenceId)
+ * O internal_code é gerado automaticamente pelo banco de dados
+ *
  * Este hook fornece acesso fácil ao AccountingService em qualquer componente React.
  * Use este hook em todos os formulários que inserem dados financeiros.
  *
  * EXEMPLO DE USO:
  *
  * ```tsx
- * const { registrarHonorario, loading, error } = useAccounting();
+ * const { registrarHonorario, loading, error, lastResult } = useAccounting();
  *
  * const handleSaveInvoice = async (invoice) => {
  *   // Salvar a fatura
  *   const { data: newInvoice } = await supabase.from('invoices').insert(invoice).select().single();
  *
  *   // Criar lançamento contábil automaticamente
- *   await registrarHonorario({
+ *   const result = await registrarHonorario({
  *     invoiceId: newInvoice.id,
  *     clientId: newInvoice.client_id,
  *     clientName: client.name,
@@ -22,6 +26,9 @@
  *     competence: newInvoice.competence,
  *     dueDate: newInvoice.due_date,
  *   });
+ *
+ *   // DR. CÍCERO: Acessar código de rastreabilidade
+ *   console.log('Código interno:', result.internalCode);
  * };
  * ```
  */
@@ -37,18 +44,27 @@ import {
 interface UseAccountingOptions {
   showToasts?: boolean;        // Mostrar toasts de sucesso/erro
   throwOnError?: boolean;      // Lançar exceção em caso de erro
+  sourceModule?: string;       // DR. CÍCERO: Módulo de origem para rastreabilidade
 }
 
 export function useAccounting(options: UseAccountingOptions = {}) {
-  const { showToasts = true, throwOnError = false } = options;
+  const { showToasts = true, throwOnError = false, sourceModule } = options;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<AccountingResult | null>(null);
+  const [lastInternalCode, setLastInternalCode] = useState<string | null>(null);
 
   // Handler genérico para processar resultados
+  // DR. CÍCERO: Capturar e expor código interno de rastreabilidade
   const handleResult = useCallback((result: AccountingResult, operationName: string) => {
     setLastResult(result);
+
+    // DR. CÍCERO: Armazenar código interno para rastreabilidade
+    if (result.internalCode) {
+      setLastInternalCode(result.internalCode);
+      console.log(`[Dr. Cícero] Lançamento rastreável: ${result.internalCode}`);
+    }
 
     if (!result.success) {
       const errorMsg = result.error || 'Erro ao criar lançamento contábil';
@@ -288,6 +304,7 @@ export function useAccounting(options: UseAccountingOptions = {}) {
     loading,
     error,
     lastResult,
+    lastInternalCode,          // DR. CÍCERO: Código de rastreabilidade do último lançamento
 
     // Métodos de registro
     registrarHonorario,
@@ -309,6 +326,9 @@ export function useAccounting(options: UseAccountingOptions = {}) {
 
     // Acesso direto ao serviço (para casos especiais)
     service: accountingService,
+
+    // DR. CÍCERO: Módulo de origem configurado
+    sourceModule,
   };
 }
 

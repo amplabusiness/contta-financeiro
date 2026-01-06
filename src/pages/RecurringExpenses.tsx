@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTableRealtime } from "@/hooks/useRealtimeSubscription";
+import { useAccounting } from "@/hooks/useAccounting";
 import {
   Table,
   TableBody,
@@ -57,6 +58,9 @@ export default function RecurringExpenses() {
   const [generating, setGenerating] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarDespesa } = useAccounting({ showToasts: false, sourceModule: 'RecurringExpenses' });
   
   const [formData, setFormData] = useState({
     supplier_name: "",
@@ -243,13 +247,48 @@ export default function RecurringExpenses() {
 
     setGenerating(true);
     try {
+      // 1. Chamar RPC para gerar despesas no banco
       const { data, error } = await supabase.rpc("generate_recurring_expenses");
 
       if (error) throw error;
 
+      const generatedCount = data[0]?.generated_count || 0;
+
+      // 2. LANÇAMENTOS CONTÁBEIS OBRIGATÓRIOS (Dr. Cícero - NBC TG 26)
+      // Para cada despesa gerada, criar lançamento D/C
+      if (generatedCount > 0) {
+        // Buscar as despesas geradas (as mais recentes)
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        const nextMonthStr = nextMonth.toISOString().slice(0, 7); // YYYY-MM
+
+        const { data: novasDespesas } = await supabase
+          .from("accounts_payable")
+          .select("*")
+          .eq("is_recurring", false) // As geradas não são mais "recurring"
+          .gte("due_date", `${nextMonthStr}-01`)
+          .order("created_at", { ascending: false })
+          .limit(generatedCount);
+
+        // Criar lançamento contábil para cada despesa gerada
+        // D: Despesa (4.x.x.xx) - aumenta custo
+        // C: Contas a Pagar (2.1.x.xx) - aumenta passivo
+        for (const despesa of novasDespesas || []) {
+          await registrarDespesa({
+            expenseId: despesa.id,
+            amount: despesa.amount,
+            expenseDate: despesa.due_date,
+            category: despesa.category,
+            description: `${despesa.supplier_name} - ${despesa.description}`,
+            supplierName: despesa.supplier_name,
+            competence: despesa.due_date.slice(0, 7),
+          });
+        }
+      }
+
       toast({
         title: "Despesas Geradas!",
-        description: `${data[0]?.generated_count || 0} despesas foram criadas para o próximo mês`,
+        description: `${generatedCount} despesas foram criadas com lançamentos contábeis`,
       });
     } catch (error) {
       console.error("Error generating expenses:", error);

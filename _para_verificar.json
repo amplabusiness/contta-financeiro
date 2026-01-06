@@ -1,0 +1,93 @@
+[
+  {
+    "date": "2025-01-03",
+    "amount": 10836.96,
+    "desc_original": "LIQUIDACAO BOLETO-          44422513000166 FACULDADE DE MEDICINA DE ITUMBIARA LTDA",
+    "sugestao": "Faculdade Medicina Itumbiara - VERIFICAR",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 875.59,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "sugestao": "Daniel Rodrigues Ribeiro - VERIFICAR (Terceiro?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-10",
+    "amount": 3773.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   05666515640 ALEXSSANDRA FERREIRA RAMOS",
+    "sugestao": "Alexssandra Ferreira - VERIFICAR (Dep. Legalizacao?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-13",
+    "amount": 160.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   99940892691 MARIA APARECIDA GOMES",
+    "sugestao": "Maria Aparecida Gomes - VERIFICAR",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 920.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a",
+    "sugestao": "Fabiana Maria - VERIFICAR (Terceira?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-15",
+    "amount": 1320.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva",
+    "sugestao": "Taylane Belle - VERIFICAR (Terceira?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-22",
+    "amount": 934.52,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "sugestao": "Daniel Rodrigues Ribeiro - VERIFICAR (Terceiro?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-27",
+    "amount": 370.75,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "sugestao": "Daniel Rodrigues Ribeiro - VERIFICAR (Terceiro?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-27",
+    "amount": 29289.39,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA",
+    "sugestao": "Transferencia para Ampla Contabilidade",
+    "cc_code": "TRANSF"
+  },
+  {
+    "date": "2025-01-28",
+    "amount": 1302.3,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   11869122000135 NOVA VISAO IMPORTS",
+    "sugestao": "Nova Visao Imports - VERIFICAR",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-28",
+    "amount": 255.8,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   10573521000191 PIX Marketplace",
+    "sugestao": "PIX Marketplace - VERIFICAR",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 1194.77,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a",
+    "sugestao": "Fabiana Maria - VERIFICAR (Terceira?)",
+    "cc_code": "VERIFICAR"
+  },
+  {
+    "date": "2025-01-30",
+    "amount": 2180.0,
+    "desc_original": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva",
+    "sugestao": "Taylane Belle - VERIFICAR (Terceira?)",
+    "cc_code": "VERIFICAR"
+  }
+]

@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { useClient } from "@/contexts/ClientContext";
 import { getDashboardBalances, getAdiantamentosSocios } from "@/lib/accountMapping";
+import { useAccounting } from "@/hooks/useAccounting";
 
 interface BankAccount {
   id: string;
@@ -40,6 +41,8 @@ interface CashFlowProjection {
 
 const CashFlow = () => {
   const { selectedClientId, selectedClientName } = useClient();
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarDespesa, registrarRecebimento, criarLancamento } = useAccounting({ showToasts: false, sourceModule: 'CashFlow' });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -118,18 +121,54 @@ const CashFlow = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Usuário não autenticado");
 
+      const amount = parseFloat(transactionFormData.amount);
+
+      // 1. Inserir na tabela cash_flow_transactions
       const payload = {
         ...transactionFormData,
-        amount: parseFloat(transactionFormData.amount),
+        amount,
         reference_type: 'manual',
         created_by: user.user.id,
       };
 
-      const { error } = await supabase
+      const { data: newTransaction, error } = await supabase
         .from("cash_flow_transactions")
-        .insert([payload]);
+        .insert([payload])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // 2. LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+      // Transações manuais de fluxo de caixa DEVEM ter lançamento D/C
+      if (transactionFormData.status === 'confirmed' && newTransaction) {
+        if (transactionFormData.transaction_type === 'inflow') {
+          // Entrada: D: Banco, C: Receita/Outras Entradas
+          await criarLancamento({
+            entryType: 'recebimento',
+            amount,
+            date: transactionFormData.transaction_date,
+            description: `[Fluxo de Caixa] ${transactionFormData.description}`,
+            competence: transactionFormData.transaction_date.slice(0, 7).replace('-', '/'),
+            referenceType: 'cash_flow_transaction',
+            referenceId: newTransaction.id,
+            metadata: {
+              category: transactionFormData.category,
+              source: 'manual_cashflow',
+            },
+          });
+        } else {
+          // Saída: D: Despesa, C: Banco
+          await registrarDespesa({
+            expenseId: newTransaction.id,
+            amount,
+            expenseDate: transactionFormData.transaction_date,
+            category: transactionFormData.category || 'Outras Despesas',
+            description: `[Fluxo de Caixa] ${transactionFormData.description}`,
+            competence: transactionFormData.transaction_date.slice(0, 7).replace('-', '/'),
+          });
+        }
+      }
 
       toast.success("Transação adicionada com sucesso!");
       setTransactionDialogOpen(false);

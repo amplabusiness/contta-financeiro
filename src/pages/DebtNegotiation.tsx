@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAccounting } from "@/hooks/useAccounting";
 
 interface ClientForNegotiation {
   client_id: string;
@@ -120,6 +121,9 @@ interface ContactHistory {
 }
 
 const DebtNegotiation = () => {
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { criarLancamento } = useAccounting({ showToasts: false, sourceModule: 'DebtNegotiation' });
+
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<ClientForNegotiation[]>([]);
   const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
@@ -400,6 +404,30 @@ const DebtNegotiation = () => {
 
       const result = data?.[0];
       if (result?.success) {
+        // LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+        // Se houve desconto, registrar perda com clientes
+        const preview = calculateNegotiationPreview();
+        if (preview.discount > 0 && result.negotiation_id) {
+          // D: Perdas com Clientes (4.9.1.01) - aumenta despesa
+          // C: Clientes a Receber (1.1.2.01) - diminui ativo (desconto dado)
+          await criarLancamento({
+            entryType: 'ajuste_manual',
+            amount: preview.discount,
+            date: firstDueDate || new Date().toISOString().split('T')[0],
+            description: `Desconto negociação ${result.negotiation_number || result.negotiation_id} - ${selectedClient.client_name}`,
+            competence: (firstDueDate || new Date().toISOString()).slice(0, 7).replace('-', '/'),
+            clientId: selectedClient.client_id,
+            clientName: selectedClient.client_name,
+            referenceType: 'debt_negotiation',
+            referenceId: result.negotiation_id,
+            metadata: {
+              discount_percentage: parseFloat(discountPercentage),
+              original_debt: preview.originalDebt,
+              final_amount: preview.finalAmount,
+            },
+          });
+        }
+
         toast.success(result.message);
         setNegotiationDialogOpen(false);
         loadData();

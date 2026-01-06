@@ -19,8 +19,8 @@ export const padroesPIX = {
   ],
 
   // Extrair CPF/CNPJ do PIX
-  regexCPF: /(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[-\s]?\d{2})/,
-  regexCNPJ: /(\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2})/,
+  regexCPF: /(\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2})/,
+  regexCNPJ: /(\d{2}[.\s]?\d{3}[.\s]?\d{3}[/\s]?\d{4}[-\s]?\d{2})/,
 
   // Extrair nome do pagador
   regexNome: /(?:PIX\s+(?:RECEBIDO|TRANSF\s+RECEBIDA)\s*-?\s*)([A-Z\s]+?)(?:\s+\d|\s+CPF|\s+CNPJ|$)/i
@@ -45,13 +45,13 @@ export function extrairDadosPIX(descricao: string): {
   // Extrair CPF
   const matchCPF = descricao.match(padroesPIX.regexCPF);
   if (matchCPF) {
-    resultado.cpf = matchCPF[1].replace(/[.\-\s]/g, "");
+    resultado.cpf = matchCPF[1].replace(/[.\s-]/g, "");
   }
 
   // Extrair CNPJ
   const matchCNPJ = descricao.match(padroesPIX.regexCNPJ);
   if (matchCNPJ) {
-    resultado.cnpj = matchCNPJ[1].replace(/[.\-\/\s]/g, "");
+    resultado.cnpj = matchCNPJ[1].replace(/[./\s-]/g, "");
   }
 
   // Extrair Nome
@@ -197,7 +197,7 @@ export function calcularScoreMatch(
 
   // Match por CNPJ
   if (dadosPix.cnpj && cliente.cnpj) {
-    const cnpjLimpo = cliente.cnpj.replace(/[.\-\/]/g, "");
+    const cnpjLimpo = cliente.cnpj.replace(/[./-]/g, "");
     if (cnpjLimpo === dadosPix.cnpj) {
       return 0.98; // Match exato por CNPJ
     }
@@ -207,7 +207,7 @@ export function calcularScoreMatch(
   if (dadosPix.cpf && cliente.qsa) {
     for (const socio of cliente.qsa) {
       if (socio.cpf) {
-        const cpfLimpo = socio.cpf.replace(/[.\-]/g, "");
+        const cpfLimpo = socio.cpf.replace(/[.-]/g, "");
         if (cpfLimpo === dadosPix.cpf) {
           return 0.95; // Match por CPF de sócio
         }

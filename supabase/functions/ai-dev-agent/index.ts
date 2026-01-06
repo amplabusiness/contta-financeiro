@@ -317,7 +317,7 @@ serve(async (req) => {
         const lowerMsg = message.toLowerCase();
 
         let intent = 'unknown';
-        let params: any = {};
+        const params: Record<string, unknown> = {};
 
         // Detectar intenções
         if (lowerMsg.includes('migração') || lowerMsg.includes('migration') || lowerMsg.includes('criar tabela')) {

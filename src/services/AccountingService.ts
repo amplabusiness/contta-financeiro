@@ -34,6 +34,7 @@ export type EntryType =
   | 'ajuste_manual';        // Ajuste contábil manual
 
 // Parâmetros para criação de lançamento
+// DR. CÍCERO - NBC TG 26: Todo lançamento DEVE ter origem rastreável
 export interface AccountingEntryParams {
   entryType: EntryType;
   amount: number;
@@ -44,17 +45,21 @@ export interface AccountingEntryParams {
   clientName?: string;
   supplierId?: string;
   supplierName?: string;
-  referenceType: string;           // Tabela de origem (invoice, expense, etc)
-  referenceId: string;             // ID do registro origem
+  referenceType: string;           // OBRIGATÓRIO: Tabela de origem (invoice, expense, bank_transaction, etc)
+  referenceId: string;             // OBRIGATÓRIO: ID do registro origem
   bankAccountId?: string;          // Para lançamentos bancários
   expenseCategory?: string;        // Categoria da despesa
   metadata?: Record<string, any>;  // Dados adicionais
+  // Sistema de Rastreabilidade Interna (Dr. Cícero)
+  sourceModule?: string;           // Módulo que gerou o lançamento (ex: 'PixReconciliation', 'ImportInvoices')
+  originContext?: string;          // Contexto adicional de origem (ex: 'conciliacao_automatica', 'importacao_manual')
 }
 
 // Resultado da operação contábil
 export interface AccountingResult {
   success: boolean;
   entryId?: string;
+  internalCode?: string;           // Código interno de rastreabilidade (Dr. Cícero)
   message?: string;
   error?: string;
   debitAccountId?: string;
@@ -98,6 +103,10 @@ class AccountingService {
   /**
    * Cria um lançamento contábil de forma atômica
    * Este é o método principal que deve ser chamado por todos os formulários
+   *
+   * DR. CÍCERO - REGRA SUPREMA:
+   * Todo lançamento DEVE ter referenceType e referenceId para rastreabilidade
+   * O internal_code é gerado automaticamente pelo trigger no banco de dados
    */
   async createEntry(params: AccountingEntryParams): Promise<AccountingResult> {
     console.log('[AccountingService] Creating entry:', params);
@@ -112,6 +121,17 @@ class AccountingService {
         return { success: false, error: 'Data é obrigatória' };
       }
 
+      // DR. CÍCERO - Validação OBRIGATÓRIA de rastreabilidade
+      if (!params.referenceType) {
+        console.error('[AccountingService] VIOLAÇÃO DR. CÍCERO: referenceType é OBRIGATÓRIO');
+        return { success: false, error: 'VIOLAÇÃO CONTÁBIL: Todo lançamento DEVE ter um tipo de origem (referenceType)' };
+      }
+
+      if (!params.referenceId) {
+        console.error('[AccountingService] VIOLAÇÃO DR. CÍCERO: referenceId é OBRIGATÓRIO');
+        return { success: false, error: 'VIOLAÇÃO CONTÁBIL: Todo lançamento DEVE ter um ID de origem (referenceId)' };
+      }
+
       // Verificar se já existe lançamento para esta referência (idempotência)
       const existing = await this.checkExistingEntry(params.referenceType, params.referenceId, params.entryType);
       if (existing) {
@@ -124,6 +144,7 @@ class AccountingService {
       }
 
       // Chamar a Edge Function para criar o lançamento
+      // DR. CÍCERO: Incluir dados de rastreabilidade completos
       const { data, error } = await supabase.functions.invoke('smart-accounting', {
         body: {
           action: 'create_entry',
@@ -138,7 +159,13 @@ class AccountingService {
           reference_id: params.referenceId,
           bank_account_id: params.bankAccountId,
           expense_category: params.expenseCategory,
-          metadata: params.metadata,
+          metadata: {
+            ...params.metadata,
+            // DR. CÍCERO - Dados de rastreabilidade
+            source_module: params.sourceModule || 'AccountingService',
+            origin_context: params.originContext || 'api_call',
+            created_at: new Date().toISOString(),
+          },
         }
       });
 
@@ -156,6 +183,7 @@ class AccountingService {
       return {
         success: true,
         entryId: data.entry_id,
+        internalCode: data.internal_code, // DR. CÍCERO: Retornar código de rastreabilidade
         message: data.message || 'Lançamento criado com sucesso'
       };
 

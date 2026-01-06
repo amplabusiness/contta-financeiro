@@ -1,0 +1,1442 @@
+[
+  {
+    "name": "Jeferson Roberto Disconsi de Sa",
+    "cpf": "***183401**",
+    "companies": [
+      {
+        "id": "1c74f368-b34b-48ba-b7b7-dd7b518e1d21",
+        "name": "BOA ESPERANCA AGRO LTDA",
+        "cnpj": "26723690000109",
+        "fee": 0
+      },
+      {
+        "id": "b7f1a46b-86c2-486b-b714-1580f6e7c044",
+        "name": "COLORADO AGROPECUARIA LTDA",
+        "cnpj": "13494261000157",
+        "fee": 0
+      },
+      {
+        "id": "f715c9d2-641c-4d94-b858-e651c15d2362",
+        "name": "FAZENDA IPE LTDA",
+        "cnpj": "33359266000184",
+        "fee": 0
+      },
+      {
+        "id": "e1b1cbf5-58a6-40f3-b0c1-f45dd9f84fe7",
+        "name": "IPE AGROINDUSTRIAL DE SEMENTES LTDA",
+        "cnpj": "03679123000199",
+        "fee": 0
+      },
+      {
+        "id": "8545268d-d93e-42ea-99c0-4110f22f6929",
+        "name": "MUNDIM SA E GUIMARAES ADVOGADOS ASSOCIADOS S/S",
+        "cnpj": "07211566000101",
+        "fee": 2194.11
+      },
+      {
+        "id": "66b3f691-4ff6-494c-b258-77a4d6ebc660",
+        "name": "RIO FORMOSO AGRO LTDA",
+        "cnpj": "26505109000174",
+        "fee": 0
+      },
+      {
+        "id": "741e7702-5cb2-42ac-b821-5a37820dcc05",
+        "name": "TUNA AGROPECUARIA LTDA",
+        "cnpj": "12764099000187",
+        "fee": 0
+      },
+      {
+        "id": "98d6eda9-1d21-412a-94d6-3eb2390fec86",
+        "name": "YPE AGRO LTDA",
+        "cnpj": "26543367000145",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Sergio Carneiro Leao",
+    "cpf": "***564881**",
+    "companies": [
+      {
+        "id": "839def96-a15d-48d8-b20d-f6608c36282c",
+        "name": "ACROPOLE ACADEMIA LTDA",
+        "cnpj": "07408746000188",
+        "fee": 0
+      },
+      {
+        "id": "b9787ade-778a-48d4-804b-21f682462fa6",
+        "name": "AMPLA CONTABILIDADE LTDA",
+        "cnpj": "23893032000169",
+        "fee": 0
+      },
+      {
+        "id": "8509b2b0-8598-4eee-8209-6bbbcc74da38",
+        "name": "ASSOCIACAO GOIANA DE DEFESA DO CIDADAO",
+        "cnpj": "09313108000109",
+        "fee": 0
+      },
+      {
+        "id": "33b20c5e-3cc5-4974-9c59-b20bae45e35e",
+        "name": "CARNEIRO LEAO E COUTINHO SOCIEDADE DE ADVOGADOS",
+        "cnpj": "49332028000115",
+        "fee": 0
+      },
+      {
+        "id": "052153a9-2965-4672-96c6-73989c8aeb39",
+        "name": "PREST LIXO LTDA",
+        "cnpj": "10293532000118",
+        "fee": 0
+      },
+      {
+        "id": "314b2cd0-94ef-4bd1-a8dc-b7ea52947008",
+        "name": "TOCA DO LEAO SERVICOS DE DESPACHANT",
+        "cnpj": "02678916000120",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Avenir Barbosa Junior",
+    "cpf": "***092841**",
+    "companies": [
+      {
+        "id": "5964e7af-f57d-4911-8330-453c16e16111",
+        "name": "AGROPECUARIA CRB LTDA.",
+        "cnpj": "08384880000159",
+        "fee": 0
+      },
+      {
+        "id": "e2241cb3-79a1-49ac-9984-ac50535521e4",
+        "name": "BJB AGROPECUARIA LTDA",
+        "cnpj": "60322855000160",
+        "fee": 0
+      },
+      {
+        "id": "a0f9cfe8-92dd-4188-957d-40617fed72b3",
+        "name": "J.A. AGROPECUARIA EIRELI",
+        "cnpj": "32873039000100",
+        "fee": 0
+      },
+      {
+        "id": "b086de44-77d9-4bd8-8c9f-6974c4f784a1",
+        "name": "J.B AGROPECUARIA LTDA",
+        "cnpj": "33060015000102",
+        "fee": 0
+      },
+      {
+        "id": "414b8da4-1caa-4d7a-8e1a-7bfc1cc6be49",
+        "name": "M NUTRITION REPARACAO DE MAQUINAS LTDA",
+        "cnpj": "29714186000122",
+        "fee": 0
+      },
+      {
+        "id": "5350a0b3-fe31-400e-96b4-526464b06251",
+        "name": "MEDLOG LOGISTICA LTDA",
+        "cnpj": "13478872000101",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Wendell Macedo de Andrade",
+    "cpf": "***238181**",
+    "companies": [
+      {
+        "id": "685657a9-adc3-4608-b234-8a884d5c25a3",
+        "name": "ANAPOLIS SERVICOS DE VISTORIAS LTDA",
+        "cnpj": "43313437000198",
+        "fee": 1500
+      },
+      {
+        "id": "abfc96dc-e28f-4ee9-83ea-5f52d1049f21",
+        "name": "CENTRO OESTE SERVICOS DE VISTORIAS",
+        "cnpj": "36457937000138",
+        "fee": 3500
+      },
+      {
+        "id": "655178a7-2792-4e08-aa06-0c7d71490a54",
+        "name": "DBCON SOLUCOES LTDA - ME",
+        "cnpj": "06091828000189",
+        "fee": 0
+      },
+      {
+        "id": "cd12e115-8fed-44ee-9366-bb7d4b1bc4dc",
+        "name": "GOIAS SERVICOS DE VISTORIAS LTDA - ME",
+        "cnpj": "25190488000198",
+        "fee": 0
+      },
+      {
+        "id": "9fd4c5fb-2204-4988-9b6c-1936bc9e6256",
+        "name": "JW SERVICOS DE VISTORIAS LTDA",
+        "cnpj": "11505838000153",
+        "fee": 0
+      },
+      {
+        "id": "e032bfe8-56d9-4726-b682-93395d5fb180",
+        "name": "RIO VERDE SERVICOS DE VISTORIAS LTDA",
+        "cnpj": "43313158000124",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "IF PARTICIPACOES EMPRESARIAIS LTDA",
+    "cpf": "11469393000101",
+    "companies": [
+      {
+        "id": "1c74f368-b34b-48ba-b7b7-dd7b518e1d21",
+        "name": "BOA ESPERANCA AGRO LTDA",
+        "cnpj": "26723690000109",
+        "fee": 0
+      },
+      {
+        "id": "f715c9d2-641c-4d94-b858-e651c15d2362",
+        "name": "FAZENDA IPE LTDA",
+        "cnpj": "33359266000184",
+        "fee": 0
+      },
+      {
+        "id": "66b3f691-4ff6-494c-b258-77a4d6ebc660",
+        "name": "RIO FORMOSO AGRO LTDA",
+        "cnpj": "26505109000174",
+        "fee": 0
+      },
+      {
+        "id": "741e7702-5cb2-42ac-b821-5a37820dcc05",
+        "name": "TUNA AGROPECUARIA LTDA",
+        "cnpj": "12764099000187",
+        "fee": 0
+      },
+      {
+        "id": "98d6eda9-1d21-412a-94d6-3eb2390fec86",
+        "name": "YPE AGRO LTDA",
+        "cnpj": "26543367000145",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "JPL AGROPECUARIA LTDA",
+    "cpf": "12269010000106",
+    "companies": [
+      {
+        "id": "60096228-dc38-4c39-831e-b95fc78d1c66",
+        "name": "CEDRO AGRO LTDA",
+        "cnpj": "26763165000109",
+        "fee": 0
+      },
+      {
+        "id": "f715c9d2-641c-4d94-b858-e651c15d2362",
+        "name": "FAZENDA IPE LTDA",
+        "cnpj": "33359266000184",
+        "fee": 0
+      },
+      {
+        "id": "66b3f691-4ff6-494c-b258-77a4d6ebc660",
+        "name": "RIO FORMOSO AGRO LTDA",
+        "cnpj": "26505109000174",
+        "fee": 0
+      },
+      {
+        "id": "741e7702-5cb2-42ac-b821-5a37820dcc05",
+        "name": "TUNA AGROPECUARIA LTDA",
+        "cnpj": "12764099000187",
+        "fee": 0
+      },
+      {
+        "id": "98d6eda9-1d21-412a-94d6-3eb2390fec86",
+        "name": "YPE AGRO LTDA",
+        "cnpj": "26543367000145",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Admir de Oliveira Alves",
+    "cpf": "***332411**",
+    "companies": [
+      {
+        "id": "e170749f-0204-4857-ad1f-66933e0dbbfe",
+        "name": "AGROPECUARIA ADM LTDA",
+        "cnpj": "23627669000103",
+        "fee": 537.5
+      },
+      {
+        "id": "4a8d09b1-54be-4d9d-ad7d-e765c29608e4",
+        "name": "AGROPECUARIA SCA LTDA",
+        "cnpj": "23627576000189",
+        "fee": 537.5
+      },
+      {
+        "id": "b3862f55-e5cc-4665-ac2a-e9120ca5eee0",
+        "name": "LIVRE VISTORIA VEICULAR LTDA - ME",
+        "cnpj": "11803753000151",
+        "fee": 603.75
+      },
+      {
+        "id": "532910cd-e4a6-4457-856d-49b732b7c4db",
+        "name": "SAO LUIS INDUSTRIA E COMERCIO DE AGUA MINERAL LTDA",
+        "cnpj": "08602412000103",
+        "fee": 334.97
+      }
+    ]
+  },
+  {
+    "name": "Antonio Marcos Gusmao de Oliveira",
+    "cpf": "***486431**",
+    "companies": [
+      {
+        "id": "33faf6ea-f461-4223-9029-7183c6988987",
+        "name": "AMG INDUSTRIA E COMERCIO DE GESSO LTDA",
+        "cnpj": "22745524000144",
+        "fee": 2322.8
+      },
+      {
+        "id": "2f1a5231-0f0b-41af-8c43-f69e9a248f27",
+        "name": "AV INDUSTRIA E COMERCIO DE FERROS E",
+        "cnpj": "15128912000110",
+        "fee": 0
+      },
+      {
+        "id": "f91b1f1d-78b4-4df4-9b73-0d13c6b45f79",
+        "name": "GUSMAO E GUSMAO INDUSTRIA E COMERCIO DE GESSO LTDA ME",
+        "cnpj": "07798664000197",
+        "fee": 0
+      },
+      {
+        "id": "6fa4489a-3ab4-428e-9316-6540c9140fe5",
+        "name": "IPE COMERCIO E SERVICOS DE GESSO LTDA",
+        "cnpj": "31500841000191",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Bernardo Carneiro de Sousa Guimaraes",
+    "cpf": "***079302**",
+    "companies": [
+      {
+        "id": "b5a1bb23-ef78-4fb7-8f5e-2c116963b059",
+        "name": "BCS GOIAS SERVICOS MEDICOS LTDA",
+        "cnpj": "50465631000154",
+        "fee": 977.45
+      },
+      {
+        "id": "ea9411d2-5bc3-4bdb-abef-5541dd634983",
+        "name": "BCS MINAS SERVICOS MEDICOS LTDA",
+        "cnpj": "49855659000119",
+        "fee": 977.45
+      },
+      {
+        "id": "01247d35-327e-416f-b928-b85e64e8b070",
+        "name": "DR BERNARDO GUIMARAES LTDA",
+        "cnpj": "36046644000168",
+        "fee": 977.45
+      },
+      {
+        "id": "96c05bb8-2009-464b-a1c3-cfbdb22b8829",
+        "name": "HOLDINGS BCS GUIMARAES LTDA",
+        "cnpj": "49521819000193",
+        "fee": 977.45
+      }
+    ]
+  },
+  {
+    "name": "SA CAMPOS AGROPECUARIA LTDA",
+    "cpf": "31986448000150",
+    "companies": [
+      {
+        "id": "1c74f368-b34b-48ba-b7b7-dd7b518e1d21",
+        "name": "BOA ESPERANCA AGRO LTDA",
+        "cnpj": "26723690000109",
+        "fee": 0
+      },
+      {
+        "id": "f715c9d2-641c-4d94-b858-e651c15d2362",
+        "name": "FAZENDA IPE LTDA",
+        "cnpj": "33359266000184",
+        "fee": 0
+      },
+      {
+        "id": "66b3f691-4ff6-494c-b258-77a4d6ebc660",
+        "name": "RIO FORMOSO AGRO LTDA",
+        "cnpj": "26505109000174",
+        "fee": 0
+      },
+      {
+        "id": "98d6eda9-1d21-412a-94d6-3eb2390fec86",
+        "name": "YPE AGRO LTDA",
+        "cnpj": "26543367000145",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Alceu Araujo da Veiga",
+    "cpf": "***564321**",
+    "companies": [
+      {
+        "id": "500aa4d8-31a1-4703-a805-e54b2cb4b156",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 2",
+        "cnpj": "13819492000274",
+        "fee": 0
+      },
+      {
+        "id": "1ba78daa-5f74-4d1c-8112-00dd10a74b7c",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 3",
+        "cnpj": "13819492000355",
+        "fee": 0
+      },
+      {
+        "id": "6180bde5-5b5e-4359-916a-60ec90d5a36b",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 4",
+        "cnpj": "13819492000436",
+        "fee": 0
+      },
+      {
+        "id": "3fde02cc-c2b0-49d0-9ff5-ee8ec8ecb465",
+        "name": "BOA VISTA AGROPECUARIA E COMERCIO DE",
+        "cnpj": "13819492000193",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Amadeu Araujo da Veiga",
+    "cpf": "***077031**",
+    "companies": [
+      {
+        "id": "500aa4d8-31a1-4703-a805-e54b2cb4b156",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 2",
+        "cnpj": "13819492000274",
+        "fee": 0
+      },
+      {
+        "id": "1ba78daa-5f74-4d1c-8112-00dd10a74b7c",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 3",
+        "cnpj": "13819492000355",
+        "fee": 0
+      },
+      {
+        "id": "6180bde5-5b5e-4359-916a-60ec90d5a36b",
+        "name": "BOA VISTA AGROPECUARIA C.I LTDA - FILIAL 4",
+        "cnpj": "13819492000436",
+        "fee": 0
+      },
+      {
+        "id": "3fde02cc-c2b0-49d0-9ff5-ee8ec8ecb465",
+        "name": "BOA VISTA AGROPECUARIA E COMERCIO DE",
+        "cnpj": "13819492000193",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Mario Lucio Pinheiro Milazzo",
+    "cpf": "***987441**",
+    "companies": [
+      {
+        "id": "7d6f13c4-deb7-4c6e-939d-a4ea682f538d",
+        "name": "C D C OLIVEIRA - ESTACAO DA ALEGRIA",
+        "cnpj": "14838598000105",
+        "fee": 1034.97
+      },
+      {
+        "id": "233b8709-7103-4b95-a6c2-fdc5dc1562d8",
+        "name": "CDC PLAYGROUND E BRINQUEDOS LTDA",
+        "cnpj": "26174910000184",
+        "fee": 603.73
+      },
+      {
+        "id": "e3858efb-9ed5-4fa5-b741-723b10c1f678",
+        "name": "ESTACAO ALEGRIA BRINQUEDOS LTDA",
+        "cnpj": "37109603000136",
+        "fee": 0
+      },
+      {
+        "id": "41f72a96-f012-48b1-92d9-1587625973d0",
+        "name": "M L PINHEIRO MILAZZO LTDA",
+        "cnpj": "12100476000183",
+        "fee": 1655.93
+      }
+    ]
+  },
+  {
+    "name": "Guilherme Otniel dos Reis Arcanjo",
+    "cpf": "***572171**",
+    "companies": [
+      {
+        "id": "a959fc39-2510-4b9a-b469-27e2d6524cac",
+        "name": "DSL HOLDING LTDA",
+        "cnpj": "42751831000145",
+        "fee": 0
+      },
+      {
+        "id": "a9440faf-c429-4059-9574-9ee5de472184",
+        "name": "DSL MARKETING DIGITAL LTDA",
+        "cnpj": "40410933000171",
+        "fee": 0
+      },
+      {
+        "id": "0733ac80-e225-4bfe-8894-0719ab73bc84",
+        "name": "DSL PARTICIPACOES LTDA",
+        "cnpj": "42479745000125",
+        "fee": 0
+      },
+      {
+        "id": "b94f3025-c93c-4de3-ab0e-414e3d9a011f",
+        "name": "PROMERCANTIL LTDA",
+        "cnpj": "19756096000140",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Giovani Augusto Magri de Castro",
+    "cpf": "***550318**",
+    "companies": [
+      {
+        "id": "b014406f-6497-49b2-bf03-483353ae99a0",
+        "name": "ACTION SERVICOS INDUSTRIAIS LTDA",
+        "cnpj": "45132444000119",
+        "fee": 12143.72
+      },
+      {
+        "id": "1818eda2-6bf8-4756-af26-24e103761562",
+        "name": "ACTION SOLUCOES INDUSTRIAIS LTDA",
+        "cnpj": "31458451000109",
+        "fee": 12143.72
+      },
+      {
+        "id": "a4e9e69b-e69b-446f-a400-b5ee012620e1",
+        "name": "PREMIER SOLUCOES INDUSTRIAIS LTDA",
+        "cnpj": "37257257000133",
+        "fee": 344.98
+      }
+    ]
+  },
+  {
+    "name": "J.A. AGROPECUARIA LTDA",
+    "cpf": "32873039000100",
+    "companies": [
+      {
+        "id": "5964e7af-f57d-4911-8330-453c16e16111",
+        "name": "AGROPECUARIA CRB LTDA.",
+        "cnpj": "08384880000159",
+        "fee": 0
+      },
+      {
+        "id": "b086de44-77d9-4bd8-8c9f-6974c4f784a1",
+        "name": "J.B AGROPECUARIA LTDA",
+        "cnpj": "33060015000102",
+        "fee": 0
+      },
+      {
+        "id": "5350a0b3-fe31-400e-96b4-526464b06251",
+        "name": "MEDLOG LOGISTICA LTDA",
+        "cnpj": "13478872000101",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "HOLDINGS BCS GUIMARAES LTDA",
+    "cpf": "49521819000193",
+    "companies": [
+      {
+        "id": "b5a1bb23-ef78-4fb7-8f5e-2c116963b059",
+        "name": "BCS GOIAS SERVICOS MEDICOS LTDA",
+        "cnpj": "50465631000154",
+        "fee": 977.45
+      },
+      {
+        "id": "ea9411d2-5bc3-4bdb-abef-5541dd634983",
+        "name": "BCS MINAS SERVICOS MEDICOS LTDA",
+        "cnpj": "49855659000119",
+        "fee": 977.45
+      },
+      {
+        "id": "01247d35-327e-416f-b928-b85e64e8b070",
+        "name": "DR BERNARDO GUIMARAES LTDA",
+        "cnpj": "36046644000168",
+        "fee": 977.45
+      }
+    ]
+  },
+  {
+    "name": "Maria Auxiliadora Caetano",
+    "cpf": "***860211**",
+    "companies": [
+      {
+        "id": "a3527b84-e710-41cd-9c9d-d7f05ea9d934",
+        "name": "CAETANO E CAETANO MAQUINAS LTDA",
+        "cnpj": "57115455000170",
+        "fee": 0
+      },
+      {
+        "id": "f91b80a1-946f-47a9-a786-f0db56aa33f6",
+        "name": "CAETANO E FILHOS MAQUINAS LTDA",
+        "cnpj": "57112242000194",
+        "fee": 0
+      },
+      {
+        "id": "017b4699-5303-4830-9015-70354bf6e636",
+        "name": "CAETANO VIEIRA MAQUINAS LTDA",
+        "cnpj": "61749715000136",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Alan Arantes de Souza Filho",
+    "cpf": "***067121**",
+    "companies": [
+      {
+        "id": "1a7909e9-109a-4f45-9eba-3ced6978bebf",
+        "name": "CARVALHO NEGOCIOS LTDA",
+        "cnpj": "45143471000197",
+        "fee": 0
+      },
+      {
+        "id": "a1674d59-970f-483a-bf51-c7425454f191",
+        "name": "CONTRONWEB TECNOLOGIA LTDA",
+        "cnpj": "31264095000184",
+        "fee": 759
+      },
+      {
+        "id": "66640522-445d-4747-a7ee-c1636a7b417a",
+        "name": "JCP NEGOCIOS LTDA",
+        "cnpj": "45060831000197",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Pedro Henrique de Carvalho Gusmao",
+    "cpf": "***092161**",
+    "companies": [
+      {
+        "id": "e0ddfe90-a6ab-4e27-b7c1-c9f2da60652a",
+        "name": "CONSTRUGESSO SERVICO DE GESSO LTDA",
+        "cnpj": "53300720000139",
+        "fee": 0
+      },
+      {
+        "id": "1f44b4c1-c099-42a3-ac7a-d1997f777c90",
+        "name": "PHG ACABAMENTOS E FORROS LTDA",
+        "cnpj": "60987390000167",
+        "fee": 0
+      },
+      {
+        "id": "10bab7c2-2ac3-4d13-ac58-226b27aea8b4",
+        "name": "PHI LOCACAO DE MAQUINAS E EQUIPAMENTOS LTDA",
+        "cnpj": "23047355000131",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Carla Dulcemar de Oliveira Leao",
+    "cpf": "***947151**",
+    "companies": [
+      {
+        "id": "0aa3f8a9-5ed0-4f68-afa1-e35028e5e5d6",
+        "name": "CONTTA INTELIGENCIA FISCAL LTDA ME",
+        "cnpj": "08970652000160",
+        "fee": 0
+      },
+      {
+        "id": "052153a9-2965-4672-96c6-73989c8aeb39",
+        "name": "PREST LIXO LTDA",
+        "cnpj": "10293532000118",
+        "fee": 0
+      },
+      {
+        "id": "314b2cd0-94ef-4bd1-a8dc-b7ea52947008",
+        "name": "TOCA DO LEAO SERVICOS DE DESPACHANT",
+        "cnpj": "02678916000120",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Enzo de Aquino Alves Donadi",
+    "cpf": "***923921**",
+    "companies": [
+      {
+        "id": "9156ed38-ac9d-4068-97f4-9426f9f1dac4",
+        "name": "CRYSTAL PARTICIPACOES LTDA",
+        "cnpj": "13381861000109",
+        "fee": 0
+      },
+      {
+        "id": "4e38b563-a69d-4880-93e3-9ec8553011fc",
+        "name": "ECD CONSTRUTORA INCORPORADORA EIRELI",
+        "cnpj": "18470289000178",
+        "fee": 0
+      },
+      {
+        "id": "1f8c7178-59f6-456a-8165-8942047e83da",
+        "name": "VERDI E ECD EMPREENDIMENTOS IMOBILIARIOS SPE LTDA",
+        "cnpj": "19579503000191",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Vinicius Reis Domingues",
+    "cpf": "***828381**",
+    "companies": [
+      {
+        "id": "e9a47af5-5fa8-44e4-8058-da1429660260",
+        "name": "HOKMA ELETROMONTAGEM LTDA",
+        "cnpj": "41912131000122",
+        "fee": 551.97
+      },
+      {
+        "id": "183d2e36-cf1a-4708-a656-1750a39e7f51",
+        "name": "KROVER ENGENHARIA E SERVICOS LTDA ME",
+        "cnpj": "18640823000147",
+        "fee": 963.1
+      },
+      {
+        "id": "574cbdfa-4bde-4a8b-a582-c975c30783a9",
+        "name": "VR CONSULTORIA LTDA - ME",
+        "cnpj": "28048711000155",
+        "fee": 162
+      }
+    ]
+  },
+  {
+    "name": "Croverly Ferreira Domingues",
+    "cpf": "***558831**",
+    "companies": [
+      {
+        "id": "e9a47af5-5fa8-44e4-8058-da1429660260",
+        "name": "HOKMA ELETROMONTAGEM LTDA",
+        "cnpj": "41912131000122",
+        "fee": 551.97
+      },
+      {
+        "id": "183d2e36-cf1a-4708-a656-1750a39e7f51",
+        "name": "KROVER ENGENHARIA E SERVICOS LTDA ME",
+        "cnpj": "18640823000147",
+        "fee": 963.1
+      },
+      {
+        "id": "574cbdfa-4bde-4a8b-a582-c975c30783a9",
+        "name": "VR CONSULTORIA LTDA - ME",
+        "cnpj": "28048711000155",
+        "fee": 162
+      }
+    ]
+  },
+  {
+    "name": "Emilio Santiago Costa Nunes",
+    "cpf": "***076331**",
+    "companies": [
+      {
+        "id": "a8066e49-0a12-4f67-bd71-b7f2fce055a5",
+        "name": "LAJES MORADA LTDA",
+        "cnpj": "12301939000175",
+        "fee": 1138.48
+      },
+      {
+        "id": "ae96ded5-e2dc-42c2-bdb1-4e3c5e0c2298",
+        "name": "LAJES NUNES LTDA",
+        "cnpj": "07205272000177",
+        "fee": 3036
+      },
+      {
+        "id": "61346d91-1fd4-41bf-9567-bab696f9475e",
+        "name": "NUNES MOTA AGROPECUARIA LTDA",
+        "cnpj": "47110033000158",
+        "fee": 322.5
+      }
+    ]
+  },
+  {
+    "name": "Sther da Fonseca Martins Goncalves",
+    "cpf": "***186731**",
+    "companies": [
+      {
+        "id": "97520bbf-d33c-4c71-a9fc-a817031b47a4",
+        "name": "MARTINS MONTAGEM INDUSTRIAL LTDA",
+        "cnpj": "10815797000139",
+        "fee": 0
+      },
+      {
+        "id": "89e24204-fd0e-41aa-98ff-fce5a1888fe3",
+        "name": "MG ALTERNATIVA SOLUCAO SERVICOS INDUSTRIAIS LTDA",
+        "cnpj": "20055300000185",
+        "fee": 0
+      },
+      {
+        "id": "61917784-8839-44c3-926e-732a1efb4849",
+        "name": "SG MARTINS MONTAGEM INDUSTRIAL LTDA",
+        "cnpj": "14757445000125",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Decio Caetano Vieira Filho",
+    "cpf": "***295151**",
+    "companies": [
+      {
+        "id": "7b1cafa1-6cfb-45c6-9bb7-c3cad5451f0b",
+        "name": "MURANO ADMINISTRACAO E PARTICIPACOES LTDA",
+        "cnpj": "07161743000192",
+        "fee": 4244.67
+      },
+      {
+        "id": "eb3ee3ca-48c8-42d0-b4c3-65f1b9b5064f",
+        "name": "TCC COMERCIO DE CARTOES LTDA",
+        "cnpj": "06982561000110",
+        "fee": 0
+      },
+      {
+        "id": "cca5abc2-a34f-4a8c-86ee-f48dab227a91",
+        "name": "TSD DISTRIBUIDORA DE CARTOES LTDA",
+        "cnpj": "04620897000107",
+        "fee": 4563.02
+      }
+    ]
+  },
+  {
+    "name": "Bruna Carolina Albino da Silva Tomassini",
+    "cpf": "***732068**",
+    "companies": [
+      {
+        "id": "ed7f82bd-2c9b-466e-bac3-e960ab298bf3",
+        "name": "PLX INDUSTRIA E COMERCIO LTDA",
+        "cnpj": "20602312000182",
+        "fee": 0
+      },
+      {
+        "id": "d36ad262-f132-4270-b7d9-346a3691ed1a",
+        "name": "POLIMAX BRASIL COBERTURAS E REVESTIMENTOS LTDA",
+        "cnpj": "11571144000114",
+        "fee": 0
+      },
+      {
+        "id": "e7d6264f-896a-4f37-85f0-513a17d42827",
+        "name": "POLIMAX BRASIL LTDA",
+        "cnpj": "10923592000177",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Edson Gomes",
+    "cpf": "***068888**",
+    "companies": [
+      {
+        "id": "b014406f-6497-49b2-bf03-483353ae99a0",
+        "name": "ACTION SERVICOS INDUSTRIAIS LTDA",
+        "cnpj": "45132444000119",
+        "fee": 12143.72
+      },
+      {
+        "id": "95aebfeb-009c-4256-ab6e-9b18676de7ad",
+        "name": "M-SERVICE SOLUCOES INDUSTRIAIS LTDA",
+        "cnpj": "35940273000109",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "ONIX ADMINISTRACAO E PARTICIPACOES EM EMPRESAS LTDA",
+    "cpf": "08275345000160",
+    "companies": [
+      {
+        "id": "e170749f-0204-4857-ad1f-66933e0dbbfe",
+        "name": "AGROPECUARIA ADM LTDA",
+        "cnpj": "23627669000103",
+        "fee": 537.5
+      },
+      {
+        "id": "4a8d09b1-54be-4d9d-ad7d-e765c29608e4",
+        "name": "AGROPECUARIA SCA LTDA",
+        "cnpj": "23627576000189",
+        "fee": 537.5
+      }
+    ]
+  },
+  {
+    "name": "IZA ASSESSORIA CORPORATIVA S/S LTDA",
+    "cpf": "07601934000128",
+    "companies": [
+      {
+        "id": "e170749f-0204-4857-ad1f-66933e0dbbfe",
+        "name": "AGROPECUARIA ADM LTDA",
+        "cnpj": "23627669000103",
+        "fee": 537.5
+      },
+      {
+        "id": "4a8d09b1-54be-4d9d-ad7d-e765c29608e4",
+        "name": "AGROPECUARIA SCA LTDA",
+        "cnpj": "23627576000189",
+        "fee": 537.5
+      }
+    ]
+  },
+  {
+    "name": "William Bonifacio Peixoto",
+    "cpf": "***199641**",
+    "companies": [
+      {
+        "id": "8d125b22-fa6d-4b86-bcc3-4795a60f2096",
+        "name": "AMAGU FESTAS LTDA",
+        "cnpj": "40888507000148",
+        "fee": 759
+      },
+      {
+        "id": "888b75da-b434-4a48-a929-cfe422033b53",
+        "name": "SHARKSAPACE GASTRO PARK LTDA",
+        "cnpj": "60731909000141",
+        "fee": 759
+      }
+    ]
+  },
+  {
+    "name": "Jullyana Mendonca Rodrigues Silva",
+    "cpf": "***640431**",
+    "companies": [
+      {
+        "id": "dfc1df26-e264-4fec-b427-effcda2e6dd4",
+        "name": "C.R.J MANUTENCAO EM AR CONDICIONADO",
+        "cnpj": "37029034000119",
+        "fee": 275.98
+      },
+      {
+        "id": "692166ce-e85d-4436-9714-07fc9891c315",
+        "name": "JULLYANA MENDONCA RODRIGUES SILVA",
+        "cnpj": "35655819000171",
+        "fee": 275.98
+      }
+    ]
+  },
+  {
+    "name": "Rubens Caetano Vieira",
+    "cpf": "***655271**",
+    "companies": [
+      {
+        "id": "f91b80a1-946f-47a9-a786-f0db56aa33f6",
+        "name": "CAETANO E FILHOS MAQUINAS LTDA",
+        "cnpj": "57112242000194",
+        "fee": 0
+      },
+      {
+        "id": "017b4699-5303-4830-9015-70354bf6e636",
+        "name": "CAETANO VIEIRA MAQUINAS LTDA",
+        "cnpj": "61749715000136",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Heronides Cesario da Silva",
+    "cpf": "***203761**",
+    "companies": [
+      {
+        "id": "06b604d4-a3d2-4e5a-8716-169bde1dceb3",
+        "name": "CAGI INDUSTRIA DE ROUPAS LTDA",
+        "cnpj": "25132963000170",
+        "fee": 506
+      },
+      {
+        "id": "eea670cd-6f00-4a0a-9425-aeed5d3fc233",
+        "name": "P.A. INDUSTRIA DE ROUPAS LTDA ME",
+        "cnpj": "06990595000156",
+        "fee": 506
+      }
+    ]
+  },
+  {
+    "name": "Lindaura Dantas Cesario",
+    "cpf": "***664101**",
+    "companies": [
+      {
+        "id": "06b604d4-a3d2-4e5a-8716-169bde1dceb3",
+        "name": "CAGI INDUSTRIA DE ROUPAS LTDA",
+        "cnpj": "25132963000170",
+        "fee": 506
+      },
+      {
+        "id": "eea670cd-6f00-4a0a-9425-aeed5d3fc233",
+        "name": "P.A. INDUSTRIA DE ROUPAS LTDA ME",
+        "cnpj": "06990595000156",
+        "fee": 506
+      }
+    ]
+  },
+  {
+    "name": "Sergio Tomio Okazima",
+    "cpf": "***803538**",
+    "companies": [
+      {
+        "id": "177369ad-808a-4633-8edc-42583d3ee833",
+        "name": "CASA NOVA TINTAS LTDA",
+        "cnpj": "48254400000150",
+        "fee": 759
+      },
+      {
+        "id": "f1b01a43-38b8-4521-94cf-6a2b6087c80e",
+        "name": "COLLOR GEL COMERCIO E INDUSTRIA DE",
+        "cnpj": "17190386000144",
+        "fee": 1518
+      }
+    ]
+  },
+  {
+    "name": "Liza Perillo Magalhaes de Sa Terra Hochmuller",
+    "cpf": "***612861**",
+    "companies": [
+      {
+        "id": "60096228-dc38-4c39-831e-b95fc78d1c66",
+        "name": "CEDRO AGRO LTDA",
+        "cnpj": "26763165000109",
+        "fee": 0
+      },
+      {
+        "id": "1f759ac5-a12f-4791-a9e1-773945260670",
+        "name": "JPL AGROPECUARIA LTDA",
+        "cnpj": "12269010000106",
+        "fee": 4346.3
+      }
+    ]
+  },
+  {
+    "name": "Pedro Perillo Magalhaes Disconzzi de Sa",
+    "cpf": "***310641**",
+    "companies": [
+      {
+        "id": "60096228-dc38-4c39-831e-b95fc78d1c66",
+        "name": "CEDRO AGRO LTDA",
+        "cnpj": "26763165000109",
+        "fee": 0
+      },
+      {
+        "id": "1f759ac5-a12f-4791-a9e1-773945260670",
+        "name": "JPL AGROPECUARIA LTDA",
+        "cnpj": "12269010000106",
+        "fee": 4346.3
+      }
+    ]
+  },
+  {
+    "name": "Pablio Matos Milhomem",
+    "cpf": "***352521**",
+    "companies": [
+      {
+        "id": "8fe85a29-d159-43dd-8874-f85da9375e32",
+        "name": "CENTRO MEDICO MILHOMEM LTDA",
+        "cnpj": "39875746000184",
+        "fee": 1518
+      },
+      {
+        "id": "ae6f5b9a-532b-4306-92cc-cb26950d5022",
+        "name": "PM ADMINISTRACAO E SERVICOS LTDA",
+        "cnpj": "46011869000132",
+        "fee": 1001.95
+      }
+    ]
+  },
+  {
+    "name": "Fernanda Covas do Vale",
+    "cpf": "***342041**",
+    "companies": [
+      {
+        "id": "5c1f28c9-212d-4038-ae1d-65ed06b0c617",
+        "name": "COVALE USINAGEM INDUSTRIA E COMERCIO",
+        "cnpj": "31319248000143",
+        "fee": 1525.86
+      },
+      {
+        "id": "b7e50813-4cf2-4e39-8d63-faff187524be",
+        "name": "COVAS SERVICOS DE PINTURAS LTDA",
+        "cnpj": "30836248000158",
+        "fee": 379.5
+      }
+    ]
+  },
+  {
+    "name": "Maria Cristina Alves Pereira",
+    "cpf": "***283418**",
+    "companies": [
+      {
+        "id": "9156ed38-ac9d-4068-97f4-9426f9f1dac4",
+        "name": "CRYSTAL PARTICIPACOES LTDA",
+        "cnpj": "13381861000109",
+        "fee": 0
+      },
+      {
+        "id": "ea06b1b8-077f-4d84-83dc-cd134f7a9032",
+        "name": "KOPA REVESTIMENTOS DE MADEIRAS LTDA",
+        "cnpj": "34127552000187",
+        "fee": 1518
+      }
+    ]
+  },
+  {
+    "name": "Angelina Tormin Mundim",
+    "cpf": "***675481**",
+    "companies": [
+      {
+        "id": "48fd6593-adec-447b-91db-9ad7847daaf5",
+        "name": "D'ANGE COMERCIO DE BICHO DE PELUCIA",
+        "cnpj": "33660643000110",
+        "fee": 759
+      },
+      {
+        "id": "86f4d91a-ec96-4e9b-b92e-63da2a2e6ce8",
+        "name": "D'ANGE2 COMERCIO DE BICHO DE PELUCIA",
+        "cnpj": "52474052000101",
+        "fee": 759
+      }
+    ]
+  },
+  {
+    "name": "Isadora Rosal Dantas Disconsi de Sa",
+    "cpf": "***379131**",
+    "companies": [
+      {
+        "id": "7308bef0-c3b9-4e88-8dfc-d0245f52b97c",
+        "name": "DANTAS DE SA SAUDE LTDA",
+        "cnpj": "40499234000140",
+        "fee": 0
+      },
+      {
+        "id": "1d455ed8-2b55-4b08-82db-3a5b16664685",
+        "name": "IF PARTICIPACOES EMPRESARIAIS LTDA",
+        "cnpj": "11469393000101",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Tereza Cristina da Silva Paes Ferreira",
+    "cpf": "***938656**",
+    "companies": [
+      {
+        "id": "14336b6b-46b8-4169-a572-2db656b4c7a8",
+        "name": "DEL PAPA ARQUITETURA LTDA",
+        "cnpj": "09277832000124",
+        "fee": 577.85
+      },
+      {
+        "id": "6b389600-328d-462a-a26b-740d77625364",
+        "name": "PAES AGROPECUARIA LTDA",
+        "cnpj": "59494281000129",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Rafael Roriz de Carvalho",
+    "cpf": "***240221**",
+    "companies": [
+      {
+        "id": "3bd17681-6880-476a-83a5-efdb2ad8f329",
+        "name": "ELETROSOL ENERGIA SOLAR LTDA",
+        "cnpj": "36779794000180",
+        "fee": 322.5
+      },
+      {
+        "id": "9e424064-7d0d-46a2-9996-782599c51913",
+        "name": "ELETROSOL SOLUCOES EM ENERGIA LTDA",
+        "cnpj": "58368299000111",
+        "fee": 322.5
+      }
+    ]
+  },
+  {
+    "name": "Filipi Santos Peixoto",
+    "cpf": "***631051**",
+    "companies": [
+      {
+        "id": "943c4c68-45b8-414f-8dd3-097484aaa2ff",
+        "name": "FUTURA AGROPECUARIA LTDA",
+        "cnpj": "50344149000166",
+        "fee": 300
+      },
+      {
+        "id": "5f7c0c62-ffa1-486f-a40d-e2d9183427d8",
+        "name": "HOLDING BOM FUTURO LTDA",
+        "cnpj": "50156789000142",
+        "fee": 300
+      }
+    ]
+  },
+  {
+    "name": "Garibaldi Adriano Neto",
+    "cpf": "***927021**",
+    "companies": [
+      {
+        "id": "199a1d9a-e92a-4170-b813-e9dff65196a5",
+        "name": "GARIBALDI ADRIANO ADMINISTRACAO E PARTICIPACOES LTDA",
+        "cnpj": "62288855000117",
+        "fee": 0
+      },
+      {
+        "id": "d346239a-9c52-41f8-a740-ba6dd85baef4",
+        "name": "MARIAH PARTICIPACOES LTDA",
+        "cnpj": "58454014000165",
+        "fee": 3036
+      }
+    ]
+  },
+  {
+    "name": "Gilberto Rodrigues Martins Filho",
+    "cpf": "***400211**",
+    "companies": [
+      {
+        "id": "023548e1-a9e3-431b-9756-0cd8ba6a63ff",
+        "name": "GRM MECANICA INDUSTRIAL LTDA",
+        "cnpj": "07401536000168",
+        "fee": 0
+      },
+      {
+        "id": "c0e5bd21-5dd1-46cc-898d-b6a4b9001446",
+        "name": "SAO FRANCCISCO AGROPECUARIA LTDA",
+        "cnpj": "50632097000123",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Fabiano Evangelista de Sousa",
+    "cpf": "***238041**",
+    "companies": [
+      {
+        "id": "4f78dbc7-750b-4ec9-a73d-0869684bf66b",
+        "name": "IMOBILIARIS TIMES LTDA",
+        "cnpj": "50093807000194",
+        "fee": 0
+      },
+      {
+        "id": "0502041f-05a1-43ed-8459-bd349df8b0e9",
+        "name": "TIMES NEGOCIOS IMOBILIARIOS LTDA ME",
+        "cnpj": "18383453000100",
+        "fee": 1130.3
+      }
+    ]
+  },
+  {
+    "name": "Rafael Belem Felipe",
+    "cpf": "***551261**",
+    "companies": [
+      {
+        "id": "4f78dbc7-750b-4ec9-a73d-0869684bf66b",
+        "name": "IMOBILIARIS TIMES LTDA",
+        "cnpj": "50093807000194",
+        "fee": 0
+      },
+      {
+        "id": "0502041f-05a1-43ed-8459-bd349df8b0e9",
+        "name": "TIMES NEGOCIOS IMOBILIARIOS LTDA ME",
+        "cnpj": "18383453000100",
+        "fee": 1130.3
+      }
+    ]
+  },
+  {
+    "name": "Mario Ferreira da Silva Neto",
+    "cpf": "***250841**",
+    "companies": [
+      {
+        "id": "7f71344a-2d0a-4dbe-85ae-94f87415020b",
+        "name": "M NETO ASSESSORIA EMPRESARIAL LTDA",
+        "cnpj": "11914321000118",
+        "fee": 0
+      },
+      {
+        "id": "24ee743e-768a-4d76-bc84-ce7174577e32",
+        "name": "MARIO NETO SOCIEDADE INDIVIDUAL DE",
+        "cnpj": "60455818000120",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Marcos Adriano Pires",
+    "cpf": "***284071**",
+    "companies": [
+      {
+        "id": "d3a203cf-1e94-476a-8e44-12e4112755dc",
+        "name": "M.M LANCHES LTDA",
+        "cnpj": "61050265000199",
+        "fee": 759
+      },
+      {
+        "id": "c3d76a06-a85e-4887-b53e-e3c01a5c7ece",
+        "name": "RAMAYOLE CASA DOS SALGADOS EIRELI - ME",
+        "cnpj": "20878163000189",
+        "fee": 759
+      }
+    ]
+  },
+  {
+    "name": "Taissa Tormin Mundim",
+    "cpf": "***294401**",
+    "companies": [
+      {
+        "id": "6869b050-94ca-428e-83f1-36a81e613ba4",
+        "name": "MARO - INVESTIMENTOS E PARTICIPACOES S/A",
+        "cnpj": "14782641000150",
+        "fee": 2879.9
+      },
+      {
+        "id": "8545268d-d93e-42ea-99c0-4110f22f6929",
+        "name": "MUNDIM SA E GUIMARAES ADVOGADOS ASSOCIADOS S/S",
+        "cnpj": "07211566000101",
+        "fee": 2194.11
+      }
+    ]
+  },
+  {
+    "name": "Janilton Fonseca Martins",
+    "cpf": "***218641**",
+    "companies": [
+      {
+        "id": "97520bbf-d33c-4c71-a9fc-a817031b47a4",
+        "name": "MARTINS MONTAGEM INDUSTRIAL LTDA",
+        "cnpj": "10815797000139",
+        "fee": 0
+      },
+      {
+        "id": "89e24204-fd0e-41aa-98ff-fce5a1888fe3",
+        "name": "MG ALTERNATIVA SOLUCAO SERVICOS INDUSTRIAIS LTDA",
+        "cnpj": "20055300000185",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Claudenir Barbosa",
+    "cpf": "***267201**",
+    "companies": [
+      {
+        "id": "f20e50fa-9627-44a5-aae7-a8dcf88270f2",
+        "name": "MED ADMINISTRACAO E PARTICIPACOES EM EMPRESA LTDA",
+        "cnpj": "25348661000133",
+        "fee": 0
+      },
+      {
+        "id": "d10abcf7-a83d-4642-8d20-dd0ed7eea667",
+        "name": "MEDNUTRITION INDUSTRIA FARMACEUTICA E ALIMENTICIA",
+        "cnpj": "11635599000156",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Flavia de Morais Santana Caetano",
+    "cpf": "***562731**",
+    "companies": [
+      {
+        "id": "7b1cafa1-6cfb-45c6-9bb7-c3cad5451f0b",
+        "name": "MURANO ADMINISTRACAO E PARTICIPACOES LTDA",
+        "cnpj": "07161743000192",
+        "fee": 4244.67
+      },
+      {
+        "id": "cca5abc2-a34f-4a8c-86ee-f48dab227a91",
+        "name": "TSD DISTRIBUIDORA DE CARTOES LTDA",
+        "cnpj": "04620897000107",
+        "fee": 4563.02
+      }
+    ]
+  },
+  {
+    "name": "Geniel Oliveira de Queluz",
+    "cpf": "***857231**",
+    "companies": [
+      {
+        "id": "174cd5bf-6795-4741-855e-3937254d17e1",
+        "name": "NUTRYMED INDUSTRIA FARMACEUTICA E ALIMENTICIA LTDA",
+        "cnpj": "40624113000182",
+        "fee": 2276.85
+      },
+      {
+        "id": "3c59be98-91bd-4a00-9047-48b24ff7ee9d",
+        "name": "QUELUZ ADMINISTRACAO LTDA",
+        "cnpj": "45859806000178",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Robson de Lucca",
+    "cpf": "***929179**",
+    "companies": [
+      {
+        "id": "0ca8e050-0c11-4124-865e-42d8380354ad",
+        "name": "PET SHOP E CAOPANHIA LTDA",
+        "cnpj": "10481804000103",
+        "fee": 1518
+      },
+      {
+        "id": "e37b0852-5741-482b-ba5d-79966df15325",
+        "name": "RL CONSULTORIA FINANCEIRA LTDA",
+        "cnpj": "44682471000100",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Jose Roberto da Silva",
+    "cpf": "***363458**",
+    "companies": [
+      {
+        "id": "ed7f82bd-2c9b-466e-bac3-e960ab298bf3",
+        "name": "PLX INDUSTRIA E COMERCIO LTDA",
+        "cnpj": "20602312000182",
+        "fee": 0
+      },
+      {
+        "id": "e7d6264f-896a-4f37-85f0-513a17d42827",
+        "name": "POLIMAX BRASIL LTDA",
+        "cnpj": "10923592000177",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Alexandre Fernandes Chaer",
+    "cpf": "***578601**",
+    "companies": [
+      {
+        "id": "098c0b67-7385-48aa-a40b-a3d62f6153ae",
+        "name": "SOLO COMERCIO DE PRODUTOS AGROPECUARIOS LTDA",
+        "cnpj": "08641878000118",
+        "fee": 0
+      },
+      {
+        "id": "206c8841-6a33-4519-851a-ef4b5bf6c95a",
+        "name": "SOLO COMERCIO DE PRODUTOS AGROPECUARIOS LTDA - FILIAL",
+        "cnpj": "08641878000207",
+        "fee": 0
+      }
+    ]
+  },
+  {
+    "name": "Leonardo Fernandes Chaer",
+    "cpf": "***680381**",
+    "companies": [
+      {
+        "id": "098c0b67-7385-48aa-a40b-a3d62f6153ae",
+        "name": "SOLO COMERCIO DE PRODUTOS AGROPECUARIOS LTDA",
+        "cnpj": "08641878000118",
+        "fee": 0
+      },
+      {
+        "id": "206c8841-6a33-4519-851a-ef4b5bf6c95a",
+        "name": "SOLO COMERCIO DE PRODUTOS AGROPECUARIOS LTDA - FILIAL",
+        "cnpj": "08641878000207",
+        "fee": 0
+      }
+    ]
+  }
+]

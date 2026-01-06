@@ -18,7 +18,8 @@ import {
   FolderOpen,
   AlertTriangle,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Banknote
 } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 
@@ -37,6 +38,21 @@ const BankFolderImport = () => {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ImportResult[]>([]);
+  const [autoPosting, setAutoPosting] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>('2025-01');
+
+  const monthRange = (() => {
+    if (!selectedMonth) return null;
+    const [y, m] = selectedMonth.split('-').map(Number);
+    if (!y || !m) return null;
+    const start = new Date(Date.UTC(y, m - 1, 1));
+    const end = new Date(Date.UTC(y, m, 0));
+    return {
+      startStr: start.toISOString().split('T')[0],
+      endStr: end.toISOString().split('T')[0],
+      label: `${String(start.getUTCDate()).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y} a ${String(end.getUTCDate()).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`
+    };
+  })();
 
   const handleOfxImport = async () => {
     if (!ofxFiles || ofxFiles.length === 0) {
@@ -58,7 +74,7 @@ const BankFolderImport = () => {
 
         // Chamar Edge Function para processar OFX
         const { data, error } = await supabase.functions.invoke('parse-ofx-statement', {
-          body: { ofxContent: text }
+          body: { ofx_content: text }
         });
 
         if (error) throw error;
@@ -162,6 +178,79 @@ const BankFolderImport = () => {
 
     setProgress(100);
     toast.success("Importação em lote concluída!");
+  };
+
+  const autoPostBankFees = async () => {
+    setAutoPosting(true);
+    try {
+      if (!monthRange) {
+        toast.error('Selecione o mês de trabalho.');
+        return;
+      }
+
+      const { data: txs, error } = await supabase
+        .from('bank_transactions')
+        .select('id, amount, transaction_date, description')
+        .lt('amount', 0)
+        .or('description.ilike.%TARIFA%,description.ilike.%LIQUIDACAO%')
+        .gte('transaction_date', monthRange.startStr)
+        .lte('transaction_date', monthRange.endStr)
+        .order('transaction_date', { ascending: true });
+
+      if (error) throw error;
+
+      if (!txs || txs.length === 0) {
+        toast.info('Nenhuma tarifa bancária encontrada no período.');
+        return;
+      }
+
+      let created = 0;
+      for (const tx of txs) {
+        const { data: existing } = await supabase
+          .from('accounting_entries')
+          .select('id')
+          .eq('reference_type', 'bank_transaction')
+          .eq('reference_id', String(tx.id))
+          .maybeSingle();
+
+        if (existing?.id) continue; // já lançado
+
+        const { data, error: fnError } = await supabase.functions.invoke('smart-accounting', {
+          body: {
+            action: 'create_entry',
+            entry_type: 'pagamento_despesa',
+            amount: Math.abs(Number(tx.amount || 0)),
+            date: tx.transaction_date,
+            description: tx.description || 'Tarifa Bancária',
+            reference_type: 'bank_transaction',
+            reference_id: String(tx.id),
+            expense_category: 'tarifas', // 4.1.3.02
+            metadata: {
+              source_module: 'BankFolderImport',
+              origin_context: 'auto_post_bank_fees',
+              created_at: new Date().toISOString(),
+            },
+          },
+        });
+
+        if (fnError) {
+          console.error('Erro ao criar lançamento de tarifa:', fnError);
+          continue;
+        }
+        if (data?.success) created++;
+      }
+
+      if (created > 0) {
+        toast.success(`Lançamentos de tarifas criados: ${created}`);
+      } else {
+        toast.info('Nenhuma tarifa pendente para lançar.');
+      }
+    } catch (err: any) {
+      console.error('Falha ao lançar tarifas:', err);
+      toast.error(err?.message || 'Erro ao lançar tarifas bancárias');
+    } finally {
+      setAutoPosting(false);
+    }
   };
 
   const clearAll = () => {
@@ -331,6 +420,50 @@ const BankFolderImport = () => {
                 </p>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Lançar tarifas bancárias automaticamente */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5" />
+              Tarifas Bancárias
+            </CardTitle>
+            <CardDescription>
+              Cria lançamentos contábeis para tarifas de cobrança (ex: TARIFA COM R LIQUIDACAO-COBxxxx) dentro do mês selecionado.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="tarifa-month">Mês de trabalho</Label>
+              <Input
+                id="tarifa-month"
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                disabled={autoPosting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Janela: {monthRange?.label || 'Selecione um mês'}
+              </p>
+            </div>
+            <Button
+              onClick={autoPostBankFees}
+              disabled={autoPosting}
+              className="w-full"
+              variant="secondary"
+            >
+              {autoPosting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Banknote className="h-4 w-4 mr-2" />
+              )}
+              Lançar tarifas (mês selecionado)
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Inclui cobranças vinculadas a LIQUIDACAO/COB. Evita duplicar se o lançamento já existir.
+            </p>
           </CardContent>
         </Card>
 

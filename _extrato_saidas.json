@@ -1,0 +1,762 @@
+[
+  {
+    "date": "2025-01-02",
+    "desc": "PAGAMENTO PIX-PIX_DEB   48656488104 SERGIO CARNEIRO LEAO",
+    "amount": 13698.01
+  },
+  {
+    "date": "2025-01-02",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000005",
+    "amount": 9.45
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 328.0
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 328.0
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "LIQUIDACAO BOLETO-          44422513000166 FACULDADE DE MEDICINA DE ITUMBIARA LTDA",
+    "amount": 10836.96
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA",
+    "amount": 11000.0
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "PAGAMENTO PIX-PIX_DEB   11072084000195 IMPERMEAVEL DISTRIBUIDORA DE IMPERMEABILIZANTES EIRELI",
+    "amount": 1964.0
+  },
+  {
+    "date": "2025-01-03",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000007",
+    "amount": 13.23
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "MANUTENCAO DE TITULOS-COB000005",
+    "amount": 9.45
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "amount": 266.0
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO",
+    "amount": 504.53
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO",
+    "amount": 457.12
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO",
+    "amount": 10843.02
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO",
+    "amount": 1420.08
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "PAGAMENTO PIX-PIX_DEB   48541079104 MIGUEL CARVALHO DE OLIVEIRA",
+    "amount": 220.0
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75619318168 FABRICIO SOARES BOMFIM JUNIOR",
+    "amount": 3800.0
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C",
+    "amount": 608.61
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "CESTA DE RELACIONAMENTO-",
+    "amount": 59.28
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-06",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000021",
+    "amount": 39.69
+  },
+  {
+    "date": "2025-01-07",
+    "desc": "PAGAMENTO PIX-PIX_DEB   97163988168 Vonoria AmÃ©lia da ConceiÃ§Ã£o",
+    "amount": 380.0
+  },
+  {
+    "date": "2025-01-07",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "amount": 55.0
+  },
+  {
+    "date": "2025-01-07",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-08",
+    "desc": "MANUTENCAO DE TITULOS-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-08",
+    "desc": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA",
+    "amount": 70000.0
+  },
+  {
+    "date": "2025-01-08",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000005",
+    "amount": 9.45
+  },
+  {
+    "date": "2025-01-09",
+    "desc": "PAGAMENTO PIX-PIX_DEB   10798029000114 A F DE OLIVEIRA - FRANCA LOCACOES EIRELI",
+    "amount": 1709.4
+  },
+  {
+    "date": "2025-01-09",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000003",
+    "amount": 5.67
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "MANUTENCAO DE TITULOS-COB000006",
+    "amount": 11.34
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 402.88
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 402.88
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   76625974153 ANTONIO LEANDRO DA SILVA FILHO",
+    "amount": 800.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   79512801191 ANDREA FERREIRA FAGUNDES QUEIROZ",
+    "amount": 1518.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02926538162 CORACI ALINE DOS SANTOS",
+    "amount": 1617.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE",
+    "amount": 1575.72
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          26659060000104 OBJETIVA EDICOES EMPRESARIAIS LTDA",
+    "amount": 423.6
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          00910509001305 THOMSON REUTERS BRAS",
+    "amount": 2278.8
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          12499520000170 CLICKSIGN GESTAO DE DOCUM SA",
+    "amount": 69.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          07296500000161 ADV SYSTEM ELEVADORES LTDA",
+    "amount": 200.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "amount": 875.59
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1",
+    "amount": 370.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 39.99
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   05666515640 ALEXSSANDRA FERREIRA RAMOS",
+    "amount": 3773.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "amount": 6000.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 6000.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          01418847000153 CAIXA DE ASSISTENCIA DOS ADVOGADOS DE GOIAS",
+    "amount": 4295.62
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 39.99
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 50.99
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 50.99
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 106.58
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          36859577000109 L ARGENT FACTORING FOMENTO MERCANTIL LTD",
+    "amount": 765.39
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-X155      03795072000160 X155",
+    "amount": 121.25
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "LIQUIDACAO BOLETO-          24989276000102 MUNDI CONSCIENTE SQUARE",
+    "amount": 1471.41
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C",
+    "amount": 312.21
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C",
+    "amount": 312.21
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 35.98
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 5731.03
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "amount": 10500.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX SICREDI-CX387324  04947719176 DANIELLE RODRIGUES DE OLIVEIRA",
+    "amount": 3465.0
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 200.5
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "PAGAMENTO PIX-PIX_DEB   05746859109 Tharson Diego Dias De Souza",
+    "amount": 399.51
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-10",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000029",
+    "amount": 54.81
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "PAGAMENTO PIX-PIX_DEB   99940892691 MARIA APARECIDA GOMES",
+    "amount": 160.0
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "DEB.CTA.FATURA-096541455",
+    "amount": 5756.25
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "PAGAMENTO PIX-PIX_DEB   05384518000190 AGUA PURA COM DISTRIBUIDORA LTDA",
+    "amount": 187.0
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "DEBITO CONVENIOS-VIVO      02558157000162 VIVO",
+    "amount": 137.68
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "PAGAMENTO PIX-PIX_DEB   43572456134 LUIZ ALVES TAVEIRA",
+    "amount": 96.0
+  },
+  {
+    "date": "2025-01-13",
+    "desc": "PAGAMENTO PIX-PIX_DEB   50464753000126 AMPLA SAUDE OCUPACIONAL",
+    "amount": 21.0
+  },
+  {
+    "date": "2025-01-14",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212650178 SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "amount": 90.0
+  },
+  {
+    "date": "2025-01-14",
+    "desc": "PAGAMENTO PIX-PIX_DEB   12962826865 ANDREA LEONE BASTOS",
+    "amount": 6000.0
+  },
+  {
+    "date": "2025-01-14",
+    "desc": "PAGAMENTO PIX-PIX_DEB   00834584506 ANDREIA",
+    "amount": 1500.0
+  },
+  {
+    "date": "2025-01-14",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000005",
+    "amount": 9.45
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "MANUTENCAO DE TITULOS-COB000004",
+    "amount": 7.56
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   71251537120 Lilian Moreira da Costa",
+    "amount": 1045.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a",
+    "amount": 920.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   82817375149 DEUZA RESENDE DE JESUS",
+    "amount": 1200.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "DEBITO CONVENIOS-TIMCEL-G  02421421000111 TIMCEL-G",
+    "amount": 132.17
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03924444102 Thaynara ConceiÃ§Ã£o de melo",
+    "amount": 1491.1
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "DEBITO ARRECADACAO-DARFC0385 00394460005887 DARFC0385",
+    "amount": 2232.28
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 1504.8
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          18191228000171 PJBANK PAGAMENTOS S A1",
+    "amount": 99.9
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA",
+    "amount": 1569.23
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          28408293000160 VERI SOLUCOES TECNOLOGICAS LTDA",
+    "amount": 418.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          37411535000165 SITTAX",
+    "amount": 865.86
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          50812771000151 AUTMAIS SOLUCOES E AUTOMACOES LTDA",
+    "amount": 222.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "DEBITO CONVENIOS-ALGARTE G 71208516000174 ALGARTE G",
+    "amount": 193.92
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "DEBITO CONVENIOS-PMGO-C    03795072000160 PMGO-C",
+    "amount": 3076.13
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          43961100000197 NB TECHNOLOGY LTDA",
+    "amount": 314.55
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   81875835172 ROSEMEIRE RODRIGUES",
+    "amount": 2508.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 4893.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva",
+    "amount": 1320.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   00360305000104 CAIXA ECONOMICA FEDERAL",
+    "amount": 2188.34
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          42977999000173 DATAUNIQUE TECH LTDA",
+    "amount": 1410.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          02872448000120 DEPARTAMENTO ESTADUAL DE TRANSITO",
+    "amount": 251.25
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          42711893000123 CONTUS TECNOLOGIA DA INFORMACAO LTDA",
+    "amount": 777.75
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA",
+    "amount": 106.23
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "LIQUIDACAO BOLETO-          14153062000148 CR SISTEMA E ANALISE EM ARQUIVOS MAGNETICOS LTDA",
+    "amount": 733.96
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "PAGAMENTO PIX-PIX_DEB   50364324000187 OUTSIDER CONSTRUTORA LTDA",
+    "amount": 1500.0
+  },
+  {
+    "date": "2025-01-15",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000007",
+    "amount": 13.23
+  },
+  {
+    "date": "2025-01-16",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000002",
+    "amount": 3.78
+  },
+  {
+    "date": "2025-01-17",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 311.63
+  },
+  {
+    "date": "2025-01-17",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 311.63
+  },
+  {
+    "date": "2025-01-17",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000004",
+    "amount": 7.56
+  },
+  {
+    "date": "2025-01-20",
+    "desc": "MANUTENCAO DE TITULOS-COB000020",
+    "amount": 37.8
+  },
+  {
+    "date": "2025-01-20",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000002",
+    "amount": 3.78
+  },
+  {
+    "date": "2025-01-21",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 411.64
+  },
+  {
+    "date": "2025-01-21",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 411.64
+  },
+  {
+    "date": "2025-01-22",
+    "desc": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "amount": 934.52
+  },
+  {
+    "date": "2025-01-22",
+    "desc": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA",
+    "amount": 73827.26
+  },
+  {
+    "date": "2025-01-22",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000005",
+    "amount": 9.45
+  },
+  {
+    "date": "2025-01-23",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 35.98
+  },
+  {
+    "date": "2025-01-23",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000004",
+    "amount": 7.56
+  },
+  {
+    "date": "2025-01-24",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 311.86
+  },
+  {
+    "date": "2025-01-24",
+    "desc": "PAGAMENTO PIX-PIX_DEB   43572456134 LUIZ ALVES TAVEIRA",
+    "amount": 96.0
+  },
+  {
+    "date": "2025-01-24",
+    "desc": "PAGAMENTO PIX-PIX_DEB   75212633168 Victor Hugo Leao",
+    "amount": 311.86
+  },
+  {
+    "date": "2025-01-24",
+    "desc": "LIQUIDACAO BOLETO-          01543032000104 EQUATORIAL GOIAS DISTR ENER SA",
+    "amount": 868.11
+  },
+  {
+    "date": "2025-01-24",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-27",
+    "desc": "PAGAMENTO PIX-PIX_DEB   41787134000181 DANIEL RODRIGUES RIBEIRO 70202638103",
+    "amount": 370.75
+  },
+  {
+    "date": "2025-01-27",
+    "desc": "PAGAMENTO PIX-PIX_DEB   23893032000169 AMPLA CONTABILIDADE LTDA",
+    "amount": 29289.39
+  },
+  {
+    "date": "2025-01-28",
+    "desc": "MANUTENCAO DE TITULOS-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-28",
+    "desc": "PAGAMENTO PIX-PIX_DEB   11869122000135 NOVA VISAO IMPORTS",
+    "amount": 1302.3
+  },
+  {
+    "date": "2025-01-28",
+    "desc": "PAGAMENTO PIX-PIX_DEB   10573521000191 PIX Marketplace",
+    "amount": 255.8
+  },
+  {
+    "date": "2025-01-28",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 81.46
+  },
+  {
+    "date": "2025-01-29",
+    "desc": "PAGAMENTO PIX-PIX_DEB   97163988168 Vonoria AmÃ©lia da ConceiÃ§Ã£o",
+    "amount": 210.0
+  },
+  {
+    "date": "2025-01-29",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "MANUTENCAO DE TITULOS-COB000001",
+    "amount": 1.89
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03924444102 Thaynara ConceiÃ§Ã£o de melo",
+    "amount": 2020.92
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02535864000133 VR BENEF. SERV. PROC. SA",
+    "amount": 600.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   00141198117 Fabiana Maria da silva MendonÃ§a",
+    "amount": 1194.77
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   05799682190 Taylane Belle Ferreira Saraiva",
+    "amount": 2180.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "LIQUIDACAO BOLETO-          03753088000100 CATHO ON LINE LTDA",
+    "amount": 178.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "amount": 435.45
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   71251537120 Lilian Moreira da Costa",
+    "amount": 1567.5
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 1813.22
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 2000.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "amount": 346.07
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "LIQUIDACAO BOLETO-          10636142000101 REDEMOB CONSORCIO",
+    "amount": 174.3
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX SICREDI-CX299815  03832285000115 SCALA CONTABILIDADE EIRELI",
+    "amount": 1000.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   81875835172 ROSEMEIRE RODRIGUES",
+    "amount": 3870.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "PAGAMENTO PIX-PIX_DEB   02073111106 JOSIMAR DOS SANTOS MOTA",
+    "amount": 2508.0
+  },
+  {
+    "date": "2025-01-30",
+    "desc": "LIQUIDACAO BOLETO-          36852259000108 CONDOMINIO DA GALERIA NACIONAL",
+    "amount": 346.07
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "PAGAMENTO PIX-PIX_DEB   16366409000166 CENTER LUZZ LTDA",
+    "amount": 421.5
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS",
+    "amount": 597.0
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "LIQUIDACAO BOLETO-          34813747000180 ONEFLOW SA",
+    "amount": 138.22
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS",
+    "amount": 296.0
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS",
+    "amount": 528.0
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "LIQUIDACAO BOLETO-          01015676000111 CONS REG CONTABILIDADE EST GOIAS",
+    "amount": 597.0
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "PAGAMENTO PIX-PIX_DEB   03788751169 NAYARA CRISTINA PEREIRA LEAO",
+    "amount": 3931.89
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "PAGAMENTO PIX-PIX_DEB   00360305000104 CAIXA ECONOMICA FEDERAL",
+    "amount": 834.46
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "PAGAMENTO PIX-PIX_DEB   82817375149 DEUZA RESENDE DE JESUS",
+    "amount": 5901.92
+  },
+  {
+    "date": "2025-01-31",
+    "desc": "TARIFA COM R LIQUIDACAO-COB000002",
+    "amount": 3.78
+  }
+]

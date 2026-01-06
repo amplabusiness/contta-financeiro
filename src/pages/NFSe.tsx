@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAccounting } from '@/hooks/useAccounting';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -180,6 +181,8 @@ interface CodigoServicoLC116 {
 
 export default function NFSe() {
   const { toast } = useToast();
+  // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
+  const { registrarHonorario, registrarDespesa } = useAccounting({ showToasts: false, sourceModule: 'NFSe' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('emitidas');
   const [nfses, setNfses] = useState<NFSe[]>([]);
@@ -360,6 +363,21 @@ export default function NFSe() {
         description: payload?.protocolo ? `Protocolo: ${payload.protocolo}` : 'Solicitação enviada',
       });
 
+      // LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+      // D: Clientes a Receber (1.1.2.01) - ativo aumenta
+      // C: Receita de Honorários (3.1.1.01) - receita aumenta
+      if (payload?.nfse_id && invoice.client_id) {
+        await registrarHonorario({
+          invoiceId: invoice.id,
+          clientId: invoice.client_id,
+          clientName: invoice.client?.name || 'Cliente',
+          amount: Number(invoice.amount),
+          competence: invoice.competence,
+          dueDate: invoice.due_date || new Date().toISOString().split('T')[0],
+          description: `NFS-e - Honorários ${invoice.competence}`,
+        });
+      }
+
       return payload?.nfse_id || true;
 
     } catch (error: any) {
@@ -493,9 +511,22 @@ export default function NFSe() {
       if (error) throw error;
 
       if (data?.success) {
+        // LANÇAMENTO CONTÁBIL OBRIGATÓRIO (Dr. Cícero - NBC TG 26)
+        // D: Despesa (4.x.x.xx) - custo aumenta
+        // C: Fornecedores a Pagar (2.1.x.xx) - passivo aumenta
+        await registrarDespesa({
+          expenseId: nfseTomada.id,
+          amount: nfseTomada.valor_servicos,
+          expenseDate: nfseTomada.data_emissao || new Date().toISOString().split('T')[0],
+          category: 'Serviços Terceiros',
+          description: `NFS-e ${nfseTomada.numero_nfse} - ${nfseTomada.prestador_razao_social || 'Fornecedor'}`,
+          supplierName: nfseTomada.prestador_razao_social || 'Fornecedor',
+          competence: nfseTomada.competencia || nfseTomada.data_emissao?.slice(0, 7),
+        });
+
         toast({
           title: 'NFS-e processada',
-          description: 'Conta a pagar criada com sucesso'
+          description: 'Conta a pagar e lançamento contábil criados'
         });
         loadData();
       } else {
