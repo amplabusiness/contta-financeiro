@@ -7,10 +7,10 @@
 | Métrica | Valor |
 |--------|-------|
 | Total de Tabelas | 16 |
-| Total de Registros | 9.234 |
+| Total de Registros | 26.922 |
 | Clientes | 219 |
 | Despesas | 535 |
-| Receita em Notas | R$ 136.821,59 |
+| Receita em Notas | R$ 1.246.164,39 |
 
 ## 📋 Tabelas Mapeadas
 
@@ -19,7 +19,7 @@
 **Propósito:** CRM - Gestão de relacionamento com clientes
 **Colunas:** 0
 
-### invoices (110 registros)
+### invoices (1391 registros)
 **Descrição:** Notas Fiscais Eletrônicas (RPS) emitidas
 **Propósito:** Faturamento - Emissão de RPS e recebimento
 **Colunas:** 0
@@ -39,7 +39,7 @@
 **Propósito:** Tesouraria - Controle de contas
 **Colunas:** 0
 
-### bank_transactions (1739 registros)
+### bank_transactions (2010 registros)
 **Descrição:** Movimentações de extrato bancário
 **Propósito:** Conciliação bancária automática
 **Colunas:** 0
@@ -49,17 +49,17 @@
 **Propósito:** Importação de extratos
 **Colunas:** 0
 
-### chart_of_accounts (635 registros)
+### chart_of_accounts (547 registros)
 **Descrição:** Plano de contas contábil
 **Propósito:** Estrutura contábil - Base para DRE e Balanço
 **Colunas:** 0
 
-### accounting_entries (1956 registros)
+### accounting_entries (8041 registros)
 **Descrição:** Lançamentos contábeis (diário)
 **Propósito:** Diário contábil - Partidas dobradas
 **Colunas:** 0
 
-### accounting_entry_lines (3910 registros)
+### accounting_entry_lines (14045 registros)
 **Descrição:** Linhas de débito/crédito dos lançamentos
 **Propósito:** Linhas do diário
 **Colunas:** 0
@@ -69,7 +69,7 @@
 **Propósito:** Departamentalização de custos
 **Colunas:** 0
 
-### recurring_expenses (0 registros)
+### recurring_expenses (4 registros)
 **Descrição:** Despesas que se repetem mensalmente
 **Propósito:** Automação de despesas mensais
 **Colunas:** 0

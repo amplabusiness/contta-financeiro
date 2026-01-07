@@ -1,6 +1,6 @@
 {
   "banco": "Ampla Contabilidade - Supabase PostgreSQL",
-  "dataMapeamento": "2026-01-07T03:20:12.280Z",
+  "dataMapeamento": "2026-01-07T16:41:39.192Z",
   "tabelas": {
     "clients": {
       "nome": "clients",
@@ -12,7 +12,7 @@
     },
     "invoices": {
       "nome": "invoices",
-      "totalRegistros": 110,
+      "totalRegistros": 1391,
       "descricao": "Notas Fiscais Eletrônicas (RPS) emitidas",
       "proposito": "Faturamento - Emissão de RPS e recebimento",
       "colunas": [],
@@ -44,7 +44,7 @@
     },
     "bank_transactions": {
       "nome": "bank_transactions",
-      "totalRegistros": 1739,
+      "totalRegistros": 2010,
       "descricao": "Movimentações de extrato bancário",
       "proposito": "Conciliação bancária automática",
       "colunas": [],
@@ -60,7 +60,7 @@
     },
     "chart_of_accounts": {
       "nome": "chart_of_accounts",
-      "totalRegistros": 635,
+      "totalRegistros": 547,
       "descricao": "Plano de contas contábil",
       "proposito": "Estrutura contábil - Base para DRE e Balanço",
       "colunas": [],
@@ -68,7 +68,7 @@
     },
     "accounting_entries": {
       "nome": "accounting_entries",
-      "totalRegistros": 1956,
+      "totalRegistros": 8041,
       "descricao": "Lançamentos contábeis (diário)",
       "proposito": "Diário contábil - Partidas dobradas",
       "colunas": [],
@@ -76,7 +76,7 @@
     },
     "accounting_entry_lines": {
       "nome": "accounting_entry_lines",
-      "totalRegistros": 3910,
+      "totalRegistros": 14045,
       "descricao": "Linhas de débito/crédito dos lançamentos",
       "proposito": "Linhas do diário",
       "colunas": [],
@@ -92,7 +92,7 @@
     },
     "recurring_expenses": {
       "nome": "recurring_expenses",
-      "totalRegistros": 0,
+      "totalRegistros": 4,
       "descricao": "Despesas que se repetem mensalmente",
       "proposito": "Automação de despesas mensais",
       "colunas": [],
@@ -223,10 +223,10 @@
   },
   "metricas": {
     "totalTabelas": 16,
-    "totalRegistros": 9234,
+    "totalRegistros": 26922,
     "totalClientes": 219,
     "totalDespesas": 535,
-    "totalReceitaNota": 136821.59000000003
+    "totalReceitaNota": 1246164.389999996
   },
   "dicionarioDados": {
     "clients": {
