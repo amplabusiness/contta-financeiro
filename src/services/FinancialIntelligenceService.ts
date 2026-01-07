@@ -53,17 +53,30 @@ export const FinancialIntelligenceService = {
      */
     async findRule(description: string): Promise<{code: string, name: string} | null> {
          try {
-             const { data } = await supabase.from('intelligence_rules').select('*');
-             if (!data) return null;
+             // Otimização: buscar apenas se a tabela existir e tiver dados
+             // Idealmente, deveríamos usar um RPC ou indexação, mas por enquanto, select all é arriscado se a tabela crescer
+             // Vamos filtrar pelo menos algo se possível, mas como é 'contains', é dificil no SQL simples sem Full Text Search
+             // Entao vamos manter o select all MAS silenciar o erro se a tabela não existir
+             const { data, error } = await supabase.from('intelligence_rules').select('*');
+             if (error) throw error;
+             
+             if (!data || data.length === 0) return null;
 
              // Ordena por especificidade (match mais longo vence) -> opcional
-             const match = data.find(rule => description.toUpperCase().includes(rule.pattern.toUpperCase()));
+             const match = data
+                .filter(rule => description.toUpperCase().includes(rule.pattern.toUpperCase()))
+                .sort((a, b) => b.pattern.length - a.pattern.length)[0];
+
              if (match) {
-                 await supabase.rpc('increment_rule_usage', { rule_id: match.id }).catch(() => {}); // Opcional
+                 // Non-blocking increment
+                 supabase.rpc('increment_rule_usage', { rule_id: match.id }).then(({ error }) => {
+                     if (error) console.warn('Failed to increment rule usage:', error.message);
+                 });
+                 
                  return { code: match.account_code, name: match.account_name || 'Conta Aprendida' };
              }
          } catch (e) {
-             console.warn("Dr. Cicero (Memória): Tabela de regras não encontrada ou vazia.");
+             console.warn("Dr. Cicero (Memória): Tabela de regras não acessível ou vazia.", e);
          }
          return null;
     },
