@@ -1,12 +1,12 @@
 {
-  "name": "ampla-contabilidade",
+  "name": "contta-financeiro",
   "private": true,
   "version": "1.30.6",
-  "description": "Sistema financeiro de Contas a Pagar e Receber para empresas contábeis - Ampla Contabilidade",
+  "description": "Contta Financeiro - Sistema de Gestão Financeira e Contábil",
   "author": "Ampla Business <sergio@amplabusiness.com.br>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amplabusiness/data-bling-sheets-3122699b"
+    "url": "https://github.com/amplabusiness/contta-financeiro"
   },
   "type": "module",
   "scripts": {
