@@ -3187,3 +3187,56 @@ Criado relatório completo (`DEPENDENCY_AUDIT.md`) identificando:
 1. Remover dependências não utilizadas (`npm uninstall react-hot-toast ...`)
 2. Rodar `npm audit fix` para corrigir vulnerabilidades automáticas
 3. Avaliar substituição do pacote `xlsx` por alternativa segura
+
+---
+
+## Sessão 34 (07/01/2026) - Correção e Reclassificação de Pessoal (PJ/CLT) da Ampla
+
+### Contexto
+Identificação de que diversos pagamentos de pessoal (PJ e CLT) estavam sendo classificados incorretamente em "Outras Despesas Operacionais" (4.1.1.08) ou "Adiantamento de Sócios" (Ativo), distorcendo o DRE.
+O usuário forneceu a lista oficial de funcionários e prestadores de serviço da Ampla.
+
+### Alterações Realizadas
+
+1. **Reclassificação de Pessoal PJ (Prestadores de Serviço)**:
+   - Movido de `4.1.1.08` (Outras Despesas) e `1.1.3.x` (Adiant. Sócios) para `4.1.2.13.99` (Outros Terceirizados).
+   - **Daniel Rodrigues** (Fiscal): ~R$ 10.500,00 (Era classificado como Adiantamento de Sócio).
+   - **Rose** (DP): ~R$ 6.677,55.
+   - **Sueli Amaral** (Recebido por Danielle Rodrigues): ~R$ 3.668,77.
+   - **Alexssandra Ramos** (DP): ~R$ 2.733,39.
+   - **Tatiana** (DP): ~R$ 1.829,79.
+   - **Andrea Ferreira** (Adm): ~R$ 1.518,00.
+   - **Aline** (DP): ~R$ 1.438,23.
+   - **Taylane** (Fin): ~R$ 1.300,00.
+
+2. **Reclassificação de Pessoal CLT (Salários)**:
+   - Identificados pagamentos líquidos de salário em `4.1.1.08` e movidos para `4.1.1.01` (Salários e Ordenados).
+   - **Erick Fabricio**: R$ 4.000,00
+   - **Thaniny**: R$ 4.000,00
+   - **Amanda Ambrosio**: R$ 3.800,00
+   - **Josimar**: R$ 3.762,00
+   - **Thaynara**: R$ 3.727,75
+   - **Luciane Rosa**: R$ 3.300,00
+   - **Deuza**: R$ 3.000,00
+   - **Jessyca de Freitas**: R$ 3.700,00
+   - **Luciana**: R$ 3.500,00
+   - **Jordana Teixeira**: R$ 3.500,00
+   - **Raimundo Pereira**: R$ 2.687,50
+   - **Lilian**: R$ 2.612,50
+   - **Claudia**: R$ 2.500,00
+   - **Fabiana Maria**: R$ 2.300,00
+
+3. **Conhecimento Adquirido (Regras de Negócio)**:
+   - **IMPORTANTE:** O pagamento para **Sueli Amaral** é feito na conta de **Danielle Rodrigues**.
+   - **Daniel Rodrigues** não é sócio estatutário para fins contábeis de retirada, mas sim prestador de serviço (PJ Fiscal).
+   - **Outras Despesas (4.1.1.08)** deve ser evitada para pagamentos de pessoal recorrente.
+
+### Arquivos Modificados
+- `AUDITORIA_DR_CICERO_PLANO_CONTAS.md`: Atualizado com as novas regras de classificação de pessoal.
+
+### Commits Realizados
+- (Scripts de execução direta via npx/node para correção em massa no banco de dados) 
+
+### Lições Aprendidas
+- **Verificação Nominal**: Sempre verificar os nomes nos extratos bancários cruzando com a lista de colaboradores fornecida.
+- **Relacionamento de Contas**: Nomes desconhecidos (ex: Danielle Rodrigues) podem ser contas de recebimento de terceiros conhecidos (ex: Sueli).

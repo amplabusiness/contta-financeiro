@@ -414,5 +414,58 @@ META: 100% das entradas passando pelo Plano de Contas
 
 ---
 
+## MAPEAMENTO OBRIGATÓRIO DE PESSOAL (DR. CÍCERO)
+
+### Regras de Classificação de Pessoas (PJ e CLT)
+**Fonte da Verdade:** Atualizado em 07/01/2026
+
+#### 1. Prestadores de Serviço (PJ) -> Conta `4.1.2.13.99` (Outros Terceirizados)
+Os pagamentos para as seguintes pessoas/empresas devem ser classificados como **Serviços de Terceiros**, e NÃO como Salários ou Adiantamento de Sócios.
+
+| Nome no Extrato/Favorecido | Colaborador Real | Função | Valor Base (Ref) |
+|----------------------------|------------------|--------|------------------|
+| **DANIEL RODRIGUES** / DANIEL RIBEIRO | Daniel Rodrigues | Fiscal | R$ 10.500,00 |
+| **ROSE** / ROSEMEIRE | Rose | DP | R$ 6.677,55 |
+| **DANIELLE RODRIGUES** | **Sueli Amaral** | SC Leg. | R$ 3.668,77 |
+| **ALEXSSANDRA** | Alexssandra Ramos | DP | R$ 2.733,39 |
+| **TATIANA** / TATIANE COELHO | Tatiana | DP | R$ 1.829,79 |
+| **ANDREA FERREIRA** | Andrea Ferreira | Adm | R$ 1.518,00 |
+| **ALINE** / CORACI ALINE | Aline | DP | R$ 1.438,23 |
+| **TAYLANE** | Taylane | Fin | R$ 1.300,00 |
+
+> **ATENÇÃO CRÍTICA:** Pagamentos para **DANIELLE RODRIGUES** refere-se à prestadora **SUELI AMARAL**.
+
+#### 2. Funcionários CLT (Líquido) -> Conta `4.1.1.01` (Salários e Ordenados)
+Pagamentos identificados com estes valores/nomes devem ir para Salários.
+
+**Departamento Administrativo**
+| Nome | Valor Líquido Aprox. | Função |
+|------|----------------------|--------|
+| Amanda Ambrosio | R$ 3.800,00 | Adm |
+| Jordana Teixeira | R$ 3.500,00 | Adm |
+| Raimundo Pereira | R$ 2.687,50 | Adm |
+| Lilian | R$ 2.612,50 | Adm |
+| Claudia | R$ 2.500,00 | Adm |
+| Fabiana Maria | R$ 2.300,00 | Adm |
+
+**Departamento Pessoal (DP)**
+| Nome | Valor Líquido Aprox. | Função |
+|------|----------------------|--------|
+| Erick Fabricio | R$ 4.000,00 | DP |
+| Thaniny | R$ 4.000,00 | DP |
+| Jessyca de Freitas | R$ 3.700,00 | DP |
+| Luciana | R$ 3.500,00 | DP |
+| Luciane Rosa | R$ 3.300,00 | DP |
+| Deuza | R$ 3.000,00 | DP |
+
+**Departamento Contábil**
+| Nome | Valor Líquido Aprox. | Função |
+|------|----------------------|--------|
+| Josimar | R$ 3.762,00 | Contábil |
+| Thaynara | R$ 3.727,75 | Contábil |
+
+
+---
+
 **Assinado:** Dr. Cícero - Agente IA Contábil
 **Fundamentação:** NBC TG 26, ITG 2000, NBC TG 00

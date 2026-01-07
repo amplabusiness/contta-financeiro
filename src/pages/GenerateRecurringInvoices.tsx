@@ -16,23 +16,48 @@ export default function GenerateRecurringInvoices() {
     setResult(null);
     
     try {
+      console.log('[GenerateRecurringInvoices] Iniciando chamada da função...');
       const { data, error } = await supabase.functions.invoke('generate-recurring-invoices');
 
+      console.log('[GenerateRecurringInvoices] Resposta:', { data, error });
+
       if (error) {
+        console.error('[GenerateRecurringInvoices] Erro retornado:', error);
         throw error;
       }
 
       setResult(data);
-      
-      if (data.success) {
-        toast.success(`${data.generated} honorários gerados com sucesso!`);
+
+      if (data?.success) {
+        toast.success(`${data.generated} honorários gerados com sucesso! (${data.skipped || 0} ignorados)`);
       } else {
-        toast.error(data.error || "Erro ao gerar honorários");
+        toast.error(data?.error || "Erro ao gerar honorários");
       }
     } catch (error: any) {
-      console.error("Erro ao gerar honorários:", error);
-      toast.error(error.message || "Erro ao gerar honorários recorrentes");
-      setResult({ error: error.message });
+      console.error("[GenerateRecurringInvoices] Erro ao gerar honorários:", error);
+
+      // Extrair mensagem de erro corretamente (context.body pode ser ReadableStream)
+      let errorMessage = "Erro ao gerar honorários recorrentes";
+      if (error?.message && typeof error.message === 'string') {
+        errorMessage = error.message;
+      }
+
+      // Tentar ler o body se for um erro de função Edge
+      if (error?.context?.body && typeof error.context.body.getReader === 'function') {
+        try {
+          const reader = error.context.body.getReader();
+          const { value } = await reader.read();
+          const bodyText = new TextDecoder().decode(value);
+          const bodyJson = JSON.parse(bodyText);
+          errorMessage = bodyJson.error || bodyJson.message || errorMessage;
+          console.log("[GenerateRecurringInvoices] Erro do servidor:", bodyJson);
+        } catch (e) {
+          console.error("[GenerateRecurringInvoices] Erro ao ler body:", e);
+        }
+      }
+
+      toast.error(errorMessage);
+      setResult({ error: errorMessage });
     } finally {
       setLoading(false);
     }

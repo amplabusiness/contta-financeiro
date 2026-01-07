@@ -24,6 +24,7 @@ export interface CobrancaGroup {
 
 /**
  * Parse CSV file com separador ponto-vírgula
+ * Suporta formatos com 8 ou 9 colunas
  */
 export function parseCobrancaCSV(csvContent: string): CobrancaRecord[] {
   const lines = csvContent.trim().split('\n');
@@ -33,15 +34,46 @@ export function parseCobrancaCSV(csvContent: string): CobrancaRecord[] {
 
   const records: CobrancaRecord[] = [];
 
+  // Detectar cabeçalho para mapeamento de colunas
+  const header = lines[0].toLowerCase();
+  const hasCartColumn = header.includes('cart') || header.startsWith('cart;');
+  
   // Skip header (linha 0)
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
     const parts = line.split(';').map(p => p.trim());
+    
+    // Validar número mínimo de colunas
+    // Formato antigo: Documento;N do boleto;Pagador;... (8 colunas)
+    // Formato novo: Cart;N Doc;Nosso N;Pagador;... (9 colunas)
     if (parts.length < 8) continue;
 
-    const [documento, numeroboleto, pagador, dataVencStr, dataLiqStr, valorBolStr, valorRecStr, dataExtratoStr] = parts;
+    let documento, numeroboleto, pagador, dataVencStr, dataLiqStr, valorBolStr, valorRecStr, dataExtratoStr;
+
+    if (hasCartColumn && parts.length >= 9) {
+      // Formato Novo (9 colunas - Cart;N Doc;Nosso N;Pagador;...)
+      documento = parts[0]; // Cart (COB...)
+      // parts[1] is N Doc
+      numeroboleto = parts[2]; // Nosso N
+      pagador = parts[3];
+      dataVencStr = parts[4];
+      dataLiqStr = parts[5];
+      valorBolStr = parts[6];
+      valorRecStr = parts[7];
+      dataExtratoStr = parts[8];
+    } else {
+      // Formato Antigo (8 colunas - Documento;N Boleto;Pagador;...)
+      documento = parts[0];
+      numeroboleto = parts[1];
+      pagador = parts[2];
+      dataVencStr = parts[3];
+      dataLiqStr = parts[4];
+      valorBolStr = parts[5];
+      valorRecStr = parts[6];
+      dataExtratoStr = parts[7];
+    }
 
     records.push({
       documento,
@@ -57,6 +89,34 @@ export function parseCobrancaCSV(csvContent: string): CobrancaRecord[] {
 
   return records;
 }
+
+/**
+ * Função auxiliar para parse de datas DD/MM/YYYY
+ */
+function parseData(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  const parts = dateStr.trim().split('/');
+  if (parts.length === 3) {
+    // Meses são 0-indexed em JS
+    return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+  }
+  return new Date();
+}
+
+/**
+ * Função auxiliar para parse de valores (R$ 1.000,00 -> 1000.00)
+ */
+function parseValor(valorStr: string): number {
+  if (!valorStr) return 0;
+  return parseFloat(
+    valorStr
+      .replace('R$', '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .trim()
+  );
+}
+
 
 /**
  * Agrupa registros por documento (COB000005, COB000007, etc)
@@ -104,14 +164,6 @@ export function groupByDataExtrato(records: CobrancaRecord[]): Map<string, Cobra
   return groups;
 }
 
-/**
- * Utilities para parse de data (format: DD/MM/YYYY)
- */
-function parseData(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('/').map(Number);
-  return new Date(year, month - 1, day);
-}
-
 function formatData(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -119,13 +171,3 @@ function formatData(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
-/**
- * Parse valor (pode vir como "1.412,00" ou "1412,00")
- */
-function parseValor(valorStr: string): number {
-  // Remove pontos de milhares e converte vírgula em ponto
-  const cleaned = valorStr
-    .replace('.', '') // Remove ponto de separador de milhares
-    .replace(',', '.'); // Converte vírgula em ponto decimal
-  return parseFloat(cleaned);
-}
