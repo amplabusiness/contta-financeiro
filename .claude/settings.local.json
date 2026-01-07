@@ -74,7 +74,10 @@
       "Bash(powershell:*)",
       "Bash(ren:*)",
       "Bash(npx supabase --help:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: atualiza memory.md e MCP com funcionalidades recentes\n\n- Documenta contratos com Devedores Solidários \\(Art. 264-275, 827 CC\\)\n- Documenta sistema de cobrança via WhatsApp\n- Documenta grupos econômicos por sócios em comum \\(client_partners\\)\n- Adiciona lista de agentes de IA e edge functions\n- Atualiza versão para 1.30.4\n- Documenta novas páginas: AIChat, AIWorkspace, CashFlowStatement, PeriodClosing\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: atualiza memory.md e MCP com funcionalidades recentes\n\n- Documenta contratos com Devedores Solidários \\(Art. 264-275, 827 CC\\)\n- Documenta sistema de cobrança via WhatsApp\n- Documenta grupos econômicos por sócios em comum \\(client_partners\\)\n- Adiciona lista de agentes de IA e edge functions\n- Atualiza versão para 1.30.4\n- Documenta novas páginas: AIChat, AIWorkspace, CashFlowStatement, PeriodClosing\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git diff:*)",
+      "Bash(git stash:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: remove nested repo folders from git tracking\n\n- Add data-bling-sheets-3122699b/ and data-bling-sheets-3122699b-1/ to .gitignore\n- Remove accidental nested clones from git tracking\n- These folders were causing sync issues with Vercel\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []

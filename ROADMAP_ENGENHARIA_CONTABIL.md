@@ -126,6 +126,19 @@ Este roadmap unifica o planejamento técnico com o status operacional (anteriorm
     - *Ação 3:* Criar regras claras de pagamento (`MANUAL_PAGAMENTOS_AMPLA.md`). ✅ Feito.
     - *Status:* ✅ Parcialmente Resolvido (07/01/2026).
 
+- [x] **5.4. Conciliação Bancária Total (Jan 2025)**
+    - Garantir que o Saldo Contábil (Banco) bata exatamente com o Extrato OFX.
+    - *Diagnóstico:* Erro de saldo negativo (-R$ 50k) causado por lançamentos duplicados ("Sistemáticos" vs "Importados") e entradas faltando.
+    - *Ação:* Scripts de saneamento (`fix_bank_system_duplicates.mjs`) removeram ~80 lançamentos fantasmas em tempo real.
+    - *Resultado:* **Divergência R$ 0,00**. Saldo em 31/01/2025: R$ 18.553,54 (Positivo e Auditado).
+    - *Status:* ✅ Concluído (07/01/2026).
+
+- [x] **5.5. Arquitetura de Saldos Universais ("Lei da Continuidade")**
+    - **Princípio:** O Saldo Inicial de Mês(X) **DEVE** ser igual ao Saldo Final de Mês(X-1) para **TODAS** as contas.
+    - **Implementação:** Tabela `accounting_balances` criada para persistir saldos fechados.
+    - **Regra:** `Saldo Final = Saldo Anterior + Débitos - Créditos` (Matematicamente travado).
+    - *Status:* ✅ Definido e SQL Gerado (`migration_accounting_balances.sql`).
+
 ---
 
 ## 🚀 Fase 6: Motor de Fluxo de Caixa (Projection Engine)
