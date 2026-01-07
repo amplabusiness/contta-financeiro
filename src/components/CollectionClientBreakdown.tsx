@@ -95,10 +95,15 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
             json = await tryFetchJson(`/baixa-clientes?${params.toString()}`);
           }
           // 3a tentativa: chamada absoluta direto no dev-server (evita proxy do Vite)
-          if (!json) {
-            const abs = `${window.location.protocol}//127.0.0.1:8082/api/baixa-clientes?${params.toString()}`;
-            console.log('Sem JSON no proxy, tentando absoluto:', abs);
-            json = await tryFetchJson(abs);
+          // FIXME: Isso é apenas para dev local e falhará em produção (SSL/HTTPS/Localhost)
+          if (!json && process.env.NODE_ENV === 'development') {
+            const abs = `http://127.0.0.1:8082/api/baixa-clientes?${params.toString()}`;
+            console.log('Sem JSON no proxy, tentando absoluto (HTTP):', abs);
+            try {
+                json = await tryFetchJson(abs);
+            } catch (err) {
+                console.warn('Falha ao conectar com dev-server local:', err);
+            }
           }
 
           // 4a tentativa: leitura direta do CSV público (servido por /banco)
