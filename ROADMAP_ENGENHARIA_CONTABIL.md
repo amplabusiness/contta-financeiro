@@ -77,7 +77,7 @@ Este roadmap unifica o planejamento técnico com o status operacional (anteriorm
     - **AÇÃO IMEDIATA (PRIORIDADE MÁXIMA)**
     - Importar dados de `_raw_opening_balances.txt` para tabela `client_opening_balance`.
     - Objetivo: Refletir dívidas de 2024 e anteriores no sistema novo.
-    - *Status:* ✅ Concluído (Importação via SQL realizada em 06/01/2026).
+    - *Status:* ✅ Concluído. (Importação de históricos 2024 + correção de duplicidades 13º Salário realizada em 07/01/2026).
 
 - [x] **3.3. Backfill de Transações Bancárias**
     - Varrer `bank_transactions` de Jan/2025 e garantir que existem lançamentos (especialmente Baixas).
@@ -172,7 +172,7 @@ Todas as fases planejadas (1 a 7) foram concluídas. O sistema agora opera com o
 ### 📊 Fase 8: Projeções 2.0 - Tributos e Custos Fixos
 **Objetivo:** Tornar o Fluxo de Caixa "à prova de balas", incluindo gastos que não são de pessoal.
 - [ ] **8.1. Motor de Impostos (Tax Engine)**
-    - Calcular provisão de DAS/ISS baseado nas Notas Fiscais emitidas (aprox. % sobre Faturamento).
+    - Calcular provisão de DAS/ISS fixo, iptu do imovel, atual e parcelados de periodo anteriores, controlar parcelas.
     - Projetar saída de caixa para dia 20 (DAS) e dia 10 (ISS) do mês seguinte.
 - [ ] **8.2. Despesas Recorrentes (Recurring Bills)**
     - Criar tabela `recurring_expenses` (Aluguel, Softwares, Energia).
