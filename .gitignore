@@ -53,3 +53,7 @@ nul
 nfes_servico/
 "Informações sobre Integração de NFS-e/"
 certificado/
+
+# Pastas aninhadas (clones acidentais)
+data-bling-sheets-3122699b/
+data-bling-sheets-3122699b-1/
