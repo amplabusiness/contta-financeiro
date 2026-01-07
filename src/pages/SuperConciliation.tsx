@@ -280,7 +280,8 @@ export default function SuperConciliation() {
         const { data } = await supabase
             .from('chart_of_accounts')
             .select('code, name')
-            .or('code.ilike.3.%,code.ilike.4.%,code.ilike.2.1.%,code.ilike.1.1.2.%,code.ilike.1.1.1.%,code.ilike.1.1.3.%') // Inclui Adiantamentos (1.1.3.x)
+            .eq('is_analytical', true) // Only analytical accounts
+            .or('code.ilike.3.%,code.ilike.4.%,code.ilike.2.1.%,code.ilike.1.1.2.%,code.ilike.1.1.1.%,code.ilike.1.1.3.%')
             .order('code');
         if (data) setAvailableAccounts(data);
     };
@@ -544,27 +545,57 @@ export default function SuperConciliation() {
         const accountMap = new Map<string, string>();
         accountsData?.forEach(acc => accountMap.set(acc.code, acc.id));
 
-        // 2. Criar Lançamento (Header) - Usa accounting_entries
-        // Calcular totais de débito e crédito
-        const totalDebit = suggestion.entries.reduce((sum, e) => sum + (Number(e.debit.account) ? e.value : 0), 0);
-        const totalCredit = suggestion.entries.reduce((sum, e) => sum + (Number(e.credit.account) ? e.value : 0), 0);
-        
-        const { data: entryData, error: entryError } = await supabase
-            .from('accounting_entries')
-            .insert({
-                entry_type: 'manual',
-                description: suggestion.description,
-                entry_date: selectedTx.date,
-                competence_date: selectedTx.date,
-                reference_type: 'bank_transaction',
-                reference_id: selectedTx.id,
-                document_number: selectedTx.description?.substring(0, 50),
-                total_debit: totalDebit,
-                total_credit: totalCredit,
-                balanced: Math.abs(totalDebit - totalCredit) < 0.01
-            })
-            .select()
-            .single();
+        // 2. Criar ou Atualizar Lançamento (Header)
+        // Check for existing entry to prevent duplicates (SINGLE SOURCE OF TRUTH)
+        const { data: existingEntry } = await supabase
+            .from('accounting_entries') 
+            .select('id')
+            .eq('transaction_id', selectedTx.id)
+            .maybeSingle(); // Safe check
+
+        const entryPayload = {
+            entry_type: 'manual',
+            description: suggestion.description,
+            entry_date: selectedTx.date,
+            competence_date: selectedTx.date,
+            reference_type: 'bank_transaction',
+            reference_id: selectedTx.id,
+            // transaction_id: selectedTx.id, // Removed to ensure compatibility with all schema versions
+            document_number: selectedTx.description?.substring(0, 50),
+            total_debit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
+            total_credit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
+            balanced: true, // Assuming suggestion is balanced
+            created_by: (await supabase.auth.getUser()).data.user?.id
+        };
+
+        let entryData: { id: string } | null = null;
+        let entryError = null;
+
+        if (existingEntry) {
+            // Update Existing
+             const { data: updated, error: updError } = await supabase
+                .from('accounting_entries')
+                .update(entryPayload)
+                .eq('id', existingEntry.id)
+                .select()
+                .single();
+             entryData = updated;
+             entryError = updError;
+             
+             // Clean old lines before re-inserting
+             if (!updError) {
+                 await supabase.from('accounting_entry_lines').delete().eq('entry_id', existingEntry.id);
+             }
+        } else {
+            // Insert New
+            const { data: inserted, error: insError } = await supabase
+                .from('accounting_entries')
+                .insert(entryPayload)
+                .select()
+                .single();
+            entryData = inserted;
+            entryError = insError;
+        }
 
         if (entryError) throw new Error("Erro ao criar lançamento: " + entryError.message);
 

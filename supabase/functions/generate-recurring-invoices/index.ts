@@ -10,7 +10,7 @@ interface Client {
   name: string;
   monthly_fee: number;
   payment_day: number | null;
-  status: string;
+  is_active: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -31,18 +31,18 @@ Deno.serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       throw new Error('Usuário não autenticado');
     }
 
     console.log(`Iniciando geração de honorários recorrentes para 2025 pelo usuário ${user.id}`);
 
-    // Buscar clientes ativos
+    // Buscar clientes ativos (is_active = true e monthly_fee > 0)
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
-      .select('id, name, monthly_fee, payment_day, status')
-      .eq('status', 'active')
+      .select('id, name, monthly_fee, payment_day, is_active')
+      .eq('is_active', true)
       .gt('monthly_fee', 0);
 
     if (clientsError) {
@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
 
     if (!clients || clients.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'Nenhum cliente ativo com honorário mensal encontrado',
           generated: 0
         }),
@@ -63,98 +63,106 @@ Deno.serve(async (req) => {
 
     console.log(`Encontrados ${clients.length} clientes ativos`);
 
+    // OTIMIZAÇÃO: Buscar TODAS as faturas existentes de 2025 em UMA única query
+    // Isso reduz de N*13 queries para apenas 1 query
+    const clientIds = clients.map(c => c.id);
+    const { data: existingInvoices, error: existingError } = await supabase
+      .from('invoices')
+      .select('client_id, competence, description')
+      .in('client_id', clientIds)
+      .like('competence', '%/2025')
+      .in('description', ['Honorários Contábeis', 'Honorários de Balanço']);
+
+    if (existingError) {
+      console.error('Erro ao buscar faturas existentes:', existingError);
+      throw existingError;
+    }
+
+    // Criar Set para verificação rápida O(1) em vez de query O(n)
+    const existingSet = new Set(
+      (existingInvoices || []).map(inv =>
+        `${inv.client_id}|${inv.competence}|${inv.description}`
+      )
+    );
+
+    console.log(`Encontradas ${existingSet.size} faturas já existentes`);
+
     const invoices: any[] = [];
     let totalGenerated = 0;
-    const errors: string[] = [];
+    let skipped = 0;
 
-    // Para cada cliente
+    // Para cada cliente - agora sem queries no loop!
     for (const client of clients as Client[]) {
-      try {
-        const paymentDay = client.payment_day || 10; // Dia padrão: 10
+      const paymentDay = client.payment_day || 10; // Dia padrão: 10
 
-        // Gerar 12 faturas mensais (janeiro a dezembro)
-        for (let month = 1; month <= 12; month++) {
-          const competence = `${String(month).padStart(2, '0')}/2025`;
-          
-          // Calcular data de vencimento
-          let dueDate = new Date(2025, month - 1, paymentDay);
-          
-          // Se o dia do pagamento for maior que o último dia do mês, usar o último dia
-          const lastDayOfMonth = new Date(2025, month, 0).getDate();
-          if (paymentDay > lastDayOfMonth) {
-            dueDate = new Date(2025, month - 1, lastDayOfMonth);
-          }
+      // Gerar 12 faturas mensais (janeiro a dezembro)
+      for (let month = 1; month <= 12; month++) {
+        const competence = `${String(month).padStart(2, '0')}/2025`;
+        const key = `${client.id}|${competence}|Honorários Contábeis`;
 
-          // Verificar se já existe fatura para este cliente e competência
-          const { data: existingInvoice } = await supabase
-            .from('invoices')
-            .select('id')
-            .eq('client_id', client.id)
-            .eq('competence', competence)
-            .eq('description', 'Honorários Contábeis')
-            .single();
-
-          if (!existingInvoice) {
-            invoices.push({
-              client_id: client.id,
-              amount: client.monthly_fee,
-              due_date: dueDate.toISOString().split('T')[0],
-              competence: competence,
-              description: 'Honorários Contábeis',
-              status: 'pending',
-              created_by: user.id,
-            });
-            totalGenerated++;
-          } else {
-            console.log(`Fatura já existe para ${client.name} - ${competence}`);
-          }
+        // Verificação em memória O(1) em vez de query ao banco
+        if (existingSet.has(key)) {
+          skipped++;
+          continue;
         }
 
-        // Gerar fatura de 13º salário (Honorários de Balanço)
-        const balanceCompetence = '13/2025';
-        const balanceDueDate = '2025-12-20';
+        // Calcular data de vencimento
+        let dueDate = new Date(2025, month - 1, paymentDay);
 
-        const { data: existingBalance } = await supabase
-          .from('invoices')
-          .select('id')
-          .eq('client_id', client.id)
-          .eq('competence', balanceCompetence)
-          .eq('description', 'Honorários de Balanço')
-          .single();
-
-        if (!existingBalance) {
-          invoices.push({
-            client_id: client.id,
-            amount: client.monthly_fee,
-            due_date: balanceDueDate,
-            competence: balanceCompetence,
-            description: 'Honorários de Balanço',
-            status: 'pending',
-            created_by: user.id,
-          });
-          totalGenerated++;
-        } else {
-          console.log(`Honorários de Balanço já existe para ${client.name}`);
+        // Se o dia do pagamento for maior que o último dia do mês, usar o último dia
+        const lastDayOfMonth = new Date(2025, month, 0).getDate();
+        if (paymentDay > lastDayOfMonth) {
+          dueDate = new Date(2025, month - 1, lastDayOfMonth);
         }
 
-      } catch (clientError) {
-        console.error(`Erro ao processar cliente ${client.name}:`, clientError);
-        const errorMessage = clientError instanceof Error ? clientError.message : 'Erro desconhecido';
-        errors.push(`${client.name}: ${errorMessage}`);
+        invoices.push({
+          client_id: client.id,
+          amount: client.monthly_fee,
+          due_date: dueDate.toISOString().split('T')[0],
+          competence: competence,
+          description: 'Honorários Contábeis',
+          status: 'pending',
+          created_by: user.id,
+        });
+        totalGenerated++;
+      }
+
+      // Gerar fatura de 13º salário (Honorários de Balanço)
+      const balanceKey = `${client.id}|13/2025|Honorários de Balanço`;
+
+      if (!existingSet.has(balanceKey)) {
+        invoices.push({
+          client_id: client.id,
+          amount: client.monthly_fee,
+          due_date: '2025-12-20',
+          competence: '13/2025',
+          description: 'Honorários de Balanço',
+          status: 'pending',
+          created_by: user.id,
+        });
+        totalGenerated++;
+      } else {
+        skipped++;
       }
     }
 
-    // Inserir todas as faturas de uma vez
+    // Inserir todas as faturas de uma vez (batch insert)
     if (invoices.length > 0) {
-      console.log(`Inserindo ${invoices.length} faturas...`);
-      
-      const { error: insertError } = await supabase
-        .from('invoices')
-        .insert(invoices);
+      console.log(`Inserindo ${invoices.length} faturas em batch...`);
 
-      if (insertError) {
-        console.error('Erro ao inserir faturas:', insertError);
-        throw insertError;
+      // Inserir em lotes de 500 para evitar limite do Supabase
+      const batchSize = 500;
+      for (let i = 0; i < invoices.length; i += batchSize) {
+        const batch = invoices.slice(i, i + batchSize);
+        const { error: insertError } = await supabase
+          .from('invoices')
+          .insert(batch);
+
+        if (insertError) {
+          console.error(`Erro ao inserir lote ${i / batchSize + 1}:`, insertError);
+          throw insertError;
+        }
+        console.log(`Lote ${i / batchSize + 1} inserido: ${batch.length} faturas`);
       }
 
       console.log(`${totalGenerated} faturas geradas com sucesso`);
@@ -165,8 +173,8 @@ Deno.serve(async (req) => {
         success: true,
         message: `Honorários recorrentes gerados com sucesso para ${clients.length} clientes`,
         generated: totalGenerated,
+        skipped: skipped,
         clients_processed: clients.length,
-        errors: errors.length > 0 ? errors : undefined,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -175,11 +183,11 @@ Deno.serve(async (req) => {
     console.error('Erro ao gerar honorários recorrentes:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: errorMessage,
         details: 'Erro ao gerar honorários recorrentes de 2025'
       }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }

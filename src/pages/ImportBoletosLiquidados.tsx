@@ -87,7 +87,52 @@ export default function ImportBoletosLiquidados() {
     const boletos: ParsedBoleto[] = [];
 
     for (const line of lines) {
-      // Formato esperado:
+      // Ignorar linhas vazias ou cabeçalhos comuns
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue;
+      if (trimmedLine.includes("N Doc") || trimmedLine.includes("N Doc") || 
+          trimmedLine.toLowerCase().startsWith("nosso n") || 
+          trimmedLine.toLowerCase().startsWith("simples")) {
+            // Verificar se é cabeçalho antes de pular (se tem tabs, pode ser linha de dados que começa com SIMPLES)
+            // Se tiver muitas colunas com nomes de cabeçalho, pule.
+            // Para o CSV específico "N Doc;Nosso N...", pulamos
+            if (trimmedLine.includes(";")) continue;
+      }
+
+      // Detecção de CSV (ponto e vírgula)
+      // Formato: N Doc;Nosso N;Pagador;Data Vencimento;Data Liquidação;Valor (R$);Liquidação (R$);DATA DO EXTRATO
+      if (line.includes(";")) {
+        const parts = line.split(";");
+        if (parts.length >= 7) {
+           const nossoNumeroRaw = parts[1].trim();
+           const pagador = parts[2].trim();
+           const dataVencStr = parts[3].trim();
+           const dataLiqStr = parts[4].trim();
+           const valorNomStr = parts[5].trim();
+           const valorLiqStr = parts[6].trim();
+
+           // Validar datas básicas
+           if (!dataVencStr.includes("/") || !dataLiqStr.includes("/")) continue;
+
+           const vencimento = parseDate(dataVencStr);
+           
+           boletos.push({
+             tipo: "BOLETO", // Padrão
+             numero_boleto: parts[0].trim() || nossoNumeroRaw, // Usa N Doc ou Nosso Numero
+             nosso_numero: nossoNumeroRaw,
+             client_name: pagador,
+             data_vencimento: vencimento,
+             data_pagamento: parseDate(dataLiqStr),
+             valor_nominal: parseAmount(valorNomStr),
+             valor_pago: parseAmount(valorLiqStr),
+             status: "LIQUIDADO",
+             competencia: calculateCompetence(vencimento),
+           });
+           continue;
+        }
+      }
+
+      // Formato esperado (Texto tabulado / espaços):
       // SIMPLES 0025200008 25/200008-1 ACTION SOLUCOES INDUSTRIAIS LTDA 10/02/2025 10/02/2025 12.143,72 12.143,72 LIQUIDADO COMPE
       // Dividir por tabs ou múltiplos espaços
       const parts = line.split(/\t+|\s{2,}/);

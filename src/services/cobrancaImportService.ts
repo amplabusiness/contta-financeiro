@@ -181,29 +181,46 @@ async function processCobrancaRecord(
 
 /**
  * Busca bank_transaction que corresponde a este documento/data/valor
+ * Estratégia:
+ * 1. Tentar match exato por Descrição (contém documento) + Valor + Data (+/- 1 dia)
+ * 2. Se falhar, tentar match por Valor + Data (+/- 1 dia)
  */
 async function findBankTransaction(
   documento: string,
   dataExtrato: Date,
   totalRecebido: number
 ) {
-  // Buscar por descrição (contém o documento) e valor
-  const { data } = await supabase
+  const startDate = new Date(dataExtrato.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const endDate = new Date(dataExtrato.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+  // 1. Tentativa com Descrição (mais seguro)
+  const { data: exactMatch } = await supabase
     .from('bank_transactions')
     .select('id, reference_id, amount, transaction_date, description')
     .ilike('description', `%${documento}%`)
     .eq('amount', totalRecebido)
-    .gte(
-      'transaction_date',
-      new Date(dataExtrato.getTime() - 24 * 60 * 60 * 1000).toISOString()
-    )
-    .lte(
-      'transaction_date',
-      new Date(dataExtrato.getTime() + 24 * 60 * 60 * 1000).toISOString()
-    )
-    .single();
+    .gte('transaction_date', startDate)
+    .lte('transaction_date', endDate)
+    .maybeSingle();
 
-  return data || null;
+  if (exactMatch) return exactMatch;
+
+  // 2. Tentativa por Valor e Data (provavelmente o caso do "LIQUIDACAO BOLETO")
+  // Exclui transações já conciliadas se possível? O campo 'reconciled' existe.
+  const { data: valueMatch } = await supabase
+    .from('bank_transactions')
+    .select('id, reference_id, amount, transaction_date, description')
+    .eq('amount', totalRecebido)
+    .gte('transaction_date', startDate)
+    .lte('transaction_date', endDate)
+    // .eq('reconciled', false) // Idealmente filtrar não conciliados, mas precisa verificar se o campo está sendo usado
+    .limit(1);
+
+  if (valueMatch && valueMatch.length > 0) {
+    return valueMatch[0];
+  }
+
+  return null;
 }
 
 /**

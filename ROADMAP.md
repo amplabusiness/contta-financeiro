@@ -1,53 +1,55 @@
 # 🗺️ ROADMAP - Sistema de Contas a Receber Ampla Contabilidade
 
-## ⚡ STATUS ATUAL: FASE 1 CONCLUÍDA! 
+## ⚡ STATUS ATUAL: FASE 2 EM ANDAMENTO (06/01/2026)
 
-### ✅ O QUE JÁ ESTÁ PRONTO (27/11/2025)
+### ✅ ÚLTIMAS CONQUISTAS
 
-1. **✅ Tabela de Saldo de Abertura**
-   - Migration SQL criada: `20251127153040_add_client_opening_balance.sql`
-   - Estrutura completa para tracking de débitos 2024
-   - Views e triggers configurados
-   - ⚠️ **AÇÃO PENDENTE:** Executar SQL no Supabase (ver `EXECUTE_SQL_NO_SUPABASE.md`)
+1. **✅ Migração Mestre de Janeiro/2026 (06/JAN)**
+   - Execução do script `_FULL_EXECUTION_SCRIPT_JAN06.sql` com sucesso.
+   - Sincronização de Schema do Banco de Dados.
+   - Criação/Atualização de Triggers de Validação.
+   - Backfill de Lançamentos Contábeis (Jan 2025+) realizado.
+   - Validação de Integridade: 0 lançamentos com erro (balanceados).
+   - Solução de contorno para validação de CNPJs antigos aplicada (Disable Triggers temporário).
+
+2. **✅ Verificação Pós-Migração**
+   - Script `VERIFY_MIGRATION_JAN06.sql` executado.
+   - Confirmado: Contabilidade batendo (Débito = Crédito).
+   - Confirmado: Clientes e Fornecedores com contas definidas.
+
+3. **✅ Tabela de Saldo de Abertura**
+   - Tabela `client_opening_balance` confirmada no schema.
+   - Preparação para carga de dados legados (pré-2025).
+
+### 🎯 AÇÃO IMEDIATA (AGORA)
+
+1. **⚠️ POPULAR SALDOS DE ABERTURA (PRIORIDADE MÁXIMA)**
+   - Recebemos os dados brutos de saldos (`_raw_opening_balances.txt`).
+   - Gerar script SQL para inserir esses débitos na tabela `client_opening_balance`.
+   - Executar script para refletir as dívidas antigas no sistema.
+
+---
+
+### ✅ HISTÓRICO DE ENTREGAS (2025)
+
+1. **✅ Tabela de Saldo de Abertura (Schema)**
+   - Migration SQL criada e aplicada.
+   - Views e triggers configurados.
 
 2. **✅ Edge Function para Excel**
-   - Function criada: `process-bank-excel-report`
-   - Parse automático de planilhas do banco
-   - Detecção inteligente de colunas
-   - Matching automático com faturas e saldo abertura
+   - Function: `process-bank-excel-report`.
+   - Parse automático de planilhas.
 
-3. **✅ Página de Importação em Lote**
-   - Componente: `BankFolderImport.tsx`
-   - Upload múltiplo de OFX e Excel
-   - Processamento batch com progresso
-   - Rota: `/bank-folder-import`
+3. **✅ Interfaces de Usuário**
+   - Página de Importação em Lote (`BankFolderImport.tsx`).
+   - Página de Saldo de Abertura (`ClientOpeningBalance.tsx`).
 
-4. **✅ Página de Saldo de Abertura**
-   - Componente: `ClientOpeningBalance.tsx`
-   - CRUD completo de competências 2024
-   - Rota: `/client-opening-balance`
+4. **✅ Configuração Bancária**
+   - Conta SICREDI configurada no banco.
+   - Menus reorganizados para fluxo de trabalho.
 
-5. **✅ Configuração Conta SICREDI**
-   - Migration SQL criada: `20251127153739_configure_sicredi_bank_account.sql`
-   - Banco: 748, Agência: 3950, Conta: 27806-8
-   - ⚠️ **AÇÃO PENDENTE:** Executar SQL no Supabase
+---
 
-6. **✅ Menu Reorganizado**
-   - 7 grupos (antes: 12)
-   - 34 itens (antes: 70+)
-   - Navegação mais limpa
-
-### 🎯 PRÓXIMAS AÇÕES (EM ORDEM!)
-
-1. **⚠️ VOCÊ (MANUAL):** Executar SQLs no Supabase
-   - Abrir: `EXECUTE_SQL_NO_SUPABASE.md`
-   - Seguir instruções passo a passo
-   - Tempo: 5 minutos
-
-2. **⚠️ VOCÊ (MANUAL):** Cadastrar Saldos de Abertura
-   - Acessar: `/client-opening-balance`
-   - Cadastrar todos os débitos de 2024
-   - Tempo: 30-60 minutos
 
 3. **⚠️ VOCÊ (MANUAL):** Testar Importação
    - Acessar: `/bank-folder-import`

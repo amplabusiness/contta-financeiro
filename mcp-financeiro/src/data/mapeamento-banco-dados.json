@@ -1,6 +1,6 @@
 {
   "banco": "Ampla Contabilidade - Supabase PostgreSQL",
-  "dataMapeamento": "2025-12-26T18:21:00.083Z",
+  "dataMapeamento": "2026-01-07T03:20:12.280Z",
   "tabelas": {
     "clients": {
       "nome": "clients",
@@ -20,7 +20,7 @@
     },
     "expenses": {
       "nome": "expenses",
-      "totalRegistros": 631,
+      "totalRegistros": 535,
       "descricao": "Despesas operacionais e contas a pagar",
       "proposito": "Contas a pagar - Gestão de despesas",
       "colunas": [],
@@ -28,7 +28,7 @@
     },
     "employees": {
       "nome": "employees",
-      "totalRegistros": 22,
+      "totalRegistros": 23,
       "descricao": "Funcionários e folha de pagamento",
       "proposito": "Folha de pagamento - ESOCIAL",
       "colunas": [],
@@ -44,7 +44,7 @@
     },
     "bank_transactions": {
       "nome": "bank_transactions",
-      "totalRegistros": 393,
+      "totalRegistros": 1739,
       "descricao": "Movimentações de extrato bancário",
       "proposito": "Conciliação bancária automática",
       "colunas": [],
@@ -52,7 +52,7 @@
     },
     "bank_imports": {
       "nome": "bank_imports",
-      "totalRegistros": 11,
+      "totalRegistros": 3,
       "descricao": "Importações de arquivos OFX/CSV",
       "proposito": "Importação de extratos",
       "colunas": [],
@@ -60,7 +60,7 @@
     },
     "chart_of_accounts": {
       "nome": "chart_of_accounts",
-      "totalRegistros": 372,
+      "totalRegistros": 635,
       "descricao": "Plano de contas contábil",
       "proposito": "Estrutura contábil - Base para DRE e Balanço",
       "colunas": [],
@@ -68,7 +68,7 @@
     },
     "accounting_entries": {
       "nome": "accounting_entries",
-      "totalRegistros": 474,
+      "totalRegistros": 1956,
       "descricao": "Lançamentos contábeis (diário)",
       "proposito": "Diário contábil - Partidas dobradas",
       "colunas": [],
@@ -76,7 +76,7 @@
     },
     "accounting_entry_lines": {
       "nome": "accounting_entry_lines",
-      "totalRegistros": 806,
+      "totalRegistros": 3910,
       "descricao": "Linhas de débito/crédito dos lançamentos",
       "proposito": "Linhas do diário",
       "colunas": [],
@@ -116,7 +116,7 @@
     },
     "cost_centers": {
       "nome": "cost_centers",
-      "totalRegistros": 13,
+      "totalRegistros": 57,
       "descricao": "Centros de custo (departamentos)",
       "proposito": "Centros de responsabilidade",
       "colunas": [],
@@ -223,9 +223,9 @@
   },
   "metricas": {
     "totalTabelas": 16,
-    "totalRegistros": 3098,
+    "totalRegistros": 9234,
     "totalClientes": 219,
-    "totalDespesas": 631,
+    "totalDespesas": 535,
     "totalReceitaNota": 136821.59000000003
   },
   "dicionarioDados": {

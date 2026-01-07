@@ -17,6 +17,7 @@ import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 import { useOfflineMode } from "@/hooks/useOfflineMode";
 import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
+import { CashFlowWidget } from "@/components/dashboard/CashFlowWidget";
 
 // Tipos para agentes IA
 interface AgentStatus {
@@ -381,11 +382,11 @@ const Dashboard = () => {
         message: `${categorizedCount} categorias`
       });
 
-      updateAgent('Dr. Cícero', {
-        status: 'active',
-        lastAction: `${categorizedCount} categorias`,
-        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + 1,
-      });
+      setAgents(prev => prev.map(agent =>
+        agent.name === 'Dr. Cícero'
+          ? { ...agent, status: 'active', lastAction: `${categorizedCount} categorias`, tasksToday: agent.tasksToday + 1 }
+          : agent
+      ));
 
     } catch (error) {
       updateTask(drCiceroTaskId, { status: 'error', message: 'Erro no processamento' });
@@ -417,11 +418,11 @@ const Dashboard = () => {
         message: `Inadimplência: ${taxaInadimplencia.toFixed(1)}%`
       });
 
-      updateAgent('Gestor IA', {
-        status: 'active',
-        lastAction: `Inadimp: ${taxaInadimplencia.toFixed(1)}%`,
-        tasksToday: prev => (typeof prev === 'number' ? prev : 0) + 1,
-      });
+      setAgents(prev => prev.map(agent =>
+        agent.name === 'Gestor IA'
+          ? { ...agent, status: 'active', lastAction: `Inadimp: ${taxaInadimplencia.toFixed(1)}%`, tasksToday: agent.tasksToday + 1 }
+          : agent
+      ));
 
     } catch (error) {
       updateTask(gestorTaskId, { status: 'error', message: 'Erro na análise' });
@@ -872,50 +873,56 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div onClick={() => showDetail("clients")} className="cursor-pointer">
-            <MetricCard
-              title="Clientes Ativos"
-              value={stats.totalClients.toString()}
-              icon={Users}
-              variant="default"
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
+            <div onClick={() => showDetail("clients")} className="cursor-pointer">
+              <MetricCard
+                title="Clientes Ativos"
+                value={stats.totalClients.toString()}
+                icon={Users}
+                variant="default"
+              />
+            </div>
+            <div onClick={() => showDetail("pending")} className="cursor-pointer">
+              <MetricCard
+                title="Honorários Pendentes"
+                // FASE 4.2: Fonte de Verdade é o Saldo Contábil (1.1.2.01)
+                value={accountingBalances ? formatCurrency(accountingBalances.accounts_receivable) : formatCurrency(stats.totalPending)}
+                icon={TrendingUp}
+                variant="warning"
+                trend={{
+                  value: `${stats.pendingInvoices} faturas`,
+                  isPositive: false,
+                }}
+              />
+            </div>
+            <div onClick={() => showDetail("overdue")} className="cursor-pointer">
+              <MetricCard
+                title="Inadimplência"
+                value={formatCurrency(stats.totalOverdue)}
+                icon={AlertCircle}
+                variant="destructive"
+                trend={{
+                  value: `${stats.overdueInvoices} vencidas`,
+                  isPositive: false,
+                }}
+              />
+            </div>
+            <div onClick={() => showDetail("expenses")} className="cursor-pointer">
+              <MetricCard
+                title="Despesas do Período"
+                value={formatCurrency(stats.totalExpenses)}
+                icon={TrendingDown}
+                variant="default"
+                trend={{
+                  value: `${stats.pendingExpenses} lançamentos`,
+                  isPositive: false,
+                }}
+              />
+            </div>
           </div>
-          <div onClick={() => showDetail("pending")} className="cursor-pointer">
-            <MetricCard
-              title="Honorários Pendentes"
-              value={formatCurrency(stats.totalPending)}
-              icon={TrendingUp}
-              variant="warning"
-              trend={{
-                value: `${stats.pendingInvoices} faturas`,
-                isPositive: false,
-              }}
-            />
-          </div>
-          <div onClick={() => showDetail("overdue")} className="cursor-pointer">
-            <MetricCard
-              title="Inadimplência"
-              value={formatCurrency(stats.totalOverdue)}
-              icon={AlertCircle}
-              variant="destructive"
-              trend={{
-                value: `${stats.overdueInvoices} vencidas`,
-                isPositive: false,
-              }}
-            />
-          </div>
-          <div onClick={() => showDetail("expenses")} className="cursor-pointer">
-            <MetricCard
-              title="Despesas do Período"
-              value={formatCurrency(stats.totalExpenses)}
-              icon={TrendingDown}
-              variant="default"
-              trend={{
-                value: `${stats.pendingExpenses} lançamentos`,
-                isPositive: false,
-              }}
-            />
+          <div className="col-span-1">
+            <CashFlowWidget />
           </div>
         </div>
 
