@@ -82,7 +82,16 @@
       "Bash(gh repo rename:*)",
       "Bash(gh repo view:*)",
       "Bash(git remote set-url:*)",
-      "Bash(move \"data-bling-sheets-3122699b-1\" \"contta-financeiro\")"
+      "Bash(move \"data-bling-sheets-3122699b-1\" \"contta-financeiro\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: initial NFS-e API for Goiania\n\n- Express REST API with TypeScript\n- Certificate digital management \\(A1/PFX\\)\n- XML builder for RPS \\(ABRASF 2.0\\)\n- XML digital signature \\(RSA-SHA1\\)\n- SOAP client for Goiania WebService\n- Docker support for local development\n- Vercel deployment configuration\n\nEndpoints:\n- POST /nfse/emitir - Issue NFS-e\n- GET /nfse/consultar/rps/:numero/:serie\n- GET /nfse/consultar/periodo\n- POST /nfse/cancelar\n- GET /nfse/certificado\n- GET /nfse/testar\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh repo create:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill /F /PID 72104)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 75328 -Force\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsImtpZCI6IkloL3lXeFlPOHhrZGppTzAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3p2b3pkd2RkYml3dHRyanpwZGRuLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJmMzUxZTcwZi1hZmExLTQ3NDktOGQ2Zi04MzJkYWQ2M2MwNzQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY3ODE5MDQzLCJpYXQiOjE3Njc4MTU0NDMsImVtYWlsIjoic2VyZ2lvQGFtcGxhYnVzaW5lc3MuY29tLmJyIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6InNlcmdpb0BhbXBsYWJ1c2luZXNzLmNvbS5iciIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJmMzUxZTcwZi1hZmExLTQ3NDktOGQ2Zi04MzJkYWQ2M2MwNzQifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc2NzgxNTQ0M31dLCJzZXNzaW9uX2lkIjoiZmRiM2U1MzMtNjQ3NC00Mzg3LTg0YmYtZTcyMWMxYjEwZWNjIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.h-eQ4Z7fG6XM5KBaJKvRbewDwk5V7nZDMtDJNTfmxek\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsImtpZCI6IkloL3lXeFlPOHhrZGppTzAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3p2b3pkd2RkYml3dHRyanpwZGRuLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJmMzUxZTcwZi1hZmExLTQ3NDktOGQ2Zi04MzJkYWQ2M2MwNzQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY3ODE5NTg3LCJpYXQiOjE3Njc4MTU5ODcsImVtYWlsIjoic2VyZ2lvQGFtcGxhYnVzaW5lc3MuY29tLmJyIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6InNlcmdpb0BhbXBsYWJ1c2luZXNzLmNvbS5iciIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJmMzUxZTcwZi1hZmExLTQ3NDktOGQ2Zi04MzJkYWQ2M2MwNzQifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc2NzgxNTk4N31dLCJzZXNzaW9uX2lkIjoiMjcxNmQ3NDktNWI1Yi00NGE4LWIyM2EtOWJiMzgyZGU5NTY1IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.rNEkelVwjfFn3ShrCCQtBzZ9Kj7kxwukT-W6iPUw2g8\")"
     ],
     "deny": [],
     "ask": []

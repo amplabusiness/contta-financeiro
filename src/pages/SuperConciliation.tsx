@@ -6,7 +6,7 @@ import { FinancialIntelligenceService, ClassificationSuggestion } from "@/servic
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -138,6 +138,14 @@ export default function SuperConciliation() {
   const [viewMode, setViewMode] = useState<'pending' | 'all'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05"); // Default Sicredi (ajustar conforme necessidade)
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
+  const [balanceDetails, setBalanceDetails] = useState({
+      base: 90725.06,
+      prevCredits: 0,
+      prevDebits: 0,
+      monthCredits: 0,
+      monthDebits: 0,
+      divergence: 0
+  });
   
   // Fetch Bank Account Code (Simples heuristic: busca Sicredi, se não achar, usa default)
   useEffect(() => {
@@ -195,40 +203,91 @@ export default function SuperConciliation() {
         const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).toISOString();
         const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).toISOString();
 
-        // Calculate Balances - base em 31/12/2024 conhecido (OFX)
+    // CONFIGURAÇÃO DE SALDOS TRAVADOS (MENSAL - PERIODO FECHADO)
+    // NÃO CALCULAR SALDOS. O saldo é um fato absoluto fornecido pelo extrato.
+    // Divergências devem ser resolvidas ajustando os lançamentos, nunca o saldo.
+    const LOCKED_BALANCES: Record<string, { start: number, end: number }> = {
+        '2024-12': { start: 0, end: 90725.06 },          // Dezembro 2024 (Base)
+        '2025-01': { start: 90725.06, end: 18553.54 },   // Janeiro
+        '2025-02': { start: 18553.54, end: 2578.93 },    // Fevereiro
+        '2025-03': { start: 2578.93, end: 28082.64 },    // Março
+        '2025-04': { start: 28082.64, end: 5533.07 },    // Abril
+        '2025-05': { start: 5533.07, end: 10119.92 },    // Maio
+        '2025-06': { start: 10119.92, end: 2696.75 },    // Junho
+        '2025-07': { start: 2696.75, end: 8462.05 },     // Julho
+        '2025-08': { start: 8462.05, end: 10251.53 },    // Agosto
+        '2025-09': { start: 10251.53, end: 14796.07 },   // Setembro
+        '2025-10': { start: 14796.07, end: 12618.57 },   // Outubro
+        '2025-11': { start: 12618.57, end: 57357.63 },   // Novembro
+    };
+        
+        const currentMonthKey = format(selectedDate, 'yyyy-MM');
+        
+        // 1. Determinar Saldo Inicial e Final (TRAVADOS)
+        let valStart = 0;
+        let valFinal = 0;
+        const locked = LOCKED_BALANCES[currentMonthKey];
+
+        // Se houver trava para o mês, respeitar cegamente.
+        // Se não houver, alerta! (Por enquanto fallback para zero ou logica antiga se necessario, mas o usuario 'proibiu' calculo)
+        
+        if (locked) {
+            valStart = locked.start;
+            valFinal = locked.end;
+        } else {
+             // Lógica de fallback provisória para meses sem trava explicita (usa o anterior como base)
+             // Tenta pegar o final do mes anterior como inicio deste
+             const prevMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
+             const prevKey = format(prevMonth, 'yyyy-MM');
+             if (LOCKED_BALANCES[prevKey]) {
+                 valStart = LOCKED_BALANCES[prevKey].end;
+                 valFinal = valStart; // Sem info do final, repete o inicial (indica zero movimento até ter trava)
+             } else {
+                 valStart = 90725.06; // Fallback genesis
+                 valFinal = 90725.06;
+             }
+        }
+        
+        // Calcular "Divergência" apenas para informar o usuário onde está o erro nos lançamentos
+        // Não altera os saldos exibidos (Start/Final)
+        const valPrev = valStart; 
+
+        // 2. Trazer Movimentações apenas para cálculo de conferência (Divergência)
         const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
         const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
-        const BASE_BALANCE_2024_12_31 = 90725.06;
 
-        const calculateBalance = (transactions: any[]) => transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
-
-        // Soma de transações desde 01/01/2025 até o dia anterior ao mês selecionado
-        const { data: txBeforeMonth } = await supabase
-                .from('bank_transactions')
-                .select('amount')
-                .lt('transaction_date', firstDateStr)
-                .gte('transaction_date', '2025-01-01')
-                .order('transaction_date', { ascending: true });
-        const sumBefore = calculateBalance(txBeforeMonth || []);
-        const valPrev = BASE_BALANCE_2024_12_31 + sumBefore;
-        console.log('Saldo Anterior (31/12/2024):', { valPrev, tipo: 'base+transacoes' });
-
-        // Saldo inicial do mês = saldo anterior
-        const valStart = valPrev;
-        console.log(`Saldo Inicial (${firstDateStr}):`, { valStart, tipo: 'base+transacoes' });
-
-        // Soma das transações dentro do mês selecionado
         const { data: txInMonth } = await supabase
                 .from('bank_transactions')
                 .select('amount')
                 .gte('transaction_date', firstDateStr)
                 .lte('transaction_date', lastDateStr)
                 .order('transaction_date', { ascending: true });
-        const sumMonth = calculateBalance(txInMonth || []);
-        const valFinal = valStart + sumMonth;
-        console.log(`Saldo Final (${lastDateStr}):`, { valFinal, sumMonth, totalTx: txInMonth?.length });
+        
+        const detailsMonth = {
+            credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+            debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
+        };
+        
+        const sumMonth = detailsMonth.credits + detailsMonth.debits;
+        
+        // CÁLCULO DE DIVERGÊNCIA (DEBUG)
+        // Se (Inicial + Movimentos) != Final Travado, existe erro nos lançamentos
+        const calculatedFinal = valStart + sumMonth;
+        const difference = valFinal - calculatedFinal;
+
+        if (Math.abs(difference) > 0.01 && locked) {
+            console.warn(`DIVERGÊNCIA ENCONTRADA: ${difference.toFixed(2)}`);
+        }
 
         setBalances({ prev: valPrev, start: valStart, final: valFinal });
+        setBalanceDetails({
+            base: valStart,
+            prevCredits: 0,
+            prevDebits: 0,
+            monthCredits: detailsMonth.credits,
+            monthDebits: detailsMonth.debits,
+            divergence: difference
+        });
 
         let query = supabase
             .from('bank_transactions')
@@ -737,15 +796,43 @@ export default function SuperConciliation() {
         </div>
 
         <div className="flex items-center gap-3">
-            <div className="mr-2 text-right flex flex-col items-end">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 0), 'dd/MM/yyyy') : 'Anterior'}
-                </span>
-                <span className={`font-mono text-sm font-medium ${balances.prev < 0 ? 'text-red-500' : 'text-slate-700'}`}>
-                    {formatCurrency(balances.prev)}
-                </span>
-             </div>
-             <div className="mr-2 text-right flex flex-col items-end">
+            {/* SALDO ANTERIOR */}
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="mr-2 text-right flex flex-col items-end cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide group-hover:text-blue-600">
+                            {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 0), 'dd/MM/yyyy') : 'Anterior'}
+                        </span>
+                        <span className={`font-mono text-sm font-medium ${balances.prev < 0 ? 'text-red-500' : 'text-slate-700'} group-hover:underline decoration-dotted`}>
+                            {formatCurrency(balances.prev)}
+                        </span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4">
+                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Acumulado desde 2025)</h4>
+                    <div className="space-y-2 text-xs">
+                        <div className="flex justify-between border-b pb-1">
+                            <span>Base (31/12/2024)</span>
+                            <span className="font-mono">{formatCurrency(balanceDetails.base)}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-600">
+                            <span>Entradas (01/01 - Início Mês)</span>
+                            <span className="font-mono">+{formatCurrency(balanceDetails.prevCredits)}</span>
+                        </div>
+                        <div className="flex justify-between text-red-600 border-b pb-1">
+                            <span>Saídas (01/01 - Início Mês)</span>
+                            <span className="font-mono">{formatCurrency(balanceDetails.prevDebits)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
+                            <span>Saldo Calculado</span>
+                            <span>{formatCurrency(balances.prev)}</span>
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+
+            {/* SALDO INICIAL (Igual ao Anterior neste modelo) */}
+             <div className="mr-2 text-right flex flex-col items-end opacity-70">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
                     {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'dd/MM/yyyy') : 'Início'}
                 </span>
@@ -753,14 +840,47 @@ export default function SuperConciliation() {
                     {formatCurrency(balances.start)}
                 </span>
              </div>
-             <div className="mr-2 text-right flex flex-col items-end pr-4 border-r border-gray-200">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'dd/MM/yyyy') : 'Final'}
-                </span>
-                <span className={`font-mono text-sm font-bold ${balances.final < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatCurrency(balances.final)}
-                </span>
-             </div>
+
+            {/* SALDO FINAL */}
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="mr-2 text-right flex flex-col items-end pr-4 border-r border-gray-200 cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide group-hover:text-blue-600">
+                            {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'dd/MM/yyyy') : 'Final'}
+                        </span>
+                        <span className={`font-mono text-sm font-bold ${balances.final < 0 ? 'text-red-600' : 'text-green-600'} group-hover:underline decoration-dotted`}>
+                            {formatCurrency(balances.final)}
+                        </span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4">
+                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição do Mês</h4>
+                    <div className="space-y-2 text-xs">
+                        <div className="flex justify-between border-b pb-1">
+                            <span>Saldo Inicial</span>
+                            <span className="font-mono">{formatCurrency(balances.start)}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-600">
+                            <span>Entradas (Mês Atual)</span>
+                            <span className="font-mono">+{formatCurrency(balanceDetails.monthCredits)}</span>
+                        </div>
+                        <div className="flex justify-between text-red-600 border-b pb-1">
+                            <span>Saídas (Mês Atual)</span>
+                            <span className="font-mono">{formatCurrency(balanceDetails.monthDebits)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
+                            <span>Saldo Final (Extrato)</span>
+                            <span>{formatCurrency(balances.final)}</span>
+                        </div>
+                        {Math.abs(balanceDetails.divergence || 0) > 0.01 && (
+                            <div className="flex justify-between font-bold pt-1 text-xs text-red-500 mt-2 border-t border-red-100 bg-red-50 p-1 rounded">
+                                <span>Diferença (Check Lançamentos)</span>
+                                <span>{formatCurrency(balanceDetails.divergence || 0)}</span>
+                            </div>
+                        )}
+                    </div>
+                </PopoverContent>
+            </Popover>
             <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -968,7 +1088,21 @@ export default function SuperConciliation() {
                     <p className="text-sm text-slate-500 mt-2 max-w-[200px] mx-auto">
                         Este lançamento já foi processado e registrado na contabilidade.
                     </p>
-                    <Button variant="destructive" className="mt-6" onClick={handleUnmatch} disabled={loading}>
+                    
+                    {selectedTx.journal_entry_id && (
+                        <div className="mt-4 flex flex-col gap-2 max-w-[200px] mx-auto">
+                             <Button 
+                                variant="outline" 
+                                className="w-full border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100" 
+                                onClick={() => navigate('/client-ledger')}
+                             >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Ver no Extrato
+                             </Button>
+                        </div>
+                    )}
+
+                    <Button variant="destructive" className="mt-4" onClick={handleUnmatch} disabled={loading}>
                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         Desfazer Conciliação (Editar)
                     </Button>
