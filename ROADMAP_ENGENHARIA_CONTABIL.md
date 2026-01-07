@@ -224,6 +224,29 @@ Todos as fases do projeto "Engenharia Contábil" foram implementadas com sucesso
 4.  **Agentes de Auditoria IA** operando diariamente.
 5.  **Conciliação Inteligente** que aprende com o uso.
 
-O foco agora muda para **Manutenção e Monitoramento**.
+---
+
+## 🏗️ Fase 6: Arquitetura ELT (Storage & Importação)
+**Objetivo:** Modernizar a importação de dados centralizando arquivos brutos no Supabase Storage (Extract, Load, Transform).
+
+- [x] **6.1. Infraestrutura de Storage**
+    - Criar buckets `financial-statements` (OFX/CSV) e `client-receipts` (Recebimentos).
+    - Criar tabela de auditoria `import_files` para rastrear status de processamento.
+    - *Ação:* Migração `20260107100000_financial_storage_setup.sql` implementada.
+    - *Status:* ✅ Concluído.
+
+- [x] **6.2. Pipeline de Processamento (Scripts ELT)**
+    - Implementar upload (`elt_upload_file.mjs`) e worker (`elt_process_queue.mjs`).
+    - Migrar lógica de Parser OFX para script centralizado.
+    - Validar detecção de duplicatas (Teste Jan 2025: 183 duplicatas detectadas corretamente).
+    - *Status:* ✅ Protótipo Funcional (07/01/2026).
+
+- [ ] **6.3. Migração para Edge Functions**
+    - Converter o script `elt_process_queue.mjs` em Supabase Edge Function para execução automática via Webhook.
+    - *Status:* 📝 Planejado.
+
+---
+
+O foco agora muda para **Implementação da Fase 6 e Monitoramento**.
 
 ---

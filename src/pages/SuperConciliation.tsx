@@ -281,6 +281,7 @@ export default function SuperConciliation() {
             .from('chart_of_accounts')
             .select('code, name')
             .eq('is_analytical', true) // Only analytical accounts
+            .eq('is_active', true) // Filter active accounts only
             .or('code.ilike.3.%,code.ilike.4.%,code.ilike.2.1.%,code.ilike.1.1.2.%,code.ilike.1.1.1.%,code.ilike.1.1.3.%')
             .order('code');
         if (data) setAvailableAccounts(data);
@@ -410,19 +411,26 @@ export default function SuperConciliation() {
   }, [selectedTx, isManualMode, bankAccountCode]);
 
   const handleUnmatch = async () => {
-      if (!selectedTx || !selectedTx.journal_entry_id) return;
+      if (!selectedTx) return;
       
-      if (!confirm("Tem certeza? Isso apagará o lançamento contábil original e permitirá reclassificar.")) return;
+      const hasEntry = !!selectedTx.journal_entry_id;
+      const confirmMsg = hasEntry 
+        ? "Tem certeza? Isso apagará o lançamento contábil original e permitirá reclassificar."
+        : "Esta transação está marcada como conciliada sem lançamento vinculado. Deseja reabrir para edição?";
+
+      if (!confirm(confirmMsg)) return;
 
       setLoading(true);
       try {
           // 1. Apagar Lançamento Contábil (Cascade deve apagar linhas)
-          const { error: delError } = await supabase
-            .from('accounting_entries')
-            .delete()
-            .eq('id', selectedTx.journal_entry_id);
-            
-          if (delError) throw new Error("Erro ao apagar lançamento: " + delError.message);
+          if (hasEntry) {
+            const { error: delError } = await supabase
+                .from('accounting_entries')
+                .delete()
+                .eq('id', selectedTx.journal_entry_id);
+                
+            if (delError) throw new Error("Erro ao apagar lançamento: " + delError.message);
+          }
 
           // 2. Desmarcar no Banco e limpar Journal ID
           const { error: updateError } = await supabase

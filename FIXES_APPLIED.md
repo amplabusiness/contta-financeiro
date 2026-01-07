@@ -191,6 +191,32 @@ Total lines changed: ~25
 - [x] No breaking changes introduced
 - [x] All commits include detailed descriptions
 
+
+### 6. Data Integrity Fix (Feb/Mar 2025 Balances)
+
+#### Issue
+- **High Balance Anomaly**:
+  - Feb 2025 and Mar 2025 showed balances growing exponentially to ~R$ 1.022.000,00.
+  - User suspected calculation error ("calcular saldo não pode dar errado").
+- **Root Cause Analysis**:
+  - Found 289 "Inverted Sign" transactions.
+  - Outflows (Pagamento Pix, Tarifas, Liquidação Boleto) were stored with POSITIVE amounts (Inflows).
+  - This effectively double-counted costs as revenue (False Revenue of R$ 486k → Impact of R$ 972k).
+
+#### Actions Taken
+- **Diagnosis**: 
+  - Ran `scripts/diagnose_sign_errors.mjs`.
+  - Identified 289 erroneous transactions using keywords (`PAGAMENTO`, `DEBITO`, `TARIFA`, etc) coupled with positive amounts.
+- **Correction**:
+  - Ran `scripts/fix_inverted_signs.mjs`.
+  - Inverted the sign of all 289 records from `+Amount` to `-Amount`.
+- **Verification**:
+  - New Projected Balance Mar 31: **R$ 49.387,30** (Was R$ ~1.022.000).
+  - Logic `Previous + In - Out` now holds true.
+
+#### Status
+- ✅ **FIXED** (Data integrity restored for Q1 2025).
+
 ---
 
 **Generated**: 2025-11-14
