@@ -24,6 +24,13 @@ PLANO DE CONTAS → LIVRO DIÁRIO → LIVRO RAZÃO → BALANCETE → DRE → BAL
 
 ---
 
+## 0. FONTE DE VERDADE - GRUPOS ECONÔMICOS
+Antes de qualquer auditoria de Receita/Honorários, consultar: `MAPA_GRUPOS_ECONOMICOS.md`.
+*   Identificar a **Empresa Pagadora** (Matriz Financeira) do grupo.
+*   Validar se o recebimento cobre as empresas vinculadas.
+
+---
+
 ## VIOLAÇÕES CRÍTICAS
 
 ### 1. Clients.tsx - Cadastro de Clientes
