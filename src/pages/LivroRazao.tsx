@@ -3,47 +3,83 @@ import { Layout } from '@/components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/integrations/supabase/client'
 import { formatCurrency } from '@/data/expensesData'
-import { Book, TrendingUp, TrendingDown, Search } from 'lucide-react'
+import { Book, TrendingUp, TrendingDown, Search, FileText } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useSearchParams } from 'react-router-dom'
+import { usePeriod } from '@/contexts/PeriodContext'
+import { Badge } from '@/components/ui/badge'
 
 interface ChartAccount {
   id: string
   code: string
   name: string
-  type: string
-  is_synthetic: boolean
+  account_type: string
+  nature: string
+  is_analytical: boolean
 }
 
-interface RazaoEntry {
-  data_lancamento: string
-  numero_lancamento: string
-  descricao: string
-  debito: number
-  credito: number
-  saldo: number
+interface LedgerEntry {
+  line_id: string | null
+  entry_id: string | null
+  entry_date: string
+  competence_date: string
+  entry_number: number
+  entry_type: string
+  document_number: string | null
+  description: string
+  history: string | null
+  debit: number
+  credit: number
+  running_balance: number
+  source_type: string | null
+  is_opening_balance: boolean
+}
+
+interface LedgerSummary {
+  account_id: string
+  account_code: string
+  account_name: string
+  account_type: string
+  nature: string
+  opening_balance: number
+  total_debits: number
+  total_credits: number
+  closing_balance: number
+  entry_count: number
 }
 
 const LivroRazao = () => {
+  const { selectedYear, selectedMonth } = usePeriod()
   const [accounts, setAccounts] = useState<ChartAccount[]>([])
   const [selectedAccount, setSelectedAccount] = useState<string>('')
-  const [entries, setEntries] = useState<RazaoEntry[]>([])
+  const [entries, setEntries] = useState<LedgerEntry[]>([])
+  const [summary, setSummary] = useState<LedgerSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingLedger, setLoadingLedger] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [searchParams] = useSearchParams()
+
+  // Inicializar datas com base no período selecionado
+  useEffect(() => {
+    const firstDay = new Date(selectedYear, selectedMonth - 1, 1)
+    const lastDay = new Date(selectedYear, selectedMonth, 0)
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+  }, [selectedYear, selectedMonth])
 
   const loadAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
         .from('chart_of_accounts')
-        .select('*')
+        .select('id, code, name, account_type, nature, is_analytical')
         .eq('is_active', true)
+        .eq('is_analytical', true) // Apenas contas analíticas têm movimentação
         .order('code')
 
       if (error) throw error
@@ -65,165 +101,78 @@ const LivroRazao = () => {
     }
   }, [searchParams])
 
-  const loadRazao = useCallback(async (accountId: string, start?: string, end?: string) => {
+  const loadLedger = useCallback(async (accountId: string, start: string, end: string) => {
+    if (!accountId || !start || !end) return
+    
     try {
-      setLoading(true)
+      setLoadingLedger(true)
+      console.log('[LivroRazao] Buscando razão do banco para conta:', accountId, 'período:', start, 'até', end)
 
-      const account = accounts.find(a => a.id === accountId)
-      if (!account) {
-        setEntries([])
-        return
-      }
-
-      // Determinar quais contas buscar
-      let accountIds: string[] = []
-      if (account.is_synthetic) {
-        // Para contas sintéticas, buscar todas as contas filhas analíticas
-        const childAccounts = accounts.filter(a => 
-          a.code.startsWith(account.code + '.') && !a.is_synthetic
-        )
-        accountIds = childAccounts.map(a => a.id)
-        
-        // Se não houver contas filhas, usar a própria conta
-        if (accountIds.length === 0) {
-          accountIds = [accountId]
-        }
-      } else {
-        // Para contas analíticas, usar apenas ela
-        accountIds = [accountId]
-      }
-
-      // Calcular saldo inicial
-      let saldoInicial = 0
-      if (start && accountIds.length > 0) {
-        const { data: saldoData, error: saldoError } = await supabase
-          .from('accounting_entry_lines')
-          .select('debit, credit, entry_id(entry_date)')
-          .in('account_id', accountIds)
-
-        if (saldoError) throw saldoError
-
-        if (saldoData) {
-          // Filtrar apenas lançamentos anterior à data inicial
-          const saldoFiltrado = saldoData.filter((line: any) => {
-            return line.entry_id && line.entry_id.entry_date < start
-          })
-
-          const totalDebito = saldoFiltrado.reduce((sum, line) => sum + (line.debit || 0), 0)
-          const totalCredito = saldoFiltrado.reduce((sum, line) => sum + (line.credit || 0), 0)
-          // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
-          const primeiroDigito = account.code.charAt(0)
-          const isDevedora = ['1', '4'].includes(primeiroDigito)
-          saldoInicial = isDevedora ? totalDebito - totalCredito : totalCredito - totalDebito
-        }
-      }
-
-      // Buscar lançamentos do período
-      let query = supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit,
-          credit,
-          description,
-          account_id,
-          entry_id(id, entry_date, description)
-        `)
-        .in('account_id', accountIds)
-        .order('entry_id(entry_date)', { ascending: true })
-
-      if (start) query = query.gte('entry_id.entry_date', start)
-      if (end) query = query.lte('entry_id.entry_date', end)
-
-      const { data, error } = await query
-      if (error) {
-        console.error('Erro na query Supabase:', error)
-        throw new Error(`Erro ao carregar lançamentos: ${error.message}`)
-      }
-
-      if (!data) {
-        setEntries([])
-        return
-      }
-
-      // Determinar natureza pelo CÓDIGO: 1=Ativo(devedora), 2=Passivo(credora), 3=Receita(credora), 4=Despesa(devedora)
-      const primeiroDigito = account.code.charAt(0)
-      const isDevedora = ['1', '4'].includes(primeiroDigito)
-
-      let saldoAcumulado = saldoInicial
-      const razaoEntries: RazaoEntry[] = []
-
-      if (Math.abs(saldoInicial) > 0.01) {
-        razaoEntries.push({
-          data_lancamento: start || '',
-          numero_lancamento: '-',
-          descricao: 'Saldo Inicial',
-          debito: 0,
-          credito: 0,
-          saldo: saldoInicial
-        })
-      }
-
-      data.forEach((line: any) => {
-        if (!line.entry_id) {
-          console.warn('Linha sem entry_id associado:', line)
-          return
-        }
-
-        const debito = line.debit || 0
-        const credito = line.credit || 0
-        saldoAcumulado += isDevedora ? debito - credito : credito - debito
-
-        // Se for conta sintética, incluir o código da conta filha na descrição
-        let descricao = line.description || line.entry_id.description || 'Sem descrição'
-        if (account.is_synthetic) {
-          const childAccount = accounts.find(a => a.id === line.account_id)
-          if (childAccount) {
-            descricao = `[${childAccount.code}] ${descricao}`
-          }
-        }
-
-        razaoEntries.push({
-          data_lancamento: line.entry_id.entry_date,
-          numero_lancamento: line.entry_id.id.substring(0, 8),
-          descricao,
-          debito,
-          credito,
-          saldo: saldoAcumulado
-        })
+      // Buscar razão detalhado via RPC
+      const { data: ledgerData, error: ledgerError } = await supabase.rpc('get_account_ledger', {
+        p_account_id: accountId,
+        p_period_start: start,
+        p_period_end: end
       })
 
-      setEntries(razaoEntries)
+      if (ledgerError) {
+        console.error('[LivroRazao] Erro ao buscar razão:', ledgerError)
+        throw ledgerError
+      }
+
+      // Buscar resumo via RPC
+      const { data: summaryData, error: summaryError } = await supabase.rpc('get_account_ledger_summary', {
+        p_account_id: accountId,
+        p_period_start: start,
+        p_period_end: end
+      })
+
+      if (summaryError) {
+        console.error('[LivroRazao] Erro ao buscar resumo:', summaryError)
+        throw summaryError
+      }
+
+      console.log('[LivroRazao] Razão carregado:', ledgerData?.length, 'linhas')
+      setEntries(ledgerData || [])
+      setSummary(summaryData?.[0] || null)
     } catch (error: any) {
-      const errorMessage = error?.message || String(error) || 'Erro desconhecido ao carregar razão'
-      console.error('Erro ao carregar razão:', errorMessage)
+      console.error('Erro ao carregar razão:', error)
       setEntries([])
+      setSummary(null)
     } finally {
-      setLoading(false)
+      setLoadingLedger(false)
     }
-  }, [accounts])
+  }, [])
 
   useEffect(() => {
     loadAccounts()
-    // Usar o ano inteiro por padrão
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
   }, [loadAccounts])
 
   useEffect(() => {
-    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
-  }, [selectedAccount, startDate, endDate, loadRazao])
+    if (selectedAccount && startDate && endDate) {
+      loadLedger(selectedAccount, startDate, endDate)
+    }
+  }, [selectedAccount, startDate, endDate, loadLedger])
 
   const handleFilter = () => {
-    if (selectedAccount) loadRazao(selectedAccount, startDate, endDate)
+    if (selectedAccount && startDate && endDate) {
+      loadLedger(selectedAccount, startDate, endDate)
+    }
   }
 
   const selectedAccountData = accounts.find(a => a.id === selectedAccount)
-  const totalDebito = entries.reduce((sum, entry) => sum + entry.debito, 0)
-  const totalCredito = entries.reduce((sum, entry) => sum + entry.credito, 0)
-  const saldoFinal = entries.length > 0 ? entries[entries.length - 1].saldo : 0
+
+  const formatEntryType = (type: string) => {
+    const types: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+      'saldo_inicial': { label: 'Saldo Inicial', variant: 'secondary' },
+      'saldo_abertura': { label: 'Abertura', variant: 'secondary' },
+      'pagamento_despesa': { label: 'Despesa', variant: 'destructive' },
+      'receita_honorarios': { label: 'Receita', variant: 'default' },
+      'adiantamento_socio': { label: 'Adiantamento', variant: 'outline' },
+      'PROVISAO_RECEITA': { label: 'Provisão', variant: 'outline' },
+    }
+    return types[type] || { label: type, variant: 'outline' as const }
+  }
 
   if (loading && accounts.length === 0) {
     return (
@@ -257,7 +206,6 @@ const LivroRazao = () => {
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.code} - {account.name}
-                        {account.is_synthetic && ' (Sintética)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -278,31 +226,34 @@ const LivroRazao = () => {
           </CardContent>
         </Card>
 
-        {selectedAccountData && (
+        {selectedAccountData && summary && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                Conta Selecionada
-                {selectedAccountData.is_synthetic && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    (Consolidado de contas filhas)
-                  </span>
-                )}
+                <FileText className="h-5 w-5" />
+                {summary.account_code} - {summary.account_name}
               </CardTitle>
+              <CardDescription>
+                Natureza: {summary.nature} | Tipo: {summary.account_type}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Código</p>
-                  <p className="text-lg font-mono font-semibold">{selectedAccountData.code}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="text-lg font-semibold">{selectedAccountData.name}</p>
+                  <p className="text-sm text-muted-foreground">Saldo Inicial</p>
+                  <p className="text-lg font-semibold">{formatCurrency(summary.opening_balance)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Tipo</p>
-                  <p className="text-lg font-semibold">{selectedAccountData.type}</p>
+                  <p className="text-sm text-muted-foreground">Total Débitos</p>
+                  <p className="text-lg font-semibold text-green-600">{formatCurrency(summary.total_debits)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Créditos</p>
+                  <p className="text-lg font-semibold text-red-600">{formatCurrency(summary.total_credits)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldo Final</p>
+                  <p className="text-lg font-bold">{formatCurrency(summary.closing_balance)}</p>
                 </div>
               </div>
             </CardContent>
@@ -316,7 +267,7 @@ const LivroRazao = () => {
                 <TrendingUp className="h-4 w-4 text-green-500" />Total Débito
               </CardTitle>
             </CardHeader>
-            <CardContent><div className="text-2xl font-bold">{formatCurrency(totalDebito)}</div></CardContent>
+            <CardContent><div className="text-2xl font-bold">{formatCurrency(summary?.total_debits || 0)}</div></CardContent>
           </Card>
 
           <Card>
@@ -325,7 +276,7 @@ const LivroRazao = () => {
                 <TrendingDown className="h-4 w-4 text-red-500" />Total Crédito
               </CardTitle>
             </CardHeader>
-            <CardContent><div className="text-2xl font-bold">{formatCurrency(totalCredito)}</div></CardContent>
+            <CardContent><div className="text-2xl font-bold">{formatCurrency(summary?.total_credits || 0)}</div></CardContent>
           </Card>
 
           <Card>
@@ -334,14 +285,17 @@ const LivroRazao = () => {
                 <Book className="h-4 w-4" />Saldo Final
               </CardTitle>
             </CardHeader>
-            <CardContent><div className="text-2xl font-bold">{formatCurrency(Math.abs(saldoFinal))}</div></CardContent>
+            <CardContent><div className="text-2xl font-bold">{formatCurrency(Math.abs(summary?.closing_balance || 0))}</div></CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Movimentações</CardTitle>
-            <CardDescription>{entries.length} movimento(s) no período</CardDescription>
+            <CardDescription>
+              {summary?.entry_count || 0} movimento(s) no período
+              {loadingLedger && ' - Carregando...'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {!selectedAccount ? (
@@ -350,12 +304,17 @@ const LivroRazao = () => {
                 <p className="text-lg font-medium">Selecione uma conta contábil</p>
                 <p className="text-sm">Use o filtro acima para escolher a conta que deseja visualizar</p>
               </div>
+            ) : loadingLedger ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
             ) : entries.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Nº Lanç.</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Histórico</TableHead>
                     <TableHead className="text-right">Débito</TableHead>
                     <TableHead className="text-right">Crédito</TableHead>
@@ -363,23 +322,37 @@ const LivroRazao = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {entries.map((entry, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        {entry.numero_lancamento !== '-'
-                          ? new Date(entry.data_lancamento).toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{entry.numero_lancamento}</TableCell>
-                      <TableCell>{entry.descricao}</TableCell>
-                      <TableCell className="text-right">{entry.debito > 0 ? formatCurrency(entry.debito) : '-'}</TableCell>
-                      <TableCell className="text-right">{entry.credito > 0 ? formatCurrency(entry.credito) : '-'}</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(Math.abs(entry.saldo))}
-                        {entry.saldo !== 0 && (entry.saldo > 0 ? ' D' : ' C')}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {entries.map((entry, idx) => {
+                    const typeInfo = formatEntryType(entry.entry_type)
+                    return (
+                      <TableRow key={idx} className={entry.is_opening_balance ? 'bg-muted/50' : ''}>
+                        <TableCell>
+                          {entry.competence_date 
+                            ? new Date(entry.competence_date).toLocaleDateString('pt-BR')
+                            : '-'}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {entry.entry_number > 0 ? entry.entry_number : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-md truncate" title={entry.description || ''}>
+                          {entry.description || 'Sem descrição'}
+                        </TableCell>
+                        <TableCell className="text-right text-green-600">
+                          {entry.debit > 0 ? formatCurrency(entry.debit) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right text-red-600">
+                          {entry.credit > 0 ? formatCurrency(entry.credit) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(Math.abs(entry.running_balance))}
+                          {entry.running_balance !== 0 && (entry.running_balance > 0 ? ' D' : ' C')}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             ) : (

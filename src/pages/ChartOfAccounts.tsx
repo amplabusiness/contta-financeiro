@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Ban, CheckCircle, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Ban, CheckCircle, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/utils";
@@ -36,6 +37,7 @@ interface AccountBalance {
 }
 
 const ChartOfAccounts = () => {
+  const navigate = useNavigate();
   const { selectedYear, selectedMonth } = usePeriod();
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [balances, setBalances] = useState<Map<string, AccountBalance>>(new Map());
@@ -52,6 +54,10 @@ const ChartOfAccounts = () => {
     nature: "DEVEDORA",
     parent_id: "",
   });
+
+  const handleViewLedger = (accountId: string) => {
+    navigate(`/livro-razao?account=${accountId}`);
+  };
 
   useEffect(() => {
     loadAccounts();
@@ -470,6 +476,17 @@ const ChartOfAccounts = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
+                              {account.is_analytical && balance && (balance.total_debits > 0 || balance.total_credits > 0) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => handleViewLedger(account.id)}
+                                  title="Ver Razão"
+                                >
+                                  <BookOpen className="w-3 h-3 text-primary" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
