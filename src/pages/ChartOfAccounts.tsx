@@ -87,157 +87,44 @@ const ChartOfAccounts = () => {
       const periodStartStr = periodStart.toISOString().split('T')[0];
       const periodEndStr = periodEnd.toISOString().split('T')[0];
 
-      console.log('[ChartOfAccounts] Carregando saldos para período:', periodStartStr, 'até', periodEndStr);
+      console.log('[ChartOfAccounts] Buscando saldos do banco para período:', periodStartStr, 'até', periodEndStr);
 
-      // Buscar saldos de abertura (lançamentos antes do período)
-      const { data: openingData, error: openingError } = await supabase
-        .from("accounting_entry_lines")
-        .select(`
-          account_id,
-          debit,
-          credit,
-          accounting_entries!inner(
-            competence_date,
-            entry_type
-          )
-        `)
-        .lt("accounting_entries.competence_date", periodStartStr);
+      // Chamar função SQL que calcula os saldos no banco de dados
+      const { data, error } = await supabase.rpc('get_account_balances', {
+        p_period_start: periodStartStr,
+        p_period_end: periodEndStr
+      });
 
-      if (openingError) {
-        console.error('[ChartOfAccounts] Erro ao buscar saldo de abertura:', openingError);
-        throw openingError;
+      if (error) {
+        console.error('[ChartOfAccounts] Erro ao buscar saldos via RPC:', error);
+        throw error;
       }
 
-      console.log('[ChartOfAccounts] Lançamentos anteriores encontrados:', openingData?.length || 0);
+      console.log('[ChartOfAccounts] Saldos recebidos do banco:', data?.length || 0);
 
-      // Buscar lançamentos de saldo de abertura do período (entry_type = 'saldo_abertura')
-      const { data: openingBalanceData, error: openingBalanceError } = await supabase
-        .from("accounting_entry_lines")
-        .select(`
-          account_id,
-          debit,
-          credit,
-          accounting_entries!inner(
-            competence_date,
-            entry_type
-          )
-        `)
-        .gte("accounting_entries.competence_date", periodStartStr)
-        .lte("accounting_entries.competence_date", periodEndStr)
-        .eq("accounting_entries.entry_type", "saldo_abertura");
-
-      if (openingBalanceError) {
-        console.error('[ChartOfAccounts] Erro ao buscar saldo_abertura:', openingBalanceError);
-        // Não lança erro, apenas ignora
-      }
-
-      console.log('[ChartOfAccounts] Lançamentos saldo_abertura encontrados:', openingBalanceData?.length || 0);
-
-      // Buscar movimentação do período (exceto saldo_abertura)
-      const { data: periodData, error: periodError } = await supabase
-        .from("accounting_entry_lines")
-        .select(`
-          account_id,
-          debit,
-          credit,
-          accounting_entries!inner(
-            competence_date,
-            entry_type
-          )
-        `)
-        .gte("accounting_entries.competence_date", periodStartStr)
-        .lte("accounting_entries.competence_date", periodEndStr)
-        .neq("accounting_entries.entry_type", "saldo_abertura");
-
-      if (periodError) {
-        console.error('[ChartOfAccounts] Erro ao buscar movimentação:', periodError);
-        throw periodError;
-      }
-
-      console.log('[ChartOfAccounts] Movimentação do período encontrada:', periodData?.length || 0);
-
-      // Log alguns exemplos para debug
-      if (periodData && periodData.length > 0) {
-        console.log('[ChartOfAccounts] Exemplos de lançamentos:', periodData.slice(0, 3).map((l: any) => ({
-          account_id: l.account_id,
-          debit: l.debit,
-          credit: l.credit,
-          entry_type: l.accounting_entries?.entry_type
-        })));
-      }
-
-      // Calcular saldos por conta
+      // Converter para Map
       const balanceMap = new Map<string, AccountBalance>();
-
-      // Inicializar todas as contas
-      accounts.forEach(account => {
-        balanceMap.set(account.id, {
-          account_id: account.id,
-          opening_balance: 0,
-          total_debits: 0,
-          total_credits: 0,
-          closing_balance: 0
+      
+      (data || []).forEach((row: any) => {
+        balanceMap.set(row.account_id, {
+          account_id: row.account_id,
+          opening_balance: Number(row.opening_balance) || 0,
+          total_debits: Number(row.total_debits) || 0,
+          total_credits: Number(row.total_credits) || 0,
+          closing_balance: Number(row.closing_balance) || 0
         });
       });
 
-      console.log('[ChartOfAccounts] Contas no balanceMap:', balanceMap.size);
-
-      // Calcular saldo de abertura (lançamentos anteriores ao período)
-      (openingData || []).forEach((line: any) => {
-        const balance = balanceMap.get(line.account_id);
-        if (balance) {
-          const account = accounts.find(a => a.id === line.account_id);
-          const debit = Number(line.debit) || 0;
-          const credit = Number(line.credit) || 0;
-
-          // Contas devedoras: saldo = débitos - créditos
-          // Contas credoras: saldo = créditos - débitos
-          if (account?.nature === 'DEVEDORA') {
-            balance.opening_balance += debit - credit;
-          } else {
-            balance.opening_balance += credit - debit;
-          }
-        }
-      });
-
-      // Adicionar lançamentos de saldo_abertura do período ao saldo inicial
-      (openingBalanceData || []).forEach((line: any) => {
-        const balance = balanceMap.get(line.account_id);
-        if (balance) {
-          const account = accounts.find(a => a.id === line.account_id);
-          const debit = Number(line.debit) || 0;
-          const credit = Number(line.credit) || 0;
-
-          if (account?.nature === 'DEVEDORA') {
-            balance.opening_balance += debit - credit;
-          } else {
-            balance.opening_balance += credit - debit;
-          }
-        }
-      });
-
-      // Calcular movimentação do período
-      let matchedLines = 0;
-      let unmatchedLines = 0;
-      (periodData || []).forEach((line: any) => {
-        const balance = balanceMap.get(line.account_id);
-        if (balance) {
-          balance.total_debits += Number(line.debit) || 0;
-          balance.total_credits += Number(line.credit) || 0;
-          matchedLines++;
-        } else {
-          unmatchedLines++;
-        }
-      });
-      console.log('[ChartOfAccounts] Linhas associadas:', matchedLines, '| Não associadas:', unmatchedLines);
-
-      // Calcular saldo final
-      balanceMap.forEach((balance, accountId) => {
-        const account = accounts.find(a => a.id === accountId);
-        if (account?.nature === 'DEVEDORA') {
-          balance.closing_balance = balance.opening_balance + balance.total_debits - balance.total_credits;
-        } else {
-          balance.closing_balance = balance.opening_balance + balance.total_credits - balance.total_debits;
+      // Garantir que todas as contas tenham entrada no map (mesmo sem movimento)
+      accounts.forEach(account => {
+        if (!balanceMap.has(account.id)) {
+          balanceMap.set(account.id, {
+            account_id: account.id,
+            opening_balance: 0,
+            total_debits: 0,
+            total_credits: 0,
+            closing_balance: 0
+          });
         }
       });
 
