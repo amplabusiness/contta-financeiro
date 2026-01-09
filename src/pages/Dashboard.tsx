@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye, Bot, Brain, Zap, FileText, Activity, CircleDot, RefreshCw } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Users, AlertCircle, BarChart3, CheckCircle2, XCircle, Clock, Eye, Bot, Brain, Zap, FileText, Activity, CircleDot, RefreshCw, BanknoteIcon } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +18,7 @@ import { useOfflineMode } from "@/hooks/useOfflineMode";
 import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
 import { CashFlowWidget } from "@/components/dashboard/CashFlowWidget";
+import titulosProblematicos from "@/data/titulosProblematicos.json";
 
 // Tipos para agentes IA
 interface AgentStatus {
@@ -942,6 +943,90 @@ const Dashboard = () => {
                 </Button>
               </div>
             </CardHeader>
+          </Card>
+        )}
+
+        {/* 🚨 ALERTA: BOLETOS VENCIDOS NO SICREDI - COBRANÇA */}
+        {titulosProblematicos.length > 0 && (
+          <Card className="border-amber-500 bg-amber-50">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-amber-800 flex items-center gap-2">
+                    <BanknoteIcon className="h-5 w-5" />
+                    ⚠️ COBRANÇA: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.totalAberto, 0))} em Boletos Vencidos
+                  </CardTitle>
+                  <CardDescription className="text-amber-700">
+                    {titulosProblematicos.length} clientes com {titulosProblematicos.reduce((s, t) => s + t.qtdBoletos, 0)} boletos vencidos no Sicredi. 
+                    Custo de manutenção: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.custoManutencao, 0))}/mês
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Badge variant="destructive" className="text-sm">
+                    {titulosProblematicos.filter(t => t.prioridade === 'CRITICO').length} CRÍTICOS
+                  </Badge>
+                  <Badge className="bg-orange-500 text-sm">
+                    {titulosProblematicos.filter(t => t.prioridade === 'ALTO').length} ALTO RISCO
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-amber-700 mb-4">
+                ⚡ <strong>AÇÃO:</strong> Baixar boletos no Sicredi (evitar taxa R$ 2/mês) e cobrar via PIX/transferência ou acordar com cliente.
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Prioridade</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="text-right">Valor em Aberto</TableHead>
+                    <TableHead className="text-center">Qtd Boletos</TableHead>
+                    <TableHead className="text-center">Dias Atraso</TableHead>
+                    <TableHead className="text-right">Custo Manut.</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {titulosProblematicos.slice(0, 15).map((titulo, idx) => (
+                    <TableRow key={idx} className={
+                      titulo.prioridade === 'CRITICO' ? 'bg-red-50' :
+                      titulo.prioridade === 'ALTO' ? 'bg-orange-50' : ''
+                    }>
+                      <TableCell>
+                        {titulo.prioridade === 'CRITICO' && <Badge variant="destructive">CRÍTICO</Badge>}
+                        {titulo.prioridade === 'ALTO' && <Badge className="bg-orange-500">ALTO</Badge>}
+                        {titulo.prioridade === 'MEDIO' && <Badge className="bg-yellow-500 text-black">MÉDIO</Badge>}
+                        {titulo.prioridade === 'BAIXO' && <Badge variant="outline">BAIXO</Badge>}
+                      </TableCell>
+                      <TableCell className="font-medium">{titulo.cliente.slice(0, 40)}</TableCell>
+                      <TableCell className="text-right font-bold text-red-600">
+                        {formatCurrency(titulo.totalAberto)}
+                      </TableCell>
+                      <TableCell className="text-center">{titulo.qtdBoletos}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={titulo.diasAtraso > 180 ? 'text-red-600 font-bold' : ''}>
+                          {titulo.diasAtraso}d ({titulo.meses}m)
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-amber-600">
+                        {formatCurrency(titulo.custoManutencao)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {titulosProblematicos.length > 15 && (
+                <p className="text-center text-sm text-amber-600 mt-4">
+                  + {titulosProblematicos.length - 15} clientes adicionais com boletos em aberto
+                </p>
+              )}
+              <div className="mt-4 p-3 bg-amber-100 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  💡 <strong>Dica:</strong> Cancele os boletos no Sicredi (baixa sem pagamento) e mantenha a cobrança apenas no sistema.
+                  Cobre via PIX ou transferência para evitar as taxas de manutenção.
+                </p>
+              </div>
+            </CardContent>
           </Card>
         )}
 
