@@ -146,7 +146,8 @@ export async function getAccountBalance(
       .from("accounting_entry_lines")
       .select("debit, credit, accounting_entries!inner(entry_date)")
       .eq("account_id", account.id)
-      .lt("accounting_entries.entry_date", startDate);
+      .lt("accounting_entries.entry_date", startDate)
+      .range(0, 49999); // Garantir que todos os registros sejam retornados
 
     if (!priorError && priorEntries) {
       const priorDebit = priorEntries.reduce((sum, e) => sum + Number(e.debit || 0), 0);
@@ -163,7 +164,8 @@ export async function getAccountBalance(
   let periodQuery = supabase
     .from("accounting_entry_lines")
     .select("debit, credit, accounting_entries!inner(entry_date)")
-    .eq("account_id", account.id);
+    .eq("account_id", account.id)
+    .range(0, 49999); // Garantir que todos os registros sejam retornados
 
   if (startDate && endDate) {
     periodQuery = periodQuery
@@ -279,7 +281,8 @@ export async function getAccountGroupBalance(
   let query = supabase
     .from("accounting_entry_lines")
     .select("account_id, debit, credit, accounting_entries!inner(entry_date)")
-    .in("account_id", accountIds);
+    .in("account_id", accountIds)
+    .range(0, 49999); // Garantir que todos os registros sejam retornados
 
   // Filtrar por período
   if (isPatrimonial) {
