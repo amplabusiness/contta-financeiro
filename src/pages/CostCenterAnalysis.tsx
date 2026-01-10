@@ -190,8 +190,8 @@ const CostCenterAnalysis = () => {
     }
   };
 
-  const loadCostCenterData = useCallback(async (centersParam?: any[]) => {
-    const costCentersToUse = centersParam || allCostCenters;
+  const loadCostCenterData = useCallback(async (centersParam: any[] = []) => {
+    const costCentersToUse = centersParam;
     try {
       setLoading(true);
 
@@ -326,7 +326,7 @@ const CostCenterAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedYear, selectedMonth_, allCostCenters]);
+  }, [selectedYear, selectedMonth_]);
 
   useEffect(() => {
     loadAllCostCenters().then((centers) => {
