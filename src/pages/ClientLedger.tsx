@@ -112,7 +112,7 @@ const ClientLedger = () => {
 
         if (invError) throw invError;
         
-        let ledgerLines = [];
+        const ledgerLines = [];
         
         invoices.forEach(inv => {
             // Debit Date logic
@@ -156,7 +156,7 @@ const ClientLedger = () => {
         
         ledgerLines.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
 
-        let filteredLines = [];
+        const filteredLines = [];
         let openingBalance = 0;
         let openingDebit = 0;
         let openingCredit = 0;
