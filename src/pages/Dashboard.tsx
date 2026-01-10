@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Layout } from "@/components/Layout";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
@@ -17,6 +17,7 @@ import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { selectedClientId, selectedClientName, setSelectedClient } = useClient();
+  const { selectedYear, selectedMonth } = usePeriod();
   const [stats, setStats] = useState({
     totalClients: 0,
     pendingInvoices: 0,
@@ -44,6 +45,16 @@ const Dashboard = () => {
     type: "invoices",
   });
 
+  const periodStart = useMemo(() => {
+    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+    return startDate.toISOString().split("T")[0];
+  }, [selectedYear, selectedMonth]);
+
+  const periodEnd = useMemo(() => {
+    const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
+    return endDate.toISOString().split("T")[0];
+  }, [selectedYear, selectedMonth]);
+
   const loadDashboardData = useCallback(async () => {
     try {
       // Construir queries com filtro de cliente se selecionado
@@ -55,10 +66,29 @@ const Dashboard = () => {
         .not("monthly_fee", "eq", 0)
         .order("name");
 
-      let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
-      let expensesQuery = supabase.from("expenses").select("*");
-      let allInvoicesQuery = supabase.from("invoices").select("*");
-      let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
+      let recentInvoicesQuery = supabase
+        .from("invoices")
+        .select("*, clients(name)")
+        .gte("due_date", periodStart)
+        .lte("due_date", periodEnd)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      let expensesQuery = supabase
+        .from("expenses")
+        .select("*")
+        .gte("due_date", periodStart)
+        .lte("due_date", periodEnd);
+      let allInvoicesQuery = supabase
+        .from("invoices")
+        .select("*")
+        .gte("due_date", periodStart)
+        .lte("due_date", periodEnd);
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select("*, clients(name)")
+        .in("status", ["pending", "partial", "overdue"])
+        .gte("due_date", periodStart)
+        .lte("due_date", periodEnd);
 
       // Aplicar filtro de cliente se selecionado
       if (selectedClientId) {
@@ -172,7 +202,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId]);
+  }, [periodEnd, periodStart, selectedClientId]);
 
   useEffect(() => {
     loadDashboardData();
@@ -201,12 +231,16 @@ const Dashboard = () => {
           .from("invoices")
           .select("*, clients(name)")
           .in("status", ["pending", "overdue"])
+          .gte("due_date", periodStart)
+          .lte("due_date", periodEnd)
           .order("due_date", { ascending: true });
 
         let openingBalanceQuery = supabase
           .from("client_opening_balance")
           .select("*, clients(name)")
-          .in("status", ["pending", "partial", "overdue"]);
+          .in("status", ["pending", "partial", "overdue"])
+          .gte("due_date", periodStart)
+          .lte("due_date", periodEnd);
 
         if (selectedClientId) {
           invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
@@ -241,12 +275,16 @@ const Dashboard = () => {
           .from("invoices")
           .select("*, clients(name)")
           .eq("status", "overdue")
+          .gte("due_date", periodStart)
+          .lte("due_date", periodEnd)
           .order("due_date", { ascending: true });
 
         let openingBalanceQuery = supabase
           .from("client_opening_balance")
           .select("*, clients(name)")
-          .in("status", ["pending", "partial", "overdue"]);
+          .in("status", ["pending", "partial", "overdue"])
+          .gte("due_date", periodStart)
+          .lte("due_date", periodEnd);
 
         if (selectedClientId) {
           invoicesQuery = invoicesQuery.eq("client_id", selectedClientId);
@@ -285,6 +323,8 @@ const Dashboard = () => {
           .from("expenses")
           .select("*")
           .eq("status", "pending")
+          .gte("due_date", periodStart)
+          .lte("due_date", periodEnd)
           .order("due_date", { ascending: true });
 
         if (selectedClientId) {
