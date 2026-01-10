@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,9 +49,9 @@ interface WorkOrder {
   id: string;
   client_id: string;
   client_name: string;
-  invoice_id: string;
+  invoice_id: string | null;
   invoice_amount: number;
-  invoice_competence: string;
+  invoice_competence: string | null;
   assigned_to: string;
   status: string;
   priority: string;
@@ -121,6 +120,11 @@ const CollectionWorkOrders = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
       // Fetch clients
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
@@ -141,9 +145,57 @@ const CollectionWorkOrders = () => {
       if (invoicesError) throw invoicesError;
       setOverdueInvoices(invoicesData || []);
 
-      // TODO: Fetch work orders from database
-      // For now, using mock data
-      setWorkOrders([]);
+      const { data: workOrdersData, error: workOrdersError } = await supabase
+        .from("collection_work_orders")
+        .select(`
+          id,
+          client_id,
+          invoice_id,
+          assigned_to,
+          status,
+          priority,
+          action_type,
+          description,
+          next_action_date,
+          created_at,
+          updated_at,
+          clients(name),
+          invoices(amount, competence),
+          collection_work_order_logs(
+            id,
+            work_order_id,
+            action,
+            description,
+            result,
+            next_step,
+            next_contact_date,
+            created_by,
+            created_at
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (workOrdersError) throw workOrdersError;
+
+      const mappedOrders = (workOrdersData || []).map((order: any) => ({
+        id: order.id,
+        client_id: order.client_id,
+        client_name: order.clients?.name || "Cliente não informado",
+        invoice_id: order.invoice_id,
+        invoice_amount: Number(order.invoices?.amount || 0),
+        invoice_competence: order.invoices?.competence || null,
+        assigned_to: order.assigned_to,
+        status: order.status,
+        priority: order.priority,
+        action_type: order.action_type,
+        description: order.description,
+        next_action_date: order.next_action_date,
+        created_at: order.created_at,
+        updated_at: order.updated_at,
+        logs: order.collection_work_order_logs || [],
+      }));
+
+      setWorkOrders(mappedOrders);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -160,38 +212,123 @@ const CollectionWorkOrders = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreateWorkOrder = () => {
-    // TODO: Save to database
-    toast({
-      title: "Ordem de Serviço criada",
-      description: "A OS foi criada com sucesso.",
-    });
-    setShowNewOrder(false);
-    setFormData({
-      client_id: "",
-      invoice_id: "",
-      assigned_to: "",
-      priority: "medium",
-      action_type: "phone_call",
-      description: "",
-      next_action_date: "",
-    });
+  const handleCreateWorkOrder = async () => {
+    if (!formData.client_id || !formData.invoice_id || !formData.assigned_to || !formData.next_action_date) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha cliente, fatura, responsável e próxima ação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const { error } = await supabase
+        .from("collection_work_orders")
+        .insert({
+          client_id: formData.client_id,
+          invoice_id: formData.invoice_id,
+          assigned_to: formData.assigned_to,
+          priority: formData.priority,
+          action_type: formData.action_type,
+          description: formData.description,
+          next_action_date: formData.next_action_date,
+          created_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Ordem de Serviço criada",
+        description: "A OS foi criada com sucesso.",
+      });
+
+      setShowNewOrder(false);
+      setFormData({
+        client_id: "",
+        invoice_id: "",
+        assigned_to: "",
+        priority: "medium",
+        action_type: "phone_call",
+        description: "",
+        next_action_date: "",
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error creating work order:", error);
+      toast({
+        title: "Erro ao criar OS",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddLog = () => {
-    // TODO: Save log to database
-    toast({
-      title: "Log adicionado",
-      description: "O registro de ação foi adicionado com sucesso.",
-    });
-    setShowLogDialog(false);
-    setLogFormData({
-      action: "",
-      description: "",
-      result: "",
-      next_step: "",
-      next_contact_date: "",
-    });
+  const handleAddLog = async () => {
+    if (!selectedOrder) {
+      toast({
+        title: "Selecione uma OS",
+        description: "Escolha uma ordem de serviço para registrar o log.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!logFormData.action) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Informe a ação realizada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const { error } = await supabase
+        .from("collection_work_order_logs")
+        .insert({
+          work_order_id: selectedOrder.id,
+          action: logFormData.action,
+          description: logFormData.description,
+          result: logFormData.result,
+          next_step: logFormData.next_step,
+          next_contact_date: logFormData.next_contact_date || null,
+          created_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Log adicionado",
+        description: "O registro de ação foi adicionado com sucesso.",
+      });
+      setShowLogDialog(false);
+      setLogFormData({
+        action: "",
+        description: "",
+        result: "",
+        next_step: "",
+        next_contact_date: "",
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error adding log:", error);
+      toast({
+        title: "Erro ao salvar log",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -241,10 +378,11 @@ const CollectionWorkOrders = () => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
-    }).format(value);
+    }).format(value ?? 0);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 

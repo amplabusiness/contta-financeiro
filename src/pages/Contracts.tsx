@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,9 +143,36 @@ const Contracts = () => {
   const fetchContracts = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: Create contracts table and query
-      // For now, using mock data
-      setContracts([]);
+      const { data, error } = await supabase
+        .from("contracts")
+        .select(`
+          id,
+          client_id,
+          start_date,
+          end_date,
+          monthly_fee,
+          status,
+          created_at,
+          services,
+          clients(name)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const mappedContracts = (data || []).map((contract: any) => ({
+        id: contract.id,
+        client_id: contract.client_id,
+        client_name: contract.clients?.name || "Cliente não informado",
+        contract_type: contract.services?.type || "full_accounting",
+        start_date: contract.start_date,
+        end_date: contract.end_date,
+        monthly_fee: Number(contract.monthly_fee || 0),
+        status: contract.status,
+        created_at: contract.created_at,
+      }));
+
+      setContracts(mappedContracts);
     } catch (error) {
       console.error("Error fetching contracts:", error);
       toast({
@@ -371,12 +397,66 @@ CPF:
       return;
     }
 
-    toast({
-      title: "Contrato criado",
-      description: "O contrato foi criado com sucesso. Em breve será possível salvá-lo no banco de dados.",
-    });
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
 
-    // TODO: Save to database when contracts table is created
+      const contractNumber = `CTR-${new Date().getFullYear()}-${Math.floor(
+        10000 + Math.random() * 90000
+      )}`;
+
+      const services = {
+        type: formData.contract_type,
+        items: contractServices[formData.contract_type as keyof typeof contractServices] || [],
+        payment_day: formData.payment_day,
+        payment_method: formData.payment_method,
+      };
+
+      const { error } = await supabase
+        .from("contracts")
+        .insert({
+          client_id: formData.client_id,
+          contract_number: contractNumber,
+          start_date: formData.start_date,
+          end_date: formData.end_date || null,
+          monthly_fee: Number(formData.monthly_fee),
+          services,
+          status: "active",
+          created_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Contrato criado",
+        description: "O contrato foi criado com sucesso.",
+      });
+      setShowNewContract(false);
+      setFormData({
+        client_id: "",
+        contract_type: "full_accounting",
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: "",
+        monthly_fee: "",
+        services: [],
+        payment_day: "10",
+        payment_method: "boleto",
+      });
+      setSelectedClient(null);
+      fetchContracts();
+    } catch (error) {
+      console.error("Error saving contract:", error);
+      toast({
+        title: "Erro ao salvar contrato",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDownloadPDF = () => {
