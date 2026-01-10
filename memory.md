@@ -1009,11 +1009,176 @@ O sistema possui **DOIS** mecanismos de controle de período:
 
 ---
 
+## SISTEMA DE COMISSÕES - VICTOR E NAYARA (10/01/2026)
+
+### Agentes Comissionados
+Os filhos Victor Hugo e Nayara Cristina recebem comissões sobre honorários de clientes específicos.
+
+### Tabelas do Banco de Dados
+```sql
+-- Agentes que recebem comissões
+commission_agents (
+  id, name, cpf, pix_key, pix_key_type, is_active
+)
+
+-- Vínculo cliente-agente
+client_commission_agents (
+  client_id, agent_id, percentage, is_active
+)
+
+-- Registro de comissões
+agent_commissions (
+  agent_id, client_id, source_type, source_description,
+  client_payment_amount, agent_percentage, commission_amount,
+  competence, payment_date, status, paid_date
+)
+```
+
+### Agentes Cadastrados
+| Nome | CPF | PIX |
+|------|-----|-----|
+| VICTOR HUGO LEÃO | 752.126.331-68 | 75212633168 |
+| NAYARA CRISTINA LEÃO | 037.887.511-69 | 03788751169 |
+
+### Clientes Vinculados (50% Victor + 50% Nayara)
+- AMAGU FESTAS
+- AÇAÍ DO MADRUGA
+- SHARKSPACE
+- CARRO DE OURO / OURO CAR
+- STAR EMPÓRIO DE BEBIDAS
+- JOHNANTHAN MACHADO
+
+### Página
+- `/agent-commissions` - Dashboard de comissões (AgentCommissions.tsx)
+
+---
+
+## DASHBOARD DE INADIMPLÊNCIA (10/01/2026)
+
+### Página
+- `/inadimplencia-dashboard` - Controle completo de inadimplência (InadimplenciaDashboard.tsx)
+
+### Funcionalidades
+1. **Cards de Resumo:**
+   - Boletos Gerados (competência)
+   - Valor Recebido
+   - Inadimplência (R$ e %)
+   - Clientes Inadimplentes
+
+2. **Gráficos:**
+   - Evolução Mensal (12 meses) - BarChart
+   - Distribuição por Faixa de Valor - PieChart
+
+3. **Tabela de Inadimplentes:**
+   - Busca por nome
+   - Filtro por severidade (Crítico, Alto, Médio, Baixo)
+   - Badge de severidade
+   - Export CSV
+
+4. **Modal Ficha do Cliente (ao clicar):**
+   - Dados cadastrais
+   - Resumo financeiro (saldo anterior, gerado, recebido, saldo devedor)
+   - Competências em aberto
+   - Razão analítico com saldo acumulado
+   - Histórico de pagamentos
+
+### Fonte de Dados
+- `invoices` - Boletos gerados (competência MM/YYYY)
+- `boleto_payments` - Pagamentos liquidados (data_liquidacao)
+- `clients` - Dados dos clientes
+
+---
+
+## TABELA BOLETO_PAYMENTS (09/01/2026)
+
+### Estrutura
+```sql
+boleto_payments (
+  id UUID PRIMARY KEY,
+  bank_transaction_id UUID REFERENCES bank_transactions(id),
+  client_id UUID REFERENCES clients(id),
+  invoice_id UUID REFERENCES invoices(id),
+  cob VARCHAR(20),           -- Código da carteira (COB000001)
+  nosso_numero VARCHAR(50),  -- Nosso número do boleto
+  data_vencimento DATE,
+  data_liquidacao DATE,      -- Data que foi pago
+  data_extrato DATE,
+  valor_original DECIMAL(15,2),
+  valor_liquidado DECIMAL(15,2),
+  juros DECIMAL(15,2),
+  multa DECIMAL(15,2),
+  desconto DECIMAL(15,2)
+)
+```
+
+### Dados Importados
+- **1.096 registros** de baixas de boletos (Jan-Dez/2025)
+- Match de 98.8% com clientes cadastrados
+- Vinculação com bank_transactions via COB
+
+---
+
+## EDGE FUNCTIONS - AGENTES IA
+
+### ai-collection-agent (Agente de Cobrança)
+Edge function para cobrança automatizada via WhatsApp.
+
+**Funcionalidades:**
+- Consulta clientes inadimplentes
+- Gera mensagem personalizada com lista de débitos
+- Integração com API de WhatsApp
+- Histórico de cobranças enviadas
+
+**Invocar:**
+```javascript
+const { data } = await supabase.functions.invoke('ai-collection-agent', {
+  body: { 
+    action: 'check_delinquent',
+    client_id: 'uuid-do-cliente'
+  }
+});
+```
+
+### MCP (Model Context Protocol) - Azure Integration
+
+O sistema utiliza MCP para integração com Azure e outros serviços.
+
+**Tools Disponíveis:**
+- `azure_resources-query_azure_resource_graph` - Consulta recursos Azure
+- `mcp_azure_mcp_documentation` - Documentação Microsoft/Azure
+- `mcp_azure_mcp_deploy` - Deploy para Azure
+- `mcp_azure_mcp_postgres` - Operações PostgreSQL
+- `mcp_context7_get-library-docs` - Documentação de bibliotecas
+- `mcp_copilot_conta_*` - Gerenciamento de containers
+
+**Configuração MCP (VS Code):**
+```json
+{
+  "mcpServers": {
+    "azure": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-azure"]
+    }
+  }
+}
+```
+
+---
+
 ## ÚLTIMA ATUALIZAÇÃO
-- **Data:** 01/01/2026
+- **Data:** 10/01/2026
 - **Por:** Claude Code + Dr. Cícero
-- **Versão:** 4.0
+- **Versão:** 5.0
 - **Alterações:**
+  - **INADIMPLÊNCIA DASHBOARD**: Nova página `/inadimplencia-dashboard` com controle completo
+  - **FICHA DO CLIENTE**: Modal com razão analítico, saldo anterior, competências devidas
+  - **SISTEMA COMISSÕES**: Victor Hugo e Nayara com 50% cada sobre clientes vinculados
+  - **TABELA boleto_payments**: 1.096 registros de baixas importados
+  - **5 NOVOS CLIENTES**: Cadastrados via CNPJA API (RBC, THC, UPPER, VIVA, ABRIGO)
+  - **MCP INTEGRATION**: Azure MCP tools configurados para deploy e gestão
+  - **EDGE FUNCTION**: ai-collection-agent para cobrança automatizada
+  - **OFX IMPORT**: Scripts para importar Jan/2025 a Jan/2026 (2.256 transações)
+  - **AUDITORIA OFX**: 100% match entre OFX e banco de dados
   - **BALANÇO EQUILIBRADO**: ATIVO = PASSIVO + PL + RESULTADO (diferença R$ 0,00)
   - **AUDITORIA COMPLETA**: Detectados e corrigidos 3 problemas no balanço
   - **SCRIPTS DE AUDITORIA**: 7 novos scripts para verificação contábil
@@ -1025,16 +1190,9 @@ O sistema possui **DOIS** mecanismos de controle de período:
   - **NOVAS CORREÇÕES**: CashFlow.tsx, DebtNegotiation.tsx, OpeningBalanceReconciliation.tsx
   - **11 páginas** agora com rastreabilidade completa (sourceModule)
   - **RASTREABILIDADE OBRIGATÓRIA**: Todo lançamento DEVE ter origem rastreável (internal_code)
-  - Validação no AccountingService.ts: referenceType e referenceId obrigatórios
-  - Hook useAccounting com sourceModule para identificar página de origem
-  - Trigger automático no banco gera internal_code único
-  - **AUDITORIA DR. CÍCERO**: Todo lançamento DEVE ter D/C com conta do Plano de Contas
-  - **CORREÇÃO SALDO ABERTURA**: 87 linhas reclassificadas de grupo 5 para 2.3.xx
-  - **PÁGINAS CORRIGIDAS**: PixReconciliation, ImportInvoices, RecurringExpenses, NFSe
   - Regra fundamental: consultar Dr. Cícero para questões contábeis
   - Contratos com Devedores Solidários (Art. 264-275, 827 CC)
   - Sistema de cobrança via WhatsApp com prazo de 5 dias
-  - DebtConfession usando Plano de Contas como fonte da verdade
   - Grupos Econômicos por sócios em comum (client_partners)
   - 80+ migrations para classificação Jan/2025
   - Edge functions para IA e processamento de CSV
