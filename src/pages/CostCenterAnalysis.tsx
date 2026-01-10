@@ -329,10 +329,7 @@ const CostCenterAnalysis = () => {
   }, [selectedYear, selectedMonth_]);
 
   const loadCostCenterDataRef = useRef(loadCostCenterData);
-
-  useEffect(() => {
-    loadCostCenterDataRef.current = loadCostCenterData;
-  }, [loadCostCenterData]);
+  loadCostCenterDataRef.current = loadCostCenterData;
 
   useEffect(() => {
     loadAllCostCenters().then((centers) => {
