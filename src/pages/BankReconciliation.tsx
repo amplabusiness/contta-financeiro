@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,6 @@ const BankReconciliation = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [clients, setClients] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
-  const [kpiData, setKpiData] = useState<any>(null);
   const [splitEntries, setSplitEntries] = useState<any[]>([
     { client_id: "", invoice_id: "", amount: "", description: "" }
   ]);
@@ -44,14 +43,12 @@ const BankReconciliation = () => {
     setInvoices(data || []);
   }, []);
 
-  const calculateKPIs = useCallback(async (txData: any[]) => {
-    const data = txData;
+  const kpiData = useMemo(() => {
+    const matched = transactions.filter((t: any) => t.matched);
+    const unmatched = transactions.filter((t: any) => !t.matched);
 
-    const matched = data.filter((t: any) => t.matched);
-    const unmatched = data.filter((t: any) => !t.matched);
-
-    const credits = data.filter((t: any) => t.transaction_type === "credit");
-    const debits = data.filter((t: any) => t.transaction_type === "debit");
+    const credits = transactions.filter((t: any) => t.transaction_type === "credit");
+    const debits = transactions.filter((t: any) => t.transaction_type === "debit");
 
     const totalCredit = credits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
     const totalDebit = debits.reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
@@ -68,10 +65,10 @@ const BankReconciliation = () => {
       ? matched.reduce((sum: number, t: any) => sum + (t.ai_confidence || 0), 0) / matched.length
       : 0;
 
-    const lastImport = data.length > 0 ? data[0].created_at : null;
+    const lastImport = transactions[0]?.created_at ?? null;
 
-    setKpiData({
-      totalTransactions: data.length,
+    return {
+      totalTransactions: transactions.length,
       matchedTransactions: matched.length,
       unmatchedTransactions: unmatched.length,
       totalCredit,
@@ -80,8 +77,8 @@ const BankReconciliation = () => {
       matchedDebit,
       averageConfidence: avgConfidence,
       lastImportDate: lastImport,
-    });
-  }, []);
+    };
+  }, [transactions]);
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -122,10 +119,6 @@ const BankReconciliation = () => {
     loadClients();
     loadInvoices();
   }, [loadTransactions, loadClients, loadInvoices]);
-
-  useEffect(() => {
-    calculateKPIs(transactions);
-  }, [calculateKPIs, transactions]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
