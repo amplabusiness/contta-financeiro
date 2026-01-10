@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,23 +17,7 @@ const ClientLedger = () => {
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
 
-  useEffect(() => {
-    loadClients();
-  }, []);
-
-  useEffect(() => {
-    if (selectedClientId) {
-      setSelectedClient(selectedClientId);
-    }
-  }, [selectedClientId]);
-
-  useEffect(() => {
-    if (selectedClient) {
-      loadLedger(selectedClient);
-    }
-  }, [selectedClient]);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("clients")
@@ -48,9 +32,9 @@ const ClientLedger = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadLedger = async (clientId: string) => {
+  const loadLedger = useCallback(async (clientId: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -72,7 +56,23 @@ const ClientLedger = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  useEffect(() => {
+    if (selectedClientId) {
+      setSelectedClient(selectedClientId);
+    }
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    if (selectedClient) {
+      loadLedger(selectedClient);
+    }
+  }, [selectedClient, loadLedger]);
 
   return (
     <Layout>
