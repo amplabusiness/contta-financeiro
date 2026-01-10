@@ -44,8 +44,8 @@ const BankReconciliation = () => {
     setInvoices(data || []);
   }, []);
 
-  const calculateKPIs = useCallback(async (txData?: any[]) => {
-    const data = txData || transactions;
+  const calculateKPIs = useCallback(async (txData: any[]) => {
+    const data = txData;
 
     const matched = data.filter((t: any) => t.matched);
     const unmatched = data.filter((t: any) => !t.matched);
@@ -81,7 +81,7 @@ const BankReconciliation = () => {
       averageConfidence: avgConfidence,
       lastImportDate: lastImport,
     });
-  }, [transactions]);
+  }, []);
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -112,18 +112,20 @@ const BankReconciliation = () => {
       );
 
       setTransactions(transactionsWithMatches);
-      calculateKPIs(transactionsWithMatches);
     } catch (error: any) {
       console.error("Erro ao carregar transações:", error);
     }
-  }, [calculateKPIs]);
+  }, []);
 
   useEffect(() => {
     loadTransactions();
     loadClients();
     loadInvoices();
-    calculateKPIs();
-  }, [loadTransactions, loadClients, loadInvoices, calculateKPIs]);
+  }, [loadTransactions, loadClients, loadInvoices]);
+
+  useEffect(() => {
+    calculateKPIs(transactions);
+  }, [calculateKPIs, transactions]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
