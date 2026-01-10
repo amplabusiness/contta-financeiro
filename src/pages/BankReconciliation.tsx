@@ -44,7 +44,7 @@ const BankReconciliation = () => {
     setInvoices(data || []);
   }, []);
 
-  const calculateKPIs = useCallback(async (txData: any[]) => {
+  const calculateKPIs = async (txData: any[]) => {
     const data = txData;
 
     const matched = data.filter((t: any) => t.matched);
@@ -81,7 +81,7 @@ const BankReconciliation = () => {
       averageConfidence: avgConfidence,
       lastImportDate: lastImport,
     });
-  }, []);
+  };
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -125,7 +125,7 @@ const BankReconciliation = () => {
 
   useEffect(() => {
     calculateKPIs(transactions);
-  }, [calculateKPIs, transactions]);
+  }, [transactions]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

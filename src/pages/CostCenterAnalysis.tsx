@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,7 +170,7 @@ const CostCenterAnalysis = () => {
     }
   };
 
-  const loadAllCostCenters = async () => {
+  const loadAllCostCenters = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("cost_centers")
@@ -188,7 +188,7 @@ const CostCenterAnalysis = () => {
       toast.error("Erro ao carregar centros de custo");
       return [];
     }
-  };
+  }, []);
 
   const loadCostCenterData = useCallback(async (centersParam: any[] = []) => {
     const costCentersToUse = centersParam;
@@ -328,22 +328,28 @@ const CostCenterAnalysis = () => {
     }
   }, [selectedYear, selectedMonth_]);
 
+  const loadCostCenterDataRef = useRef(loadCostCenterData);
+
+  useEffect(() => {
+    loadCostCenterDataRef.current = loadCostCenterData;
+  }, [loadCostCenterData]);
+
   useEffect(() => {
     loadAllCostCenters().then((centers) => {
-      loadCostCenterData(centers);
+      loadCostCenterDataRef.current(centers);
     });
-  }, [selectedYear, selectedMonth_, loadCostCenterData]);
+  }, [selectedYear, selectedMonth_, loadAllCostCenters]);
 
   // Subscribe to expense changes and reload data automatically
   useEffect(() => {
     const unsubscribe = subscribeToExpenseChanges(() => {
       loadAllCostCenters().then((centers) => {
-        loadCostCenterData(centers);
+        loadCostCenterDataRef.current(centers);
       });
     });
 
     return unsubscribe;
-  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_, loadCostCenterData]);
+  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_, loadAllCostCenters]);
 
   // Calcular centros sem movimentação
   useEffect(() => {
