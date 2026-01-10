@@ -79,6 +79,7 @@ import InvoiceGenerationReport from "./pages/InvoiceGenerationReport";
 import BoletoReconciliation from "./pages/BoletoReconciliation";
 import AutomatedFileUpload from "./pages/AutomatedFileUpload";
 import Partners from "./pages/Partners";
+import AgentCommissions from "./pages/AgentCommissions";
 import EconomicGroups from "./pages/EconomicGroups";
 import SpecialFees from "./pages/SpecialFees";
 import ClientVerification from "./pages/ClientVerification";
@@ -114,6 +115,7 @@ import AIChat from "./pages/AIChat";
 import AIWorkspace from "./pages/AIWorkspace";
 import CodeEditor from "./pages/CodeEditor";
 import NotFound from "./pages/NotFound";
+import InadimplenciaDashboard from "./pages/InadimplenciaDashboard";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -173,6 +175,7 @@ const appRoutes = [
   { path: "/import-expenses-spreadsheet", element: <ImportExpensesSpreadsheet /> },
   { path: "/import-honorarios", element: <ImportHonorarios /> },
   { path: "/import-invoices", element: <ImportInvoices /> },
+  { path: "/inadimplencia-dashboard", element: <InadimplenciaDashboard /> },
   { path: "/invoice-generation-report", element: <InvoiceGenerationReport /> },
   { path: "/inactive-client-verification", element: <InactiveClientVerification /> },
   { path: "/incentives", element: <Incentives /> },
@@ -255,6 +258,7 @@ const App = () => (
             <Route path="/balancete" element={<Balancete />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />
+            <Route path="/inadimplencia-dashboard" element={<InadimplenciaDashboard />} />
             <Route path="/collection-letters" element={<CollectionLetters />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/service-proposals" element={<ServiceProposals />} />
@@ -269,6 +273,7 @@ const App = () => (
             <Route path="/economic-group-analysis" element={<EconomicGroupAnalysis />} />
             <Route path="/pro-bono-clients" element={<ProBonoClients />} />
             <Route path="/partners" element={<Partners />} />
+            <Route path="/agent-commissions" element={<AgentCommissions />} />
             <Route path="/economic-groups" element={<EconomicGroups />} />
             <Route path="/special-fees" element={<SpecialFees />} />
             <Route path="/process-pro-bono-fix" element={<ProcessProBonoFix />} />
@@ -305,6 +310,7 @@ const App = () => (
             <Route path="/video-content" element={<VideoContent />} />
             <Route path="/pending-entities" element={<PendingEntities />} />
             <Route path="/incentives" element={<Incentives />} />
+            <Route path="/invoices" element={<Invoices />} />
             <Route path="/import-boletos-liquidados" element={<ImportBoletosLiquidados />} />
             <Route path="/boletos-composicao" element={<BoletosComposicao />} />
             <Route path="/ai-automation" element={<AIAutomation />} />
