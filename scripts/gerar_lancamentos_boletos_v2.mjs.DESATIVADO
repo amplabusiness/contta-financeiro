@@ -1,0 +1,280 @@
+/**
+ * GERAR LANÇAMENTOS CONTÁBEIS DOS BOLETOS PAGOS - V2
+ *
+ * Este script cria lançamentos contábeis INDIVIDUAIS para cada boleto pago,
+ * usando os dados da tabela boleto_payments + mapa de pagadores dos CSVs.
+ *
+ * RESULTADO NO RAZÃO DO BANCO:
+ * Ao invés de "LIQ.COBRANCA SIMPLES-COB000009 R$ 20.000", teremos:
+ * - Recebimento MARO AGROPECUARIA: R$ 2.897,90
+ * - Recebimento L F GONCALVES: R$ 2.276,86
+ * - Recebimento LAJES NUNES: R$ 3.036,00
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync, existsSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Configuração
+const CONFIG = {
+  CONTA_BANCO_SICREDI_ID: null,
+  CONTA_CLIENTES_RECEBER_ID: null,
+  ANO: 2025,
+  MES: 2,
+  DRY_RUN: true,
+};
+
+// Argumentos
+const args = process.argv.slice(2);
+if (args.includes('--execute')) CONFIG.DRY_RUN = false;
+if (args.includes('--mes')) {
+  const idx = args.indexOf('--mes');
+  CONFIG.MES = parseInt(args[idx + 1]) || 2;
+}
+
+// Carregar mapa de pagadores
+let mapaPagadores = {};
+const mapaPath = join(__dirname, '..', '_mapa_pagadores.json');
+if (existsSync(mapaPath)) {
+  mapaPagadores = JSON.parse(readFileSync(mapaPath, 'utf8'));
+}
+
+// Carregar CSVs diretamente para ter dados frescos
+async function carregarPagadoresCSV() {
+  const BANCO_DIR = join(__dirname, '..', 'banco');
+  const BAIXA_DIR = join(__dirname, '..', 'banco', 'baixa_clientes');
+  const mapa = {};
+
+  const { readdirSync } = await import('fs');
+
+  // Função para ler CSV
+  const lerCSV = (caminho) => {
+    try {
+      const conteudo = readFileSync(caminho, 'latin1');
+      const linhas = conteudo.split('\n');
+      for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i].trim();
+        if (!linha) continue;
+        const campos = linha.split(';');
+        if (campos.length >= 3) {
+          const nossoNumero = campos[1]?.trim();
+          const pagador = campos[2]?.trim();
+          if (nossoNumero && pagador && pagador.length > 2) {
+            mapa[nossoNumero] = pagador;
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  // Ler pastas
+  try {
+    readdirSync(BANCO_DIR).filter(f => f.endsWith('.csv')).forEach(f => lerCSV(join(BANCO_DIR, f)));
+    readdirSync(BAIXA_DIR).filter(f => f.endsWith('.csv')).forEach(f => lerCSV(join(BAIXA_DIR, f)));
+  } catch (e) { /* ignore */ }
+
+  return mapa;
+}
+
+function buscarPagador(nossoNumero) {
+  // Match direto
+  if (mapaPagadores[nossoNumero]) return mapaPagadores[nossoNumero];
+
+  // Match por número normalizado
+  const norm = nossoNumero.replace(/[^0-9]/g, '');
+  for (const [key, nome] of Object.entries(mapaPagadores)) {
+    if (key.replace(/[^0-9]/g, '') === norm) return nome;
+  }
+
+  return null;
+}
+
+async function main() {
+  console.log('🏦 GERAÇÃO DE LANÇAMENTOS CONTÁBEIS - BOLETOS SICREDI V2');
+  console.log('='.repeat(70));
+  console.log(`📅 Período: ${CONFIG.MES.toString().padStart(2, '0')}/${CONFIG.ANO}`);
+  console.log(`🔧 Modo: ${CONFIG.DRY_RUN ? 'SIMULAÇÃO' : '⚠️  EXECUÇÃO REAL'}`);
+  console.log('');
+
+  // Carregar pagadores dos CSVs
+  mapaPagadores = await carregarPagadoresCSV();
+  console.log(`📋 Pagadores carregados dos CSVs: ${Object.keys(mapaPagadores).length}\n`);
+
+  // Buscar contas contábeis
+  await buscarContasContabeis();
+
+  // Buscar boletos do período
+  const mesStr = CONFIG.MES.toString().padStart(2, '0');
+  const dataInicio = `${CONFIG.ANO}-${mesStr}-01`;
+  const dataFim = `${CONFIG.ANO}-${mesStr}-28`;
+
+  const { data: boletos, error } = await supabase
+    .from('boleto_payments')
+    .select('id, cob, nosso_numero, valor_liquidado, data_liquidacao, data_extrato')
+    .gte('data_liquidacao', dataInicio)
+    .lte('data_liquidacao', dataFim)
+    .order('data_liquidacao');
+
+  if (error || !boletos?.length) {
+    console.log('❌ Nenhum boleto encontrado ou erro:', error);
+    return;
+  }
+
+  console.log(`📊 Boletos encontrados: ${boletos.length}\n`);
+
+  // Processar e mostrar resumo
+  const resumo = {};
+  let semNome = 0;
+
+  for (const boleto of boletos) {
+    const pagador = buscarPagador(boleto.nosso_numero) || 'PAGADOR NÃO IDENTIFICADO';
+    const valor = parseFloat(boleto.valor_liquidado) || 0;
+
+    if (pagador === 'PAGADOR NÃO IDENTIFICADO') semNome++;
+
+    if (!resumo[pagador]) resumo[pagador] = { total: 0, count: 0 };
+    resumo[pagador].total += valor;
+    resumo[pagador].count++;
+  }
+
+  // Mostrar resumo ordenado por valor
+  console.log('📋 RESUMO POR PAGADOR:');
+  console.log('─'.repeat(85));
+  console.log(`${'Pagador'.padEnd(50)} | ${'Qtd'.padStart(4)} | ${'Valor Total'.padStart(15)}`);
+  console.log('─'.repeat(85));
+
+  let totalGeral = 0;
+  const ordenado = Object.entries(resumo).sort((a, b) => b[1].total - a[1].total);
+
+  for (const [pagador, info] of ordenado) {
+    const nome = pagador.substring(0, 48).padEnd(50);
+    const qtd = info.count.toString().padStart(4);
+    const valor = 'R$ ' + info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(12);
+    console.log(`${nome} | ${qtd} | ${valor}`);
+    totalGeral += info.total;
+  }
+
+  console.log('─'.repeat(85));
+  console.log(`${'TOTAL'.padEnd(50)} | ${boletos.length.toString().padStart(4)} | R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(12)}`);
+
+  if (semNome > 0) {
+    console.log(`\n⚠️  ${semNome} boletos sem nome de pagador identificado`);
+  }
+
+  // Criar lançamentos
+  if (!CONFIG.DRY_RUN) {
+    console.log('\n\n📝 CRIANDO LANÇAMENTOS CONTÁBEIS...');
+    console.log('─'.repeat(70));
+
+    let sucesso = 0;
+    let erro = 0;
+
+    for (const boleto of boletos) {
+      const pagador = buscarPagador(boleto.nosso_numero) || 'PAGADOR NÃO IDENTIFICADO';
+      const valor = parseFloat(boleto.valor_liquidado) || 0;
+      const dataLancamento = boleto.data_extrato || boleto.data_liquidacao;
+
+      const descricao = `Recebimento ${pagador} - ${boleto.cob}`;
+
+      try {
+        // Criar entry
+        const { data: entry, error: entryError } = await supabase
+          .from('accounting_entries')
+          .insert({
+            entry_date: dataLancamento,
+            competence_date: boleto.data_liquidacao,
+            description: descricao,
+            entry_type: 'recebimento',
+            status: 'posted',
+            reference_type: 'boleto_payment',
+            reference_id: boleto.id,
+            source_type: 'boleto_sicredi',
+          })
+          .select()
+          .single();
+
+        if (entryError) {
+          console.error(`   ❌ ${pagador.substring(0, 30)}: ${entryError.message}`);
+          erro++;
+          continue;
+        }
+
+        // Criar linhas
+        const { error: linhasError } = await supabase
+          .from('accounting_entry_lines')
+          .insert([
+            {
+              entry_id: entry.id,
+              account_id: CONFIG.CONTA_BANCO_SICREDI_ID,
+              debit: valor,
+              credit: 0,
+              description: `D - Banco Sicredi`
+            },
+            {
+              entry_id: entry.id,
+              account_id: CONFIG.CONTA_CLIENTES_RECEBER_ID,
+              debit: 0,
+              credit: valor,
+              description: `C - Clientes a Receber - ${pagador}`
+            }
+          ]);
+
+        if (linhasError) {
+          erro++;
+        } else {
+          sucesso++;
+          if (sucesso <= 20) {
+            console.log(`   ✓ ${pagador.substring(0, 40).padEnd(40)} R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(10)}`);
+          } else if (sucesso === 21) {
+            console.log(`   ... (mais ${boletos.length - 20} lançamentos)`);
+          }
+        }
+      } catch (e) {
+        erro++;
+      }
+    }
+
+    console.log('\n' + '─'.repeat(70));
+    console.log(`✅ Lançamentos criados: ${sucesso}`);
+    if (erro > 0) console.log(`❌ Erros: ${erro}`);
+  } else {
+    console.log('\n\n⚠️  MODO SIMULAÇÃO - Nenhum dado foi gravado.');
+    console.log('   Para executar: node gerar_lancamentos_boletos_v2.mjs --execute');
+    console.log(`\n   Seriam criados ${boletos.length} lançamentos individuais.`);
+  }
+}
+
+async function buscarContasContabeis() {
+  const { data: banco } = await supabase
+    .from('chart_of_accounts')
+    .select('id')
+    .eq('code', '1.1.1.05')
+    .single();
+
+  const { data: clientes } = await supabase
+    .from('chart_of_accounts')
+    .select('id')
+    .eq('code', '1.1.2.01')
+    .single();
+
+  if (!banco || !clientes) throw new Error('Contas contábeis não encontradas!');
+
+  CONFIG.CONTA_BANCO_SICREDI_ID = banco.id;
+  CONFIG.CONTA_CLIENTES_RECEBER_ID = clientes.id;
+
+  console.log('✓ Contas contábeis carregadas\n');
+}
+
+main().catch(console.error);

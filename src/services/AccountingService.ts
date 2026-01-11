@@ -100,6 +100,59 @@ class AccountingService {
     return AccountingService.instance;
   }
 
+  // Lista de contas sintéticas que NUNCA devem receber lançamentos diretos (NBC TG 26)
+  private static CONTAS_SINTETICAS_BLOQUEADAS = [
+    '1.1.2.01',  // Clientes a Receber (usar analíticas 1.1.2.01.xxxx)
+    '1.1.2',     // Créditos a Receber
+    '2.1.1',     // Fornecedores a Pagar (usar analíticas)
+    '4.1',       // Despesas Operacionais (usar analíticas)
+    '3.1',       // Receitas Operacionais (usar analíticas)
+  ];
+
+  /**
+   * DR. CÍCERO - Valida se uma conta é sintética
+   * Contas sintéticas NÃO podem receber lançamentos diretos (NBC TG 26)
+   */
+  private async validarContaSintetica(accountId: string): Promise<{ valido: boolean; erro?: string }> {
+    const { data: conta, error } = await supabase
+      .from('chart_of_accounts')
+      .select('id, code, name, is_synthetic, is_analytical, accepts_entries')
+      .eq('id', accountId)
+      .single();
+
+    if (error || !conta) {
+      return { valido: false, erro: `Conta não encontrada: ${accountId}` };
+    }
+
+    // Verificar se é sintética pelo flag
+    if (conta.is_synthetic === true || conta.is_analytical === false) {
+      return {
+        valido: false,
+        erro: `VIOLAÇÃO NBC TG 26: Conta ${conta.code} (${conta.name}) é SINTÉTICA e não aceita lançamentos diretos. Use uma conta analítica.`
+      };
+    }
+
+    // Verificar se aceita lançamentos
+    if (conta.accepts_entries === false) {
+      return {
+        valido: false,
+        erro: `VIOLAÇÃO: Conta ${conta.code} (${conta.name}) não aceita lançamentos diretos.`
+      };
+    }
+
+    // Verificar pelo código (lista de bloqueio)
+    for (const codigoBloqueado of AccountingService.CONTAS_SINTETICAS_BLOQUEADAS) {
+      if (conta.code === codigoBloqueado) {
+        return {
+          valido: false,
+          erro: `VIOLAÇÃO NBC TG 26: Conta ${conta.code} (${conta.name}) é uma conta TOTALIZADORA. Lançamentos devem ir nas subcontas analíticas (ex: ${conta.code}.xxxx).`
+        };
+      }
+    }
+
+    return { valido: true };
+  }
+
   /**
    * Cria um lançamento contábil de forma atômica
    * Este é o método principal que deve ser chamado por todos os formulários

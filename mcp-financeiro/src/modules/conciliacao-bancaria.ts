@@ -176,14 +176,26 @@ export const padroesTransacoes = {
 
 export const regrasClassificacao = {
   // Contas contábeis por tipo de transação
+  // DR. CÍCERO - NBC TG 26: NUNCA usar conta sintética 1.1.2.01 diretamente
+  // Usar conta TRANSITÓRIA 1.1.9.01 para recebimentos pendentes de identificação
   contasPorTipo: {
-    "pix_recebido": { debito: "1.1.1.02", credito: "1.1.2.01", descricao: "Recebimento de cliente" },
-    "boleto_recebido": { debito: "1.1.1.02", credito: "1.1.2.01", descricao: "Recebimento boleto" },
+    // RECEBIMENTOS: Vão para TRANSITÓRIA até identificar cliente
+    "pix_recebido": { debito: "1.1.1.02", credito: "1.1.9.01", descricao: "Recebimento PIX (pendente identificação)" },
+    "boleto_recebido": { debito: "1.1.1.02", credito: "1.1.9.01", descricao: "Recebimento boleto (pendente desmembramento)" },
+    "cobranca_agrupada": { debito: "1.1.1.02", credito: "1.1.9.01", descricao: "Cobrança agrupada (usar Super Conciliação)" },
+    // PAGAMENTOS: Usam contas analíticas específicas
     "pix_enviado": { debito: "2.1.1.01", credito: "1.1.1.02", descricao: "Pagamento fornecedor" },
     "tarifa_bancaria": { debito: "4.1.5.01", credito: "1.1.1.02", descricao: "Tarifa bancária" },
     "imposto_das": { debito: "2.1.3.01", credito: "1.1.1.02", descricao: "Pagamento DAS" },
     "salario": { debito: "2.1.2.01", credito: "1.1.1.02", descricao: "Pagamento salário" },
     "adiantamento_socio": { debito: "1.1.3.04", credito: "1.1.1.02", descricao: "Adiantamento a sócio" }
+  },
+
+  // CONTA TRANSITÓRIA: Usada para recebimentos pendentes de identificação
+  contaTransitoria: {
+    code: "1.1.9.01",
+    name: "Recebimentos a Conciliar",
+    descricao: "Recebimentos que precisam ser desmembrados por cliente na Super Conciliação"
   },
 
   // Tolerância para match

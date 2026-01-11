@@ -1,0 +1,287 @@
+/**
+ * PROCESSAR NOVOS BOLETOS AUTOMATICAMENTE
+ *
+ * Este script processa automaticamente novos arquivos CSV de baixa de boletos
+ * e gera os lançamentos contábeis individuais por cliente.
+ *
+ * FLUXO AUTOMÁTICO:
+ * 1. Lê os CSVs de baixa da pasta banco/
+ * 2. Identifica boletos ainda não processados
+ * 3. Importa para boleto_payments
+ * 4. Gera lançamentos contábeis individuais
+ *
+ * Uso:
+ *   node processar_novos_boletos.mjs                    # Simula
+ *   node processar_novos_boletos.mjs --execute          # Executa
+ *   node processar_novos_boletos.mjs --execute --mes 1  # Só janeiro
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync, readdirSync, existsSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Usar SERVICE_ROLE_KEY para bypass do RLS
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(process.env.VITE_SUPABASE_URL, supabaseKey);
+
+// Configuração
+const CONFIG = {
+  CONTA_BANCO_SICREDI_ID: null,
+  CONTA_CLIENTES_RECEBER_ID: null,
+  DRY_RUN: !process.argv.includes('--execute'),
+  MES_FILTRO: null, // null = todos
+};
+
+// Pegar filtro de mês
+const mesIdx = process.argv.indexOf('--mes');
+if (mesIdx !== -1 && process.argv[mesIdx + 1]) {
+  CONFIG.MES_FILTRO = parseInt(process.argv[mesIdx + 1]);
+}
+
+async function main() {
+  console.log('');
+  console.log('╔══════════════════════════════════════════════════════════════════════╗');
+  console.log('║  🔄 PROCESSADOR AUTOMÁTICO DE BOLETOS SICREDI                        ║');
+  console.log('╚══════════════════════════════════════════════════════════════════════╝');
+  console.log('');
+  console.log(`🔧 Modo: ${CONFIG.DRY_RUN ? '⚠️  SIMULAÇÃO' : '✅ EXECUÇÃO REAL'}`);
+  if (CONFIG.MES_FILTRO) console.log(`📅 Filtro: Apenas mês ${CONFIG.MES_FILTRO}`);
+  console.log('');
+
+  // 1. Buscar contas contábeis
+  await buscarContasContabeis();
+
+  // 2. Ler CSVs e extrair boletos
+  const boletosCSV = await lerTodosCSVs();
+  console.log(`📋 Total de boletos nos CSVs: ${boletosCSV.length}\n`);
+
+  // 3. Verificar quais já foram processados
+  const { data: processados } = await supabase
+    .from('boleto_payments')
+    .select('nosso_numero');
+
+  const nossoNumProcessados = new Set(processados?.map(p => p.nosso_numero) || []);
+
+  const novos = boletosCSV.filter(b => !nossoNumProcessados.has(b.nosso_numero));
+  console.log(`✅ Já processados: ${nossoNumProcessados.size}`);
+  console.log(`🆕 Novos boletos: ${novos.length}\n`);
+
+  if (novos.length === 0) {
+    console.log('ℹ️  Nenhum boleto novo para processar.');
+    return;
+  }
+
+  // 4. Processar novos boletos
+  if (!CONFIG.DRY_RUN) {
+    console.log('📝 PROCESSANDO NOVOS BOLETOS...');
+    console.log('═'.repeat(70));
+
+    let sucesso = 0;
+    let erro = 0;
+
+    for (const boleto of novos) {
+      try {
+        // Inserir em boleto_payments
+        const { data: boletoInserido, error: boletoError } = await supabase
+          .from('boleto_payments')
+          .insert({
+            cob: boleto.cob,
+            nosso_numero: boleto.nosso_numero,
+            data_vencimento: boleto.data_vencimento,
+            data_liquidacao: boleto.data_liquidacao,
+            data_extrato: boleto.data_extrato,
+            valor_original: boleto.valor_original,
+            valor_liquidado: boleto.valor_liquidado,
+          })
+          .select()
+          .single();
+
+        if (boletoError) {
+          erro++;
+          continue;
+        }
+
+        // Criar lançamento contábil
+        const descricao = `Recebimento ${boleto.pagador} - ${boleto.cob}`;
+        const dataLancamento = boleto.data_extrato || boleto.data_liquidacao;
+
+        const { data: entry, error: entryError } = await supabase
+          .from('accounting_entries')
+          .insert({
+            entry_date: dataLancamento,
+            competence_date: boleto.data_liquidacao,
+            description: descricao,
+            entry_type: 'recebimento',
+            is_draft: false,
+            reference_type: 'boleto_payment',
+            reference_id: boletoInserido.id,
+            source_type: 'boleto_sicredi',
+          })
+          .select()
+          .single();
+
+        if (entryError) {
+          erro++;
+          continue;
+        }
+
+        // Criar linhas do lançamento
+        await supabase
+          .from('accounting_entry_lines')
+          .insert([
+            {
+              entry_id: entry.id,
+              account_id: CONFIG.CONTA_BANCO_SICREDI_ID,
+              debit: boleto.valor_liquidado,
+              credit: 0,
+              description: 'D - Banco Sicredi'
+            },
+            {
+              entry_id: entry.id,
+              account_id: CONFIG.CONTA_CLIENTES_RECEBER_ID,
+              debit: 0,
+              credit: boleto.valor_liquidado,
+              description: `C - Clientes a Receber - ${boleto.pagador}`
+            }
+          ]);
+
+        sucesso++;
+        process.stdout.write('.');
+        if (sucesso % 50 === 0) process.stdout.write(` ${sucesso}\n`);
+
+      } catch (e) {
+        erro++;
+      }
+    }
+
+    console.log('\n\n' + '═'.repeat(70));
+    console.log(`✅ Processados com sucesso: ${sucesso}`);
+    if (erro > 0) console.log(`❌ Erros: ${erro}`);
+  } else {
+    // Mostrar resumo do que seria processado
+    console.log('📋 BOLETOS QUE SERIAM PROCESSADOS:');
+    console.log('─'.repeat(80));
+
+    const porMes = {};
+    for (const b of novos) {
+      const mes = b.data_liquidacao?.substring(0, 7) || 'SEM_DATA';
+      if (!porMes[mes]) porMes[mes] = { count: 0, total: 0 };
+      porMes[mes].count++;
+      porMes[mes].total += b.valor_liquidado;
+    }
+
+    for (const [mes, info] of Object.entries(porMes).sort()) {
+      const valor = 'R$ ' + info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      console.log(`   ${mes}: ${info.count} boletos | ${valor}`);
+    }
+
+    console.log('\n⚠️  Use --execute para processar de verdade.');
+  }
+}
+
+async function buscarContasContabeis() {
+  const { data: banco } = await supabase
+    .from('chart_of_accounts')
+    .select('id')
+    .eq('code', '1.1.1.05')
+    .single();
+
+  const { data: clientes } = await supabase
+    .from('chart_of_accounts')
+    .select('id')
+    .eq('code', '1.1.2.01')
+    .single();
+
+  if (!banco || !clientes) throw new Error('Contas contábeis não encontradas!');
+
+  CONFIG.CONTA_BANCO_SICREDI_ID = banco.id;
+  CONFIG.CONTA_CLIENTES_RECEBER_ID = clientes.id;
+  console.log('✓ Contas contábeis carregadas\n');
+}
+
+async function lerTodosCSVs() {
+  const BANCO_DIR = join(__dirname, '..', 'banco');
+  const BAIXA_DIR = join(__dirname, '..', 'banco', 'baixa_clientes');
+  const boletos = [];
+
+  const lerCSV = (caminho) => {
+    try {
+      const conteudo = readFileSync(caminho, 'latin1');
+      const linhas = conteudo.split('\n');
+
+      for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i].trim();
+        if (!linha) continue;
+
+        const campos = linha.split(';');
+        if (campos.length >= 7) {
+          const cob = campos[0]?.trim();
+          const nossoNumero = campos[1]?.trim();
+          const pagador = campos[2]?.trim();
+          const dataVencimento = parseData(campos[3]?.trim());
+          const dataLiquidacao = parseData(campos[4]?.trim());
+          const valorOriginal = parseValor(campos[5]?.trim());
+          const valorLiquidado = parseValor(campos[6]?.trim());
+          const dataExtrato = campos[7] ? parseData(campos[7].trim()) : dataLiquidacao;
+
+          if (nossoNumero && valorLiquidado > 0) {
+            // Aplicar filtro de mês se configurado
+            if (CONFIG.MES_FILTRO && dataLiquidacao) {
+              const mes = parseInt(dataLiquidacao.split('-')[1]);
+              if (mes !== CONFIG.MES_FILTRO) continue;
+            }
+
+            boletos.push({
+              cob,
+              nosso_numero: nossoNumero,
+              pagador: pagador || 'PAGADOR NÃO IDENTIFICADO',
+              data_vencimento: dataVencimento,
+              data_liquidacao: dataLiquidacao,
+              data_extrato: dataExtrato,
+              valor_original: valorOriginal,
+              valor_liquidado: valorLiquidado,
+            });
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  // Ler pastas
+  try {
+    if (existsSync(BANCO_DIR)) {
+      readdirSync(BANCO_DIR).filter(f => f.endsWith('.csv')).forEach(f => lerCSV(join(BANCO_DIR, f)));
+    }
+    if (existsSync(BAIXA_DIR)) {
+      readdirSync(BAIXA_DIR).filter(f => f.endsWith('.csv')).forEach(f => lerCSV(join(BAIXA_DIR, f)));
+    }
+  } catch (e) { /* ignore */ }
+
+  return boletos;
+}
+
+function parseData(str) {
+  if (!str) return null;
+  // Formato DD/MM/YYYY -> YYYY-MM-DD
+  const match = str.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+  return null;
+}
+
+function parseValor(str) {
+  if (!str) return 0;
+  // Remove "R$", espaços, pontos de milhar e troca vírgula por ponto
+  const num = str.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim();
+  return parseFloat(num) || 0;
+}
+
+main().catch(console.error);
