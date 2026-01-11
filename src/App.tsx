@@ -120,6 +120,7 @@ import DREAnalytics from "./pages/DREAnalytics";
 import RazaoContabil from "./pages/RazaoContabil";
 import BalanceteVerificacao from "./pages/BalanceteVerificacao";
 import BalancoPatrimonial from "./pages/BalancoPatrimonial";
+import ChatContabil from "./components/ChatContabil";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -334,6 +335,7 @@ const App = () => (
             <Route path="/ai-chat" element={<AIChat />} />
             <Route path="/ai-workspace" element={<AIWorkspace />} />
             <Route path="/code-editor" element={<CodeEditor />} />
+            <Route path="/chat-contabil" element={<ChatContabil />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
