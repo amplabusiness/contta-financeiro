@@ -20,7 +20,7 @@ interface Mensagem {
 }
 
 interface RespostaVisual {
-  tipo: 'card' | 'tabela' | 'grafico' | 'lista' | 'resumo' | 'alerta';
+  tipo: 'card' | 'tabela' | 'grafico' | 'lista' | 'resumo' | 'alerta' | 'dre' | 'comparativo' | 'confirmacao' | 'formulario';
   titulo: string;
   subtitulo?: string;
   resumo?: {
@@ -29,11 +29,12 @@ interface RespostaVisual {
       valor: string | number;
       variacao?: number;
       icone?: string;
+      percentual?: string;
     }>;
   };
   dados?: any[];
   grafico?: {
-    tipo: 'bar' | 'line' | 'pie' | 'area';
+    tipo: string;
     series: any[];
   };
   acoes?: Array<{
@@ -41,12 +42,15 @@ interface RespostaVisual {
     label: string;
     icone: string;
     acao: string;
+    confirmacao?: boolean;
   }>;
   observacao?: string;
   alerta?: {
     tipo: 'info' | 'warning' | 'error' | 'success';
     mensagem: string;
   };
+  requerConfirmacao?: boolean;
+  dadosConfirmacao?: any;
 }
 
 // ============================================
@@ -54,12 +58,12 @@ interface RespostaVisual {
 // ============================================
 
 const SUGESTOES = [
-  "Quantos PIX recebemos este mês?",
-  "Quais clientes estão em atraso?",
   "Como está o financeiro da empresa?",
-  "Quais foram as maiores despesas?",
-  "Quando o cliente ACME pagou?",
-  "Qual o saldo do banco Sicredi?",
+  "Gerar DRE do mês",
+  "Análise de cobrança",
+  "Quais clientes estão em atraso?",
+  "Rentabilidade por cliente",
+  "Saldos dos bancos",
 ];
 
 // ============================================
@@ -84,13 +88,16 @@ const CardResumo: React.FC<{ dados: RespostaVisual }> = ({ dados }) => (
           <div className="text-xs text-slate-400">{item.label}</div>
           {item.variacao !== undefined && (
             <div className={`text-xs mt-1 ${item.variacao >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {item.variacao >= 0 ? '▲' : '▼'} {Math.abs(item.variacao)}%
+              {item.variacao >= 0 ? '+' : ''}{item.variacao}%
             </div>
+          )}
+          {item.percentual && (
+            <div className="text-xs text-slate-500 mt-1">{item.percentual}</div>
           )}
         </div>
       ))}
     </div>
-    
+
     {dados.alerta && (
       <div className={`p-3 rounded-lg text-sm ${
         dados.alerta.tipo === 'success' ? 'bg-green-500/20 text-green-300' :
@@ -234,6 +241,45 @@ const LoadingDots: React.FC = () => (
 );
 
 // ============================================
+// MAPEAMENTO DE PERGUNTAS PARA FERRAMENTAS V2
+// ============================================
+
+const mapearPerguntaParaFerramenta = (pergunta: string): { nome: string; params: any } => {
+  const p = pergunta.toLowerCase();
+
+  // DRE
+  if (p.includes('dre') || p.includes('demonstra') || p.includes('resultado')) {
+    return { nome: 'gerar_dre', params: { periodo: 'mes' } };
+  }
+
+  // Cobranca
+  if (p.includes('cobran') || p.includes('boleto') || p.includes('fatura')) {
+    if (p.includes('evolu') || p.includes('historico') || p.includes('6 meses')) {
+      return { nome: 'analisar_cobranca_evolucao', params: { meses: 6 } };
+    }
+    return { nome: 'analisar_cobranca_mes', params: {} };
+  }
+
+  // Inadimplentes
+  if (p.includes('inadimpl') || p.includes('atraso') || p.includes('devendo') || p.includes('devedor')) {
+    return { nome: 'buscar_clientes_inadimplentes', params: { diasMinimo: 1 } };
+  }
+
+  // Rentabilidade
+  if (p.includes('rentabil') || p.includes('lucrativ') || p.includes('margem')) {
+    return { nome: 'analisar_rentabilidade_clientes', params: {} };
+  }
+
+  // Bancos
+  if (p.includes('banco') || p.includes('saldo') || p.includes('caixa')) {
+    return { nome: 'buscar_saldos_bancos', params: {} };
+  }
+
+  // Dashboard (default)
+  return { nome: 'dashboard_financeiro', params: {} };
+};
+
+// ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
 
@@ -284,19 +330,22 @@ export const ChatContabil: React.FC = () => {
     }]);
     
     try {
-      // Chamar Edge Function via Supabase
-      const { data, error } = await supabase.functions.invoke('mcp-financeiro-chat', {
-        body: { pergunta },
+      // Mapear pergunta para ferramenta v2
+      const ferramenta = mapearPerguntaParaFerramenta(pergunta);
+
+      // Chamar Edge Function v2 via Supabase
+      const { data, error } = await supabase.functions.invoke('mcp-financeiro-v2', {
+        body: { ferramenta: ferramenta.nome, params: ferramenta.params },
       });
 
       if (error) throw error;
-      
+
       // Substituir mensagem de loading pela resposta
-      setMensagens(prev => prev.map(m => 
+      setMensagens(prev => prev.map(m =>
         m.id === loadingId
           ? {
               ...m,
-              conteudo: `Aqui está o que encontrei:`,
+              conteudo: `Aqui esta o que encontrei:`,
               resposta: data.resultado,
               carregando: false,
             }
@@ -322,13 +371,21 @@ export const ChatContabil: React.FC = () => {
     switch (resposta.tipo) {
       case 'card':
       case 'resumo':
+      case 'confirmacao':
         return <CardResumo dados={resposta} />;
       case 'tabela':
       case 'lista':
+      case 'dre':
+      case 'comparativo':
         return <TabelaDados dados={resposta} />;
+      case 'grafico':
+        return <GraficoBarra dados={resposta} />;
       default:
         if (resposta.grafico) {
           return <GraficoBarra dados={resposta} />;
+        }
+        if (resposta.dados && resposta.dados.length > 0) {
+          return <TabelaDados dados={resposta} />;
         }
         return <CardResumo dados={resposta} />;
     }
