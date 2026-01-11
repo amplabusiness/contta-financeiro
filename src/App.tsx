@@ -116,6 +116,10 @@ import AIWorkspace from "./pages/AIWorkspace";
 import CodeEditor from "./pages/CodeEditor";
 import NotFound from "./pages/NotFound";
 import InadimplenciaDashboard from "./pages/InadimplenciaDashboard";
+import DREAnalytics from "./pages/DREAnalytics";
+import RazaoContabil from "./pages/RazaoContabil";
+import BalanceteVerificacao from "./pages/BalanceteVerificacao";
+import BalancoPatrimonial from "./pages/BalancoPatrimonial";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -129,6 +133,8 @@ const appRoutes = [
   { path: "/automated-upload", element: <AutomatedFileUpload /> },
   { path: "/balance-sheet", element: <BalanceSheet /> },
   { path: "/balancete", element: <Balancete /> },
+  { path: "/balancete-verificacao", element: <BalanceteVerificacao /> },
+  { path: "/balanco-patrimonial", element: <BalancoPatrimonial /> },
   { path: "/bank-accounts", element: <BankAccounts /> },
   { path: "/bank-folder-import", element: <BankFolderImport /> },
   { path: "/bank-import", element: <BankImport /> },
@@ -158,6 +164,7 @@ const appRoutes = [
   { path: "/debt-negotiation", element: <DebtNegotiation /> },
   { path: "/default-analysis", element: <DefaultAnalysis /> },
   { path: "/dre", element: <DRE /> },
+  { path: "/dre-analytics", element: <DREAnalytics /> },
   { path: "/economic-group-analysis", element: <EconomicGroupAnalysis /> },
   { path: "/economic-groups", element: <EconomicGroups /> },
   { path: "/executive-dashboard", element: <ExecutiveDashboard /> },
@@ -185,6 +192,7 @@ const appRoutes = [
   { path: "/labor-advisory", element: <LaborAdvisory /> },
   { path: "/livro-diario", element: <LivroDiario /> },
   { path: "/livro-razao", element: <LivroRazao /> },
+  { path: "/razao-contabil", element: <RazaoContabil /> },
   { path: "/partners", element: <Partners /> },
   { path: "/payroll", element: <Payroll /> },
   { path: "/pending-entities", element: <PendingEntities /> },
@@ -235,6 +243,7 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
             <Route path="/dre" element={<DRE />} />
+            <Route path="/dre-analytics" element={<DREAnalytics />} />
             <Route path="/revenue-types" element={<RevenueTypes />} />
                         <Route path="/pix-reconciliation" element={<PixReconciliation />} />
             <Route path="/boleto-gaps" element={<BoletoGapsAnalysis />} />
@@ -254,8 +263,11 @@ const App = () => (
             <Route path="/batch-enrichment" element={<BatchEnrichment />} />
             <Route path="/livro-diario" element={<LivroDiario />} />
             <Route path="/livro-razao" element={<LivroRazao />} />
+            <Route path="/razao-contabil" element={<RazaoContabil />} />
             <Route path="/razao-geral" element={<GeneralLedgerAll />} />
             <Route path="/balancete" element={<Balancete />} />
+            <Route path="/balancete-verificacao" element={<BalanceteVerificacao />} />
+            <Route path="/balanco-patrimonial" element={<BalancoPatrimonial />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collection-dashboard" element={<CollectionDashboard />} />
             <Route path="/inadimplencia-dashboard" element={<InadimplenciaDashboard />} />

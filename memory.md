@@ -1165,11 +1165,114 @@ O sistema utiliza MCP para integração com Azure e outros serviços.
 
 ---
 
+## RELATÓRIOS CONTÁBEIS PROFISSIONAIS (11/01/2026)
+
+### Novos Relatórios Implementados
+Todos os relatórios usam a função RPC `get_account_balances` que retorna saldos calculados corretamente.
+
+#### 1. DRE Análise Vertical Comparativa
+**Rota:** `/dre-analytics`
+**Arquivo:** `src/pages/DREAnalytics.tsx`
+
+**Funcionalidades:**
+- Comparativo de múltiplos meses lado a lado (até 12 meses)
+- Análise Vertical (AV%) - cada conta como % da Receita Bruta
+- Visualização: Mensal, Trimestral ou Acumulada
+- Seleção de período (mês inicial até mês final)
+- Cards de resumo (últimos 3 períodos)
+- Expandir/colapsar contas sintéticas
+- Export CSV
+
+**Estrutura:**
+- Receitas (grupo 3) = créditos - débitos
+- Despesas (grupo 4) = débitos - créditos
+- Resultado = Receitas - Despesas
+- AV% = (Valor / Total Receitas) × 100
+
+#### 2. Livro Razão Contábil
+**Rota:** `/razao-contabil`
+**Arquivo:** `src/pages/RazaoContabil.tsx`
+
+**Funcionalidades:**
+- Navegação por plano de contas (árvore colapsável)
+- Seleção de período (mês/ano)
+- Filtro por tipo de conta (1-5)
+- Busca por código ou nome
+- Saldo anterior calculado
+- Saldo acumulado por lançamento
+- Export CSV por conta
+
+**Resumo por conta:**
+- Saldo Anterior
+- Total Débitos
+- Total Créditos
+- Saldo Final
+
+#### 3. Balancete de Verificação
+**Rota:** `/balancete-verificacao`
+**Arquivo:** `src/pages/BalanceteVerificacao.tsx`
+
+**Funcionalidades:**
+- Status de balanceamento (Equilibrado/Desequilibrado)
+- Exibe diferenças se houver
+- 6 colunas: Saldo Anterior (D/C), Movimento (D/C), Saldo Final (D/C)
+- Filtros: tipo, busca, saldos zero, só analíticas
+- Totais com verificação de partidas dobradas
+- Export CSV
+
+**Verificação:**
+- Débitos devem = Créditos em cada coluna
+- Alerta visual quando há diferença
+
+#### 4. Balanço Patrimonial
+**Rota:** `/balanco-patrimonial`
+**Arquivo:** `src/pages/BalancoPatrimonial.tsx`
+
+**Funcionalidades:**
+- Layout lado a lado: Ativo | Passivo + PL
+- Análise Vertical por grupo
+- Comparativo com período anterior (variação %)
+- Índices: Liquidez Corrente (AC/PC)
+- Resultado do Exercício integrado ao PL
+- Cards de resumo (Ativo, Passivo, PL, Liquidez)
+- Export CSV
+
+**Estrutura:**
+- ATIVO = Circulante + Não Circulante
+- PASSIVO + PL = Circulante + Não Circulante + Patrimônio Líquido + Resultado
+- Verificação: ATIVO = PASSIVO + PL
+
+### Função SQL Utilizada
+```sql
+get_account_balances(p_period_start DATE, p_period_end DATE)
+RETURNS TABLE (
+  account_id UUID,
+  account_code VARCHAR(20),
+  account_name VARCHAR(255),
+  account_type VARCHAR(50),
+  nature VARCHAR(20),        -- DEVEDORA | CREDORA
+  is_analytical BOOLEAN,
+  opening_balance NUMERIC,   -- Saldo antes do período
+  total_debits NUMERIC,      -- Débitos no período
+  total_credits NUMERIC,     -- Créditos no período
+  closing_balance NUMERIC    -- Saldo ao final
+)
+```
+
+---
+
 ## ÚLTIMA ATUALIZAÇÃO
-- **Data:** 10/01/2026
+- **Data:** 11/01/2026
 - **Por:** Claude Code + Dr. Cícero
-- **Versão:** 5.0
+- **Versão:** 5.1
 - **Alterações:**
+  - **DRE ANALYTICS**: Novo DRE com análise vertical e comparativo de 3+ meses
+  - **RAZÃO CONTÁBIL**: Nova página do Livro Razão com navegação por contas
+  - **BALANCETE VERIFICAÇÃO**: Balancete de 6 colunas com verificação de partidas dobradas
+  - **BALANÇO PATRIMONIAL**: Balanço completo com índices e comparativo
+  - Todos os relatórios usam RPC `get_account_balances`
+  - Export CSV em todos os relatórios
+  - Análise vertical (AV%) em DRE e Balanço
   - **INADIMPLÊNCIA DASHBOARD**: Nova página `/inadimplencia-dashboard` com controle completo
   - **FICHA DO CLIENTE**: Modal com razão analítico, saldo anterior, competências devidas
   - **SISTEMA COMISSÕES**: Victor Hugo e Nayara com 50% cada sobre clientes vinculados
