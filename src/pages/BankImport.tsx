@@ -226,13 +226,23 @@ const BankImport = () => {
       setAiProgress(20);
 
       // Chamar Edge Function do processador de transações bancárias
+      // MODIFICAÇÃO DR. CÍCERO: Usar conta transitória para cobranças agrupadas
       const { data, error } = await supabase.functions.invoke('ai-bank-transaction-processor', {
         body: {
           action: 'process_transactions',
           transactions: txnsForAI,
           bank_account_id: selectedAccount,
           import_id: importId,
-          opening_date: '2024-12-31' // Data de abertura do controle
+          opening_date: '2024-12-31', // Data de abertura do controle
+          // NOVAS CONFIGURAÇÕES - Fluxo correto NBC TG 26:
+          usar_conta_transitoria: true,
+          conta_transitoria_code: '1.1.9.01', // Recebimentos a Conciliar
+          regras_classificacao: {
+            // Padrões de cobrança agrupada → Conta Transitória
+            cobranca_pattern: 'COB\\d+|COBRANCA|LIQ\\.COBRANCA|LIQUIDACAO',
+            acao_cobranca: 'TRANSITORIA', // Não baixar cliente direto
+            // Depois o SuperConciliation desmembra para clientes individuais
+          }
         }
       });
 

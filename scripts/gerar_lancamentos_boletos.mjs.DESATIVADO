@@ -1,0 +1,275 @@
+/**
+ * GERAR LANÇAMENTOS CONTÁBEIS DOS BOLETOS PAGOS
+ *
+ * Este script cria lançamentos contábeis INDIVIDUAIS para cada boleto pago,
+ * usando os dados da tabela boleto_payments.
+ *
+ * RESULTADO NO RAZÃO DO BANCO:
+ * Ao invés de "LIQ.COBRANCA SIMPLES-COB000009 R$ 20.000", teremos:
+ * - Recebimento CLIENTE A: R$ 5.000
+ * - Recebimento CLIENTE B: R$ 8.000
+ * - Recebimento CLIENTE C: R$ 7.000
+ *
+ * Cada lançamento fica rastreável ao cliente que pagou.
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Credenciais Supabase não encontradas no .env');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Configuração
+const CONFIG = {
+  // Contas contábeis
+  CONTA_BANCO_SICREDI_ID: null,
+  CONTA_CLIENTES_RECEBER_ID: null,
+
+  // Período para processar
+  ANO: 2025,
+  MES: 2, // Fevereiro
+
+  // Modo de execução
+  DRY_RUN: true, // true = apenas simula, false = executa de verdade
+};
+
+// Pegar argumentos da linha de comando
+const args = process.argv.slice(2);
+if (args.includes('--execute')) {
+  CONFIG.DRY_RUN = false;
+}
+if (args.includes('--mes')) {
+  const idx = args.indexOf('--mes');
+  CONFIG.MES = parseInt(args[idx + 1]) || 2;
+}
+
+async function main() {
+  console.log('🏦 GERAÇÃO DE LANÇAMENTOS CONTÁBEIS - BOLETOS SICREDI');
+  console.log('='.repeat(70));
+  console.log(`📅 Período: ${CONFIG.MES.toString().padStart(2, '0')}/${CONFIG.ANO}`);
+  console.log(`🔧 Modo: ${CONFIG.DRY_RUN ? 'SIMULAÇÃO (dry-run)' : '⚠️  EXECUÇÃO REAL'}`);
+  console.log('');
+
+  // 1. Buscar IDs das contas contábeis
+  await buscarContasContabeis();
+
+  // 2. Buscar boletos pagos no período
+  const boletos = await buscarBoletosPagos();
+
+  if (boletos.length === 0) {
+    console.log('ℹ️  Nenhum boleto pago encontrado para o período.');
+    return;
+  }
+
+  // 3. Agrupar por cliente para mostrar resumo
+  const porCliente = agruparPorCliente(boletos);
+
+  console.log(`\n📊 RESUMO POR CLIENTE:`);
+  console.log('─'.repeat(90));
+  console.log(`${'Cliente'.padEnd(50)} | ${'Boletos'.padStart(7)} | ${'Valor Total'.padStart(15)}`);
+  console.log('─'.repeat(90));
+
+  let totalGeral = 0;
+  for (const [clienteId, info] of Object.entries(porCliente).sort((a, b) => b[1].total - a[1].total)) {
+    const nome = info.nome.substring(0, 48).padEnd(50);
+    const qtd = info.boletos.length.toString().padStart(7);
+    const valor = 'R$ ' + info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(12);
+    console.log(`${nome} | ${qtd} | ${valor}`);
+    totalGeral += info.total;
+  }
+
+  console.log('─'.repeat(90));
+  console.log(`${'TOTAL'.padEnd(50)} | ${boletos.length.toString().padStart(7)} | R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(12)}`);
+
+  // 4. Criar lançamentos
+  if (!CONFIG.DRY_RUN) {
+    console.log('\n\n📝 CRIANDO LANÇAMENTOS CONTÁBEIS...');
+    console.log('─'.repeat(70));
+    await criarLancamentos(boletos);
+  } else {
+    console.log('\n\n⚠️  MODO SIMULAÇÃO - Nenhum dado foi gravado.');
+    console.log('   Para executar de verdade, use: node gerar_lancamentos_boletos.mjs --execute');
+    console.log(`\n   Seriam criados ${boletos.length} lançamentos individuais.`);
+  }
+}
+
+async function buscarContasContabeis() {
+  console.log('🔍 Buscando contas contábeis...');
+
+  // Banco Sicredi
+  const { data: banco } = await supabase
+    .from('chart_of_accounts')
+    .select('id, code, name')
+    .eq('code', '1.1.1.05')
+    .single();
+
+  if (banco) {
+    CONFIG.CONTA_BANCO_SICREDI_ID = banco.id;
+    console.log(`   ✓ ${banco.code} - ${banco.name}`);
+  } else {
+    throw new Error('Conta 1.1.1.05 (Banco Sicredi) não encontrada!');
+  }
+
+  // Clientes a Receber
+  const { data: clientes } = await supabase
+    .from('chart_of_accounts')
+    .select('id, code, name')
+    .eq('code', '1.1.2.01')
+    .single();
+
+  if (clientes) {
+    CONFIG.CONTA_CLIENTES_RECEBER_ID = clientes.id;
+    console.log(`   ✓ ${clientes.code} - ${clientes.name}`);
+  } else {
+    throw new Error('Conta 1.1.2.01 (Clientes a Receber) não encontrada!');
+  }
+}
+
+async function buscarBoletosPagos() {
+  console.log('\n🔍 Buscando boletos pagos no período...');
+
+  const mesStr = CONFIG.MES.toString().padStart(2, '0');
+  const dataInicio = `${CONFIG.ANO}-${mesStr}-01`;
+  const dataFim = `${CONFIG.ANO}-${mesStr}-28`;
+
+  const { data, error } = await supabase
+    .from('boleto_payments')
+    .select(`
+      id,
+      cob,
+      nosso_numero,
+      valor_liquidado,
+      data_liquidacao,
+      data_extrato,
+      client_id,
+      clients (id, name)
+    `)
+    .gte('data_liquidacao', dataInicio)
+    .lte('data_liquidacao', dataFim)
+    .order('data_liquidacao');
+
+  if (error) {
+    console.error('❌ Erro ao buscar boletos:', error);
+    return [];
+  }
+
+  console.log(`   ✓ Encontrados ${data?.length || 0} boletos pagos`);
+  return data || [];
+}
+
+function agruparPorCliente(boletos) {
+  const porCliente = {};
+
+  for (const boleto of boletos) {
+    const clienteId = boleto.client_id || 'SEM_CLIENTE';
+    const clienteNome = boleto.clients?.name || 'CLIENTE NÃO IDENTIFICADO';
+
+    if (!porCliente[clienteId]) {
+      porCliente[clienteId] = {
+        id: clienteId,
+        nome: clienteNome,
+        total: 0,
+        boletos: []
+      };
+    }
+
+    porCliente[clienteId].total += parseFloat(boleto.valor_liquidado) || 0;
+    porCliente[clienteId].boletos.push(boleto);
+  }
+
+  return porCliente;
+}
+
+async function criarLancamentos(boletos) {
+  let sucesso = 0;
+  let erro = 0;
+
+  for (const boleto of boletos) {
+    const clienteNome = boleto.clients?.name || 'CLIENTE NÃO IDENTIFICADO';
+    const valor = parseFloat(boleto.valor_liquidado) || 0;
+    const dataLancamento = boleto.data_extrato || boleto.data_liquidacao;
+
+    // Descrição do lançamento com nome do cliente
+    const descricao = `Recebimento ${clienteNome} - Boleto ${boleto.nosso_numero}`;
+
+    try {
+      // Criar entry
+      const { data: entry, error: entryError } = await supabase
+        .from('accounting_entries')
+        .insert({
+          entry_date: dataLancamento,
+          competence_date: boleto.data_liquidacao,
+          description: descricao,
+          entry_type: 'recebimento',
+          status: 'posted',
+          reference_type: 'boleto_payment',
+          reference_id: boleto.id,
+          source_type: 'boleto_sicredi',
+        })
+        .select()
+        .single();
+
+      if (entryError) {
+        console.error(`   ❌ ${clienteNome}: ${entryError.message}`);
+        erro++;
+        continue;
+      }
+
+      // Criar linhas (Débito Banco, Crédito Clientes a Receber)
+      const linhas = [
+        {
+          entry_id: entry.id,
+          account_id: CONFIG.CONTA_BANCO_SICREDI_ID,
+          debit: valor,
+          credit: 0,
+          description: `D - Banco Sicredi`
+        },
+        {
+          entry_id: entry.id,
+          account_id: CONFIG.CONTA_CLIENTES_RECEBER_ID,
+          debit: 0,
+          credit: valor,
+          description: `C - Clientes a Receber - ${clienteNome}`
+        }
+      ];
+
+      const { error: linhasError } = await supabase
+        .from('accounting_entry_lines')
+        .insert(linhas);
+
+      if (linhasError) {
+        console.error(`   ❌ Linhas ${clienteNome}: ${linhasError.message}`);
+        erro++;
+      } else {
+        console.log(`   ✓ ${clienteNome.substring(0, 40).padEnd(40)} R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).padStart(10)}`);
+        sucesso++;
+      }
+    } catch (e) {
+      console.error(`   ❌ Exceção ${clienteNome}: ${e.message}`);
+      erro++;
+    }
+  }
+
+  console.log('\n' + '─'.repeat(70));
+  console.log(`✅ Lançamentos criados com sucesso: ${sucesso}`);
+  if (erro > 0) {
+    console.log(`❌ Lançamentos com erro: ${erro}`);
+  }
+}
+
+// Executar
+main().catch(console.error);
