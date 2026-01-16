@@ -26,11 +26,11 @@ export const PeriodFilter = () => {
   ];
 
   return (
-    <Card className="p-4 mb-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-foreground">Período de Trabalho:</span>
+          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <span className="text-sm sm:text-base font-semibold text-foreground">Período de Trabalho:</span>
         </div>
         
         <div className="flex items-center gap-2 flex-wrap">

@@ -169,14 +169,14 @@ export function Layout({ children }: LayoutProps) {
         <AppSidebar />
         
         <div className="flex-1 flex flex-col w-full">
-          <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10 gap-4">
+          <header className="min-h-14 sm:h-16 border-b bg-card flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10 gap-2 sm:gap-4 py-2 sm:py-0">
             <SidebarTrigger />
             
-            <div className="flex items-center gap-4 flex-1 max-w-md">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-md">
               {selectedClientId ? (
-                <div className="flex items-center gap-2 flex-1 bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
-                  <User className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium flex-1">{selectedClientName}</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-1 bg-primary/10 border border-primary/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium flex-1 truncate">{selectedClientName}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -246,7 +246,7 @@ export function Layout({ children }: LayoutProps) {
 
             {/* Seletor de Escritório Global */}
             {offices.length > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="hidden lg:flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-muted-foreground" />
                 <Select
                   value={selectedOfficeId || undefined}
@@ -278,7 +278,7 @@ export function Layout({ children }: LayoutProps) {
             )}
 
             {/* Seletor de Período Global */}
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-muted-foreground" />
               <Select
                 value={`${selectedMonth}-${selectedYear}`}
@@ -291,7 +291,7 @@ export function Layout({ children }: LayoutProps) {
                   });
                 }}
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-[130px] sm:w-[150px]">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,13 +304,13 @@ export function Layout({ children }: LayoutProps) {
               </Select>
             </div>
 
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="px-2 sm:px-4">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </header>
 
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 overflow-auto">
             {children}
           </main>
         </div>

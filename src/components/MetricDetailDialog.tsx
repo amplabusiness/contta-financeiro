@@ -42,7 +42,7 @@ export function MetricDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -50,7 +50,8 @@ export function MetricDetailDialog({
         
         <div className="space-y-4">
           {type === "invoices" && (
-            <Table>
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
@@ -72,10 +73,12 @@ export function MetricDetailDialog({
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
 
           {type === "expenses" && (
-            <Table>
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>Descrição</TableHead>
@@ -97,10 +100,12 @@ export function MetricDetailDialog({
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
 
           {type === "clients" && (
-            <Table>
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
@@ -122,6 +127,7 @@ export function MetricDetailDialog({
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
 
           {data.length === 0 && (

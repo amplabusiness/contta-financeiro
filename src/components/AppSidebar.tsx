@@ -239,9 +239,9 @@ export function AppSidebar() {
         {/* Logo */}
         <div className={`flex items-center gap-3 p-4 border-b ${collapsed ? 'justify-center' : ''}`}>
           <img 
-            src="/logo-ampla-color.png" 
+            src="/logo-ampla.png" 
             alt="Ampla Contabilidade" 
-            className={`${collapsed ? 'w-8 h-8' : 'w-12 h-12'} object-contain flex-shrink-0 rounded-lg`}
+            className={`${collapsed ? 'w-12 h-12' : 'w-20 h-20'} object-contain flex-shrink-0`}
           />
           {!collapsed && (
             <div className="overflow-hidden">

@@ -248,12 +248,12 @@ const ExecutiveDashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
             {selectedClientId ? `Dashboard Executivo - ${selectedClientName}` : "Dashboard Executivo"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {selectedClientId
               ? "Visão estratégica do cliente selecionado"
               : "Visão estratégica dos principais indicadores financeiros"}
@@ -270,7 +270,7 @@ const ExecutiveDashboard = () => {
         </Card>
 
         {/* KPIs Principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Faturamento Total"
             value={formatCurrency(totalRevenue)}
@@ -302,8 +302,8 @@ const ExecutiveDashboard = () => {
           <CardHeader>
             <CardTitle>Evolução Financeira (Últimos 12 Meses)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
+          <CardContent className="p-4 sm:p-6">
+            <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
               <AreaChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
