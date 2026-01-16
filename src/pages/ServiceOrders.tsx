@@ -69,11 +69,11 @@ const ServiceOrders = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 px-2 sm:px-4 md:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">📋 Ordens de Serviço</h1>
-            <p className="text-muted-foreground">Registros de ações de cobrança</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">📋 Ordens de Serviço</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Registros de ações de cobrança</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -122,7 +122,7 @@ const ServiceOrders = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Histórico de Ordens</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Histórico de Ordens</CardTitle>
           </CardHeader>
           <CardContent>
             {orders.length === 0 ? (
@@ -132,26 +132,28 @@ const ServiceOrders = () => {
                 <p className="text-muted-foreground">Crie sua primeira ordem de serviço para começar.</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Ação</TableHead>
-                    <TableHead>Data</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.clientName}</TableCell>
-                      <TableCell>{order.description}</TableCell>
-                      <TableCell>{order.actionTaken}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleDateString("pt-BR")}</TableCell>
+              <div className="w-full overflow-x-auto rounded-lg border bg-background">
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Ação</TableHead>
+                      <TableHead>Data</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.clientName}</TableCell>
+                        <TableCell>{order.description}</TableCell>
+                        <TableCell>{order.actionTaken}</TableCell>
+                        <TableCell>{new Date(order.createdAt).toLocaleDateString("pt-BR")}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
