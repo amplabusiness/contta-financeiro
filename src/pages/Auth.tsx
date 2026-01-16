@@ -170,11 +170,11 @@ const Auth = () => {
         <div className="relative z-10 flex-1 flex flex-col">
           {/* Logo + Nome */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="bg-white rounded-2xl p-3 shadow-lg">
+            <div className="bg-white rounded-2xl p-4 xl:p-6 shadow-lg">
               <img
-                src="/logo-ampla-color.png"
+                src="/logo-ampla.png"
                 alt="Ampla Contabilidade"
-                className="h-16 xl:h-20 w-auto"
+                className="h-24 xl:h-32 w-auto"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -245,14 +245,14 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex flex-col items-center mb-6">
+          <div className="lg:hidden flex flex-col items-center mb-8">
             <img
-              src="/logo-ampla-color.png"
+              src="/logo-ampla.png"
               alt="Ampla Contabilidade"
-              className="h-20 w-auto mb-3"
+              className="h-28 sm:h-32 w-auto mb-4"
             />
-            <h1 className="text-xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
-            <p className="text-sm text-gray-500">{AMPLA_INFO.slogan}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
+            <p className="text-base text-gray-500">{AMPLA_INFO.slogan}</p>
           </div>
 
           <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
