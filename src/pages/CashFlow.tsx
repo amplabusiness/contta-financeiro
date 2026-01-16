@@ -517,19 +517,19 @@ const CashFlow = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 px-2 sm:px-4 md:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-4 sm:pt-6 px-2 sm:px-0">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight pb-1 sm:pb-2">
               {selectedClientId ? `Fluxo de Caixa - ${selectedClientName}` : "Fluxo de Caixa"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm sm:text-base">
               Gestão inteligente com projeções e alertas automáticos
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
             <Select value={selectedPeriod.toString()} onValueChange={(value) => setSelectedPeriod(parseInt(value))}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[120px] sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -544,24 +544,26 @@ const CashFlow = () => {
               variant="outline" 
               onClick={syncCashFlow}
               disabled={syncing}
+              className="flex items-center gap-2"
             >
               {syncing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
               )}
-              Sincronizar
+              <span className="hidden sm:inline">Sincronizar</span>
             </Button>
             <Button 
-              variant="outline"
+              variant="secondary"
               onClick={() => { resetTransactionForm(); setTransactionDialogOpen(true); }}
+              className="flex items-center gap-2"
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Transação Manual
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Transação Manual</span>
             </Button>
-            <Button onClick={() => { resetForm(); setOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Conta
+            <Button onClick={() => { resetForm(); setOpen(true); }} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nova Conta</span>
             </Button>
           </div>
         </div>
@@ -683,7 +685,7 @@ const CashFlow = () => {
         )}
 
         {/* Cards de Resumo */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -708,17 +710,13 @@ const CashFlow = () => {
                   </div>
                   <div className="border-t pt-1 flex justify-between font-bold">
                     <span className="text-xs">= Saldo Final:</span>
-                    <span className={`text-lg ${accountingBalances.banco.saldoFinal < 0 ? 'text-destructive' : ''}`}>
-                      {formatCurrency(accountingBalances.banco.saldoFinal)}
-                    </span>
+                    <span className={`text-lg ${accountingBalances.banco.saldoFinal < 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(accountingBalances.banco.saldoFinal)}</span>
                   </div>
                   <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
                 </div>
               ) : (
                 <div>
-                  <div className={`text-2xl font-bold ${getTotalBalance() < 0 ? 'text-destructive' : ''}`}>
-                    {formatCurrency(getTotalBalance())}
-                  </div>
+                  <div className={`text-2xl font-bold ${getTotalBalance() < 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(getTotalBalance())}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {bankAccounts.length} conta{bankAccounts.length !== 1 ? 's' : ''} ativa{bankAccounts.length !== 1 ? 's' : ''}
                   </p>
@@ -751,17 +749,13 @@ const CashFlow = () => {
                   </div>
                   <div className="border-t pt-1 flex justify-between font-bold">
                     <span className="text-xs">= Saldo Final:</span>
-                    <span className="text-lg text-green-500">
-                      {formatCurrency(accountingBalances.receber.saldoFinal)}
-                    </span>
+                    <span className="text-lg text-green-600">{formatCurrency(accountingBalances.receber.saldoFinal)}</span>
                   </div>
                   <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
                 </div>
               ) : (
                 <div>
-                  <div className="text-2xl font-bold text-green-500">
-                    {formatCurrency(getTotalReceivables())}
-                  </div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(getTotalReceivables())}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {invoices.length} fatura{invoices.length !== 1 ? 's' : ''} pendente{invoices.length !== 1 ? 's' : ''}
                   </p>
@@ -795,12 +789,8 @@ const CashFlow = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${getProjectedBalance() < 0 ? 'text-destructive' : 'text-green-500'}`}>
-                {formatCurrency(getProjectedBalance())}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Para os próximos {selectedPeriod} dias
-              </p>
+              <div className={`text-2xl font-bold ${getProjectedBalance() < 0 ? 'text-destructive' : 'text-green-600'}`}>{formatCurrency(getProjectedBalance())}</div>
+              <p className="text-xs text-muted-foreground mt-1">Para os próximos {selectedPeriod} dias</p>
             </CardContent>
           </Card>
         </div>
@@ -808,33 +798,19 @@ const CashFlow = () => {
         {/* Gráfico de Projeção */}
         <Card>
           <CardHeader>
-            <CardTitle>Projeção de Saldo</CardTitle>
-            <CardDescription>
-              Evolução prevista do saldo bancário nos próximos {selectedPeriod} dias
-            </CardDescription>
+            <CardTitle className="text-base sm:text-lg">Projeção de Saldo</CardTitle>
+            <CardDescription>Evolução prevista do saldo bancário nos próximos {selectedPeriod} dias</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={(value) => format(parseISO(value), "dd/MM")}
-                />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip 
-                  formatter={(value: any) => formatCurrency(value)}
-                  labelFormatter={(label) => format(parseISO(label), "dd/MM/yyyy")}
-                />
-                <Legend />
-                <ReferenceLine y={0} stroke="red" strokeDasharray="3 3" />
-                <Line 
-                  type="monotone" 
-                  dataKey="projected_balance" 
-                  stroke="#8884d8" 
-                  name="Saldo Projetado"
-                  strokeWidth={2}
-                />
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tickFormatter={(value) => format(parseISO(value), "dd/MM")} fontSize={12} />
+                <YAxis tickFormatter={(value) => formatCurrency(value)} fontSize={12} />
+                <Tooltip formatter={(value: any) => formatCurrency(value)} labelFormatter={(label) => format(parseISO(label), "dd/MM/yyyy")} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" />
+                <Line type="monotone" dataKey="projected_balance" stroke="#2563eb" name="Saldo Projetado" strokeWidth={3} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

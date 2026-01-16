@@ -576,13 +576,13 @@ const InadimplenciaDashboard = () => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={exportToCSV} size="sm" className="flex-1 sm:flex-none">
+              <Download className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Exportar CSV</span>
             </Button>
-            <Button onClick={() => loadData()}>
-              Atualizar
+            <Button onClick={() => loadData()} size="sm" className="flex-1 sm:flex-none">
+              <span className="text-sm">Atualizar</span>
             </Button>
           </div>
         </div>
@@ -590,16 +590,16 @@ const InadimplenciaDashboard = () => {
         <PeriodFilter />
 
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+            <CardHeader className="pb-2 p-4 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                 Boletos Gerados
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {formatCurrency(totalGerado)}
               </div>
               <p className="text-sm text-muted-foreground">
@@ -661,7 +661,7 @@ const InadimplenciaDashboard = () => {
         </div>
 
         {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Gráfico de Evolução */}
           <Card>
             <CardHeader>
