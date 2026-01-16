@@ -18,7 +18,6 @@ import { useOfflineMode } from "@/hooks/useOfflineMode";
 import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
 import { CashFlowWidget } from "@/components/dashboard/CashFlowWidget";
-import titulosProblematicos from "@/data/titulosProblematicos.json";
 
 // Tipos para agentes IA
 interface AgentStatus {
@@ -80,6 +79,8 @@ const Dashboard = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  // Novo estado para títulos problemáticos reais
+  const [titulosProblematicos, setTitulosProblematicos] = useState<any[]>([]);
 
   // Estados dos agentes IA
   const [isAutomationActive, setIsAutomationActive] = useState(true);
@@ -294,6 +295,53 @@ const Dashboard = () => {
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
 
+      // Buscar boletos vencidos do banco, agrupando por cliente
+      // Só considera invoices com status 'overdue' e não canceladas
+      const { data: overdueInvoicesData, error: overdueError } = await supabase
+        .from("invoices")
+        .select("id, client_id, amount, due_date, status, clients(name)")
+        .eq("status", "overdue");
+
+      if (overdueError) {
+        setTitulosProblematicos([]);
+      } else {
+        // Agrupar por cliente
+        const agrupados: Record<string, any> = {};
+        (overdueInvoicesData || []).forEach(inv => {
+          const cliente = inv.clients?.name || inv.client_id || "N/D";
+          if (!agrupados[cliente]) {
+            agrupados[cliente] = {
+              cliente,
+              totalAberto: 0,
+              qtdBoletos: 0,
+              diasAtraso: 0,
+              meses: 0,
+              custoManutencao: 0,
+              prioridade: "BAIXO",
+            };
+          }
+          agrupados[cliente].totalAberto += Number(inv.amount);
+          agrupados[cliente].qtdBoletos += 1;
+          // Calcular dias de atraso
+          const due = inv.due_date ? new Date(inv.due_date) : null;
+          if (due) {
+            const diff = Math.floor((Date.now() - due.getTime()) / (1000 * 60 * 60 * 24));
+            agrupados[cliente].diasAtraso = Math.max(agrupados[cliente].diasAtraso, diff);
+            agrupados[cliente].meses = Math.floor(diff / 30);
+          }
+          // Exemplo: custo de manutenção fictício (ajuste conforme regra real)
+          agrupados[cliente].custoManutencao += 2.02;
+          // Prioridade
+          agrupados[cliente].prioridade = agrupados[cliente].diasAtraso > 60 ? "CRITICO" : agrupados[cliente].diasAtraso > 30 ? "ALTO" : agrupados[cliente].diasAtraso > 15 ? "MEDIO" : "BAIXO";
+        });
+        // Só mostrar clientes do tenant logado (se houver filtro)
+        let titulosArr = Object.values(agrupados);
+        if (selectedClientId) {
+          titulosArr = titulosArr.filter((t: any) => clientsList.some(c => c.id === selectedClientId && c.name === t.cliente));
+        }
+        setTitulosProblematicos(titulosArr);
+      }
+
       // Salvar dados no cache para modo offline
       saveOfflineData({
         dashboardStats: stats,
@@ -323,10 +371,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   }, [selectedClientId, selectedYear, selectedMonth, saveOfflineData, offlineData]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]); // Recarregar quando mudar o cliente ou período selecionado
 
   // =====================================================
   // AUTOMAÇÃO DOS AGENTES IA (executa a cada 60s)
