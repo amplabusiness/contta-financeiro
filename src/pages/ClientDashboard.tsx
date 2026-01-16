@@ -365,19 +365,19 @@ const ClientDashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">{selectedClientName}</h1>
-            <p className="text-muted-foreground">Dashboard individual do cliente</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{selectedClientName}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Dashboard individual do cliente</p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/client-ledger")}>
+          <Button variant="outline" onClick={() => navigate("/client-ledger")} size="sm" className="w-full sm:w-auto">
             <FileText className="w-4 h-4 mr-2" />
-            Ver Razão Completo
+            <span className="text-sm">Ver Razão Completo</span>
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Inadimplência"
             value={formatCurrency(stats.totalOverdue)}
