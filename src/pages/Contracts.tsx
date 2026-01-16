@@ -93,6 +93,7 @@ interface Contract {
   signature_status: string;
   coaf_clause_accepted: boolean;
   created_at: string;
+  special_clauses?: string;
   clients?: {
     name: string;
     cnpj: string;
@@ -120,6 +121,7 @@ interface Client {
   municipio: string | null;
   uf: string | null;
   cep: string | null;
+  complemento?: string | null;
   is_active: boolean;
   is_pro_bono: boolean;
   is_barter: boolean;
@@ -231,6 +233,35 @@ const contractServices = {
 };
 
 const Contracts = () => {
+      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+      const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+      const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+
+      const handleDeleteContract = async () => {
+        if (!contractToDelete) return;
+        try {
+          const { error } = await supabase
+            .from("accounting_contracts")
+            .delete()
+            .eq("id", contractToDelete.id);
+          if (error) throw error;
+          toast({
+            title: "Contrato deletado",
+            description: `Contrato ${contractToDelete.contract_number} removido com sucesso.`,
+          });
+          setShowDeleteDialog(false);
+          setContractToDelete(null);
+          setDeleteConfirmed(false);
+          fetchContracts();
+        } catch (error) {
+          toast({
+            title: "Erro ao deletar contrato",
+            description: error instanceof Error ? error.message : "Erro desconhecido",
+            variant: "destructive",
+          });
+        }
+      };
+    const [editingContractId, setEditingContractId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -1180,22 +1211,37 @@ ${officeData.cidade || "Goiânia"}/${officeData.estado || "GO"}, ${formattedDate
         signature_status: "signed", // Aceite tácito = assinado
       };
 
-      const { data, error } = await supabase
-        .from("accounting_contracts")
-        .insert(contractData)
-        .select()
-        .single();
+      let data, error;
+      if (editingContractId) {
+        // Update existing contract
+        ({ data, error } = await supabase
+          .from("accounting_contracts")
+          .update(contractData)
+          .eq("id", editingContractId)
+          .select()
+          .single());
+      } else {
+        // Insert new contract
+        ({ data, error } = await supabase
+          .from("accounting_contracts")
+          .insert(contractData)
+          .select()
+          .single());
+      }
 
       if (error) throw error;
 
       toast({
-        title: "Contrato criado",
-        description: `Contrato ${data.contract_number} criado com sucesso. Válido por aceite tácito.`,
+        title: editingContractId ? "Contrato atualizado" : "Contrato criado",
+        description: editingContractId
+          ? `Contrato ${data.contract_number} atualizado com sucesso.`
+          : `Contrato ${data.contract_number} criado com sucesso. Válido por aceite tácito.`,
       });
 
       setShowNewContract(false);
       setShowPreview(false);
       resetForm();
+      setEditingContractId(null);
       fetchContracts();
     } catch (error) {
       console.error("Error saving contract:", error);
@@ -3091,32 +3137,123 @@ _${formattedToday}_
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
+                                                                <DropdownMenuItem onClick={() => {
+                                                                  const client = clients.find(c => c.id === contract.client_id);
+                                                                  if (client) {
+                                                                    setSelectedClient(client);
+                                                                    setFormData({
+                                                                      ...formData,
+                                                                      client_id: client.id,
+                                                                      contract_type: contract.contract_type,
+                                                                      monthly_fee: String(contract.monthly_fee),
+                                                                      start_date: contract.start_date,
+                                                                    });
+                                                                    // Passa o cliente diretamente para evitar problema de setState assíncrono
+                                                                    const preview = generateContractContent(contract.contract_type, client, contract.monthly_fee);
+                                                                    setContractPreview(preview);
+                                                                    setShowPreview(true);
+                                                                  }
+                                                                }}>
+                                                                  <Eye className="mr-2 h-4 w-4" />
+                                                                  Visualizar
+                                                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const client = clients.find(c => c.id === contract.client_id);
+                                    if (client) {
+                                      setSelectedClient(client);
+                                      setFormData({
+                                        ...formData,
+                                        client_id: client.id,
+                                        contract_type: contract.contract_type,
+                                        monthly_fee: String(contract.monthly_fee),
+                                        start_date: contract.start_date,
+                                        end_date: contract.end_date || "",
+                                        payment_day: contract.payment_day ? String(contract.payment_day) : "",
+                                        payment_method: contract.payment_method || "",
+                                        adjustment_index: contract.adjustment_index || "",
+                                        special_clauses: contract.special_clauses || "",
+                                      });
+                                      setEditingContractId(contract.id);
+                                      setShowNewContract(true);
+                                    }
+                                  }}
+                                >
+                                  <span className="mr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13h3l8-8a2.828 2.828 0 00-4-4l-8 8v3zm0 0v3a2 2 0 002 2h3" /></svg></span>
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      const { error } = await supabase
+                                        .from("accounting_contracts")
+                                        .update({ status: "terminated" })
+                                        .eq("id", contract.id);
+                                      if (error) throw error;
+                                      toast({
+                                        title: "Contrato rescindido",
+                                        description: `Contrato ${contract.contract_number} foi rescindido com sucesso.`,
+                                      });
+                                      fetchContracts();
+                                    } catch (error) {
+                                      toast({
+                                        title: "Erro ao rescindir contrato",
+                                        description: error instanceof Error ? error.message : "Erro desconhecido",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  className="text-orange-600"
+                                >
+                                  <span className="mr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></span>
+                                  Rescindir
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      const { error } = await supabase
+                                        .from("accounting_contracts")
+                                        .delete()
+                                        .eq("id", contract.id);
+                                      if (error) throw error;
+                                      toast({
+                                        title: "Contrato deletado",
+                                        description: `Contrato ${contract.contract_number} removido com sucesso.`,
+                                      });
+                                      fetchContracts();
+                                    } catch (error) {
+                                      toast({
+                                        title: "Erro ao deletar contrato",
+                                        description: error instanceof Error ? error.message : "Erro desconhecido",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  className="text-red-600"
+                                >
+                                  <span className="mr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></span>
+                                  Deletar
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => {
                                   const client = clients.find(c => c.id === contract.client_id);
                                   if (client) {
-                                    setSelectedClient(client);
-                                    setFormData({
-                                      ...formData,
-                                      client_id: client.id,
-                                      contract_type: contract.contract_type,
-                                      monthly_fee: String(contract.monthly_fee),
-                                      start_date: contract.start_date,
-                                    });
-                                    // Passa o cliente diretamente para evitar problema de setState assíncrono
-                                    const preview = generateContractContent(contract.contract_type, client, contract.monthly_fee);
-                                    setContractPreview(preview);
-                                    setShowPreview(true);
+                                    generateModernPDF({ ...contract, clients: client, monthly_fee: contract.monthly_fee ?? client.monthly_fee });
+                                  } else {
+                                    generateModernPDF(contract);
                                   }
                                 }}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  Visualizar
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => generateModernPDF(contract)}>
                                   <FileDown className="mr-2 h-4 w-4 text-red-600" />
                                   Baixar PDF
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => generateModernWord(contract)}>
+                                <DropdownMenuItem onClick={() => {
+                                  const client = clients.find(c => c.id === contract.client_id);
+                                  if (client) {
+                                    generateModernWord({ ...contract, clients: client, monthly_fee: contract.monthly_fee ?? client.monthly_fee });
+                                  } else {
+                                    generateModernWord(contract);
+                                  }
+                                }}>
                                   <FileType className="mr-2 h-4 w-4 text-blue-600" />
                                   Baixar Word
                                 </DropdownMenuItem>
@@ -3141,8 +3278,7 @@ _${formattedToday}_
                                 <DropdownMenuItem onClick={() => {
                                   const client = clients.find(c => c.id === contract.client_id);
                                   if (client) {
-                                    // Passa o cliente diretamente para evitar problema de setState assíncrono
-                                    const content = generateContractContent(contract.contract_type, client, contract.monthly_fee);
+                                    const content = generateContractContent(contract.contract_type, client, contract.monthly_fee ?? client.monthly_fee);
                                     navigator.clipboard.writeText(content);
                                     toast({
                                       title: "Contrato copiado",
@@ -3345,7 +3481,9 @@ _${formattedToday}_
                     <Eye className="w-4 h-4 mr-2" />
                     Preview
                   </Button>
-                  <Button onClick={handleSaveContract}>Gerar Contrato</Button>
+                  <Button onClick={handleSaveContract}>
+                    {editingContractId ? 'Salvar Contrato' : 'Gerar Contrato'}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
