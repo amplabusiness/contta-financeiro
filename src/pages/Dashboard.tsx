@@ -667,12 +667,12 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
             {selectedClientId ? `Dashboard - ${selectedClientName}` : "Dashboard Geral"}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {selectedClientId
               ? "Visão financeira do cliente selecionado"
               : "Visão geral do sistema financeiro - selecione um cliente para filtrar"
@@ -684,16 +684,16 @@ const Dashboard = () => {
 
         {/* ========== DASHBOARD DOS AGENTES IA ========== */}
         <Card className="bg-gradient-to-r from-violet-50 to-blue-50 border-violet-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <CardHeader className="pb-3 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="relative">
-                  <Bot className="h-6 w-6 text-violet-600" />
-                  <Zap className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1" />
+                  <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600" />
+                  <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-500 absolute -top-1 -right-1" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Agentes IA</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Agentes IA</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Automação 100% - Ciclo #{cycleCount} | Atualizado: {lastAgentUpdate.toLocaleTimeString('pt-BR')}
                   </CardDescription>
                 </div>
@@ -701,7 +701,7 @@ const Dashboard = () => {
               <Badge
                 variant={isAutomationActive ? "default" : "secondary"}
                 className={cn(
-                  "px-3 py-1",
+                  "px-2 py-0.5 sm:px-3 sm:py-1 text-xs",
                   isAutomationActive && "bg-green-600 animate-pulse"
                 )}
               >
@@ -715,10 +715,10 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {agents.map((agent, idx) => (
-                <div key={idx} className="bg-white rounded-lg p-3 border shadow-sm">
-                  <div className="flex items-center justify-between">
+                <div key={idx} className="bg-white rounded-lg p-2 sm:p-3 border shadow-sm">
+                  <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
                     <div className="flex items-center gap-2">
                       <div className={cn("p-2 rounded-lg", agent.bgColor)}>
                         <agent.icon className={cn("h-4 w-4", agent.color)} />
@@ -763,7 +763,7 @@ const Dashboard = () => {
 
         {/* Saldos Contábeis - Formato Razão (SI + D - C = SF) */}
         {accountingBalances && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {/* Saldo Banco */}
             <Card>
               <CardHeader className="pb-2">
@@ -894,8 +894,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             <div onClick={() => showDetail("clients")} className="cursor-pointer">
               <MetricCard
                 title="Clientes Ativos"
@@ -949,17 +949,17 @@ const Dashboard = () => {
 
         {stats.overdueInvoices > 0 && (
           <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-destructive">⚠️ Atenção: Inadimplência Detectada</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-destructive text-base sm:text-lg">⚠️ Atenção: Inadimplência Detectada</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Existem {stats.overdueInvoices} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
                   </CardDescription>
                 </div>
-                <Button onClick={() => navigate("/reports")} variant="destructive">
+                <Button onClick={() => navigate("/reports")} variant="destructive" size="sm" className="w-full sm:w-auto">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Ver Relatório Completo
+                  <span className="text-xs sm:text-sm">Ver Relatório</span>
                 </Button>
               </div>
             </CardHeader>
@@ -969,33 +969,34 @@ const Dashboard = () => {
         {/* 🚨 ALERTA: BOLETOS VENCIDOS NO SICREDI - COBRANÇA */}
         {titulosProblematicos.length > 0 && (
           <Card className="border-amber-500 bg-amber-50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-amber-800 flex items-center gap-2">
-                    <BanknoteIcon className="h-5 w-5" />
+                  <CardTitle className="text-amber-800 flex items-center gap-2 text-sm sm:text-base lg:text-lg">
+                    <BanknoteIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     ⚠️ COBRANÇA: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.totalAberto, 0))} em Boletos Vencidos
                   </CardTitle>
-                  <CardDescription className="text-amber-700">
+                  <CardDescription className="text-amber-700 text-xs sm:text-sm mt-1">
                     {titulosProblematicos.length} clientes com {titulosProblematicos.reduce((s, t) => s + t.qtdBoletos, 0)} boletos vencidos no Sicredi. 
                     Custo de manutenção: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.custoManutencao, 0))}/mês
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Badge variant="destructive" className="text-sm">
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="destructive" className="text-xs">
                     {titulosProblematicos.filter(t => t.prioridade === 'CRITICO').length} CRÍTICOS
                   </Badge>
-                  <Badge className="bg-orange-500 text-sm">
+                  <Badge className="bg-orange-500 text-xs">
                     {titulosProblematicos.filter(t => t.prioridade === 'ALTO').length} ALTO RISCO
                   </Badge>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-sm text-amber-700 mb-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-xs sm:text-sm text-amber-700 mb-3 sm:mb-4">
                 ⚡ <strong>AÇÃO:</strong> Baixar boletos no Sicredi (evitar taxa R$ 2/mês) e cobrar via PIX/transferência ou acordar com cliente.
               </div>
-              <Table>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Prioridade</TableHead>
@@ -1035,13 +1036,14 @@ const Dashboard = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               {titulosProblematicos.length > 15 && (
-                <p className="text-center text-sm text-amber-600 mt-4">
+                <p className="text-center text-xs sm:text-sm text-amber-600 mt-3 sm:mt-4">
                   + {titulosProblematicos.length - 15} clientes adicionais com boletos em aberto
                 </p>
               )}
-              <div className="mt-4 p-3 bg-amber-100 rounded-lg">
-                <p className="text-sm text-amber-800">
+              <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-amber-100 rounded-lg">
+                <p className="text-xs sm:text-sm text-amber-800">
                   💡 <strong>Dica:</strong> Cancele os boletos no Sicredi (baixa sem pagamento) e mantenha a cobrança apenas no sistema.
                   Cobre via PIX ou transferência para evitar as taxas de manutenção.
                 </p>
@@ -1051,17 +1053,17 @@ const Dashboard = () => {
         )}
 
         <Card>
-          <CardHeader>
-            <CardTitle>Clientes Ativos</CardTitle>
-            <CardDescription>Acesso rápido aos dashboards individuais dos clientes</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Clientes Ativos</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Acesso rápido aos dashboards individuais dos clientes</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             {clients.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+              <p className="text-center text-muted-foreground text-sm py-8">
                 Nenhum cliente ativo cadastrado
               </p>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {clients.map((client) => {
                   const health = clientsHealth[client.id] || {};
                   const healthStatus = health.healthStatus || "healthy";
