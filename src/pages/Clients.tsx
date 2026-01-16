@@ -571,20 +571,20 @@ const Clients = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 px-2 sm:px-4 md:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">Clientes</h1>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1>
               {/* Indicador de Realtime */}
               <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
                 <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
                 {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
               </Badge>
             </div>
-            <p className="text-muted-foreground">Gerencie o cadastro de clientes</p>
+            <p className="text-muted-foreground text-sm sm:text-base">Gerencie o cadastro de clientes</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
             <Button 
               variant="outline" 
               onClick={handleImportGroups}
@@ -974,9 +974,9 @@ const Clients = () => {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>Lista de Clientes</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Lista de Clientes</CardTitle>
                 <CardDescription>
                   {selectedClientId ? (
                     <>Cliente selecionado: {clients.find(c => c.id === selectedClientId)?.name}</>
@@ -989,7 +989,7 @@ const Clients = () => {
                   )}
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end">
                 {selectedClientId && (
                   <Button
                     variant="outline"
@@ -1000,7 +1000,7 @@ const Clients = () => {
                   </Button>
                 )}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[140px] sm:w-[180px]">
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1023,140 +1023,141 @@ const Clients = () => {
                   : `Nenhum cliente ${statusFilter === "active" ? "ativo" : "suspenso"} encontrado`}
               </p>
             ) : (
-              <Table>
+              <div className="w-full overflow-x-auto rounded-lg border bg-background">
+                <Table className="min-w-[700px]">
                   <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>CPF/CNPJ</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Honorário</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Grupo Econômico</TableHead>
-                    <TableHead>IA</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clients.filter(client => 
-                    (selectedClientId ? client.id === selectedClientId : true) &&
-                    (statusFilter === "all" || 
-                     (statusFilter === "active" && client.is_active) || 
-                     (statusFilter === "inactive" && !client.is_active))
-                  ).map((client) => {
-                    const today = new Date();
-                    const isProBonoActive = client.is_pro_bono && 
-                      (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
-                    const isSuspended = !client.is_active;
-                    
-                    return (
-                      <TableRow 
-                        key={client.id}
-                        className={isSuspended ? "border-l-4 border-l-destructive bg-destructive/5" : ""}
-                      >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-3">
-                            <FinancialGroupBadge clientId={client.id} />
-                            <div className="flex items-center gap-2">
-                              {client.name}
-                              {client.is_pro_bono && (
-                                <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
-                                  <Heart className="h-3 w-3 fill-current" />
-                                  Pro-Bono
-                                </Badge>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CPF/CNPJ</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Honorário</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Grupo Econômico</TableHead>
+                      <TableHead>IA</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clients.filter(client => 
+                      (selectedClientId ? client.id === selectedClientId : true) &&
+                      (statusFilter === "all" || 
+                        (statusFilter === "active" && client.is_active) || 
+                        (statusFilter === "inactive" && !client.is_active))
+                    ).map((client) => {
+                      const today = new Date();
+                      const isProBonoActive = client.is_pro_bono && 
+                        (!client.pro_bono_end_date || new Date(client.pro_bono_end_date) >= today);
+                      const isSuspended = !client.is_active;
+                      return (
+                        <TableRow 
+                          key={client.id}
+                          className={isSuspended ? "border-l-4 border-l-destructive bg-destructive/5" : ""}
+                        >
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <FinancialGroupBadge clientId={client.id} />
+                              <div className="flex items-center gap-2">
+                                {client.name}
+                                {client.is_pro_bono && (
+                                  <Badge variant="outline" className="gap-1 border-pink-500 text-pink-700">
+                                    <Heart className="h-3 w-3 fill-current" />
+                                    Pro-Bono
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{(client.cnpj || client.cpf) ? formatDocument(client.cnpj || client.cpf || "") : "-"}</TableCell>
+                          <TableCell>{client.email || "-"}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className={client.is_pro_bono ? "line-through text-muted-foreground" : ""}>
+                                {formatCurrency(Number(client.monthly_fee))}
+                              </span>
+                              {isProBonoActive && (
+                                <span className="text-xs text-pink-600 font-medium">
+                                  Gratuito {client.pro_bono_end_date 
+                                    ? `até ${new Date(client.pro_bono_end_date).toLocaleDateString('pt-BR')}`
+                                    : '(indefinido)'}
+                                </span>
+                              )}
+                              {client.is_pro_bono && !isProBonoActive && (
+                                <span className="text-xs text-muted-foreground">
+                                  Pro-bono expirado
+                                </span>
                               )}
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{(client.cnpj || client.cpf) ? formatDocument(client.cnpj || client.cpf || "") : "-"}</TableCell>
-                        <TableCell>{client.email || "-"}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className={client.is_pro_bono ? "line-through text-muted-foreground" : ""}>
-                              {formatCurrency(Number(client.monthly_fee))}
-                            </span>
-                            {isProBonoActive && (
-                              <span className="text-xs text-pink-600 font-medium">
-                                Gratuito {client.pro_bono_end_date 
-                                  ? `até ${new Date(client.pro_bono_end_date).toLocaleDateString('pt-BR')}`
-                                  : '(indefinido)'}
-                              </span>
-                            )}
-                            {client.is_pro_bono && !isProBonoActive && (
-                              <span className="text-xs text-muted-foreground">
-                                Pro-bono expirado
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={client.is_active ? "default" : "destructive"}>
-                            {client.is_active ? "Ativo" : "Suspenso"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <EconomicGroupIndicator client={client} allClients={allClientsForGroups} />
-                        </TableCell>
-                        <TableCell>
-                          <AIClientAnalyzer
-                            clientId={client.id}
-                            trigger={
-                              <Button size="sm" variant="outline">
-                                <Users className="h-4 w-4" />
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={client.is_active ? "default" : "destructive"}>
+                              {client.is_active ? "Ativo" : "Suspenso"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <EconomicGroupIndicator client={client} allClients={allClientsForGroups} />
+                          </TableCell>
+                          <TableCell>
+                            <AIClientAnalyzer
+                              clientId={client.id}
+                              trigger={
+                                <Button size="sm" variant="outline">
+                                  <Users className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewClient(client)}
+                                title="Ver Dados da Empresa"
+                              >
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            }
-                          />
-                        </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewClient(client)}
-                            title="Ver Dados da Empresa"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(client)}
-                            title="Editar"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleStatus(client)}
-                            title={client.is_active ? "Suspender" : "Ativar"}
-                          >
-                            {client.is_active ? (
-                              <Ban className="w-4 h-4 text-destructive" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-success" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setDeleteClientId(client.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(client)}
+                                title="Editar"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleStatus(client)}
+                                title={client.is_active ? "Suspender" : "Ativar"}
+                              >
+                                {client.is_active ? (
+                                  <Ban className="w-4 h-4 text-destructive" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4 text-success" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setDeleteClientId(client.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Dialog de Visualização de Dados da Empresa */}
         <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>

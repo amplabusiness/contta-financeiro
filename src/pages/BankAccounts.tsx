@@ -538,13 +538,13 @@ const BankAccounts = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 px-2 sm:px-4 md:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <Landmark className="h-8 w-8 text-primary" />
+            <Landmark className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold">Contas Bancárias</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold">Contas Bancárias</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Gerencie as contas bancárias da empresa
               </p>
             </div>
@@ -556,7 +556,7 @@ const BankAccounts = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -605,7 +605,7 @@ const BankAccounts = () => {
         {/* Accounts Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Contas Cadastradas</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Contas Cadastradas</CardTitle>
             <CardDescription>
               Lista de todas as contas bancárias configuradas no sistema
             </CardDescription>
@@ -616,8 +616,8 @@ const BankAccounts = () => {
                 Nenhuma conta bancária cadastrada
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="w-full overflow-x-auto rounded-lg border bg-background">
+                <Table className="min-w-[700px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>

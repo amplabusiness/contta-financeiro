@@ -210,10 +210,10 @@ const ClientLedger = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Razão do Cliente</h1>
-          <p className="text-muted-foreground">
+      <div className="space-y-6 px-2 sm:px-4 md:px-8">
+        <div className="pt-4 sm:pt-6 px-2 sm:px-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight pb-1 sm:pb-2">Razão do Cliente</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Histórico de honorários e pagamentos por cliente
           </p>
         </div>
