@@ -140,7 +140,9 @@ const Dashboard = () => {
 
   const loadDashboardData = useCallback(async () => {
     try {
-      // Construir queries com filtro de cliente se selecionado
+      setLoading(true);
+
+      // 1. PREPARAÇÃO DAS QUERIES (COM LIMITES)
       let clientsQuery = supabase
         .from("clients")
         .select("*", { count: "exact" })
@@ -149,14 +151,24 @@ const Dashboard = () => {
         .not("monthly_fee", "eq", 0)
         .order("name");
 
-      let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
+      let recentInvoicesQuery = supabase
+        .from("invoices")
+        .select("*, clients(name)")
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-      // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
+      let allInvoicesQuery = supabase
+        .from("invoices")
+        .select("*")
+        .order('due_date', { ascending: true })
+        .limit(200);
 
-      let allInvoicesQuery = supabase.from("invoices").select("*");
-      let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
+      let openingBalanceQuery = supabase
+        .from("client_opening_balance")
+        .select("*, clients(name)")
+        .in("status", ["pending", "partial", "overdue"])
+        .limit(200);
 
-      // Aplicar filtro de cliente se selecionado
       if (selectedClientId) {
         clientsQuery = clientsQuery.eq("id", selectedClientId);
         recentInvoicesQuery = recentInvoicesQuery.eq("client_id", selectedClientId);
@@ -164,18 +176,13 @@ const Dashboard = () => {
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
       }
 
-      // Usar Promise.allSettled para não falhar se uma query falhar
-      const results = await Promise.allSettled([
-        clientsQuery,
-        recentInvoicesQuery,
-        allInvoicesQuery,
-        openingBalanceQuery,
+      // 2. EXECUÇÃO PARALELA (BD + CONTABILIDADE)
+      const [results, dashboardBalances, adiantamentos, expensesData] = await Promise.all([
+        Promise.allSettled([clientsQuery, recentInvoicesQuery, allInvoicesQuery, openingBalanceQuery]),
+        getDashboardBalances(selectedYear, selectedMonth),
+        getAdiantamentosSocios(selectedYear, selectedMonth),
+        getExpenses(selectedYear, selectedMonth)
       ]);
-
-      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
-      // Cada tela consulta a conta que precisa - alteração reflete imediato
-      const dashboardBalances = await getDashboardBalances(selectedYear, selectedMonth);
-      const adiantamentos = await getAdiantamentosSocios(selectedYear, selectedMonth);
 
       setAccountingBalances({
         bank_balance: dashboardBalances.saldoBanco,
@@ -183,27 +190,21 @@ const Dashboard = () => {
         partner_advances: adiantamentos.total,
         total_revenue: dashboardBalances.totalReceitas,
         total_expenses: dashboardBalances.totalDespesas,
-        // Formato de razão: SI + D - C = SF
         banco: dashboardBalances.banco,
         receber: dashboardBalances.receber,
       });
 
-      // Extrair dados com fallback para array vazio
+      // 3. EXTRAÇÃO DE DADOS
       const clientsRes = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: [] };
       const recentInvoicesRes = results[1].status === 'fulfilled' ? results[1].value : { data: [] };
       const allInvoicesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
       const openingBalanceRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
 
-      // Logar erros se houver
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
-          const queryNames = ['clients', 'recentInvoices', 'allInvoices', 'openingBalance'];
-          console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
+          console.warn(`Query falhou (Index ${index}):`, result.reason);
         }
       });
-
-      // FONTE DA VERDADE: Buscar despesas da contabilidade (grupo 4.*)
-      const expensesData = await getExpenses(selectedYear, selectedMonth);
 
       const totalClients = clientsRes.count || 0;
       const recentInvoices = recentInvoicesRes.data || [];
@@ -211,45 +212,8 @@ const Dashboard = () => {
       const allInvoices = allInvoicesRes.data || [];
       const openingBalances = openingBalanceRes.data || [];
 
-      // CORRIGIDO: Calcular KPIs com TODAS as invoices + saldos de abertura
-      // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
-      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
-      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
-
-      // Calcular saldos de abertura pendentes
-      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
-      const openingBalanceOverdue = openingBalances.filter(ob => {
-        // Considerar vencido se data de vencimento já passou
-        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
-        const isOverdue = dueDate && dueDate < new Date();
-        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
-      });
-
-      // Total de saldo de abertura pendente (valor - valor pago)
-      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
-        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
-
-      // Total de saldo de abertura vencido
-      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
-        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
-
-      setStats({
-        totalClients,
-        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
-        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
-        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
-        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
-        // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
-        pendingExpenses: expensesData.entries.length,
-        totalExpenses: expensesData.totalExpenses,
-      });
-
-      // Calcular saúde financeira de cada cliente (incluindo saldo de abertura)
-      const healthData: Record<string, any> = {};
+      // 4. CÁLCULOS DE SAÚDE (HEALTH DATA)
+      const calculatedHealthData: Record<string, any> = {};
       clientsList.forEach((client) => {
         const clientInvoices = allInvoices.filter((inv) => inv.client_id === client.id);
         const clientOpeningBalances = openingBalances.filter((ob) => ob.client_id === client.id);
@@ -258,7 +222,6 @@ const Dashboard = () => {
         const pending = clientInvoices.filter((inv) => inv.status === "pending");
         const paid = clientInvoices.filter((inv) => inv.status === "paid");
 
-        // Saldos de abertura vencidos
         const obOverdue = clientOpeningBalances.filter(ob => {
           const dueDate = ob.due_date ? new Date(ob.due_date) : null;
           const isOverdue = dueDate && dueDate < new Date();
@@ -266,12 +229,11 @@ const Dashboard = () => {
         });
         const obPending = clientOpeningBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
 
-        const totalOverdue = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+        const totalOverdueVal = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
           obOverdue.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
-        const totalPending = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+        const totalPendingVal = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
           obPending.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
 
-        // Última movimentação (última fatura paga ou criada)
         const sortedInvoices = clientInvoices.sort((a, b) =>
           new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
         );
@@ -280,34 +242,63 @@ const Dashboard = () => {
         const totalOverdueCount = overdue.length + obOverdue.length;
         const totalPendingCount = pending.length + obPending.length;
 
-        healthData[client.id] = {
+        calculatedHealthData[client.id] = {
           overdueCount: totalOverdueCount,
-          overdueAmount: totalOverdue,
+          overdueAmount: totalOverdueVal,
           pendingCount: totalPendingCount,
-          pendingAmount: totalPending,
+          pendingAmount: totalPendingVal,
           paidCount: paid.length,
           lastActivity: lastActivity ? new Date(lastActivity.updated_at || lastActivity.created_at) : null,
           healthStatus: totalOverdueCount > 0 ? "critical" : totalPendingCount > 2 ? "warning" : "healthy",
         };
       });
 
-      setClientsHealth(healthData);
+      // 5. CÁLCULO DE ESTATÍSTICAS GERAIS
+      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
+      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
+
+      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
+      const openingBalanceOverdue = openingBalances.filter(ob => {
+        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+        const isOverdue = dueDate && dueDate < new Date();
+        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+      });
+
+      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
+      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
+      const newStats = {
+        totalClients,
+        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
+        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
+        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
+        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
+        pendingExpenses: expensesData.entries.length,
+        totalExpenses: expensesData.totalExpenses,
+      };
+
+      setClientsHealth(calculatedHealthData);
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
+      setStats(newStats);
 
-      // Buscar boletos vencidos do banco, agrupando por cliente
-      // Só considera invoices com status 'overdue' e não canceladas
-      const { data: overdueInvoicesData, error: overdueError } = await supabase
+      // Busca de boletos do Sicredi (separado para não bloquear o resto)
+      const { data: overdueInvoicesData } = await supabase
         .from("invoices")
         .select("id, client_id, amount, due_date, status, clients(name)")
-        .eq("status", "overdue");
+        .eq("status", "overdue")
+        .limit(200);
 
-      if (overdueError) {
-        setTitulosProblematicos([]);
-      } else {
-        // Agrupar por cliente
+      if (overdueInvoicesData) {
         const agrupados: Record<string, any> = {};
-        (overdueInvoicesData || []).forEach(inv => {
+        overdueInvoicesData.forEach(inv => {
           const cliente = inv.clients?.name || inv.client_id || "N/D";
           if (!agrupados[cliente]) {
             agrupados[cliente] = {
@@ -322,19 +313,16 @@ const Dashboard = () => {
           }
           agrupados[cliente].totalAberto += Number(inv.amount);
           agrupados[cliente].qtdBoletos += 1;
-          // Calcular dias de atraso
           const due = inv.due_date ? new Date(inv.due_date) : null;
           if (due) {
             const diff = Math.floor((Date.now() - due.getTime()) / (1000 * 60 * 60 * 24));
             agrupados[cliente].diasAtraso = Math.max(agrupados[cliente].diasAtraso, diff);
             agrupados[cliente].meses = Math.floor(diff / 30);
           }
-          // Exemplo: custo de manutenção fictício (ajuste conforme regra real)
           agrupados[cliente].custoManutencao += 2.02;
-          // Prioridade
           agrupados[cliente].prioridade = agrupados[cliente].diasAtraso > 60 ? "CRITICO" : agrupados[cliente].diasAtraso > 30 ? "ALTO" : agrupados[cliente].diasAtraso > 15 ? "MEDIO" : "BAIXO";
         });
-        // Só mostrar clientes do tenant logado (se houver filtro)
+
         let titulosArr = Object.values(agrupados);
         if (selectedClientId) {
           titulosArr = titulosArr.filter((t: any) => clientsList.some(c => c.id === selectedClientId && c.name === t.cliente));
@@ -342,30 +330,18 @@ const Dashboard = () => {
         setTitulosProblematicos(titulosArr);
       }
 
-      // Salvar dados no cache para modo offline
       saveOfflineData({
-        dashboardStats: stats,
+        dashboardStats: newStats,
         clients: clientsList,
         invoices: recentInvoices,
       });
+
     } catch (error) {
-      console.error("Erro crítico ao carregar dados da Dashboard:", {
-        error,
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-
-      // Se falhar e houver dados em cache, usar dados em cache
-      if (offlineData) {
-        console.log("Usando dados em cache devido a erro de conexão");
-        setStats(offlineData.dashboardStats || stats);
-        setClients(offlineData.clients || []);
-        setRecentInvoices(offlineData.invoices || []);
-      }
-
-      // Mostrar toast com erro amigável
-      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
-        console.warn("Problema de conectividade com o servidor. Verifique sua internet.");
+      console.error("Erro crítico na Dashboard:", error);
+      if (typeof offlineData !== 'undefined' && offlineData) {
+         setStats(offlineData.dashboardStats || stats);
+         setClients(offlineData.clients || []);
+         setRecentInvoices(offlineData.invoices || []);
       }
     } finally {
       setLoading(false);
