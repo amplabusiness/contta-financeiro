@@ -19,7 +19,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Tipos
 interface VariableFee {
   id: string;
   client_id: string;
@@ -93,17 +92,18 @@ interface MonthlyRevenue {
   id: string;
   client_id: string;
   client_name?: string;
-  reference_month: string;
+  reference_month: number;
   gross_revenue: number;
   calculated_fee?: number;
   percentage_rate?: number;
+  employee_commission_rate?: number;
+  employee_name?: string;
 }
 
 export default function SpecialFees() {
   const [activeTab, setActiveTab] = useState("variable");
   const [loading, setLoading] = useState(true);
 
-  // Estados para cada tipo
   const [variableFees, setVariableFees] = useState<VariableFee[]>([]);
   const [companyServices, setCompanyServices] = useState<CompanyService[]>([]);
   const [referralPartners, setReferralPartners] = useState<ReferralPartner[]>([]);
@@ -111,7 +111,6 @@ export default function SpecialFees() {
   const [irpfDeclarations, setIrpfDeclarations] = useState<IrpfDeclaration[]>([]);
   const [monthlyRevenues, setMonthlyRevenues] = useState<MonthlyRevenue[]>([]);
 
-  // Estados para diálogos
   const [showVariableFeeDialog, setShowVariableFeeDialog] = useState(false);
   const [showCompanyServiceDialog, setShowCompanyServiceDialog] = useState(false);
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
@@ -119,14 +118,11 @@ export default function SpecialFees() {
   const [showIrpfDialog, setShowIrpfDialog] = useState(false);
   const [showRevenueDialog, setShowRevenueDialog] = useState(false);
 
-  // Estados para edição
   const [editingVariableFee, setEditingVariableFee] = useState<VariableFee | null>(null);
 
-  // Clientes para seleção
   const [clients, setClients] = useState<{id: string, name: string, cnpj?: string}[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mês de referência para faturamento
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -199,13 +195,11 @@ export default function SpecialFees() {
   };
 
   const loadReferrals = async () => {
-    // Parceiros
     const { data: partners } = await supabase
       .from('referral_partners')
       .select('*')
       .order('name');
 
-    // Indicações
     const { data: referrals } = await supabase
       .from('client_referrals')
       .select(`
@@ -239,7 +233,6 @@ export default function SpecialFees() {
     })) || []);
   };
 
-  // Formulários
   const [variableFeeForm, setVariableFeeForm] = useState({
     client_id: '',
     fee_name: 'Honorário Variável',
@@ -247,7 +240,6 @@ export default function SpecialFees() {
     percentage_rate: 2.87,
     due_day: 20,
     calculation_base: 'faturamento',
-    // Comissão do funcionário
     employee_commission_rate: 1.25,
     employee_name: '',
     employee_pix_key: '',
@@ -293,14 +285,11 @@ export default function SpecialFees() {
     fee_amount: 300
   });
 
-  // Carregar faturamentos do mês selecionado
   const loadMonthlyRevenues = async () => {
-    // Extrair ano e mês do formato YYYY-MM
     const [year, month] = selectedMonth.split('-');
     const referenceYear = parseInt(year);
     const referenceMonth = parseInt(month);
 
-    // Buscar clientes com honorário variável e seus faturamentos
     const { data: fees } = await supabase
       .from('client_variable_fees')
       .select(`
@@ -319,7 +308,6 @@ export default function SpecialFees() {
       .eq('reference_year', referenceYear)
       .eq('reference_month', referenceMonth);
 
-    // Combinar dados
     const combined = (fees || []).map((fee: any) => {
       const revenue = revenues?.find(r => r.client_id === fee.client_id);
       const grossRevenue = revenue?.gross_revenue || 0;
@@ -341,10 +329,8 @@ export default function SpecialFees() {
     setMonthlyRevenues(combined);
   };
 
-  // Salvar faturamento mensal
   const saveMonthlyRevenue = async () => {
     try {
-      // Extrair ano e mês do formato YYYY-MM
       const [year, month] = revenueForm.reference_month.split('-');
       const referenceYear = parseInt(year);
       const referenceMonth = parseInt(month);
@@ -370,21 +356,18 @@ export default function SpecialFees() {
     }
   };
 
-  // Gerar fatura do honorário variável + lançamentos contábeis (receita + custo comissão)
   const generateInvoice = async (clientId: string, amount: number, clientName: string) => {
     try {
       const referenceMonth = selectedMonth;
       const [year, month] = referenceMonth.split('-');
-      const dueDate = new Date(parseInt(year), parseInt(month), 20); // Dia 20 do mês seguinte
+      const dueDate = new Date(parseInt(year), parseInt(month), 20);
       const competenceDate = `${year}-${month}-01`;
 
-      // Buscar dados do honorário para pegar comissão
       const feeData = monthlyRevenues.find(r => r.client_id === clientId);
       const employeeCommissionRate = (feeData as any)?.employee_commission_rate || 0;
       const employeeName = (feeData as any)?.employee_name || '';
       const commissionAmount = amount * (employeeCommissionRate / 100);
 
-      // 1. Criar a fatura
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
@@ -401,28 +384,24 @@ export default function SpecialFees() {
 
       if (invoiceError) throw invoiceError;
 
-      // 2. Buscar contas necessárias
       const { data: revenueAccount } = await supabase
         .from('chart_of_accounts')
         .select('id')
-        .eq('code', '3.1.1.01') // Honorários Contábeis
+        .eq('code', '3.1.1.01')
         .eq('is_active', true)
         .single();
 
-      // Conta de CUSTO para comissões (CSV - Custo dos Serviços Vendidos)
-      // A comissão é CUSTO pois está diretamente vinculada à prestação do serviço
       let commissionCostAccount = null;
       const { data: existingCostAccount } = await supabase
         .from('chart_of_accounts')
         .select('id')
-        .eq('code', '4.5.1.01') // Comissão sobre Honorários Variáveis (CUSTO)
+        .eq('code', '4.5.1.01')
         .eq('is_active', true)
         .single();
 
       if (existingCostAccount) {
         commissionCostAccount = existingCostAccount;
       } else {
-        // Fallback para conta antiga se a nova não existir
         const { data: fallbackAccount } = await supabase
           .from('chart_of_accounts')
           .select('id')
@@ -433,19 +412,17 @@ export default function SpecialFees() {
         commissionCostAccount = fallbackAccount;
       }
 
-      // Conta de passivo para comissões a pagar (2.1.3.03)
       let commissionPayableAccount = null;
       const { data: existingPayableAccount } = await supabase
         .from('chart_of_accounts')
         .select('id')
-        .eq('code', '2.1.3.03') // Comissões a Pagar (nova conta)
+        .eq('code', '2.1.3.03')
         .eq('is_active', true)
         .single();
 
       if (existingPayableAccount) {
         commissionPayableAccount = existingPayableAccount;
       } else {
-        // Fallback para conta antiga se a nova não existir
         const { data: fallbackPayable } = await supabase
           .from('chart_of_accounts')
           .select('id')
@@ -455,7 +432,6 @@ export default function SpecialFees() {
         commissionPayableAccount = fallbackPayable;
       }
 
-      // 3. Buscar ou criar conta de cliente a receber
       let clientAccountId: string | null = null;
       const { data: existingClientAccount } = await supabase
         .from('chart_of_accounts')
@@ -484,7 +460,6 @@ export default function SpecialFees() {
         }
       }
 
-      // 4. Criar lançamento contábil da RECEITA
       if (revenueAccount && clientAccountId) {
         const { data: entry, error: entryError } = await supabase
           .from('accounting_entries')
@@ -522,9 +497,6 @@ export default function SpecialFees() {
         }
       }
 
-      // 5. Criar lançamento contábil do CUSTO DA COMISSÃO (se houver)
-      // D - 4.5.1.01 Comissão sobre Honorários Variáveis (CUSTO)
-      // C - 2.1.3.03 Comissões a Pagar (PASSIVO)
       if (commissionAmount > 0 && commissionCostAccount && commissionPayableAccount) {
         const { data: commEntry, error: commError } = await supabase
           .from('accounting_entries')
@@ -532,7 +504,7 @@ export default function SpecialFees() {
             entry_date: new Date().toISOString().split('T')[0],
             competence_date: competenceDate,
             description: `Custo Comissão ${employeeName} - Hon. Variável ${clientName} - ${month}/${year}`,
-            entry_type: 'provisao_custo', // Custo, não despesa
+            entry_type: 'provisao_custo',
             source_type: 'invoice',
             source_id: invoice.id,
             status: 'posted'
@@ -546,14 +518,14 @@ export default function SpecialFees() {
             .insert([
               {
                 entry_id: commEntry.id,
-                account_id: commissionCostAccount.id, // 4.5.1.01 - CUSTO
+                account_id: commissionCostAccount.id,
                 debit: commissionAmount,
                 credit: 0,
                 description: `Custo Comissão ${employeeName} - ${clientName}`
               },
               {
                 entry_id: commEntry.id,
-                account_id: commissionPayableAccount.id, // 2.1.3.03 - Passivo
+                account_id: commissionPayableAccount.id,
                 debit: 0,
                 credit: commissionAmount,
                 description: `Comissão a pagar - ${employeeName}`
@@ -575,7 +547,6 @@ export default function SpecialFees() {
     }
   };
 
-  // Abrir edição de honorário variável
   const openEditVariableFee = (fee: VariableFee) => {
     setEditingVariableFee(fee);
     setVariableFeeForm({
@@ -593,11 +564,9 @@ export default function SpecialFees() {
     setShowVariableFeeDialog(true);
   };
 
-  // Handlers de salvamento
   const saveVariableFee = async () => {
     try {
       if (editingVariableFee) {
-        // Atualizar existente
         const { error } = await supabase
           .from('client_variable_fees')
           .update(variableFeeForm)
@@ -606,7 +575,6 @@ export default function SpecialFees() {
         if (error) throw error;
         toast.success('Honorário variável atualizado!');
       } else {
-        // Criar novo
         const { error } = await supabase
           .from('client_variable_fees')
           .insert(variableFeeForm);
@@ -690,13 +658,11 @@ export default function SpecialFees() {
     }
   };
 
-  // Função para gerar IRPF dos sócios
   const generateIrpfFromPartners = async () => {
     try {
       setLoading(true);
       const calendarYear = new Date().getFullYear() - 1;
 
-      // Buscar todos clientes com QSA
       const { data: clientsWithQsa } = await supabase
         .from('clients')
         .select('id, name, qsa')
@@ -708,7 +674,6 @@ export default function SpecialFees() {
         return;
       }
 
-      // Extrair sócios únicos
       const partners = new Map<string, { name: string; cpf: string; client_id: string; client_name: string }>();
 
       for (const client of clientsWithQsa) {
@@ -727,10 +692,8 @@ export default function SpecialFees() {
         }
       }
 
-      // Criar declarações
       let created = 0;
       for (const [cpf, partner] of partners) {
-        // Verificar se já existe
         const { data: existing } = await supabase
           .from('irpf_declarations')
           .select('id')
@@ -798,35 +761,34 @@ export default function SpecialFees() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Honorários Especiais</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Honorários Especiais</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Gerencie honorários variáveis, abertura de empresas, comissões e IRPF
             </p>
           </div>
         </div>
 
-        {/* Cards de resumo */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
               <CardTitle className="text-sm font-medium">Hon. Variáveis</CardTitle>
               <Percent className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">{variableFees.filter(f => f.is_active).length}</div>
               <p className="text-xs text-muted-foreground">clientes ativos</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
               <CardTitle className="text-sm font-medium">Aberturas</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">
                 {companyServices.filter(s => s.service_status === 'em_andamento').length}
               </div>
@@ -835,11 +797,11 @@ export default function SpecialFees() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
               <CardTitle className="text-sm font-medium">Comissões</CardTitle>
               <UserPlus className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">
                 {clientReferrals.filter(r => r.status === 'active').length}
               </div>
@@ -848,11 +810,11 @@ export default function SpecialFees() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
               <CardTitle className="text-sm font-medium">IRPF {new Date().getFullYear()}</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">
                 {irpfDeclarations.filter(d => d.calendar_year === new Date().getFullYear() - 1).length}
               </div>
@@ -861,218 +823,221 @@ export default function SpecialFees() {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="variable" className="flex items-center gap-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+            <TabsTrigger value="variable" className="flex items-center gap-2 py-2">
               <Percent className="h-4 w-4" />
-              Variáveis
+              <span className="hidden sm:inline">Variáveis</span>
+              <span className="sm:hidden">Var.</span>
             </TabsTrigger>
-            <TabsTrigger value="company" className="flex items-center gap-2">
+            <TabsTrigger value="company" className="flex items-center gap-2 py-2">
               <Building2 className="h-4 w-4" />
-              Abertura/Alteração
+              <span className="hidden sm:inline">Abertura/Alteração</span>
+              <span className="sm:hidden">Abert.</span>
             </TabsTrigger>
-            <TabsTrigger value="referral" className="flex items-center gap-2">
+            <TabsTrigger value="referral" className="flex items-center gap-2 py-2">
               <UserPlus className="h-4 w-4" />
-              Indicações
+              <span className="hidden sm:inline">Indicações</span>
+              <span className="sm:hidden">Indic.</span>
             </TabsTrigger>
-            <TabsTrigger value="irpf" className="flex items-center gap-2">
+            <TabsTrigger value="irpf" className="flex items-center gap-2 py-2">
               <FileText className="h-4 w-4" />
-              IRPF
+              <span>IRPF</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Honorários Variáveis */}
           <TabsContent value="variable" className="space-y-4">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Honorários Variáveis</CardTitle>
-                    <CardDescription>
-                      Clientes com honorário baseado em % do faturamento
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => {
-                    setEditingVariableFee(null);
-                    setVariableFeeForm({
-                      client_id: '',
-                      fee_name: 'Honorário Variável',
-                      fee_type: 'percentage',
-                      percentage_rate: 2.87,
-                      due_day: 20,
-                      calculation_base: 'faturamento',
-                      employee_commission_rate: 1.25,
-                      employee_name: '',
-                      employee_pix_key: '',
-                      employee_pix_type: 'cpf'
-                    });
-                    setShowVariableFeeDialog(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Honorário
-                  </Button>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Honorários Variáveis</CardTitle>
+                  <CardDescription>
+                    Clientes com honorário baseado em % do faturamento
+                  </CardDescription>
                 </div>
+                <Button onClick={() => {
+                  setEditingVariableFee(null);
+                  setVariableFeeForm({
+                    client_id: '',
+                    fee_name: 'Honorário Variável',
+                    fee_type: 'percentage',
+                    percentage_rate: 2.87,
+                    due_day: 20,
+                    calculation_base: 'faturamento',
+                    employee_commission_rate: 1.25,
+                    employee_name: '',
+                    employee_pix_key: '',
+                    employee_pix_type: 'cpf'
+                  });
+                  setShowVariableFeeDialog(true);
+                }} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Honorário
+                </Button>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Taxa</TableHead>
-                      <TableHead>Comissão Func.</TableHead>
-                      <TableHead>Funcionário</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {variableFees.map(fee => (
-                      <TableRow key={fee.id}>
-                        <TableCell className="font-medium">{fee.client_name}</TableCell>
-                        <TableCell>{fee.fee_name}</TableCell>
-                        <TableCell>{fee.percentage_rate}%</TableCell>
-                        <TableCell>{(fee as any).employee_commission_rate || 0}%</TableCell>
-                        <TableCell>{(fee as any).employee_name || '-'}</TableCell>
-                        <TableCell>Dia {fee.due_day}</TableCell>
-                        <TableCell>
-                          <Badge variant={fee.is_active ? "default" : "secondary"}>
-                            {fee.is_active ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditVariableFee(fee)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {variableFees.length === 0 && (
+              <CardContent className="p-0 sm:p-6 overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          Nenhum honorário variável cadastrado
-                        </TableCell>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Taxa</TableHead>
+                        <TableHead>Comissão Func.</TableHead>
+                        <TableHead>Funcionário</TableHead>
+                        <TableHead>Vencimento</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {variableFees.map(fee => (
+                        <TableRow key={fee.id}>
+                          <TableCell className="font-medium">{fee.client_name}</TableCell>
+                          <TableCell>{fee.fee_name}</TableCell>
+                          <TableCell>{fee.percentage_rate}%</TableCell>
+                          <TableCell>{(fee as any).employee_commission_rate || 0}%</TableCell>
+                          <TableCell>{(fee as any).employee_name || '-'}</TableCell>
+                          <TableCell>Dia {fee.due_day}</TableCell>
+                          <TableCell>
+                            <Badge variant={fee.is_active ? "default" : "secondary"}>
+                              {fee.is_active ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditVariableFee(fee)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {variableFees.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            Nenhum honorário variável cadastrado
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Card de Faturamento Mensal */}
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calculator className="h-5 w-5" />
-                      Cálculo Mensal de Honorários
-                    </CardTitle>
-                    <CardDescription>
-                      Informe o faturamento do cliente para calcular o honorário
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="month"
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        setSelectedMonth(e.target.value);
-                      }}
-                      className="w-40"
-                    />
-                    <Button variant="outline" onClick={loadMonthlyRevenues}>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5" />
+                    Cálculo Mensal de Honorários
+                  </CardTitle>
+                  <CardDescription>
+                    Informe o faturamento do cliente para calcular o honorário
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <Input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.target.value);
+                    }}
+                    className="w-full sm:w-40"
+                  />
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button variant="outline" onClick={loadMonthlyRevenues} className="flex-1 sm:flex-none">
                       <Search className="h-4 w-4 mr-2" />
                       Carregar
                     </Button>
-                    <Button onClick={() => setShowRevenueDialog(true)}>
+                    <Button onClick={() => setShowRevenueDialog(true)} className="flex-1 sm:flex-none">
                       <Plus className="h-4 w-4 mr-2" />
-                      Informar Faturamento
+                      Informar
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead className="text-right">Faturamento</TableHead>
-                      <TableHead className="text-right">Taxa</TableHead>
-                      <TableHead className="text-right">Honorário</TableHead>
-                      <TableHead className="text-right">Comissão Func.</TableHead>
-                      <TableHead>Funcionário</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {monthlyRevenues.map((rev: any) => {
-                      const employeeCommission = (rev.calculated_fee || 0) * ((rev.employee_commission_rate || 0) / 100);
-                      return (
-                        <TableRow key={rev.client_id}>
-                          <TableCell className="font-medium">{rev.client_name}</TableCell>
-                          <TableCell className="text-right">
-                            {rev.gross_revenue > 0 ? formatCurrency(rev.gross_revenue) : (
-                              <span className="text-muted-foreground">Não informado</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">{rev.percentage_rate}%</TableCell>
-                          <TableCell className="text-right font-bold text-green-600">
-                            {formatCurrency(rev.calculated_fee || 0)}
-                          </TableCell>
-                          <TableCell className="text-right text-orange-600">
-                            {formatCurrency(employeeCommission)}
-                          </TableCell>
-                          <TableCell>{rev.employee_name || '-'}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setRevenueForm({
-                                    client_id: rev.client_id,
-                                    reference_month: selectedMonth,
-                                    gross_revenue: rev.gross_revenue || 0
-                                  });
-                                  setShowRevenueDialog(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              {rev.gross_revenue > 0 && rev.calculated_fee > 0 && (
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => generateInvoice(rev.client_id, rev.calculated_fee, rev.client_name)}
-                                >
-                                  <Banknote className="h-4 w-4 mr-1" />
-                                  Gerar Fatura
-                                </Button>
+              <CardContent className="p-0 sm:p-6 overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead className="text-right">Faturamento</TableHead>
+                        <TableHead className="text-right">Taxa</TableHead>
+                        <TableHead className="text-right">Honorário</TableHead>
+                        <TableHead className="text-right">Comissão Func.</TableHead>
+                        <TableHead>Funcionário</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {monthlyRevenues.map((rev: any) => {
+                        const employeeCommission = (rev.calculated_fee || 0) * ((rev.employee_commission_rate || 0) / 100);
+                        return (
+                          <TableRow key={rev.client_id}>
+                            <TableCell className="font-medium">{rev.client_name}</TableCell>
+                            <TableCell className="text-right">
+                              {rev.gross_revenue > 0 ? formatCurrency(rev.gross_revenue) : (
+                                <span className="text-muted-foreground">Não informado</span>
                               )}
-                            </div>
+                            </TableCell>
+                            <TableCell className="text-right">{rev.percentage_rate}%</TableCell>
+                            <TableCell className="text-right font-bold text-green-600">
+                              {formatCurrency(rev.calculated_fee || 0)}
+                            </TableCell>
+                            <TableCell className="text-right text-orange-600">
+                              {formatCurrency(employeeCommission)}
+                            </TableCell>
+                            <TableCell>{rev.employee_name || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setRevenueForm({
+                                      client_id: rev.client_id,
+                                      reference_month: selectedMonth,
+                                      gross_revenue: rev.gross_revenue || 0
+                                    });
+                                    setShowRevenueDialog(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                {rev.gross_revenue > 0 && rev.calculated_fee > 0 && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => generateInvoice(rev.client_id, rev.calculated_fee, rev.client_name)}
+                                  >
+                                    <Banknote className="h-4 w-4 mr-1" />
+                                    Fatura
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {monthlyRevenues.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            Clique em "Carregar" para ver os clientes com honorário variável
                           </TableCell>
                         </TableRow>
-                      );
-                    })}
-                    {monthlyRevenues.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          Clique em "Carregar" para ver os clientes com honorário variável
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {monthlyRevenues.length > 0 && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="mt-4 p-4 bg-muted rounded-lg mx-4 sm:mx-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                       <div>
                         <p className="text-sm text-muted-foreground">Total Faturamento</p>
                         <p className="text-xl font-bold">
@@ -1101,93 +1066,88 @@ export default function SpecialFees() {
             </Card>
           </TabsContent>
 
-          {/* Tab: Abertura/Alteração de Empresas */}
           <TabsContent value="company" className="space-y-4">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Abertura / Alteração de Empresas</CardTitle>
-                    <CardDescription>
-                      Controle de serviços de abertura, alteração e baixa de empresas
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => setShowCompanyServiceDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Serviço
-                  </Button>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Abertura / Alteração de Empresas</CardTitle>
+                  <CardDescription>
+                    Controle de serviços de abertura, alteração e baixa de empresas
+                  </CardDescription>
                 </div>
+                <Button onClick={() => setShowCompanyServiceDialog(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Serviço
+                </Button>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Valor Cobrado</TableHead>
-                      <TableHead>Taxas Pagas</TableHead>
-                      <TableHead>Lucro</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Pagamento</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {companyServices.map(service => (
-                      <TableRow key={service.id}>
-                        <TableCell className="font-medium">{service.company_name}</TableCell>
-                        <TableCell className="capitalize">{service.service_type}</TableCell>
-                        <TableCell>{formatCurrency(service.total_charged)}</TableCell>
-                        <TableCell className="text-red-600">{formatCurrency(service.total_costs)}</TableCell>
-                        <TableCell className="text-green-600 font-medium">
-                          {formatCurrency(service.profit)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(service.service_status)}</TableCell>
-                        <TableCell>{getStatusBadge(service.payment_status)}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {companyServices.length === 0 && (
+              <CardContent className="p-0 sm:p-6 overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          Nenhum serviço cadastrado
-                        </TableCell>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Valor Cobrado</TableHead>
+                        <TableHead>Taxas Pagas</TableHead>
+                        <TableHead>Lucro</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Pagamento</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {companyServices.map(service => (
+                        <TableRow key={service.id}>
+                          <TableCell className="font-medium">{service.company_name}</TableCell>
+                          <TableCell className="capitalize">{service.service_type}</TableCell>
+                          <TableCell>{formatCurrency(service.total_charged)}</TableCell>
+                          <TableCell className="text-red-600">{formatCurrency(service.total_costs)}</TableCell>
+                          <TableCell className="text-green-600 font-medium">
+                            {formatCurrency(service.profit)}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(service.service_status)}</TableCell>
+                          <TableCell>{getStatusBadge(service.payment_status)}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {companyServices.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            Nenhum serviço cadastrado
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Tab: Indicações */}
           <TabsContent value="referral" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Parceiros */}
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Parceiros/Corretores</CardTitle>
-                      <CardDescription>Pessoas que indicam clientes</CardDescription>
-                    </div>
-                    <Button onClick={() => setShowPartnerDialog(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Novo
-                    </Button>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="space-y-1">
+                    <CardTitle>Parceiros/Corretores</CardTitle>
+                    <CardDescription>Pessoas que indicam clientes</CardDescription>
                   </div>
+                  <Button onClick={() => setShowPartnerDialog(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px]">
                     {referralPartners.map(partner => (
-                      <div key={partner.id} className="flex items-center justify-between p-3 border-b">
+                      <div key={partner.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border-b gap-2 sm:gap-0">
                         <div>
                           <p className="font-medium">{partner.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground break-all">
                             PIX: {partner.pix_key || 'Não informado'}
                           </p>
                         </div>
@@ -1205,32 +1165,29 @@ export default function SpecialFees() {
                 </CardContent>
               </Card>
 
-              {/* Indicações */}
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Indicações Ativas</CardTitle>
-                      <CardDescription>Clientes indicados com comissão</CardDescription>
-                    </div>
-                    <Button onClick={() => setShowReferralDialog(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nova
-                    </Button>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="space-y-1">
+                    <CardTitle>Indicações Ativas</CardTitle>
+                    <CardDescription>Clientes indicados com comissão</CardDescription>
                   </div>
+                  <Button onClick={() => setShowReferralDialog(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px]">
                     {clientReferrals.map(referral => (
                       <div key={referral.id} className="p-3 border-b">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                           <p className="font-medium">{referral.client_name}</p>
                           {getStatusBadge(referral.status)}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mt-1">
                           Indicado por: {referral.partner_name}
                         </p>
-                        <div className="flex items-center gap-4 mt-1 text-sm">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 text-sm">
                           <span>{referral.commission_percentage}% por {referral.commission_months} meses</span>
                           <span className="text-muted-foreground">
                             ({referral.months_paid}/{referral.commission_months} pagos)
@@ -1249,90 +1206,88 @@ export default function SpecialFees() {
             </div>
           </TabsContent>
 
-          {/* Tab: IRPF */}
           <TabsContent value="irpf" className="space-y-4">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Declarações de IRPF</CardTitle>
-                    <CardDescription>
-                      Declarações de imposto de renda dos sócios e particulares
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={generateIrpfFromPartners}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Gerar dos Sócios
-                    </Button>
-                    <Button onClick={() => setShowIrpfDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nova Declaração
-                    </Button>
-                  </div>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Declarações de IRPF</CardTitle>
+                  <CardDescription>
+                    Declarações de imposto de renda dos sócios e particulares
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button variant="outline" onClick={generateIrpfFromPartners} className="w-full sm:w-auto">
+                    <Users className="h-4 w-4 mr-2" />
+                    Gerar dos Sócios
+                  </Button>
+                  <Button onClick={() => setShowIrpfDialog(true)} className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Declaração
+                  </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ano-Cal.</TableHead>
-                      <TableHead>Contribuinte</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>Honorário</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Resultado</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {irpfDeclarations.map(decl => (
-                      <TableRow key={decl.id}>
-                        <TableCell>{decl.calendar_year}</TableCell>
-                        <TableCell className="font-medium">{decl.taxpayer_name}</TableCell>
-                        <TableCell>{decl.taxpayer_cpf}</TableCell>
-                        <TableCell className="capitalize">{decl.taxpayer_type}</TableCell>
-                        <TableCell>{decl.client_name || '-'}</TableCell>
-                        <TableCell>{formatCurrency(decl.fee_amount)}</TableCell>
-                        <TableCell>{getStatusBadge(decl.status)}</TableCell>
-                        <TableCell>
-                          {decl.result_type ? (
-                            <span className={decl.result_type === 'restituir' ? 'text-green-600' : 'text-red-600'}>
-                              {decl.result_type === 'restituir' ? '+' : '-'}
-                              {formatCurrency(Math.abs(decl.result_amount || 0))}
-                            </span>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {irpfDeclarations.length === 0 && (
+              <CardContent className="p-0 sm:p-6 overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                          Nenhuma declaração cadastrada
-                        </TableCell>
+                        <TableHead>Ano-Cal.</TableHead>
+                        <TableHead>Contribuinte</TableHead>
+                        <TableHead>CPF</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Honorário</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Resultado</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {irpfDeclarations.map(decl => (
+                        <TableRow key={decl.id}>
+                          <TableCell>{decl.calendar_year}</TableCell>
+                          <TableCell className="font-medium">{decl.taxpayer_name}</TableCell>
+                          <TableCell>{decl.taxpayer_cpf}</TableCell>
+                          <TableCell className="capitalize">{decl.taxpayer_type}</TableCell>
+                          <TableCell>{decl.client_name || '-'}</TableCell>
+                          <TableCell>{formatCurrency(decl.fee_amount)}</TableCell>
+                          <TableCell>{getStatusBadge(decl.status)}</TableCell>
+                          <TableCell>
+                            {decl.result_type ? (
+                              <span className={decl.result_type === 'restituir' ? 'text-green-600' : 'text-red-600'}>
+                                {decl.result_type === 'restituir' ? '+' : '-'}
+                                {formatCurrency(Math.abs(decl.result_amount || 0))}
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {irpfDeclarations.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                            Nenhuma declaração cadastrada
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Dialog: Novo/Editar Honorário Variável */}
       <Dialog open={showVariableFeeDialog} onOpenChange={(open) => {
         setShowVariableFeeDialog(open);
         if (!open) setEditingVariableFee(null);
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingVariableFee ? 'Editar Honorário Variável' : 'Novo Honorário Variável'}</DialogTitle>
             <DialogDescription>
@@ -1401,10 +1356,9 @@ export default function SpecialFees() {
               </Select>
             </div>
 
-            {/* Seção de Comissão do Funcionário */}
             <div className="border-t pt-4">
               <h4 className="font-medium mb-3 text-orange-600">Comissão do Funcionário</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Taxa sobre honorário (%)</Label>
                   <Input
@@ -1424,8 +1378,8 @@ export default function SpecialFees() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4 mt-2">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 sm:mt-2">
+                <div className="sm:col-span-2">
                   <Label>Chave PIX</Label>
                   <Input
                     value={variableFeeForm.employee_pix_key}
@@ -1454,20 +1408,19 @@ export default function SpecialFees() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVariableFeeDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowVariableFeeDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveVariableFee}>
+            <Button onClick={saveVariableFee} className="w-full sm:w-auto">
               {editingVariableFee ? 'Atualizar' : 'Salvar'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Informar Faturamento */}
       <Dialog open={showRevenueDialog} onOpenChange={setShowRevenueDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Informar Faturamento Mensal</DialogTitle>
             <DialogDescription>
@@ -1512,7 +1465,6 @@ export default function SpecialFees() {
               />
             </div>
 
-            {/* Preview do cálculo */}
             {revenueForm.client_id && revenueForm.gross_revenue > 0 && (
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Prévia do Cálculo</h4>
@@ -1543,18 +1495,17 @@ export default function SpecialFees() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRevenueDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowRevenueDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveMonthlyRevenue}>Salvar</Button>
+            <Button onClick={saveMonthlyRevenue} className="w-full sm:w-auto">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Novo Serviço de Abertura */}
       <Dialog open={showCompanyServiceDialog} onOpenChange={setShowCompanyServiceDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Novo Serviço de Abertura/Alteração</DialogTitle>
             <DialogDescription>
@@ -1617,18 +1568,17 @@ export default function SpecialFees() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCompanyServiceDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowCompanyServiceDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveCompanyService}>Salvar</Button>
+            <Button onClick={saveCompanyService} className="w-full sm:w-auto">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Novo Parceiro */}
       <Dialog open={showPartnerDialog} onOpenChange={setShowPartnerDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Novo Parceiro/Corretor</DialogTitle>
             <DialogDescription>
@@ -1643,7 +1593,7 @@ export default function SpecialFees() {
                 onChange={e => setPartnerForm({...partnerForm, name: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>CPF</Label>
                 <Input
@@ -1667,8 +1617,8 @@ export default function SpecialFees() {
                 onChange={e => setPartnerForm({...partnerForm, email: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
                 <Label>Chave PIX</Label>
                 <Input
                   value={partnerForm.pix_key}
@@ -1696,18 +1646,17 @@ export default function SpecialFees() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPartnerDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowPartnerDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={savePartner}>Salvar</Button>
+            <Button onClick={savePartner} className="w-full sm:w-auto">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Nova Indicação */}
       <Dialog open={showReferralDialog} onOpenChange={setShowReferralDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Nova Indicação</DialogTitle>
             <DialogDescription>
@@ -1768,18 +1717,17 @@ export default function SpecialFees() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReferralDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowReferralDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveReferral}>Salvar</Button>
+            <Button onClick={saveReferral} className="w-full sm:w-auto">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Nova Declaração IRPF */}
       <Dialog open={showIrpfDialog} onOpenChange={setShowIrpfDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Nova Declaração de IRPF</DialogTitle>
             <DialogDescription>
@@ -1819,7 +1767,7 @@ export default function SpecialFees() {
                 onChange={e => setIrpfForm({...irpfForm, taxpayer_name: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>CPF</Label>
                 <Input
@@ -1856,11 +1804,11 @@ export default function SpecialFees() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowIrpfDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowIrpfDialog(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={saveIrpf}>Salvar</Button>
+            <Button onClick={saveIrpf} className="w-full sm:w-auto">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

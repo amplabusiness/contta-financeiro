@@ -23,10 +23,9 @@ import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
 
-// Tipos para a Super Tela
 interface BankTransaction {
   id: string;
-  amount: number; // Negativo = Saída, Positivo = Entrada
+  amount: number;
   date: string;
   description: string;
   matched: boolean;
@@ -34,71 +33,70 @@ interface BankTransaction {
 }
 
 interface ManualSplitItem {
-    accountCode: string; // Changed from clientName for better logic
-    amount: number;
+  accountCode: string;
+  amount: number;
 }
 
-// Internal Component: Searchable Account Selector (Compact)
 function AccountSelector({ 
-    value, 
-    onChange, 
-    accounts 
+  value, 
+  onChange, 
+  accounts 
 }: { 
-    value: string, 
-    onChange: (code: string) => void,
-    accounts: {code: string, name: string}[] 
+  value: string, 
+  onChange: (code: string) => void,
+  accounts: {code: string, name: string}[] 
 }) {
-    const [open, setOpen] = useState(false);
-    const selectedAccount = accounts.find((a) => a.code === value);
+  const [open, setOpen] = useState(false);
+  const selectedAccount = accounts.find((a) => a.code === value);
 
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="ghost"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-full justify-between h-6 p-0 px-1 text-xs font-normal hover:bg-slate-100"
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between h-6 p-0 px-1 text-xs font-normal hover:bg-slate-100"
+        >
+          {selectedAccount ? (
+            <span className="truncate flex items-center gap-1.5">
+              <span className="font-mono text-slate-500">{selectedAccount.code}</span>
+              {selectedAccount.name}
+            </span>
+          ) : (
+            <span className="text-red-400 italic">Selecione...</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[90vw] sm:w-[400px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar conta (nome ou código)..." className="h-8 text-xs" />
+          <CommandList>
+            <CommandEmpty>Conta não encontrada.</CommandEmpty>
+            <CommandGroup className="max-h-[300px] overflow-auto">
+              {accounts.map((acc) => (
+                <CommandItem
+                  key={acc.code}
+                  value={`${acc.code} ${acc.name}`}
+                  onSelect={() => {
+                    onChange(acc.code);
+                    setOpen(false);
+                  }}
+                  className="text-xs py-1"
                 >
-                    {selectedAccount ? (
-                        <span className="truncate flex items-center gap-1.5">
-                            <span className="font-mono text-slate-500">{selectedAccount.code}</span>
-                            {selectedAccount.name}
-                        </span>
-                    ) : (
-                        <span className="text-red-400 italic">Selecione...</span>
-                    )}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
-                    <CommandInput placeholder="Buscar conta (nome ou código)..." className="h-8 text-xs" />
-                    <CommandList>
-                        <CommandEmpty>Conta não encontrada.</CommandEmpty>
-                        <CommandGroup className="max-h-[300px] overflow-auto">
-                            {accounts.map((acc) => (
-                                <CommandItem
-                                    key={acc.code}
-                                    value={`${acc.code} ${acc.name}`} // Searchable string
-                                    onSelect={() => {
-                                        onChange(acc.code);
-                                        setOpen(false);
-                                    }}
-                                    className="text-xs py-1"
-                                >
-                                    <span className="font-mono text-slate-500 w-20 shrink-0">{acc.code}</span>
-                                    {acc.name}
-                                    <CheckCircle2
-                                        className={`ml-auto h-3 w-3 ${value === acc.code ? "opacity-100" : "opacity-0"}`}
-                                    />
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
+                  <span className="font-mono text-slate-500 w-20 shrink-0">{acc.code}</span>
+                  {acc.name}
+                  <CheckCircle2
+                    className={`ml-auto h-3 w-3 ${value === acc.code ? "opacity-100" : "opacity-0"}`}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export default function SuperConciliation() {
@@ -109,10 +107,9 @@ export default function SuperConciliation() {
   const [suggestion, setSuggestion] = useState<ClassificationSuggestion | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingTx, setLoadingTx] = useState(false);
-    const [page, setPage] = useState(1);
-    const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   
-  // Modos Manuais
   const [isManualMode, setIsManualMode] = useState(false);
   const [manualType, setManualType] = useState<'split' | 'expense' | null>(null);
   const [splitItems, setSplitItems] = useState<ManualSplitItem[]>([]);
@@ -121,14 +118,12 @@ export default function SuperConciliation() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Estado para seletor de data (Mês/Ano) com persistência
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = localStorage.getItem('super-conciliation-date');
     if (saved) return new Date(saved);
-    return new Date(2025, 0, 1); // Jan 2025 default
+    return new Date(2025, 0, 1);
   });
 
-  // Salvar preferência de data
   useEffect(() => {
     if (selectedDate) {
         localStorage.setItem('super-conciliation-date', selectedDate.toISOString());
@@ -136,7 +131,7 @@ export default function SuperConciliation() {
   }, [selectedDate]);
 
   const [viewMode, setViewMode] = useState<'pending' | 'all'>('pending');
-  const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05"); // Default Sicredi (ajustar conforme necessidade)
+  const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
       base: 90725.06,
@@ -147,10 +142,8 @@ export default function SuperConciliation() {
       divergence: 0
   });
   
-  // Fetch Bank Account Code (Simples heuristic: busca Sicredi, se não achar, usa default)
   useEffect(() => {
      const fetchBankCode = async () => {
-         // Tenta achar Sicredi (748)
          const { data } = await supabase.from('chart_of_accounts').select('code').ilike('name', '%Sicredi%').limit(1).single();
          if (data) setBankAccountCode(data.code);
      };
@@ -203,56 +196,44 @@ export default function SuperConciliation() {
         const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).toISOString();
         const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).toISOString();
 
-    // CONFIGURAÇÃO DE SALDOS TRAVADOS (MENSAL - PERIODO FECHADO)
-    // NÃO CALCULAR SALDOS. O saldo é um fato absoluto fornecido pelo extrato.
-    // Divergências devem ser resolvidas ajustando os lançamentos, nunca o saldo.
     const LOCKED_BALANCES: Record<string, { start: number, end: number }> = {
-        '2024-12': { start: 0, end: 90725.06 },          // Dezembro 2024 (Base)
-        '2025-01': { start: 90725.06, end: 18553.54 },   // Janeiro
-        '2025-02': { start: 18553.54, end: 2578.93 },    // Fevereiro
-        '2025-03': { start: 2578.93, end: 28082.64 },    // Março
-        '2025-04': { start: 28082.64, end: 5533.07 },    // Abril
-        '2025-05': { start: 5533.07, end: 10119.92 },    // Maio
-        '2025-06': { start: 10119.92, end: 2696.75 },    // Junho
-        '2025-07': { start: 2696.75, end: 8462.05 },     // Julho
-        '2025-08': { start: 8462.05, end: 10251.53 },    // Agosto
-        '2025-09': { start: 10251.53, end: 14796.07 },   // Setembro
-        '2025-10': { start: 14796.07, end: 12618.57 },   // Outubro
-        '2025-11': { start: 12618.57, end: 57357.63 },   // Novembro
+        '2024-12': { start: 0, end: 90725.06 },
+        '2025-01': { start: 90725.06, end: 18553.54 },
+        '2025-02': { start: 18553.54, end: 2578.93 },
+        '2025-03': { start: 2578.93, end: 28082.64 },
+        '2025-04': { start: 28082.64, end: 5533.07 },
+        '2025-05': { start: 5533.07, end: 10119.92 },
+        '2025-06': { start: 10119.92, end: 2696.75 },
+        '2025-07': { start: 2696.75, end: 8462.05 },
+        '2025-08': { start: 8462.05, end: 10251.53 },
+        '2025-09': { start: 10251.53, end: 14796.07 },
+        '2025-10': { start: 14796.07, end: 12618.57 },
+        '2025-11': { start: 12618.57, end: 57357.63 },
     };
         
         const currentMonthKey = format(selectedDate, 'yyyy-MM');
         
-        // 1. Determinar Saldo Inicial e Final (TRAVADOS)
         let valStart = 0;
         let valFinal = 0;
         const locked = LOCKED_BALANCES[currentMonthKey];
 
-        // Se houver trava para o mês, respeitar cegamente.
-        // Se não houver, alerta! (Por enquanto fallback para zero ou logica antiga se necessario, mas o usuario 'proibiu' calculo)
-        
         if (locked) {
             valStart = locked.start;
             valFinal = locked.end;
         } else {
-             // Lógica de fallback provisória para meses sem trava explicita (usa o anterior como base)
-             // Tenta pegar o final do mes anterior como inicio deste
              const prevMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
              const prevKey = format(prevMonth, 'yyyy-MM');
              if (LOCKED_BALANCES[prevKey]) {
                  valStart = LOCKED_BALANCES[prevKey].end;
-                 valFinal = valStart; // Sem info do final, repete o inicial (indica zero movimento até ter trava)
+                 valFinal = valStart;
              } else {
-                 valStart = 90725.06; // Fallback genesis
+                 valStart = 90725.06;
                  valFinal = 90725.06;
              }
         }
         
-        // Calcular "Divergência" apenas para informar o usuário onde está o erro nos lançamentos
-        // Não altera os saldos exibidos (Start/Final)
         const valPrev = valStart; 
 
-        // 2. Trazer Movimentações apenas para cálculo de conferência (Divergência)
         const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
         const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
@@ -270,8 +251,6 @@ export default function SuperConciliation() {
         
         const sumMonth = detailsMonth.credits + detailsMonth.debits;
         
-        // CÁLCULO DE DIVERGÊNCIA (DEBUG)
-        // Se (Inicial + Movimentos) != Final Travado, existe erro nos lançamentos
         const calculatedFinal = valStart + sumMonth;
         const difference = valFinal - calculatedFinal;
 
@@ -306,10 +285,8 @@ export default function SuperConciliation() {
             console.error("Erro ao buscar transações:", error);
             toast.error("Erro ao carregar extrato bancário");
         } else {
-            // Mapear para interface local
             const mapped: BankTransaction[] = (data || []).map(tx => {
                 let amt = Number(tx.amount);
-                // Se o banco armazena sempre positivo, usamos transaction_type para definir o sinal
                 if (tx.transaction_type === 'debit' && amt > 0) {
                     amt = -amt;
                 }
@@ -325,22 +302,20 @@ export default function SuperConciliation() {
             setTransactions(mapped);
         }
         setLoadingTx(false);
-        setPage(1); // reset página sempre que recarregar mês/modo
+        setPage(1);
     }, [selectedDate, viewMode]);
 
-    // Carregar Transações Reais do Banco
     useEffect(() => {
         fetchTransactions();
     }, [fetchTransactions]);
 
-  // Carregar Plano de Contas (Geral)
   useEffect(() => {
     const fetchAccounts = async () => {
         const { data } = await supabase
             .from('chart_of_accounts')
             .select('code, name')
-            .eq('is_analytical', true) // Only analytical accounts
-            .eq('is_active', true) // Filter active accounts only
+            .eq('is_analytical', true)
+            .eq('is_active', true)
             .or('code.ilike.3.%,code.ilike.4.%,code.ilike.2.1.%,code.ilike.1.1.2.%,code.ilike.1.1.1.%,code.ilike.1.1.3.%')
             .order('code');
         if (data) setAvailableAccounts(data);
@@ -348,21 +323,18 @@ export default function SuperConciliation() {
     fetchAccounts();
   }, []);
 
-    // Paginação local (client-side) para navegar pelos 173 lançamentos
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const pagedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     useEffect(() => {
         if (page > totalPages) setPage(totalPages);
     }, [page, totalPages]);
 
-  // O CEREBRO: Dr. Cícero analisa a transação selecionada
   useEffect(() => {
     if (!selectedTx || isManualMode) { 
         if (!selectedTx) setSuggestion(null);
-        return; // Se estiver em modo manual, não sobrescreve
+        return;
     };
     
-    // Se já estiver conciliado, busca o lançamento real
     if (selectedTx.matched && selectedTx.journal_entry_id) {
         const fetchJournal = async () => {
             setLoading(true);
@@ -375,39 +347,20 @@ export default function SuperConciliation() {
                 .eq('entry_id', selectedTx.journal_entry_id);
             
             if (lines) {
-                // Formata para o formato de ClassificationSuggestion para reaproveitar a UI
-                const entries = lines.map((l: any) => {
-                    const isDebit = l.debit > 0;
-                    return {
-                        debit: isDebit ? { account: l.chart_of_accounts?.code, name: l.chart_of_accounts?.name } : { account: '', name: '' },
-                        credit: !isDebit ? { account: l.chart_of_accounts?.code, name: l.chart_of_accounts?.name } : { account: '', name: '' },
-                        value: isDebit ? l.debit : l.credit
-                    };
-                }).filter(e => e.value > 0);
-
-                // Como a UI espera pares (D/C no mesmo objeto) e o banco retorna linhas soltas,
-                // vamos agrupar simplificadamente ou criar lista plana.
-                // A UI atual itera sobre 'entries' e mostra um item por iteração.
-                // Vou adaptar para mostrar linhas individuais se necessário, mas a UI espera {debit, credit}.
-                // Hack: Vamos criar uma estrutura visual onde Debit e Credit são mostrados.
-                
-                // Melhor abordagem: Criar pares artificiais se possível ou apenas listar.
-                // Vamos criar uma lista onde cada linha do banco vira uma entrada suggestion com o outro lado vazio para exibição
-                
                 const displayEntries = lines.map((line: any) => {
-                     const isDebit = Number(line.debit) > 0;
-                     const val = isDebit ? line.debit : line.credit;
-                     
-                     return {
-                         debit: isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
-                         credit: !isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
-                         value: val
-                     };
+                      const isDebit = Number(line.debit) > 0;
+                      const val = isDebit ? line.debit : line.credit;
+                      
+                      return {
+                          debit: isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
+                          credit: !isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
+                          value: val
+                      };
                 });
 
                 setSuggestion({
                     description: "Lançamento Registrado (Banco de Dados)",
-                    type: 'revenue_current', // Dummy
+                    type: 'revenue_current',
                     reasoning: "Dados extraídos diretamente do lançamento contábil vinculado.",
                     entries: displayEntries
                 });
@@ -425,33 +378,23 @@ export default function SuperConciliation() {
             selectedTx.amount,
             selectedTx.date,
             selectedTx.description,
-            bankAccountCode // Passa o código do banco correto
+            bankAccountCode
         );
 
-        // DR CICERO ENFORCEMENT:
-        // Se estamos conciliando extrato BANCÁRIO (OFX), a "perna do banco" é Sagrada.
-        // Entrada (>0) = Débito no Banco OBRIGATÓRIO.
-        // Saída (<0) = Crédito no Banco OBRIGATÓRIO.
-        // Sobrescrevemos o retorno da IA para garantir integridade contábil.
-        
         const isReceipt = selectedTx.amount > 0;
         const bankName = availableAccounts.find(a => a.code === bankAccountCode)?.name || 'Banco Sicredi';
 
         const enforcedEntries = result.entries.map(e => {
             if (isReceipt) {
-                // Entrada: Força Débito = Banco
                 return {
                     ...e,
                     debit: { account: bankAccountCode, name: bankName },
-                    // Mantém o crédito sugerido pela IA (a contrapartida variável)
                     credit: e.credit
                 };
             } else {
-                // Saída: Força Crédito = Banco
                 return {
                     ...e,
                     debit: e.debit,
-                    // Mantém o débito sugerido pela IA (a contrapartida variável), força Crédito = Banco
                     credit: { account: bankAccountCode, name: bankName }
                 };
             }
@@ -481,7 +424,6 @@ export default function SuperConciliation() {
 
       setLoading(true);
       try {
-          // 1. Apagar Lançamento Contábil (Cascade deve apagar linhas)
           if (hasEntry) {
             const { error: delError } = await supabase
                 .from('accounting_entries')
@@ -491,7 +433,6 @@ export default function SuperConciliation() {
             if (delError) throw new Error("Erro ao apagar lançamento: " + delError.message);
           }
 
-          // 2. Desmarcar no Banco e limpar Journal ID
           const { error: updateError } = await supabase
             .from('bank_transactions')
             .update({ matched: false, journal_entry_id: null })
@@ -501,15 +442,12 @@ export default function SuperConciliation() {
 
           toast.success("Transação reaberta para edição!");
           
-          // Atualiza estado local
           const updated = { ...selectedTx, matched: false, journal_entry_id: undefined };
           setSelectedTx(updated);
           setTransactions(prev => prev.map(t => t.id === selectedTx.id ? updated : t));
           
-          // Reseta Suggestion para rodar Dr Cicero de novo
           setIsManualMode(false);
           setSuggestion(null); 
-          // O useEffect vai rodar pq selectedTx mudou
 
       } catch (err: unknown) {
           const errorMessage = err instanceof Error ? err.message : "Erro desconhecido";
@@ -523,7 +461,6 @@ export default function SuperConciliation() {
       if (!selectedTx) return;
       
       const totalSplit = splitItems.reduce((acc, i) => acc + i.amount, 0);
-      // Validar valor absoluto
       if (Math.abs(totalSplit - Math.abs(selectedTx.amount)) > 0.01) {
           toast.error(`A soma (${totalSplit}) difere do valor da transação (${Math.abs(selectedTx.amount)})`);
           return;
@@ -539,14 +476,12 @@ export default function SuperConciliation() {
              const acc = availableAccounts.find(a => a.code === item.accountCode);
              const bankAccName = availableAccounts.find(a => a.code === bankAccountCode)?.name || 'Banco Sicredi';
              if (isReceipt) {
-                // Entrada: Débito Banco, Crédito Contas
                  return {
                     debit: { account: bankAccountCode, name: bankAccName },
                     credit: { account: item.accountCode, name: acc ? acc.name : 'Conta' },
                     value: item.amount 
                  };
              } else {
-                 // Saída: Débito Contas, Crédito Banco
                  return {
                     debit: { account: item.accountCode, name: acc ? acc.name : 'Conta' },
                     credit: { account: bankAccountCode, name: bankAccName },
@@ -584,8 +519,6 @@ export default function SuperConciliation() {
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // ... existing logic ...
-    // Keep simplistic for now or integrate with new manual mode
     const file = event.target.files?.[0];
     if (!file) return;
     toast.info("Importação via arquivo simulada.");
@@ -596,10 +529,7 @@ export default function SuperConciliation() {
 
     setLoading(true);
     try {
-        // 1. Resolver IDs das Contas (Code -> UUID)
         const codes = suggestion.entries.flatMap(e => [e.debit.account, e.credit.account]);
-        
-        // Remove duplicates for query
         const uniqueCodes = [...new Set(codes)];
         
         const { data: accountsData, error: accountsError } = await supabase
@@ -612,13 +542,11 @@ export default function SuperConciliation() {
         const accountMap = new Map<string, string>();
         accountsData?.forEach(acc => accountMap.set(acc.code, acc.id));
 
-        // 2. Criar ou Atualizar Lançamento (Header)
-        // Check for existing entry to prevent duplicates (SINGLE SOURCE OF TRUTH)
         const { data: existingEntry } = await supabase
             .from('accounting_entries') 
             .select('id')
             .eq('transaction_id', selectedTx.id)
-            .maybeSingle(); // Safe check
+            .maybeSingle();
 
         const entryPayload = {
             entry_type: 'manual',
@@ -627,11 +555,10 @@ export default function SuperConciliation() {
             competence_date: selectedTx.date,
             reference_type: 'bank_transaction',
             reference_id: selectedTx.id,
-            // transaction_id: selectedTx.id, // Removed to ensure compatibility with all schema versions
             document_number: selectedTx.description?.substring(0, 50),
             total_debit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
             total_credit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
-            balanced: true, // Assuming suggestion is balanced
+            balanced: true,
             created_by: (await supabase.auth.getUser()).data.user?.id
         };
 
@@ -639,7 +566,6 @@ export default function SuperConciliation() {
         let entryError = null;
 
         if (existingEntry) {
-            // Update Existing
              const { data: updated, error: updError } = await supabase
                 .from('accounting_entries')
                 .update(entryPayload)
@@ -649,12 +575,10 @@ export default function SuperConciliation() {
              entryData = updated;
              entryError = updError;
              
-             // Clean old lines before re-inserting
              if (!updError) {
                  await supabase.from('accounting_entry_lines').delete().eq('entry_id', existingEntry.id);
              }
         } else {
-            // Insert New
             const { data: inserted, error: insError } = await supabase
                 .from('accounting_entries')
                 .insert(entryPayload)
@@ -670,28 +594,22 @@ export default function SuperConciliation() {
             throw new Error("Erro ao criar lançamento: nenhum ID retornado do banco de dados");
         }
 
-        // 3. Preparar e Agrupar Itens do Lançamento
-        // Transforma pares D/C em lista plana de linhas
         const rawLines = suggestion.entries.flatMap(entry => [
             { code: entry.debit.account, name: entry.debit.name, debit: entry.value, credit: 0 },
             { code: entry.credit.account, name: entry.credit.name, debit: 0, credit: entry.value }
         ]);
 
-        // Agrupa por conta para evitar múltiplas linhas da mesma conta (ex: Banco repetido várias vezes)
         const aggregatedLines = rawLines.reduce((acc, line) => {
             const existing = acc.find(l => l.code === line.code);
             if (existing) {
                 existing.debit += line.debit;
                 existing.credit += line.credit;
-                // If it has mixed debit/credit, we keep it as is (netting is risky without user intent)
-                // Assuming well-formed bookkeeping: usually one account is all debit or all credit in a simple transaction
             } else {
                 acc.push({ ...line });
             }
             return acc;
         }, [] as typeof rawLines);
 
-        // Prepara para insert
         const linesToInsert = aggregatedLines.map(line => {
             const accId = accountMap.get(line.code);
              if (!accId) {
@@ -713,21 +631,13 @@ export default function SuperConciliation() {
             .insert(linesToInsert);
 
         if (linesError) throw new Error("Erro ao criar itens: " + linesError.message);
-
-        // 4. Nota: O lançamento já está vinculado via reference_id em accounting_entries
-        // Não atualizamos bank_transactions.matched pois há problemas com chave estrangeira
-        // O lançamento está criado e pronto para usar
         
-        // AUTO-LEARN: Tenta aprender automaticamente
         if (suggestion.entries.length > 0) {
             const entry = suggestion.entries[0];
             const isReceipt = selectedTx.amount > 0;
-            // Se entrada, aprendemos de onde veio (Crédito). Se saída, para onde foi (Débito).
             const target = isReceipt ? entry.credit : entry.debit;
             
-            // Só aprende se não for a própria conta banco (que seria redundante) e se não for split complexo
             if (target.account !== bankAccountCode && suggestion.type !== 'split') {
-                 // Dispara sem await para não travar a UI
                  FinancialIntelligenceService.learnRule(
                      selectedTx.description, 
                      target.account, 
@@ -739,15 +649,12 @@ export default function SuperConciliation() {
 
         toast.success("Lançamento confirmado!");
         
-        // Remove da lista
         setTransactions(prev => prev.map(t => t.id === selectedTx.id ? { ...t, matched: true } : t));
         
-        // Se estiver vendo apenas pendentes, remove da visualização
         if (viewMode === 'pending') {
              setTransactions(prev => prev.filter(t => t.id !== selectedTx.id));
              setSelectedTx(null);
         } else {
-             // Se estiver vendo todas, apenas atualiza
              setSelectedTx(prev => prev ? { ...prev, matched: true } : null);
         }
         
@@ -767,13 +674,13 @@ export default function SuperConciliation() {
     <Tabs 
       value={viewMode}
       onValueChange={(v) => setViewMode(v as 'pending' | 'all')}
-      className="h-[calc(100vh-4rem)] flex flex-col p-4 bg-slate-50"
+      className="h-auto lg:h-[calc(100vh-4rem)] flex flex-col p-2 md:p-4 bg-slate-50 min-h-screen w-full max-w-[100vw] overflow-x-hidden"
     >
       
       {/* HEADER: Controles e Data */}
-      <div className="flex justify-between items-center mb-4 shrink-0">
-        <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 shrink-0 gap-4 lg:gap-0 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
                 <ChevronLeft className="h-6 w-6" />
             </Button>
             <div>
@@ -783,23 +690,23 @@ export default function SuperConciliation() {
             </p>
             </div>
             
-            <TabsList className="h-10">
-                <TabsTrigger value="pending" className="px-4">
+            <TabsList className="h-auto flex-wrap w-full sm:w-auto p-1">
+                <TabsTrigger value="pending" className="flex-1 sm:flex-none px-4">
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Pendentes
                 </TabsTrigger>
-                <TabsTrigger value="all" className="px-4">
+                <TabsTrigger value="all" className="flex-1 sm:flex-none px-4">
                      <CheckCircle2 className="mr-2 h-4 w-4" />
                     Análise / Auditoria
                 </TabsTrigger>
             </TabsList>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
             {/* SALDO ANTERIOR */}
             <Popover>
                 <PopoverTrigger asChild>
-                    <div className="mr-2 text-right flex flex-col items-end cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
+                    <div className="text-right flex flex-col items-end cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide group-hover:text-blue-600">
                             {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 0), 'dd/MM/yyyy') : 'Anterior'}
                         </span>
@@ -808,7 +715,7 @@ export default function SuperConciliation() {
                         </span>
                     </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4">
+                <PopoverContent className="w-[90vw] sm:w-80 p-4">
                     <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Acumulado desde 2025)</h4>
                     <div className="space-y-2 text-xs">
                         <div className="flex justify-between border-b pb-1">
@@ -831,8 +738,8 @@ export default function SuperConciliation() {
                 </PopoverContent>
             </Popover>
 
-            {/* SALDO INICIAL (Igual ao Anterior neste modelo) */}
-             <div className="mr-2 text-right flex flex-col items-end opacity-70">
+            {/* SALDO INICIAL */}
+             <div className="text-right flex flex-col items-end opacity-70">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
                     {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'dd/MM/yyyy') : 'Início'}
                 </span>
@@ -844,7 +751,7 @@ export default function SuperConciliation() {
             {/* SALDO FINAL */}
             <Popover>
                 <PopoverTrigger asChild>
-                    <div className="mr-2 text-right flex flex-col items-end pr-4 border-r border-gray-200 cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
+                    <div className="text-right flex flex-col items-end pr-4 border-r border-gray-200 cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors group">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide group-hover:text-blue-600">
                             {selectedDate ? format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'dd/MM/yyyy') : 'Final'}
                         </span>
@@ -853,7 +760,7 @@ export default function SuperConciliation() {
                         </span>
                     </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-4">
+                <PopoverContent className="w-[90vw] sm:w-80 p-4">
                     <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição do Mês</h4>
                     <div className="space-y-2 text-xs">
                         <div className="flex justify-between border-b pb-1">
@@ -885,13 +792,13 @@ export default function SuperConciliation() {
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
-                className={"w-[240px] justify-start text-left font-normal bg-white"}
+                className={"w-[180px] sm:w-[240px] justify-start text-left font-normal bg-white"}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {selectedDate ? format(selectedDate, "MMMM yyyy", { locale: ptBR }) : <span>Selecione o Mês</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-4" align="end">
+            <PopoverContent className="w-[90vw] sm:w-[300px] p-4" align="end">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <Button 
@@ -928,26 +835,26 @@ export default function SuperConciliation() {
             </PopoverContent>
           </Popover>
 
-          <CobrancaImporter />
-          
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" /> 
-            Upload Extrato
-          </Button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
+          <div className="flex items-center gap-2">
+            <CobrancaImporter />
+            <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} className="shrink-0">
+                <Upload className="w-4 h-4" /> 
+            </Button>
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
                         accept=".ofx,.csv"
-            aria-label="Upload de Extrato"
+                aria-label="Upload de Extrato"
                         onChange={handleExtratoUpload}
-          />
+            />
+          </div>
         </div>
       </div>
 
-      {/* ACTION BUTTONS (Moved to Top Right) */}
-      <div className="flex justify-end mb-2 px-1 shrink-0">
-        <div className="flex flex-col gap-2 w-[300px]">
+      {/* ACTION BUTTONS */}
+      <div className="flex justify-end mb-2 px-1 shrink-0 w-full lg:w-auto">
+        <div className="flex flex-col gap-2 w-full sm:w-[300px]">
             {suggestion && !selectedTx?.matched && (
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-center text-slate-500 italic bg-blue-50/50 py-1 rounded">
                     <CheckCircle2 className="h-3 w-3 text-blue-400" />
@@ -984,10 +891,10 @@ export default function SuperConciliation() {
         </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
       
       {/* COLUNA 1: Extrato Bancário (Pendente) */}
-      <Card className={`h-full flex flex-col transition-all duration-300 ${isListExpanded ? 'col-span-6' : 'col-span-3'}`}>
+      <Card className={`flex flex-col transition-all duration-300 ${isListExpanded ? 'lg:col-span-6' : 'lg:col-span-3'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -1001,7 +908,7 @@ export default function SuperConciliation() {
                 }
             </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => setIsListExpanded(!isListExpanded)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hidden lg:flex" onClick={() => setIsListExpanded(!isListExpanded)}>
              {isListExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </CardHeader>
@@ -1052,30 +959,32 @@ export default function SuperConciliation() {
       </Card>
 
       {/* COLUNA 2: Inteligência Dr. Cícero / MODO MANUAL */}
-      <Card className={`h-full flex flex-col border-blue-200 shadow-sm transition-all duration-300 ${isListExpanded ? 'col-span-3' : 'col-span-5'}`}>
-         <CardHeader className="bg-blue-50/50 pb-4">
-            <CardTitle className="text-lg flex items-center justify-between text-blue-800">
+      <Card className={`flex flex-col border-blue-200 shadow-sm transition-all duration-300 ${isListExpanded ? 'lg:col-span-3' : 'lg:col-span-5'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
+          <CardHeader className="bg-blue-50/50 pb-4">
+            <CardTitle className="text-lg flex flex-wrap items-center justify-between text-blue-800 gap-2">
                 <div className="flex items-center gap-2">
                     <div className="bg-blue-600 p-1 rounded-md">
                         <CheckCircle2 className="h-5 w-5 text-white" />
                     </div>
                     {isManualMode ? "Classificação Manual" : "Análise do Dr. Cícero"}
                 </div>
-                {selectedTx && !selectedTx.matched && !isManualMode && (
-                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setIsManualMode(true)}>
-                        Modo Manual
-                    </Button>
-                )}
-                {isManualMode && (
-                     <Button variant="ghost" size="sm" className="text-xs h-7 text-slate-500" onClick={() => { setIsManualMode(false); setManualType(null); }}>
-                        Voltar para IA
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    {selectedTx && !selectedTx.matched && !isManualMode && (
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setIsManualMode(true)}>
+                            Modo Manual
+                        </Button>
+                    )}
+                    {isManualMode && (
+                        <Button variant="ghost" size="sm" className="text-xs h-7 text-slate-500" onClick={() => { setIsManualMode(false); setManualType(null); }}>
+                            Voltar para IA
+                        </Button>
+                    )}
+                </div>
             </CardTitle>
             <CardDescription>{isManualMode ? "Defina os detalhes do lançamento" : "Inteligência Contábil Ativa"}</CardDescription>
          </CardHeader>
          <Separator className="bg-blue-100" />
-         <div className="flex-1 p-6 flex items-center justify-center overflow-auto">
+         <div className="flex-1 p-6 flex items-center justify-center overflow-auto w-full">
             {!selectedTx ? (
                 <div className="text-center text-slate-400">
                     <ArrowRight className="h-12 w-12 mx-auto mb-2 opacity-20" />
@@ -1110,28 +1019,28 @@ export default function SuperConciliation() {
             ) : isManualMode ? (
                 <div className="w-full h-full flex flex-col gap-4">
                     {!manualType ? (
-                        <div className="grid grid-cols-2 gap-4 h-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
                             <Button 
                                 variant="outline" 
-                                className="h-full flex flex-col items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                                className="h-full flex flex-col items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-300 transition-all p-6 sm:p-4"
                                 onClick={() => setManualType('split')}
                             >
                                 <SplitSquareHorizontal className="h-8 w-8 text-blue-600" />
                                 <div className="text-center">
-                                    <span className="font-bold block">Rateio / Múltiplos</span>
-                                    <span className="text-xs text-muted-foreground">Dividir em várias contas</span>
+                                    <span className="font-bold block text-wrap">Rateio / Múltiplos</span>
+                                    <span className="text-xs text-muted-foreground block text-wrap">Dividir em várias contas</span>
                                 </div>
                             </Button>
                             <Button 
                                 variant="outline" 
-                                className="h-full flex flex-col items-center justify-center gap-3 hover:bg-amber-50 hover:border-amber-300 transition-all"
+                                className="h-full flex flex-col items-center justify-center gap-3 hover:bg-amber-50 hover:border-amber-300 transition-all p-6 sm:p-4"
                                 onClick={() => setManualType('expense')}
-                                disabled={selectedTx.amount > 0} // Entrada geralmente não é despesa
+                                disabled={selectedTx.amount > 0} 
                             >
                                 <Wallet className="h-8 w-8 text-amber-600" />
                                 <div className="text-center">
-                                    <span className="font-bold block">Classificar Despesa</span>
-                                    <span className="text-xs text-muted-foreground">Escolher conta do plano</span>
+                                    <span className="font-bold block text-wrap">Classificar Despesa</span>
+                                    <span className="text-xs text-muted-foreground block text-wrap">Escolher conta do plano</span>
                                 </div>
                             </Button>
                         </div>
@@ -1146,8 +1055,8 @@ export default function SuperConciliation() {
                             
                             <div className="flex-1 border rounded-md p-2 space-y-2 overflow-auto bg-white mb-2">
                                 {splitItems.map((item, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center">
-                                        <div className="flex-1">
+                                    <div key={idx} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center border-b sm:border-b-0 pb-2 sm:pb-0">
+                                        <div className="flex-1 w-full sm:w-auto">
                                             <AccountSelector 
                                                 value={item.accountCode}
                                                 accounts={availableAccounts}
@@ -1158,25 +1067,27 @@ export default function SuperConciliation() {
                                                 }}
                                             />
                                         </div>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="Valor" 
-                                            value={item.amount}
-                                            onChange={(e) => {
-                                                const newItems = [...splitItems];
-                                                newItems[idx].amount = Number(e.target.value);
-                                                setSplitItems(newItems);
-                                            }}
-                                            className="w-24 h-6 text-xs text-right font-mono"
-                                        />
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                            onClick={() => setSplitItems(items => items.filter((_, i) => i !== idx))}
-                                        >
-                                            &times;
-                                        </Button>
+                                        <div className="flex gap-2 w-full sm:w-auto">
+                                            <Input 
+                                                type="number" 
+                                                placeholder="Valor" 
+                                                value={item.amount}
+                                                onChange={(e) => {
+                                                    const newItems = [...splitItems];
+                                                    newItems[idx].amount = Number(e.target.value);
+                                                    setSplitItems(newItems);
+                                                }}
+                                                className="flex-1 sm:w-24 h-6 text-xs text-right font-mono"
+                                            />
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                onClick={() => setSplitItems(items => items.filter((_, i) => i !== idx))}
+                                            >
+                                                &times;
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                                 <Button 
@@ -1264,7 +1175,7 @@ export default function SuperConciliation() {
       </Card>
 
       {/* COLUNA 3: Efetivação Contábil */}
-      <Card className={`h-full flex flex-col bg-slate-50/50 overflow-hidden transition-all duration-300 ${isListExpanded ? 'col-span-3' : 'col-span-4'}`}>
+      <Card className={`flex flex-col bg-slate-50/50 overflow-hidden transition-all duration-300 ${isListExpanded ? 'lg:col-span-3' : 'lg:col-span-4'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
         <CardHeader>
              <CardTitle className="text-lg flex items-center gap-2">
                 <Receipt className="h-5 w-5 text-slate-600" />
@@ -1275,7 +1186,6 @@ export default function SuperConciliation() {
         <CardContent className="flex-1 overflow-auto p-2">
              {suggestion?.entries && suggestion.entries.length > 0 ? (
                 <div className="bg-white border rounded-lg shadow-sm">
-                    {/* Simplified Single Entry View */}
                     <div className="bg-slate-50 border-b p-2 flex justify-between items-center">
                         <span className="font-bold text-xs text-slate-700">Lançamento Único (Dr. Cicero)</span>
                         <Badge variant="outline" className="text-[10px] h-5">{formatCurrency(suggestion.entries.reduce((a, b) => a + b.value, 0))}</Badge>
@@ -1292,7 +1202,6 @@ export default function SuperConciliation() {
                                             {formatCurrency(entry.value)}
                                         </div>
                                         <div className="flex-1">
-                                            {/* Only editable if it's NOT the bank context usually, but allow all here */}
                                             {entry.debit.account === bankAccountCode ? (
                                                 <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
                                                     <Wallet className="h-3 w-3 text-slate-400" />
@@ -1322,56 +1231,52 @@ export default function SuperConciliation() {
                         {/* CREDITS SECTION */}
                         <div className="p-2">
                              <div className="text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-wider">Créditos (Origem)</div>
-                                                         <div className="space-y-1">
-                                                                {suggestion.entries.map((entry, idx) => {
-                                                                    const isCobranca = selectedTx && (
-                                                                        selectedTx.description.includes('COB') || 
-                                                                        selectedTx.description.includes('COBRANCA') ||
-                                                                        selectedTx.description.includes('Cobrança')
-                                                                    );
-                                                                    // Aceitar variações 'COB' ou 'OB' (ex.: OB000005)
-                                                                    const cobrancaDoc = selectedTx?.description.match(/[C]?OB\d+/)?.[0] || '';
-                                  
-                                                                    // Para cobrança, não renderiza a linha genérica de crédito aqui
-                                                                    if (isCobranca) return null;
-                                                                    return (
-                                                                        <div key={`c-${idx}`} className="flex items-center gap-1 group">
-                                                                            <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
-                                                                                {formatCurrency(entry.value)}
-                                                                            </div>
-                                                                            <div className="flex-1">
-                                                                                {entry.credit.account === bankAccountCode ? (
-                                                                                    <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
-                                                                                        <Wallet className="h-3 w-3 text-slate-400" />
-                                                                                        {entry.credit.name || 'Conta Banco'}
-                                                                                        <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <AccountSelector 
-                                                                                            value={entry.credit.account}
-                                                                                            accounts={availableAccounts}
-                                                                                            onChange={(newCode) => {
-                                                                                                const newEntries = [...suggestion.entries];
-                                                                                                const acc = availableAccounts.find(a => a.code === newCode);
-                                                                                                if (acc) {
-                                                                                                    newEntries[idx].credit = { account: acc.code, name: acc.name };
-                                                                                                    setSuggestion({ ...suggestion, entries: newEntries });
-                                                                                                }
-                                                                                            }}
-                                                                                        />
-                                                                                    </>
-                                                                                )}
-                                                                            </div>
+                                                 <div className="space-y-1">
+                                                        {suggestion.entries.map((entry, idx) => {
+                                                            const isCobranca = selectedTx && (
+                                                                selectedTx.description.includes('COB') || 
+                                                                selectedTx.description.includes('COBRANCA') ||
+                                                                selectedTx.description.includes('Cobrança')
+                                                            );
+                                                            
+                                                            if (isCobranca) return null;
+                                                            return (
+                                                                <div key={`c-${idx}`} className="flex items-center gap-1 group">
+                                                                        <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
+                                                                            {formatCurrency(entry.value)}
                                                                         </div>
-                                                                    );
-                                                                })}
+                                                                        <div className="flex-1">
+                                                                            {entry.credit.account === bankAccountCode ? (
+                                                                                <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
+                                                                                    <Wallet className="h-3 w-3 text-slate-400" />
+                                                                                    {entry.credit.name || 'Conta Banco'}
+                                                                                    <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <AccountSelector 
+                                                                                        value={entry.credit.account}
+                                                                                        accounts={availableAccounts}
+                                                                                        onChange={(newCode) => {
+                                                                                            const newEntries = [...suggestion.entries];
+                                                                                            const acc = availableAccounts.find(a => a.code === newCode);
+                                                                                            if (acc) {
+                                                                                                newEntries[idx].credit = { account: acc.code, name: acc.name };
+                                                                                                setSuggestion({ ...suggestion, entries: newEntries });
+                                                                                            }
+                                                                                        }}
+                                                                                    />
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                 
-                                                                {/* Mostrar desdobramento de clientes se for cobrança - FORA DO MAP */}
-                                                                {selectedTx && (/(^|\s)[C]?OB\d+/.test(selectedTx.description) || selectedTx.description.includes('COBRANCA') || selectedTx.description.includes('Cobrança')) && (
+                                                        {selectedTx && (/(^|\s)[C]?OB\d+/.test(selectedTx.description) || selectedTx.description.includes('COBRANCA') || selectedTx.description.includes('Cobrança')) && (
                                   <div className="mt-2">
                                     <CollectionClientBreakdown 
-                                                                            cobrancaDoc={selectedTx.description.match(/[C]?OB\d+/)?.[0] || ''}
+                                              cobrancaDoc={selectedTx.description.match(/[C]?OB\d+/)?.[0] || ''}
                                       amount={Math.abs(selectedTx.amount)}
                                       transactionDate={selectedTx.date}
                                     />
