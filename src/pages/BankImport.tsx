@@ -207,14 +207,12 @@ const BankImport = () => {
     }
   };
 
-  // Processar transações com IA (Contador e Financeiro)
   const processWithAI = async (transactions: OFXTransaction[], importId: string) => {
     setAiProcessing(true);
     setAiProgress(0);
     toast.info("🧠 Invocando Contador IA e Agente Financeiro para classificação...");
 
     try {
-      // Preparar transações para a IA
       const txnsForAI = transactions.map(txn => ({
         fitid: txn.fitid,
         date: format(txn.date, 'yyyy-MM-dd'),
@@ -225,23 +223,18 @@ const BankImport = () => {
 
       setAiProgress(20);
 
-      // Chamar Edge Function do processador de transações bancárias
-      // MODIFICAÇÃO DR. CÍCERO: Usar conta transitória para cobranças agrupadas
       const { data, error } = await supabase.functions.invoke('ai-bank-transaction-processor', {
         body: {
           action: 'process_transactions',
           transactions: txnsForAI,
           bank_account_id: selectedAccount,
           import_id: importId,
-          opening_date: '2024-12-31', // Data de abertura do controle
-          // NOVAS CONFIGURAÇÕES - Fluxo correto NBC TG 26:
+          opening_date: '2024-12-31',
           usar_conta_transitoria: true,
-          conta_transitoria_code: '1.1.9.01', // Recebimentos a Conciliar
+          conta_transitoria_code: '1.1.9.01',
           regras_classificacao: {
-            // Padrões de cobrança agrupada → Conta Transitória
             cobranca_pattern: 'COB\\d+|COBRANCA|LIQ\\.COBRANCA|LIQUIDACAO',
-            acao_cobranca: 'TRANSITORIA', // Não baixar cliente direto
-            // Depois o SuperConciliation desmembra para clientes individuais
+            acao_cobranca: 'TRANSITORIA',
           }
         }
       });
@@ -283,11 +276,9 @@ const BankImport = () => {
       const errors: string[] = [];
       let totalAmount = 0;
 
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      // Create import record
       const { data: importRecord, error: importError } = await supabase
         .from("bank_imports")
         .insert({
@@ -304,10 +295,8 @@ const BankImport = () => {
 
       if (importError) throw importError;
 
-      // Import each transaction
       for (const txn of parsedData.transactions) {
         try {
-          // Check if transaction already exists (by fitid + bank_account_id - unique constraint)
           if (txn.fitid) {
             const { data: existing } = await supabase
               .from("bank_transactions")
@@ -322,7 +311,6 @@ const BankImport = () => {
             }
           }
 
-          // Insert transaction - use only fields that exist in the table
           const insertData = {
             bank_account_id: selectedAccount,
             transaction_date: format(txn.date, 'yyyy-MM-dd'),
@@ -332,8 +320,6 @@ const BankImport = () => {
             fitid: txn.fitid || null,
             created_by: user.id
           };
-
-          console.log('Inserting transaction:', insertData);
 
           const { error: txnError } = await supabase
             .from("bank_transactions")
@@ -352,7 +338,6 @@ const BankImport = () => {
         }
       }
 
-      // Calculate totals
       const totalDebits = parsedData.transactions
         .filter(t => t.type === 'DEBIT')
         .reduce((sum, t) => sum + t.amount, 0);
@@ -361,7 +346,6 @@ const BankImport = () => {
         .filter(t => t.type === 'CREDIT')
         .reduce((sum, t) => sum + t.amount, 0);
 
-      // Update import record
       await supabase
         .from("bank_imports")
         .update({
@@ -374,17 +358,14 @@ const BankImport = () => {
         })
         .eq("id", importRecord.id);
 
-      // Processar com IA se habilitado
       let aiResult = null;
       if (enableAI && newTransactions > 0) {
         const transactionsToProcess = parsedData.transactions.filter(txn => {
-          // Apenas transações novas (não duplicadas)
-          return true; // Simplificado - a IA vai processar todas
+          return true;
         });
         aiResult = await processWithAI(transactionsToProcess, importRecord.id);
       }
 
-      // Update bank account balance (trigger will handle this)
       setImportResult({
         success: true,
         newTransactions,
@@ -431,9 +412,7 @@ const BankImport = () => {
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
-  // Abrir diálogo de classificação para transações com baixa confiança
   const openClassificationDialog = (classifications: AIClassification[], importId: string) => {
-    // Filtrar transações com baixa confiança (< 70%) ou sem classificação
     const lowConfidenceTxns = classifications
       .filter(c => !c.classification?.confidence || c.classification.confidence < 0.7)
       .map(c => ({
@@ -459,16 +438,13 @@ const BankImport = () => {
     }
   };
 
-  // Callback quando o diálogo de classificação é concluído
   const handleClassificationComplete = async (results: any[]) => {
     try {
       toast.success(`${results.length} transações classificadas manualmente!`);
 
-      // Criar lançamentos contábeis para as classificações manuais
       for (const result of results) {
         const { data: userData } = await supabase.auth.getUser();
 
-        // Criar lançamento contábil
         const { error } = await supabase
           .from('accounting_entries')
           .insert({
@@ -484,7 +460,6 @@ const BankImport = () => {
         }
       }
 
-      // Recarregar importações
       loadRecentImports();
     } catch (error) {
       console.error('Erro ao processar classificações:', error);
@@ -492,7 +467,6 @@ const BankImport = () => {
     }
   };
 
-  // Função para atualizar classificação de uma transação
   const updateClassification = (fitid: string, field: keyof TransactionClassification, value: string) => {
     setClassifications(prev => ({
       ...prev,
@@ -504,14 +478,11 @@ const BankImport = () => {
     }));
   };
 
-  // Sugerir conta contábil baseado na categoria
   const suggestAccountByCategory = (category: string, type: string): string => {
     if (type === 'CREDIT') {
-      // Entradas
       if (category === 'receita') return chartAccounts.find(a => a.code.startsWith('3.1'))?.id || '';
       if (category === 'transferencia') return chartAccounts.find(a => a.code.startsWith('1.1'))?.id || '';
     } else {
-      // Saídas
       if (category === 'despesa') return chartAccounts.find(a => a.code.startsWith('4.1'))?.id || '';
       if (category === 'investimento') return chartAccounts.find(a => a.code.startsWith('1.2'))?.id || '';
       if (category === 'transferencia') return chartAccounts.find(a => a.code.startsWith('1.1'))?.id || '';
@@ -519,7 +490,6 @@ const BankImport = () => {
     return '';
   };
 
-  // Filtrar contas por categoria selecionada
   const getFilteredAccounts = (category: string, type: string) => {
     if (!category) return chartAccounts;
 
@@ -534,7 +504,6 @@ const BankImport = () => {
     return chartAccounts;
   };
 
-  // Função para abrir classificação manual de todas as transações do preview
   const openManualClassification = () => {
     if (!parsedData) return;
 
@@ -554,13 +523,13 @@ const BankImport = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Upload className="h-8 w-8 text-primary" />
+            <Upload className="h-8 w-8 text-primary shrink-0" />
             <div>
-              <h1 className="text-3xl font-bold">Importar Extrato Bancário</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold">Importar Extrato Bancário</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Importe arquivos OFX do seu banco (Sicredi, Banco do Brasil, etc.)
               </p>
             </div>
@@ -568,7 +537,6 @@ const BankImport = () => {
           <AITeamBadge variant="compact" />
         </div>
 
-        {/* Import Form */}
         <Card>
           <CardHeader>
             <CardTitle>Importar Arquivo OFX</CardTitle>
@@ -615,10 +583,9 @@ const BankImport = () => {
               </p>
             </div>
 
-            {/* Opção de Classificação com IA */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
               <div className="flex items-center gap-3">
-                <Brain className="h-6 w-6 text-purple-600" />
+                <Brain className="h-6 w-6 text-purple-600 shrink-0" />
                 <div>
                   <p className="font-medium">Classificação Automática com IA</p>
                   <p className="text-sm text-muted-foreground">
@@ -629,6 +596,7 @@ const BankImport = () => {
               <Switch
                 checked={enableAI}
                 onCheckedChange={setEnableAI}
+                className="shrink-0"
               />
             </div>
 
@@ -639,7 +607,6 @@ const BankImport = () => {
               </div>
             )}
 
-            {/* Chat Assistente IA */}
             <AIAssistantChat
               context="bank_import"
               contextId={selectedAccount || undefined}
@@ -649,7 +616,6 @@ const BankImport = () => {
           </CardContent>
         </Card>
 
-        {/* Preview */}
         {parsedData && !importResult && (
           <Card>
             <CardHeader>
@@ -662,7 +628,7 @@ const BankImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Período</p>
                   <p className="font-medium">
@@ -683,12 +649,11 @@ const BankImport = () => {
                 </div>
               </div>
 
-              {/* Toggle para mostrar classificação inline */}
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted rounded-lg gap-3">
                 <div className="flex items-center gap-2">
                   <Pencil className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Classificação Manual Inline</span>
-                  <span className="text-xs text-muted-foreground">(categorize cada transação antes de importar)</span>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">(categorize cada transação antes de importar)</span>
                 </div>
                 <Switch
                   checked={showInlineClassification}
@@ -696,121 +661,121 @@ const BankImport = () => {
                 />
               </div>
 
-              <div className="max-h-[500px] overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[90px]">Data</TableHead>
-                      <TableHead className="w-[80px]">Tipo</TableHead>
-                      <TableHead className="min-w-[200px]">Descrição</TableHead>
-                      <TableHead className="text-right w-[100px]">Valor</TableHead>
-                      {showInlineClassification && (
-                        <>
-                          <TableHead className="w-[130px]">Categoria</TableHead>
-                          <TableHead className="w-[150px]">Centro Custo</TableHead>
-                          <TableHead className="w-[200px]">Conta Contábil</TableHead>
-                        </>
-                      )}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {parsedData.transactions.map((txn, idx) => {
-                      const classification: Partial<TransactionClassification> = classifications[txn.fitid] || {};
-                      const filteredAccounts = getFilteredAccounts(classification.category || '', txn.type);
+              <div className="max-h-[500px] overflow-auto">
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[90px]">Data</TableHead>
+                        <TableHead className="w-[80px]">Tipo</TableHead>
+                        <TableHead className="min-w-[200px]">Descrição</TableHead>
+                        <TableHead className="text-right w-[100px]">Valor</TableHead>
+                        {showInlineClassification && (
+                          <>
+                            <TableHead className="w-[130px]">Categoria</TableHead>
+                            <TableHead className="w-[150px]">Centro Custo</TableHead>
+                            <TableHead className="w-[200px]">Conta Contábil</TableHead>
+                          </>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {parsedData.transactions.map((txn, idx) => {
+                        const classification: Partial<TransactionClassification> = classifications[txn.fitid] || {};
+                        const filteredAccounts = getFilteredAccounts(classification.category || '', txn.type);
 
-                      return (
-                        <TableRow key={idx}>
-                          <TableCell className="text-xs">{formatDate(txn.date)}</TableCell>
-                          <TableCell>
-                            <Badge variant={txn.type === 'CREDIT' ? 'default' : 'secondary'} className="text-xs">
-                              {txn.type === 'CREDIT' ? 'Crédito' : 'Débito'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate text-sm" title={txn.description}>
-                            {txn.description}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span className={`font-mono text-sm ${txn.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
-                              {txn.type === 'CREDIT' ? '+' : '-'}{formatCurrency(txn.amount)}
-                            </span>
-                          </TableCell>
-                          {showInlineClassification && (
-                            <>
-                              <TableCell>
-                                <Select
-                                  value={classification.category || ''}
-                                  onValueChange={(value) => {
-                                    updateClassification(txn.fitid, 'category', value as any);
-                                    // Auto-sugerir conta contábil
-                                    const suggestedAccount = suggestAccountByCategory(value, txn.type);
-                                    if (suggestedAccount) {
-                                      updateClassification(txn.fitid, 'account_id', suggestedAccount);
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Categoria" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {txn.type === 'DEBIT' ? (
-                                      <>
-                                        <SelectItem value="despesa">Despesa</SelectItem>
-                                        <SelectItem value="investimento">Investimento</SelectItem>
-                                        <SelectItem value="transferencia">Transferência</SelectItem>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <SelectItem value="receita">Receita</SelectItem>
-                                        <SelectItem value="transferencia">Transferência</SelectItem>
-                                      </>
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                              <TableCell>
-                                <Select
-                                  value={classification.cost_center_id || ''}
-                                  onValueChange={(value) => updateClassification(txn.fitid, 'cost_center_id', value)}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Centro Custo" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {costCenters.map(cc => (
-                                      <SelectItem key={cc.id} value={cc.id} className="text-xs">
-                                        {cc.code}. {cc.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                              <TableCell>
-                                <Select
-                                  value={classification.account_id || ''}
-                                  onValueChange={(value) => updateClassification(txn.fitid, 'account_id', value)}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Conta" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {filteredAccounts.map(acc => (
-                                      <SelectItem key={acc.id} value={acc.id} className="text-xs">
-                                        {acc.code} - {acc.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                            </>
-                          )}
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                        return (
+                          <TableRow key={idx}>
+                            <TableCell className="text-xs">{formatDate(txn.date)}</TableCell>
+                            <TableCell>
+                              <Badge variant={txn.type === 'CREDIT' ? 'default' : 'secondary'} className="text-xs">
+                                {txn.type === 'CREDIT' ? 'Crédito' : 'Débito'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-sm" title={txn.description}>
+                              {txn.description}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className={`font-mono text-sm ${txn.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
+                                {txn.type === 'CREDIT' ? '+' : '-'}{formatCurrency(txn.amount)}
+                              </span>
+                            </TableCell>
+                            {showInlineClassification && (
+                              <>
+                                <TableCell>
+                                  <Select
+                                    value={classification.category || ''}
+                                    onValueChange={(value) => {
+                                      updateClassification(txn.fitid, 'category', value as any);
+                                      const suggestedAccount = suggestAccountByCategory(value, txn.type);
+                                      if (suggestedAccount) {
+                                        updateClassification(txn.fitid, 'account_id', suggestedAccount);
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs">
+                                      <SelectValue placeholder="Categoria" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {txn.type === 'DEBIT' ? (
+                                        <>
+                                          <SelectItem value="despesa">Despesa</SelectItem>
+                                          <SelectItem value="investimento">Investimento</SelectItem>
+                                          <SelectItem value="transferencia">Transferência</SelectItem>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <SelectItem value="receita">Receita</SelectItem>
+                                          <SelectItem value="transferencia">Transferência</SelectItem>
+                                        </>
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={classification.cost_center_id || ''}
+                                    onValueChange={(value) => updateClassification(txn.fitid, 'cost_center_id', value)}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs">
+                                      <SelectValue placeholder="Centro Custo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {costCenters.map(cc => (
+                                        <SelectItem key={cc.id} value={cc.id} className="text-xs">
+                                          {cc.code}. {cc.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={classification.account_id || ''}
+                                    onValueChange={(value) => updateClassification(txn.fitid, 'account_id', value)}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs">
+                                      <SelectValue placeholder="Conta" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {filteredAccounts.map(acc => (
+                                        <SelectItem key={acc.id} value={acc.id} className="text-xs">
+                                          {acc.code} - {acc.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                              </>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
-              {/* Resumo das classificações */}
               {showInlineClassification && Object.keys(classifications).length > 0 && (
                 <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-lg">
                   <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
@@ -822,7 +787,6 @@ const BankImport = () => {
                 </div>
               )}
 
-              {/* Barra de progresso IA */}
               {aiProcessing && (
                 <div className="space-y-2 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200">
                   <div className="flex items-center gap-2">
@@ -841,15 +805,15 @@ const BankImport = () => {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setParsedData(null)} disabled={loading || aiProcessing}>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button variant="outline" onClick={() => setParsedData(null)} disabled={loading || aiProcessing} className="w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button variant="secondary" onClick={openManualClassification} disabled={loading || aiProcessing}>
+                <Button variant="secondary" onClick={openManualClassification} disabled={loading || aiProcessing} className="w-full sm:w-auto">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Classificar Manualmente
                 </Button>
-                <Button onClick={handleImport} disabled={loading || aiProcessing}>
+                <Button onClick={handleImport} disabled={loading || aiProcessing} className="w-full sm:w-auto">
                   {loading || aiProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -867,7 +831,6 @@ const BankImport = () => {
           </Card>
         )}
 
-        {/* Import Result */}
         {importResult && (
           <Card>
             <CardHeader>
@@ -881,7 +844,7 @@ const BankImport = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Novas Transações</p>
                   <p className="text-2xl font-bold text-green-600">{importResult.newTransactions}</p>
@@ -906,54 +869,55 @@ const BankImport = () => {
                 )}
               </div>
 
-              {/* Classificações da IA */}
               {importResult.aiClassifications && importResult.aiClassifications.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-purple-600" />
                     <p className="font-medium">Classificações do Contador IA</p>
                   </div>
-                  <div className="max-h-64 overflow-y-auto border rounded-lg">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Descrição</TableHead>
-                          <TableHead>Valor</TableHead>
-                          <TableHead>Categoria</TableHead>
-                          <TableHead>Contas</TableHead>
-                          <TableHead>Confiança</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {importResult.aiClassifications.map((item: any, idx: number) => (
-                          <TableRow key={idx}>
-                            <TableCell className="max-w-[200px] truncate">
-                              {item.description}
-                            </TableCell>
-                            <TableCell>
-                              <span className={item.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
-                                {item.type === 'CREDIT' ? '+' : '-'}{formatCurrency(item.amount)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{item.classification?.category}</Badge>
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <span className="text-blue-600">D: {item.classification?.debit_account}</span>
-                              <br />
-                              <span className="text-green-600">C: {item.classification?.credit_account}</span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={item.classification?.confidence >= 0.8 ? 'default' : 'secondary'}
-                              >
-                                {Math.round((item.classification?.confidence || 0) * 100)}%
-                              </Badge>
-                            </TableCell>
+                  <div className="max-h-64 overflow-auto border rounded-lg">
+                    <div className="min-w-[700px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead>Valor</TableHead>
+                            <TableHead>Categoria</TableHead>
+                            <TableHead>Contas</TableHead>
+                            <TableHead>Confiança</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {importResult.aiClassifications.map((item: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="max-w-[200px] truncate">
+                                {item.description}
+                              </TableCell>
+                              <TableCell>
+                                <span className={item.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                                  {item.type === 'CREDIT' ? '+' : '-'}{formatCurrency(item.amount)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{item.classification?.category}</Badge>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <span className="text-blue-600">D: {item.classification?.debit_account}</span>
+                                <br />
+                                <span className="text-green-600">C: {item.classification?.credit_account}</span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={item.classification?.confidence >= 0.8 ? 'default' : 'secondary'}
+                                >
+                                  {Math.round((item.classification?.confidence || 0) * 100)}%
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -971,29 +935,29 @@ const BankImport = () => {
                 </div>
               )}
 
-              <div className="flex gap-2">
-                <Button onClick={() => { setImportResult(null); setAiClassifications([]); }}>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button onClick={() => { setImportResult(null); setAiClassifications([]); }} className="w-full sm:w-auto">
                   Nova Importação
                 </Button>
                 {importResult.aiClassifications && importResult.aiClassifications.some((c: any) =>
                   !c.classification?.confidence || c.classification.confidence < 0.7
                 ) && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => openClassificationDialog(importResult.aiClassifications as AIClassification[], currentImportId)}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Revisar Classificações ({importResult.aiClassifications.filter((c: any) =>
-                      !c.classification?.confidence || c.classification.confidence < 0.7
-                    ).length} pendentes)
-                  </Button>
-                )}
+                    <Button
+                      variant="secondary"
+                      className="w-full sm:w-auto"
+                      onClick={() => openClassificationDialog(importResult.aiClassifications as AIClassification[], currentImportId)}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Revisar Classificações ({importResult.aiClassifications.filter((c: any) =>
+                        !c.classification?.confidence || c.classification.confidence < 0.7
+                      ).length} pendentes)
+                    </Button>
+                  )}
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Recent Imports */}
         <Card>
           <CardHeader>
             <CardTitle>Importações Recentes</CardTitle>
@@ -1006,56 +970,57 @@ const BankImport = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Conta</TableHead>
-                      <TableHead>Período</TableHead>
-                      <TableHead className="text-center">Total</TableHead>
-                      <TableHead className="text-center">Novas</TableHead>
-                      <TableHead className="text-center">Duplicadas</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentImports.map((imp) => (
-                      <TableRow key={imp.id}>
-                        <TableCell>{formatDate(imp.import_date)}</TableCell>
-                        <TableCell>{imp.bank_accounts?.name}</TableCell>
-                        <TableCell className="text-sm">
-                          {imp.period_start && imp.period_end ? `${formatDate(imp.period_start)} - ${formatDate(imp.period_end)}` : '-'}
-                        </TableCell>
-                        <TableCell className="text-center">{imp.total_transactions}</TableCell>
-                        <TableCell className="text-center text-green-600 font-medium">
-                          {imp.new_transactions}
-                        </TableCell>
-                        <TableCell className="text-center text-yellow-600">
-                          {imp.duplicated_transactions}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              imp.status === 'completed' ? 'default' :
-                              imp.status === 'failed' ? 'destructive' : 'secondary'
-                            }
-                          >
-                            {imp.status === 'completed' ? 'Concluído' :
-                             imp.status === 'failed' ? 'Erro' :
-                             imp.status === 'processing' ? 'Processando' : imp.status}
-                          </Badge>
-                        </TableCell>
+                <div className="min-w-[800px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Conta</TableHead>
+                        <TableHead>Período</TableHead>
+                        <TableHead className="text-center">Total</TableHead>
+                        <TableHead className="text-center">Novas</TableHead>
+                        <TableHead className="text-center">Duplicadas</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {recentImports.map((imp) => (
+                        <TableRow key={imp.id}>
+                          <TableCell>{formatDate(imp.import_date)}</TableCell>
+                          <TableCell>{imp.bank_accounts?.name}</TableCell>
+                          <TableCell className="text-sm">
+                            {imp.period_start && imp.period_end ? `${formatDate(imp.period_start)} - ${formatDate(imp.period_end)}` : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">{imp.total_transactions}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">
+                            {imp.new_transactions}
+                          </TableCell>
+                          <TableCell className="text-center text-yellow-600">
+                            {imp.duplicated_transactions}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                imp.status === 'completed' ? 'default' :
+                                  imp.status === 'failed' ? 'destructive' : 'secondary'
+                              }
+                            >
+                              {imp.status === 'completed' ? 'Concluído' :
+                                imp.status === 'failed' ? 'Erro' :
+                                  imp.status === 'processing' ? 'Processando' : imp.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Diálogo de Classificação Interativa IA-Humano */}
       <AIClassificationDialog
         open={showClassificationDialog}
         onOpenChange={setShowClassificationDialog}
