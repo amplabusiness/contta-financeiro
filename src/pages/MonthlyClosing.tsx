@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { Layout } from "@/components/Layout";
 import { getDashboardBalances, getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -416,8 +415,7 @@ const MonthlyClosing = () => {
       // Buscar despesas recorrentes ativas
       const { data: recurring, error } = await supabase
         .from("recurring_expenses")
-        .select("*")
-        .eq("is_active", true);
+        .select("*");
 
       if (error) throw error;
 
@@ -480,25 +478,22 @@ const MonthlyClosing = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <div className="flex-1 overflow-auto">
-          <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <Layout>
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 flex-wrap">
+              <div className="min-w-0">
                 <h1 className="text-3xl font-bold tracking-tight">Fechamento de Mês</h1>
                 <p className="text-muted-foreground">
                   Controle de períodos e transferência de saldos
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 min-w-0">
                 <Select
                   value={selectedYear.toString()}
                   onValueChange={(v) => setSelectedYear(parseInt(v))}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="min-w-[90px] w-auto max-w-[120px] sm:w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -513,6 +508,7 @@ const MonthlyClosing = () => {
                   variant="outline"
                   onClick={() => fetchClosings()}
                   disabled={isLoading}
+                  className="whitespace-nowrap"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Atualizar
@@ -661,7 +657,7 @@ const MonthlyClosing = () => {
                     <Receipt className="h-4 w-4 mr-2" />
                     Gerar Honorários
                   </Button>
-                  <Button variant="outline" onClick={() => navigate("/bank-reconciliation")}>
+                  <Button variant="outline" onClick={() => navigate("/bank-import")}> 
                     <CreditCard className="h-4 w-4 mr-2" />
                     Importar Extratos
                   </Button>
@@ -702,12 +698,12 @@ const MonthlyClosing = () => {
                         }`}
                       >
                         <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">{monthName}</span>
+                          <div className="flex flex-col items-center justify-center mb-2 min-w-0">
+                            <div className="flex items-center min-w-0 justify-center">
+                              <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="font-medium ml-2">{monthName}</span>
                             </div>
-                            {getStatusBadge(closing)}
+                            <div className="mt-1">{getStatusBadge(closing)}</div>
                           </div>
 
                           {closing && isClosed && (
@@ -813,8 +809,6 @@ const MonthlyClosing = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </div>
       </div>
 
       {/* Dialog Fechar Mês */}
@@ -920,7 +914,7 @@ const MonthlyClosing = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SidebarProvider>
+    </Layout>
   );
 };
 

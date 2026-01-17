@@ -16,13 +16,9 @@ export default function GenerateRecurringInvoices() {
     setResult(null);
     
     try {
-      console.log('[GenerateRecurringInvoices] Iniciando chamada da função...');
       const { data, error } = await supabase.functions.invoke('generate-recurring-invoices');
 
-      console.log('[GenerateRecurringInvoices] Resposta:', { data, error });
-
       if (error) {
-        console.error('[GenerateRecurringInvoices] Erro retornado:', error);
         throw error;
       }
 
@@ -34,15 +30,11 @@ export default function GenerateRecurringInvoices() {
         toast.error(data?.error || "Erro ao gerar honorários");
       }
     } catch (error: any) {
-      console.error("[GenerateRecurringInvoices] Erro ao gerar honorários:", error);
-
-      // Extrair mensagem de erro corretamente (context.body pode ser ReadableStream)
       let errorMessage = "Erro ao gerar honorários recorrentes";
       if (error?.message && typeof error.message === 'string') {
         errorMessage = error.message;
       }
 
-      // Tentar ler o body se for um erro de função Edge
       if (error?.context?.body && typeof error.context.body.getReader === 'function') {
         try {
           const reader = error.context.body.getReader();
@@ -50,9 +42,8 @@ export default function GenerateRecurringInvoices() {
           const bodyText = new TextDecoder().decode(value);
           const bodyJson = JSON.parse(bodyText);
           errorMessage = bodyJson.error || bodyJson.message || errorMessage;
-          console.log("[GenerateRecurringInvoices] Erro do servidor:", bodyJson);
         } catch (e) {
-          console.error("[GenerateRecurringInvoices] Erro ao ler body:", e);
+          console.error(e);
         }
       }
 
@@ -65,10 +56,10 @@ export default function GenerateRecurringInvoices() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
         <div>
-          <h1 className="text-3xl font-bold">Gerar Honorários Recorrentes 2025</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">Gerar Honorários Recorrentes 2025</h1>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Gera automaticamente as contas a receber de honorários contábeis para todo o ano de 2025
           </p>
         </div>
@@ -76,7 +67,7 @@ export default function GenerateRecurringInvoices() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-5 w-5 shrink-0" />
               Honorários de 2025
             </CardTitle>
             <CardDescription>
@@ -86,7 +77,7 @@ export default function GenerateRecurringInvoices() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
+                <div className="bg-primary/10 p-2 rounded-lg shrink-0">
                   <DollarSign className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -98,7 +89,7 @@ export default function GenerateRecurringInvoices() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
+                <div className="bg-primary/10 p-2 rounded-lg shrink-0">
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -111,17 +102,18 @@ export default function GenerateRecurringInvoices() {
             </div>
 
             <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <AlertDescription className="text-sm">
                 <strong>Atenção:</strong> Apenas clientes com status "Ativo" e com valor de honorário mensal maior que zero serão incluídos. Faturas já existentes para as mesmas competências serão ignoradas.
               </AlertDescription>
             </Alert>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={handleGenerate}
                 disabled={loading}
                 size="lg"
+                className="w-full sm:w-auto"
               >
                 {loading ? (
                   <>
@@ -140,15 +132,15 @@ export default function GenerateRecurringInvoices() {
             {result && (
               <Card className={result.success ? "border-success" : "border-destructive"}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     {result.success ? (
                       <>
-                        <CheckCircle className="h-5 w-5 text-success" />
+                        <CheckCircle className="h-5 w-5 text-success shrink-0" />
                         Honorários Gerados com Sucesso
                       </>
                     ) : (
                       <>
-                        <AlertCircle className="h-5 w-5 text-destructive" />
+                        <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                         Erro ao Gerar Honorários
                       </>
                     )}
@@ -157,7 +149,7 @@ export default function GenerateRecurringInvoices() {
                 <CardContent className="space-y-3">
                   {result.success ? (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Faturas Geradas</p>
                           <p className="text-2xl font-bold text-success">{result.generated}</p>
@@ -172,10 +164,10 @@ export default function GenerateRecurringInvoices() {
                       </p>
                       {result.errors && result.errors.length > 0 && (
                         <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
+                          <AlertCircle className="h-4 w-4 shrink-0" />
                           <AlertDescription>
                             <strong>Erros encontrados:</strong>
-                            <ul className="list-disc list-inside mt-2">
+                            <ul className="list-disc list-inside mt-2 max-h-40 overflow-y-auto">
                               {result.errors.map((error: string, index: number) => (
                                 <li key={index} className="text-sm">{error}</li>
                               ))}
@@ -185,7 +177,7 @@ export default function GenerateRecurringInvoices() {
                       )}
                     </>
                   ) : (
-                    <p className="text-destructive">{result.error || "Erro desconhecido"}</p>
+                    <p className="text-destructive text-sm sm:text-base">{result.error || "Erro desconhecido"}</p>
                   )}
                 </CardContent>
               </Card>
