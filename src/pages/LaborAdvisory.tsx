@@ -84,18 +84,23 @@ interface Consultation {
 }
 
 const LaborAdvisory = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [consulting, setConsulting] = useState(false);
+
+  // Estados de dados principais
   const [solutions, setSolutions] = useState<LaborSolution[]>([]);
   const [legislation, setLegislation] = useState<Legislation[]>([]);
   const [jurisprudence, setJurisprudence] = useState<Jurisprudence[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRiskType, setSelectedRiskType] = useState<string>("all");
-  const [showConsultDialog, setShowConsultDialog] = useState(false);
   const [consultQuestion, setConsultQuestion] = useState("");
   const [consultContext, setConsultContext] = useState("");
-  const [consulting, setConsulting] = useState(false);
   const [consultResponse, setConsultResponse] = useState<string | null>(null);
+
+  // Estados de diálogos
+  const [showConsultDialog, setShowConsultDialog] = useState(false);
 
   const riskTypes = [
     { value: "all", label: "Todos os riscos" },
@@ -105,9 +110,9 @@ const LaborAdvisory = () => {
     { value: "diarista", label: "Diarista/Domestica" },
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = async () => {
     setLoading(true);
@@ -153,6 +158,18 @@ const LaborAdvisory = () => {
       setLoading(false);
     }
   };
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleConsultation = async () => {
     if (!consultQuestion.trim()) {
@@ -204,6 +221,10 @@ Alem da visao juridica, sugiro estruturar a relacao de forma que:
     }
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const getOutcomeBadge = (outcome: string) => {
     if (outcome === "favoravel_empresa") {
       return <Badge className="bg-green-100 text-green-800">Favoravel Empresa</Badge>;
@@ -244,12 +265,12 @@ Alem da visao juridica, sugiro estruturar a relacao de forma que:
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Consultoria Trabalhista</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Consultoria Trabalhista</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Base de conhecimento juridico e solucoes para riscos trabalhistas
             </p>
           </div>
