@@ -39,12 +39,14 @@ interface AccountBalance {
 const ChartOfAccounts = () => {
   const navigate = useNavigate();
   const { selectedYear, selectedMonth } = usePeriod();
-  const [accounts, setAccounts] = useState<ChartAccount[]>([]);
-  const [balances, setBalances] = useState<Map<string, AccountBalance>>(new Map());
+
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
   const [loadingBalances, setLoadingBalances] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Estados de dados principais
+  const [accounts, setAccounts] = useState<ChartAccount[]>([]);
+  const [balances, setBalances] = useState<Map<string, AccountBalance>>(new Map());
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<ChartAccount | null>(null);
   const [formData, setFormData] = useState({
@@ -55,19 +57,13 @@ const ChartOfAccounts = () => {
     parent_id: "",
   });
 
-  const handleViewLedger = (accountId: string) => {
-    navigate(`/livro-razao?account=${accountId}`);
-  };
+  // Estados de diálogos
+  const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  useEffect(() => {
-    if (accounts.length > 0) {
-      loadBalances();
-    }
-  }, [selectedYear, selectedMonth, accounts]);
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadAccounts = async () => {
     try {
@@ -110,7 +106,7 @@ const ChartOfAccounts = () => {
 
       // Converter para Map
       const balanceMap = new Map<string, AccountBalance>();
-      
+
       (data || []).forEach((row: any) => {
         balanceMap.set(row.account_id, {
           account_id: row.account_id,
@@ -141,6 +137,28 @@ const ChartOfAccounts = () => {
     } finally {
       setLoadingBalances(false);
     }
+  };
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
+  useEffect(() => {
+    if (accounts.length > 0) {
+      loadBalances();
+    }
+  }, [selectedYear, selectedMonth, accounts]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
+  const handleViewLedger = (accountId: string) => {
+    navigate(`/livro-razao?account=${accountId}`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,16 +245,6 @@ const ChartOfAccounts = () => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      code: "",
-      name: "",
-      account_type: "DESPESA",
-      nature: "DEVEDORA",
-      parent_id: "",
-    });
-  };
-
   const handleEdit = (account: ChartAccount) => {
     setEditingAccount(account);
     setFormData({
@@ -247,6 +255,20 @@ const ChartOfAccounts = () => {
       parent_id: account.parent_id || "",
     });
     setOpen(true);
+  };
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
+  const resetForm = () => {
+    setFormData({
+      code: "",
+      name: "",
+      account_type: "DESPESA",
+      nature: "DEVEDORA",
+      parent_id: "",
+    });
   };
 
   const getParentAccounts = () => {
@@ -296,11 +318,11 @@ const ChartOfAccounts = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Plano de Contas</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Plano de Contas</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Período: {getMonthName(selectedMonth)}/{selectedYear} |
               Total: {accounts.length} contas
             </p>
