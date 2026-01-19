@@ -26,7 +26,6 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import {
-  DollarSign,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -79,14 +78,28 @@ interface OverdueSegmentation {
   threeMonths: { count: number; amount: number; clients: string[] };
 }
 
+interface OpeningBalance {
+  id: string;
+  client_id: string;
+  amount: number;
+  paid_amount: number;
+  due_date: string | null;
+  competence: string;
+  status: string;
+  clients: { id: string; name: string } | null;
+}
+
 const FeesAnalysis = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Estados de carregamento
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estados de dados principais
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("all");
-  // Iniciar com janeiro/2025 que é o último mês com dados fechados
   const [selectedMonth, setSelectedMonth] = useState<string>("2025-01");
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
@@ -115,16 +128,9 @@ const FeesAnalysis = () => {
   const [groupMemberIds, setGroupMemberIds] = useState<Set<string>>(new Set());
   const [mainPayerIds, setMainPayerIds] = useState<Set<string>>(new Set());
 
-  interface OpeningBalance {
-    id: string;
-    client_id: string;
-    amount: number;
-    paid_amount: number;
-    due_date: string | null;
-    competence: string;
-    status: string;
-    clients: { id: string; name: string } | null;
-  }
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const calculateOverdueSegmentation = useCallback((
     overdueInvoices: Invoice[],
@@ -443,9 +449,17 @@ const FeesAnalysis = () => {
     }
   }, [selectedMonth, selectedYear, selectedClient, viewMode, toast, calculateStatistics, checkMissingBillings]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -487,21 +501,14 @@ const FeesAnalysis = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 overflow-auto">
-          <div className="container mx-auto py-8 px-4 max-w-7xl">
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold">Análise de Honorários</h1>
-                    <p className="text-muted-foreground">
-                      Visão completa de faturamento, recebimento e inadimplência
-                    </p>
-                  </div>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Análise de Honorários</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  Visão completa de faturamento, recebimento e inadimplência
+                </p>
               </div>
             </div>
 
