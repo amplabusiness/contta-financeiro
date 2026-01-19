@@ -54,24 +54,33 @@ interface InvoiceInfo {
 }
 
 const PendingReconciliations = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Estados de dados principais
   const [pending, setPending] = useState<PendingReconciliation[]>([]);
   const [approved, setApproved] = useState<PendingReconciliation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [invoiceInfo, setInvoiceInfo] = useState<InvoiceInfo>({});
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+
+  // Estados de diálogos
   const [rejectionDialog, setRejectionDialog] = useState<{
     visible: boolean;
     reconciliationId?: string;
     reason: string;
   }>({ visible: false, reason: "" });
-  const [processingId, setProcessingId] = useState<string | null>(null);
   const [approvalDialog, setApprovalDialog] = useState<{
     visible: boolean;
     reconciliationId?: string;
     chartAccountId: string;
     costCenterId: string;
   }>({ visible: false, chartAccountId: "", costCenterId: "" });
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadInvoiceInfo = useCallback(async (invoiceIds: string[]) => {
     try {
@@ -162,11 +171,19 @@ const PendingReconciliations = () => {
     }
   }, []);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadPendingReconciliations();
     loadChartOfAccounts();
     loadCostCenters();
   }, [loadPendingReconciliations, loadChartOfAccounts, loadCostCenters]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES - Aprovação e Rejeição
+  // =====================================================
 
   const handleApproveClick = (reconciliationId: string) => {
     setApprovalDialog({
@@ -330,17 +347,24 @@ const PendingReconciliations = () => {
     }
   };
 
-  const approvedCount = pending.filter(p => p.status === "approved").length + approved.length; // Adjusted logic to include loaded approved items
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
+  const approvedCount = pending.filter(p => p.status === "approved").length + approved.length;
   const rejectedCount = pending.filter(p => p.status === "rejected" || !!p.rejected_reason).length;
 
   return (
     <Layout>
-      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Conciliações Pendentes</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Revise e aproves matches sugeridos entre CNAB e faturas
-          </p>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Conciliações Pendentes</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Revise e aprove matches sugeridos entre CNAB e faturas
+            </p>
+          </div>
         </div>
 
         {pending.length === 0 && approved.length === 0 && !loading ? (
