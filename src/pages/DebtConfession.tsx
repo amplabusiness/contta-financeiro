@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +79,8 @@ interface DebtConfession {
   first_due_date: string;
   status: string;
   created_at: string;
+  content?: string;
+  original_amount?: number;
   clients?: { name: string; cnpj: string };
 }
 
@@ -144,21 +145,19 @@ const defaultOfficeData: OfficeData = {
 
 const DebtConfession = () => {
   const { toast } = useToast();
+
+  // Estados de carregamento
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estados de dados principais
   const [confessions, setConfessions] = useState<DebtConfession[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<PendingInvoice[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showNewConfession, setShowNewConfession] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [confessionToDelete, setConfessionToDelete] = useState<DebtConfession | null>(null);
-  const [confessionToView, setConfessionToView] = useState<DebtConfession | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [confessionPreview, setConfessionPreview] = useState("");
   const [officeData, setOfficeData] = useState<OfficeData>(defaultOfficeData);
-
   const [formData, setFormData] = useState({
     client_id: "",
     discount_percentage: "0",
@@ -168,7 +167,17 @@ const DebtConfession = () => {
     notes: "",
   });
 
-  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
+  // Estados de diálogos
+  const [showNewConfession, setShowNewConfession] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [confessionToDelete, setConfessionToDelete] = useState<DebtConfession | null>(null);
+  const [confessionToView, setConfessionToView] = useState<DebtConfession | null>(null);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const fetchOfficeData = useCallback(async () => {
     try {
@@ -372,11 +381,19 @@ const DebtConfession = () => {
     }
   }, []);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     fetchOfficeData();
     fetchClients();
     fetchConfessions();
   }, [fetchOfficeData, fetchClients, fetchConfessions]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
@@ -405,6 +422,10 @@ const DebtConfession = () => {
       setSelectedInvoices(pendingInvoices.map(inv => inv.id));
     }
   };
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const calculateTotals = () => {
     const selectedItems = pendingInvoices.filter(inv => selectedInvoices.includes(inv.id));
@@ -854,422 +875,412 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
   const totals = calculateTotals();
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <div className="flex-1 overflow-auto">
-          <div className="container mx-auto py-8 px-4 max-w-7xl">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold">Confissão de Dívida</h1>
-                    <p className="text-muted-foreground">
-                      Título Executivo Extrajudicial - Art. 585, II do CPC
-                    </p>
-                  </div>
-                </div>
+    <Layout>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Confissão de Dívida</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Título Executivo Extrajudicial - Art. 585, II do CPC
+            </p>
+          </div>
+          <Button onClick={() => setShowNewConfession(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Confissão
+          </Button>
+        </div>
+
+        {/* Info Card */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-amber-900">Título Executivo Extrajudicial</h4>
+              <p className="text-sm text-amber-800">
+                A confissão de dívida assinada pelo devedor constitui título executivo extrajudicial,
+                permitindo a execução direta em caso de inadimplência, sem necessidade de processo
+                de conhecimento prévio.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold">{confessions.length}</div>
+              <p className="text-xs text-muted-foreground">Total de Confissões</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-green-600">
+                {confessions.filter(c => c.status === "active" || c.status === "signed").length}
+              </div>
+              <p className="text-xs text-muted-foreground">Em Andamento</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-blue-600">
+                R$ {confessions
+                  .filter(c => c.status === "active" || c.status === "signed")
+                  .reduce((sum, c) => sum + Number(c.final_amount), 0)
+                  .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground">Valor em Acordos</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-emerald-600">
+                {confessions.filter(c => c.status === "completed").length}
+              </div>
+              <p className="text-xs text-muted-foreground">Quitados</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Confissões de Dívida</CardTitle>
+            <CardDescription>Acordos de parcelamento firmados com clientes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {confessions.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma confissão registrada</h3>
+                <p className="text-muted-foreground mb-4">
+                  Crie confissões de dívida para formalizar acordos
+                </p>
                 <Button onClick={() => setShowNewConfession(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Nova Confissão
+                  Criar Confissão
                 </Button>
               </div>
-            </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nº Documento</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Valor Original</TableHead>
+                    <TableHead>Valor Final</TableHead>
+                    <TableHead>Parcelas</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {confessions.map((confession) => (
+                    <TableRow key={confession.id}>
+                      <TableCell className="font-mono text-sm">
+                        {confession.confession_number}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {confession.clients?.name}
+                      </TableCell>
+                      <TableCell>
+                        R$ {Number(confession.total_debt).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        R$ {Number(confession.final_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>
+                        {confession.installments}x de R$ {Number(confession.installment_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(confession.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewConfession(confession)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Visualizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCopyConfessionDocument(confession)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copiar Documento
+                            </DropdownMenuItem>
+                            {confession.status !== "completed" && (
+                              <DropdownMenuItem onClick={() => handleSendToClient(confession)}>
+                                <Send className="h-4 w-4 mr-2" />
+                                Enviar ao Cliente
+                              </DropdownMenuItem>
+                            )}
+                            {confession.status === "draft" && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => handleDeleteConfession(confession)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir Rascunho
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-            {/* Info Card */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <div className="flex gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-amber-900">Título Executivo Extrajudicial</h4>
-                  <p className="text-sm text-amber-800">
-                    A confissão de dívida assinada pelo devedor constitui título executivo extrajudicial,
-                    permitindo a execução direta em caso de inadimplência, sem necessidade de processo
-                    de conhecimento prévio.
-                  </p>
-                </div>
+        {/* New Confession Dialog */}
+        <Dialog open={showNewConfession} onOpenChange={setShowNewConfession}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nova Confissão de Dívida</DialogTitle>
+              <DialogDescription>
+                Selecione o cliente e os débitos para gerar o termo de confissão
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Cliente */}
+              <div className="space-y-2">
+                <Label>Cliente Devedor *</Label>
+                <Select
+                  value={formData.client_id}
+                  onValueChange={handleClientChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name} {client.cnpj && `- ${client.cnpj}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">{confessions.length}</div>
-                  <p className="text-xs text-muted-foreground">Total de Confissões</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-green-600">
-                    {confessions.filter(c => c.status === "active" || c.status === "signed").length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Em Andamento</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-blue-600">
-                    R$ {confessions
-                      .filter(c => c.status === "active" || c.status === "signed")
-                      .reduce((sum, c) => sum + Number(c.final_amount), 0)
-                      .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Valor em Acordos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {confessions.filter(c => c.status === "completed").length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Quitados</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Confissões de Dívida</CardTitle>
-                <CardDescription>Acordos de parcelamento firmados com clientes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {confessions.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Nenhuma confissão registrada</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Crie confissões de dívida para formalizar acordos
-                    </p>
-                    <Button onClick={() => setShowNewConfession(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Criar Confissão
+              {/* Débitos Pendentes */}
+              {selectedClient && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Débitos Pendentes</Label>
+                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                      {selectedInvoices.length === pendingInvoices.length ? "Desmarcar Todos" : "Selecionar Todos"}
                     </Button>
                   </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nº Documento</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Valor Original</TableHead>
-                        <TableHead>Valor Final</TableHead>
-                        <TableHead>Parcelas</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {confessions.map((confession) => (
-                        <TableRow key={confession.id}>
-                          <TableCell className="font-mono text-sm">
-                            {confession.confession_number}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {confession.clients?.name}
-                          </TableCell>
-                          <TableCell>
-                            R$ {Number(confession.total_debt).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            R$ {Number(confession.final_amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>
-                            {confession.installments}x de R$ {Number(confession.installment_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(confession.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewConfession(confession)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Visualizar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleCopyConfessionDocument(confession)}>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Copiar Documento
-                                </DropdownMenuItem>
-                                {confession.status !== "completed" && (
-                                  <DropdownMenuItem onClick={() => handleSendToClient(confession)}>
-                                    <Send className="h-4 w-4 mr-2" />
-                                    Enviar ao Cliente
-                                  </DropdownMenuItem>
-                                )}
-                                {confession.status === "draft" && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-red-600"
-                                      onClick={() => handleDeleteConfession(confession)}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Excluir Rascunho
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* New Confession Dialog */}
-            <Dialog open={showNewConfession} onOpenChange={setShowNewConfession}>
-              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Nova Confissão de Dívida</DialogTitle>
-                  <DialogDescription>
-                    Selecione o cliente e os débitos para gerar o termo de confissão
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6">
-                  {/* Cliente */}
-                  <div className="space-y-2">
-                    <Label>Cliente Devedor *</Label>
-                    <Select
-                      value={formData.client_id}
-                      onValueChange={handleClientChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name} {client.cnpj && `- ${client.cnpj}`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Débitos Pendentes */}
-                  {selectedClient && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Débitos Pendentes</Label>
-                        <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                          {selectedInvoices.length === pendingInvoices.length ? "Desmarcar Todos" : "Selecionar Todos"}
-                        </Button>
-                      </div>
-
-                      {pendingInvoices.length === 0 ? (
-                        <div className="text-center py-8 border rounded-lg bg-muted/50">
-                          <DollarSign className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-muted-foreground">
-                            Este cliente não possui débitos pendentes
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="border rounded-lg max-h-64 overflow-y-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-12"></TableHead>
-                                <TableHead>Competência</TableHead>
-                                <TableHead>Descrição</TableHead>
-                                <TableHead>Vencimento</TableHead>
-                                <TableHead>Dias Atraso</TableHead>
-                                <TableHead className="text-right">Valor</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {pendingInvoices.map((invoice) => (
-                                <TableRow key={invoice.id} className={invoice.source === "opening_balance" ? "bg-yellow-50" : ""}>
-                                  <TableCell>
-                                    <Checkbox
-                                      checked={selectedInvoices.includes(invoice.id)}
-                                      onCheckedChange={() => handleInvoiceToggle(invoice.id)}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center gap-2">
-                                      {invoice.reference_month}
-                                      {invoice.source === "opening_balance" && (
-                                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
-                                          Abertura
-                                        </Badge>
-                                      )}
-                                      {invoice.source === "accounting" && (
-                                        <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
-                                          Contábil
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-sm text-muted-foreground">
-                                    {invoice.description || `Honorários ${invoice.reference_month}`}
-                                  </TableCell>
-                                  <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
-                                  <TableCell>
-                                    <Badge variant={invoice.days_overdue > 60 ? "destructive" : "outline"}>
-                                      {invoice.days_overdue} dias
+                  {pendingInvoices.length === 0 ? (
+                    <div className="text-center py-8 border rounded-lg bg-muted/50">
+                      <DollarSign className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">
+                        Este cliente não possui débitos pendentes
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg max-h-64 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12"></TableHead>
+                            <TableHead>Competência</TableHead>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead>Vencimento</TableHead>
+                            <TableHead>Dias Atraso</TableHead>
+                            <TableHead className="text-right">Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pendingInvoices.map((invoice) => (
+                            <TableRow key={invoice.id} className={invoice.source === "opening_balance" ? "bg-yellow-50" : ""}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedInvoices.includes(invoice.id)}
+                                  onCheckedChange={() => handleInvoiceToggle(invoice.id)}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {invoice.reference_month}
+                                  {invoice.source === "opening_balance" && (
+                                    <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
+                                      Abertura
                                     </Badge>
-                                  </TableCell>
-                                  <TableCell className="text-right font-medium">
-                                    R$ {Number(invoice.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
+                                  )}
+                                  {invoice.source === "accounting" && (
+                                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                      Contábil
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {invoice.description || `Honorários ${invoice.reference_month}`}
+                              </TableCell>
+                              <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
+                              <TableCell>
+                                <Badge variant={invoice.days_overdue > 60 ? "destructive" : "outline"}>
+                                  {invoice.days_overdue} dias
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                R$ {Number(invoice.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
-
-                  {/* Condições do Acordo */}
-                  {selectedInvoices.length > 0 && (
-                    <>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>Desconto (%)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="50"
-                            value={formData.discount_percentage}
-                            onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Nº de Parcelas</Label>
-                          <Select
-                            value={formData.installments}
-                            onValueChange={(value) => setFormData({ ...formData, installments: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
-                                <SelectItem key={n} value={n.toString()}>{n}x</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>1º Vencimento</Label>
-                          <Input
-                            type="date"
-                            value={formData.first_due_date}
-                            onChange={(e) => setFormData({ ...formData, first_due_date: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Resumo */}
-                      <div className="bg-muted rounded-lg p-4 space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <Calculator className="w-4 h-4" />
-                          Resumo do Acordo
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-muted-foreground">Débitos selecionados</p>
-                            <p className="font-medium">{totals.invoiceCount} fatura(s)</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Valor original</p>
-                            <p className="font-medium">R$ {totals.totalDebt.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Desconto</p>
-                            <p className="font-medium text-green-600">
-                              - R$ {totals.discountAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Valor final</p>
-                            <p className="font-bold text-lg">
-                              R$ {totals.finalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t">
-                          <p className="font-medium">
-                            {formData.installments}x de R$ {totals.installmentValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  )}
                 </div>
+              )}
 
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => { setShowNewConfession(false); resetForm(); }}>
-                    Cancelar
-                  </Button>
-                  <Button variant="outline" onClick={handlePreview} disabled={selectedInvoices.length === 0}>
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              {/* Condições do Acordo */}
+              {selectedInvoices.length > 0 && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Desconto (%)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={formData.discount_percentage}
+                        onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Nº de Parcelas</Label>
+                      <Select
+                        value={formData.installments}
+                        onValueChange={(value) => setFormData({ ...formData, installments: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                            <SelectItem key={n} value={n.toString()}>{n}x</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>1º Vencimento</Label>
+                      <Input
+                        type="date"
+                        value={formData.first_due_date}
+                        onChange={(e) => setFormData({ ...formData, first_due_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
 
-            {/* Preview Dialog */}
-            <Dialog open={showPreview} onOpenChange={setShowPreview}>
-              <DialogContent className="max-w-5xl max-h-[90vh]">
-                <DialogHeader>
-                  <DialogTitle>Confissão de Dívida - Preview</DialogTitle>
-                  <DialogDescription>
-                    Documento para assinatura do cliente devedor
-                  </DialogDescription>
-                </DialogHeader>
+                  {/* Resumo */}
+                  <div className="bg-muted rounded-lg p-4 space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Calculator className="w-4 h-4" />
+                      Resumo do Acordo
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Débitos selecionados</p>
+                        <p className="font-medium">{totals.invoiceCount} fatura(s)</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Valor original</p>
+                        <p className="font-medium">R$ {totals.totalDebt.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Desconto</p>
+                        <p className="font-medium text-green-600">
+                          - R$ {totals.discountAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Valor final</p>
+                        <p className="font-bold text-lg">
+                          R$ {totals.finalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <p className="font-medium">
+                        {formData.installments}x de R$ {totals.installmentValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
-                <ScrollArea className="h-[60vh] border rounded-lg">
-                  <pre className="p-6 text-xs font-mono whitespace-pre-wrap bg-white">
-                    {confessionPreview}
-                  </pre>
-                </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setShowNewConfession(false); resetForm(); }}>
+                Cancelar
+              </Button>
+              <Button variant="outline" onClick={handlePreview} disabled={selectedInvoices.length === 0}>
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowPreview(false)}>
-                    Fechar
-                  </Button>
-                  <Button variant="outline" onClick={handleCopyDocument}>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copiar
-                  </Button>
-                  <Button onClick={handleSaveConfession}>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Salvar Documento
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+        {/* Preview Dialog */}
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-5xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Confissão de Dívida - Preview</DialogTitle>
+              <DialogDescription>
+                Documento para assinatura do cliente devedor
+              </DialogDescription>
+            </DialogHeader>
 
-            {/* View Confession Dialog */}
-            <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {confessionToView?.confession_number}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Confissão de Dívida - {confessionToView?.clients?.name}
-                  </DialogDescription>
-                </DialogHeader>
+            <ScrollArea className="h-[60vh] border rounded-lg">
+              <pre className="p-6 text-xs font-mono whitespace-pre-wrap bg-white">
+                {confessionPreview}
+              </pre>
+            </ScrollArea>
 
-                <div className="space-y-4">
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                Fechar
+              </Button>
+              <Button variant="outline" onClick={handleCopyDocument}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copiar
+              </Button>
+              <Button onClick={handleSaveConfession}>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Salvar Documento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Confession Dialog */}
+        <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {confessionToView?.confession_number}
+              </DialogTitle>
+              <DialogDescription>
+                Confissão de Dívida - {confessionToView?.clients?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
                   {/* Resumo */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
                     <div>
@@ -1301,68 +1312,66 @@ Art. 585, II do CPC. Guarde uma via assinada para seus registros.
                     <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
                       {confessionToView?.content || "Documento não disponível"}
                     </pre>
-                  </div>
-                </div>
+              </div>
+            </div>
 
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (confessionToView?.content) {
-                        navigator.clipboard.writeText(confessionToView.content);
-                        toast({
-                          title: "Documento copiado",
-                          description: "O texto foi copiado para a área de transferência.",
-                        });
-                      }
-                    }}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copiar
-                  </Button>
-                  <Button onClick={() => setShowViewDialog(false)}>
-                    Fechar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (confessionToView?.content) {
+                    navigator.clipboard.writeText(confessionToView.content);
+                    toast({
+                      title: "Documento copiado",
+                      description: "O texto foi copiado para a área de transferência.",
+                    });
+                  }
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar
+              </Button>
+              <Button onClick={() => setShowViewDialog(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir Confissão de Dívida</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tem certeza que deseja excluir o documento "{confessionToDelete?.confession_number}"?
-                    Esta ação não pode ser desfeita.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={confirmDeleteConfession}
-                    className="bg-red-600 hover:bg-red-700"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Excluindo...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Excluir
-                      </>
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir Confissão de Dívida</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o documento "{confessionToDelete?.confession_number}"?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteConfession}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-    </SidebarProvider>
+    </Layout>
   );
 };
 
