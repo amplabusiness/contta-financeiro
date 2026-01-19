@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, CheckCircle, DollarSign, Loader2, AlertCircle, TrendingUp, RefreshCw, Download, Upload, FileSpreadsheet, Layers, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, Loader2, AlertCircle, RefreshCw, Download, FileSpreadsheet, Layers, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import * as XLSX from "xlsx";
@@ -62,20 +62,19 @@ interface TransacaoConsolidada {
 
 const HonorariosFlow = () => {
   const { registrarHonorario, registrarRecebimento } = useAccounting({ showToasts: false, sourceModule: 'HonorariosFlow' });
+
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [honorarios, setHonorarios] = useState<HonorarioRecord[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [editingHonorario, setEditingHonorario] = useState<HonorarioRecord | null>(null);
   const [bankAccountId, setBankAccountId] = useState<string>("");
-  const [showImportDialog, setShowImportDialog] = useState(false);
   const [importResult, setImportResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
 
-  const [showComposicaoDialog, setShowComposicaoDialog] = useState(false);
-  const [transacoesConsolidadas, setTransacoesConsolidadas] = useState<TransacaoConsolidada[]>([]);
-  const [selectedTransacao, setSelectedTransacao] = useState<TransacaoConsolidada | null>(null);
-  const [selectedHonorariosIds, setSelectedHonorariosIds] = useState<string[]>([]);
-
+  // Estados de diálogos - CRUD
+  const [open, setOpen] = useState(false);
+  const [editingHonorario, setEditingHonorario] = useState<HonorarioRecord | null>(null);
   const [formData, setFormData] = useState({
     client_id: "",
     amount: "",
@@ -83,6 +82,16 @@ const HonorariosFlow = () => {
     competence: "",
     description: "",
   });
+
+  // Estados de diálogos - Composição Manual
+  const [showComposicaoDialog, setShowComposicaoDialog] = useState(false);
+  const [transacoesConsolidadas, setTransacoesConsolidadas] = useState<TransacaoConsolidada[]>([]);
+  const [selectedTransacao, setSelectedTransacao] = useState<TransacaoConsolidada | null>(null);
+  const [selectedHonorariosIds, setSelectedHonorariosIds] = useState<string[]>([]);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = useCallback(async () => {
     try {
@@ -111,9 +120,17 @@ const HonorariosFlow = () => {
     }
   }, [clients]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const resetForm = () => {
     setFormData({
@@ -125,6 +142,30 @@ const HonorariosFlow = () => {
     });
     setEditingHonorario(null);
   };
+
+  const toggleHonorarioSelection = (honorarioId: string) => {
+    setSelectedHonorariosIds(prev =>
+      prev.includes(honorarioId)
+        ? prev.filter(id => id !== honorarioId)
+        : [...prev, honorarioId]
+    );
+  };
+
+  const totalSelecionado = honorarios
+    .filter(h => selectedHonorariosIds.includes(h.id))
+    .reduce((sum, h) => sum + h.amount, 0);
+
+  const stats = {
+    total: honorarios.length,
+    pending: honorarios.filter(h => h.status === "pending").length,
+    paid: honorarios.filter(h => h.status === "paid").length,
+    totalAmount: honorarios.reduce((sum, h) => sum + h.amount, 0),
+    pendingAmount: honorarios.filter(h => h.status === "pending").reduce((sum, h) => sum + h.amount, 0),
+  };
+
+  // =====================================================
+  // HANDLERS DE AÇÕES - CRUD
+  // =====================================================
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -566,18 +607,6 @@ const HonorariosFlow = () => {
     }
   };
 
-  const toggleHonorarioSelection = (honorarioId: string) => {
-    setSelectedHonorariosIds(prev =>
-      prev.includes(honorarioId)
-        ? prev.filter(id => id !== honorarioId)
-        : [...prev, honorarioId]
-    );
-  };
-
-  const totalSelecionado = honorarios
-    .filter(h => selectedHonorariosIds.includes(h.id))
-    .reduce((sum, h) => sum + h.amount, 0);
-
   const handleConfirmarComposicao = async () => {
     if (!selectedTransacao) {
       toast.error("Selecione uma transação consolidada");
@@ -681,24 +710,14 @@ const HonorariosFlow = () => {
     setOpen(true);
   };
 
-  const stats = {
-    total: honorarios.length,
-    pending: honorarios.filter(h => h.status === "pending").length,
-    paid: honorarios.filter(h => h.status === "paid").length,
-    totalAmount: honorarios.reduce((sum, h) => sum + h.amount, 0),
-    pendingAmount: honorarios.filter(h => h.status === "pending").reduce((sum, h) => sum + h.amount, 0),
-  };
-
   return (
     <Layout>
-      <div className="space-y-6 px-1 sm:px-0 w-full max-w-[100vw] overflow-hidden">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-              <DollarSign className="h-7 w-7 sm:h-8 sm:w-8" />
-              Fluxo de Honorários
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Fluxo de Honorários</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Gerenciamento completo de honorários com lançamentos contábeis automáticos
             </p>
           </div>
