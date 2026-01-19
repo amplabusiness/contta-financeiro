@@ -37,33 +37,29 @@ interface DiarioEntry {
 }
 
 const LivroDiario = () => {
-  const [entries, setEntries] = useState<DiarioEntry[]>([])
+  // Estados de carregamento
   const [loading, setLoading] = useState(true)
+
+  // Estados de dados principais
+  const [entries, setEntries] = useState<DiarioEntry[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([])
+  const [auditHistory, setAuditHistory] = useState<any[]>([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [launchDate, setLaunchDate] = useState('')
   const [filterMode, setFilterMode] = useState<'range' | 'specific'>('range')
   const [dateFilterType, setDateFilterType] = useState<'entry_date' | 'created_at'>('entry_date')
+
+  // Estados de diálogos
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingLine, setEditingLine] = useState<DiarioEntry | null>(null)
-  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([])
-  const [auditHistory, setAuditHistory] = useState<any[]>([])
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
   const [selectedEntryId, setSelectedEntryId] = useState<string>('')
 
-  useEffect(() => {
-    // Usar o ano inteiro para mostrar todos os lançamentos por padrão
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
-
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
-
-    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
-    loadChartOfAccounts()
-  }, [])
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadChartOfAccounts = async () => {
     try {
@@ -156,6 +152,27 @@ const LivroDiario = () => {
       setLoading(false)
     }
   }
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    // Usar o ano inteiro para mostrar todos os lançamentos por padrão
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
+    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
+
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+
+    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
+    loadChartOfAccounts()
+  }, [])
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleFilter = () => {
     if (filterMode === 'specific' && launchDate) {
@@ -288,6 +305,10 @@ const LivroDiario = () => {
     }
   }
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const groupedEntries = entries.reduce((acc, entry) => {
     if (!acc[entry.numero_lancamento]) acc[entry.numero_lancamento] = []
     acc[entry.numero_lancamento].push(entry)
@@ -321,10 +342,10 @@ const LivroDiario = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Livro Diário</h1>
-          <p className="text-muted-foreground">Registro cronológico de todos os lançamentos contábeis</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Livro Diário</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Registro cronológico de todos os lançamentos contábeis</p>
         </div>
 
         <Card>
