@@ -90,19 +90,18 @@ const MONTHS = [
 ];
 
 const RazaoContabil = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+  const [loadingEntries, setLoadingEntries] = useState(false);
+
+  // Estados de dados principais
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountBalances, setAccountBalances] = useState<Map<string, AccountBalance>>(new Map());
   const [selectedAccount, setSelectedAccount] = useState<SelectedAccount | null>(null);
-  const [loadingEntries, setLoadingEntries] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "1" | "2" | "3" | "4" | "5">("all");
-  
-  // Configuração de período
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  
-  // Expandir grupos
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["1", "2", "3", "4", "5"]));
 
   const years = [2024, 2025, 2026];
@@ -112,7 +111,10 @@ const RazaoContabil = () => {
   const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
   const periodEnd = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${lastDay}`;
 
-  // Carregar contas e saldos
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -149,11 +151,6 @@ const RazaoContabil = () => {
     }
   }, [periodStart, periodEnd]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Carregar lançamentos de uma conta específica
   const loadAccountEntries = async (account: Account) => {
     setLoadingEntries(true);
     try {
@@ -258,29 +255,18 @@ const RazaoContabil = () => {
     }
   };
 
-  // Filtrar contas
-  const filteredAccounts = accounts.filter((acc) => {
-    const matchesSearch = 
-      searchTerm === "" ||
-      acc.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      acc.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = 
-      filterType === "all" || 
-      acc.code.startsWith(filterType);
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
 
-    return matchesSearch && matchesType;
-  });
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  // Agrupar contas por primeiro dígito
-  const groupedAccounts = filteredAccounts.reduce((groups, acc) => {
-    const group = acc.code[0];
-    if (!groups[group]) groups[group] = [];
-    groups[group].push(acc);
-    return groups;
-  }, {} as Record<string, Account[]>);
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
-  // Toggle grupo
   const toggleGroup = (group: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(group)) {
@@ -291,7 +277,6 @@ const RazaoContabil = () => {
     setExpandedGroups(newExpanded);
   };
 
-  // Exportar Razão para CSV
   const exportToCSV = () => {
     if (!selectedAccount) {
       toast.error("Selecione uma conta para exportar");
@@ -330,7 +315,31 @@ const RazaoContabil = () => {
     link.click();
   };
 
-  // Nome do grupo
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
+  const filteredAccounts = accounts.filter((acc) => {
+    const matchesSearch = 
+      searchTerm === "" ||
+      acc.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      acc.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = 
+      filterType === "all" || 
+      acc.code.startsWith(filterType);
+
+    return matchesSearch && matchesType;
+  });
+
+  // Agrupar contas por primeiro dígito
+  const groupedAccounts = filteredAccounts.reduce((groups, acc) => {
+    const group = acc.code[0];
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(acc);
+    return groups;
+  }, {} as Record<string, Account[]>);
+
   const getGroupName = (group: string) => {
     const names: Record<string, string> = {
       "1": "1 - ATIVO",
@@ -344,15 +353,14 @@ const RazaoContabil = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               Livro Razão
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Movimentação detalhada por conta contábil
             </p>
           </div>
