@@ -87,7 +87,6 @@ const EconomicGroupAnalysis = () => {
       const endDate = new Date(year, month, 0, 23, 59, 59);
 
       // Buscar clientes ativos com QSA
-      // @ts-expect-error - Supabase type recursion issue
       const clientsResult = await supabase
         .from('clients')
         .select('id, name, cnpj, qsa, monthly_fee')
