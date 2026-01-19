@@ -67,6 +67,7 @@ import ImportCNAB from "./pages/ImportCNAB";
 import PendingReconciliations from "./pages/PendingReconciliations";
 import AccountsPayable from "./pages/AccountsPayable";
 import CashFlow from "./pages/CashFlow";
+import CashFlowProjections from "./pages/CashFlowProjections";
 import DefaultAnalysis from "./pages/DefaultAnalysis";
 import ImportDefaultReport from "./pages/ImportDefaultReport";
 import ImportHonorarios from "./pages/ImportHonorarios";
@@ -146,6 +147,7 @@ const appRoutes = [
   { path: "/boleto-reports-dashboard", element: <BoletoReportsDashboard /> },
   { path: "/business-manager", element: <BusinessManager /> },
   { path: "/cash-flow", element: <CashFlow /> },
+  { path: "/cash-flow-projections", element: <CashFlowProjections /> },
   { path: "/chart-of-accounts", element: <ChartOfAccounts /> },
   { path: "/client-comparison-verification", element: <ClientComparisonVerification /> },
   { path: "/client-dashboard", element: <ClientDashboard /> },
@@ -299,6 +301,7 @@ const App = () => (
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
             <Route path="/cash-flow" element={<CashFlow />} />
+            <Route path="/cash-flow-projections" element={<CashFlowProjections />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
             <Route path="/import-default-report" element={<ImportDefaultReport />} />
             <Route path="/ai-insights" element={<AIInsights />} />
