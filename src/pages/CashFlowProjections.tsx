@@ -60,15 +60,25 @@ const CashFlowProjections = () => {
   const loadProjections = async () => {
     try {
       setLoading(true);
+      console.log('[CashFlowProjections] Loading projections...');
       const { data, error } = await supabase
         .from("cash_flow_projections")
         .select("*")
         .order("projection_date", { ascending: true });
 
       if (error) throw error;
+      console.log('[CashFlowProjections] Loaded projections:', {
+        total: data?.length || 0,
+        active: data?.filter(p => p.is_active).length || 0,
+        inactive: data?.filter(p => !p.is_active).length || 0,
+        byType: data?.reduce((acc, p) => {
+          acc[p.projection_type] = (acc[p.projection_type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      });
       setProjections(data || []);
     } catch (error: any) {
-      console.error("Erro ao carregar projeções:", error);
+      console.error("[CashFlowProjections] Erro ao carregar projeções:", error);
       toast.error("Erro ao carregar projeções");
     } finally {
       setLoading(false);
