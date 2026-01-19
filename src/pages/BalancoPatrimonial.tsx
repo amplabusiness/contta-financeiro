@@ -9,7 +9,6 @@ import { formatCurrency } from "@/data/expensesData";
 import {
   RefreshCw,
   Download,
-  Scale,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -86,7 +85,10 @@ const MONTHS = [
 ];
 
 const BalancoPatrimonial = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [data, setData] = useState<BalanceSheetData>({
     ativoCirculante: [],
     ativoNaoCirculante: [],
@@ -107,14 +109,10 @@ const BalancoPatrimonial = () => {
       previousTotalPassivoMaisPL: 0,
     },
   });
-  
-  // Expandir grupos
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([
-    "ativo-circulante", "ativo-nao-circulante", 
+    "ativo-circulante", "ativo-nao-circulante",
     "passivo-circulante", "passivo-nao-circulante", "pl"
   ]));
-  
-  // Configuração de período
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [showComparison, setShowComparison] = useState(true);
@@ -125,7 +123,10 @@ const BalancoPatrimonial = () => {
   const periodEnd = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${new Date(selectedYear, selectedMonth, 0).getDate()}`;
   const periodStart = `${selectedYear}-01-01`; // Início do ano para acumulado
 
-  // Período anterior (mês anterior)
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const getPreviousPeriod = useCallback(() => {
     let prevYear = selectedYear;
     let prevMonth = selectedMonth - 1;
@@ -305,11 +306,18 @@ const BalancoPatrimonial = () => {
     }
   }, [periodStart, periodEnd, getPreviousPeriod]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Toggle grupo
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
   const toggleGroup = (group: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(group)) {
@@ -320,10 +328,12 @@ const BalancoPatrimonial = () => {
     setExpandedGroups(newExpanded);
   };
 
-  // Verificar se está equilibrado
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const isBalanced = Math.abs(data.totals.totalAtivo - data.totals.totalPassivoMaisPL) < 0.01;
 
-  // Formatar percentual
   const formatPercent = (value: number) => {
     if (isNaN(value) || !isFinite(value)) return "-";
     return `${value.toFixed(1)}%`;
@@ -427,15 +437,14 @@ const BalancoPatrimonial = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Scale className="w-8 h-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               Balanço Patrimonial
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Posição patrimonial e financeira da empresa
             </p>
           </div>
