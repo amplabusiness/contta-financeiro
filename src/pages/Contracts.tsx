@@ -233,36 +233,30 @@ const contractServices = {
 const Contracts = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Estados de carregamento
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingDebts, setLoadingDebts] = useState(false);
+  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
+
+  // Estados de dados principais
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [officeData, setOfficeData] = useState<AccountingOffice>(defaultOfficeData);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showNewContract, setShowNewContract] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [contractPreview, setContractPreview] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-
-  // Estados para cobrança de inadimplentes
-  const [showCollectionDialog, setShowCollectionDialog] = useState(false);
   const [selectedDebtorContract, setSelectedDebtorContract] = useState<Contract | null>(null);
   const [debtorPartners, setDebtorPartners] = useState<ClientPartner[]>([]);
   const [collectionDays, setCollectionDays] = useState("5");
   const [debtAmount, setDebtAmount] = useState("");
   const [debtMonths, setDebtMonths] = useState("");
   const [clientDebts, setClientDebts] = useState<{competence: string; due_date: string; amount: number; description: string}[]>([]);
-  const [loadingDebts, setLoadingDebts] = useState(false);
-
-  // Estados para geração em lote
-  const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [eligibleClients, setEligibleClients] = useState<EligibleClient[]>([]);
   const [clientsWithWarnings, setClientsWithWarnings] = useState<EligibleClient[]>([]);
-  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
   const [batchTotal, setBatchTotal] = useState(0);
   const [generatedContracts, setGeneratedContracts] = useState<string[]>([]);
-
-  // Form state
   const [formData, setFormData] = useState({
     client_id: "",
     contract_type: "full_accounting",
@@ -274,6 +268,16 @@ const Contracts = () => {
     adjustment_index: "IGPM",
     special_clauses: "",
   });
+
+  // Estados de diálogos
+  const [showNewContract, setShowNewContract] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showCollectionDialog, setShowCollectionDialog] = useState(false);
+  const [showBatchDialog, setShowBatchDialog] = useState(false);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const fetchAccountingOffice = useCallback(async () => {
     try {
@@ -337,11 +341,19 @@ const Contracts = () => {
     }
   }, [toast]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     fetchAccountingOffice();
     fetchContracts();
     fetchClients();
   }, [fetchAccountingOffice, fetchContracts, fetchClients]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   // Preparar clientes elegíveis para geração em lote
   const prepareEligibleClients = useCallback(() => {
@@ -1102,6 +1114,10 @@ ${officeData.cidade || "Goiânia"}/${officeData.estado || "GO"}, ${formattedDate
 ═══════════════════════════════════════════════════════════════════════════════
 `;
   };
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);
@@ -2939,33 +2955,26 @@ _${formattedToday}_
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 overflow-auto">
-          <div className="container mx-auto py-8 px-4 max-w-7xl">
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold">
-                      Contratos de Prestação de Serviços
-                    </h1>
-                    <p className="text-muted-foreground">
-                      Modalidade Adesão com Aceite Tácito - Resolução CFC 1.590/2020
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={openBatchDialog}>
-                    <Users className="w-4 h-4 mr-2" />
-                    Gerar em Lote
-                  </Button>
-                  <Button onClick={() => setShowNewContract(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Contrato
-                  </Button>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+                  Contratos de Prestação de Serviços
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  Modalidade Adesão com Aceite Tácito - Resolução CFC 1.590/2020
+                </p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" onClick={openBatchDialog}>
+                  <Users className="w-4 h-4 mr-2" />
+                  Gerar em Lote
+                </Button>
+                <Button onClick={() => setShowNewContract(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Contrato
+                </Button>
               </div>
             </div>
 
