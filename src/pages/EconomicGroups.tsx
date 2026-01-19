@@ -56,26 +56,31 @@ interface SelectedClient {
 }
 
 export default function EconomicGroups() {
-  const [groups, setGroups] = useState<EconomicGroup[]>([]);
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [importPreview, setImportPreview] = useState<any[][] | null>(null);
-  const [importFileName, setImportFileName] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Estado para criação manual de grupo
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [groupName, setGroupName] = useState("");
-  const [paymentDay, setPaymentDay] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<ClientOption[]>([]);
-  const [selectedClients, setSelectedClients] = useState<SelectedClient[]>([]);
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Estado para edição de grupo
+  // Estados de dados principais
+  const [groups, setGroups] = useState<EconomicGroup[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [importPreview, setImportPreview] = useState<any[][] | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<ClientOption[]>([]);
+  const [selectedClients, setSelectedClients] = useState<SelectedClient[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Estados de diálogos
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<EconomicGroup | null>(null);
+  const [groupName, setGroupName] = useState("");
+  const [paymentDay, setPaymentDay] = useState(10);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   useEffect(() => {
     loadGroups();
@@ -151,6 +156,10 @@ export default function EconomicGroups() {
     }
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const parseExcelFile = (file: File): Promise<any[][]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -173,36 +182,23 @@ export default function EconomicGroups() {
     });
   };
 
-  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setImporting(true);
-      setImportFileName(file.name);
-      const data = await parseExcelFile(file);
-      setImportPreview(data);
-      toast.success("Planilha carregada! Iniciando análise dos grupos financeiros...");
-    } catch (error) {
-      console.error("Erro ao ler planilha:", error);
-      toast.error("Erro ao ler a planilha. Verifique o formato.");
-      setImportPreview(null);
-      setImportFileName(null);
-    } finally {
-      setImporting(false);
-      event.target.value = "";
-    }
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
   };
 
-  const handleCompleteImport = () => {
-    setImportPreview(null);
-    setImportFileName(null);
-    loadGroups();
-  };
-
-  const handleImportGroups = () => {
-    // Agora o botão apenas abre o seletor de arquivos, não cria grupos automaticamente
-    fileInputRef.current?.click();
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
   // Buscar clientes por nome ou CNPJ
@@ -244,6 +240,55 @@ export default function EconomicGroups() {
       setSearching(false);
     }
   }, [selectedClients]);
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm) {
+        searchClients(searchTerm);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, searchClients]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setImporting(true);
+      setImportFileName(file.name);
+      const data = await parseExcelFile(file);
+      setImportPreview(data);
+      toast.success("Planilha carregada! Iniciando análise dos grupos financeiros...");
+    } catch (error) {
+      console.error("Erro ao ler planilha:", error);
+      toast.error("Erro ao ler a planilha. Verifique o formato.");
+      setImportPreview(null);
+      setImportFileName(null);
+    } finally {
+      setImporting(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleCompleteImport = () => {
+    setImportPreview(null);
+    setImportFileName(null);
+    loadGroups();
+  };
+
+  const handleImportGroups = () => {
+    fileInputRef.current?.click();
+  };
 
   // Adicionar cliente à lista de selecionados
   const addClient = (client: ClientOption) => {
@@ -424,34 +469,6 @@ export default function EconomicGroups() {
     }
   };
 
-  // Debounce para busca
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm) {
-        searchClients(searchTerm);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm, searchClients]);
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupId)) {
-        newSet.delete(groupId);
-      } else {
-        newSet.add(groupId);
-      }
-      return newSet;
-    });
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
   const totalGroups = groups.length;
   const totalCompanies = groups.reduce((sum, g) => sum + g.member_count, 0);
   const totalRevenue = groups.reduce((sum, g) => sum + g.total_monthly_fee, 0);
@@ -468,7 +485,7 @@ export default function EconomicGroups() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <input
           type="file"
           accept=".csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -482,12 +499,12 @@ export default function EconomicGroups() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Importar Grupos Financeiros</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Importar Grupos Financeiros</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Arquivo: <strong>{importFileName}</strong>
                 </p>
               </div>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
                   setImportPreview(null);
@@ -498,24 +515,24 @@ export default function EconomicGroups() {
               </Button>
             </div>
 
-            <FinancialGroupImporter 
-              spreadsheetData={importPreview} 
+            <FinancialGroupImporter
+              spreadsheetData={importPreview}
               onComplete={handleCompleteImport}
             />
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-start">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <div>
-                <h1 className="text-3xl font-bold">Grupos Financeiros</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Grupos Financeiros</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Empresas relacionadas com pagamento consolidado
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button
                   onClick={() => { resetForm(); setShowCreateDialog(true); }}
-                  size="lg"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Grupo

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 interface BankAccount {
   id: string;
@@ -44,29 +45,23 @@ interface LedgerEntry {
 }
 
 const BankAccounts = () => {
-  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const { selectedYear, selectedMonth: contextMonth } = usePeriod();
+
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+
+  // Estados de dados principais
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [stats, setStats] = useState({
     totalAccounts: 0,
     activeAccounts: 0,
     totalBalance: 0
   });
 
-  // Estado para o extrato/razão
-  const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
-  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
-  const [ledgerLoading, setLedgerLoading] = useState(false);
-  const [selectedAccountForLedger, setSelectedAccountForLedger] = useState<BankAccount | null>(null);
-  const [ledgerSummary, setLedgerSummary] = useState({
-    openingBalance: 0, // Saldo de 31/12/2024
-    totalDebits: 0,
-    totalCredits: 0,
-    calculatedBalance: 0
-  });
-  const [selectedMonth, setSelectedMonth] = useState('2025-01'); // Filtro de mês
-
+  // Estados de diálogos - Conta
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     bank_code: "",
@@ -79,11 +74,25 @@ const BankAccounts = () => {
     notes: ""
   });
 
-  useEffect(() => {
-    loadBankAccounts();
-  }, []);
+  // Estados de diálogos - Extrato/Razão
+  const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
+  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
+  const [selectedAccountForLedger, setSelectedAccountForLedger] = useState<BankAccount | null>(null);
+  const [ledgerSummary, setLedgerSummary] = useState({
+    openingBalance: 0,
+    totalDebits: 0,
+    totalCredits: 0,
+    calculatedBalance: 0
+  });
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    return `${selectedYear}-${String(contextMonth).padStart(2, '0')}`;
+  });
 
-  const loadBankAccounts = async () => {
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
+  const loadBankAccounts = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -135,7 +144,19 @@ const BankAccounts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, contextMonth]);
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadBankAccounts();
+  }, [loadBankAccounts]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES - CRUD de Contas
+  // =====================================================
 
   const handleAdd = () => {
     setEditingAccount(null);
@@ -251,6 +272,10 @@ const BankAccounts = () => {
     }
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const getAccountTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       checking: "Conta Corrente",
@@ -259,6 +284,10 @@ const BankAccounts = () => {
     };
     return types[type] || type;
   };
+
+  // =====================================================
+  // HANDLERS - Extrato/Razão
+  // =====================================================
 
   // Função para carregar o extrato/razão da conta bancária
   // Usa as TRANSAÇÕES BANCÁRIAS (bank_transactions) para bater com o extrato do banco
@@ -538,16 +567,14 @@ const BankAccounts = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 px-2 sm:px-4 md:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <Landmark className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Contas Bancárias</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Gerencie as contas bancárias da empresa
-              </p>
-            </div>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Contas Bancárias</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Gerencie as contas bancárias da empresa
+            </p>
           </div>
           <Button onClick={handleAdd}>
             <Plus className="h-4 w-4 mr-2" />

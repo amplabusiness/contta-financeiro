@@ -26,10 +26,15 @@ interface Category {
 }
 
 const ExpenseCategories = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [expenseCategories, setExpenseCategories] = useState<Category[]>([]);
   const [revenueCategories, setRevenueCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"expense" | "revenue">("expense");
+
+  // Estados de diálogos
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -41,6 +46,10 @@ const ExpenseCategories = () => {
     color: "",
     icon: "",
   });
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getCategoriesByTab = (tab: "expense" | "revenue") =>
     tab === "expense" ? expenseCategories : revenueCategories;
@@ -57,6 +66,10 @@ const ExpenseCategories = () => {
     }
     return String(categoriesList.length + 1);
   };
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadCategories = async () => {
     try {
@@ -102,9 +115,17 @@ const ExpenseCategories = () => {
     }
   };
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,11 +337,12 @@ const ExpenseCategories = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-start mb-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Gestão de Categorias</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Gestão de Categorias</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Gerencie as categorias de despesas e receitas do seu sistema
             </p>
           </div>
@@ -441,7 +463,7 @@ const ExpenseCategories = () => {
           </Dialog>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2">
           <Button
             variant={activeTab === "expense" ? "default" : "outline"}
             onClick={() => setActiveTab("expense")}

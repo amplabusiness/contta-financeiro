@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,11 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Users, 
-  DollarSign, 
-  FileText, 
-  Briefcase, 
+import {
+  Users,
+  DollarSign,
+  FileText,
+  Briefcase,
   TrendingUp,
   Calendar,
   RefreshCw,
@@ -55,14 +56,18 @@ interface AgentSummary {
 }
 
 export default function AgentCommissions() {
+  const { toast } = useToast();
+
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [agents, setAgents] = useState<CommissionAgent[]>([]);
   const [commissions, setCommissions] = useState<AgentCommission[]>([]);
+  const [summaries, setSummaries] = useState<AgentSummary[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>("all");
   const [selectedCompetence, setSelectedCompetence] = useState<string>("12/2025");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [loading, setLoading] = useState(true);
-  const [summaries, setSummaries] = useState<AgentSummary[]>([]);
-  const { toast } = useToast();
 
   // Competências disponíveis
   const competencias = [
@@ -70,6 +75,10 @@ export default function AgentCommissions() {
     "07/2025", "08/2025", "09/2025", "10/2025", "11/2025", "12/2025",
     "01/2026"
   ];
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const fetchAgents = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,11 +128,19 @@ export default function AgentCommissions() {
     setLoading(false);
   };
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     fetchAgents();
     fetchCommissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAgent, selectedCompetence, selectedType]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const calculateSummaries = (data: AgentCommission[]) => {
     const agentMap: Record<string, AgentSummary> = {};
@@ -196,14 +213,15 @@ export default function AgentCommissions() {
   const totalAdiantamentos = summaries.reduce((acc, s) => acc + s.adiantamento, 0);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Comissões de Agentes</h1>
-          <p className="text-muted-foreground">
-            Victor Hugo e Nayara Cristina - Controle de Honorários e Repasses
-          </p>
-        </div>
+    <Layout>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Comissões de Agentes</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Victor Hugo e Nayara Cristina - Controle de Honorários e Repasses
+            </p>
+          </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchCommissions}>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -414,6 +432,7 @@ export default function AgentCommissions() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

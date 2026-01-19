@@ -57,7 +57,11 @@ interface GroupStats {
 
 const EconomicGroupAnalysis = () => {
   const { selectedYear, selectedMonth } = usePeriod();
+
+  // Estados de carregamento
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estados de dados principais
   const [groups, setGroups] = useState<EconomicGroup[]>([]);
   const [stats, setStats] = useState<GroupStats>({
     totalGroups: 0,
@@ -67,6 +71,10 @@ const EconomicGroupAnalysis = () => {
   });
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [totalRevenue, setTotalRevenue] = useState(0);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadEconomicGroups = useCallback(async () => {
     setIsLoading(true);
@@ -266,9 +274,17 @@ const EconomicGroupAnalysis = () => {
     }
   }, [selectedYear, selectedMonth]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadEconomicGroups();
   }, [loadEconomicGroups]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups);
@@ -309,12 +325,15 @@ const EconomicGroupAnalysis = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Análise por Sócios</h1>
-          <p className="text-muted-foreground">
-            Identificação automática de grupos empresariais por sócios em comum
-          </p>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Análise por Sócios</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Identificação automática de grupos empresariais por sócios em comum
+            </p>
+          </div>
         </div>
 
         <PeriodFilter />

@@ -41,22 +41,27 @@ const COLORS = [
 ];
 
 const CostCenterAnalysis = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
+  const [savingCenterId, setSavingCenterId] = useState<string | null>(null);
+
+  // Estados de dados principais
   const [costCenterData, setCostCenterData] = useState<any[]>([]);
   const [costCenterWithoutData, setCostCenterWithoutData] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [allCostCenters, setAllCostCenters] = useState<any[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth_, setSelectedMonth_] = useState<string | null>(null);
   const [selectedCostCenter, setSelectedCostCenter] = useState<any | null>(null);
   const [costCenterExpenses, setCostCenterExpenses] = useState<any[]>([]);
-  const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [chartAccounts, setChartAccounts] = useState<any[]>([]);
   const [editingCenterId, setEditingCenterId] = useState<string | null>(null);
-  const [savingCenterId, setSavingCenterId] = useState<string | null>(null);
   const [centerAccounts, setCenterAccounts] = useState<Map<string, string[]>>(new Map());
+
+  // Estados de diálogos
+  const [showFilters, setShowFilters] = useState(false);
 
   const months = [
     { value: "01", label: "Janeiro" },
@@ -74,6 +79,10 @@ const CostCenterAnalysis = () => {
   ];
 
   const { subscribeToExpenseChanges } = useExpenseUpdate();
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadCostCenterExpenses = async (costCenter: any) => {
     try {
@@ -195,35 +204,6 @@ const CostCenterAnalysis = () => {
     }
   };
 
-  useEffect(() => {
-    loadAllCostCenters().then((centers) => {
-      loadCostCenterData(centers);
-    });
-    loadChartAccounts();
-  }, [selectedYear, selectedMonth_]);
-
-  // Subscribe to expense changes and reload data automatically
-  useEffect(() => {
-    const unsubscribe = subscribeToExpenseChanges(() => {
-      loadAllCostCenters().then((centers) => {
-        loadCostCenterData(centers);
-      });
-    });
-
-    return unsubscribe;
-  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_]);
-
-  // Calcular centros sem movimentação
-  useEffect(() => {
-    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
-      const centrosComDados = new Set(costCenterData.map(c => c.code));
-      const centersSemDados = allCostCenters.filter(
-        center => !centrosComDados.has(center.code)
-      );
-      setCostCenterWithoutData(centersSemDados);
-    }
-  }, [allCostCenters, costCenterData]);
-
   const loadAllCostCenters = async () => {
     try {
       const { data, error } = await supabase
@@ -288,38 +268,6 @@ const CostCenterAnalysis = () => {
     } catch (error: any) {
       console.error("Erro ao carregar plano de contas:", error);
       toast.error("Erro ao carregar plano de contas");
-    }
-  };
-
-  const handleAccountToggle = async (centerId: string, accountId: string, isSelected: boolean) => {
-    try {
-      setSavingCenterId(centerId);
-
-      if (isSelected) {
-        // Remover vínculo
-        const { error } = await supabase
-          .from("cost_center_accounts")
-          .delete()
-          .eq("cost_center_id", centerId)
-          .eq("chart_account_id", accountId);
-
-        if (error) throw error;
-      } else {
-        // Adicionar vínculo
-        const { error } = await supabase
-          .from("cost_center_accounts")
-          .insert({ cost_center_id: centerId, chart_account_id: accountId });
-
-        if (error) throw error;
-      }
-
-      toast.success(isSelected ? "Conta removida" : "Conta adicionada");
-      await loadAllCostCenters();
-    } catch (error: any) {
-      console.error("Erro ao atualizar vínculo:", error);
-      toast.error("Erro ao atualizar vínculo");
-    } finally {
-      setSavingCenterId(null);
     }
   };
 
@@ -475,34 +423,6 @@ const CostCenterAnalysis = () => {
     }
   }, [selectedYear, selectedMonth_, allCostCenters]);
 
-  useEffect(() => {
-    loadAllCostCenters().then((centers) => {
-      loadCostCenterData(centers);
-    });
-  }, [selectedYear, selectedMonth_, loadCostCenterData]);
-
-  // Subscribe to expense changes and reload data automatically
-  useEffect(() => {
-    const unsubscribe = subscribeToExpenseChanges(() => {
-      loadAllCostCenters().then((centers) => {
-        loadCostCenterData(centers);
-      });
-    });
-
-    return unsubscribe;
-  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_, loadCostCenterData]);
-
-  // Calcular centros sem movimentação
-  useEffect(() => {
-    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
-      const centrosComDados = new Set(costCenterData.map(c => c.code));
-      const centersSemDados = allCostCenters.filter(
-        center => !centrosComDados.has(center.code)
-      );
-      setCostCenterWithoutData(centersSemDados);
-    }
-  }, [allCostCenters, costCenterData]);
-
   const loadMonthlyComparison = async () => {
     try {
       const { data: expenses, error } = await supabase
@@ -554,6 +474,75 @@ const CostCenterAnalysis = () => {
     }
   };
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadAllCostCenters().then((centers) => {
+      loadCostCenterData(centers);
+    });
+    loadChartAccounts();
+  }, [selectedYear, selectedMonth_]);
+
+  // Subscribe to expense changes and reload data automatically
+  useEffect(() => {
+    const unsubscribe = subscribeToExpenseChanges(() => {
+      loadAllCostCenters().then((centers) => {
+        loadCostCenterData(centers);
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribeToExpenseChanges, selectedYear, selectedMonth_]);
+
+  // Calcular centros sem movimentação
+  useEffect(() => {
+    if (allCostCenters.length > 0 && costCenterData.length >= 0) {
+      const centrosComDados = new Set(costCenterData.map(c => c.code));
+      const centersSemDados = allCostCenters.filter(
+        center => !centrosComDados.has(center.code)
+      );
+      setCostCenterWithoutData(centersSemDados);
+    }
+  }, [allCostCenters, costCenterData]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
+  const handleAccountToggle = async (centerId: string, accountId: string, isSelected: boolean) => {
+    try {
+      setSavingCenterId(centerId);
+
+      if (isSelected) {
+        // Remover vínculo
+        const { error } = await supabase
+          .from("cost_center_accounts")
+          .delete()
+          .eq("cost_center_id", centerId)
+          .eq("chart_account_id", accountId);
+
+        if (error) throw error;
+      } else {
+        // Adicionar vínculo
+        const { error } = await supabase
+          .from("cost_center_accounts")
+          .insert({ cost_center_id: centerId, chart_account_id: accountId });
+
+        if (error) throw error;
+      }
+
+      toast.success(isSelected ? "Conta removida" : "Conta adicionada");
+      await loadAllCostCenters();
+    } catch (error: any) {
+      console.error("Erro ao atualizar vínculo:", error);
+      toast.error("Erro ao atualizar vínculo");
+    } finally {
+      setSavingCenterId(null);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -566,10 +555,10 @@ const CostCenterAnalysis = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">Centro de Custo Despesas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Centro de Custo Despesas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Visualize os gastos por departamento e identifique oportunidades de otimização
           </p>
         </div>

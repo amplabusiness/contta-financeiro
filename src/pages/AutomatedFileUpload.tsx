@@ -12,10 +12,37 @@ import { toast } from "sonner";
 
 export default function AutomatedFileUpload() {
   const navigate = useNavigate();
+
+  // Estados de carregamento
+  const [uploading, setUploading] = useState(false);
+
+  // Estados de dados principais
   const [boletoFile, setBoletoFile] = useState<File | null>(null);
   const [statementFile, setStatementFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [queueStatus, setQueueStatus] = useState<any[]>([]);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
+  const loadQueueStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('file_processing_queue')
+        .select('*')
+        .order('uploaded_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setQueueStatus(data || []);
+    } catch (error) {
+      console.error('Error loading queue status:', error);
+    }
+  };
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleFileUpload = async (file: File, fileType: 'boleto_report' | 'bank_statement') => {
     try {
@@ -88,20 +115,9 @@ export default function AutomatedFileUpload() {
     }
   };
 
-  const loadQueueStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('file_processing_queue')
-        .select('*')
-        .order('uploaded_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setQueueStatus(data || []);
-    } catch (error) {
-      console.error('Error loading queue status:', error);
-    }
-  };
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -118,10 +134,10 @@ export default function AutomatedFileUpload() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">🤖 Upload Automático</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Upload Automático</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Envie arquivos para processamento automático - sem necessidade de cliques adicionais
           </p>
         </div>

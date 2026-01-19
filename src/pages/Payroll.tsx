@@ -164,41 +164,37 @@ const Payroll = () => {
   // Hook de contabilidade para provisão da folha
   const { registrarFolhaProvisao } = usePayrollAccounting();
 
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [generatingPayroll, setGeneratingPayroll] = useState(false);
+  const [addingEvent, setAddingEvent] = useState(false);
+  const [calculatingTermination, setCalculatingTermination] = useState(false);
+  const [importingEmployees, setImportingEmployees] = useState(false);
+
+  // Estados de dados principais
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [alerts, setAlerts] = useState<LaborAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
-  const [showSimulation, setShowSimulation] = useState(false);
-  const [simulationEmployee, setSimulationEmployee] = useState<Employee | null>(null);
-  const [newOfficialSalary, setNewOfficialSalary] = useState<number>(0);
-
-  // CRUD states
-  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [showSuspendDialog, setShowSuspendDialog] = useState(false);
-  const [employeeToSuspend, setEmployeeToSuspend] = useState<Employee | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
-
-  // Rubricas and Payroll states
   const [rubricas, setRubricas] = useState<EsocialRubrica[]>([]);
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
   const [payrollEvents, setPayrollEvents] = useState<PayrollEvent[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedCompetencia, setSelectedCompetencia] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [selectedPayroll, setSelectedPayroll] = useState<PayrollRecord | null>(null);
-  const [generatingPayroll, setGeneratingPayroll] = useState(false);
+  const [simulationEmployee, setSimulationEmployee] = useState<Employee | null>(null);
+  const [newOfficialSalary, setNewOfficialSalary] = useState<number>(0);
   const [activeTab, setActiveTab] = useState("employees");
-
-  // Add/Edit Event states (para adicionar/editar eventos manuais na folha)
-  const [showAddEventDialog, setShowAddEventDialog] = useState(false);
-  const [addingEvent, setAddingEvent] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [employeeToSuspend, setEmployeeToSuspend] = useState<Employee | null>(null);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [employeeToTerminate, setEmployeeToTerminate] = useState<Employee | null>(null);
+  const [terminationData, setTerminationData] = useState<TerminationData | null>(null);
   const [newEventForm, setNewEventForm] = useState({
     rubrica_codigo: "none",
     descricao: "",
@@ -208,6 +204,27 @@ const Payroll = () => {
     observacao: "",
     variable_type: "", // Tipo de variável pré-definida
   });
+  const [terminationForm, setTerminationForm] = useState({
+    termination_date: new Date().toISOString().split('T')[0],
+    last_working_day: new Date().toISOString().split('T')[0],
+    termination_type: 'dispensa_sem_justa_causa',
+    notice_type: 'indenizado',
+  });
+  const [terminationVariables, setTerminationVariables] = useState<Array<{
+    descricao: string;
+    valor: number;
+    is_desconto: boolean;
+    referencia?: string;
+  }>>([]);
+
+  // Estados de diálogos
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [showSuspendDialog, setShowSuspendDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showTerminationDialog, setShowTerminationDialog] = useState(false);
+  const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showSimulation, setShowSimulation] = useState(false);
 
   // Variáveis pré-definidas comuns na folha de pagamento
   const commonVariables = [
@@ -234,30 +251,6 @@ const Payroll = () => {
     { value: "outros_desconto", label: "Outros (Desconto)", is_desconto: true, rubrica: "" },
   ];
 
-  // Variáveis para rescisão
-  const [terminationVariables, setTerminationVariables] = useState<Array<{
-    descricao: string;
-    valor: number;
-    is_desconto: boolean;
-    referencia?: string;
-  }>>([]);
-
-  // Termination (Rescisão) states
-  const [showTerminationDialog, setShowTerminationDialog] = useState(false);
-  const [employeeToTerminate, setEmployeeToTerminate] = useState<Employee | null>(null);
-  const [terminationData, setTerminationData] = useState<TerminationData | null>(null);
-  const [calculatingTermination, setCalculatingTermination] = useState(false);
-  const [terminationForm, setTerminationForm] = useState({
-    termination_date: new Date().toISOString().split('T')[0],
-    last_working_day: new Date().toISOString().split('T')[0],
-    termination_type: 'dispensa_sem_justa_causa',
-    notice_type: 'indenizado',
-  });
-
-  // Import state
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importingEmployees, setImportingEmployees] = useState(false);
-  
   // Dados para importação (extraídos da folha de pagamento)
   const employeesToImport = [
     { name: 'DEUZA RESENDE DE JESUS', role: 'ANALISTA DE DEPARTAMENTO PESSOAL', department: 'Operacional', contract_type: 'CLT', official_salary: 3000.00, hire_date: '2024-12-03', work_area: '413105' },
@@ -297,6 +290,10 @@ const Payroll = () => {
     { value: "Socio", label: "Socio" },
   ];
 
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -333,6 +330,10 @@ const Payroll = () => {
       setLoading(false);
     }
   }, [showInactive]);
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
 
   useEffect(() => {
     loadData();
@@ -445,6 +446,10 @@ const Payroll = () => {
       setPayrollEvents([]);
     }
   }, [selectedPayroll, loadPayrollEvents]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   // Generate payroll for an employee
   const handleGeneratePayroll = async (employeeId: string) => {
@@ -1271,6 +1276,10 @@ const Payroll = () => {
     setShowDeleteDialog(true);
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const calculateSummary = (): PayrollSummary => {
     // Filtrar funcionários admitidos até a competência para o cálculo do resumo
     const competenciaDate = new Date(`${selectedCompetencia}-01`);
@@ -1374,12 +1383,12 @@ const Payroll = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Folha de Pagamento</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Folha de Pagamento</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Comparativo carteira vs por fora - Analise de riscos trabalhistas
             </p>
           </div>

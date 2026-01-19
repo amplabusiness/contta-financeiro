@@ -10,7 +10,6 @@ import {
   DollarSign,
   Users,
   Calendar,
-  ArrowUpDown,
   BookOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format, differenceInDays, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Select,
   SelectContent,
@@ -67,7 +64,10 @@ export default function DefaultAnalysis() {
   const { selectedClientId, selectedClientName } = useClient();
   const { selectedYear, selectedMonth, getEndDate, getFormattedPeriod } = usePeriod();
 
-  // Dados da fonte da verdade (accounting_entries)
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [receivables, setReceivables] = useState<ClientReceivable[]>([]);
   const [accountSummary, setAccountSummary] = useState({
     openingBalance: 0,
@@ -75,8 +75,6 @@ export default function DefaultAnalysis() {
     credit: 0,
     balance: 0,
   });
-
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"amount" | "opening" | "debit">("amount");
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -85,6 +83,10 @@ export default function DefaultAnalysis() {
     averageDaysLate: 0,
     defaultRate: 0,
   });
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadDefaultData = useCallback(async () => {
     try {
@@ -141,9 +143,17 @@ export default function DefaultAnalysis() {
     }
   }, [selectedClientId, selectedYear, selectedMonth]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadDefaultData();
   }, [loadDefaultData]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -209,14 +219,17 @@ export default function DefaultAnalysis() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {selectedClientId ? `Clientes a Receber - ${selectedClientName}` : "Clientes a Receber"}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Conta 1.1.2.01 - {getFormattedPeriod()} • Fonte da Verdade: accounting_entries
-          </p>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+              {selectedClientId ? `Clientes a Receber - ${selectedClientName}` : "Clientes a Receber"}
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Conta 1.1.2.01 - {getFormattedPeriod()} • Fonte da Verdade: accounting_entries
+            </p>
+          </div>
         </div>
 
         {/* RAZÃO CONTÁBIL - Resumo da Conta 1.1.2.01 */}

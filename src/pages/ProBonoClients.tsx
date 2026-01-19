@@ -27,11 +27,15 @@ import { getErrorMessage } from "@/lib/utils";
 const ProBonoClients = () => {
   const navigate = useNavigate();
   const { selectedClientId } = useClient();
+
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [clients, setClients] = useState<any[]>([]);
   const [clientsWithoutFee, setClientsWithoutFee] = useState<any[]>([]);
   const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
   const [groupMemberships, setGroupMemberships] = useState<Map<string, { groupName: string; mainPayerName: string; isMainPayer: boolean }>>(new Map());
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
   const [viewMode, setViewMode] = useState<"pro_bono" | "without_fee">("pro_bono");
   const [stats, setStats] = useState({
@@ -43,6 +47,8 @@ const ProBonoClients = () => {
     inGroups: 0,
     needsAction: 0
   });
+
+  // Estados de diálogos
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -57,6 +63,10 @@ const ProBonoClients = () => {
     monthly_fee: "",
     payment_day: ""
   });
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadProBonoClients = useCallback(async () => {
     try {
@@ -201,9 +211,17 @@ const ProBonoClients = () => {
     }
   }, [statusFilter]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadProBonoClients();
   }, [loadProBonoClients]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
@@ -227,6 +245,10 @@ const ProBonoClients = () => {
       </Badge>
     );
   };
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleEditClick = (client: any) => {
     setEditingClient(client);
@@ -382,12 +404,12 @@ const ProBonoClients = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Heart className="h-8 w-8 text-primary" />
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Clientes Pro-Bono</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Clientes Pro-Bono</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Clientes sem honorários ou com atendimento gratuito
             </p>
           </div>
