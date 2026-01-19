@@ -30,23 +30,29 @@ import { getErrorMessage } from "@/lib/utils";
 const Clients = () => {
   const navigate = useNavigate();
   const { selectedClientId, setSelectedClient, clearSelectedClient } = useClient();
+
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [loadingClientDetails, setLoadingClientDetails] = useState(false);
+  const [enriching, setEnriching] = useState(false);
+  const [importingGroups, setImportingGroups] = useState(false);
+
+  // Estados de dados principais
   const [clients, setClients] = useState<any[]>([]);
   const [allClientsForGroups, setAllClientsForGroups] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
-  const [editingClient, setEditingClient] = useState<any>(null);
-  const [enriching, setEnriching] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [viewingClient, setViewingClient] = useState<any>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingClientInvoices, setViewingClientInvoices] = useState<any[]>([]);
   const [viewingClientOpeningBalances, setViewingClientOpeningBalances] = useState<any[]>([]);
-  const [loadingClientDetails, setLoadingClientDetails] = useState(false);
-  const [importingGroups, setImportingGroups] = useState(false);
+
+  // Estados de diálogos
+  const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [financialGroupsDialogOpen, setFinancialGroupsDialogOpen] = useState(false);
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -79,6 +85,10 @@ const Clients = () => {
     atividades_secundarias: [] as any[],
     qsa: [] as any[]
   });
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadClients = useCallback(async () => {
     try {
@@ -139,6 +149,10 @@ const Clients = () => {
     }
   }, []);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   // 🔴 REALTIME: Atualização automática quando dados mudam
   useTableRealtime("clients", () => {
     console.log("[Realtime] Clientes atualizados!");
@@ -150,6 +164,10 @@ const Clients = () => {
   useEffect(() => {
     loadClients();
   }, [loadClients]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,6 +361,10 @@ const Clients = () => {
       toast.error("Erro ao atualizar status do cliente: " + getErrorMessage(error));
     }
   };
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const handleCNPJDataFetched = (data: any) => {
     // Callback quando CNPJInput buscar dados automaticamente
@@ -571,18 +593,19 @@ const Clients = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 px-2 sm:px-4 md:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Clientes</h1>
               {/* Indicador de Realtime */}
               <Badge variant={isRealtimeConnected ? "default" : "outline"} className="gap-1">
                 <Radio className={`h-3 w-3 ${isRealtimeConnected ? "text-green-400 animate-pulse" : "text-gray-400"}`} />
                 {isRealtimeConnected ? "Ao vivo" : "Conectando..."}
               </Badge>
             </div>
-            <p className="text-muted-foreground text-sm sm:text-base">Gerencie o cadastro de clientes</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie o cadastro de clientes</p>
           </div>
           <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
             <Button 
