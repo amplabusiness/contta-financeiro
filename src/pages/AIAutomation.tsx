@@ -94,7 +94,10 @@ const AIAutomation = () => {
   // Usar período selecionado do contexto global
   const { selectedYear, selectedMonth } = usePeriod();
 
-  // Estados principais
+  // Referência para o intervalo de automação
+  const automationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Estados de dados principais
   const [isAutomationActive, setIsAutomationActive] = useState(true);
   const [currentTasks, setCurrentTasks] = useState<AutomationTask[]>([]);
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
@@ -104,11 +107,6 @@ const AIAutomation = () => {
   const [humanInterventions, setHumanInterventions] = useState<HumanIntervention[]>([]);
   const [classificationsProcessed, setClassificationsProcessed] = useState(0);
   const [extractsProcessed, setExtractsProcessed] = useState(0);
-
-  // Referência para o intervalo de automação
-  const automationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Métricas dos agentes
   const [agentMetrics, setAgentMetrics] = useState<AgentMetrics[]>([
     {
       name: "Dr. Cícero",
@@ -134,6 +132,10 @@ const AIAutomation = () => {
     },
   ]);
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -142,6 +144,10 @@ const AIAutomation = () => {
   };
 
   const formatPercent = (value: number) => `${value.toFixed(1)}%`;
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   // Adicionar alerta ao sistema
   const addAlert = useCallback((alert: Omit<SystemAlert, 'id' | 'timestamp' | 'resolved'>) => {
@@ -188,8 +194,10 @@ const AIAutomation = () => {
   }, []);
 
   // =====================================================
-  // AUTOMAÇÃO 1: CARREGAR DADOS FINANCEIROS (USANDO LÓGICA DA DRE)
+  // FUNÇÕES DE AUTOMAÇÃO
   // =====================================================
+
+  // AUTOMAÇÃO 1: CARREGAR DADOS FINANCEIROS (USANDO LÓGICA DA DRE)
   const loadFinancialData = useCallback(async () => {
     const taskId = addTask({
       name: 'Carregar dados financeiros',
@@ -869,6 +877,10 @@ const AIAutomation = () => {
     setLastUpdate(new Date());
   }, [isAutomationActive, loadFinancialData, runExtractProcessing, runAutoClassification, runAutoReconciliation, runAutoAnalysis, cleanupTasks]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   // Recarregar dados quando o período mudar
   useEffect(() => {
     if (isAutomationActive) {
@@ -897,7 +909,10 @@ const AIAutomation = () => {
     };
   }, [isAutomationActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Helpers de UI
+  // =====================================================
+  // FUNÇÕES AUXILIARES DE UI
+  // =====================================================
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500';
@@ -935,18 +950,18 @@ const AIAutomation = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header com Status Global */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-3">
               <div className="relative">
-                <Bot className="h-8 w-8 text-violet-600" />
-                <Zap className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1" />
+                <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-violet-600" />
+                <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 absolute -top-1 -right-1" />
               </div>
               Central de Automação IA
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Sistema 100% autônomo - Zero intervenção humana
             </p>
           </div>

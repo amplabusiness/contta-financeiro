@@ -159,16 +159,16 @@ const AREAS = [
 ];
 
 const Incentives = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Estados de dados principais
   const [policies, setPolicies] = useState<IncentivePolicy[]>([]);
   const [sales, setSales] = useState<EmployeeSale[]>([]);
   const [ranking, setRanking] = useState<SalesRanking[]>([]);
   const [plrPrograms, setPLRPrograms] = useState<PLRProgram[]>([]);
   const [plrShares, setPLRShares] = useState<PLREmployeeShare[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Sale form state
-  const [saleDialog, setSaleDialog] = useState(false);
   const [editingSale, setEditingSale] = useState<EmployeeSale | null>(null);
   const [saleForm, setSaleForm] = useState({
     employee_name: "",
@@ -185,9 +185,12 @@ const Incentives = () => {
     notes: "",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Estados de diálogos
+  const [saleDialog, setSaleDialog] = useState(false);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = async () => {
     setLoading(true);
@@ -243,6 +246,18 @@ const Incentives = () => {
       setLoading(false);
     }
   };
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   // Sale CRUD
   const resetSaleForm = () => {
@@ -392,6 +407,10 @@ const Incentives = () => {
     }
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const formatCurrency = (value: number | null) => {
     if (!value) return "R$ 0,00";
     return new Intl.NumberFormat("pt-BR", {
@@ -417,18 +436,18 @@ const Incentives = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-3">
               <div className="relative">
-                <Gift className="h-8 w-8 text-amber-500" />
-                <Star className="h-4 w-4 text-yellow-400 absolute -top-1 -right-1" />
+                <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-amber-500" />
+                <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 absolute -top-1 -right-1" />
               </div>
               Incentivos e PLR
             </h1>
-            <p className="text-muted-foreground mt-1">Sistema de comissoes, indicacoes e participacao nos lucros</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Sistema de comissoes, indicacoes e participacao nos lucros</p>
           </div>
 
           <Button onClick={openCreateSale}>

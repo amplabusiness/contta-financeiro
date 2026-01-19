@@ -12,10 +12,18 @@ import { Progress } from "@/components/ui/progress";
 
 export default function ImportHonorarios() {
   const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
+
+  // Estados de carregamento
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Estados de dados principais
+  const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<any>(null);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -103,10 +111,10 @@ export default function ImportHonorarios() {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Importar Honorários</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Importar Honorários</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Faça upload da planilha de honorários para atualizar os valores e datas de vencimento dos clientes
           </p>
         </div>

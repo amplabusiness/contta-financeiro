@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Download,
   Search,
-  ClipboardList,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -69,7 +68,10 @@ const MONTHS = [
 ];
 
 const BalanceteVerificacao = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [accounts, setAccounts] = useState<BalanceteAccount[]>([]);
   const [totals, setTotals] = useState<Totals>({
     opening_debit: 0,
@@ -83,22 +85,19 @@ const BalanceteVerificacao = () => {
   const [showZeroBalances, setShowZeroBalances] = useState(false);
   const [showAnalyticalOnly, setShowAnalyticalOnly] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "1" | "2" | "3" | "4" | "5">("all");
-  
-  // Configuração de período
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  
-  // Expandir grupos
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["1", "2", "3", "4", "5"]));
 
   const years = [2024, 2025, 2026];
-
-  // Datas do período
   const periodStart = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-01`;
   const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
   const periodEnd = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${lastDay}`;
 
-  // Carregar balancete
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -203,9 +202,17 @@ const BalanceteVerificacao = () => {
     }
   }, [periodStart, periodEnd]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   // Filtrar contas
   const filteredAccounts = accounts.filter((acc) => {
@@ -349,15 +356,14 @@ const BalanceteVerificacao = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <ClipboardList className="w-8 h-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               Balancete de Verificação
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Verificação do equilíbrio entre débitos e créditos
             </p>
           </div>

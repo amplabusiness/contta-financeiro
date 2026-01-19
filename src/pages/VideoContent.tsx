@@ -282,38 +282,30 @@ const promptTemplates = [
 ];
 
 const VideoContent = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Estados de dados principais
   const [videos, setVideos] = useState<VideoContent[]>([]);
   const [screens, setScreens] = useState<TVScreen[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showNewDialog, setShowNewDialog] = useState(false);
-  const [generating, setGenerating] = useState(false);
-
-  // New video form
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newType, setNewType] = useState("informativo");
   const [newPrompt, setNewPrompt] = useState("");
   const [newTargetScreens, setNewTargetScreens] = useState<string[]>([]);
-
-  // CRUD states
   const [editingVideo, setEditingVideo] = useState<VideoContent | null>(null);
-  const [showDeleteVideoDialog, setShowDeleteVideoDialog] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<VideoContent | null>(null);
-  const [showScreenDialog, setShowScreenDialog] = useState(false);
   const [editingScreen, setEditingScreen] = useState<TVScreen | null>(null);
-  const [showDeleteScreenDialog, setShowDeleteScreenDialog] = useState(false);
   const [screenToDelete, setScreenToDelete] = useState<TVScreen | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Screen form
   const [screenForm, setScreenForm] = useState({
     name: "",
     location: "",
     resolution: "1920x1080",
     is_active: true,
   });
-
-  // AI Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -332,11 +324,16 @@ Como posso ajudar?`,
     },
   ]);
   const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Estados de diálogos
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [showDeleteVideoDialog, setShowDeleteVideoDialog] = useState(false);
+  const [showScreenDialog, setShowScreenDialog] = useState(false);
+  const [showDeleteScreenDialog, setShowDeleteScreenDialog] = useState(false);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = async () => {
     setLoading(true);
@@ -364,6 +361,18 @@ Como posso ajudar?`,
       setLoading(false);
     }
   };
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleGenerate = async () => {
     if (!newTitle.trim()) {
@@ -673,6 +682,10 @@ Sobre qual tema quer um video?`;
     setShowDeleteScreenDialog(true);
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "ready":
@@ -711,12 +724,12 @@ Sobre qual tema quer um video?`;
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Videos e TVs</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Videos e TVs</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Geracao de conteudo com IA e gestao das TVs do escritorio
             </p>
           </div>

@@ -71,23 +71,23 @@ interface Supplier {
 }
 
 const Inventory = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Estados de dados principais
   const [products, setProducts] = useState<Product[]>([]);
   const [purchaseLists, setPurchaseLists] = useState<PurchaseList[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [consumptionDialog, setConsumptionDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [consumptionQty, setConsumptionQty] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
-
-  // CRUD States - Products
-  const [showProductDialog, setShowProductDialog] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [productForm, setProductForm] = useState({
     name: "",
     category: "limpeza",
@@ -98,18 +98,19 @@ const Inventory = () => {
     last_purchase_price: 0,
     preferred_supplier: "",
   });
-
-  // CRUD States - Suppliers
-  const [showSupplierDialog, setShowSupplierDialog] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [showDeleteSupplierDialog, setShowDeleteSupplierDialog] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [supplierForm, setSupplierForm] = useState({
     name: "",
     category: "limpeza",
     phone: "",
     notes: "",
   });
+
+  // Estados de diálogos
+  const [consumptionDialog, setConsumptionDialog] = useState(false);
+  const [showProductDialog, setShowProductDialog] = useState(false);
+  const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false);
+  const [showSupplierDialog, setShowSupplierDialog] = useState(false);
+  const [showDeleteSupplierDialog, setShowDeleteSupplierDialog] = useState(false);
 
   const categories = [
     { value: "all", label: "Todas" },
@@ -118,6 +119,10 @@ const Inventory = () => {
     { value: "alimentacao", label: "Alimentacao" },
     { value: "escritorio", label: "Escritorio" },
   ];
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -166,9 +171,17 @@ const Inventory = () => {
     }
   }, [showInactive]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleConsumption = async () => {
     if (!selectedProduct || consumptionQty <= 0) return;
@@ -479,6 +492,10 @@ const Inventory = () => {
     }
   };
 
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -521,15 +538,14 @@ const Inventory = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Package className="h-8 w-8 text-blue-600" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               Estoque e Compras
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Controle de produtos e lista de compras do escritorio
             </p>
           </div>

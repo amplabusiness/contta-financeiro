@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileSpreadsheet,
-  BarChart3,
   Calendar,
   Percent,
 } from "lucide-react";
@@ -93,26 +92,27 @@ const MONTHS = [
 ];
 
 const DREAnalytics = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [dreStructure, setDreStructure] = useState<DREStructure>({
     revenues: [],
     expenses: [],
     periods: [],
   });
-  
-  // Configuração de período
   const [selectedYear, setSelectedYear] = useState(2025);
   const [startMonth, setStartMonth] = useState(1);
   const [endMonth, setEndMonth] = useState(12);
   const [periodType, setPeriodType] = useState<"monthly" | "quarterly" | "accumulated">("monthly");
-  
-  // Contas expandidas
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
 
-  // Anos disponíveis
   const years = [2024, 2025, 2026];
 
-  // Gerar períodos baseado na seleção
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const generatePeriods = useCallback(() => {
     const periods: { start: string; end: string; label: string; key: string }[] = [];
     
@@ -330,11 +330,18 @@ const DREAnalytics = () => {
     }
   }, [generatePeriods]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadDREData();
   }, [loadDREData]);
 
-  // Toggle expansão de conta
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
   const toggleExpand = (code: string) => {
     const newExpanded = new Set(expandedAccounts);
     if (newExpanded.has(code)) {
@@ -345,7 +352,10 @@ const DREAnalytics = () => {
     setExpandedAccounts(newExpanded);
   };
 
-  // Formatar percentual
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const formatPercent = (value: number) => {
     if (isNaN(value) || !isFinite(value)) return "-";
     return `${value.toFixed(1)}%`;
@@ -503,15 +513,14 @@ const DREAnalytics = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               DRE - Análise Vertical Comparativa
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Demonstração do Resultado do Exercício com análise vertical e comparativo mensal
             </p>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Layout } from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAccounting } from '@/hooks/useAccounting';
@@ -183,7 +184,16 @@ export default function NFSe() {
   const { toast } = useToast();
   // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
   const { registrarHonorario, registrarDespesa } = useAccounting({ showToasts: false, sourceModule: 'NFSe' });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+  const [emitting, setEmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Estados de dados principais
   const [activeTab, setActiveTab] = useState('emitidas');
   const [nfses, setNfses] = useState<NFSe[]>([]);
   const [nfsesTomadas, setNfsesTomadas] = useState<NFSeTomada[]>([]);
@@ -191,30 +201,15 @@ export default function NFSe() {
   const [invoices, setInvoices] = useState<InvoiceForNFSe[]>([]);
   const [config, setConfig] = useState<NFSeConfig | null>(null);
   const [codigosServico, setCodigosServico] = useState<CodigoServicoLC116[]>([]);
-  const [showEmitirDialog, setShowEmitirDialog] = useState(false);
-  const [showEmitirLoteDialog, setShowEmitirLoteDialog] = useState(false);
-  const [showConfigDialog, setShowConfigDialog] = useState(false);
-  const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
-  const [showDetalhesTomadaDialog, setShowDetalhesTomadaDialog] = useState(false);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedNFSe, setSelectedNFSe] = useState<NFSe | null>(null);
   const [selectedNFSeTomada, setSelectedNFSeTomada] = useState<NFSeTomada | null>(null);
-  const [emitting, setEmitting] = useState(false);
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState<any[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const printRef = useRef<HTMLDivElement>(null);
-
-  // Filtros
   const [filtroStatus, setFiltroStatus] = useState<string>('all');
   const [filtroCompetencia, setFiltroCompetencia] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [filtroEmissaoRapida, setFiltroEmissaoRapida] = useState<string>('');
   const [filtroStatusTomadas, setFiltroStatusTomadas] = useState<string>('all');
   const [filtroMesTomadas, setFiltroMesTomadas] = useState<string>('all');
-
-  // Form de emissão manual
   const [formData, setFormData] = useState({
     client_id: '',
     valor_servicos: '',
@@ -223,16 +218,22 @@ export default function NFSe() {
     codigo_servico: '17.19',
     aliquota: '0'
   });
-
-  // Upload options
   const [uploadOptions, setUploadOptions] = useState({
     criarContasPagar: true,
     diasVencimento: 30
   });
 
-  useEffect(() => {
-    loadData();
-  }, [filtroStatus, filtroCompetencia, activeTab]);
+  // Estados de diálogos
+  const [showEmitirDialog, setShowEmitirDialog] = useState(false);
+  const [showEmitirLoteDialog, setShowEmitirLoteDialog] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
+  const [showDetalhesTomadaDialog, setShowDetalhesTomadaDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadData = async () => {
     setLoading(true);
@@ -330,6 +331,18 @@ export default function NFSe() {
       setLoading(false);
     }
   };
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadData();
+  }, [filtroStatus, filtroCompetencia, activeTab]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   // Emissão automática
   const emitirAutomatico = async (invoice: InvoiceForNFSe) => {
@@ -899,18 +912,18 @@ export default function NFSe() {
   }, {} as Record<string, NFSeTomada[]>);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Receipt className="h-8 w-8" />
-            NFS-e - Nota Fiscal de Serviços
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Emissão, recebimento e gerenciamento de notas fiscais eletrônicas
-          </p>
-        </div>
+    <Layout>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+              NFS-e - Nota Fiscal de Serviços
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Emissão, recebimento e gerenciamento de notas fiscais eletrônicas
+            </p>
+          </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowConfigDialog(true)}>
             <Settings className="h-4 w-4 mr-2" />
@@ -2039,6 +2052,7 @@ export default function NFSe() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </Layout>
   );
 }

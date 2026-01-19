@@ -70,11 +70,15 @@ interface ClientLedgerEntry {
 const CollectionDashboard = () => {
   const { toast } = useToast();
   const { selectedMonth, selectedYear } = usePeriod();
+
+  // Estados de carregamento
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingLedger, setIsLoadingLedger] = useState(false);
+
+  // Estados de dados principais
   const [collectionAlerts, setCollectionAlerts] = useState<CollectionAlert[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [clientLedger, setClientLedger] = useState<ClientLedgerEntry[]>([]);
-  const [isLoadingLedger, setIsLoadingLedger] = useState(false);
   const [stats, setStats] = useState({
     totalOverdue: 0,
     totalClients: 0,
@@ -83,6 +87,10 @@ const CollectionDashboard = () => {
     totalDebit: 0,
     totalCredit: 0,
   });
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const fetchCollectionData = useCallback(async () => {
     setIsLoading(true);
@@ -196,9 +204,17 @@ const CollectionDashboard = () => {
     }
   }, [selectedYear, selectedMonth, toast]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     fetchCollectionData();
   }, [fetchCollectionData]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -237,6 +253,10 @@ const CollectionDashboard = () => {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
   const handleSendCollectionLetter = (clientId: string, method: "email" | "whatsapp") => {
     toast({
       title: `Carta de cobranca ${method === "email" ? "por e-mail" : "por WhatsApp"}`,
@@ -256,37 +276,30 @@ const CollectionDashboard = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 overflow-auto">
-          <div className="container mx-auto py-8 px-4 max-w-7xl">
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-6 h-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold">Dashboard de Cobranca</h1>
-                    <p className="text-muted-foreground">
-                      Monitore inadimplencia e gerencie cobrancas
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                    <Database className="w-3 h-3 mr-1" />
-                    Fonte da Verdade
-                  </Badge>
-                  <Button onClick={() => fetchCollectionData()}>
-                    Atualizar Dados
-                  </Button>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Dashboard de Cobranca</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  Monitore inadimplencia e gerencie cobrancas
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                  <Database className="w-3 h-3 mr-1" />
+                  Fonte da Verdade
+                </Badge>
+                <Button onClick={() => fetchCollectionData()}>
+                  Atualizar Dados
+                </Button>
               </div>
             </div>
 
             <PeriodFilter />
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -370,7 +383,7 @@ const CollectionDashboard = () => {
 
             {/* Critical Alerts */}
             {stats.criticalAlerts > 0 && (
-              <Alert className="mb-6 border-red-300 bg-red-50">
+              <Alert className="border-red-300 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
                 <AlertTitle className="text-red-800">
                   {stats.criticalAlerts} {stats.criticalAlerts === 1 ? "Cliente" : "Clientes"} com

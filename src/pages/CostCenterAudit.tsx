@@ -28,34 +28,19 @@ interface CostCenterAuditResult {
 const AUDIT_COMPLETED_KEY = "cost_center_audit_completed";
 
 const CostCenterAudit = () => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [auditResults, setAuditResults] = useState<CostCenterAuditResult[]>([]);
   const [discrepancyCount, setDiscrepancyCount] = useState(0);
   const [auditCompleted, setAuditCompleted] = useState(
     localStorage.getItem(AUDIT_COMPLETED_KEY) === "true"
   );
 
-  useEffect(() => {
-    loadAuditData();
-  }, []);
-
-  const isAccountDescendant = (accountCode: string, parentCode: string): boolean => {
-    // Check if accountCode is a descendant of parentCode
-    // e.g., "4.1.1" is descendant of "4", "4.1", but not of "1"
-    // "1.1.3.04.001" is descendant of "1", "1.1", "1.1.3", "1.1.3.04"
-
-    // Exact match
-    if (accountCode === parentCode) return true;
-
-    // Check if accountCode starts with parentCode.
-    return accountCode.startsWith(parentCode + ".");
-  };
-
-  const markAuditAsCompleted = () => {
-    localStorage.setItem(AUDIT_COMPLETED_KEY, "true");
-    setAuditCompleted(true);
-    toast.success("Auditoria finalizada! Item removido do menu.");
-  };
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const loadAuditData = async () => {
     try {
@@ -197,12 +182,46 @@ const CostCenterAudit = () => {
     }
   };
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
+  useEffect(() => {
+    loadAuditData();
+  }, []);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
+
+  const markAuditAsCompleted = () => {
+    localStorage.setItem(AUDIT_COMPLETED_KEY, "true");
+    setAuditCompleted(true);
+    toast.success("Auditoria finalizada! Item removido do menu.");
+  };
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
+  const isAccountDescendant = (accountCode: string, parentCode: string): boolean => {
+    // Check if accountCode is a descendant of parentCode
+    // e.g., "4.1.1" is descendant of "4", "4.1", but not of "1"
+    // "1.1.3.04.001" is descendant of "1", "1.1", "1.1.3", "1.1.3.04"
+
+    // Exact match
+    if (accountCode === parentCode) return true;
+
+    // Check if accountCode starts with parentCode.
+    return accountCode.startsWith(parentCode + ".");
+  };
+
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Auditoria de Centros de Custo</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Auditoria de Centros de Custo</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Verificar quais centros de custo têm contas vinculadas que não respeitam as contas padrão cadastradas
           </p>
         </div>

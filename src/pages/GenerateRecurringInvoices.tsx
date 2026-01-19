@@ -8,8 +8,15 @@ import { Loader2, Calendar, DollarSign, CheckCircle, AlertCircle } from "lucide-
 import { toast } from "sonner";
 
 export default function GenerateRecurringInvoices() {
+  // Estados de carregamento
   const [loading, setLoading] = useState(false);
+
+  // Estados de dados principais
   const [result, setResult] = useState<any>(null);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -56,12 +63,15 @@ export default function GenerateRecurringInvoices() {
 
   return (
     <Layout>
-      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Gerar Honorários Recorrentes 2025</h1>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            Gera automaticamente as contas a receber de honorários contábeis para todo o ano de 2025
-          </p>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Gerar Honorários Recorrentes 2025</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Gera automaticamente as contas a receber de honorários contábeis para todo o ano de 2025
+            </p>
+          </div>
         </div>
 
         <Card>

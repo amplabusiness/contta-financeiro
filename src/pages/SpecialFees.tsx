@@ -101,32 +101,35 @@ interface MonthlyRevenue {
 }
 
 export default function SpecialFees() {
-  const [activeTab, setActiveTab] = useState("variable");
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
 
+  // Estados de dados principais
+  const [activeTab, setActiveTab] = useState("variable");
   const [variableFees, setVariableFees] = useState<VariableFee[]>([]);
   const [companyServices, setCompanyServices] = useState<CompanyService[]>([]);
   const [referralPartners, setReferralPartners] = useState<ReferralPartner[]>([]);
   const [clientReferrals, setClientReferrals] = useState<ClientReferral[]>([]);
   const [irpfDeclarations, setIrpfDeclarations] = useState<IrpfDeclaration[]>([]);
   const [monthlyRevenues, setMonthlyRevenues] = useState<MonthlyRevenue[]>([]);
+  const [clients, setClients] = useState<{id: string, name: string, cnpj?: string}[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
+  // Estados de diálogos
   const [showVariableFeeDialog, setShowVariableFeeDialog] = useState(false);
   const [showCompanyServiceDialog, setShowCompanyServiceDialog] = useState(false);
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
   const [showReferralDialog, setShowReferralDialog] = useState(false);
   const [showIrpfDialog, setShowIrpfDialog] = useState(false);
   const [showRevenueDialog, setShowRevenueDialog] = useState(false);
-
   const [editingVariableFee, setEditingVariableFee] = useState<VariableFee | null>(null);
 
-  const [clients, setClients] = useState<{id: string, name: string, cnpj?: string}[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   useEffect(() => {
     loadData();
@@ -754,18 +757,14 @@ export default function SpecialFees() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.cnpj && c.cnpj.includes(searchTerm))
-  );
-
   return (
     <Layout>
-      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Honorários Especiais</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Honorários Especiais</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Gerencie honorários variáveis, abertura de empresas, comissões e IRPF
             </p>
           </div>

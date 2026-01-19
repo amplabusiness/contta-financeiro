@@ -37,14 +37,21 @@ interface PayableSummary {
 
 const AccountsPayable = () => {
   const { selectedYear, selectedMonth } = usePeriod();
+
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [accounts, setAccounts] = useState<AccountPayable[]>([]);
   const [summary, setSummary] = useState<PayableSummary[]>([]);
   const [totalPending, setTotalPending] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [filterTab, setFilterTab] = useState("all");
 
-  // Carregar dados da FONTE DA VERDADE (accounting_entries)
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
@@ -62,9 +69,17 @@ const AccountsPayable = () => {
     }
   }, [selectedYear, selectedMonth]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadAccounts();
   }, [loadAccounts]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getStatusBadge = (status: "pending" | "paid" | "partial") => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -112,19 +127,13 @@ const AccountsPayable = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">Contas a Pagar</h1>
-              {/* Indicador de Fonte da Verdade */}
-              <Badge variant="default" className="gap-1">
-                <Database className="h-3 w-3" />
-                Fonte da Verdade
-              </Badge>
-            </div>
-            <p className="text-muted-foreground">
-              Passivo Circulante - Contas do grupo 2.1.x (accounting_entries)
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Contas a Pagar</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Passivo Circulante - Contas do grupo 2.1.x • Fonte da Verdade: accounting_entries
             </p>
           </div>
         </div>

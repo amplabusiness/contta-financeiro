@@ -34,13 +34,18 @@ interface ExpenseSummary {
 const Expenses = () => {
   const { selectedYear, selectedMonth } = usePeriod();
 
-  // Estados
+  // Estados de carregamento
+  const [loading, setLoading] = useState(true);
+
+  // Estados de dados principais
   const [entries, setEntries] = useState<ExpenseEntry[]>([]);
   const [summary, setSummary] = useState<ExpenseSummary[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
-  const [loading, setLoading] = useState(true);
 
-  // Carregar despesas da FONTE DA VERDADE
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
+
   const loadExpenses = useCallback(async () => {
     try {
       setLoading(true);
@@ -60,11 +65,18 @@ const Expenses = () => {
     }
   }, [selectedYear, selectedMonth]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadExpenses();
   }, [loadExpenses]);
 
-  // Formatar período para exibição
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
+
   const getFormattedPeriod = () => {
     if (selectedMonth && selectedYear) {
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -79,20 +91,24 @@ const Expenses = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Despesas</h1>
-          <p className="text-muted-foreground">
-            Análise de despesas • Fonte da Verdade: accounting_entries
-          </p>
-          {(selectedYear || selectedMonth) && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
-              <span className="font-medium">Filtros ativos:</span>
-              {selectedYear && <Badge variant="secondary">Ano: {selectedYear}</Badge>}
-              {selectedMonth && <Badge variant="secondary">Mês: {selectedMonth}</Badge>}
-            </div>
-          )}
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Despesas</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Análise de despesas • Fonte da Verdade: accounting_entries
+            </p>
+          </div>
         </div>
+
+        {(selectedYear || selectedMonth) && (
+          <div className="flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
+            <span className="font-medium">Filtros ativos:</span>
+            {selectedYear && <Badge variant="secondary">Ano: {selectedYear}</Badge>}
+            {selectedMonth && <Badge variant="secondary">Mês: {selectedMonth}</Badge>}
+          </div>
+        )}
 
         <Card>
           <CardHeader>

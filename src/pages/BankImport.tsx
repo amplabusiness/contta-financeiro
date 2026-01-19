@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Download, Calendar, Brain, BookOpen, MessageCircle, Pencil, Save } from "lucide-react";
+import { Loader2, FileText, CheckCircle2, AlertCircle, Download, Brain, BookOpen, MessageCircle, Pencil, Save } from "lucide-react";
 import { readOFXFile, OFXStatement, OFXTransaction } from "@/lib/ofxParser";
 import { formatCurrency } from "@/data/expensesData";
 import { format } from "date-fns";
@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { AIClassificationDialog } from "@/components/AIClassificationDialog";
-import { AITeamBadge } from "@/components/AITeamBadge";
 import { AIAssistantChat } from "@/components/AIAssistantChat";
 
 interface BankAccount {
@@ -91,38 +90,39 @@ interface TransactionClassification {
 }
 
 const BankImport = () => {
+  // Estados de carregamento
+  const [loading, setLoading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [aiProcessing, setAiProcessing] = useState(false);
+
+  // Estados de dados principais
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<string>("");
-  const [loading, setLoading] = useState(false);
   const [parsedData, setParsedData] = useState<OFXStatement | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [previewing, setPreviewing] = useState(false);
   const [recentImports, setRecentImports] = useState<any[]>([]);
 
-  // Estados para classificação IA
+  // Estados de classificação IA
   const [enableAI, setEnableAI] = useState(true);
-  const [aiProcessing, setAiProcessing] = useState(false);
   const [aiProgress, setAiProgress] = useState(0);
   const [aiClassifications, setAiClassifications] = useState<AIClassification[]>([]);
 
-  // Estados para diálogo de classificação interativa
+  // Estados de diálogos
   const [showClassificationDialog, setShowClassificationDialog] = useState(false);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
   const [currentImportId, setCurrentImportId] = useState<string>("");
+  const [showInlineClassification, setShowInlineClassification] = useState(false);
 
-  // Estados para classificação inline
+  // Estados de classificação inline
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [chartAccounts, setChartAccounts] = useState<ChartAccount[]>([]);
   const [classifications, setClassifications] = useState<Record<string, TransactionClassification>>({});
-  const [showInlineClassification, setShowInlineClassification] = useState(false);
 
-  useEffect(() => {
-    loadBankAccounts();
-    loadRecentImports();
-    loadCostCentersAndAccounts();
-  }, []);
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
-  const loadCostCentersAndAccounts = async () => {
+  const loadCostCentersAndAccounts = useCallback(async () => {
     try {
       const [centersRes, accountsRes] = await Promise.all([
         supabase.from("cost_centers").select("id, name, code").eq("is_active", true).order("code"),
@@ -134,9 +134,9 @@ const BankImport = () => {
     } catch (error) {
       console.error("Erro ao carregar centros de custo e contas:", error);
     }
-  };
+  }, []);
 
-  const loadBankAccounts = async () => {
+  const loadBankAccounts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("bank_accounts")
@@ -150,9 +150,9 @@ const BankImport = () => {
       console.error("Erro ao carregar contas:", error);
       toast.error("Erro ao carregar contas bancárias");
     }
-  };
+  }, []);
 
-  const loadRecentImports = async () => {
+  const loadRecentImports = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("bank_imports")
@@ -171,7 +171,21 @@ const BankImport = () => {
     } catch (error: any) {
       console.error("Erro ao carregar importações:", error);
     }
-  };
+  }, []);
+
+  // =====================================================
+  // EFFECTS - Inicialização
+  // =====================================================
+
+  useEffect(() => {
+    loadBankAccounts();
+    loadRecentImports();
+    loadCostCentersAndAccounts();
+  }, [loadBankAccounts, loadRecentImports, loadCostCentersAndAccounts]);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -523,18 +537,15 @@ const BankImport = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 w-full max-w-[100vw] overflow-hidden px-1 sm:px-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Upload className="h-8 w-8 text-primary shrink-0" />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Importar Extrato Bancário</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Importe arquivos OFX do seu banco (Sicredi, Banco do Brasil, etc.)
-              </p>
-            </div>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Importar Extrato Bancário</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Importe arquivos OFX do seu banco (Sicredi, Banco do Brasil, etc.)
+            </p>
           </div>
-          <AITeamBadge variant="compact" />
         </div>
 
         <Card>

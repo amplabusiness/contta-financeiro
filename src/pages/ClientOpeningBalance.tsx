@@ -64,17 +64,18 @@ const ClientOpeningBalance = () => {
   const { selectedClientId: globalClientId, selectedClientName: globalClientName } = useClient();
   // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
   const { registrarSaldoAbertura } = useAccounting({ showToasts: false, sourceModule: 'ClientOpeningBalance' });
-  const [clients, setClients] = useState<Client[]>([]);
-  const [balances, setBalances] = useState<OpeningBalance[]>([]);
+
+  // Estados de carregamento
   const [loading, setLoading] = useState(true);
   const [savingBatch, setSavingBatch] = useState(false);
   const [reprocessing, setReprocessing] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+
+  // Estados de dados principais
+  const [clients, setClients] = useState<Client[]>([]);
+  const [balances, setBalances] = useState<OpeningBalance[]>([]);
   const [editingBalance, setEditingBalance] = useState<OpeningBalance | null>(null);
   const [filterClientId, setFilterClientId] = useState<string>("");
-
-  // Form para lançamento individual
+  const [selectedClientForBatch, setSelectedClientForBatch] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
     client_id: "",
     competence: "",
@@ -83,8 +84,6 @@ const ClientOpeningBalance = () => {
     description: "",
     notes: ""
   });
-
-  // Form para lançamento em lote
   const [batchForm, setBatchForm] = useState({
     client_id: "",
     year: currentYear.toString(),
@@ -94,8 +93,13 @@ const ClientOpeningBalance = () => {
     notes: ""
   });
 
-  // Cliente selecionado para lote
-  const [selectedClientForBatch, setSelectedClientForBatch] = useState<Client | null>(null);
+  // Estados de diálogos
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   // ✅ CONTABILIDADE INTEGRADA: Função para criar lançamento contábil do saldo de abertura
   const createAccountingEntryForBalance = async (
@@ -188,9 +192,17 @@ const ClientOpeningBalance = () => {
     }
   }, [loadBalances]);
 
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
+
   useEffect(() => {
     loadData();
   }, [loadData]); // Recarregar quando mudar cliente global
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -390,6 +402,10 @@ const ClientOpeningBalance = () => {
       setSavingBatch(false);
     }
   };
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getMonthName = (monthNum: string) => {
     const month = MONTHS.find(m => m.value === monthNum);
@@ -631,13 +647,13 @@ const ClientOpeningBalance = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
               {globalClientId ? `Saldo de Abertura - ${globalClientName}` : "Saldo de Abertura"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               {globalClientId
                 ? "Honorários não pagos deste cliente"
                 : "Gerencie honorários não pagos de competências anteriores - selecione um cliente para filtrar"

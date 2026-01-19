@@ -3,18 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
+import { PeriodFilter } from "@/components/PeriodFilter";
 import { getDashboardBalances, getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
+import { usePeriod } from "@/contexts/PeriodContext";
+import { formatCurrency } from "@/data/expensesData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -37,13 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Lock,
   Unlock,
   Calendar,
@@ -52,20 +39,15 @@ import {
   ArrowRight,
   Loader2,
   FileText,
-  DollarSign,
   TrendingUp,
   TrendingDown,
-  Building2,
   CreditCard,
   RefreshCw,
-  ClipboardList,
   AlertCircle,
   Banknote,
   Receipt,
-  Users,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface MonthlyClosing {
   id: string;
@@ -119,22 +101,30 @@ const monthNames = [
 const MonthlyClosing = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { selectedYear } = usePeriod();
+
+  // Estados de carregamento
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Estados de dados principais
   const [closings, setClosings] = useState<MonthlyClosing[]>([]);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [periodSummary, setPeriodSummary] = useState<PeriodSummary | null>(null);
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
 
-  // Dialog states
+  // Estados de diálogos
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<{ year: number; month: number } | null>(null);
   const [closeNotes, setCloseNotes] = useState("");
   const [reopenReason, setReopenReason] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
+
+  // =====================================================
+  // FUNÇÕES DE CARREGAMENTO DE DADOS
+  // =====================================================
 
   const fetchClosings = useCallback(async () => {
     setIsLoading(true);
@@ -162,49 +152,72 @@ const MonthlyClosing = () => {
       const endStr = format(endDate, "yyyy-MM-dd");
 
       // =====================================================
-      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
-      // Cada tela consulta a conta que precisa
+      // PREPARAÇÃO DAS QUERIES - Construir queries
       // =====================================================
-      const [dashboardBalances, saldoBanco, contasReceber] = await Promise.all([
+      const queries = [
+        supabase
+          .from("invoices")
+          .select("id, status")
+          .lte("due_date", endStr)
+          .in("status", ["pending", "overdue"]),
+        supabase
+          .from("expenses")
+          .select("id, status")
+          .lte("due_date", endStr)
+          .in("status", ["pending", "overdue"]),
+        supabase
+          .from("bank_transactions")
+          .select("id")
+          .gte("transaction_date", startStr)
+          .lte("transaction_date", endStr)
+          .eq("is_reconciled", false),
+        supabase
+          .from("expenses")
+          .select("amount")
+          .lte("due_date", endStr)
+          .in("status", ["pending", "overdue"]),
+      ];
+
+      // =====================================================
+      // EXECUÇÃO PARALELA - Promise.allSettled para tratamento robusto de erros
+      // =====================================================
+      const [results, dashboardBalances, saldoBanco, contasReceber] = await Promise.all([
+        Promise.allSettled(queries),
         getDashboardBalances(year, month),
         getAccountBalance(ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, year, month),
         getAccountBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month),
       ]);
 
-      // Buscar invoices pendentes (apenas para contagem, não para valores)
-      const { data: pendingInvoices } = await supabase
-        .from("invoices")
-        .select("id, status")
-        .lte("due_date", endStr)
-        .in("status", ["pending", "overdue"]);
+      // =====================================================
+      // EXTRAÇÃO DE DADOS - Verificar status e extrair dados
+      // =====================================================
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn(`Query ${index} falhou:`, result.reason);
+        }
+      });
 
-      // Buscar despesas pendentes (apenas para contagem)
-      const { data: pendingExpenses } = await supabase
-        .from("expenses")
-        .select("id, status")
-        .lte("due_date", endStr)
-        .in("status", ["pending", "overdue"]);
+      const pendingInvoices = results[0].status === 'fulfilled' ? results[0].value.data : [];
+      const pendingExpenses = results[1].status === 'fulfilled' ? results[1].value.data : [];
+      const unreconciledTx = results[2].status === 'fulfilled' ? results[2].value.data : [];
+      const payableExpenses = results[3].status === 'fulfilled' ? results[3].value.data : [];
 
-      // Buscar transações não conciliadas (para alerta)
-      const { data: unreconciledTx } = await supabase
-        .from("bank_transactions")
-        .select("id")
-        .gte("transaction_date", startStr)
-        .lte("transaction_date", endStr)
-        .eq("is_reconciled", false);
-
-      // FONTE DA VERDADE: Valores das contas contábeis
+      // =====================================================
+      // CÁLCULO DE VALORES - Fonte da verdade: contas contábeis
+      // =====================================================
       const totalRevenue = dashboardBalances.totalReceitas;
       const totalExpenses = dashboardBalances.totalDespesas;
       const accountsReceivable = contasReceber.balance;
-
-      // Contas a pagar - usar expenses apenas como fallback
-      const { data: payableExpenses } = await supabase
-        .from("expenses")
-        .select("amount")
-        .lte("due_date", endStr)
-        .in("status", ["pending", "overdue"]);
       const accountsPayable = payableExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+
+      // =====================================================
+      // CÁLCULO DE ESTATÍSTICAS - Agregações e contadores
+      // =====================================================
+      const pendingInvoicesCount = pendingInvoices?.filter((i: any) => i.status === "pending").length || 0;
+      const overdueInvoicesCount = pendingInvoices?.filter((i: any) => i.status === "overdue").length || 0;
+      const pendingExpensesCount = pendingExpenses?.filter((e: any) => e.status === "pending").length || 0;
+      const overdueExpensesCount = pendingExpenses?.filter((e: any) => e.status === "overdue").length || 0;
+      const unreconciledCount = unreconciledTx?.length || 0;
 
       setPeriodSummary({
         totalRevenue,
@@ -212,53 +225,53 @@ const MonthlyClosing = () => {
         netResult: totalRevenue - totalExpenses,
         accountsReceivable,
         accountsPayable,
-        pendingInvoices: pendingInvoices?.filter(i => i.status === "pending").length || 0,
-        overdueInvoices: pendingInvoices?.filter(i => i.status === "overdue").length || 0,
-        pendingExpenses: pendingExpenses?.filter(e => e.status === "pending").length || 0,
-        overdueExpenses: pendingExpenses?.filter(e => e.status === "overdue").length || 0,
+        pendingInvoices: pendingInvoicesCount,
+        overdueInvoices: overdueInvoicesCount,
+        pendingExpenses: pendingExpensesCount,
+        overdueExpenses: overdueExpensesCount,
         bankBalances: [{
           id: "sicredi",
           name: saldoBanco.name,
           balance: saldoBanco.balance,
         }],
-        unreconciled: unreconciledTx?.length || 0,
+        unreconciled: unreconciledCount,
       });
 
-      // Gerar tarefas pendentes
+      // =====================================================
+      // GERAR TAREFAS PENDENTES - Lista de alertas
+      // =====================================================
       const tasks: PendingTask[] = [];
 
-      if (unreconciledTx && unreconciledTx.length > 0) {
+      if (unreconciledCount > 0) {
         tasks.push({
           type: "reconciliation",
           title: "Transações não conciliadas",
-          description: `${unreconciledTx.length} transações bancárias aguardando conciliação`,
-          count: unreconciledTx.length,
+          description: `${unreconciledCount} transações bancárias aguardando conciliação`,
+          count: unreconciledCount,
           severity: "warning",
           action: "Conciliar agora",
           route: "/bank-reconciliation",
         });
       }
 
-      const overdueInvCount = pendingInvoices?.filter(i => i.status === "overdue").length || 0;
-      if (overdueInvCount > 0) {
+      if (overdueInvoicesCount > 0) {
         tasks.push({
           type: "invoice",
           title: "Honorários vencidos",
-          description: `${overdueInvCount} honorários vencidos aguardando pagamento`,
-          count: overdueInvCount,
+          description: `${overdueInvoicesCount} honorários vencidos aguardando pagamento`,
+          count: overdueInvoicesCount,
           severity: "error",
           action: "Ver honorários",
           route: "/invoices",
         });
       }
 
-      const overdueExpCount = pendingExpenses?.filter(e => e.status === "overdue").length || 0;
-      if (overdueExpCount > 0) {
+      if (overdueExpensesCount > 0) {
         tasks.push({
           type: "expense",
           title: "Despesas vencidas",
-          description: `${overdueExpCount} despesas vencidas aguardando pagamento`,
-          count: overdueExpCount,
+          description: `${overdueExpensesCount} despesas vencidas aguardando pagamento`,
+          count: overdueExpensesCount,
           severity: "error",
           action: "Ver despesas",
           route: "/expenses",
@@ -268,9 +281,13 @@ const MonthlyClosing = () => {
       setPendingTasks(tasks);
 
     } catch (error) {
-      console.error("Erro ao buscar resumo do período:", error);
+      console.error("Erro crítico ao buscar resumo do período:", error);
     }
   }, []);
+
+  // =====================================================
+  // EFFECTS - Inicialização e sincronização
+  // =====================================================
 
   useEffect(() => {
     fetchClosings();
@@ -280,6 +297,10 @@ const MonthlyClosing = () => {
     // Buscar resumo do mês atual
     fetchPeriodSummary(currentYear, currentMonth);
   }, [currentYear, currentMonth, fetchPeriodSummary]);
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   const getClosingForMonth = (month: number): MonthlyClosing | undefined => {
     return closings.find(c => c.month === month);
@@ -325,6 +346,10 @@ const MonthlyClosing = () => {
     const nextClosing = closings.find(c => c.month === nextMonth);
     return !nextClosing || nextClosing.status !== "closed";
   };
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleCloseMonth = (year: number, month: number) => {
     setSelectedPeriod({ year, month });
@@ -479,31 +504,17 @@ const MonthlyClosing = () => {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 flex-wrap">
               <div className="min-w-0">
-                <h1 className="text-3xl font-bold tracking-tight">Fechamento de Mês</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Fechamento de Mês</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Controle de períodos e transferência de saldos
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 min-w-0">
-                <Select
-                  value={selectedYear.toString()}
-                  onValueChange={(v) => setSelectedYear(parseInt(v))}
-                >
-                  <SelectTrigger className="min-w-[90px] w-auto max-w-[120px] sm:w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[currentYear - 1, currentYear, currentYear + 1].map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <PeriodFilter />
                 <Button
                   variant="outline"
                   onClick={() => fetchClosings()}
@@ -528,7 +539,7 @@ const MonthlyClosing = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">Receitas ({monthNames[currentMonth - 1]})</p>
                         <p className="text-xl font-bold text-green-600">
-                          R$ {periodSummary.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {formatCurrency(periodSummary.totalRevenue)}
                         </p>
                       </div>
                     </div>
@@ -544,7 +555,7 @@ const MonthlyClosing = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">Despesas ({monthNames[currentMonth - 1]})</p>
                         <p className="text-xl font-bold text-red-600">
-                          R$ {periodSummary.totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {formatCurrency(periodSummary.totalExpenses)}
                         </p>
                       </div>
                     </div>
@@ -560,7 +571,7 @@ const MonthlyClosing = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">A Receber</p>
                         <p className="text-xl font-bold">
-                          R$ {periodSummary.accountsReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {formatCurrency(periodSummary.accountsReceivable)}
                         </p>
                         {periodSummary.overdueInvoices > 0 && (
                           <p className="text-xs text-red-500">{periodSummary.overdueInvoices} vencidos</p>
@@ -579,7 +590,7 @@ const MonthlyClosing = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">A Pagar</p>
                         <p className="text-xl font-bold">
-                          R$ {periodSummary.accountsPayable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {formatCurrency(periodSummary.accountsPayable)}
                         </p>
                         {periodSummary.overdueExpenses > 0 && (
                           <p className="text-xs text-red-500">{periodSummary.overdueExpenses} vencidas</p>
@@ -708,7 +719,7 @@ const MonthlyClosing = () => {
 
                           {closing && isClosed && (
                             <div className="text-xs text-muted-foreground mb-2">
-                              <p>Resultado: R$ {Number(closing.net_result).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                              <p>Resultado: {formatCurrency(Number(closing.net_result))}</p>
                               {closing.closed_at && (
                                 <p>Fechado em: {format(new Date(closing.closed_at), "dd/MM/yyyy HH:mm")}</p>
                               )}
@@ -781,13 +792,13 @@ const MonthlyClosing = () => {
                           </TableCell>
                           <TableCell>{getStatusBadge(closing)}</TableCell>
                           <TableCell className="text-right text-green-600">
-                            R$ {Number(closing.total_revenue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            {formatCurrency(Number(closing.total_revenue))}
                           </TableCell>
                           <TableCell className="text-right text-red-600">
-                            R$ {Number(closing.total_expenses).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            {formatCurrency(Number(closing.total_expenses))}
                           </TableCell>
                           <TableCell className={`text-right font-medium ${Number(closing.net_result) >= 0 ? "text-green-600" : "text-red-600"}`}>
-                            R$ {Number(closing.net_result).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            {formatCurrency(Number(closing.net_result))}
                           </TableCell>
                           <TableCell>
                             {closing.closed_at ? format(new Date(closing.closed_at), "dd/MM/yyyy HH:mm") : "-"}

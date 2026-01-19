@@ -12,15 +12,22 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Import = () => {
-  const [file, setFile] = useState<File | null>(null);
+  // Estados de carregamento
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Estados de dados principais
+  const [file, setFile] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState("");
-  const [results, setResults] = useState<{ 
-    success: number; 
+  const [results, setResults] = useState<{
+    success: number;
     errors: Array<{ line: number; client: string; reason: string }>;
     skipped: Array<{ line: number; client: string; reason: string }>;
   } | null>(null);
+
+  // =====================================================
+  // HANDLERS DE AÇÕES
+  // =====================================================
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -174,10 +181,10 @@ const Import = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">Importar Clientes</h1>
-          <p className="text-muted-foreground">Importe clientes do Excel para o sistema</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Importar Clientes</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Importe clientes do Excel para o sistema</p>
         </div>
 
         <Card>
