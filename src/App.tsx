@@ -122,6 +122,8 @@ import RazaoContabil from "./pages/RazaoContabil";
 import BalanceteVerificacao from "./pages/BalanceteVerificacao";
 import BalancoPatrimonial from "./pages/BalancoPatrimonial";
 import ChatContabil from "./components/ChatContabil";
+import Onboarding from "./pages/Onboarding";
+import { OnboardingGuard } from "./components/OnboardingGuard";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -227,7 +229,8 @@ const App = () => (
             <Routes>
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<OnboardingGuard><Dashboard /></OnboardingGuard>} />
             <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/clients" element={<Clients />} />

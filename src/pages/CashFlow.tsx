@@ -20,6 +20,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useClient } from "@/contexts/ClientContext";
 import { getDashboardBalances, getAdiantamentosSocios } from "@/lib/accountMapping";
 import { useAccounting } from "@/hooks/useAccounting";
+import { isEdgeFunctionError } from "@/lib/edgeFunctionUtils";
 
 interface BankAccount {
   id: string;
@@ -107,7 +108,13 @@ const CashFlow = () => {
       loadCashFlowData();
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
-      toast.error("Erro ao sincronizar fluxo de caixa");
+      // Se Edge Function não está disponível, apenas recarregar os dados locais
+      if (isEdgeFunctionError(error)) {
+        toast.info("Sincronização automática indisponível. Dados locais carregados.");
+        loadCashFlowData();
+      } else {
+        toast.error("Erro ao sincronizar fluxo de caixa");
+      }
     } finally {
       setSyncing(false);
     }

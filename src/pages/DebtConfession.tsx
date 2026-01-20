@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTenantConfig } from "@/hooks/useTenantConfig";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,24 +128,27 @@ interface OfficeData {
   accountantCrc: string;
 }
 
-// Dados padrão do escritório (fallback) - CNPJ CORRETO: 23.893.032/0001-69
-const defaultOfficeData: OfficeData = {
-  name: "AMPLA ASSESSORIA CONTABIL LTDA",
-  tradeName: "Ampla Business",
-  cnpj: "23.893.032/0001-69",
-  crc: "CRC/GO 007640/O",
-  address: "Rua 1, Qd. 24, Lt. 08, S/N - Setor Maracanã",
-  city: "Goiânia",
-  state: "GO",
-  zip: "74.680-320",
-  email: "contato@amplabusiness.com.br",
-  phone: "(62) 3932-1365",
-  accountant: "Sergio Carneiro Leão",
-  accountantCrc: "CRC/GO 007640/O",
+// Dados vazios do escritório (fallback se não configurado)
+const emptyOfficeData: OfficeData = {
+  name: "",
+  tradeName: "",
+  cnpj: "",
+  crc: "",
+  address: "",
+  city: "",
+  state: "",
+  zip: "",
+  email: "",
+  phone: "",
+  accountant: "",
+  accountantCrc: "",
 };
 
 const DebtConfession = () => {
   const { toast } = useToast();
+
+  // Hook para obter dados do tenant atual
+  const { officeData: tenantOfficeData, loading: tenantLoading } = useTenantConfig();
 
   // Estados de carregamento
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +161,27 @@ const DebtConfession = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [confessionPreview, setConfessionPreview] = useState("");
-  const [officeData, setOfficeData] = useState<OfficeData>(defaultOfficeData);
+
+  // officeData derivado do tenant
+  const officeData = useMemo<OfficeData>(() => {
+    if (tenantOfficeData) {
+      return {
+        name: tenantOfficeData.razao_social || "",
+        tradeName: tenantOfficeData.nome_fantasia || "",
+        cnpj: tenantOfficeData.cnpj || "",
+        crc: tenantOfficeData.crc_number ? `CRC/${tenantOfficeData.crc_state || ""} ${tenantOfficeData.crc_number}` : "",
+        address: `${tenantOfficeData.endereco || ""}, ${tenantOfficeData.numero || "S/N"} - ${tenantOfficeData.bairro || ""}`.trim(),
+        city: tenantOfficeData.cidade || "",
+        state: tenantOfficeData.estado || "",
+        zip: tenantOfficeData.cep || "",
+        email: tenantOfficeData.email || "",
+        phone: tenantOfficeData.telefone || "",
+        accountant: tenantOfficeData.responsavel_tecnico || "",
+        accountantCrc: tenantOfficeData.responsavel_crc || "",
+      };
+    }
+    return emptyOfficeData;
+  }, [tenantOfficeData]);
   const [formData, setFormData] = useState({
     client_id: "",
     discount_percentage: "0",
@@ -179,40 +203,7 @@ const DebtConfession = () => {
   // FUNÇÕES DE CARREGAMENTO DE DADOS
   // =====================================================
 
-  const fetchOfficeData = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("accounting_office")
-        .select("*")
-        .eq("is_active", true)
-        .limit(1)
-        .single();
-
-      if (error) {
-        console.log("Usando dados padrão do escritório");
-        return;
-      }
-
-      if (data) {
-        setOfficeData({
-          name: data.razao_social || defaultOfficeData.name,
-          tradeName: data.nome_fantasia || defaultOfficeData.tradeName,
-          cnpj: data.cnpj || defaultOfficeData.cnpj,
-          crc: data.crc_number ? `CRC/${data.crc_state} ${data.crc_number}` : "",
-          address: `${data.endereco || ""}, ${data.numero || "S/N"} - ${data.bairro || ""}`.trim(),
-          city: data.cidade || defaultOfficeData.city,
-          state: data.estado || defaultOfficeData.state,
-          zip: data.cep || "",
-          email: data.email || "",
-          phone: data.telefone || "",
-          accountant: data.responsavel_tecnico || defaultOfficeData.accountant,
-          accountantCrc: data.responsavel_crc || "",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching office data:", error);
-    }
-  }, []);
+  // Nota: officeData agora vem do useTenantConfig hook (definido acima)
 
   const fetchClients = useCallback(async () => {
     try {
@@ -386,10 +377,9 @@ const DebtConfession = () => {
   // =====================================================
 
   useEffect(() => {
-    fetchOfficeData();
     fetchClients();
     fetchConfessions();
-  }, [fetchOfficeData, fetchClients, fetchConfessions]);
+  }, [fetchClients, fetchConfessions]);
 
   // =====================================================
   // HANDLERS DE AÇÕES

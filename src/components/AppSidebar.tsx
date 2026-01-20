@@ -72,6 +72,8 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { AITeamBadge } from "@/components/AITeamBadge";
+import { TenantLogo } from "@/components/TenantLogo";
+import { useTenantConfig } from "@/hooks/useTenantConfig";
 
 const SCROLL_POSITION_KEY = "sidebar-scroll-position";
 
@@ -81,6 +83,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
   const { selectedClientId, selectedClientName } = useClient();
+  const { officeData, tenant } = useTenantConfig();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const auditCompleted = localStorage.getItem("cost_center_audit_completed") === "true";
 
@@ -239,14 +242,12 @@ export function AppSidebar() {
       <SidebarContent ref={scrollContainerRef}>
         {/* Logo */}
         <div className={`flex items-center gap-3 p-4 border-b ${collapsed ? 'justify-center' : ''}`}>
-          <img 
-            src="/logo-ampla.png" 
-            alt="Ampla Contabilidade" 
-            className={`${collapsed ? 'w-12 h-12' : 'w-20 h-20'} object-contain flex-shrink-0`}
-          />
+          <TenantLogo size={collapsed ? "md" : "lg"} />
           {!collapsed && (
             <div className="overflow-hidden">
-              <h2 className="font-bold text-sm">Ampla Contabilidade</h2>
+              <h2 className="font-bold text-sm truncate">
+                {officeData?.nome_fantasia || officeData?.razao_social || tenant?.name || "Meu Escritório"}
+              </h2>
               <p className="text-xs text-muted-foreground truncate">Gestão Financeira</p>
             </div>
           )}

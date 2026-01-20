@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
 import { TrendingUp, TrendingDown, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
+import { isEdgeFunctionError } from "@/lib/edgeFunctionUtils";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { Button } from "@/components/ui/button";
@@ -110,9 +111,11 @@ const DRE = () => {
         toast.success(`${data.created} lançamentos sincronizados`);
       }
     } catch (syncError: any) {
-      // Ignorar erros de timeout/rede silenciosamente
+      // Ignorar erros de timeout/rede/Edge Function silenciosamente
       if (syncError?.name === 'AbortError' || syncError?.message?.includes('timeout')) {
         console.log('[DRE] Sincronização ignorada por timeout');
+      } else if (isEdgeFunctionError(syncError)) {
+        console.log('[DRE] Sincronização ignorada - Edge Function indisponível');
       } else {
         console.error("Erro ao sincronizar despesas para a DRE:", syncError);
       }

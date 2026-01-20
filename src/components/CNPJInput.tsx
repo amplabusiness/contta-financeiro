@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isEdgeFunctionError } from "@/lib/edgeFunctionUtils";
 
 interface CNPJData {
   razao_social?: string;
@@ -118,12 +119,20 @@ export const CNPJInput = ({
       } else {
         throw new Error(data?.message || "Erro ao buscar dados do CNPJ");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching CNPJ data:", error);
       setStatus("error");
-      toast.error("Erro ao buscar dados do CNPJ", {
-        description: error instanceof Error ? error.message : "Verifique o número e tente novamente"
-      });
+
+      // Mensagem mais amigável para erros de Edge Function
+      if (isEdgeFunctionError(error)) {
+        toast.error("Busca automática indisponível", {
+          description: "Preencha os dados manualmente ou tente novamente mais tarde"
+        });
+      } else {
+        toast.error("Erro ao buscar dados do CNPJ", {
+          description: error instanceof Error ? error.message : "Verifique o número e tente novamente"
+        });
+      }
     } finally {
       setLoading(false);
     }

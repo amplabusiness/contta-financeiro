@@ -19,10 +19,8 @@ export const ACCOUNT_MAPPING = {
   SALDO_BANCO_SICREDI: "1.1.1.05",      // Banco Sicredi (disponibilidades)
   CONTAS_A_RECEBER: "1.1.2.01",          // Clientes a Receber
 
-  // Adiantamentos a Sócios (cada sócio tem sua conta)
-  ADIANTAMENTO_SERGIO: "1.1.3.04.01",    // Adiantamento Sergio Carneiro
-  ADIANTAMENTO_VICTOR: "1.1.3.04.02",    // Adiantamento Victor Hugo
-  ADIANTAMENTO_JOSE: "1.1.3.04.03",      // Adiantamento José Carlos
+  // Adiantamentos a Sócios (grupo 1.1.3.04.* - dinâmico por tenant)
+  ADIANTAMENTO_SOCIOS_PREFIX: "1.1.3.04", // Prefixo do grupo de adiantamentos a sócios
 
   // DRE - Receitas (grupo 3)
   RECEITA_HONORARIOS: "3.1.1.01",        // Honorários Contábeis
@@ -411,20 +409,51 @@ export async function getDashboardBalances(year?: number, month?: number) {
 }
 
 /**
- * Adiantamentos a Sócios: Retorna saldo de cada sócio
+ * Adiantamentos a Sócios: Retorna saldo de cada sócio DINAMICAMENTE
+ *
+ * Busca todas as contas analíticas sob o prefixo 1.1.3.04.* (Adiantamentos a Sócios)
+ * e retorna os saldos individuais e o total.
+ *
+ * Cada tenant pode ter seus próprios sócios cadastrados no plano de contas.
  */
-export async function getAdiantamentosSocios(year?: number, month?: number) {
-  const [sergio, victor, jose] = await Promise.all([
-    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_SERGIO, year, month),
-    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_VICTOR, year, month),
-    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_JOSE, year, month),
-  ]);
+export async function getAdiantamentosSocios(year?: number, month?: number): Promise<{
+  partners: Array<{ code: string; name: string; balance: number }>;
+  total: number;
+}> {
+  // Buscar todas as contas analíticas de adiantamento a sócios (grupo 1.1.3.04.*)
+  const { data: partnerAccounts, error: accountsError } = await supabase
+    .from("chart_of_accounts")
+    .select("id, code, name")
+    .like("code", `${ACCOUNT_MAPPING.ADIANTAMENTO_SOCIOS_PREFIX}.%`)
+    .eq("is_analytical", true)
+    .eq("is_active", true);
+
+  if (accountsError || !partnerAccounts?.length) {
+    return {
+      partners: [],
+      total: 0,
+    };
+  }
+
+  // Buscar saldos de todas as contas em paralelo
+  const balancePromises = partnerAccounts.map((account) =>
+    getAccountBalance(account.code, year, month)
+  );
+  const balances = await Promise.all(balancePromises);
+
+  // Montar resultado
+  const partners = balances.map((balance) => ({
+    code: balance.code,
+    name: balance.name,
+    balance: balance.balance,
+  }));
+
+  // Calcular total
+  const total = partners.reduce((sum, p) => sum + p.balance, 0);
 
   return {
-    sergio: sergio.balance,
-    victor: victor.balance,
-    jose: jose.balance,
-    total: sergio.balance + victor.balance + jose.balance,
+    partners,
+    total,
   };
 }
 

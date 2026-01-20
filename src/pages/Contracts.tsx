@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTenantConfig } from "@/hooks/useTenantConfig";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -169,28 +170,28 @@ interface AccountingOffice {
   website: string | null;
 }
 
-// Dados padrão do escritório (usado como fallback)
-const defaultOfficeData: AccountingOffice = {
+// Dados padrão vazios do escritório (fallback se não configurado)
+const emptyOfficeData: AccountingOffice = {
   id: "",
-  razao_social: "AMPLA CONTABILIDADE LTDA",
-  nome_fantasia: "Ampla Contabilidade",
-  cnpj: "23.893.032/0001-69",
-  crc_number: "007640/O",
-  crc_state: "GO",
-  responsavel_tecnico: "Sérgio Carneiro Leão",
-  responsavel_crc: "CRC-GO 8.074",
+  razao_social: "",
+  nome_fantasia: null,
+  cnpj: "",
+  crc_number: null,
+  crc_state: null,
+  responsavel_tecnico: null,
+  responsavel_crc: null,
   responsavel_cpf: null,
-  endereco: "Rua P25, 931",
-  numero: "931",
-  complemento: "Quadra P 89, Lote 44/45, Sala 09",
-  bairro: "Setor dos Funcionários",
-  cidade: "Goiânia",
-  estado: "GO",
-  cep: "74.543-395",
-  telefone: "(62) 3233-8888",
+  endereco: null,
+  numero: null,
+  complemento: null,
+  bairro: null,
+  cidade: null,
+  estado: null,
+  cep: null,
+  telefone: null,
   celular: null,
-  email: "legalizacao@amplabusiness.com.br",
-  website: "www.amplabusiness.com.br",
+  email: null,
+  website: null,
 };
 
 // Serviços por tipo de contrato
@@ -233,8 +234,11 @@ const contractServices = {
 };
 
 const Contracts = () => {
-      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-      const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  // Hook para obter dados do tenant atual
+  const { officeData: tenantOfficeData, loading: tenantLoading } = useTenantConfig();
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
       const [deleteConfirmed, setDeleteConfirmed] = useState(false);
 
       const handleDeleteContract = async () => {
@@ -273,7 +277,34 @@ const Contracts = () => {
   // Estados de dados principais
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [officeData, setOfficeData] = useState<AccountingOffice>(defaultOfficeData);
+  // officeData derivado do tenant ou fallback
+  const officeData = useMemo<AccountingOffice>(() => {
+    if (tenantOfficeData) {
+      return {
+        id: tenantOfficeData.id,
+        razao_social: tenantOfficeData.razao_social,
+        nome_fantasia: tenantOfficeData.nome_fantasia || null,
+        cnpj: tenantOfficeData.cnpj,
+        crc_number: tenantOfficeData.crc_number || null,
+        crc_state: tenantOfficeData.crc_state || null,
+        responsavel_tecnico: tenantOfficeData.responsavel_tecnico || null,
+        responsavel_crc: tenantOfficeData.responsavel_crc || null,
+        responsavel_cpf: tenantOfficeData.responsavel_cpf || null,
+        endereco: tenantOfficeData.endereco || null,
+        numero: tenantOfficeData.numero || null,
+        complemento: tenantOfficeData.complemento || null,
+        bairro: tenantOfficeData.bairro || null,
+        cidade: tenantOfficeData.cidade || null,
+        estado: tenantOfficeData.estado || null,
+        cep: tenantOfficeData.cep || null,
+        telefone: tenantOfficeData.telefone || null,
+        celular: tenantOfficeData.celular || null,
+        email: tenantOfficeData.email || null,
+        website: tenantOfficeData.website || null,
+      };
+    }
+    return emptyOfficeData;
+  }, [tenantOfficeData]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [contractPreview, setContractPreview] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -310,27 +341,7 @@ const Contracts = () => {
   // FUNÇÕES DE CARREGAMENTO DE DADOS
   // =====================================================
 
-  const fetchAccountingOffice = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("accounting_office")
-        .select("*")
-        .eq("is_active", true)
-        .limit(1)
-        .single();
-
-      if (error) {
-        console.log("Usando dados padrão do escritório:", error.message);
-        return;
-      }
-
-      if (data) {
-        setOfficeData(data);
-      }
-    } catch (error) {
-      console.log("Usando dados padrão do escritório");
-    }
-  }, []);
+  // Nota: officeData agora vem do useTenantConfig hook (definido acima)
 
   const fetchClients = useCallback(async () => {
     try {
@@ -377,10 +388,9 @@ const Contracts = () => {
   // =====================================================
 
   useEffect(() => {
-    fetchAccountingOffice();
     fetchContracts();
     fetchClients();
-  }, [fetchAccountingOffice, fetchContracts, fetchClients]);
+  }, [fetchContracts, fetchClients]);
 
   // =====================================================
   // FUNÇÕES AUXILIARES

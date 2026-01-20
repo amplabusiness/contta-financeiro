@@ -21,33 +21,27 @@ import {
   CheckCircle,
   Briefcase,
   Award,
-  Globe,
-  Phone,
-  Mail,
-  MapPin,
+  BarChart3,
+  Wallet,
+  PieChart,
 } from "lucide-react";
 
-// Conhecimento da Ampla
-const AMPLA_INFO = {
-  nome: "Ampla Contabilidade",
-  slogan: "Transformando negócios há mais de 30 anos",
-  missao: "Fornecer informações e diferenciais competitivos para o desenvolvimento máximo de nossos clientes.",
-  historia: "30+ anos no mercado goiano",
-  site: "www.amplabusiness.com.br",
-  telefone: "(62) 3941-3060",
-  email: "contato@amplabusiness.com.br",
-  localizacao: "Goiânia - GO",
-  diferenciais: [
-    { icon: Clock, texto: "30+ anos de experiência" },
-    { icon: Users, texto: "Equipe multidisciplinar" },
-    { icon: Scale, texto: "Assessoria jurídica" },
-    { icon: TrendingUp, texto: "Consultoria estratégica" },
+// Informações genéricas do sistema SaaS
+const CONTTA_INFO = {
+  nome: "Contta",
+  slogan: "Sistema de Gestão Financeira para Escritórios Contábeis",
+  descricao: "Simplifique a gestão financeira do seu escritório com automação inteligente e relatórios em tempo real.",
+  recursos: [
+    { icon: Calculator, texto: "Contabilidade automatizada" },
+    { icon: BarChart3, texto: "Relatórios em tempo real" },
+    { icon: Wallet, texto: "Gestão de honorários" },
+    { icon: PieChart, texto: "Análise de rentabilidade" },
   ],
-  servicos: [
-    { icon: Calculator, nome: "Contabilidade", desc: "Fiscal, DP e Societário" },
-    { icon: Scale, nome: "Jurídico", desc: "Civil, Trabalhista e Tributário" },
-    { icon: Briefcase, nome: "BPO Financeiro", desc: "Tesouraria e Controladoria" },
-    { icon: FileText, nome: "Consultoria", desc: "Planejamento Estratégico" },
+  beneficios: [
+    { icon: Clock, nome: "Economia de Tempo", desc: "Automatize tarefas repetitivas" },
+    { icon: Shield, nome: "Segurança", desc: "Dados protegidos e criptografados" },
+    { icon: TrendingUp, nome: "Crescimento", desc: "Insights para tomada de decisão" },
+    { icon: Users, nome: "Multi-tenant", desc: "Cada escritório isolado" },
   ],
 };
 
@@ -159,7 +153,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-8 xl:p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white p-8 xl:p-12 flex-col justify-between relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
@@ -170,51 +164,44 @@ const Auth = () => {
         <div className="relative z-10 flex-1 flex flex-col">
           {/* Logo + Nome */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="bg-white rounded-2xl p-3 shadow-lg">
-              <img
-                src="/logo-ampla-color.png"
-                alt="Ampla Contabilidade"
-                className="h-16 xl:h-20 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+            <div className="bg-white rounded-2xl p-4 xl:p-6 shadow-lg">
+              <Building2 className="h-16 xl:h-20 w-16 xl:w-20 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl xl:text-3xl font-bold">{AMPLA_INFO.nome}</h1>
-              <p className="text-blue-200 text-sm xl:text-base">{AMPLA_INFO.slogan}</p>
+              <h1 className="text-2xl xl:text-3xl font-bold">{CONTTA_INFO.nome}</h1>
+              <p className="text-primary-foreground/80 text-sm xl:text-base">{CONTTA_INFO.slogan}</p>
             </div>
           </div>
 
-          {/* Mission */}
+          {/* Descrição */}
           <div className="mb-8 xl:mb-10">
-            <blockquote className="text-lg xl:text-xl text-blue-100 leading-relaxed border-l-4 border-blue-400 pl-4 italic">
-              "{AMPLA_INFO.missao}"
-            </blockquote>
+            <p className="text-lg xl:text-xl text-primary-foreground/90 leading-relaxed">
+              {CONTTA_INFO.descricao}
+            </p>
           </div>
 
-          {/* Diferenciais - Grid mais compacto */}
+          {/* Recursos - Grid */}
           <div className="grid grid-cols-2 gap-3 mb-8 xl:mb-10">
-            {AMPLA_INFO.diferenciais.map((dif, idx) => (
+            {CONTTA_INFO.recursos.map((recurso, idx) => (
               <div key={idx} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-                <dif.icon className="w-4 h-4 xl:w-5 xl:h-5 text-blue-300 flex-shrink-0" />
-                <span className="text-sm text-blue-100">{dif.texto}</span>
+                <recurso.icon className="w-4 h-4 xl:w-5 xl:h-5 text-primary-foreground/80 flex-shrink-0" />
+                <span className="text-sm text-primary-foreground/90">{recurso.texto}</span>
               </div>
             ))}
           </div>
 
-          {/* Servicos - Layout melhorado */}
+          {/* Benefícios - Layout melhorado */}
           <div className="flex-1">
-            <h3 className="text-xs uppercase tracking-widest text-blue-400 mb-4 font-semibold">Nossos Serviços</h3>
+            <h3 className="text-xs uppercase tracking-widest text-primary-foreground/60 mb-4 font-semibold">Por que escolher o Contta?</h3>
             <div className="grid grid-cols-2 gap-4">
-              {AMPLA_INFO.servicos.map((srv, idx) => (
+              {CONTTA_INFO.beneficios.map((beneficio, idx) => (
                 <div key={idx} className="flex items-center gap-3 group">
                   <div className="w-10 h-10 xl:w-12 xl:h-12 bg-white/10 group-hover:bg-white/20 transition-colors rounded-xl flex items-center justify-center flex-shrink-0 border border-white/10">
-                    <srv.icon className="w-5 h-5 xl:w-6 xl:h-6 text-blue-200" />
+                    <beneficio.icon className="w-5 h-5 xl:w-6 xl:h-6 text-primary-foreground/80" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm xl:text-base">{srv.nome}</p>
-                    <p className="text-xs text-blue-300">{srv.desc}</p>
+                    <p className="font-semibold text-white text-sm xl:text-base">{beneficio.nome}</p>
+                    <p className="text-xs text-primary-foreground/70">{beneficio.desc}</p>
                   </div>
                 </div>
               ))}
@@ -222,21 +209,11 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Footer com contatos */}
+        {/* Footer */}
         <div className="relative z-10 pt-6 border-t border-white/10">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-blue-200">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              <span>{AMPLA_INFO.site}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>{AMPLA_INFO.localizacao}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4" />
-              <span>{AMPLA_INFO.historia}</span>
-            </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-primary-foreground/60">
+            <Shield className="w-4 h-4" />
+            <span>Seus dados protegidos com criptografia de ponta a ponta</span>
           </div>
         </div>
       </div>
@@ -245,14 +222,10 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex flex-col items-center mb-6">
-            <img
-              src="/logo-ampla-color.png"
-              alt="Ampla Contabilidade"
-              className="h-20 w-auto mb-3"
-            />
-            <h1 className="text-xl font-bold text-gray-900">{AMPLA_INFO.nome}</h1>
-            <p className="text-sm text-gray-500">{AMPLA_INFO.slogan}</p>
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <Building2 className="h-20 w-20 text-primary mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900">{CONTTA_INFO.nome}</h1>
+            <p className="text-base text-gray-500 text-center">{CONTTA_INFO.slogan}</p>
           </div>
 
           <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
@@ -404,8 +377,8 @@ const Auth = () => {
                   </div>
                   <div className="w-px h-4 bg-gray-200" />
                   <div className="flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-blue-500" />
-                    <span>30+ Anos</span>
+                    <Building2 className="w-4 h-4 text-blue-500" />
+                    <span>Multi-tenant</span>
                   </div>
                 </div>
               </div>
@@ -414,7 +387,7 @@ const Auth = () => {
 
           {/* Footer */}
           <p className="text-center text-xs text-gray-400 mt-6">
-            © {new Date().getFullYear()} {AMPLA_INFO.nome}. Todos os direitos reservados.
+            © {new Date().getFullYear()} {CONTTA_INFO.nome}. Todos os direitos reservados.
           </p>
         </div>
       </div>

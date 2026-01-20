@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTenantConfig } from '@/hooks/useTenantConfig';
 import { Layout } from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -184,6 +185,8 @@ export default function NFSe() {
   const { toast } = useToast();
   // Hook de contabilidade - OBRIGATÓRIO para lançamentos D/C (Dr. Cícero - NBC TG 26)
   const { registrarHonorario, registrarDespesa } = useAccounting({ showToasts: false, sourceModule: 'NFSe' });
+  // Hook para obter dados do tenant atual
+  const { officeData: tenantOfficeData } = useTenantConfig();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -616,8 +619,14 @@ export default function NFSe() {
       const client = clients.find(c => c.id === formData.client_id);
       if (!client) throw new Error('Cliente não encontrado');
 
+      // Usar CNPJ do config ou do tenant (removido fallback hardcoded)
+      const prestadorCnpj = config?.prestador_cnpj || tenantOfficeData?.cnpj?.replace(/\D/g, '') || '';
+      if (!prestadorCnpj) {
+        throw new Error('CNPJ do prestador não configurado. Configure nas configurações do escritório.');
+      }
+
       const { data: rpsData, error: rpsError } = await supabase
-        .rpc('proximo_numero_rps', { p_prestador_cnpj: config?.prestador_cnpj || '23893032000169' });
+        .rpc('proximo_numero_rps', { p_prestador_cnpj: prestadorCnpj });
 
       if (rpsError) throw rpsError;
 
@@ -633,9 +642,9 @@ export default function NFSe() {
           status: 'pending',
           data_emissao: new Date().toISOString().split('T')[0],
           competencia: formData.competencia,
-          prestador_cnpj: config?.prestador_cnpj || '23893032000169',
-          prestador_inscricao_municipal: config?.prestador_inscricao_municipal || '6241034',
-          prestador_razao_social: config?.prestador_razao_social || 'AMPLA CONTABILIDADE LTDA',
+          prestador_cnpj: prestadorCnpj,
+          prestador_inscricao_municipal: config?.prestador_inscricao_municipal || tenantOfficeData?.inscricao_municipal || '',
+          prestador_razao_social: config?.prestador_razao_social || tenantOfficeData?.razao_social || '',
           tomador_cnpj: (client.cnpj || client.cpf)?.replace(/\D/g, ''),
           tomador_razao_social: client.name,
           tomador_email: client.email,
@@ -810,7 +819,7 @@ export default function NFSe() {
     doc.setFont('helvetica', 'bold');
     doc.text('PRESTADOR:', margin, y);
     doc.setFont('helvetica', 'normal');
-    doc.text(nfse.prestador_razao_social || 'AMPLA CONTABILIDADE LTDA', margin + 30, y);
+    doc.text(nfse.prestador_razao_social || tenantOfficeData?.razao_social || 'Não configurado', margin + 30, y);
 
     y += 8;
     doc.text(`CNPJ: ${formatCNPJ(nfse.prestador_cnpj)} | IM: ${nfse.prestador_inscricao_municipal}`, margin, y);
