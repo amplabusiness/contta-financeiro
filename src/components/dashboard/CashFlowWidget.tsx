@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CashFlowService, CashFlowProjection, CashFlowEvent } from "@/services/CashFlowService";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/data/expensesData";
+import { Button } from "@/components/ui/button";
 
 export const CashFlowWidget = () => {
     const [projection, setProjection] = useState<CashFlowProjection | null>(null);
@@ -18,10 +19,34 @@ export const CashFlowWidget = () => {
     const loadData = async () => {
         try {
             setLoading(true);
+            console.log('[CashFlowWidget] Loading projection data...');
             const data = await CashFlowService.getProjection(30); // 30 days projection
+            const futureEvents = data.events.filter(e => new Date(e.date) >= new Date());
+            console.log('[CashFlowWidget] Projection loaded:', {
+                currentBalance: data.currentBalance,
+                totalEvents: data.events.length,
+                futureEvents: futureEvents.length,
+                totalDailyBalances: data.dailyBalances.length,
+                eventTypes: data.events.reduce((acc, e) => {
+                    acc[e.type] = (acc[e.type] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>),
+                first5Events: data.events.slice(0, 5).map(e => ({
+                    date: e.date,
+                    desc: e.description,
+                    amount: e.amount,
+                    type: e.type
+                })),
+                first5FutureEvents: futureEvents.slice(0, 5).map(e => ({
+                    date: e.date,
+                    desc: e.description,
+                    amount: e.amount,
+                    type: e.type
+                }))
+            });
             setProjection(data);
         } catch (error) {
-            console.error("Failed to load cash flow", error);
+            console.error("[CashFlowWidget] Failed to load cash flow", error);
         } finally {
             setLoading(false);
         }
@@ -35,23 +60,54 @@ export const CashFlowWidget = () => {
     const balanceColor = projectedBalance >= 0 ? "text-green-600" : "text-red-600";
 
     // Group events next 5
-    const upcomingEvents = projection.events.filter(e => new Date(e.date) >= new Date()).slice(0, 5);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+    const upcomingEvents = projection.events.filter(e => {
+        const eventDate = new Date(e.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+    }).slice(0, 5);
+
+    console.log('[CashFlowWidget] Upcoming events filter:', {
+        today: today.toISOString(),
+        totalEvents: projection.events.length,
+        upcomingCount: upcomingEvents.length,
+        upcomingEvents: upcomingEvents.map(e => ({
+            date: e.date,
+            desc: e.description,
+            amount: e.amount
+        }))
+    });
 
     return (
         <Card className="col-span-full md:col-span-1 shadow-md hover:shadow-lg transition-all duration-200 border-l-4 border-l-indigo-500">
             <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-indigo-500" />
-                        Projeção (30 dias)
-                    </CardTitle>
-                    <Badge variant="outline" className={`${balanceColor} border-current font-mono text-lg`}>
-                        {formatCurrency(projectedBalance)}
-                    </Badge>
+                <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <DollarSign className="h-5 w-5 text-indigo-500" />
+                            Projeção (30 dias)
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                            Saldo Atual: {formatCurrency(projection.currentBalance)}
+                        </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={loadData}
+                            disabled={loading}
+                            className="h-8 w-8"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Badge variant="outline" className={`${balanceColor} border-current font-mono text-lg`}>
+                            {formatCurrency(projectedBalance)}
+                        </Badge>
+                    </div>
                 </div>
-                <CardDescription>
-                    Saldo Atual: {formatCurrency(projection.currentBalance)}
-                </CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">

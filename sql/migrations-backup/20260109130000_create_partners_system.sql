@@ -90,23 +90,22 @@ CREATE INDEX IF NOT EXISTS idx_partner_payments_source ON partner_payments(sourc
 
 -- 4. CONTAS CONTÁBEIS PARA REPASSES
 -- Conta de Passivo: Repasses a Efetuar
-INSERT INTO chart_of_accounts (code, name, type, nature, parent_code, is_active, description)
+INSERT INTO chart_of_accounts (code, name, type, nature, parent_id, is_active, description)
 SELECT '2.1.05', 'Repasses a Efetuar', 'liability', 'credit', '2.1', true, 'Valores recebidos de clientes para repasse a terceiros'
 WHERE NOT EXISTS (SELECT 1 FROM chart_of_accounts WHERE code = '2.1.05');
 
-INSERT INTO chart_of_accounts (code, name, type, nature, parent_code, is_active, description)
+INSERT INTO chart_of_accounts (code, name, type, nature, parent_id, is_active, description)
 SELECT '2.1.05.01', 'Repasses a Parceiros', 'liability', 'credit', '2.1.05', true, 'Comissões/honorários a repassar para parceiros (Victor/Nayara)'
 WHERE NOT EXISTS (SELECT 1 FROM chart_of_accounts WHERE code = '2.1.05.01');
 
 -- Conta de Despesa: Comissões Pagas (alternativa se tratar como despesa)
-INSERT INTO chart_of_accounts (code, name, type, nature, parent_code, is_active, description)
+INSERT INTO chart_of_accounts (code, name, type, nature, parent_id, is_active, description)
 SELECT '3.2.05', 'Comissões e Repasses', 'expense', 'debit', '3.2', true, 'Comissões e repasses pagos a terceiros'
 WHERE NOT EXISTS (SELECT 1 FROM chart_of_accounts WHERE code = '3.2.05');
 
-INSERT INTO chart_of_accounts (code, name, type, nature, parent_code, is_active, description)
+INSERT INTO chart_of_accounts (code, name, type, nature, parent_id, is_active, description)
 SELECT '3.2.05.01', 'Comissões a Parceiros', 'expense', 'debit', '3.2.05', true, 'Comissões pagas a parceiros sobre honorários'
 WHERE NOT EXISTS (SELECT 1 FROM chart_of_accounts WHERE code = '3.2.05.01');
-
 -- 5. INSERIR VICTOR E NAYARA
 INSERT INTO partners (name, cpf, pix_key, pix_key_type, notes)
 SELECT 'VICTOR HUGO LEÃO', '752.126.331-68', '75212633168', 'cpf', 'Filho - recebe 50% dos honorários de clientes vinculados'
