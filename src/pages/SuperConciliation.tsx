@@ -3,10 +3,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { ChangeEvent } from "react";
 import { useAccounting } from "@/hooks/useAccounting";
 import { FinancialIntelligenceService, ClassificationSuggestion } from "@/services/FinancialIntelligenceService";
+import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoReconciliationService";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -15,13 +16,15 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
+import { ReconciliationReport } from "@/components/ReconciliationReport";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
+import { parseOFX } from "@/lib/ofxParser";
 
 interface BankTransaction {
   id: string;
@@ -130,11 +133,11 @@ export default function SuperConciliation() {
     }
   }, [selectedDate]);
 
-  const [viewMode, setViewMode] = useState<'pending' | 'all'>('pending');
+  const [viewMode, setViewMode] = useState<'pending' | 'all' | 'boletos'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
-      base: 90725.06,
+      base: 0,
       prevCredits: 0,
       prevDebits: 0,
       monthCredits: 0,
@@ -161,12 +164,79 @@ export default function SuperConciliation() {
 
             if (lower.endsWith('.ofx')) {
                 const content = await file.text();
-                const { data, error } = await supabase.functions.invoke('parse-ofx-statement', {
-                    body: { ofx_content: content }
-                });
-                if (error) throw error;
-                const imported = data?.imported ?? data?.transactions?.length ?? 0;
-                toast.success(`Extrato OFX importado (${imported} lançamentos)`);
+
+                // Tentar Edge Function primeiro, se falhar usa parser local
+                let parsedData;
+                let useLocalParser = false;
+
+                try {
+                    const { data, error } = await supabase.functions.invoke('parse-ofx-statement', {
+                        body: { ofx_content: content }
+                    });
+                    if (error) {
+                        console.warn('Edge Function indisponível, usando parser local:', error);
+                        useLocalParser = true;
+                    } else {
+                        parsedData = data;
+                    }
+                } catch (edgeFnError) {
+                    console.warn('Edge Function indisponível, usando parser local:', edgeFnError);
+                    useLocalParser = true;
+                }
+
+                // Fallback para parser local
+                if (useLocalParser) {
+                    const parseResult = await parseOFX(content);
+                    if (!parseResult.success || !parseResult.data) {
+                        throw new Error(parseResult.error || 'Erro ao processar arquivo OFX');
+                    }
+
+                    // Buscar fitids já existentes para evitar duplicados
+                    const fitids = parseResult.data.transactions.map(tx => tx.fitid);
+                    const { data: existingTx } = await supabase
+                        .from('bank_transactions')
+                        .select('fitid')
+                        .in('fitid', fitids);
+
+                    const existingFitids = new Set((existingTx || []).map(t => t.fitid));
+
+                    // Filtrar apenas transações novas
+                    const newTransactions = parseResult.data.transactions.filter(
+                        tx => !existingFitids.has(tx.fitid)
+                    );
+
+                    if (newTransactions.length === 0) {
+                        toast.info('Todas as transações já foram importadas anteriormente');
+                    } else {
+                        // Inserir transações diretamente no banco
+                        const { data: userData } = await supabase.auth.getUser();
+                        const userId = userData.user?.id;
+
+                        const transactionsToInsert = newTransactions.map(tx => ({
+                            transaction_date: tx.date.toISOString().split('T')[0],
+                            description: tx.description,
+                            amount: tx.type === 'DEBIT' ? -tx.amount : tx.amount,
+                            transaction_type: tx.type === 'DEBIT' ? 'debit' : 'credit',
+                            fitid: tx.fitid,
+                            matched: false,
+                            created_by: userId,
+                            imported_from: 'ofx_local'
+                        }));
+
+                        const { error: insertError } = await supabase
+                            .from('bank_transactions')
+                            .insert(transactionsToInsert);
+
+                        if (insertError) {
+                            throw new Error('Erro ao inserir transações: ' + insertError.message);
+                        }
+
+                        toast.success(`Extrato OFX importado via parser local (${newTransactions.length} lançamentos)`);
+                    }
+                } else {
+                    const imported = parsedData?.imported ?? parsedData?.transactions?.length ?? 0;
+                    toast.success(`Extrato OFX importado (${imported} lançamentos)`);
+                }
             } else if (lower.endsWith('.csv')) {
                 const text = await file.text();
                 const { transacoes } = parseExtratoBancarioCSV(text);
@@ -196,43 +266,18 @@ export default function SuperConciliation() {
         const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).toISOString();
         const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).toISOString();
 
-    const LOCKED_BALANCES: Record<string, { start: number, end: number }> = {
-        '2024-12': { start: 0, end: 90725.06 },
-        '2025-01': { start: 90725.06, end: 18553.54 },
-        '2025-02': { start: 18553.54, end: 2578.93 },
-        '2025-03': { start: 2578.93, end: 28082.64 },
-        '2025-04': { start: 28082.64, end: 5533.07 },
-        '2025-05': { start: 5533.07, end: 10119.92 },
-        '2025-06': { start: 10119.92, end: 2696.75 },
-        '2025-07': { start: 2696.75, end: 8462.05 },
-        '2025-08': { start: 8462.05, end: 10251.53 },
-        '2025-09': { start: 10251.53, end: 14796.07 },
-        '2025-10': { start: 14796.07, end: 12618.57 },
-        '2025-11': { start: 12618.57, end: 57357.63 },
-    };
-        
-        const currentMonthKey = format(selectedDate, 'yyyy-MM');
-        
-        let valStart = 0;
-        let valFinal = 0;
-        const locked = LOCKED_BALANCES[currentMonthKey];
+        // Calcular saldo inicial dinamicamente (soma de todas as transações antes do mês selecionado)
+        const firstDayOfMonth = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
 
-        if (locked) {
-            valStart = locked.start;
-            valFinal = locked.end;
-        } else {
-             const prevMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
-             const prevKey = format(prevMonth, 'yyyy-MM');
-             if (LOCKED_BALANCES[prevKey]) {
-                 valStart = LOCKED_BALANCES[prevKey].end;
-                 valFinal = valStart;
-             } else {
-                 valStart = 90725.06;
-                 valFinal = 90725.06;
-             }
-        }
+        const { data: txBeforeMonth } = await supabase
+            .from('bank_transactions')
+            .select('amount')
+            .lt('transaction_date', firstDayOfMonth);
+
+        // Saldo inicial = soma de todas as transações anteriores ao mês
+        const valStart = (txBeforeMonth || []).reduce((acc, tx) => acc + Number(tx.amount), 0);
         
-        const valPrev = valStart; 
+        const valPrev = valStart;
 
         const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
         const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
@@ -243,29 +288,25 @@ export default function SuperConciliation() {
                 .gte('transaction_date', firstDateStr)
                 .lte('transaction_date', lastDateStr)
                 .order('transaction_date', { ascending: true });
-        
+
         const detailsMonth = {
             credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
             debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
         };
-        
-        const sumMonth = detailsMonth.credits + detailsMonth.debits;
-        
-        const calculatedFinal = valStart + sumMonth;
-        const difference = valFinal - calculatedFinal;
 
-        if (Math.abs(difference) > 0.01 && locked) {
-            console.warn(`DIVERGÊNCIA ENCONTRADA: ${difference.toFixed(2)}`);
-        }
+        const sumMonth = detailsMonth.credits + detailsMonth.debits;
+
+        // Saldo final = saldo inicial + movimentação do mês
+        const valFinal = valStart + sumMonth;
 
         setBalances({ prev: valPrev, start: valStart, final: valFinal });
         setBalanceDetails({
-            base: valStart,
-            prevCredits: 0,
-            prevDebits: 0,
+            base: 0,
+            prevCredits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+            prevDebits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0),
             monthCredits: detailsMonth.credits,
             monthDebits: detailsMonth.debits,
-            divergence: difference
+            divergence: 0
         });
 
         let query = supabase
@@ -673,7 +714,7 @@ export default function SuperConciliation() {
   return (
     <Tabs 
       value={viewMode}
-      onValueChange={(v) => setViewMode(v as 'pending' | 'all')}
+      onValueChange={(v) => setViewMode(v as 'pending' | 'all' | 'boletos')}
       className="h-auto lg:h-[calc(100vh-4rem)] flex flex-col p-2 md:p-4 bg-slate-50 min-h-screen w-full max-w-[100vw] overflow-x-hidden"
     >
       
@@ -699,6 +740,10 @@ export default function SuperConciliation() {
                      <CheckCircle2 className="mr-2 h-4 w-4" />
                     Análise / Auditoria
                 </TabsTrigger>
+                <TabsTrigger value="boletos" className="flex-1 sm:flex-none px-4">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Boletos
+                </TabsTrigger>
             </TabsList>
         </div>
 
@@ -716,18 +761,14 @@ export default function SuperConciliation() {
                     </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-[90vw] sm:w-80 p-4">
-                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Acumulado desde 2025)</h4>
+                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Histórico Acumulado)</h4>
                     <div className="space-y-2 text-xs">
-                        <div className="flex justify-between border-b pb-1">
-                            <span>Base (31/12/2024)</span>
-                            <span className="font-mono">{formatCurrency(balanceDetails.base)}</span>
-                        </div>
                         <div className="flex justify-between text-emerald-600">
-                            <span>Entradas (01/01 - Início Mês)</span>
+                            <span>Entradas (Períodos Anteriores)</span>
                             <span className="font-mono">+{formatCurrency(balanceDetails.prevCredits)}</span>
                         </div>
                         <div className="flex justify-between text-red-600 border-b pb-1">
-                            <span>Saídas (01/01 - Início Mês)</span>
+                            <span>Saídas (Períodos Anteriores)</span>
                             <span className="font-mono">{formatCurrency(balanceDetails.prevDebits)}</span>
                         </div>
                         <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
@@ -776,15 +817,9 @@ export default function SuperConciliation() {
                             <span className="font-mono">{formatCurrency(balanceDetails.monthDebits)}</span>
                         </div>
                         <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
-                            <span>Saldo Final (Extrato)</span>
+                            <span>Saldo Final (Calculado)</span>
                             <span>{formatCurrency(balances.final)}</span>
                         </div>
-                        {Math.abs(balanceDetails.divergence || 0) > 0.01 && (
-                            <div className="flex justify-between font-bold pt-1 text-xs text-red-500 mt-2 border-t border-red-100 bg-red-50 p-1 rounded">
-                                <span>Diferença (Check Lançamentos)</span>
-                                <span>{formatCurrency(balanceDetails.divergence || 0)}</span>
-                            </div>
-                        )}
                     </div>
                 </PopoverContent>
             </Popover>
@@ -891,8 +926,27 @@ export default function SuperConciliation() {
         </div>
       </div>
 
+      {/* Conteúdo principal - condicionalmente renderizado */}
+      {viewMode === 'boletos' ? (
+        /* ABA DE BOLETOS - Relatório de Conciliação Automática */
+        <div className="flex-1 overflow-y-auto p-2">
+          <ReconciliationReport
+            startDate={format(startOfMonth(selectedDate), 'yyyy-MM-dd')}
+            endDate={format(endOfMonth(selectedDate), 'yyyy-MM-dd')}
+            onReconcile={(match: BoletoMatch) => {
+              // Ao clicar em conciliar, muda para aba pendentes e seleciona a transação
+              setViewMode('pending');
+              // Buscar a transação correspondente
+              const tx = transactions.find(t => t.id === match.bankTransactionId);
+              if (tx) {
+                setSelectedTx(tx);
+              }
+            }}
+          />
+        </div>
+      ) : (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
-      
+
       {/* COLUNA 1: Extrato Bancário (Pendente) */}
       <Card className={`flex flex-col transition-all duration-300 ${isListExpanded ? 'lg:col-span-6' : 'lg:col-span-3'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -1295,6 +1349,7 @@ export default function SuperConciliation() {
       </Card>
       
       </div>
+      )}
     </Tabs>
   );
 }

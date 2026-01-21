@@ -119,14 +119,29 @@ function parseValor(valorStr: string): number {
 
 
 /**
- * Agrupa registros por documento (COB000005, COB000007, etc)
- * Isso permite ver que COB000005 tem múltiplos clientes somando R$ 5.913,78
+ * Formata data para chave de agrupamento
+ */
+function formatData(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Agrupa registros por documento + data de extrato
+ * Isso é necessário porque um mesmo COB pode ter múltiplas liquidações em datas diferentes
+ * Ex: COB000005 pode ter liquidação de R$ 5.913,78 em 03/01 e R$ 1.330,58 em 09/01
+ * Cada uma corresponde a uma transação bancária diferente
  */
 export function groupByDocumento(records: CobrancaRecord[]): Map<string, CobrancaGroup> {
   const groups = new Map<string, CobrancaGroup>();
 
   for (const record of records) {
-    const key = record.documento;
+    // Chave composta: documento + data de extrato
+    const dataKey = formatData(record.dataExtrato);
+    const key = `${record.documento}_${dataKey}`;
+
     if (!groups.has(key)) {
       groups.set(key, {
         documento: record.documento,
@@ -140,6 +155,12 @@ export function groupByDocumento(records: CobrancaRecord[]): Map<string, Cobranc
     const group = groups.get(key)!;
     group.clientes.push(record);
     group.totalRecebido += record.valorRecebido;
+  }
+
+  // Arredondar totais para 2 casas decimais para evitar problemas de precisão de ponto flutuante
+  // Ex: 17076.850000000002 -> 17076.85
+  for (const group of groups.values()) {
+    group.totalRecebido = Math.round(group.totalRecebido * 100) / 100;
   }
 
   return groups;
@@ -164,10 +185,4 @@ export function groupByDataExtrato(records: CobrancaRecord[]): Map<string, Cobra
   return groups;
 }
 
-function formatData(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
 
