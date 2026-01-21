@@ -64,7 +64,9 @@ function parseOFXSGML(content: string): OFXParseResult {
   try {
     // Helper to extract tag value
     const getTagValue = (tagName: string, text: string): string | null => {
-      const regex = new RegExp(`<${tagName}>([^<]*?)(?:<|$)`, 'i');
+      // Regex que captura o valor até a próxima tag ou fim de linha
+      // Funciona tanto com <TAG>valor<NEXT> quanto com <TAG>valor\n
+      const regex = new RegExp(`<${tagName}>\\s*([^<\\r\\n]*?)\\s*(?:<|\\r|\\n|$)`, 'i');
       const match = text.match(regex);
       return match ? match[1].trim() : null;
     };
@@ -100,7 +102,12 @@ function parseOFXSGML(content: string): OFXParseResult {
 
     // Parse transactions
     const transactions: OFXTransaction[] = [];
-    const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
+
+    // Suporta dois formatos:
+    // 1. <STMTTRN>..content..</STMTTRN> (com tag de fechamento)
+    // 2. <STMTTRN>..content..<STMTTRN> (próxima transação fecha a anterior - SGML)
+    // 3. <STMTTRN>..content..</BANKTRANLIST> (última transação fecha com a lista)
+    const transactionRegex = /<STMTTRN>([\s\S]*?)(?=<STMTTRN>|<\/STMTTRN>|<\/BANKTRANLIST>)/gi;
     let match;
 
     while ((match = transactionRegex.exec(content)) !== null) {

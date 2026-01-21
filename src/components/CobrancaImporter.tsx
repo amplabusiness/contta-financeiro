@@ -62,11 +62,16 @@ export function CobrancaImporter({ onImportComplete }: CobrancaImporterProps) {
       const totalMatched = importResults.filter(
         (r) => r.bankTransactionMatched
       ).length;
-
-      toast.success(
-        `Importado: ${totalDocumentos} cobranças, ${totalClientes} clientes, ${formatCurrency(totalRecebido)}\n${totalMatched}/${totalDocumentos} conciliadas`,
-        { duration: 5000 }
+      const totalAccountsCreated = importResults.reduce(
+        (sum, r) => sum + (r.accountsCreated || 0),
+        0
       );
+
+      let message = `Importado: ${totalDocumentos} cobranças, ${totalClientes} clientes, ${formatCurrency(totalRecebido)}\n${totalMatched}/${totalDocumentos} conciliadas`;
+      if (totalAccountsCreated > 0) {
+        message += `\n${totalAccountsCreated} contas contábeis criadas automaticamente`;
+      }
+      toast.success(message, { duration: 5000 });
 
       onImportComplete?.(importResults);
     } catch (error) {
@@ -145,7 +150,7 @@ export function CobrancaImporter({ onImportComplete }: CobrancaImporterProps) {
             </>
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Cobranças</CardTitle>
@@ -162,6 +167,17 @@ export function CobrancaImporter({ onImportComplete }: CobrancaImporterProps) {
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
                       {results.filter((r) => r.bankTransactionMatched).length}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Contas Criadas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {results.reduce((sum, r) => sum + (r.accountsCreated || 0), 0)}
                     </div>
                   </CardContent>
                 </Card>
@@ -242,9 +258,19 @@ export function CobrancaImporter({ onImportComplete }: CobrancaImporterProps) {
                               key={cIdx}
                               className="text-xs flex justify-between items-center p-2 bg-slate-50 rounded"
                             >
-                              <span className="flex-1">
-                                {cliente.nome.substring(0, 40)}
-                              </span>
+                              <div className="flex-1 flex flex-col">
+                                <span>{cliente.nome.substring(0, 40)}</span>
+                                {cliente.accountCode && (
+                                  <span className="font-mono text-[10px] text-slate-500">
+                                    {cliente.accountCode}
+                                    {cliente.accountCreated && (
+                                      <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 text-green-600 border-green-300">
+                                        nova
+                                      </Badge>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
                               <span className="font-mono font-semibold min-w-fit ml-2">
                                 {formatCurrency(cliente.valor)}
                               </span>
