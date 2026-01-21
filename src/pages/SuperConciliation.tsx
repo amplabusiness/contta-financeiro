@@ -25,6 +25,7 @@ import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdow
 import { ReconciliationReport } from "@/components/ReconciliationReport";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
 import { parseOFX } from "@/lib/ofxParser";
+import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
 interface BankTransaction {
   id: string;
@@ -266,48 +267,114 @@ export default function SuperConciliation() {
         const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).toISOString();
         const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).toISOString();
 
-        // Calcular saldo inicial dinamicamente (soma de todas as transações antes do mês selecionado)
-        const firstDayOfMonth = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1; // 1-indexed para a função
 
-        const { data: txBeforeMonth } = await supabase
-            .from('bank_transactions')
-            .select('amount')
-            .lt('transaction_date', firstDayOfMonth);
+        // =====================================================
+        // FONTE DE VERDADE: CONTABILIDADE (conta 1.1.1.05)
+        // =====================================================
+        // Busca o saldo da conta bancária diretamente da contabilidade
+        // Fórmula: Saldo Inicial (antes do mês) + Débitos - Créditos = Saldo Final
+        // Para conta DEVEDORA (Ativo): Débito aumenta, Crédito diminui
 
-        // Saldo inicial = soma de todas as transações anteriores ao mês
-        const valStart = (txBeforeMonth || []).reduce((acc, tx) => acc + Number(tx.amount), 0);
-        
-        const valPrev = valStart;
+        try {
+            // Usar a mesma função que o Dashboard usa (fonte única de verdade)
+            const accountingBalance = await getAccountBalance(
+                ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, // "1.1.1.05"
+                year,
+                month
+            );
 
-        const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
-        const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+            // Saldo Inicial = openingBalance (saldo antes do período)
+            const valStart = accountingBalance.openingBalance;
 
-        const { data: txInMonth } = await supabase
+            // Entradas = Débitos (aumentam conta devedora)
+            const monthCredits = accountingBalance.debit;
+
+            // Saídas = Créditos (diminuem conta devedora) - mostrar como negativo
+            const monthDebits = -accountingBalance.credit;
+
+            // Saldo Final = balance (já calculado pela função)
+            const valFinal = accountingBalance.balance;
+
+            // Mês anterior para exibição
+            const valPrev = valStart;
+
+            setBalances({ prev: valPrev, start: valStart, final: valFinal });
+            setBalanceDetails({
+                base: 0,
+                prevCredits: 0, // Não precisamos mais desse detalhe
+                prevDebits: 0,
+                monthCredits: monthCredits,
+                monthDebits: monthDebits,
+                divergence: 0
+            });
+
+            console.log('[SuperConciliation] Saldos da contabilidade:', {
+                conta: ACCOUNT_MAPPING.SALDO_BANCO_SICREDI,
+                periodo: `${month}/${year}`,
+                saldoInicial: valStart,
+                debitos: monthCredits,
+                creditos: accountingBalance.credit,
+                saldoFinal: valFinal
+            });
+
+        } catch (err) {
+            console.error('[SuperConciliation] Erro ao buscar saldo contábil, usando fallback:', err);
+
+            // Fallback para bank_transactions se a contabilidade falhar
+            const firstDayOfMonth = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
+
+            const { data: bankAccount } = await supabase
+                .from('bank_accounts')
+                .select('initial_balance, initial_balance_date')
+                .eq('is_active', true)
+                .single();
+
+            let openingBalance = 0;
+            if (bankAccount?.initial_balance && bankAccount?.initial_balance_date) {
+                const openingDate = bankAccount.initial_balance_date;
+                if (openingDate < firstDayOfMonth) {
+                    openingBalance = Number(bankAccount.initial_balance) || 0;
+                }
+            }
+
+            const { data: txBeforeMonth } = await supabase
+                .from('bank_transactions')
+                .select('amount')
+                .lt('transaction_date', firstDayOfMonth);
+
+            const txSumBefore = (txBeforeMonth || []).reduce((acc, tx) => acc + Number(tx.amount), 0);
+            const valStart = openingBalance + txSumBefore;
+
+            const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
+            const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+
+            const { data: txInMonth } = await supabase
                 .from('bank_transactions')
                 .select('amount')
                 .gte('transaction_date', firstDateStr)
                 .lte('transaction_date', lastDateStr)
                 .order('transaction_date', { ascending: true });
 
-        const detailsMonth = {
-            credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
-            debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
-        };
+            const detailsMonth = {
+                credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+                debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
+            };
 
-        const sumMonth = detailsMonth.credits + detailsMonth.debits;
+            const sumMonth = detailsMonth.credits + detailsMonth.debits;
+            const valFinal = valStart + sumMonth;
 
-        // Saldo final = saldo inicial + movimentação do mês
-        const valFinal = valStart + sumMonth;
-
-        setBalances({ prev: valPrev, start: valStart, final: valFinal });
-        setBalanceDetails({
-            base: 0,
-            prevCredits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
-            prevDebits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0),
-            monthCredits: detailsMonth.credits,
-            monthDebits: detailsMonth.debits,
-            divergence: 0
-        });
+            setBalances({ prev: valStart, start: valStart, final: valFinal });
+            setBalanceDetails({
+                base: 0,
+                prevCredits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+                prevDebits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0),
+                monthCredits: detailsMonth.credits,
+                monthDebits: detailsMonth.debits,
+                divergence: 0
+            });
+        }
 
         let query = supabase
             .from('bank_transactions')

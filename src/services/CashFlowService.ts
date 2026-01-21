@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
 export interface CashFlowEvent {
   date: string;
@@ -24,16 +25,38 @@ export const CashFlowService = {
 
     console.log('[CashFlowService] Fetching projection from', today.toISOString().split('T')[0], 'to', limitDateStr);
 
-    // 1. Get Current Bank Balance
-    const { data: accounts, error: errBank } = await supabase
-      .from('bank_accounts')
-      .select('balance')
-      .eq('is_active', true);
+    // 1. Get Current Bank Balance from ACCOUNTING (Source of Truth)
+    // Usamos a contabilidade como fonte única de verdade para o saldo bancário
+    let currentBalance = 0;
 
-    if (errBank) throw errBank;
+    try {
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
 
-    const currentBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
-    console.log('[CashFlowService] Current balance:', currentBalance);
+      // Buscar saldo da conta 1.1.1.05 (Banco Sicredi) na contabilidade
+      const accountingBalance = await getAccountBalance(
+        ACCOUNT_MAPPING.SALDO_BANCO_SICREDI,
+        year,
+        month
+      );
+
+      // Para projeção, usamos o saldo atual (balance) que inclui todos os lançamentos do mês
+      currentBalance = accountingBalance.balance;
+      console.log('[CashFlowService] Current balance from ACCOUNTING:', currentBalance);
+    } catch (err) {
+      // Fallback para bank_accounts se a contabilidade não estiver configurada
+      console.warn('[CashFlowService] Failed to get balance from accounting, falling back to bank_accounts:', err);
+
+      const { data: accounts, error: errBank } = await supabase
+        .from('bank_accounts')
+        .select('balance')
+        .eq('is_active', true);
+
+      if (errBank) throw errBank;
+
+      currentBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+      console.log('[CashFlowService] Current balance from bank_accounts (fallback):', currentBalance);
+    }
 
     // 2. Get Unified Cash Flow View (Source of Truth)
     // The view v_cash_flow_daily already consolidates Invoices, Payroll, Contractors, Taxes, and Recurring
