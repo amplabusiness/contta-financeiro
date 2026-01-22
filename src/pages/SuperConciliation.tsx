@@ -777,14 +777,30 @@ export default function SuperConciliation() {
             const entry = suggestion.entries[0];
             const isReceipt = selectedTx.amount > 0;
             const target = isReceipt ? entry.credit : entry.debit;
-            
+
             if (target.account !== bankAccountCode && suggestion.type !== 'split') {
                  FinancialIntelligenceService.learnRule(
-                     selectedTx.description, 
-                     target.account, 
+                     selectedTx.description,
+                     target.account,
                      target.name,
                      isReceipt ? 'credit' : 'debit'
                  );
+            }
+        }
+
+        // Sistema de Aprendizado Contínuo (Sprint 2)
+        // Se a transação tinha sugestão automática e foi confirmada, registrar feedback positivo
+        if (selectedTx.suggested_client_id && !isManualMode) {
+            try {
+                const user = (await supabase.auth.getUser()).data.user;
+                await supabase.rpc('fn_confirm_suggestion', {
+                    p_transaction_id: selectedTx.id,
+                    p_user_id: user?.id || null
+                });
+                console.log('[Learning] Confirmação registrada para aprendizado');
+            } catch (learnErr) {
+                console.warn('[Learning] Erro ao registrar confirmação:', learnErr);
+                // Não bloqueia o fluxo principal
             }
         }
 
