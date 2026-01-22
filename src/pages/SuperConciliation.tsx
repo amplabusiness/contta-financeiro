@@ -7,7 +7,7 @@ import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoRecon
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
 import { ReconciliationReport } from "@/components/ReconciliationReport";
+import { AIClassificationReport } from "@/components/AIClassificationReport";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
 import { parseOFX } from "@/lib/ofxParser";
 import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
@@ -144,7 +145,7 @@ export default function SuperConciliation() {
     }
   }, [selectedDate]);
 
-  const [viewMode, setViewMode] = useState<'pending' | 'all' | 'boletos'>('pending');
+  const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
@@ -396,8 +397,17 @@ export default function SuperConciliation() {
             .lte('transaction_date', endOfMonth)
             .order('transaction_date', { ascending: true });
 
+        // Filtros por aba:
+        // - Pendentes: transações não conciliadas E que NÃO precisam de revisão (ainda não foram processadas)
+        // - Revisão/Auditoria: transações não conciliadas E que PRECISAM de revisão (foram processadas pela IA ou manualmente mas aguardam aprovação)
         if (viewMode === 'pending') {
-             query = query.eq('matched', false);
+             query = query
+                .eq('matched', false)
+                .or('needs_review.is.null,needs_review.eq.false');
+        } else if (viewMode === 'review') {
+             query = query
+                .eq('matched', false)
+                .eq('needs_review', true);
         }
 
         const { data, error } = await query;
@@ -830,7 +840,7 @@ export default function SuperConciliation() {
   return (
     <Tabs 
       value={viewMode}
-      onValueChange={(v) => setViewMode(v as 'pending' | 'all' | 'boletos')}
+      onValueChange={(v) => setViewMode(v as 'pending' | 'review' | 'ai_report' | 'boletos')}
       className="h-auto lg:h-[calc(100vh-4rem)] flex flex-col p-2 md:p-4 bg-slate-50 min-h-screen w-full max-w-[100vw] overflow-x-hidden"
     >
       
@@ -852,9 +862,13 @@ export default function SuperConciliation() {
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Pendentes
                 </TabsTrigger>
-                <TabsTrigger value="all" className="flex-1 sm:flex-none px-4">
+                <TabsTrigger value="review" className="flex-1 sm:flex-none px-4">
                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Análise / Auditoria
+                    Revisão / Auditoria
+                </TabsTrigger>
+                <TabsTrigger value="ai_report" className="flex-1 sm:flex-none px-4">
+                    <Brain className="mr-2 h-4 w-4" />
+                    IA Classificados
                 </TabsTrigger>
                 <TabsTrigger value="boletos" className="flex-1 sm:flex-none px-4">
                     <FileText className="mr-2 h-4 w-4" />
@@ -988,8 +1002,9 @@ export default function SuperConciliation() {
 
           <div className="flex items-center gap-2">
             <CobrancaImporter />
-            <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} className="shrink-0">
-                <Upload className="w-4 h-4" /> 
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="shrink-0 gap-2">
+                <Upload className="w-4 h-4" />
+                Importar OFX
             </Button>
             <input 
                 type="file" 
@@ -1060,6 +1075,14 @@ export default function SuperConciliation() {
             }}
           />
         </div>
+      ) : viewMode === 'ai_report' ? (
+        /* ABA DE IA CLASSIFICADOS - Relatório detalhado de classificações da IA */
+        <div className="flex-1 overflow-y-auto">
+          <AIClassificationReport
+            startDate={format(startOfMonth(selectedDate), 'yyyy-MM-dd')}
+            endDate={format(endOfMonth(selectedDate), 'yyyy-MM-dd')}
+          />
+        </div>
       ) : (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
 
@@ -1072,9 +1095,9 @@ export default function SuperConciliation() {
               Extrato Bancário
             </CardTitle>
             <CardDescription>
-                {loadingTx 
-                    ? "Carregando..." 
-                    : `${viewMode === 'pending' ? 'Pendentes' : 'Histórico Completo'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
+                {loadingTx
+                    ? "Carregando..."
+                    : `${viewMode === 'pending' ? 'Pendentes' : 'Revisão/Auditoria'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
                 }
             </CardDescription>
           </div>
@@ -1104,7 +1127,7 @@ export default function SuperConciliation() {
                  </div>
                         ) : transactions.length === 0 ? (
                  <div className="text-center p-8 text-muted-foreground text-sm">
-                    {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação encontrada."}
+                    {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação aguardando revisão."}
                  </div>
                         ) : pagedTransactions.map(tx => (
               <div
