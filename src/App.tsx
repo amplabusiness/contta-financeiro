@@ -107,6 +107,7 @@ import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportBoletosLiquidados from "./pages/ImportBoletosLiquidados";
 import BoletosComposicao from "./pages/BoletosComposicao";
 import AIAutomation from "./pages/AIAutomation";
+import AutomationDashboard from "./pages/AutomationDashboard";
 import NFSe from "./pages/NFSe";
 import MonthlyClosing from "./pages/MonthlyClosing";
 import OpeningBalanceReconciliation from "./pages/OpeningBalanceReconciliation";
@@ -333,6 +334,7 @@ const App = () => (
             <Route path="/import-boletos-liquidados" element={<ImportBoletosLiquidados />} />
             <Route path="/boletos-composicao" element={<BoletosComposicao />} />
             <Route path="/ai-automation" element={<AIAutomation />} />
+            <Route path="/automation-dashboard" element={<AutomationDashboard />} />
             <Route path="/nfse" element={<NFSe />} />
             <Route path="/monthly-closing" element={<MonthlyClosing />} />
             <Route path="/opening-balance-reconciliation" element={<OpeningBalanceReconciliation />} />

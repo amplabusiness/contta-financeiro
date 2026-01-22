@@ -139,6 +139,7 @@ export function AppSidebar() {
       label: "Banco",
       items: [
         { title: "Super Conciliação", url: "/super-conciliation", icon: Zap },
+        { title: "Painel de Automação", url: "/automation-dashboard", icon: Activity },
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
         { title: "Aprovações", url: "/pending-reconciliations", icon: AlertTriangle },
