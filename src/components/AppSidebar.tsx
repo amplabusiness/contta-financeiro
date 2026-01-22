@@ -15,7 +15,6 @@ import {
   DollarSign,
   ShieldAlert,
   RefreshCw,
-  BookOpen,
   Zap,
   UserSquare2,
   Calendar,
@@ -267,7 +266,7 @@ export function AppSidebar() {
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.url);
-                    
+
                     return (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
@@ -276,7 +275,7 @@ export function AppSidebar() {
                           tooltip={collapsed ? item.title : undefined}
                           className={`${!collapsed ? 'pl-6' : ''} transition-colors`}
                         >
-                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
                           {!collapsed && <span className="text-sm truncate">{item.title}</span>}
                         </SidebarMenuButton>
                       </SidebarMenuItem>

@@ -90,6 +90,29 @@ interface HumanIntervention {
   timestamp: Date;
 }
 
+// Estatísticas de identificação de pagadores (Sprint 1)
+interface PayerIdentificationStats {
+  totalIdentified: number;
+  byCnpj: number;
+  byQsa: number;
+  pendingReview: number;
+  lastRun?: Date;
+}
+
+// Alertas do sistema (tabela system_alerts)
+interface DatabaseAlert {
+  id: string;
+  alert_type: string;
+  severity: 'info' | 'warning' | 'error';
+  title: string;
+  message: string;
+  entity_type?: string;
+  entity_id?: string;
+  resolved: boolean;
+  resolved_at?: string;
+  created_at: string;
+}
+
 const AIAutomation = () => {
   // Usar período selecionado do contexto global
   const { selectedYear, selectedMonth } = usePeriod();
@@ -107,6 +130,13 @@ const AIAutomation = () => {
   const [humanInterventions, setHumanInterventions] = useState<HumanIntervention[]>([]);
   const [classificationsProcessed, setClassificationsProcessed] = useState(0);
   const [extractsProcessed, setExtractsProcessed] = useState(0);
+  const [payerStats, setPayerStats] = useState<PayerIdentificationStats>({
+    totalIdentified: 0,
+    byCnpj: 0,
+    byQsa: 0,
+    pendingReview: 0
+  });
+  const [databaseAlerts, setDatabaseAlerts] = useState<DatabaseAlert[]>([]);
   const [agentMetrics, setAgentMetrics] = useState<AgentMetrics[]>([
     {
       name: "Dr. Cícero",
@@ -851,7 +881,166 @@ const AIAutomation = () => {
   }, [addTask, updateTask, updateAgent, addAlert]);
 
   // =====================================================
-  // CICLO PRINCIPAL DE AUTOMAÇÃO (5 ETAPAS)
+  // AUTOMAÇÃO 6: IDENTIFICAÇÃO AUTOMÁTICA DE PAGADORES (SPRINT 1)
+  // =====================================================
+  const runPayerIdentification = useCallback(async () => {
+    const taskId = addTask({
+      name: 'Identificar pagadores automaticamente',
+      agent: 'Dr. Cícero',
+      status: 'running',
+      progress: 0,
+      message: 'Buscando transações com metadados extraídos...',
+    });
+
+    updateAgent('Dr. Cícero', { status: 'working', lastAction: 'Identificando pagadores...' });
+
+    try {
+      // Buscar transações com CNPJ/CPF extraído mas sem cliente sugerido
+      const { data: pendingTx } = await supabase
+        .from('bank_transactions')
+        .select('id, description, extracted_cnpj, extracted_cpf, suggested_client_id')
+        .or('extracted_cnpj.not.is.null,extracted_cpf.not.is.null')
+        .is('suggested_client_id', null)
+        .limit(50);
+
+      if (!pendingTx || pendingTx.length === 0) {
+        updateTask(taskId, {
+          status: 'completed',
+          progress: 100,
+          message: 'Nenhuma transação pendente de identificação',
+          completedAt: new Date()
+        });
+        updateAgent('Dr. Cícero', { status: 'active', lastAction: 'Identificação em dia' });
+        return { processed: 0, identified: 0 };
+      }
+
+      updateTask(taskId, { progress: 20, message: `Identificando ${pendingTx.length} transações...` });
+
+      let identifiedCount = 0;
+      let byCnpj = 0;
+      let byQsa = 0;
+
+      for (let i = 0; i < pendingTx.length; i++) {
+        const tx = pendingTx[i];
+
+        updateTask(taskId, {
+          progress: 20 + (i / pendingTx.length) * 70,
+          message: `Identificando ${i + 1}/${pendingTx.length}...`
+        });
+
+        // Chamar função do banco que identifica o pagador
+        const { data: result, error } = await supabase
+          .rpc('fn_identify_payer', { p_transaction_id: tx.id });
+
+        if (!error && result?.success) {
+          identifiedCount++;
+          if (result.method === 'cnpj_match') byCnpj++;
+          if (result.method === 'qsa_match') byQsa++;
+        }
+      }
+
+      // Atualizar estatísticas
+      const { data: reviewCount } = await supabase
+        .from('bank_transactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('needs_review', true);
+
+      setPayerStats(prev => ({
+        totalIdentified: prev.totalIdentified + identifiedCount,
+        byCnpj: prev.byCnpj + byCnpj,
+        byQsa: prev.byQsa + byQsa,
+        pendingReview: reviewCount?.length || 0,
+        lastRun: new Date()
+      }));
+
+      updateTask(taskId, {
+        status: 'completed',
+        progress: 100,
+        message: `${identifiedCount} pagadores identificados`,
+        completedAt: new Date(),
+        result: { identified: identifiedCount, byCnpj, byQsa }
+      });
+
+      updateAgent('Dr. Cícero', {
+        status: 'active',
+        lastAction: `${identifiedCount} pagadores ID`,
+        tasksCompleted: (prev: any) => prev.tasksCompleted + 1,
+        tasksToday: (prev: any) => prev.tasksToday + identifiedCount,
+      });
+
+      if (identifiedCount > 0) {
+        addAlert({
+          type: 'success',
+          agent: 'Dr. Cícero',
+          title: 'Identificação de Pagadores',
+          message: `${identifiedCount} pagadores identificados automaticamente (${byCnpj} por CNPJ, ${byQsa} por QSA).`,
+        });
+      }
+
+      return { processed: pendingTx.length, identified: identifiedCount, byCnpj, byQsa };
+
+    } catch (error: any) {
+      console.error('Erro na identificação de pagadores:', error);
+      updateTask(taskId, { status: 'error', message: error.message });
+      updateAgent('Dr. Cícero', { status: 'idle', lastAction: 'Erro na identificação' });
+      return null;
+    }
+  }, [addTask, updateTask, updateAgent, addAlert]);
+
+  // =====================================================
+  // AUTOMAÇÃO 7: CARREGAR ALERTAS DO BANCO DE DADOS
+  // =====================================================
+  const loadDatabaseAlerts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_alerts')
+        .select('*')
+        .eq('resolved', false)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        setDatabaseAlerts(data);
+
+        // Converter alertas do banco para o formato do sistema
+        const newAlerts = data.map(dbAlert => ({
+          type: dbAlert.severity === 'error' ? 'danger' : dbAlert.severity as 'warning' | 'info' | 'success',
+          agent: 'Sistema',
+          title: dbAlert.title,
+          message: dbAlert.message,
+          action: dbAlert.entity_type ? `Ver ${dbAlert.entity_type}` : undefined,
+        }));
+
+        // Adicionar apenas alertas novos (não duplicados)
+        newAlerts.forEach(alert => {
+          const exists = alerts.some(a => a.title === alert.title && a.message === alert.message);
+          if (!exists) {
+            addAlert(alert);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar alertas do banco:', error);
+    }
+  }, [addAlert, alerts]);
+
+  // =====================================================
+  // AUTOMAÇÃO 8: GERAR ALERTAS DIÁRIOS
+  // =====================================================
+  const generateDailyAlerts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc('fn_generate_daily_alerts');
+      if (!error && data) {
+        // Recarregar alertas após gerar novos
+        await loadDatabaseAlerts();
+      }
+    } catch (error) {
+      console.error('Erro ao gerar alertas diários:', error);
+    }
+  }, [loadDatabaseAlerts]);
+
+  // =====================================================
+  // CICLO PRINCIPAL DE AUTOMAÇÃO (8 ETAPAS)
   // =====================================================
   const runAutomationCycle = useCallback(async () => {
     if (!isAutomationActive) return;
@@ -871,11 +1060,20 @@ const AIAutomation = () => {
     // 4. Executar conciliação automática
     await runAutoReconciliation();
 
-    // 5. Executar análise e gerar alertas
+    // 5. Identificar pagadores automaticamente (Sprint 1)
+    await runPayerIdentification();
+
+    // 6. Executar análise e gerar alertas
     await runAutoAnalysis(data);
 
+    // 7. Gerar alertas diários do sistema
+    await generateDailyAlerts();
+
+    // 8. Carregar alertas do banco
+    await loadDatabaseAlerts();
+
     setLastUpdate(new Date());
-  }, [isAutomationActive, loadFinancialData, runExtractProcessing, runAutoClassification, runAutoReconciliation, runAutoAnalysis, cleanupTasks]);
+  }, [isAutomationActive, loadFinancialData, runExtractProcessing, runAutoClassification, runAutoReconciliation, runPayerIdentification, runAutoAnalysis, generateDailyAlerts, loadDatabaseAlerts, cleanupTasks]);
 
   // =====================================================
   // EFFECTS - Inicialização e sincronização
@@ -975,6 +1173,10 @@ const AIAutomation = () => {
               <div className="font-bold text-lg text-green-600">{extractsProcessed}</div>
             </div>
             <div className="text-right text-sm">
+              <div className="text-muted-foreground">Pagadores ID</div>
+              <div className="font-bold text-lg text-violet-600">{payerStats.totalIdentified}</div>
+            </div>
+            <div className="text-right text-sm">
               <div className="text-muted-foreground">Ciclos</div>
               <div className="font-bold text-lg">{cycleCount}</div>
             </div>
@@ -1038,6 +1240,82 @@ const AIAutomation = () => {
             </Card>
           ))}
         </div>
+
+        {/* Card de Identificação de Pagadores (Sprint 1) */}
+        <Card className="border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-violet-800">
+              <Sparkles className="h-5 w-5" />
+              Identificação Automática de Pagadores
+              <Badge variant="secondary" className="ml-2 bg-violet-100 text-violet-700">Sprint 1</Badge>
+            </CardTitle>
+            <CardDescription>
+              Sistema de reconhecimento inteligente baseado em CNPJ/CPF extraídos do extrato bancário
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-white rounded-lg border">
+                <div className="text-3xl font-bold text-violet-600">{payerStats.totalIdentified}</div>
+                <div className="text-xs text-muted-foreground">Total Identificados</div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg border">
+                <div className="text-3xl font-bold text-blue-600">{payerStats.byCnpj}</div>
+                <div className="text-xs text-muted-foreground">Por CNPJ (100%)</div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg border">
+                <div className="text-3xl font-bold text-purple-600">{payerStats.byQsa}</div>
+                <div className="text-xs text-muted-foreground">Por QSA/CPF (95%)</div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg border">
+                <div className="text-3xl font-bold text-amber-600">{payerStats.pendingReview}</div>
+                <div className="text-xs text-muted-foreground">Revisão Pendente</div>
+              </div>
+            </div>
+            {payerStats.lastRun && (
+              <div className="mt-3 text-xs text-muted-foreground text-right">
+                Última execução: {payerStats.lastRun.toLocaleTimeString('pt-BR')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Alertas do Sistema (Banco de Dados) */}
+        {databaseAlerts.length > 0 && (
+          <Card className="border-amber-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-amber-800">
+                <Bell className="h-5 w-5" />
+                Alertas do Sistema
+                <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-700">{databaseAlerts.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {databaseAlerts.slice(0, 5).map((alert) => (
+                <div
+                  key={alert.id}
+                  className={cn(
+                    "p-3 rounded-lg border flex items-start gap-3",
+                    alert.severity === 'error' ? 'bg-red-50 border-red-200' :
+                    alert.severity === 'warning' ? 'bg-amber-50 border-amber-200' :
+                    'bg-blue-50 border-blue-200'
+                  )}
+                >
+                  {alert.severity === 'error' ? <AlertCircle className="h-5 w-5 text-red-500 shrink-0" /> :
+                   alert.severity === 'warning' ? <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" /> :
+                   <Bell className="h-5 w-5 text-blue-500 shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{alert.title}</div>
+                    <div className="text-xs text-muted-foreground truncate">{alert.message}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(alert.created_at).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tarefas em Execução */}
         {currentTasks.length > 0 && (

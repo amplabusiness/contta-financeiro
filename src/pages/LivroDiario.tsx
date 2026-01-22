@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react'
-import { Layout } from '@/components/Layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { supabase } from '@/integrations/supabase/client'
-import { formatCurrency } from '@/data/expensesData'
-import { Calendar, FileText, Filter, Edit2, Trash2, History } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useState, useEffect, useMemo } from "react";
+import { Layout } from "@/components/Layout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PeriodFilter } from "@/components/PeriodFilter";
+import { usePeriod } from "@/contexts/PeriodContext";
+import { formatCurrency } from "@/data/expensesData";
 import {
   Dialog,
   DialogContent,
@@ -16,529 +21,695 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
-import { AccountingAuditService } from '@/services/AccountingAuditService'
+} from "@/components/ui/dialog";
+import {
+  RefreshCw, FileDown, Search, Calendar as CalendarIcon,
+  ChevronDown, ChevronRight, Sparkles, AlertTriangle,
+  Trash2, Edit2, History, Bot, User, X, FileText
+} from "lucide-react";
+import { format, endOfMonth, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
+import { AccountingAuditService } from "@/services/AccountingAuditService";
 
-interface DiarioEntry {
-  numero_lancamento: string
-  linha_id: string
-  data_lancamento: string
-  descricao: string
-  tipo_lancamento: string
-  numero_documento: string
-  codigo_conta: string
-  nome_conta: string
-  debito: number
-  credito: number
-  historico: string
-  chart_of_accounts_id?: string
+interface AccountingEntry {
+  id: string;
+  entry_number: number;
+  entry_date: string;
+  competence_date: string;
+  description: string;
+  history: string | null;
+  document_number: string | null;
+  document_type: string | null;
+  entry_type: string;
+  total_debit: number;
+  total_credit: number;
+  balanced: boolean;
+  ai_generated: boolean;
+  ai_confidence: number | null;
+  ai_model: string | null;
+  internal_code: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  created_at: string;
+  lines: Array<{
+    id: string;
+    account_id: string;
+    account_code: string;
+    account_name: string;
+    debit: number;
+    credit: number;
+    description: string | null;
+  }>;
+}
+
+interface EditingLine {
+  entry_id: string;
+  line_id: string;
+  account_code: string;
+  account_name: string;
+  account_id: string;
+  debit: number;
+  credit: number;
+  description: string | null;
 }
 
 const LivroDiario = () => {
-  // Estados de carregamento
-  const [loading, setLoading] = useState(true)
+  const { selectedYear, selectedMonth } = usePeriod();
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<AccountingEntry[]>([]);
+  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([]);
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterOrigin, setFilterOrigin] = useState<'all' | 'auto' | 'manual'>('all');
 
-  // Estados de dados principais
-  const [entries, setEntries] = useState<DiarioEntry[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([])
-  const [auditHistory, setAuditHistory] = useState<any[]>([])
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [launchDate, setLaunchDate] = useState('')
-  const [filterMode, setFilterMode] = useState<'range' | 'specific'>('range')
-  const [dateFilterType, setDateFilterType] = useState<'entry_date' | 'created_at'>('entry_date')
+  // Estados de edição e auditoria
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingLine, setEditingLine] = useState<EditingLine | null>(null);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [auditHistory, setAuditHistory] = useState<any[]>([]);
+  const [selectedEntryId, setSelectedEntryId] = useState<string>('');
 
-  // Estados de diálogos
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [editingLine, setEditingLine] = useState<DiarioEntry | null>(null)
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
-  const [selectedEntryId, setSelectedEntryId] = useState<string>('')
+  const [stats, setStats] = useState({
+    total: 0,
+    autoGenerated: 0,
+    manual: 0,
+    totalDebit: 0,
+    totalCredit: 0,
+  });
 
-  // =====================================================
-  // FUNÇÕES DE CARREGAMENTO DE DADOS
-  // =====================================================
-
+  // Carregar plano de contas para edição
   const loadChartOfAccounts = async () => {
     try {
       const { data, error } = await supabase
         .from('chart_of_accounts')
         .select('id, code, name, type')
-        .order('code')
+        .order('code');
 
-      if (error) throw error
-      setChartOfAccounts(data || [])
+      if (error) throw error;
+      setChartOfAccounts(data || []);
     } catch (error: any) {
-      console.error('Erro ao carregar plano de contas:', error?.message || error)
-      toast.error(`Erro ao carregar plano de contas: ${error?.message || 'Erro desconhecido'}`)
+      console.error('Erro ao carregar plano de contas:', error?.message || error);
     }
-  }
+  };
 
-  const loadDiario = async (start?: string, end?: string, dateField: 'entry_date' | 'created_at' = 'entry_date') => {
+  // Carregar lançamentos baseado no período selecionado
+  const loadEntries = async () => {
+    setLoading(true);
     try {
-      setLoading(true)
+      const startDate = format(new Date(selectedYear, selectedMonth - 1, 1), 'yyyy-MM-dd');
+      const endDate = format(endOfMonth(new Date(selectedYear, selectedMonth - 1)), 'yyyy-MM-dd');
 
-      let query = supabase
-        .from('accounting_entries')
+      const { data, error } = await supabase
+        .from("accounting_entries")
         .select(`
-          id,
-          entry_date,
-          created_at,
-          description,
-          entry_type,
-          document_number,
-          accounting_entry_lines (
+          *,
+          accounting_entry_lines(
             id,
+            account_id,
             debit,
             credit,
             description,
-            account_id,
-            chart_of_accounts (
-              code,
-              name
-            )
+            chart_of_accounts(code, name)
           )
         `)
-        .order(dateField, { ascending: false })
+        .gte('entry_date', startDate)
+        .lte('entry_date', endDate)
+        .order('entry_date', { ascending: false })
+        .limit(500);
 
-      if (start) query = query.gte(dateField, start)
-      if (end) query = query.lte(dateField, end)
+      if (error) throw error;
 
-      const { data, error } = await query
-      if (error) throw error
+      const formattedEntries: AccountingEntry[] = (data || []).map(entry => ({
+        id: entry.id,
+        entry_number: entry.entry_number,
+        entry_date: entry.entry_date,
+        competence_date: entry.competence_date,
+        description: entry.description,
+        history: entry.history,
+        document_number: entry.document_number,
+        document_type: entry.document_type,
+        entry_type: entry.entry_type,
+        total_debit: Number(entry.total_debit || 0),
+        total_credit: Number(entry.total_credit || 0),
+        balanced: entry.balanced,
+        ai_generated: entry.ai_generated || false,
+        ai_confidence: entry.ai_confidence ? Number(entry.ai_confidence) : null,
+        ai_model: entry.ai_model,
+        internal_code: entry.internal_code,
+        reference_type: entry.reference_type,
+        reference_id: entry.reference_id,
+        created_at: entry.created_at,
+        lines: (entry.accounting_entry_lines as any[] || []).map(line => ({
+          id: line.id,
+          account_id: line.account_id,
+          account_code: line.chart_of_accounts?.code || '',
+          account_name: line.chart_of_accounts?.name || '',
+          debit: Number(line.debit || 0),
+          credit: Number(line.credit || 0),
+          description: line.description,
+        })),
+      }));
 
-      let filteredData = data
-      if (dateField === 'created_at' && (start || end)) {
-        filteredData = data?.filter((entry: any) => {
-          const createdDate = entry.created_at ? entry.created_at.split('T')[0] : null
-          if (!createdDate) return false
+      setEntries(formattedEntries);
 
-          const matchStart = !start || createdDate >= start
-          const matchEnd = !end || createdDate <= end
+      // Calcular estatísticas
+      const autoCount = formattedEntries.filter(e => e.ai_generated).length;
+      setStats({
+        total: formattedEntries.length,
+        autoGenerated: autoCount,
+        manual: formattedEntries.length - autoCount,
+        totalDebit: formattedEntries.reduce((sum, e) => sum + e.total_debit, 0),
+        totalCredit: formattedEntries.reduce((sum, e) => sum + e.total_credit, 0),
+      });
 
-          return matchStart && matchEnd
-        })
-      }
-
-      const diarioEntries: DiarioEntry[] = []
-
-      filteredData?.forEach((entry: any) => {
-        entry.accounting_entry_lines?.forEach((line: any) => {
-          diarioEntries.push({
-            numero_lancamento: entry.id,
-            linha_id: line.id,
-            data_lancamento: entry.entry_date,
-            descricao: entry.description,
-            tipo_lancamento: entry.entry_type,
-            numero_documento: entry.document_number || '',
-            codigo_conta: line.chart_of_accounts?.code || '',
-            nome_conta: line.chart_of_accounts?.name || '',
-            debito: line.debit || 0,
-            credito: line.credit || 0,
-            historico: line.description || entry.description,
-            chart_of_accounts_id: line.account_id
-          })
-        })
-      })
-
-      setEntries(diarioEntries)
     } catch (error: any) {
-      console.error('Erro ao carregar diário:', error?.message || error)
-      toast.error(`Erro ao carregar diário: ${error?.message || 'Erro desconhecido'}`)
-      setEntries([])
+      console.error("Erro:", error);
+      toast.error("Erro ao carregar lançamentos", { description: error.message });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  // =====================================================
-  // EFFECTS - Inicialização e sincronização
-  // =====================================================
+  };
 
   useEffect(() => {
-    // Usar o ano inteiro para mostrar todos os lançamentos por padrão
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
+    loadEntries();
+    loadChartOfAccounts();
+  }, [selectedYear, selectedMonth]);
 
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
+  // Filtrar por busca e origem
+  const filteredEntries = useMemo(() => {
+    let result = entries;
 
-    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
-    loadChartOfAccounts()
-  }, [])
-
-  // =====================================================
-  // HANDLERS DE AÇÕES
-  // =====================================================
-
-  const handleFilter = () => {
-    if (filterMode === 'specific' && launchDate) {
-      loadDiario(launchDate, launchDate, dateFilterType)
-    } else {
-      loadDiario(startDate, endDate, dateFilterType)
+    // Filtro de origem
+    if (filterOrigin === 'auto') {
+      result = result.filter(e => e.ai_generated);
+    } else if (filterOrigin === 'manual') {
+      result = result.filter(e => !e.ai_generated);
     }
-  }
 
-  const handleClearFilter = () => {
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), 0, 1) // 1º de Janeiro
-    const lastDay = new Date(now.getFullYear(), 11, 31) // 31 de Dezembro
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
-    setLaunchDate('')
-    setSearchTerm('')
-    setFilterMode('range')
-    setDateFilterType('entry_date')
-    loadDiario(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0], 'entry_date')
-  }
+    // Busca textual
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      const searchNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'));
+      result = result.filter(e =>
+        e.description?.toLowerCase().includes(search) ||
+        e.document_number?.toLowerCase().includes(search) ||
+        e.internal_code?.toLowerCase().includes(search) ||
+        e.lines.some(l =>
+          l.account_code.includes(search) ||
+          l.account_name.toLowerCase().includes(search) ||
+          (l.debit === searchNum || l.credit === searchNum) ||
+          (Math.abs(l.debit - searchNum) < 0.01 || Math.abs(l.credit - searchNum) < 0.01)
+        )
+      );
+    }
 
-  const handleEditLine = (entry: DiarioEntry) => {
-    setEditingLine(entry)
-    setEditDialogOpen(true)
-  }
+    return result;
+  }, [entries, filterOrigin, searchTerm]);
+
+  const toggleExpand = (id: string) => {
+    const newSet = new Set(expandedEntries);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setExpandedEntries(newSet);
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSet = new Set(selectedEntries);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedEntries(newSet);
+  };
+
+  const selectAll = () => {
+    if (selectedEntries.size === filteredEntries.length) {
+      setSelectedEntries(new Set());
+    } else {
+      setSelectedEntries(new Set(filteredEntries.map(e => e.id)));
+    }
+  };
+
+  // Edição de linha
+  const handleEditLine = (entry: AccountingEntry, line: AccountingEntry['lines'][0]) => {
+    setEditingLine({
+      entry_id: entry.id,
+      line_id: line.id,
+      account_code: line.account_code,
+      account_name: line.account_name,
+      account_id: line.account_id,
+      debit: line.debit,
+      credit: line.credit,
+      description: line.description,
+    });
+    setEditDialogOpen(true);
+  };
 
   const handleSaveEdit = async () => {
-    if (!editingLine) return
+    if (!editingLine) return;
 
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user?.id) throw new Error('Usuário não identificado')
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user?.id) throw new Error('Usuário não identificado');
 
-      const updates: Record<string, any> = {}
-      const oldValues: Record<string, any> = {
-        account_code: editingLine.codigo_conta,
-        debit: editingLine.debito,
-        credit: editingLine.credito,
-        description: editingLine.historico
-      }
+      const updates: Record<string, any> = {};
 
-      if (editingLine.codigo_conta) {
-        const account = chartOfAccounts.find(a => a.code === editingLine.codigo_conta)
+      if (editingLine.account_code) {
+        const account = chartOfAccounts.find(a => a.code === editingLine.account_code);
         if (account) {
-          updates.account_id = account.id
+          updates.account_id = account.id;
         }
       }
 
-      if (editingLine.debito >= 0) {
-        updates.debit = editingLine.debito
+      if (editingLine.debit >= 0) {
+        updates.debit = editingLine.debit;
       }
 
-      if (editingLine.credito >= 0) {
-        updates.credit = editingLine.credito
+      if (editingLine.credit >= 0) {
+        updates.credit = editingLine.credit;
       }
 
       if (Object.keys(updates).length === 0) {
-        toast.error('Nenhuma alteração foi feita')
-        return
+        toast.error('Nenhuma alteração foi feita');
+        return;
       }
 
       const { error: updateError } = await supabase
         .from('accounting_entry_lines')
         .update(updates)
-        .eq('id', editingLine.linha_id)
+        .eq('id', editingLine.line_id);
 
       if (updateError) {
-        console.error('Erro de banco de dados:', updateError)
-        throw new Error(`Erro ao atualizar: ${updateError.message}`)
+        throw new Error(`Erro ao atualizar: ${updateError.message}`);
       }
 
       await AccountingAuditService.logLineChange(
-        editingLine.numero_lancamento,
-        editingLine.linha_id,
+        editingLine.entry_id,
+        editingLine.line_id,
         {
-          line_id: editingLine.linha_id,
-          old_account_code: editingLine.codigo_conta,
-          new_account_code: editingLine.codigo_conta,
-          old_debit: editingLine.debito,
-          new_debit: updates.debit !== undefined ? updates.debit : editingLine.debito,
-          old_credit: editingLine.credito,
-          new_credit: updates.credit !== undefined ? updates.credit : editingLine.credito
+          line_id: editingLine.line_id,
+          old_account_code: editingLine.account_code,
+          new_account_code: editingLine.account_code,
+          old_debit: editingLine.debit,
+          new_debit: updates.debit !== undefined ? updates.debit : editingLine.debit,
+          old_credit: editingLine.credit,
+          new_credit: updates.credit !== undefined ? updates.credit : editingLine.credit
         },
         user.user.id
-      )
+      );
 
-      toast.success('Lançamento atualizado com sucesso!')
-      setEditDialogOpen(false)
-      setEditingLine(null)
-      loadDiario(startDate, endDate, dateFilterType)
+      toast.success('Lançamento atualizado com sucesso!');
+      setEditDialogOpen(false);
+      setEditingLine(null);
+      loadEntries();
     } catch (error: any) {
-      console.error('Erro ao salvar edição:', error?.message || error)
-      toast.error(`Erro ao atualizar lançamento: ${error?.message || 'Erro desconhecido'}`)
+      console.error('Erro ao salvar edição:', error?.message || error);
+      toast.error(`Erro ao atualizar lançamento: ${error?.message || 'Erro desconhecido'}`);
     }
-  }
+  };
 
-  const handleDeleteEntry = async (entryId: string) => {
-    if (!confirm('Tem certeza que deseja deletar este lançamento? Uma entrada de auditoria será registrada.')) {
-      return
-    }
-
-    try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user?.id) throw new Error('Usuário não identificado')
-
-      await AccountingAuditService.deleteEntryWithAudit(
-        entryId,
-        user.user.id,
-        'Deletado pelo usuário'
-      )
-
-      toast.success('Lançamento deletado com sucesso!')
-      loadDiario(startDate, endDate, dateFilterType)
-    } catch (error: any) {
-      console.error('Erro ao deletar lançamento:', error?.message || error)
-      toast.error(`Erro ao deletar lançamento: ${error?.message || 'Erro desconhecido'}`)
-    }
-  }
-
+  // Histórico de auditoria
   const handleShowHistory = async (entryId: string) => {
     try {
-      setSelectedEntryId(entryId)
-      const history = await AccountingAuditService.getEntryAuditHistory(entryId)
-      setAuditHistory(history)
-      setHistoryDialogOpen(true)
+      setSelectedEntryId(entryId);
+      const history = await AccountingAuditService.getEntryAuditHistory(entryId);
+      setAuditHistory(history);
+      setHistoryDialogOpen(true);
     } catch (error: any) {
-      console.error('Erro ao carregar histórico:', error?.message || error)
-      toast.error(`Erro ao carregar histórico: ${error?.message || 'Erro desconhecido'}`)
+      console.error('Erro ao carregar histórico:', error?.message || error);
+      toast.error(`Erro ao carregar histórico: ${error?.message || 'Erro desconhecido'}`);
     }
-  }
+  };
 
-  // =====================================================
-  // FUNÇÕES AUXILIARES
-  // =====================================================
+  // Exclusão
+  const deleteSelected = async () => {
+    if (selectedEntries.size === 0) return;
 
-  const groupedEntries = entries.reduce((acc, entry) => {
-    if (!acc[entry.numero_lancamento]) acc[entry.numero_lancamento] = []
-    acc[entry.numero_lancamento].push(entry)
-    return acc
-  }, {} as Record<string, DiarioEntry[]>)
+    if (!confirm(`Deseja excluir ${selectedEntries.size} lançamento(s)? Uma entrada de auditoria será registrada.`)) return;
 
-  const filteredGroups = searchTerm
-    ? Object.entries(groupedEntries).filter(([_, items]) => {
-        const searchLower = searchTerm.toLowerCase()
-        const searchNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
-        return items.some(item =>
-          item.descricao.toLowerCase().includes(searchLower) ||
-          item.nome_conta.toLowerCase().includes(searchLower) ||
-          item.codigo_conta.toLowerCase().includes(searchLower) ||
-          item.historico.toLowerCase().includes(searchLower) ||
-          (item.debito === searchNum || item.credito === searchNum) ||
-          (Math.abs(item.debito - searchNum) < 0.01 || Math.abs(item.credito - searchNum) < 0.01)
-        )
-      })
-    : Object.entries(groupedEntries)
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user?.id) throw new Error('Usuário não identificado');
+
+      // Deletar com auditoria
+      for (const entryId of selectedEntries) {
+        await AccountingAuditService.deleteEntryWithAudit(
+          entryId,
+          user.user.id,
+          'Deletado pelo usuário via Livro Diário'
+        );
+      }
+
+      // Atualizar bank_transactions que referenciavam esses lançamentos
+      await supabase
+        .from('bank_transactions')
+        .update({ matched: false, journal_entry_id: null })
+        .in('journal_entry_id', Array.from(selectedEntries));
+
+      toast.success(`${selectedEntries.size} lançamento(s) excluído(s)`);
+      setSelectedEntries(new Set());
+      loadEntries();
+    } catch (error: any) {
+      toast.error("Erro ao excluir", { description: error.message });
+    }
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Data', 'Número', 'Descrição', 'Conta', 'Débito', 'Crédito', 'Tipo', 'AI', 'Confiança'];
+    const rows: any[] = [];
+
+    filteredEntries.forEach(e => {
+      e.lines.forEach(line => {
+        rows.push([
+          format(parseISO(e.entry_date), 'dd/MM/yyyy'),
+          e.entry_number,
+          `"${e.description.replace(/"/g, '""')}"`,
+          `${line.account_code} - ${line.account_name}`,
+          line.debit.toFixed(2),
+          line.credit.toFixed(2),
+          e.entry_type,
+          e.ai_generated ? 'Sim' : 'Não',
+          e.ai_confidence ? `${(e.ai_confidence * 100).toFixed(0)}%` : '-',
+        ]);
+      });
+    });
+
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `livro_diario_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+  };
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
     <Layout>
       <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* Header */}
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Livro Diário</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Registro cronológico de todos os lançamentos contábeis</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+            Livro Diário
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Registro cronológico de todos os lançamentos contábeis
+          </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Button
-                variant={filterMode === 'range' ? 'default' : 'outline'}
-                onClick={() => setFilterMode('range')}
-                className="flex-1"
-              >
-                Período
-              </Button>
-              <Button
-                variant={filterMode === 'specific' ? 'default' : 'outline'}
-                onClick={() => setFilterMode('specific')}
-                className="flex-1"
-              >
-                Dia Específico
-              </Button>
-            </div>
+        <PeriodFilter />
 
-            <div className="space-y-4">
-              <div className="mb-4">
-                <Label htmlFor="dateFilterType">Tipo de Data</Label>
-                <select
-                  id="dateFilterType"
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  value={dateFilterType}
-                  onChange={(e) => setDateFilterType(e.target.value as 'entry_date' | 'created_at')}
-                >
-                  <option value="entry_date">Data do Lançamento (quando ocorreu)</option>
-                  <option value="created_at">Data de Criação (quando registrou no sistema)</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {filterMode === 'range' ? (
-                  <>
-                    <div>
-                      <Label htmlFor="startDate">Data Inicial</Label>
-                      <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label htmlFor="endDate">Data Final</Label>
-                      <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <Label htmlFor="launchDate">Dia do Lançamento</Label>
-                    <Input id="launchDate" type="date" value={launchDate} onChange={(e) => setLaunchDate(e.target.value)} />
-                  </div>
-                )}
-                <div>
-                  <Label htmlFor="search">Buscar por Descrição ou Valor</Label>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <Card className="p-3 sm:p-4">
+            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+          </Card>
+          <Card className="p-3 sm:p-4 bg-purple-50 border-purple-200">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <Bot className="h-3 w-3 text-purple-600" /> Automáticos
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.autoGenerated}</div>
+          </Card>
+          <Card className="p-3 sm:p-4 bg-blue-50 border-blue-200">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <User className="h-3 w-3 text-blue-600" /> Manuais
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.manual}</div>
+          </Card>
+          <Card className="p-3 sm:p-4 bg-green-50 border-green-200">
+            <div className="text-xs text-muted-foreground">Total Débitos</div>
+            <div className="text-lg sm:text-xl font-bold text-green-600">{formatCurrency(stats.totalDebit)}</div>
+          </Card>
+          <Card className="p-3 sm:p-4 bg-red-50 border-red-200">
+            <div className="text-xs text-muted-foreground">Total Créditos</div>
+            <div className="text-lg sm:text-xl font-bold text-red-600">{formatCurrency(stats.totalCredit)}</div>
+          </Card>
+        </div>
+
+        {/* Filters & Actions */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {/* Busca */}
+                <div className="relative flex-1 sm:flex-none sm:w-[300px]">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="search"
-                    placeholder="Conta, descrição, valor..."
+                    placeholder="Buscar descrição, documento, conta, valor..."
+                    className="pl-9 h-9"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
+
+                {/* Filtro de origem */}
+                <Select value={filterOrigin} onValueChange={(v: any) => setFilterOrigin(v)}>
+                  <SelectTrigger className="h-9 w-full sm:w-[150px]">
+                    <SelectValue placeholder="Origem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="auto">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-purple-600" /> Automáticos
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="manual">
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" /> Manuais
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {searchTerm && (
+                  <Button variant="ghost" size="sm" onClick={() => setSearchTerm('')}>
+                    <X className="h-4 w-4 mr-1" /> Limpar
+                  </Button>
+                )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => {
-                  const yesterday = new Date()
-                  yesterday.setDate(yesterday.getDate() - 1)
-                  const dateStr = yesterday.toISOString().split('T')[0]
-                  setStartDate(dateStr)
-                  setEndDate(dateStr)
-                  setFilterMode('specific')
-                  loadDiario(dateStr, dateStr, dateFilterType)
-                }} variant="secondary" className="flex-1 md:flex-none">
-                  Ontem
+              <div className="flex gap-2 w-full sm:w-auto justify-end">
+                {selectedEntries.size > 0 && (
+                  <Button variant="destructive" size="sm" onClick={deleteSelected}>
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Excluir ({selectedEntries.size})
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={exportToCSV}>
+                  <FileDown className="h-4 w-4 mr-1" />
+                  Exportar
                 </Button>
-                <Button onClick={() => {
-                  const today = new Date().toISOString().split('T')[0]
-                  setStartDate(today)
-                  setEndDate(today)
-                  setFilterMode('specific')
-                  loadDiario(today, today, dateFilterType)
-                }} variant="secondary" className="flex-1 md:flex-none">
-                  Hoje
+                <Button variant="outline" size="sm" onClick={loadEntries} disabled={loading}>
+                  <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
+                  Atualizar
                 </Button>
-                <Button onClick={handleFilter} className="flex-1"><Filter className="mr-2 h-4 w-4" />Filtrar</Button>
-                <Button onClick={handleClearFilter} variant="outline" className="flex-1 md:flex-none">Limpar</Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Lançamentos Contábeis</CardTitle>
-            <CardDescription>{filteredGroups.length} lançamento(s) encontrado(s)</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              Lançamentos do Período
+            </CardTitle>
+            <CardDescription>
+              {filteredEntries.length} lançamentos encontrados
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {filteredGroups.map(([lancamentoId, items]) => {
-                const totalDebito = items.reduce((sum, item) => sum + item.debito, 0)
-                const totalCredito = items.reduce((sum, item) => sum + item.credito, 0)
-                const firstItem = items[0]
-
-                return (
-                  <div key={lancamentoId} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between pb-3 border-b">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            <Calendar className="mr-1 h-3 w-3" />
-                            {new Date(firstItem.data_lancamento).toLocaleDateString('pt-BR')}
-                          </Badge>
-                          {firstItem.numero_documento && (
-                            <Badge variant="secondary"><FileText className="mr-1 h-3 w-3" />Doc: {firstItem.numero_documento}</Badge>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-500px)] min-h-[400px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedEntries.size === filteredEntries.length && filteredEntries.length > 0}
+                        onCheckedChange={selectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[40px]"></TableHead>
+                    <TableHead className="w-[100px]">Data</TableHead>
+                    <TableHead className="w-[60px]">Nº</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[120px] text-right">Débito</TableHead>
+                    <TableHead className="w-[120px] text-right">Crédito</TableHead>
+                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEntries.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Nenhum lançamento encontrado para o período selecionado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEntries.map(entry => (
+                      <>
+                        <TableRow
+                          key={entry.id}
+                          className={cn(
+                            "cursor-pointer hover:bg-muted/50",
+                            selectedEntries.has(entry.id) && "bg-blue-50",
+                            expandedEntries.has(entry.id) && "bg-muted/30"
                           )}
-                          <Badge>{firstItem.tipo_lancamento}</Badge>
-                        </div>
-                        <p className="text-sm font-medium">{firstItem.descricao}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Nº {lancamentoId.substring(0, 8)}</p>
-                      </div>
-                    </div>
-
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Código</TableHead>
-                          <TableHead>Conta</TableHead>
-                          <TableHead>Histórico</TableHead>
-                          <TableHead className="text-right">Débito</TableHead>
-                          <TableHead className="text-right">Crédito</TableHead>
-                          <TableHead className="text-right">Ações</TableHead>
+                          onClick={() => toggleExpand(entry.id)}
+                        >
+                          <TableCell onClick={e => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedEntries.has(entry.id)}
+                              onCheckedChange={() => toggleSelect(entry.id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              {expandedEntries.has(entry.id) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {format(parseISO(entry.entry_date), 'dd/MM/yyyy')}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {entry.entry_number}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="truncate max-w-[250px] sm:max-w-[400px]" title={entry.description}>
+                                {entry.description}
+                              </span>
+                              {entry.ai_generated && (
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-[10px] px-1.5 shrink-0">
+                                  <Sparkles className="h-3 w-3 mr-0.5" />
+                                  {entry.ai_confidence ? `${(entry.ai_confidence * 100).toFixed(0)}%` : 'AI'}
+                                </Badge>
+                              )}
+                              {!entry.balanced && (
+                                <Badge variant="destructive" className="text-[10px] px-1.5 shrink-0">
+                                  <AlertTriangle className="h-3 w-3 mr-0.5" />
+                                  Desbalanceado
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-green-600">
+                            {formatCurrency(entry.total_debit)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-red-600">
+                            {formatCurrency(entry.total_credit)}
+                          </TableCell>
+                          <TableCell className="text-center" onClick={e => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleShowHistory(entry.id)}
+                              className="h-7 w-7 p-0"
+                              title="Histórico"
+                            >
+                              <History className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {items.map((item, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-mono text-sm">{item.codigo_conta}</TableCell>
-                            <TableCell>{item.nome_conta}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{item.historico}</TableCell>
-                            <TableCell className="text-right">{item.debito > 0 ? formatCurrency(item.debito) : '-'}</TableCell>
-                            <TableCell className="text-right">{item.credito > 0 ? formatCurrency(item.credito) : '-'}</TableCell>
-                            <TableCell className="text-right space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditLine(item)}
-                                className="h-8"
-                              >
-                                <Edit2 className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleShowHistory(lancamentoId)}
-                                className="h-8"
-                              >
-                                <History className="h-3 w-3" />
-                              </Button>
+
+                        {/* Linhas expandidas */}
+                        {expandedEntries.has(entry.id) && (
+                          <TableRow className="bg-muted/20">
+                            <TableCell colSpan={8} className="p-0">
+                              <div className="p-4 space-y-3">
+                                {/* Metadata */}
+                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                  {entry.internal_code && (
+                                    <span>Código: <code className="bg-muted px-1 rounded">{entry.internal_code}</code></span>
+                                  )}
+                                  {entry.document_number && (
+                                    <span>Doc: {entry.document_number}</span>
+                                  )}
+                                  {entry.ai_model && (
+                                    <span>Modelo: {entry.ai_model}</span>
+                                  )}
+                                  <span>Criado: {format(parseISO(entry.created_at), 'dd/MM/yyyy HH:mm')}</span>
+                                </div>
+
+                                {/* Entry lines */}
+                                <div className="bg-white rounded-lg border">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow className="text-xs">
+                                        <TableHead className="py-2 w-[100px]">Conta</TableHead>
+                                        <TableHead className="py-2">Nome</TableHead>
+                                        <TableHead className="py-2 text-right w-[120px]">Débito</TableHead>
+                                        <TableHead className="py-2 text-right w-[120px]">Crédito</TableHead>
+                                        <TableHead className="py-2 text-center w-[60px]">Ações</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {entry.lines.map(line => (
+                                        <TableRow key={line.id} className="text-sm">
+                                          <TableCell className="py-2 font-mono text-xs">{line.account_code}</TableCell>
+                                          <TableCell className="py-2">{line.account_name}</TableCell>
+                                          <TableCell className="py-2 text-right font-mono text-green-600">
+                                            {line.debit > 0 ? formatCurrency(line.debit) : '-'}
+                                          </TableCell>
+                                          <TableCell className="py-2 text-right font-mono text-red-600">
+                                            {line.credit > 0 ? formatCurrency(line.credit) : '-'}
+                                          </TableCell>
+                                          <TableCell className="py-2 text-center">
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => handleEditLine(entry, line)}
+                                              className="h-6 w-6 p-0"
+                                              title="Editar linha"
+                                            >
+                                              <Edit2 className="h-3 w-3" />
+                                            </Button>
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                      <TableRow className="bg-muted/50 font-semibold">
+                                        <TableCell colSpan={2} className="py-2">Total</TableCell>
+                                        <TableCell className="py-2 text-right font-mono">{formatCurrency(entry.total_debit)}</TableCell>
+                                        <TableCell className="py-2 text-right font-mono">{formatCurrency(entry.total_credit)}</TableCell>
+                                        <TableCell></TableCell>
+                                      </TableRow>
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              </div>
                             </TableCell>
                           </TableRow>
-                        ))}
-                        <TableRow className="bg-muted/50 font-semibold">
-                          <TableCell colSpan={3}>Total do Lançamento</TableCell>
-                          <TableCell className="text-right">{formatCurrency(totalDebito)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(totalCredito)}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-
-                    {Math.abs(totalDebito - totalCredito) > 0.01 && (
-                      <div className="flex items-center gap-2 text-destructive text-sm">
-                        <FileText className="h-4 w-4" />
-                        <span>Atenção: Lançamento desbalanceado!</span>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              {filteredGroups.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  Nenhum lançamento encontrado no período selecionado.
-                </div>
-              )}
-            </div>
+                        )}
+                      </>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </CardContent>
         </Card>
 
+        {/* Dialog de Edição */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -553,15 +724,16 @@ const LivroDiario = () => {
                   <Label htmlFor="edit-account">Conta</Label>
                   <select
                     id="edit-account"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={editingLine.codigo_conta}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    value={editingLine.account_code}
                     onChange={(e) => {
-                      const account = chartOfAccounts.find(a => a.code === e.target.value)
+                      const account = chartOfAccounts.find(a => a.code === e.target.value);
                       setEditingLine(prev => prev ? {
                         ...prev,
-                        codigo_conta: e.target.value,
-                        nome_conta: account?.name || prev.nome_conta
-                      } : null)
+                        account_code: e.target.value,
+                        account_name: account?.name || prev.account_name,
+                        account_id: account?.id || prev.account_id
+                      } : null);
                     }}
                   >
                     {chartOfAccounts.map(account => (
@@ -577,10 +749,10 @@ const LivroDiario = () => {
                     id="edit-debit"
                     type="number"
                     step="0.01"
-                    value={editingLine.debito}
+                    value={editingLine.debit}
                     onChange={(e) => setEditingLine(prev => prev ? {
                       ...prev,
-                      debito: parseFloat(e.target.value) || 0
+                      debit: parseFloat(e.target.value) || 0
                     } : null)}
                   />
                 </div>
@@ -590,10 +762,10 @@ const LivroDiario = () => {
                     id="edit-credit"
                     type="number"
                     step="0.01"
-                    value={editingLine.credito}
+                    value={editingLine.credit}
                     onChange={(e) => setEditingLine(prev => prev ? {
                       ...prev,
-                      credito: parseFloat(e.target.value) || 0
+                      credit: parseFloat(e.target.value) || 0
                     } : null)}
                   />
                 </div>
@@ -610,6 +782,7 @@ const LivroDiario = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Dialog de Histórico */}
         <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[80vh]">
             <DialogHeader>
@@ -620,7 +793,7 @@ const LivroDiario = () => {
             </DialogHeader>
             <div className="space-y-4 overflow-y-auto max-h-[60vh]">
               {auditHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma alteração registrada</p>
               ) : (
                 auditHistory.map((log) => (
                   <div key={log.id} className="border rounded-lg p-4 space-y-2">
@@ -663,7 +836,7 @@ const LivroDiario = () => {
         </Dialog>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default LivroDiario
+export default LivroDiario;

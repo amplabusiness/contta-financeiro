@@ -7,7 +7,7 @@ import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoRecon
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +34,16 @@ interface BankTransaction {
   description: string;
   matched: boolean;
   journal_entry_id?: string;
+  // Campos de automação Sprint 1
+  extracted_cnpj?: string;
+  extracted_cpf?: string;
+  extracted_cob?: string;
+  suggested_client_id?: string;
+  suggested_client_name?: string;
+  identification_confidence?: number;
+  identification_method?: string;
+  auto_matched?: boolean;
+  needs_review?: boolean;
 }
 
 interface ManualSplitItem {
@@ -378,7 +388,10 @@ export default function SuperConciliation() {
 
         let query = supabase
             .from('bank_transactions')
-            .select('*')
+            .select(`
+                *,
+                suggested_client:clients!bank_transactions_suggested_client_id_fkey(id, name)
+            `)
             .gte('transaction_date', startOfMonth)
             .lte('transaction_date', endOfMonth)
             .order('transaction_date', { ascending: true });
@@ -404,7 +417,17 @@ export default function SuperConciliation() {
                     date: tx.transaction_date,
                     description: tx.description,
                     matched: tx.matched,
-                    journal_entry_id: tx.journal_entry_id
+                    journal_entry_id: tx.journal_entry_id,
+                    // Campos de automação
+                    extracted_cnpj: tx.extracted_cnpj,
+                    extracted_cpf: tx.extracted_cpf,
+                    extracted_cob: tx.extracted_cob,
+                    suggested_client_id: tx.suggested_client_id,
+                    suggested_client_name: tx.suggested_client?.name,
+                    identification_confidence: tx.identification_confidence,
+                    identification_method: tx.identification_method,
+                    auto_matched: tx.auto_matched,
+                    needs_review: tx.needs_review
                 };
             });
             setTransactions(mapped);
@@ -650,11 +673,18 @@ export default function SuperConciliation() {
         const accountMap = new Map<string, string>();
         accountsData?.forEach(acc => accountMap.set(acc.code, acc.id));
 
+        // Verificar lançamento existente por transaction_id, reference_id OU source_id
+        // (lançamentos automáticos usam source_id, manuais usam reference_id)
         const { data: existingEntry } = await supabase
-            .from('accounting_entries') 
+            .from('accounting_entries')
             .select('id')
-            .eq('transaction_id', selectedTx.id)
+            .or(`transaction_id.eq.${selectedTx.id},reference_id.eq.${selectedTx.id},source_id.eq.${selectedTx.id}`)
             .maybeSingle();
+
+        // Gerar internal_code único no cliente para evitar colisões
+        const dateStr = selectedTx.date.replace(/-/g, '');
+        const uniquePart = crypto.randomUUID().substring(0, 8);
+        const internalCode = `bank_transaction:${dateStr}:${uniquePart}`;
 
         const entryPayload = {
             entry_type: 'manual',
@@ -663,6 +693,9 @@ export default function SuperConciliation() {
             competence_date: selectedTx.date,
             reference_type: 'bank_transaction',
             reference_id: selectedTx.id,
+            source_type: 'bank_transaction',
+            source_id: selectedTx.id,
+            internal_code: internalCode,
             document_number: selectedTx.description?.substring(0, 50),
             total_debit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
             total_credit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
@@ -1058,18 +1091,44 @@ export default function SuperConciliation() {
                     {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação encontrada."}
                  </div>
                         ) : pagedTransactions.map(tx => (
-              <div 
+              <div
                 key={tx.id}
                 onClick={() => setSelectedTx(tx)}
-                className={`flex items-center gap-2 p-0.5 px-2 rounded-sm border cursor-pointer transition-all hover:bg-slate-100 h-7 ${selectedTx?.id === tx.id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'} ${tx.matched ? 'opacity-70 grayscale-[0.5]' : ''}`}
+                className={`flex items-center gap-2 p-0.5 px-2 rounded-sm border cursor-pointer transition-all hover:bg-slate-100 min-h-[28px] ${selectedTx?.id === tx.id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'} ${tx.matched ? 'opacity-70 grayscale-[0.5]' : ''} ${tx.auto_matched ? 'border-l-2 border-l-emerald-500' : ''}`}
               >
                 <div className="w-[60px] shrink-0 text-[10px] text-slate-500">{new Date(tx.date).toLocaleDateString().slice(0,5)}</div>
-                
+
                 <div className="flex-1 font-medium text-[10px] truncate leading-tight" title={tx.description}>
                     {tx.matched && <CheckCircle2 className="h-2 w-2 inline text-green-600 mr-1" />}
+                    {tx.auto_matched && !tx.matched && <Sparkles className="h-2 w-2 inline text-amber-500 mr-1" title="Auto-identificado" />}
                     {tx.description}
+                    {/* Badges de automação */}
+                    {tx.suggested_client_name && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1 rounded text-[8px] font-normal" title={`Cliente: ${tx.suggested_client_name} (${tx.identification_confidence}%)`}>
+                        <User className="h-2 w-2" />
+                        {tx.suggested_client_name.split(' ')[0]}
+                        {tx.identification_confidence && <span className="text-emerald-500">({tx.identification_confidence}%)</span>}
+                      </span>
+                    )}
+                    {tx.extracted_cnpj && !tx.suggested_client_name && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 px-1 rounded text-[8px] font-normal" title={`CNPJ: ${tx.extracted_cnpj}`}>
+                        <Building2 className="h-2 w-2" />
+                        CNPJ
+                      </span>
+                    )}
+                    {tx.extracted_cpf && !tx.suggested_client_name && !tx.extracted_cnpj && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1 rounded text-[8px] font-normal" title={`CPF: ${tx.extracted_cpf}`}>
+                        <User className="h-2 w-2" />
+                        CPF
+                      </span>
+                    )}
+                    {tx.needs_review && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-amber-100 text-amber-700 px-1 rounded text-[8px] font-normal" title="Necessita revisão">
+                        <AlertTriangle className="h-2 w-2" />
+                      </span>
+                    )}
                 </div>
-                
+
                 <div className={`shrink-0 font-bold text-[10px] w-[50px] text-right ${tx.amount > 0 ? "text-emerald-700" : "text-red-700"}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
