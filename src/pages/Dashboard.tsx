@@ -75,6 +75,7 @@ const Dashboard = () => {
       saldoFinal: number;
     };
   } | null>(null);
+
   const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
@@ -124,19 +125,6 @@ const Dashboard = () => {
     data: [],
     type: "invoices",
   });
-
-  useEffect(() => {
-    if (isOfflineMode && offlineData) {
-      // Carregar dados do cache quando offline
-      setStats(offlineData.dashboardStats || stats);
-      setClients(offlineData.clients || []);
-      setRecentInvoices(offlineData.invoices || []);
-      setLoading(false);
-    } else {
-      // Carregar dados do servidor quando online
-      loadDashboardData();
-    }
-  }, [selectedClientId, isOfflineMode]); // Recarregar quando mudar o cliente selecionado ou modo offline
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -338,15 +326,17 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error("Erro crítico na Dashboard:", error);
-      if (typeof offlineData !== 'undefined' && offlineData) {
-         setStats(offlineData.dashboardStats || stats);
-         setClients(offlineData.clients || []);
-         setRecentInvoices(offlineData.invoices || []);
-      }
+      // Fallback para dados offline em caso de erro (não precisa estar nas deps)
     } finally {
       setLoading(false);
     }
-  }, [selectedClientId, selectedYear, selectedMonth, saveOfflineData, offlineData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId, selectedYear, selectedMonth]);
+
+  // Efeito para carregar dados quando mudar cliente, período ou modo offline
+  useEffect(() => {
+    loadDashboardData();
+  }, [selectedClientId, selectedYear, selectedMonth, loadDashboardData]);
 
   // =====================================================
   // AUTOMAÇÃO DOS AGENTES IA (executa a cada 60s)

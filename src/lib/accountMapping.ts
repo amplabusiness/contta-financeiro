@@ -375,16 +375,22 @@ export async function getAccountGroupBalance(
 /**
  * Dashboard / CashFlow: Retorna saldos principais com formato de razão
  * Saldo Inicial + Débitos - Créditos = Saldo Final
+ *
+ * IMPORTANTE:
+ * - Banco: conta única 1.1.1.05
+ * - Contas a Receber: grupo 1.1.2.01.* (clientes individuais)
+ * - Receitas: grupo 3.* (todas as contas de receita)
+ * - Despesas: grupo 4.* (todas as contas de despesa)
  */
 export async function getDashboardBalances(year?: number, month?: number) {
-  const [saldoBanco, contasReceber, receitas, despesas] = await Promise.all([
+  const [saldoBanco, contasReceberGroup, receitas, despesas] = await Promise.all([
     getAccountBalance(ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, year, month),
-    getAccountBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month),
+    getAccountGroupBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month), // Grupo 1.1.2.01.* (clientes)
     getAccountGroupBalance("3", year, month), // Todas as receitas
     getAccountGroupBalance("4", year, month), // Todas as despesas
   ]);
 
-  return {
+  const result = {
     // Banco - formato de razão
     saldoBanco: saldoBanco.balance,
     banco: {
@@ -393,19 +399,21 @@ export async function getDashboardBalances(year?: number, month?: number) {
       creditos: saldoBanco.credit,
       saldoFinal: saldoBanco.balance,
     },
-    // Contas a Receber - formato de razão
-    contasReceber: contasReceber.balance,
+    // Contas a Receber - formato de razão (soma de todas as contas de clientes)
+    contasReceber: contasReceberGroup.balance,
     receber: {
-      saldoInicial: contasReceber.openingBalance,
-      debitos: contasReceber.debit,
-      creditos: contasReceber.credit,
-      saldoFinal: contasReceber.balance,
+      saldoInicial: 0, // Grupo não tem saldo inicial individual
+      debitos: contasReceberGroup.totalDebit,
+      creditos: contasReceberGroup.totalCredit,
+      saldoFinal: contasReceberGroup.balance,
     },
     // Receitas e Despesas
     totalReceitas: receitas.balance,
     totalDespesas: despesas.balance,
     resultado: receitas.balance - despesas.balance,
   };
+
+  return result;
 }
 
 /**

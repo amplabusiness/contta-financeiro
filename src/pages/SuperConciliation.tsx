@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ChangeEvent } from "react";
 import { useAccounting } from "@/hooks/useAccounting";
+import { AccountingService } from "@/services/AccountingService";
 import { FinancialIntelligenceService, ClassificationSuggestion } from "@/services/FinancialIntelligenceService";
 import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoReconciliationService";
 import { formatCurrency } from "@/data/expensesData";
@@ -20,6 +21,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTenantConfig } from "@/hooks/useTenantConfig";
 import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
 import { ReconciliationReport } from "@/components/ReconciliationReport";
@@ -116,6 +118,7 @@ function AccountSelector({
 
 export default function SuperConciliation() {
   const navigate = useNavigate();
+  const { tenant } = useTenantConfig();
   const [isListExpanded, setIsListExpanded] = useState(false);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
@@ -147,6 +150,7 @@ export default function SuperConciliation() {
 
   const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
+  const [identifyingPayers, setIdentifyingPayers] = useState(false);
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
       base: 0,
@@ -203,47 +207,78 @@ export default function SuperConciliation() {
                         throw new Error(parseResult.error || 'Erro ao processar arquivo OFX');
                     }
 
-                    // Buscar fitids já existentes para evitar duplicados
+                    // Buscar fitids já existentes para evitar duplicados (com batching para arquivos grandes)
                     const fitids = parseResult.data.transactions.map(tx => tx.fitid);
-                    const { data: existingTx } = await supabase
-                        .from('bank_transactions')
-                        .select('fitid')
-                        .in('fitid', fitids);
+                    const BATCH_SIZE = 100;
+                    const existingFitids = new Set<string>();
 
-                    const existingFitids = new Set((existingTx || []).map(t => t.fitid));
+                    // Processar FITIDs em lotes para evitar URLs muito longas
+                    for (let i = 0; i < fitids.length; i += BATCH_SIZE) {
+                        const batch = fitids.slice(i, i + BATCH_SIZE);
+                        const { data: existingTx } = await supabase
+                            .from('bank_transactions')
+                            .select('fitid')
+                            .in('fitid', batch);
 
-                    // Filtrar apenas transações novas
+                        (existingTx || []).forEach(t => existingFitids.add(t.fitid));
+                    }
+
+                    // Filtrar apenas transações novas E com dados válidos (amount não pode ser null)
                     const newTransactions = parseResult.data.transactions.filter(
-                        tx => !existingFitids.has(tx.fitid)
+                        tx => !existingFitids.has(tx.fitid) &&
+                              tx.amount != null &&
+                              !isNaN(tx.amount) &&
+                              tx.date != null
                     );
 
+                    // Contar transações inválidas para feedback
+                    const invalidCount = parseResult.data.transactions.filter(
+                        tx => tx.amount == null || isNaN(tx.amount) || tx.date == null
+                    ).length;
+
                     if (newTransactions.length === 0) {
-                        toast.info('Todas as transações já foram importadas anteriormente');
+                        if (invalidCount > 0) {
+                            toast.warning(`${invalidCount} transações ignoradas (dados inválidos). Nenhuma nova transação para importar.`);
+                        } else {
+                            toast.info('Todas as transações já foram importadas anteriormente');
+                        }
                     } else {
-                        // Inserir transações diretamente no banco
+                        // Inserir transações diretamente no banco (com batching para arquivos grandes)
                         const { data: userData } = await supabase.auth.getUser();
                         const userId = userData.user?.id;
 
                         const transactionsToInsert = newTransactions.map(tx => ({
                             transaction_date: tx.date.toISOString().split('T')[0],
-                            description: tx.description,
-                            amount: tx.type === 'DEBIT' ? -tx.amount : tx.amount,
+                            description: tx.description || 'Sem descrição',
+                            amount: tx.type === 'DEBIT' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
                             transaction_type: tx.type === 'DEBIT' ? 'debit' : 'credit',
                             fitid: tx.fitid,
                             matched: false,
                             created_by: userId,
-                            imported_from: 'ofx_local'
+                            imported_from: 'ofx_local',
+                            tenant_id: tenant?.id // CRÍTICO: necessário para automação funcionar
                         }));
 
-                        const { error: insertError } = await supabase
-                            .from('bank_transactions')
-                            .insert(transactionsToInsert);
+                        // Inserir em lotes de 100 para evitar timeout/limites
+                        const INSERT_BATCH_SIZE = 100;
+                        let insertedCount = 0;
+                        for (let i = 0; i < transactionsToInsert.length; i += INSERT_BATCH_SIZE) {
+                            const batch = transactionsToInsert.slice(i, i + INSERT_BATCH_SIZE);
+                            const { error: insertError } = await supabase
+                                .from('bank_transactions')
+                                .insert(batch);
 
-                        if (insertError) {
-                            throw new Error('Erro ao inserir transações: ' + insertError.message);
+                            if (insertError) {
+                                throw new Error(`Erro ao inserir transações (lote ${Math.floor(i/INSERT_BATCH_SIZE) + 1}): ` + insertError.message);
+                            }
+                            insertedCount += batch.length;
                         }
 
-                        toast.success(`Extrato OFX importado via parser local (${newTransactions.length} lançamentos)`);
+                        if (invalidCount > 0) {
+                            toast.success(`OFX importado: ${insertedCount} lançamentos (${invalidCount} ignorados por dados inválidos)`);
+                        } else {
+                            toast.success(`Extrato OFX importado via parser local (${insertedCount} lançamentos)`);
+                        }
                     }
                 } else {
                     const imported = parsedData?.imported ?? parsedData?.transactions?.length ?? 0;
@@ -450,8 +485,96 @@ export default function SuperConciliation() {
         fetchTransactions();
     }, [fetchTransactions]);
 
+    // Função para executar identificação de pagadores via SQL
+    const handleIdentifyPayers = async () => {
+        setIdentifyingPayers(true);
+        try {
+            // Chamar a função SQL fn_identify_payers_batch diretamente
+            const { data, error } = await supabase.rpc('fn_identify_payers_batch', {
+                p_tenant_id: tenant?.id || null,
+                p_limit: 200
+            });
+
+            if (error) {
+                // Se a função SQL não existir, tentar Edge Function
+                console.warn('fn_identify_payers_batch não disponível, tentando Edge Function:', error);
+
+                const { data: efData, error: efError } = await supabase.functions.invoke('ai-payer-identifier', {
+                    body: { action: 'identify_batch', tenant_id: tenant?.id }
+                });
+
+                if (efError) {
+                    throw new Error('Identificação não disponível: ' + efError.message);
+                }
+
+                const stats = efData?.data || efData;
+                toast.success(
+                    `Identificação concluída: ${stats?.identified || 0} identificados, ${stats?.auto_matched || 0} auto-conciliados`
+                );
+            } else {
+                const stats = data as any;
+                toast.success(
+                    `Identificação concluída: ${stats?.identified || 0} identificados, ${stats?.auto_matched || 0} auto-conciliados`
+                );
+            }
+
+            // Recarregar transações para mostrar os resultados
+            await fetchTransactions();
+        } catch (err: any) {
+            console.error('Erro na identificação de pagadores:', err);
+            toast.error('Erro ao identificar pagadores: ' + err.message);
+        } finally {
+            setIdentifyingPayers(false);
+        }
+    };
+
   useEffect(() => {
     const fetchAccounts = async () => {
+        // Primeiro verificar se existe alguma conta
+        const { data: anyAccount, error: checkError } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .limit(1);
+
+        // Se não existir nenhuma conta, auto-inicializar o plano de contas
+        if (!anyAccount || anyAccount.length === 0) {
+            console.log('[SuperConciliation] Plano de contas vazio, inicializando automaticamente...');
+            toast.info('Inicializando plano de contas para novo cliente...');
+
+            try {
+                const accountingService = new AccountingService();
+                const result = await accountingService.initializeChartOfAccounts();
+                if (result.success) {
+                    console.log('[SuperConciliation] Plano de contas inicializado com sucesso');
+                    toast.success('Plano de contas criado automaticamente!');
+
+                    // Também criar contas para clientes existentes
+                    const clientResult = await accountingService.ensureAllClientAccounts();
+                    if (clientResult.success && clientResult.message?.includes('criadas')) {
+                        console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
+                        toast.success(clientResult.message);
+                    }
+                } else {
+                    console.warn('[SuperConciliation] Erro ao inicializar plano de contas:', result.error);
+                }
+            } catch (initError) {
+                console.error('[SuperConciliation] Erro ao inicializar plano de contas:', initError);
+            }
+        } else {
+            // Mesmo se o plano existe, verificar se há clientes sem conta
+            try {
+                const accountingService = new AccountingService();
+                const clientResult = await accountingService.ensureAllClientAccounts();
+                if (clientResult.success && clientResult.message?.includes('criadas')) {
+                    console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
+                    toast.info(clientResult.message);
+                }
+            } catch (err) {
+                console.warn('[SuperConciliation] Erro ao verificar contas de clientes:', err);
+            }
+        }
+
+        // Buscar contas analíticas para uso na interface
         const { data } = await supabase
             .from('chart_of_accounts')
             .select('code, name')
@@ -1006,10 +1129,23 @@ export default function SuperConciliation() {
                 <Upload className="w-4 h-4" />
                 Importar OFX
             </Button>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
+            <Button
+                variant="outline"
+                onClick={handleIdentifyPayers}
+                disabled={identifyingPayers || transactions.length === 0}
+                className="shrink-0 gap-2 text-purple-700 border-purple-300 hover:bg-purple-50"
+            >
+                {identifyingPayers ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                    <Brain className="w-4 h-4" />
+                )}
+                Identificar Pagadores
+            </Button>
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
                         accept=".ofx,.csv"
                 aria-label="Upload de Extrato"
                         onChange={handleExtratoUpload}
