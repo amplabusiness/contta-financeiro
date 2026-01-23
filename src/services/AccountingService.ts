@@ -468,25 +468,150 @@ class AccountingService {
 
   /**
    * Inicializa o plano de contas padrão
+   * Tenta Edge Function primeiro, se falhar usa fallback local
    */
   async initializeChartOfAccounts(): Promise<AccountingResult> {
     try {
+      // Tentar Edge Function primeiro
       const { data, error } = await supabase.functions.invoke('smart-accounting', {
         body: { action: 'init_chart' }
       });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!error && data?.success) {
+        return {
+          success: true,
+          message: data?.message,
+        };
       }
 
-      return {
-        success: data?.success || false,
-        message: data?.message,
-        error: data?.error,
-      };
+      // Fallback: Inserir diretamente via cliente se Edge Function falhar
+      console.log('[AccountingService] Edge Function indisponível, usando fallback local para plano de contas');
+      return await this.initializeChartOfAccountsLocal();
     } catch (error: any) {
-      return { success: false, error: error.message };
+      console.warn('[AccountingService] Erro na Edge Function, tentando fallback local:', error.message);
+      return await this.initializeChartOfAccountsLocal();
     }
+  }
+
+  /**
+   * Fallback local para inicializar plano de contas quando Edge Function não está disponível
+   */
+  private async initializeChartOfAccountsLocal(): Promise<AccountingResult> {
+    const DEFAULT_CHART = [
+      // ATIVO
+      { code: '1', name: 'ATIVO', account_type: 'ATIVO', nature: 'DEVEDORA', level: 1, is_analytical: false },
+      { code: '1.1', name: 'ATIVO CIRCULANTE', account_type: 'ATIVO', nature: 'DEVEDORA', level: 2, is_analytical: false },
+      { code: '1.1.1', name: 'Caixa e Equivalentes', account_type: 'ATIVO', nature: 'DEVEDORA', level: 3, is_analytical: false },
+      { code: '1.1.1.01', name: 'Caixa Geral', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '1.1.1.02', name: 'Bancos Conta Movimento', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '1.1.1.05', name: 'Banco Sicredi', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '1.1.2', name: 'Créditos a Receber', account_type: 'ATIVO', nature: 'DEVEDORA', level: 3, is_analytical: false },
+      { code: '1.1.2.01', name: 'Clientes a Receber', account_type: 'ATIVO', nature: 'DEVEDORA', level: 4, is_analytical: false },
+      { code: '1.1.3', name: 'Outros Créditos', account_type: 'ATIVO', nature: 'DEVEDORA', level: 3, is_analytical: false },
+
+      // PASSIVO
+      { code: '2', name: 'PASSIVO', account_type: 'PASSIVO', nature: 'CREDORA', level: 1, is_analytical: false },
+      { code: '2.1', name: 'PASSIVO CIRCULANTE', account_type: 'PASSIVO', nature: 'CREDORA', level: 2, is_analytical: false },
+      { code: '2.1.1', name: 'Fornecedores', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
+      { code: '2.1.1.01', name: 'Fornecedores a Pagar', account_type: 'PASSIVO', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '2.1.2', name: 'Obrigações Trabalhistas', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
+      { code: '2.1.3', name: 'Obrigações Tributárias', account_type: 'PASSIVO', nature: 'CREDORA', level: 3, is_analytical: false },
+
+      // RECEITAS
+      { code: '3', name: 'RECEITAS', account_type: 'RECEITA', nature: 'CREDORA', level: 1, is_analytical: false },
+      { code: '3.1', name: 'RECEITAS OPERACIONAIS', account_type: 'RECEITA', nature: 'CREDORA', level: 2, is_analytical: false },
+      { code: '3.1.1', name: 'Receita de Honorários', account_type: 'RECEITA', nature: 'CREDORA', level: 3, is_analytical: false },
+      { code: '3.1.1.01', name: 'Honorários Contábeis', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '3.1.1.02', name: 'Honorários Fiscais', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '3.1.1.03', name: 'Honorários Trabalhistas', account_type: 'RECEITA', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '3.1.2', name: 'Outras Receitas', account_type: 'RECEITA', nature: 'CREDORA', level: 3, is_analytical: false },
+
+      // DESPESAS
+      { code: '4', name: 'DESPESAS', account_type: 'DESPESA', nature: 'DEVEDORA', level: 1, is_analytical: false },
+      { code: '4.1', name: 'DESPESAS OPERACIONAIS', account_type: 'DESPESA', nature: 'DEVEDORA', level: 2, is_analytical: false },
+      { code: '4.1.1', name: 'Despesas com Pessoal', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+      { code: '4.1.1.01', name: 'Salários e Ordenados', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.1.02', name: 'Encargos Sociais', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.2', name: 'Despesas Administrativas', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+      { code: '4.1.2.01', name: 'Aluguel', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.2.02', name: 'Energia Elétrica', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.2.03', name: 'Telefone e Internet', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.2.04', name: 'Material de Escritório', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.2.05', name: 'Serviços de Terceiros', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.3', name: 'Despesas Financeiras', account_type: 'DESPESA', nature: 'DEVEDORA', level: 3, is_analytical: false },
+      { code: '4.1.3.01', name: 'Juros e Multas', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+      { code: '4.1.3.02', name: 'Tarifas Bancárias', account_type: 'DESPESA', nature: 'DEVEDORA', level: 4, is_analytical: true },
+
+      // PATRIMÔNIO LÍQUIDO
+      { code: '5', name: 'PATRIMÔNIO LÍQUIDO', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 1, is_analytical: false },
+      { code: '5.1', name: 'CAPITAL SOCIAL', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 2, is_analytical: false },
+      { code: '5.1.1', name: 'Capital Integralizado', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 3, is_analytical: false },
+      { code: '5.1.1.01', name: 'Capital Social', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '5.2', name: 'LUCROS OU PREJUÍZOS ACUMULADOS', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 2, is_analytical: false },
+      { code: '5.2.1', name: 'Resultados Acumulados', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 3, is_analytical: false },
+      { code: '5.2.1.01', name: 'Lucros Acumulados', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
+      { code: '5.2.1.02', name: 'Saldos de Abertura', account_type: 'PATRIMONIO_LIQUIDO', nature: 'CREDORA', level: 4, is_analytical: true },
+    ];
+
+    let created = 0;
+    let existing = 0;
+    const errors: string[] = [];
+
+    // Criar mapa de parent_ids
+    const parentIdMap: Record<string, string> = {};
+
+    for (const account of DEFAULT_CHART) {
+      try {
+        // Verificar se já existe
+        const { data: existingAccount } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('code', account.code)
+          .maybeSingle();
+
+        if (existingAccount) {
+          parentIdMap[account.code] = existingAccount.id;
+          existing++;
+          continue;
+        }
+
+        // Encontrar parent_id
+        const parentCode = account.code.split('.').slice(0, -1).join('.');
+        const parentId = parentCode ? parentIdMap[parentCode] || null : null;
+
+        // Inserir conta
+        const { data: newAccount, error: insertError } = await supabase
+          .from('chart_of_accounts')
+          .insert({
+            code: account.code,
+            name: account.name,
+            account_type: account.account_type,
+            nature: account.nature,
+            level: account.level,
+            is_analytical: account.is_analytical,
+            parent_id: parentId,
+            is_active: true,
+          })
+          .select('id')
+          .single();
+
+        if (insertError) {
+          errors.push(`${account.code}: ${insertError.message}`);
+        } else if (newAccount) {
+          parentIdMap[account.code] = newAccount.id;
+          created++;
+        }
+      } catch (err: any) {
+        errors.push(`${account.code}: ${err.message}`);
+      }
+    }
+
+    const success = errors.length === 0 || created > 0;
+    return {
+      success,
+      message: `Plano de contas: ${created} criadas, ${existing} já existiam${errors.length > 0 ? `, ${errors.length} erros` : ''}`,
+      error: errors.length > 0 ? errors.join('; ') : undefined,
+    };
   }
 
   /**
@@ -614,6 +739,143 @@ class AccountingService {
       success: true,
       message: 'Lançamentos contábeis da despesa excluídos'
     };
+  }
+
+  /**
+   * Cria contas contábeis para todos os clientes que não possuem
+   * Útil para clientes importados antes do trigger de auto-criação existir
+   */
+  async ensureAllClientAccounts(): Promise<AccountingResult> {
+    console.log('[AccountingService] Verificando clientes sem conta contábil...');
+
+    try {
+      // Buscar clientes ativos sem conta contábil
+      const { data: clientsWithoutAccount, error: fetchError } = await supabase
+        .from('clients')
+        .select('id, name')
+        .eq('is_active', true)
+        .is('accounting_account_id', null);
+
+      if (fetchError) {
+        console.error('[AccountingService] Erro ao buscar clientes:', fetchError);
+        return { success: false, error: fetchError.message };
+      }
+
+      if (!clientsWithoutAccount || clientsWithoutAccount.length === 0) {
+        console.log('[AccountingService] Todos os clientes já possuem conta contábil');
+        return { success: true, message: 'Todos os clientes já possuem conta contábil' };
+      }
+
+      console.log(`[AccountingService] Encontrados ${clientsWithoutAccount.length} clientes sem conta`);
+
+      // Garantir que a conta pai 1.1.2.01 existe
+      const { data: parentAccount } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.2.01')
+        .single();
+
+      if (!parentAccount) {
+        // Criar a conta pai se não existir
+        console.log('[AccountingService] Criando conta pai 1.1.2.01...');
+        const { error: createParentError } = await supabase
+          .from('chart_of_accounts')
+          .insert({
+            code: '1.1.2.01',
+            name: 'Clientes a Receber',
+            account_type: 'ATIVO',
+            nature: 'DEVEDORA',
+            level: 4,
+            is_analytical: false,
+            is_active: true,
+          });
+
+        if (createParentError) {
+          console.error('[AccountingService] Erro ao criar conta pai:', createParentError);
+          return { success: false, error: 'Erro ao criar conta pai 1.1.2.01: ' + createParentError.message };
+        }
+      }
+
+      // Buscar próximo código disponível
+      const { data: existingClientAccounts } = await supabase
+        .from('chart_of_accounts')
+        .select('code')
+        .like('code', '1.1.2.01.%')
+        .order('code', { ascending: false });
+
+      let nextSuffix = 1;
+      if (existingClientAccounts && existingClientAccounts.length > 0) {
+        const lastCode = existingClientAccounts[0].code;
+        const lastNum = parseInt(lastCode.split('.').pop() || '0');
+        nextSuffix = lastNum + 1;
+      }
+
+      // Buscar ID da conta pai atualizado
+      const { data: parentData } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('code', '1.1.2.01')
+        .single();
+
+      const parentId = parentData?.id || null;
+
+      let created = 0;
+      let errors: string[] = [];
+
+      for (const client of clientsWithoutAccount) {
+        try {
+          const code = `1.1.2.01.${String(nextSuffix).padStart(3, '0')}`;
+
+          // Criar conta para o cliente
+          const { data: newAccount, error: createError } = await supabase
+            .from('chart_of_accounts')
+            .insert({
+              code,
+              name: `Cliente: ${client.name}`,
+              account_type: 'ATIVO',
+              nature: 'DEVEDORA',
+              level: 5,
+              is_analytical: true,
+              parent_id: parentId,
+              is_active: true,
+            })
+            .select('id')
+            .single();
+
+          if (createError) {
+            errors.push(`${client.name}: ${createError.message}`);
+            continue;
+          }
+
+          // Atualizar cliente com a nova conta
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({ accounting_account_id: newAccount.id })
+            .eq('id', client.id);
+
+          if (updateError) {
+            errors.push(`${client.name}: ${updateError.message}`);
+          } else {
+            created++;
+            nextSuffix++;
+            console.log(`[AccountingService] Conta ${code} criada para ${client.name}`);
+          }
+        } catch (err: any) {
+          errors.push(`${client.name}: ${err.message}`);
+        }
+      }
+
+      const success = created > 0 || errors.length === 0;
+      return {
+        success,
+        message: `${created} contas criadas para clientes${errors.length > 0 ? `, ${errors.length} erros` : ''}`,
+        error: errors.length > 0 ? errors.slice(0, 5).join('; ') : undefined,
+      };
+
+    } catch (error: any) {
+      console.error('[AccountingService] Erro inesperado:', error);
+      return { success: false, error: error.message };
+    }
   }
 }
 

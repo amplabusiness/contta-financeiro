@@ -118,8 +118,14 @@ function parseOFXSGML(content: string): OFXParseResult {
         continue; // Skip invalid transactions
       }
 
-      const amount = Math.abs(parseFloat(amountStr));
-      const isDebit = parseFloat(amountStr) < 0 || typeStr === 'DEBIT';
+      const parsedAmount = parseFloat(amountStr.replace(',', '.'));
+      if (isNaN(parsedAmount)) {
+        console.warn(`[OFX Parser] Transação ignorada - amount inválido: ${amountStr}`);
+        continue; // Skip transactions with invalid amount
+      }
+
+      const amount = Math.abs(parsedAmount);
+      const isDebit = parsedAmount < 0 || typeStr === 'DEBIT';
 
       // Build description
       let description = name || memo || 'Transação bancária';
@@ -245,8 +251,14 @@ function parseOFXXML(content: string): OFXParseResult {
 
       if (!dateStr || !amountStr || !fitid) continue;
 
-      const amount = Math.abs(parseFloat(amountStr));
-      const isDebit = parseFloat(amountStr) < 0 || typeStr === 'DEBIT';
+      const parsedAmount = parseFloat(amountStr.replace(',', '.'));
+      if (isNaN(parsedAmount)) {
+        console.warn(`[OFX Parser XML] Transação ignorada - amount inválido: ${amountStr}`);
+        continue;
+      }
+
+      const amount = Math.abs(parsedAmount);
+      const isDebit = parsedAmount < 0 || typeStr === 'DEBIT';
 
       let description = name || memo || 'Transação bancária';
       if (memo && name && memo !== name) {
