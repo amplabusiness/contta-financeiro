@@ -23,8 +23,6 @@ export const CashFlowService = {
     limitDate.setDate(today.getDate() + daysToProject);
     const limitDateStr = limitDate.toISOString().split('T')[0];
 
-    console.log('[CashFlowService] Fetching projection from', today.toISOString().split('T')[0], 'to', limitDateStr);
-
     // 1. Get Current Bank Balance from ACCOUNTING (Source of Truth)
     // Usamos a contabilidade como fonte única de verdade para o saldo bancário
     let currentBalance = 0;
@@ -42,10 +40,8 @@ export const CashFlowService = {
 
       // Para projeção, usamos o saldo atual (balance) que inclui todos os lançamentos do mês
       currentBalance = accountingBalance.balance;
-      console.log('[CashFlowService] Current balance from ACCOUNTING:', currentBalance);
-    } catch (err) {
-      // Fallback para bank_accounts se a contabilidade não estiver configurada
-      console.warn('[CashFlowService] Failed to get balance from accounting, falling back to bank_accounts:', err);
+    } catch {
+      // Fallback silencioso para bank_accounts se a contabilidade não estiver configurada
 
       const { data: accounts, error: errBank } = await supabase
         .from('bank_accounts')
@@ -55,7 +51,6 @@ export const CashFlowService = {
       if (errBank) throw errBank;
 
       currentBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
-      console.log('[CashFlowService] Current balance from bank_accounts (fallback):', currentBalance);
     }
 
     // 2. Get Unified Cash Flow View (Source of Truth)
@@ -80,7 +75,6 @@ export const CashFlowService = {
       }
 
       if (data && data.length > 0) {
-        console.log(`[CashFlowService] Fetched ${data.length} records from v_cash_flow_daily (range ${from}-${from + step - 1})`);
         allUnifiedData = [...allUnifiedData, ...data];
         if (data.length < step) {
           fetchMore = false;
@@ -90,16 +84,6 @@ export const CashFlowService = {
       } else {
         fetchMore = false;
       }
-    }
-
-    console.log(`[CashFlowService] Total unified data fetched: ${allUnifiedData.length} records`);
-
-    // Debug: Check if we have custom projections
-    const customProjectionTypes = ['RECEITA', 'DESPESA_FOLHA', 'DESPESA_PJ', 'DESPESA_IMPOSTO', 'DESPESA_OUTROS', 'DESPESA_RECORRENTE'];
-    const customProjections = allUnifiedData.filter(item => customProjectionTypes.includes(item.type));
-    console.log('[CashFlowService] Custom projections found:', customProjections.length);
-    if (customProjections.length > 0) {
-      console.log('[CashFlowService] Sample custom projection:', customProjections[0]);
     }
 
     // 3. Map to Internal Event Structure
@@ -133,7 +117,6 @@ export const CashFlowService = {
           type = 'DESPESA_OUTROS';
           break;
         default:
-          console.warn('[CashFlowService] Unknown type from DB:', item.type, 'for item:', item);
           type = 'DESPESA_OUTROS';
       }
 
@@ -145,14 +128,6 @@ export const CashFlowService = {
         status: item.status === 'CONFIRMED' ? 'realizado' : 'previsto' // 'realizado' implies certain/confirmed here
       };
     });
-
-    console.log('[CashFlowService] Total events mapped:', allEvents.length);
-    console.log('[CashFlowService] Event types breakdown:',
-      allEvents.reduce((acc, e) => {
-        acc[e.type] = (acc[e.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    );
 
     // 4. Calculate Daily Balances
     const dailyBalances: { date: string; balance: number }[] = [];

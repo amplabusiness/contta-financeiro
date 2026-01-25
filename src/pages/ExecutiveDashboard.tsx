@@ -87,8 +87,6 @@ const ExecutiveDashboard = () => {
         .filter((line: any) => expenseAccountIds.includes(line.account_id))
         .reduce((sum: number, line: any) => sum + (Number(line.debit) || 0) - (Number(line.credit) || 0), 0);
 
-      console.log(`[ExecutiveDashboard] Contabilidade - Receitas: ${totalRevenueFromAccounting}, Despesas: ${totalExpensesFromAccounting}`);
-
       // Buscar inadimplência de faturas (pendentes e atrasadas até a data final do período)
       let overdueInvoicesQuery = supabase
         .from("invoices")

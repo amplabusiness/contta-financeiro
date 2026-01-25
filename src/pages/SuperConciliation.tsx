@@ -190,13 +190,11 @@ export default function SuperConciliation() {
                         body: { ofx_content: content }
                     });
                     if (error) {
-                        console.warn('Edge Function indisponível, usando parser local:', error);
                         useLocalParser = true;
                     } else {
                         parsedData = data;
                     }
-                } catch (edgeFnError) {
-                    console.warn('Edge Function indisponível, usando parser local:', edgeFnError);
+                } catch {
                     useLocalParser = true;
                 }
 
@@ -356,15 +354,6 @@ export default function SuperConciliation() {
                 divergence: 0
             });
 
-            console.log('[SuperConciliation] Saldos da contabilidade:', {
-                conta: ACCOUNT_MAPPING.SALDO_BANCO_SICREDI,
-                periodo: `${month}/${year}`,
-                saldoInicial: valStart,
-                debitos: monthCredits,
-                creditos: accountingBalance.credit,
-                saldoFinal: valFinal
-            });
-
         } catch (err) {
             console.error('[SuperConciliation] Erro ao buscar saldo contábil, usando fallback:', err);
 
@@ -497,8 +486,6 @@ export default function SuperConciliation() {
 
             if (error) {
                 // Se a função SQL não existir, tentar Edge Function
-                console.warn('fn_identify_payers_batch não disponível, tentando Edge Function:', error);
-
                 const { data: efData, error: efError } = await supabase.functions.invoke('ai-payer-identifier', {
                     body: { action: 'identify_batch', tenant_id: tenant?.id }
                 });
@@ -538,27 +525,22 @@ export default function SuperConciliation() {
 
         // Se não existir nenhuma conta, auto-inicializar o plano de contas
         if (!anyAccount || anyAccount.length === 0) {
-            console.log('[SuperConciliation] Plano de contas vazio, inicializando automaticamente...');
             toast.info('Inicializando plano de contas para novo cliente...');
 
             try {
                 const accountingService = new AccountingService();
                 const result = await accountingService.initializeChartOfAccounts();
                 if (result.success) {
-                    console.log('[SuperConciliation] Plano de contas inicializado com sucesso');
                     toast.success('Plano de contas criado automaticamente!');
 
                     // Também criar contas para clientes existentes
                     const clientResult = await accountingService.ensureAllClientAccounts();
                     if (clientResult.success && clientResult.message?.includes('criadas')) {
-                        console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
                         toast.success(clientResult.message);
                     }
-                } else {
-                    console.warn('[SuperConciliation] Erro ao inicializar plano de contas:', result.error);
                 }
-            } catch (initError) {
-                console.error('[SuperConciliation] Erro ao inicializar plano de contas:', initError);
+            } catch {
+                // Erro silencioso - plano de contas será criado na próxima tentativa
             }
         } else {
             // Mesmo se o plano existe, verificar se há clientes sem conta
@@ -566,11 +548,10 @@ export default function SuperConciliation() {
                 const accountingService = new AccountingService();
                 const clientResult = await accountingService.ensureAllClientAccounts();
                 if (clientResult.success && clientResult.message?.includes('criadas')) {
-                    console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
                     toast.info(clientResult.message);
                 }
-            } catch (err) {
-                console.warn('[SuperConciliation] Erro ao verificar contas de clientes:', err);
+            } catch {
+                // Erro silencioso
             }
         }
 
@@ -930,9 +911,7 @@ export default function SuperConciliation() {
                     p_transaction_id: selectedTx.id,
                     p_user_id: user?.id || null
                 });
-                console.log('[Learning] Confirmação registrada para aprendizado');
-            } catch (learnErr) {
-                console.warn('[Learning] Erro ao registrar confirmação:', learnErr);
+            } catch {
                 // Não bloqueia o fluxo principal
             }
         }
