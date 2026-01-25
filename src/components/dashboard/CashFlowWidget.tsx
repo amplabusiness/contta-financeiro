@@ -19,31 +19,7 @@ export const CashFlowWidget = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            console.log('[CashFlowWidget] Loading projection data...');
             const data = await CashFlowService.getProjection(30); // 30 days projection
-            const futureEvents = data.events.filter(e => new Date(e.date) >= new Date());
-            console.log('[CashFlowWidget] Projection loaded:', {
-                currentBalance: data.currentBalance,
-                totalEvents: data.events.length,
-                futureEvents: futureEvents.length,
-                totalDailyBalances: data.dailyBalances.length,
-                eventTypes: data.events.reduce((acc, e) => {
-                    acc[e.type] = (acc[e.type] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>),
-                first5Events: data.events.slice(0, 5).map(e => ({
-                    date: e.date,
-                    desc: e.description,
-                    amount: e.amount,
-                    type: e.type
-                })),
-                first5FutureEvents: futureEvents.slice(0, 5).map(e => ({
-                    date: e.date,
-                    desc: e.description,
-                    amount: e.amount,
-                    type: e.type
-                }))
-            });
             setProjection(data);
         } catch (error) {
             console.error("[CashFlowWidget] Failed to load cash flow", error);
@@ -68,17 +44,6 @@ export const CashFlowWidget = () => {
         eventDate.setHours(0, 0, 0, 0);
         return eventDate >= today;
     }).slice(0, 5);
-
-    console.log('[CashFlowWidget] Upcoming events filter:', {
-        today: today.toISOString(),
-        totalEvents: projection.events.length,
-        upcomingCount: upcomingEvents.length,
-        upcomingEvents: upcomingEvents.map(e => ({
-            date: e.date,
-            desc: e.description,
-            amount: e.amount
-        }))
-    });
 
     return (
         <Card className="col-span-full md:col-span-1 shadow-md hover:shadow-lg transition-all duration-200 border-l-4 border-l-indigo-500">

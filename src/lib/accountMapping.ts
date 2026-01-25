@@ -235,6 +235,7 @@ export async function getMultipleAccountBalances(
 
 /**
  * Busca saldo de um grupo de contas (ex: todas as receitas "3%")
+ * OTIMIZADO: Usa RPC fn_get_accounts_balance para evitar URL longa
  *
  * Para grupos de contas:
  * - Grupo 1 (Ativo), 2 (Passivo), 5 (PL): saldo ACUMULADO
@@ -251,65 +252,46 @@ export async function getAccountGroupBalance(
   balance: number;
   accounts: Array<{ code: string; name: string; balance: number }>;
 }> {
-  // Buscar todas as contas analíticas do grupo
-  const { data: accounts, error: accountsError } = await supabase
-    .from("chart_of_accounts")
-    .select("id, code, name, nature, account_type")
-    .like("code", `${groupPrefix}%`)
-    .eq("is_analytical", true)
-    .eq("is_active", true);
-
-  if (accountsError || !accounts?.length) {
-    return {
-      prefix: groupPrefix,
-      totalDebit: 0,
-      totalCredit: 0,
-      balance: 0,
-      accounts: [],
-    };
-  }
-
-  const accountIds = accounts.map((a) => a.id);
-
   // Determinar se é grupo patrimonial (1, 2, 5) ou de resultado (3, 4)
   const firstDigit = groupPrefix.charAt(0);
   const isPatrimonial = ["1", "2", "5"].includes(firstDigit);
 
-  // Construir query
-  let query = supabase
-    .from("accounting_entry_lines")
-    .select("account_id, debit, credit, accounting_entries!inner(entry_date)")
-    .in("account_id", accountIds)
-    .range(0, 49999); // Garantir que todos os registros sejam retornados
+  // Calcular datas de acordo com o tipo de grupo
+  let startDate: string | null = null;
+  let endDate: string | null = null;
 
-  // Filtrar por período
   if (isPatrimonial) {
     // Grupos patrimoniais: saldo ACUMULADO até o final do período
     if (year && month) {
-      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
-      query = query.lte("accounting_entries.entry_date", endDate);
+      endDate = new Date(year, month, 0).toISOString().split("T")[0];
     } else if (year) {
-      query = query.lte("accounting_entries.entry_date", `${year}-12-31`);
+      endDate = `${year}-12-31`;
     }
   } else {
     // Grupos de resultado: saldo do PERÍODO específico
     if (year && month) {
-      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
-      query = query
-        .gte("accounting_entries.entry_date", startDate)
-        .lte("accounting_entries.entry_date", endDate);
+      startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      endDate = new Date(year, month, 0).toISOString().split("T")[0];
     } else if (year) {
-      query = query
-        .gte("accounting_entries.entry_date", `${year}-01-01`)
-        .lte("accounting_entries.entry_date", `${year}-12-31`);
+      startDate = `${year}-01-01`;
+      endDate = `${year}-12-31`;
     }
   }
 
-  const { data: entries, error: entriesError } = await query;
+  // Chamar RPC (evita URL longa com muitos UUIDs)
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "fn_get_accounts_balance",
+    {
+      p_tenant_id: null, // usa get_my_tenant_id()
+      p_account_ids: null,
+      p_group_prefix: groupPrefix,
+      p_end_date: endDate,
+      p_start_date: startDate,
+    }
+  );
 
-  if (entriesError) {
-    console.error(`Erro ao buscar lançamentos do grupo ${groupPrefix}:`, entriesError);
+  if (rpcError) {
+    console.error(`Erro ao buscar saldos do grupo ${groupPrefix} via RPC:`, rpcError);
     return {
       prefix: groupPrefix,
       totalDebit: 0,
@@ -319,41 +301,37 @@ export async function getAccountGroupBalance(
     };
   }
 
-  // Agrupar por conta
-  const accountMap = new Map<string, { debit: number; credit: number }>();
-  entries?.forEach((e) => {
-    const current = accountMap.get(e.account_id) || { debit: 0, credit: 0 };
-    accountMap.set(e.account_id, {
-      debit: current.debit + Number(e.debit || 0),
-      credit: current.credit + Number(e.credit || 0),
-    });
-  });
-
-  // Calcular saldos por conta
-  const accountBalances = accounts.map((account) => {
-    const totals = accountMap.get(account.id) || { debit: 0, credit: 0 };
-    const balance =
-      account.nature === "DEVEDORA"
-        ? totals.debit - totals.credit
-        : totals.credit - totals.debit;
+  if (!rpcData?.length) {
     return {
-      code: account.code,
-      name: account.name,
-      balance,
+      prefix: groupPrefix,
+      totalDebit: 0,
+      totalCredit: 0,
+      balance: 0,
+      accounts: [],
     };
-  });
+  }
+
+  // Processar resultados da RPC
+  const accountBalances = rpcData.map((row: {
+    account_code: string;
+    account_name: string;
+    balance: number;
+  }) => ({
+    code: row.account_code,
+    name: row.account_name,
+    balance: Number(row.balance),
+  }));
 
   // Totais do grupo
   let totalDebit = 0;
   let totalCredit = 0;
-  accountMap.forEach((v) => {
-    totalDebit += v.debit;
-    totalCredit += v.credit;
+  rpcData.forEach((row: { total_debit: number; total_credit: number }) => {
+    totalDebit += Number(row.total_debit || 0);
+    totalCredit += Number(row.total_credit || 0);
   });
 
   // Saldo do grupo (assumindo natureza baseada no prefixo)
   // 1-2 = Ativo (Devedora), 3 = Receita (Credora), 4 = Despesa (Devedora), 5 = PL (Credora)
-  // Reutiliza firstDigit declarado anteriormente
   const isDevedora = firstDigit === "1" || firstDigit === "4";
   const balance = isDevedora
     ? totalDebit - totalCredit
@@ -364,7 +342,7 @@ export async function getAccountGroupBalance(
     totalDebit,
     totalCredit,
     balance,
-    accounts: accountBalances.filter((a) => a.balance !== 0),
+    accounts: accountBalances.filter((a: { balance: number }) => a.balance !== 0),
   };
 }
 

@@ -291,8 +291,6 @@ const CashFlow = () => {
         banco: dashboardBalances.banco,
         receber: dashboardBalances.receber,
       });
-      console.log(`[CashFlow] Saldos contábeis (contas diretas):`, dashboardBalances);
-
       // Buscar contas bancárias da tabela correta (bank_accounts)
       const { data: accountsData, error: accountsError } = await supabase
         .from("bank_accounts")
@@ -302,7 +300,6 @@ const CashFlow = () => {
 
       if (accountsError) throw accountsError;
       setBankAccounts(accountsData || []);
-      console.log(`[CashFlow] Contas bancárias encontradas: ${accountsData?.length || 0}`);
 
       // =====================================================
       // FLUXO DE CAIXA: Usa despesas PENDENTES DE PAGAMENTO
@@ -331,8 +328,6 @@ const CashFlow = () => {
       const { data: expensesData, error: expensesError } = await expensesQuery;
       if (expensesError) throw expensesError;
 
-      console.log(`[CashFlow] Despesas pendentes de ${todayStr} até ${endPeriodStr}: ${expensesData?.length || 0}`);
-
       // Normalizar despesas para a estrutura de contas a pagar
       const normalizedExpenses = (expensesData || []).map((exp) => ({
         ...exp,
@@ -359,8 +354,6 @@ const CashFlow = () => {
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData || []);
 
-      console.log(`[CashFlow] Faturas a receber até ${endPeriodStr}: ${invoicesData?.length || 0}`);
-
       // Buscar saldos de abertura pendentes (a receber) - COM FILTRO DE PERÍODO
       let openingBalanceQuery = supabase
         .from("client_opening_balance")
@@ -376,8 +369,6 @@ const CashFlow = () => {
       const { data: openingBalanceData, error: openingBalanceError } = await openingBalanceQuery;
       if (openingBalanceError) throw openingBalanceError;
       setOpeningBalances(openingBalanceData || []);
-
-      console.log(`[CashFlow] Saldos de abertura até ${endPeriodStr}: ${openingBalanceData?.length || 0}`);
 
       // Buscar transações de fluxo de caixa
       const { data: transactionsData, error: transactionsError } = await supabase

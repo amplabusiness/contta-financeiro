@@ -62,8 +62,18 @@ export function TenantLogo({
         return;
       }
 
-      // Tentar carregar do storage
+      // Verificar se o arquivo existe antes de criar URL assinada
       try {
+        const { data: files } = await supabase.storage
+          .from("tenant-assets")
+          .list(tenant.id, { search: "logo" });
+
+        // Se não encontrou arquivo de logo, usar fallback silenciosamente
+        if (!files || files.length === 0) {
+          return;
+        }
+
+        // Arquivo existe, criar URL assinada
         const { data } = await supabase.storage
           .from("tenant-assets")
           .createSignedUrl(`${tenant.id}/logo.png`, 3600); // 1 hora
@@ -71,9 +81,8 @@ export function TenantLogo({
         if (data?.signedUrl) {
           setLogoUrl(data.signedUrl);
         }
-      } catch (err) {
-        // Logo não existe no storage, usar fallback
-        console.debug("[TenantLogo] Logo não encontrado no storage");
+      } catch {
+        // Erro silencioso - usar fallback
       }
     }
 

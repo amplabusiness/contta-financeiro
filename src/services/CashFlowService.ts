@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
 export interface CashFlowEvent {
   date: string;
@@ -22,18 +23,35 @@ export const CashFlowService = {
     limitDate.setDate(today.getDate() + daysToProject);
     const limitDateStr = limitDate.toISOString().split('T')[0];
 
-    console.log('[CashFlowService] Fetching projection from', today.toISOString().split('T')[0], 'to', limitDateStr);
+    // 1. Get Current Bank Balance from ACCOUNTING (Source of Truth)
+    // Usamos a contabilidade como fonte única de verdade para o saldo bancário
+    let currentBalance = 0;
 
-    // 1. Get Current Bank Balance
-    const { data: accounts, error: errBank } = await supabase
-      .from('bank_accounts')
-      .select('balance')
-      .eq('is_active', true);
+    try {
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
 
-    if (errBank) throw errBank;
+      // Buscar saldo da conta 1.1.1.05 (Banco Sicredi) na contabilidade
+      const accountingBalance = await getAccountBalance(
+        ACCOUNT_MAPPING.SALDO_BANCO_SICREDI,
+        year,
+        month
+      );
 
-    const currentBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
-    console.log('[CashFlowService] Current balance:', currentBalance);
+      // Para projeção, usamos o saldo atual (balance) que inclui todos os lançamentos do mês
+      currentBalance = accountingBalance.balance;
+    } catch {
+      // Fallback silencioso para bank_accounts se a contabilidade não estiver configurada
+
+      const { data: accounts, error: errBank } = await supabase
+        .from('bank_accounts')
+        .select('balance')
+        .eq('is_active', true);
+
+      if (errBank) throw errBank;
+
+      currentBalance = accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+    }
 
     // 2. Get Unified Cash Flow View (Source of Truth)
     // The view v_cash_flow_daily already consolidates Invoices, Payroll, Contractors, Taxes, and Recurring
@@ -57,7 +75,6 @@ export const CashFlowService = {
       }
 
       if (data && data.length > 0) {
-        console.log(`[CashFlowService] Fetched ${data.length} records from v_cash_flow_daily (range ${from}-${from + step - 1})`);
         allUnifiedData = [...allUnifiedData, ...data];
         if (data.length < step) {
           fetchMore = false;
@@ -67,16 +84,6 @@ export const CashFlowService = {
       } else {
         fetchMore = false;
       }
-    }
-
-    console.log(`[CashFlowService] Total unified data fetched: ${allUnifiedData.length} records`);
-
-    // Debug: Check if we have custom projections
-    const customProjectionTypes = ['RECEITA', 'DESPESA_FOLHA', 'DESPESA_PJ', 'DESPESA_IMPOSTO', 'DESPESA_OUTROS', 'DESPESA_RECORRENTE'];
-    const customProjections = allUnifiedData.filter(item => customProjectionTypes.includes(item.type));
-    console.log('[CashFlowService] Custom projections found:', customProjections.length);
-    if (customProjections.length > 0) {
-      console.log('[CashFlowService] Sample custom projection:', customProjections[0]);
     }
 
     // 3. Map to Internal Event Structure
@@ -110,7 +117,6 @@ export const CashFlowService = {
           type = 'DESPESA_OUTROS';
           break;
         default:
-          console.warn('[CashFlowService] Unknown type from DB:', item.type, 'for item:', item);
           type = 'DESPESA_OUTROS';
       }
 
@@ -122,14 +128,6 @@ export const CashFlowService = {
         status: item.status === 'CONFIRMED' ? 'realizado' : 'previsto' // 'realizado' implies certain/confirmed here
       };
     });
-
-    console.log('[CashFlowService] Total events mapped:', allEvents.length);
-    console.log('[CashFlowService] Event types breakdown:',
-      allEvents.reduce((acc, e) => {
-        acc[e.type] = (acc[e.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    );
 
     // 4. Calculate Daily Balances
     const dailyBalances: { date: string; balance: number }[] = [];

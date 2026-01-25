@@ -162,8 +162,6 @@ class AccountingService {
    * O internal_code é gerado automaticamente pelo trigger no banco de dados
    */
   async createEntry(params: AccountingEntryParams): Promise<AccountingResult> {
-    console.log('[AccountingService] Creating entry:', params);
-
     try {
       // Validações básicas
       if (!params.amount || params.amount <= 0) {
@@ -188,7 +186,6 @@ class AccountingService {
       // Verificar se já existe lançamento para esta referência (idempotência)
       const existing = await this.checkExistingEntry(params.referenceType, params.referenceId, params.entryType);
       if (existing) {
-        console.log('[AccountingService] Entry already exists:', existing);
         return {
           success: true,
           entryId: existing,
@@ -232,7 +229,6 @@ class AccountingService {
         return { success: false, error: data?.error || 'Erro ao criar lançamento' };
       }
 
-      console.log('[AccountingService] Entry created successfully:', data);
       return {
         success: true,
         entryId: data.entry_id,
@@ -485,10 +481,9 @@ class AccountingService {
       }
 
       // Fallback: Inserir diretamente via cliente se Edge Function falhar
-      console.log('[AccountingService] Edge Function indisponível, usando fallback local para plano de contas');
       return await this.initializeChartOfAccountsLocal();
-    } catch (error: any) {
-      console.warn('[AccountingService] Erro na Edge Function, tentando fallback local:', error.message);
+    } catch {
+      // Edge Function indisponível, usar fallback local
       return await this.initializeChartOfAccountsLocal();
     }
   }
@@ -650,8 +645,6 @@ class AccountingService {
     referenceType: string;
     referenceId: string;
   }): Promise<AccountingResult> {
-    console.log('[AccountingService] Deleting entries for reference:', params);
-
     try {
       // Buscar todos os lançamentos relacionados a esta referência
       const { data: entries, error: fetchError } = await supabase
@@ -666,12 +659,10 @@ class AccountingService {
       }
 
       if (!entries || entries.length === 0) {
-        console.log('[AccountingService] No entries found for reference');
         return { success: true, message: 'Nenhum lançamento encontrado' };
       }
 
       const entryIds = entries.map(e => e.id);
-      console.log('[AccountingService] Found entries to delete:', entryIds);
 
       // Primeiro deletar as linhas (accounting_entry_lines)
       const { error: linesError } = await supabase
@@ -695,7 +686,6 @@ class AccountingService {
         return { success: false, error: entriesError.message };
       }
 
-      console.log('[AccountingService] Successfully deleted', entryIds.length, 'entries');
       return {
         success: true,
         message: `${entryIds.length} lançamento(s) contábil(is) excluído(s)`
@@ -711,8 +701,6 @@ class AccountingService {
    * Deleta lançamento de despesa e seu pagamento (se houver)
    */
   async deletarLancamentosDespesa(expenseId: string): Promise<AccountingResult> {
-    console.log('[AccountingService] Deleting expense entries for:', expenseId);
-
     // Deletar lançamento de provisionamento (despesa)
     const provisionResult = await this.deletarLancamentoPorReferencia({
       referenceType: 'expense',
@@ -746,8 +734,6 @@ class AccountingService {
    * Útil para clientes importados antes do trigger de auto-criação existir
    */
   async ensureAllClientAccounts(): Promise<AccountingResult> {
-    console.log('[AccountingService] Verificando clientes sem conta contábil...');
-
     try {
       // Buscar clientes ativos sem conta contábil
       const { data: clientsWithoutAccount, error: fetchError } = await supabase
@@ -762,11 +748,8 @@ class AccountingService {
       }
 
       if (!clientsWithoutAccount || clientsWithoutAccount.length === 0) {
-        console.log('[AccountingService] Todos os clientes já possuem conta contábil');
         return { success: true, message: 'Todos os clientes já possuem conta contábil' };
       }
-
-      console.log(`[AccountingService] Encontrados ${clientsWithoutAccount.length} clientes sem conta`);
 
       // Garantir que a conta pai 1.1.2.01 existe
       const { data: parentAccount } = await supabase
@@ -777,7 +760,6 @@ class AccountingService {
 
       if (!parentAccount) {
         // Criar a conta pai se não existir
-        console.log('[AccountingService] Criando conta pai 1.1.2.01...');
         const { error: createParentError } = await supabase
           .from('chart_of_accounts')
           .insert({
@@ -824,6 +806,27 @@ class AccountingService {
 
       for (const client of clientsWithoutAccount) {
         try {
+          // Primeiro verificar se já existe uma conta com o nome do cliente
+          const { data: existingAccount } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .like('code', '1.1.2.01.%')
+            .or(`name.ilike.Cliente: ${client.name},name.ilike.${client.name}`)
+            .maybeSingle();
+
+          if (existingAccount) {
+            // Conta já existe, apenas vincular ao cliente
+            const { error: updateError } = await supabase
+              .from('clients')
+              .update({ accounting_account_id: existingAccount.id })
+              .eq('id', client.id);
+
+            if (!updateError) {
+              created++;
+            }
+            continue;
+          }
+
           const code = `1.1.2.01.${String(nextSuffix).padStart(3, '0')}`;
 
           // Criar conta para o cliente
@@ -843,7 +846,23 @@ class AccountingService {
             .single();
 
           if (createError) {
-            errors.push(`${client.name}: ${createError.message}`);
+            // Se erro for de conflito (409), tentar buscar a conta existente e vincular
+            if (createError.code === '23505' || createError.message?.includes('duplicate')) {
+              const { data: conflictAccount } = await supabase
+                .from('chart_of_accounts')
+                .select('id')
+                .eq('code', code)
+                .maybeSingle();
+
+              if (conflictAccount) {
+                await supabase
+                  .from('clients')
+                  .update({ accounting_account_id: conflictAccount.id })
+                  .eq('id', client.id);
+                created++;
+                nextSuffix++;
+              }
+            }
             continue;
           }
 
@@ -853,15 +872,12 @@ class AccountingService {
             .update({ accounting_account_id: newAccount.id })
             .eq('id', client.id);
 
-          if (updateError) {
-            errors.push(`${client.name}: ${updateError.message}`);
-          } else {
+          if (!updateError) {
             created++;
             nextSuffix++;
-            console.log(`[AccountingService] Conta ${code} criada para ${client.name}`);
           }
-        } catch (err: any) {
-          errors.push(`${client.name}: ${err.message}`);
+        } catch {
+          // Erro silencioso - continuar com próximo cliente
         }
       }
 

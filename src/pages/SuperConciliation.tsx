@@ -4,10 +4,11 @@ import type { ChangeEvent } from "react";
 import { useAccounting } from "@/hooks/useAccounting";
 import { AccountingService } from "@/services/AccountingService";
 import { FinancialIntelligenceService, ClassificationSuggestion } from "@/services/FinancialIntelligenceService";
+import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoReconciliationService";
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -16,14 +17,18 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useTenantConfig } from "@/hooks/useTenantConfig";
 import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
+import { ReconciliationReport } from "@/components/ReconciliationReport";
+import { AIClassificationReport } from "@/components/AIClassificationReport";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
+import { parseOFX } from "@/lib/ofxParser";
+import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
 
 interface BankTransaction {
   id: string;
@@ -32,6 +37,16 @@ interface BankTransaction {
   description: string;
   matched: boolean;
   journal_entry_id?: string;
+  // Campos de automação Sprint 1
+  extracted_cnpj?: string;
+  extracted_cpf?: string;
+  extracted_cob?: string;
+  suggested_client_id?: string;
+  suggested_client_name?: string;
+  identification_confidence?: number;
+  identification_method?: string;
+  auto_matched?: boolean;
+  needs_review?: boolean;
 }
 
 interface ManualSplitItem {
@@ -133,12 +148,12 @@ export default function SuperConciliation() {
     }
   }, [selectedDate]);
 
-  const [viewMode, setViewMode] = useState<'pending' | 'all'>('pending');
+  const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [identifyingPayers, setIdentifyingPayers] = useState(false);
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
-      base: 90725.06,
+      base: 0,
       prevCredits: 0,
       prevDebits: 0,
       monthCredits: 0,
@@ -175,13 +190,11 @@ export default function SuperConciliation() {
                         body: { ofx_content: content }
                     });
                     if (error) {
-                        console.warn('Edge Function indisponível, usando parser local:', error);
                         useLocalParser = true;
                     } else {
                         parsedData = data;
                     }
-                } catch (edgeFnError) {
-                    console.warn('Edge Function indisponível, usando parser local:', edgeFnError);
+                } catch {
                     useLocalParser = true;
                 }
 
@@ -298,87 +311,127 @@ export default function SuperConciliation() {
         const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).toISOString();
         const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).toISOString();
 
-    const LOCKED_BALANCES: Record<string, { start: number, end: number }> = {
-        '2024-12': { start: 0, end: 90725.06 },
-        '2025-01': { start: 90725.06, end: 18553.54 },
-        '2025-02': { start: 18553.54, end: 2578.93 },
-        '2025-03': { start: 2578.93, end: 28082.64 },
-        '2025-04': { start: 28082.64, end: 5533.07 },
-        '2025-05': { start: 5533.07, end: 10119.92 },
-        '2025-06': { start: 10119.92, end: 2696.75 },
-        '2025-07': { start: 2696.75, end: 8462.05 },
-        '2025-08': { start: 8462.05, end: 10251.53 },
-        '2025-09': { start: 10251.53, end: 14796.07 },
-        '2025-10': { start: 14796.07, end: 12618.57 },
-        '2025-11': { start: 12618.57, end: 57357.63 },
-    };
-        
-        const currentMonthKey = format(selectedDate, 'yyyy-MM');
-        
-        let valStart = 0;
-        let valFinal = 0;
-        const locked = LOCKED_BALANCES[currentMonthKey];
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1; // 1-indexed para a função
 
-        if (locked) {
-            valStart = locked.start;
-            valFinal = locked.end;
-        } else {
-             const prevMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
-             const prevKey = format(prevMonth, 'yyyy-MM');
-             if (LOCKED_BALANCES[prevKey]) {
-                 valStart = LOCKED_BALANCES[prevKey].end;
-                 valFinal = valStart;
-             } else {
-                 valStart = 90725.06;
-                 valFinal = 90725.06;
-             }
-        }
-        
-        const valPrev = valStart; 
+        // =====================================================
+        // FONTE DE VERDADE: CONTABILIDADE (conta 1.1.1.05)
+        // =====================================================
+        // Busca o saldo da conta bancária diretamente da contabilidade
+        // Fórmula: Saldo Inicial (antes do mês) + Débitos - Créditos = Saldo Final
+        // Para conta DEVEDORA (Ativo): Débito aumenta, Crédito diminui
 
-        const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
-        const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+        try {
+            // Usar a mesma função que o Dashboard usa (fonte única de verdade)
+            const accountingBalance = await getAccountBalance(
+                ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, // "1.1.1.05"
+                year,
+                month
+            );
 
-        const { data: txInMonth } = await supabase
+            // Saldo Inicial = openingBalance (saldo antes do período)
+            const valStart = accountingBalance.openingBalance;
+
+            // Entradas = Débitos (aumentam conta devedora)
+            const monthCredits = accountingBalance.debit;
+
+            // Saídas = Créditos (diminuem conta devedora) - mostrar como negativo
+            const monthDebits = -accountingBalance.credit;
+
+            // Saldo Final = balance (já calculado pela função)
+            const valFinal = accountingBalance.balance;
+
+            // Mês anterior para exibição
+            const valPrev = valStart;
+
+            setBalances({ prev: valPrev, start: valStart, final: valFinal });
+            setBalanceDetails({
+                base: 0,
+                prevCredits: 0, // Não precisamos mais desse detalhe
+                prevDebits: 0,
+                monthCredits: monthCredits,
+                monthDebits: monthDebits,
+                divergence: 0
+            });
+
+        } catch (err) {
+            console.error('[SuperConciliation] Erro ao buscar saldo contábil, usando fallback:', err);
+
+            // Fallback para bank_transactions se a contabilidade falhar
+            const firstDayOfMonth = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
+
+            const { data: bankAccount } = await supabase
+                .from('bank_accounts')
+                .select('initial_balance, initial_balance_date')
+                .eq('is_active', true)
+                .single();
+
+            let openingBalance = 0;
+            if (bankAccount?.initial_balance && bankAccount?.initial_balance_date) {
+                const openingDate = bankAccount.initial_balance_date;
+                if (openingDate < firstDayOfMonth) {
+                    openingBalance = Number(bankAccount.initial_balance) || 0;
+                }
+            }
+
+            const { data: txBeforeMonth } = await supabase
+                .from('bank_transactions')
+                .select('amount')
+                .lt('transaction_date', firstDayOfMonth);
+
+            const txSumBefore = (txBeforeMonth || []).reduce((acc, tx) => acc + Number(tx.amount), 0);
+            const valStart = openingBalance + txSumBefore;
+
+            const firstDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1), 'yyyy-MM-dd');
+            const lastDateStr = format(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+
+            const { data: txInMonth } = await supabase
                 .from('bank_transactions')
                 .select('amount')
                 .gte('transaction_date', firstDateStr)
                 .lte('transaction_date', lastDateStr)
                 .order('transaction_date', { ascending: true });
-        
-        const detailsMonth = {
-            credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
-            debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
-        };
-        
-        const sumMonth = detailsMonth.credits + detailsMonth.debits;
-        
-        const calculatedFinal = valStart + sumMonth;
-        const difference = valFinal - calculatedFinal;
 
-        if (Math.abs(difference) > 0.01 && locked) {
-            console.warn(`DIVERGÊNCIA ENCONTRADA: ${difference.toFixed(2)}`);
+            const detailsMonth = {
+                credits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+                debits: (txInMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0)
+            };
+
+            const sumMonth = detailsMonth.credits + detailsMonth.debits;
+            const valFinal = valStart + sumMonth;
+
+            setBalances({ prev: valStart, start: valStart, final: valFinal });
+            setBalanceDetails({
+                base: 0,
+                prevCredits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) > 0 ? Number(tx.amount) : 0), 0),
+                prevDebits: (txBeforeMonth || []).reduce((acc, tx) => acc + (Number(tx.amount) < 0 ? Number(tx.amount) : 0), 0),
+                monthCredits: detailsMonth.credits,
+                monthDebits: detailsMonth.debits,
+                divergence: 0
+            });
         }
-
-        setBalances({ prev: valPrev, start: valStart, final: valFinal });
-        setBalanceDetails({
-            base: valStart,
-            prevCredits: 0,
-            prevDebits: 0,
-            monthCredits: detailsMonth.credits,
-            monthDebits: detailsMonth.debits,
-            divergence: difference
-        });
 
         let query = supabase
             .from('bank_transactions')
-            .select('*')
+            .select(`
+                *,
+                suggested_client:clients!bank_transactions_suggested_client_id_fkey(id, name)
+            `)
             .gte('transaction_date', startOfMonth)
             .lte('transaction_date', endOfMonth)
             .order('transaction_date', { ascending: true });
 
+        // Filtros por aba:
+        // - Pendentes: transações não conciliadas E que NÃO precisam de revisão (ainda não foram processadas)
+        // - Revisão/Auditoria: transações não conciliadas E que PRECISAM de revisão (foram processadas pela IA ou manualmente mas aguardam aprovação)
         if (viewMode === 'pending') {
-             query = query.eq('matched', false);
+             query = query
+                .eq('matched', false)
+                .or('needs_review.is.null,needs_review.eq.false');
+        } else if (viewMode === 'review') {
+             query = query
+                .eq('matched', false)
+                .eq('needs_review', true);
         }
 
         const { data, error } = await query;
@@ -398,7 +451,17 @@ export default function SuperConciliation() {
                     date: tx.transaction_date,
                     description: tx.description,
                     matched: tx.matched,
-                    journal_entry_id: tx.journal_entry_id
+                    journal_entry_id: tx.journal_entry_id,
+                    // Campos de automação
+                    extracted_cnpj: tx.extracted_cnpj,
+                    extracted_cpf: tx.extracted_cpf,
+                    extracted_cob: tx.extracted_cob,
+                    suggested_client_id: tx.suggested_client_id,
+                    suggested_client_name: tx.suggested_client?.name,
+                    identification_confidence: tx.identification_confidence,
+                    identification_method: tx.identification_method,
+                    auto_matched: tx.auto_matched,
+                    needs_review: tx.needs_review
                 };
             });
             setTransactions(mapped);
@@ -423,8 +486,6 @@ export default function SuperConciliation() {
 
             if (error) {
                 // Se a função SQL não existir, tentar Edge Function
-                console.warn('fn_identify_payers_batch não disponível, tentando Edge Function:', error);
-
                 const { data: efData, error: efError } = await supabase.functions.invoke('ai-payer-identifier', {
                     body: { action: 'identify_batch', tenant_id: tenant?.id }
                 });
@@ -464,27 +525,22 @@ export default function SuperConciliation() {
 
         // Se não existir nenhuma conta, auto-inicializar o plano de contas
         if (!anyAccount || anyAccount.length === 0) {
-            console.log('[SuperConciliation] Plano de contas vazio, inicializando automaticamente...');
             toast.info('Inicializando plano de contas para novo cliente...');
 
             try {
                 const accountingService = new AccountingService();
                 const result = await accountingService.initializeChartOfAccounts();
                 if (result.success) {
-                    console.log('[SuperConciliation] Plano de contas inicializado com sucesso');
                     toast.success('Plano de contas criado automaticamente!');
 
                     // Também criar contas para clientes existentes
                     const clientResult = await accountingService.ensureAllClientAccounts();
                     if (clientResult.success && clientResult.message?.includes('criadas')) {
-                        console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
                         toast.success(clientResult.message);
                     }
-                } else {
-                    console.warn('[SuperConciliation] Erro ao inicializar plano de contas:', result.error);
                 }
-            } catch (initError) {
-                console.error('[SuperConciliation] Erro ao inicializar plano de contas:', initError);
+            } catch {
+                // Erro silencioso - plano de contas será criado na próxima tentativa
             }
         } else {
             // Mesmo se o plano existe, verificar se há clientes sem conta
@@ -492,11 +548,10 @@ export default function SuperConciliation() {
                 const accountingService = new AccountingService();
                 const clientResult = await accountingService.ensureAllClientAccounts();
                 if (clientResult.success && clientResult.message?.includes('criadas')) {
-                    console.log('[SuperConciliation] Contas de clientes criadas:', clientResult.message);
                     toast.info(clientResult.message);
                 }
-            } catch (err) {
-                console.warn('[SuperConciliation] Erro ao verificar contas de clientes:', err);
+            } catch {
+                // Erro silencioso
             }
         }
 
@@ -732,11 +787,18 @@ export default function SuperConciliation() {
         const accountMap = new Map<string, string>();
         accountsData?.forEach(acc => accountMap.set(acc.code, acc.id));
 
+        // Verificar lançamento existente por transaction_id, reference_id OU source_id
+        // (lançamentos automáticos usam source_id, manuais usam reference_id)
         const { data: existingEntry } = await supabase
-            .from('accounting_entries') 
+            .from('accounting_entries')
             .select('id')
-            .eq('transaction_id', selectedTx.id)
+            .or(`transaction_id.eq.${selectedTx.id},reference_id.eq.${selectedTx.id},source_id.eq.${selectedTx.id}`)
             .maybeSingle();
+
+        // Gerar internal_code único no cliente para evitar colisões
+        const dateStr = selectedTx.date.replace(/-/g, '');
+        const uniquePart = crypto.randomUUID().substring(0, 8);
+        const internalCode = `bank_transaction:${dateStr}:${uniquePart}`;
 
         const entryPayload = {
             entry_type: 'manual',
@@ -745,6 +807,9 @@ export default function SuperConciliation() {
             competence_date: selectedTx.date,
             reference_type: 'bank_transaction',
             reference_id: selectedTx.id,
+            source_type: 'bank_transaction',
+            source_id: selectedTx.id,
+            internal_code: internalCode,
             document_number: selectedTx.description?.substring(0, 50),
             total_debit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
             total_credit: suggestion.entries.reduce((sum, e) => sum + e.value, 0),
@@ -826,14 +891,28 @@ export default function SuperConciliation() {
             const entry = suggestion.entries[0];
             const isReceipt = selectedTx.amount > 0;
             const target = isReceipt ? entry.credit : entry.debit;
-            
+
             if (target.account !== bankAccountCode && suggestion.type !== 'split') {
                  FinancialIntelligenceService.learnRule(
-                     selectedTx.description, 
-                     target.account, 
+                     selectedTx.description,
+                     target.account,
                      target.name,
                      isReceipt ? 'credit' : 'debit'
                  );
+            }
+        }
+
+        // Sistema de Aprendizado Contínuo (Sprint 2)
+        // Se a transação tinha sugestão automática e foi confirmada, registrar feedback positivo
+        if (selectedTx.suggested_client_id && !isManualMode) {
+            try {
+                const user = (await supabase.auth.getUser()).data.user;
+                await supabase.rpc('fn_confirm_suggestion', {
+                    p_transaction_id: selectedTx.id,
+                    p_user_id: user?.id || null
+                });
+            } catch {
+                // Não bloqueia o fluxo principal
             }
         }
 
@@ -863,7 +942,7 @@ export default function SuperConciliation() {
   return (
     <Tabs 
       value={viewMode}
-      onValueChange={(v) => setViewMode(v as 'pending' | 'all')}
+      onValueChange={(v) => setViewMode(v as 'pending' | 'review' | 'ai_report' | 'boletos')}
       className="h-auto lg:h-[calc(100vh-4rem)] flex flex-col p-2 md:p-4 bg-slate-50 min-h-screen w-full max-w-[100vw] overflow-x-hidden"
     >
       
@@ -885,9 +964,17 @@ export default function SuperConciliation() {
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Pendentes
                 </TabsTrigger>
-                <TabsTrigger value="all" className="flex-1 sm:flex-none px-4">
+                <TabsTrigger value="review" className="flex-1 sm:flex-none px-4">
                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Análise / Auditoria
+                    Revisão / Auditoria
+                </TabsTrigger>
+                <TabsTrigger value="ai_report" className="flex-1 sm:flex-none px-4">
+                    <Brain className="mr-2 h-4 w-4" />
+                    IA Classificados
+                </TabsTrigger>
+                <TabsTrigger value="boletos" className="flex-1 sm:flex-none px-4">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Boletos
                 </TabsTrigger>
             </TabsList>
         </div>
@@ -906,18 +993,14 @@ export default function SuperConciliation() {
                     </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-[90vw] sm:w-80 p-4">
-                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Acumulado desde 2025)</h4>
+                    <h4 className="font-semibold mb-2 text-sm bg-slate-50 p-2 rounded">Composição (Histórico Acumulado)</h4>
                     <div className="space-y-2 text-xs">
-                        <div className="flex justify-between border-b pb-1">
-                            <span>Base (31/12/2024)</span>
-                            <span className="font-mono">{formatCurrency(balanceDetails.base)}</span>
-                        </div>
                         <div className="flex justify-between text-emerald-600">
-                            <span>Entradas (01/01 - Início Mês)</span>
+                            <span>Entradas (Períodos Anteriores)</span>
                             <span className="font-mono">+{formatCurrency(balanceDetails.prevCredits)}</span>
                         </div>
                         <div className="flex justify-between text-red-600 border-b pb-1">
-                            <span>Saídas (01/01 - Início Mês)</span>
+                            <span>Saídas (Períodos Anteriores)</span>
                             <span className="font-mono">{formatCurrency(balanceDetails.prevDebits)}</span>
                         </div>
                         <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
@@ -966,15 +1049,9 @@ export default function SuperConciliation() {
                             <span className="font-mono">{formatCurrency(balanceDetails.monthDebits)}</span>
                         </div>
                         <div className="flex justify-between font-bold pt-1 text-sm bg-slate-100 p-1 rounded">
-                            <span>Saldo Final (Extrato)</span>
+                            <span>Saldo Final (Calculado)</span>
                             <span>{formatCurrency(balances.final)}</span>
                         </div>
-                        {Math.abs(balanceDetails.divergence || 0) > 0.01 && (
-                            <div className="flex justify-between font-bold pt-1 text-xs text-red-500 mt-2 border-t border-red-100 bg-red-50 p-1 rounded">
-                                <span>Diferença (Check Lançamentos)</span>
-                                <span>{formatCurrency(balanceDetails.divergence || 0)}</span>
-                            </div>
-                        )}
                     </div>
                 </PopoverContent>
             </Popover>
@@ -1027,8 +1104,9 @@ export default function SuperConciliation() {
 
           <div className="flex items-center gap-2">
             <CobrancaImporter />
-            <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} className="shrink-0">
-                <Upload className="w-4 h-4" /> 
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="shrink-0 gap-2">
+                <Upload className="w-4 h-4" />
+                Importar OFX
             </Button>
             <Button
                 variant="outline"
@@ -1094,8 +1172,35 @@ export default function SuperConciliation() {
         </div>
       </div>
 
+      {/* Conteúdo principal - condicionalmente renderizado */}
+      {viewMode === 'boletos' ? (
+        /* ABA DE BOLETOS - Relatório de Conciliação Automática */
+        <div className="flex-1 overflow-y-auto p-2">
+          <ReconciliationReport
+            startDate={format(startOfMonth(selectedDate), 'yyyy-MM-dd')}
+            endDate={format(endOfMonth(selectedDate), 'yyyy-MM-dd')}
+            onReconcile={(match: BoletoMatch) => {
+              // Ao clicar em conciliar, muda para aba pendentes e seleciona a transação
+              setViewMode('pending');
+              // Buscar a transação correspondente
+              const tx = transactions.find(t => t.id === match.bankTransactionId);
+              if (tx) {
+                setSelectedTx(tx);
+              }
+            }}
+          />
+        </div>
+      ) : viewMode === 'ai_report' ? (
+        /* ABA DE IA CLASSIFICADOS - Relatório detalhado de classificações da IA */
+        <div className="flex-1 overflow-y-auto">
+          <AIClassificationReport
+            startDate={format(startOfMonth(selectedDate), 'yyyy-MM-dd')}
+            endDate={format(endOfMonth(selectedDate), 'yyyy-MM-dd')}
+          />
+        </div>
+      ) : (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
-      
+
       {/* COLUNA 1: Extrato Bancário (Pendente) */}
       <Card className={`flex flex-col transition-all duration-300 ${isListExpanded ? 'lg:col-span-6' : 'lg:col-span-3'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -1105,9 +1210,9 @@ export default function SuperConciliation() {
               Extrato Bancário
             </CardTitle>
             <CardDescription>
-                {loadingTx 
-                    ? "Carregando..." 
-                    : `${viewMode === 'pending' ? 'Pendentes' : 'Histórico Completo'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
+                {loadingTx
+                    ? "Carregando..."
+                    : `${viewMode === 'pending' ? 'Pendentes' : 'Revisão/Auditoria'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
                 }
             </CardDescription>
           </div>
@@ -1137,21 +1242,47 @@ export default function SuperConciliation() {
                  </div>
                         ) : transactions.length === 0 ? (
                  <div className="text-center p-8 text-muted-foreground text-sm">
-                    {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação encontrada."}
+                    {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação aguardando revisão."}
                  </div>
                         ) : pagedTransactions.map(tx => (
-              <div 
+              <div
                 key={tx.id}
                 onClick={() => setSelectedTx(tx)}
-                className={`flex items-center gap-2 p-0.5 px-2 rounded-sm border cursor-pointer transition-all hover:bg-slate-100 h-7 ${selectedTx?.id === tx.id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'} ${tx.matched ? 'opacity-70 grayscale-[0.5]' : ''}`}
+                className={`flex items-center gap-2 p-0.5 px-2 rounded-sm border cursor-pointer transition-all hover:bg-slate-100 min-h-[28px] ${selectedTx?.id === tx.id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'} ${tx.matched ? 'opacity-70 grayscale-[0.5]' : ''} ${tx.auto_matched ? 'border-l-2 border-l-emerald-500' : ''}`}
               >
                 <div className="w-[60px] shrink-0 text-[10px] text-slate-500">{new Date(tx.date).toLocaleDateString().slice(0,5)}</div>
-                
+
                 <div className="flex-1 font-medium text-[10px] truncate leading-tight" title={tx.description}>
                     {tx.matched && <CheckCircle2 className="h-2 w-2 inline text-green-600 mr-1" />}
+                    {tx.auto_matched && !tx.matched && <Sparkles className="h-2 w-2 inline text-amber-500 mr-1" title="Auto-identificado" />}
                     {tx.description}
+                    {/* Badges de automação */}
+                    {tx.suggested_client_name && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1 rounded text-[8px] font-normal" title={`Cliente: ${tx.suggested_client_name} (${tx.identification_confidence}%)`}>
+                        <User className="h-2 w-2" />
+                        {tx.suggested_client_name.split(' ')[0]}
+                        {tx.identification_confidence && <span className="text-emerald-500">({tx.identification_confidence}%)</span>}
+                      </span>
+                    )}
+                    {tx.extracted_cnpj && !tx.suggested_client_name && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 px-1 rounded text-[8px] font-normal" title={`CNPJ: ${tx.extracted_cnpj}`}>
+                        <Building2 className="h-2 w-2" />
+                        CNPJ
+                      </span>
+                    )}
+                    {tx.extracted_cpf && !tx.suggested_client_name && !tx.extracted_cnpj && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1 rounded text-[8px] font-normal" title={`CPF: ${tx.extracted_cpf}`}>
+                        <User className="h-2 w-2" />
+                        CPF
+                      </span>
+                    )}
+                    {tx.needs_review && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-amber-100 text-amber-700 px-1 rounded text-[8px] font-normal" title="Necessita revisão">
+                        <AlertTriangle className="h-2 w-2" />
+                      </span>
+                    )}
                 </div>
-                
+
                 <div className={`shrink-0 font-bold text-[10px] w-[50px] text-right ${tx.amount > 0 ? "text-emerald-700" : "text-red-700"}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
@@ -1498,6 +1629,7 @@ export default function SuperConciliation() {
       </Card>
       
       </div>
+      )}
     </Tabs>
   );
 }
