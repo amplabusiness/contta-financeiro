@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, X, Check, ChevronsUpDown, CalendarDays, Building2 } from "lucide-react";
+import { LogOut, User, X, Check, ChevronsUpDown, CalendarDays, Building2, Search, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -15,10 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDocument } from "@/lib/formatters";
-import { useAccountingHealth } from "@/hooks/useAccountingHealth";
+// import { useAccountingHealth } from "@/hooks/useAccountingHealth";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { MCPFinanceiroChat } from "@/components/MCPFinanceiroChat";
 import { TrialBanner } from "@/components/TrialBanner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LayoutProps {
   children: ReactNode;
@@ -164,76 +167,107 @@ export function Layout({ children }: LayoutProps) {
     return null;
   }
 
+  // Obter iniciais do usuário
+  const getUserInitials = () => {
+    const email = session?.user?.email || "";
+    const name = session?.user?.user_metadata?.full_name || email;
+    return name
+      .split(" ")
+      .map((n: string) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
+  };
+
   return (
     <SidebarProvider>
+      <TooltipProvider>
       <div className="flex flex-col min-h-screen w-full">
         <TrialBanner />
         <div className="flex flex-1">
         <AppSidebar />
-        
+
         <div className="flex-1 flex flex-col w-full">
-          <header className="min-h-14 sm:h-16 border-b bg-card flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10 gap-2 sm:gap-4 py-2 sm:py-0">
-            <SidebarTrigger />
-            
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-md">
-              {selectedClientId ? (
-                <div className="flex items-center gap-1 sm:gap-2 flex-1 bg-primary/10 border border-primary/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
-                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-medium flex-1 truncate">{selectedClientName}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearClient}
-                    className="h-6 w-6 p-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  <User className="w-4 h-4 text-muted-foreground" />
+          <header className="min-h-14 sm:h-16 border-b bg-gradient-to-r from-background to-muted/30 backdrop-blur-sm flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10 gap-2 sm:gap-4 py-2 sm:py-0 shadow-sm">
+            {/* Lado Esquerdo: Menu Toggle + Busca de Cliente */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <SidebarTrigger className="hover:bg-primary/10 transition-colors" />
+
+              {/* Separador visual */}
+              <div className="hidden sm:block h-6 w-px bg-border" />
+
+              {/* Seletor de Cliente Melhorado */}
+              <div className="flex items-center">
+                {selectedClientId ? (
+                  <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1.5 transition-all hover:bg-primary/15">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium max-w-[150px] sm:max-w-[200px] truncate">{selectedClientName}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearClient}
+                      className="h-5 w-5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
                   <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="flex-1 justify-between"
+                        className="w-[180px] sm:w-[220px] justify-between rounded-full border-dashed hover:border-primary hover:bg-primary/5 transition-all"
                       >
-                        {selectedClientId
-                          ? clients.find((client) => client.id === selectedClientId)?.name
-                          : "Selecione um cliente"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex items-center gap-2">
+                          <Search className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground font-normal">Buscar cliente...</span>
+                        </div>
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0" align="start">
+                    <PopoverContent className="w-[350px] sm:w-[400px] p-0" align="start">
                       <Command shouldFilter={false}>
-                        <CommandInput 
-                          placeholder="Digite o nome, CPF ou CNPJ do cliente..." 
+                        <CommandInput
+                          placeholder="Digite nome, CPF ou CNPJ..."
                           value={searchTerm}
                           onValueChange={setSearchTerm}
+                          className="border-none focus:ring-0"
                         />
-                        <CommandList>
-                          <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
-                          <CommandGroup>
+                        <CommandList className="max-h-[300px]">
+                          <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+                            Nenhum cliente encontrado.
+                          </CommandEmpty>
+                          <CommandGroup heading={`${filteredClients.length} cliente${filteredClients.length !== 1 ? 's' : ''}`}>
                             {filteredClients.map((client) => (
                               <CommandItem
                                 key={client.id}
                                 value={client.id}
                                 onSelect={() => handleClientChange(client.id)}
+                                className="cursor-pointer"
                               >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedClientId === client.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex flex-col">
-                                  <span>{client.name}</span>
-                                  {(client.cnpj || client.cpf) && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {formatDocument(client.cnpj || client.cpf || "")}
-                                    </span>
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
+                                    selectedClientId === client.id
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground"
+                                  )}>
+                                    {client.name.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="font-medium truncate">{client.name}</span>
+                                    {(client.cnpj || client.cpf) && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatDocument(client.cnpj || client.cpf || "")}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {selectedClientId === client.id && (
+                                    <Check className="h-4 w-4 text-primary" />
                                   )}
                                 </div>
                               </CommandItem>
@@ -243,74 +277,195 @@ export function Layout({ children }: LayoutProps) {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                </div>
-              )}
-            </div>
-
-            {/* Seletor de Escritório Global */}
-            {offices.length > 0 && (
-              <div className="hidden lg:flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                <Select
-                  value={selectedOfficeId || undefined}
-                  onValueChange={(value) => {
-                    const office = offices.find(o => o.id === value);
-                    if (office) {
-                      const name = office.nome_fantasia || office.razao_social;
-                      setSelectedOffice(office.id, name);
-                      toast.info(`Escritório: ${name}`, {
-                        description: "Todos os dados serão filtrados para este escritório"
-                      });
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Escritório">
-                      {selectedOfficeName || "Selecione"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {offices.map((office) => (
-                      <SelectItem key={office.id} value={office.id}>
-                        {office.nome_fantasia || office.razao_social}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                )}
               </div>
-            )}
-
-            {/* Seletor de Período Global */}
-            <div className="hidden md:flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              <Select
-                value={`${selectedMonth}-${selectedYear}`}
-                onValueChange={(value) => {
-                  const [month, year] = value.split("-").map(Number);
-                  setSelectedMonth(month);
-                  setSelectedYear(year);
-                  toast.info(`Período alterado para ${MONTH_OPTIONS.find(m => m.value === value)?.label}`, {
-                    description: "Todos os relatórios serão filtrados para este período"
-                  });
-                }}
-              >
-                <SelectTrigger className="w-[130px] sm:w-[150px]">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTH_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
-            <Button variant="outline" size="sm" onClick={handleSignOut} className="px-2 sm:px-4">
-              <LogOut className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Sair</span>
-            </Button>
+            {/* Centro: Filtros Globais */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Seletor de Escritório */}
+              {offices.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center">
+                      <Select
+                        value={selectedOfficeId || undefined}
+                        onValueChange={(value) => {
+                          const office = offices.find(o => o.id === value);
+                          if (office) {
+                            const name = office.nome_fantasia || office.razao_social;
+                            setSelectedOffice(office.id, name);
+                            toast.info(`Escritório: ${name}`, {
+                              description: "Dados filtrados para este escritório"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px] lg:w-[160px] border-dashed hover:border-primary transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate text-sm">{selectedOfficeName || "Escritório"}</span>
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {offices.map((office) => (
+                            <SelectItem key={office.id} value={office.id}>
+                              {office.nome_fantasia || office.razao_social}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>{selectedOfficeName || "Filtrar por escritório"}</TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Separador */}
+              {offices.length > 0 && <div className="h-6 w-px bg-border" />}
+
+              {/* Seletor de Período */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center">
+                    <Select
+                      value={`${selectedMonth}-${selectedYear}`}
+                      onValueChange={(value) => {
+                        const [month, year] = value.split("-").map(Number);
+                        setSelectedMonth(month);
+                        setSelectedYear(year);
+                        toast.info(`Período: ${MONTH_OPTIONS.find(m => m.value === value)?.label}`, {
+                          description: "Relatórios filtrados para este período"
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-[140px] lg:w-[160px] border-dashed hover:border-primary transition-colors">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                          <SelectValue placeholder="Período" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MONTH_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Período de referência</TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Lado Direito: Ações do Usuário */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Botão de Configurações (Mobile: mostra filtros) */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Filtros</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {offices.length > 0 && (
+                      <div className="px-2 py-1.5">
+                        <label className="text-xs text-muted-foreground mb-1 block">Escritório</label>
+                        <Select
+                          value={selectedOfficeId || undefined}
+                          onValueChange={(value) => {
+                            const office = offices.find(o => o.id === value);
+                            if (office) {
+                              const name = office.nome_fantasia || office.razao_social;
+                              setSelectedOffice(office.id, name);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {offices.map((office) => (
+                              <SelectItem key={office.id} value={office.id}>
+                                {office.nome_fantasia || office.razao_social}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="px-2 py-1.5">
+                      <label className="text-xs text-muted-foreground mb-1 block">Período</label>
+                      <Select
+                        value={`${selectedMonth}-${selectedYear}`}
+                        onValueChange={(value) => {
+                          const [month, year] = value.split("-").map(Number);
+                          setSelectedMonth(month);
+                          setSelectedYear(year);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MONTH_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Separador */}
+              <div className="hidden sm:block h-6 w-px bg-border" />
+
+              {/* Menu do Usuário */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:ring-2 hover:ring-primary/20 transition-all">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {session?.user?.user_metadata?.full_name || "Usuário"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {session?.user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configurações
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/billing")}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    Faturamento
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </header>
 
           <main className="flex-1 overflow-auto">
@@ -321,6 +476,7 @@ export function Layout({ children }: LayoutProps) {
       </div>
       <ConnectionStatus />
       <MCPFinanceiroChat />
+      </TooltipProvider>
     </SidebarProvider>
   );
 }
