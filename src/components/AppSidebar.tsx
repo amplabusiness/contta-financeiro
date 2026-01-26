@@ -231,6 +231,7 @@ export function AppSidebar() {
         { title: "Rede Neural", url: "/ai-network", icon: Network },
         { title: "Evolucao Continua", url: "/feature-requests", icon: Lightbulb },
         { title: "Enriquecimento", url: "/client-enrichment", icon: Database },
+        { title: "Faturamento", url: "/billing", icon: CreditCard },
         { title: "Configuracoes", url: "/settings", icon: Settings },
       ],
     },

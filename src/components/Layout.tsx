@@ -18,6 +18,7 @@ import { formatDocument } from "@/lib/formatters";
 import { useAccountingHealth } from "@/hooks/useAccountingHealth";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { MCPFinanceiroChat } from "@/components/MCPFinanceiroChat";
+import { TrialBanner } from "@/components/TrialBanner";
 
 interface LayoutProps {
   children: ReactNode;
@@ -165,7 +166,9 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex flex-col min-h-screen w-full">
+        <TrialBanner />
+        <div className="flex flex-1">
         <AppSidebar />
         
         <div className="flex-1 flex flex-col w-full">
@@ -313,6 +316,7 @@ export function Layout({ children }: LayoutProps) {
           <main className="flex-1 overflow-auto">
             {children}
           </main>
+        </div>
         </div>
       </div>
       <ConnectionStatus />

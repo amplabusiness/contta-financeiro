@@ -126,6 +126,13 @@ import BalancoPatrimonial from "./pages/BalancoPatrimonial";
 import ChatContabil from "./components/ChatContabil";
 import Onboarding from "./pages/Onboarding";
 import { OnboardingGuard } from "./components/OnboardingGuard";
+import Landing from "./pages/Landing";
+import Pricing from "./pages/Pricing";
+import Billing from "./pages/Billing";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import TrialExpired from "./pages/TrialExpired";
+import { SubscriptionGuard } from "./components/SubscriptionGuard";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -229,7 +236,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
-            <Route path="/" element={<Navigate to="/auth" replace />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<OnboardingGuard><Dashboard /></OnboardingGuard>} />
@@ -346,6 +353,13 @@ const App = () => (
             <Route path="/ai-workspace" element={<AIWorkspace />} />
             <Route path="/code-editor" element={<CodeEditor />} />
             <Route path="/chat-contabil" element={<ChatContabil />} />
+            {/* Páginas públicas de vendas */}
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/trial-expired" element={<TrialExpired />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

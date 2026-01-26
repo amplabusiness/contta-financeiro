@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,12 +54,16 @@ const passwordSchema = z.string()
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
+  // Define aba inicial baseado no parâmetro mode
+  const defaultTab = searchParams.get("mode") === "signup" ? "signup" : "signin";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -234,7 +238,7 @@ const Auth = () => {
               <CardDescription className="text-gray-500">Sistema de Gestão Financeira</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="signin" className="w-full">
+              <Tabs defaultValue={defaultTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="signin">Entrar</TabsTrigger>
                   <TabsTrigger value="signup">Criar Conta</TabsTrigger>
@@ -386,9 +390,19 @@ const Auth = () => {
           </Card>
 
           {/* Footer */}
-          <p className="text-center text-xs text-gray-400 mt-6">
-            © {new Date().getFullYear()} {CONTTA_INFO.nome}. Todos os direitos reservados.
-          </p>
+          <div className="text-center mt-6 space-y-2">
+            <Link to="/" className="text-sm text-blue-600 hover:underline">
+              ← Voltar para a página inicial
+            </Link>
+            <p className="text-xs text-gray-400">
+              © {new Date().getFullYear()} {CONTTA_INFO.nome}. Todos os direitos reservados.
+            </p>
+            <p className="text-xs text-gray-400">
+              <Link to="/terms" className="hover:underline">Termos de Serviço</Link>
+              {" · "}
+              <Link to="/privacy" className="hover:underline">Política de Privacidade</Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
