@@ -16,6 +16,10 @@ import { supabase } from "@/integrations/supabase/client";
 // =====================================================
 const BATCH_SIZE = 1000; // Standard batch size for paginated queries
 
+if (BATCH_SIZE <= 0) {
+  throw new Error("BATCH_SIZE must be a positive integer");
+}
+
 // =====================================================
 // MAPEAMENTO TELA → CONTA CONTÁBIL
 // =====================================================

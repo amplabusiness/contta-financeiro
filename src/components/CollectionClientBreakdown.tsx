@@ -197,8 +197,8 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                     .replace(/[\u0300-\u036f]/g, '')
                     .replace(/\b(ltda|eireli|me|epp|s\/a|sa|-?\s*me)\b/g, '')
                     .replace(/[^a-z0-9\s]/g, ' ')
-                    .replace(/companhi(a|a)/g, 'companhia')
-                    .replace(/caopanhi(a|a)/g, 'companhia')
+                    .replace(/companhia/g, 'companhia')
+                    .replace(/caopanhia/g, 'companhia')
                     .replace(/caopanhia/g, 'companhia')
                     .replace(/\s+/g, ' ')
                     .trim();
@@ -304,7 +304,7 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                 .replace(/[\u0300-\u036f]/g, '')
                 .replace(/\b(ltda|eireli|me|epp|s\/a|sa|-?\s*me)\b/g, '')
                 .replace(/[^a-z0-9\s]/g, ' ')
-                .replace(/companhi(a|a)/g, 'companhia')
+                .replace(/companhia/g, 'companhia')
                 .replace(/caopanhia/g, 'companhia')
                 .replace(/\s+/g, ' ')
                 .trim();
@@ -474,8 +474,8 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
-            .replace(/companhi(a|a)/g, 'companhia')
-            .replace(/caopanhi(a|a)/g, 'companhia')
+            .replace(/companhia/g, 'companhia')
+            .replace(/caopanhia/g, 'companhia')
             .replace(/\s+/g, ' ')
             .trim();
           const similarity = (a: string, b: string) => {
