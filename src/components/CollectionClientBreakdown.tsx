@@ -161,16 +161,23 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                     phone: undefined,
                     account_code: null as string | null,
                   }));
-                  const { data: coaList } = await supabase
-                    .from('chart_of_accounts')
-                    .select('id, code, name')
-                    .ilike('code', '1.1.2.01%');
-                  setCoaOptions(coaList || []);
-                  // Regras já aprendidas (por nome do cliente)
-                  const { data: rules } = await supabase
-                    .from('intelligence_rules')
-                    .select('pattern, account_code')
-                    .ilike('account_code', '1.1.2.01%');
+                  
+                  // Fetch COA list and rules in parallel for better performance
+                  const [coaResult, rulesResult] = await Promise.all([
+                    supabase
+                      .from('chart_of_accounts')
+                      .select('id, code, name')
+                      .ilike('code', '1.1.2.01%'),
+                    supabase
+                      .from('intelligence_rules')
+                      .select('pattern, account_code')
+                      .ilike('account_code', '1.1.2.01%')
+                  ]);
+                  
+                  const coaList = coaResult.data || [];
+                  setCoaOptions(coaList);
+                  
+                  // Build rule map with normalized patterns
                   const ruleMap = new Map<string, string>();
                   const normRule = (s?: string) => (s || '')
                     .toLowerCase().normalize('NFD')
@@ -178,9 +185,12 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                     .replace(/\b(ltda|eireli|me|epp|s\/a|sa|-?\s*me)\b/g, '')
                     .replace(/[^a-z0-9\s]/g, ' ')
                     .replace(/\s+/g, ' ').trim();
-                  (rules || []).forEach(r => {
+                  
+                  (rulesResult.data || []).forEach(r => {
                     ruleMap.set(normRule(r.pattern as string), r.account_code as string);
                   });
+                  
+                  // Normalize function
                   const normalize = (s?: string) => (s || '')
                     .toLowerCase()
                     .normalize('NFD')
@@ -192,26 +202,50 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                     .replace(/caopanhia/g, 'companhia')
                     .replace(/\s+/g, ' ')
                     .trim();
-                  const similarity = (a: string, b: string) => {
-                    const A = new Set(normalize(a).split(' '));
-                    const B = new Set(normalize(b).split(' '));
-                    if (A.size === 0 || B.size === 0) return 0;
-                    const inter = [...A].filter((w) => B.has(w)).length;
-                    return inter / Math.max(A.size, B.size);
+                  
+                  // Pre-normalize COA names and convert to word sets for faster matching
+                  const normalizedCoa = coaList.map(a => ({
+                    ...a,
+                    normalizedName: normalize(a.name),
+                    nameWords: new Set(normalize(a.name).split(' '))
+                  }));
+                  
+                  // Optimized similarity using pre-computed word sets
+                  const similarity = (wordsA: Set<string>, normalizedB: string) => {
+                    const wordsB = new Set(normalizedB.split(' '));
+                    if (wordsA.size === 0 || wordsB.size === 0) return 0;
+                    const inter = [...wordsA].filter((w) => wordsB.has(w)).length;
+                    return inter / Math.max(wordsA.size, wordsB.size);
                   };
+                  
                   const withAccounts = baseList.map((c) => {
-                    const fromRule = ruleMap.get(normalize(c.client_name));
-                    let acc = (coaList || []).find((a) => (a.name || '').toLowerCase().includes((c.client_name || '').toLowerCase()));
+                    const normalizedClientName = normalize(c.client_name);
+                    
+                    // Check rule first (fastest)
+                    const fromRule = ruleMap.get(normalizedClientName);
+                    if (fromRule) {
+                      return { ...c, account_code: fromRule };
+                    }
+                    
+                    // Try substring match (fast)
+                    let acc = normalizedCoa.find((a) => a.normalizedName.includes(normalizedClientName));
+                    
+                    // Fuzzy match if needed
                     if (!acc) {
-                      let best: { item: CoaRow; score: number } | null = null;
-                      for (const a of (coaList as CoaRow[] | null) || []) {
-                        const score = similarity(a.name || '', c.client_name || '');
-                        if (!best || score > best.score) best = { item: a, score };
+                      const clientWords = new Set(normalizedClientName.split(' '));
+                      let best: { item: typeof normalizedCoa[0]; score: number } | null = null;
+                      for (const a of normalizedCoa) {
+                        const score = similarity(clientWords, a.normalizedName);
+                        if (!best || score > best.score) {
+                          best = { item: a, score };
+                        }
                       }
                       if (best && best.score >= 0.6) acc = best.item;
                     }
-                    return { ...c, account_code: fromRule || (acc as CoaRow | undefined)?.code || null };
+                    
+                    return { ...c, account_code: acc?.code || null };
                   });
+                  
                   setClients(withAccounts);
                   setLoading(false);
                   return;
@@ -236,18 +270,23 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                 account_code: null as string | null,
               }));
 
-              // Buscar contas contábeis para associação por nome (fuzzy)
-              const { data: coaList, error: coaErr } = await supabase
-                .from('chart_of_accounts')
-                .select('id, code, name')
-                .ilike('code', '1.1.2.01%');
-              if (coaErr) console.warn('Falha ao buscar plano de contas de clientes:', coaErr);
-              setCoaOptions(coaList || []);
-              // Regras já aprendidas (por nome do cliente)
-              const { data: rules } = await supabase
-                .from('intelligence_rules')
-                .select('pattern, account_code')
-                .ilike('account_code', '1.1.2.01%');
+              // Fetch COA list and rules in parallel
+              const [coaResult, rulesResult] = await Promise.all([
+                supabase
+                  .from('chart_of_accounts')
+                  .select('id, code, name')
+                  .ilike('code', '1.1.2.01%'),
+                supabase
+                  .from('intelligence_rules')
+                  .select('pattern, account_code')
+                  .ilike('account_code', '1.1.2.01%')
+              ]);
+              
+              const coaList = coaResult.data || [];
+              if (coaResult.error) console.warn('Falha ao buscar plano de contas de clientes:', coaResult.error);
+              setCoaOptions(coaList);
+              
+              // Build rule map
               const ruleMap = new Map<string, string>();
               const normRule = (s?: string) => (s || '')
                 .toLowerCase().normalize('NFD')
@@ -255,7 +294,8 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                 .replace(/\b(ltda|eireli|me|epp|s\/a|sa|-?\s*me)\b/g, '')
                 .replace(/[^a-z0-9\s]/g, ' ')
                 .replace(/\s+/g, ' ').trim();
-              (rules || []).forEach(r => {
+              
+              (rulesResult.data || []).forEach(r => {
                 ruleMap.set(normRule(r.pattern as string), r.account_code as string);
               });
 
@@ -269,25 +309,46 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                 .replace(/caopanhia/g, 'companhia')
                 .replace(/\s+/g, ' ')
                 .trim();
-              const similarity = (a: string, b: string) => {
-                const A = new Set(normalize(a).split(' '));
-                const B = new Set(normalize(b).split(' '));
-                if (A.size === 0 || B.size === 0) return 0;
-                const inter = [...A].filter((w) => B.has(w)).length;
-                return inter / Math.max(A.size, B.size);
+              
+              // Pre-normalize COA for performance
+              const normalizedCoa = coaList.map(a => ({
+                ...a,
+                normalizedName: normalize(a.name),
+                nameWords: new Set(normalize(a.name).split(' '))
+              }));
+              
+              const similarity = (wordsA: Set<string>, normalizedB: string) => {
+                const wordsB = new Set(normalizedB.split(' '));
+                if (wordsA.size === 0 || wordsB.size === 0) return 0;
+                const inter = [...wordsA].filter((w) => wordsB.has(w)).length;
+                return inter / Math.max(wordsA.size, wordsB.size);
               };
 
               const withAccounts = baseList.map((c) => {
-                let acc = (coaList || []).find((a) => (a.name || '').toLowerCase().includes((c.client_name || '').toLowerCase()));
+                const normalizedClientName = normalize(c.client_name);
+                
+                // Check rule first
+                const fromRule = ruleMap.get(normalizedClientName);
+                if (fromRule) {
+                  return { ...c, account_code: fromRule };
+                }
+                
+                // Substring match
+                let acc = normalizedCoa.find((a) => a.normalizedName.includes(normalizedClientName));
+                
+                // Fuzzy match
                 if (!acc) {
-                  let best: { item: CoaRow; score: number } | null = null;
-                  for (const a of (coaList as CoaRow[] | null) || []) {
-                    const score = similarity(a.name || '', c.client_name || '');
-                    if (!best || score > best.score) best = { item: a, score };
+                  const clientWords = new Set(normalizedClientName.split(' '));
+                  let best: { item: typeof normalizedCoa[0]; score: number } | null = null;
+                  for (const a of normalizedCoa) {
+                    const score = similarity(clientWords, a.normalizedName);
+                    if (!best || score > best.score) {
+                      best = { item: a, score };
+                    }
                   }
                   if (best && best.score >= 0.6) acc = best.item;
                 }
-                return { ...c, account_code: (acc as CoaRow | undefined)?.code || null };
+                return { ...c, account_code: acc?.code || null };
               });
 
               setClients(withAccounts);
