@@ -200,74 +200,130 @@ const Dashboard = () => {
       const allInvoices = allInvoicesRes.data || [];
       const openingBalances = openingBalanceRes.data || [];
 
-      // 4. CÁLCULOS DE SAÚDE (HEALTH DATA)
+      // 4. CÁLCULOS DE SAÚDE (HEALTH DATA) - OPTIMIZED WITH MAP LOOKUPS
       const calculatedHealthData: Record<string, any> = {};
+      
+      // Create Maps for O(1) lookup instead of O(n) filter for each client
+      const invoicesByClient = new Map<string, any[]>();
+      const openingBalancesByClient = new Map<string, any[]>();
+      const now = new Date();
+      
+      // Group invoices by client_id (single pass)
+      allInvoices.forEach((inv) => {
+        const clientId = inv.client_id;
+        if (!invoicesByClient.has(clientId)) {
+          invoicesByClient.set(clientId, []);
+        }
+        invoicesByClient.get(clientId)!.push(inv);
+      });
+      
+      // Group opening balances by client_id (single pass)
+      openingBalances.forEach((ob) => {
+        const clientId = ob.client_id;
+        if (!openingBalancesByClient.has(clientId)) {
+          openingBalancesByClient.set(clientId, []);
+        }
+        openingBalancesByClient.get(clientId)!.push(ob);
+      });
+      
+      // Calculate health data for each client
       clientsList.forEach((client) => {
-        const clientInvoices = allInvoices.filter((inv) => inv.client_id === client.id);
-        const clientOpeningBalances = openingBalances.filter((ob) => ob.client_id === client.id);
+        const clientInvoices = invoicesByClient.get(client.id) || [];
+        const clientOpeningBalances = openingBalancesByClient.get(client.id) || [];
 
-        const overdue = clientInvoices.filter((inv) => inv.status === "overdue");
-        const pending = clientInvoices.filter((inv) => inv.status === "pending");
-        const paid = clientInvoices.filter((inv) => inv.status === "paid");
-
-        const obOverdue = clientOpeningBalances.filter(ob => {
-          const dueDate = ob.due_date ? new Date(ob.due_date) : null;
-          const isOverdue = dueDate && dueDate < new Date();
-          return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+        // Single pass through invoices to categorize and sum
+        let overdueCount = 0, pendingCount = 0, paidCount = 0;
+        let overdueAmount = 0, pendingAmount = 0;
+        let lastActivityDate: Date | null = null;
+        
+        clientInvoices.forEach((inv) => {
+          const invDate = new Date(inv.updated_at || inv.created_at);
+          if (!lastActivityDate || invDate > lastActivityDate) {
+            lastActivityDate = invDate;
+          }
+          
+          const amount = Number(inv.amount);
+          if (inv.status === "overdue") {
+            overdueCount++;
+            overdueAmount += amount;
+          } else if (inv.status === "pending") {
+            pendingCount++;
+            pendingAmount += amount;
+          } else if (inv.status === "paid") {
+            paidCount++;
+          }
         });
-        const obPending = clientOpeningBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
-
-        const totalOverdueVal = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
-          obOverdue.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
-        const totalPendingVal = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
-          obPending.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
-
-        const sortedInvoices = clientInvoices.sort((a, b) =>
-          new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
-        );
-        const lastActivity = sortedInvoices[0];
-
-        const totalOverdueCount = overdue.length + obOverdue.length;
-        const totalPendingCount = pending.length + obPending.length;
+        
+        // Single pass through opening balances
+        clientOpeningBalances.forEach(ob => {
+          const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+          const isOverdue = dueDate && dueDate < now;
+          const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+          
+          if (ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"))) {
+            overdueCount++;
+            overdueAmount += remaining;
+          } else if (ob.status === "pending" || ob.status === "partial") {
+            pendingCount++;
+            pendingAmount += remaining;
+          }
+        });
 
         calculatedHealthData[client.id] = {
-          overdueCount: totalOverdueCount,
-          overdueAmount: totalOverdueVal,
-          pendingCount: totalPendingCount,
-          pendingAmount: totalPendingVal,
-          paidCount: paid.length,
-          lastActivity: lastActivity ? new Date(lastActivity.updated_at || lastActivity.created_at) : null,
-          healthStatus: totalOverdueCount > 0 ? "critical" : totalPendingCount > 2 ? "warning" : "healthy",
+          overdueCount,
+          overdueAmount,
+          pendingCount,
+          pendingAmount,
+          paidCount,
+          lastActivity: lastActivityDate,
+          healthStatus: overdueCount > 0 ? "critical" : pendingCount > 2 ? "warning" : "healthy",
         };
       });
 
-      // 5. CÁLCULO DE ESTATÍSTICAS GERAIS
-      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
-      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
-
-      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
-      const openingBalanceOverdue = openingBalances.filter(ob => {
-        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
-        const isOverdue = dueDate && dueDate < new Date();
-        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+      // 5. CÁLCULO DE ESTATÍSTICAS GERAIS - OPTIMIZED SINGLE PASS
+      let pendingInvoicesCount = 0, overdueInvoicesCount = 0;
+      let totalPendingAmount = 0, totalOverdueAmount = 0;
+      
+      // Single pass through all invoices
+      allInvoices.forEach((i) => {
+        const amount = Number(i.amount);
+        if (i.status === "overdue") {
+          overdueInvoicesCount++;
+          totalOverdueAmount += amount;
+          pendingInvoicesCount++; // overdue is also pending
+          totalPendingAmount += amount;
+        } else if (i.status === "pending") {
+          pendingInvoicesCount++;
+          totalPendingAmount += amount;
+        }
       });
-
-      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
+      
+      // Single pass through opening balances
+      let obPendingCount = 0, obOverdueCount = 0;
+      let obPendingTotal = 0, obOverdueTotal = 0;
+      
+      openingBalances.forEach(ob => {
+        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+        const isOverdue = dueDate && dueDate < now;
         const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
-
-      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
-        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
+        
+        if (remaining > 0) {
+          if (ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"))) {
+            obOverdueCount++;
+            obOverdueTotal += remaining;
+          } else if (ob.status === "pending" || ob.status === "partial") {
+            obPendingCount++;
+            obPendingTotal += remaining;
+          }
+        }
+      });
 
       const newStats = {
         totalClients,
-        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
-        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
-        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
-        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
+        pendingInvoices: pendingInvoicesCount + obPendingCount,
+        overdueInvoices: overdueInvoicesCount + obOverdueCount,
+        totalPending: totalPendingAmount + obPendingTotal,
+        totalOverdue: totalOverdueAmount + obOverdueTotal,
         pendingExpenses: expensesData.entries.length,
         totalExpenses: expensesData.totalExpenses,
       };
