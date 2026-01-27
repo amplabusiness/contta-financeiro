@@ -211,8 +211,7 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                   }));
                   
                   // Optimized similarity using pre-computed word sets
-                  const similarity = (wordsA: Set<string>, normalizedB: string) => {
-                    const wordsB = new Set(normalizedB.split(' '));
+                  const similarity = (wordsA: Set<string>, wordsB: Set<string>) => {
                     if (wordsA.size === 0 || wordsB.size === 0) return 0;
                     const inter = [...wordsA].filter((w) => wordsB.has(w)).length;
                     return inter / Math.max(wordsA.size, wordsB.size);
@@ -235,7 +234,7 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                       const clientWords = new Set(normalizedClientName.split(' '));
                       let best: { item: typeof normalizedCoa[0]; score: number } | null = null;
                       for (const a of normalizedCoa) {
-                        const score = similarity(clientWords, a.normalizedName);
+                        const score = similarity(clientWords, a.nameWords);
                         if (!best || score > best.score) {
                           best = { item: a, score };
                         }
@@ -317,8 +316,7 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                 nameWords: new Set(normalize(a.name).split(' '))
               }));
               
-              const similarity = (wordsA: Set<string>, normalizedB: string) => {
-                const wordsB = new Set(normalizedB.split(' '));
+              const similarity = (wordsA: Set<string>, wordsB: Set<string>) => {
                 if (wordsA.size === 0 || wordsB.size === 0) return 0;
                 const inter = [...wordsA].filter((w) => wordsB.has(w)).length;
                 return inter / Math.max(wordsA.size, wordsB.size);
@@ -341,7 +339,7 @@ export function CollectionClientBreakdown({ cobrancaDoc, amount, transactionDate
                   const clientWords = new Set(normalizedClientName.split(' '));
                   let best: { item: typeof normalizedCoa[0]; score: number } | null = null;
                   for (const a of normalizedCoa) {
-                    const score = similarity(clientWords, a.normalizedName);
+                    const score = similarity(clientWords, a.nameWords);
                     if (!best || score > best.score) {
                       best = { item: a, score };
                     }

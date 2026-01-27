@@ -214,7 +214,10 @@ const Dashboard = () => {
         if (!invoicesByClient.has(clientId)) {
           invoicesByClient.set(clientId, []);
         }
-        invoicesByClient.get(clientId)!.push(inv);
+        const clientInvoices = invoicesByClient.get(clientId);
+        if (clientInvoices) {
+          clientInvoices.push(inv);
+        }
       });
       
       // Group opening balances by client_id (single pass)
@@ -223,7 +226,10 @@ const Dashboard = () => {
         if (!openingBalancesByClient.has(clientId)) {
           openingBalancesByClient.set(clientId, []);
         }
-        openingBalancesByClient.get(clientId)!.push(ob);
+        const clientBalances = openingBalancesByClient.get(clientId);
+        if (clientBalances) {
+          clientBalances.push(ob);
+        }
       });
       
       // Calculate health data for each client

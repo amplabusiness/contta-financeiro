@@ -288,4 +288,4 @@ Key metrics to track:
 ---
 
 **Last Updated:** January 2026
-**Optimized By:** GitHub Copilot Agent
+**Optimized By:** Ampla Business Development Team
