@@ -12,6 +12,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // =====================================================
+// CONSTANTS
+// =====================================================
+const BATCH_SIZE = 1000; // Standard batch size for paginated queries
+
+// =====================================================
 // MAPEAMENTO TELA → CONTA CONTÁBIL
 // =====================================================
 export const ACCOUNT_MAPPING = {
@@ -74,6 +79,68 @@ export type AccountKey = keyof typeof ACCOUNT_MAPPING;
 // =====================================================
 // FUNÇÕES HELPER PARA BUSCAR SALDOS
 // =====================================================
+
+/**
+ * Helper function to fetch accounting entries in batches and sum them up
+ * @param accountId Account ID to filter
+ * @param dateFilter Optional date filter object with lt, gte, lte properties
+ * @returns Object with total debit and credit
+ */
+async function fetchAndSumEntries(
+  accountId: string,
+  dateFilter?: { lt?: string; gte?: string; lte?: string }
+): Promise<{ totalDebit: number; totalCredit: number }> {
+  let totalDebit = 0;
+  let totalCredit = 0;
+  let hasMore = true;
+  let rangeStart = 0;
+
+  while (hasMore) {
+    let query = supabase
+      .from("accounting_entry_lines")
+      .select("debit, credit, accounting_entries!inner(entry_date)")
+      .eq("account_id", accountId)
+      .range(rangeStart, rangeStart + BATCH_SIZE - 1)
+      .order("accounting_entries.entry_date");
+
+    // Apply date filters if provided
+    if (dateFilter) {
+      if (dateFilter.lt) {
+        query = query.lt("accounting_entries.entry_date", dateFilter.lt);
+      }
+      if (dateFilter.gte) {
+        query = query.gte("accounting_entries.entry_date", dateFilter.gte);
+      }
+      if (dateFilter.lte) {
+        query = query.lte("accounting_entries.entry_date", dateFilter.lte);
+      }
+    }
+
+    const { data: entries, error } = await query;
+
+    if (error) {
+      console.error("Error fetching accounting entries:", error);
+      break;
+    }
+
+    if (entries && entries.length > 0) {
+      // Sum batch debits and credits
+      totalDebit += entries.reduce((sum, e) => sum + Number(e.debit || 0), 0);
+      totalCredit += entries.reduce((sum, e) => sum + Number(e.credit || 0), 0);
+
+      // Check if we got less than batch size (no more data)
+      if (entries.length < BATCH_SIZE) {
+        hasMore = false;
+      } else {
+        rangeStart += BATCH_SIZE;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return { totalDebit, totalCredit };
+}
 
 /**
  * Busca o saldo de uma conta específica com formato de razão contábil:
@@ -140,100 +207,25 @@ export async function getAccountBalance(
   let openingBalance = 0;
 
   if (startDate) {
-    // Fetch in batches to avoid memory issues, but sum incrementally
-    let hasMore = true;
-    let rangeStart = 0;
-    const batchSize = 1000; // Reasonable batch size
-    
-    while (hasMore) {
-      const { data: priorEntries, error: priorError } = await supabase
-        .from("accounting_entry_lines")
-        .select("debit, credit, accounting_entries!inner(entry_date)")
-        .eq("account_id", account.id)
-        .lt("accounting_entries.entry_date", startDate)
-        .range(rangeStart, rangeStart + batchSize - 1)
-        .order("accounting_entries.entry_date");
-
-      if (priorError) {
-        console.error(`Erro ao buscar saldo inicial da conta ${accountCode}:`, priorError);
-        break;
-      }
-      
-      if (priorEntries && priorEntries.length > 0) {
-        const priorDebit = priorEntries.reduce((sum, e) => sum + Number(e.debit || 0), 0);
-        const priorCredit = priorEntries.reduce((sum, e) => sum + Number(e.credit || 0), 0);
-        const batchBalance = account.nature === "DEVEDORA"
-          ? priorDebit - priorCredit
-          : priorCredit - priorDebit;
-        openingBalance += batchBalance;
-        
-        // Check if we got less than batch size (no more data)
-        if (priorEntries.length < batchSize) {
-          hasMore = false;
-        } else {
-          rangeStart += batchSize;
-        }
-      } else {
-        hasMore = false;
-      }
-    }
+    const { totalDebit: priorDebit, totalCredit: priorCredit } = await fetchAndSumEntries(
+      account.id,
+      { lt: startDate }
+    );
+    openingBalance = account.nature === "DEVEDORA"
+      ? priorDebit - priorCredit
+      : priorCredit - priorDebit;
   }
 
   // =====================================================
   // 2. MOVIMENTOS DO PERÍODO: Débitos e Créditos
   // =====================================================
-  let totalDebit = 0;
-  let totalCredit = 0;
-  
-  // Fetch in batches to avoid memory issues
-  let hasMore = true;
-  let rangeStart = 0;
-  const batchSize = 1000;
-  
-  while (hasMore) {
-    let periodQuery = supabase
-      .from("accounting_entry_lines")
-      .select("debit, credit, accounting_entries!inner(entry_date)")
-      .eq("account_id", account.id)
-      .range(rangeStart, rangeStart + batchSize - 1)
-      .order("accounting_entries.entry_date");
-
-    if (startDate && endDate) {
-      periodQuery = periodQuery
-        .gte("accounting_entries.entry_date", startDate)
-        .lte("accounting_entries.entry_date", endDate);
-    }
-
-    const { data: periodEntries, error: periodError } = await periodQuery;
-
-    if (periodError) {
-      console.error(`Erro ao buscar lançamentos da conta ${accountCode}:`, periodError);
-      return {
-        code: account.code,
-        name: account.name,
-        openingBalance: 0,
-        debit: 0,
-        credit: 0,
-        balance: 0,
-        nature: account.nature,
-      };
-    }
-
-    if (periodEntries && periodEntries.length > 0) {
-      // Sum batch debits and credits
-      totalDebit += periodEntries.reduce((sum, e) => sum + Number(e.debit || 0), 0);
-      totalCredit += periodEntries.reduce((sum, e) => sum + Number(e.credit || 0), 0);
-      
-      // Check if we got less than batch size (no more data)
-      if (periodEntries.length < batchSize) {
-        hasMore = false;
-      } else {
-        rangeStart += batchSize;
-      }
-    } else {
-      hasMore = false;
-    }
+  const dateFilter: { gte?: string; lte?: string } = {};
+  if (startDate && endDate) {
+    dateFilter.gte = startDate;
+    dateFilter.lte = endDate;
   }
+
+  const { totalDebit, totalCredit } = await fetchAndSumEntries(account.id, dateFilter);
 
   // =====================================================
   // 3. SALDO FINAL: Saldo Inicial + Débitos - Créditos
