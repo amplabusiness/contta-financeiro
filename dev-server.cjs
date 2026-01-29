@@ -143,6 +143,12 @@ app.post('/nfse/importar-xml', async (req, res) => {
   await handleApiRequest(filePath, req, res);
 });
 
+// Parecer contábil Dr. Cícero
+app.post('/closing/evaluate', async (req, res) => {
+  const filePath = path.resolve(__dirname, './api/closing/evaluate.js');
+  await handleApiRequest(filePath, req, res);
+});
+
 // API: Baixa de clientes (fonte banco) para conciliação de crédito por documento
 function selectBaixaFileByDate(dateStr) {
   const bancoDir = path.resolve(__dirname, 'banco');
