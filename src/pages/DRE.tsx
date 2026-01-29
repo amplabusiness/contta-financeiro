@@ -173,17 +173,32 @@ const DRE = () => {
         await syncExpensesToAccounting(startDate, endDate);
       }
 
-      // Buscar TODOS os lançamentos contábeis (sem filtro na query)
-      const { data: allLines, error: linesError } = await supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit,
-          credit,
-          account_id,
-          entry_id(entry_date, competence_date)
-        `);
+      // Buscar TODOS os lançamentos contábeis com paginação (Supabase limita a 1000 por padrão)
+      const allLines: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
 
-      if (linesError) throw linesError;
+      while (true) {
+        const { data: pageData, error: linesError } = await supabase
+          .from('accounting_entry_lines')
+          .select(`
+            debit,
+            credit,
+            account_id,
+            entry_id(entry_date, competence_date)
+          `)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (linesError) throw linesError;
+
+        if (!pageData || pageData.length === 0) break;
+        allLines.push(...pageData);
+
+        if (pageData.length < pageSize) break;
+        page++;
+      }
+
+      console.log(`[DRE] Carregadas ${allLines.length} linhas contábeis`);
 
       // Filtrar por data em JavaScript (usar competence_date se disponível, senão entry_date)
       const filteredLines = allLines?.filter((line: any) => {
@@ -320,25 +335,38 @@ const DRE = () => {
         endDate = `${selectedYear}-12-31`;
       }
 
-      // Buscar lançamentos da conta
-      const { data, error } = await supabase
-        .from('accounting_entry_lines')
-        .select(`
-          id,
-          debit,
-          credit,
-          description,
-          entry_id (
-            id,
-            entry_date,
-            competence_date,
-            description,
-            reference_type
-          )
-        `)
-        .eq('account_id', account.account_id);
+      // Buscar lançamentos da conta com paginação
+      const data: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
 
-      if (error) throw error;
+      while (true) {
+        const { data: pageData, error } = await supabase
+          .from('accounting_entry_lines')
+          .select(`
+            id,
+            debit,
+            credit,
+            description,
+            entry_id (
+              id,
+              entry_date,
+              competence_date,
+              description,
+              reference_type
+            )
+          `)
+          .eq('account_id', account.account_id)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) throw error;
+
+        if (!pageData || pageData.length === 0) break;
+        data.push(...pageData);
+
+        if (pageData.length < pageSize) break;
+        page++;
+      }
 
       // Filtrar por data e formatar
       const entries: AccountEntry[] = (data || [])

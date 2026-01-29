@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Ban, CheckCircle, RefreshCw, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Ban, CheckCircle, RefreshCw, BookOpen, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/utils";
@@ -39,14 +39,12 @@ interface AccountBalance {
 const ChartOfAccounts = () => {
   const navigate = useNavigate();
   const { selectedYear, selectedMonth } = usePeriod();
-
-  // Estados de carregamento
-  const [loading, setLoading] = useState(true);
-  const [loadingBalances, setLoadingBalances] = useState(false);
-
-  // Estados de dados principais
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [balances, setBalances] = useState<Map<string, AccountBalance>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [loadingBalances, setLoadingBalances] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<ChartAccount | null>(null);
   const [formData, setFormData] = useState({
@@ -56,21 +54,35 @@ const ChartOfAccounts = () => {
     nature: "DEVEDORA",
     parent_id: "",
   });
+  const [showInactive, setShowInactive] = useState(false);
 
-  // Estados de diálogos
-  const [open, setOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const handleViewLedger = (accountId: string) => {
+    navigate(`/livro-razao?account=${accountId}`);
+  };
 
-  // =====================================================
-  // FUNÇÕES DE CARREGAMENTO DE DADOS
-  // =====================================================
+  useEffect(() => {
+    loadAccounts();
+  }, [showInactive]);
+
+  useEffect(() => {
+    if (accounts.length > 0) {
+      loadBalances();
+    }
+  }, [selectedYear, selectedMonth, accounts]);
 
   const loadAccounts = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("chart_of_accounts")
         .select("*")
         .order("code");
+
+      // Filtrar apenas contas ativas por padrão
+      if (!showInactive) {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setAccounts(data || []);
@@ -106,7 +118,7 @@ const ChartOfAccounts = () => {
 
       // Converter para Map
       const balanceMap = new Map<string, AccountBalance>();
-
+      
       (data || []).forEach((row: any) => {
         balanceMap.set(row.account_id, {
           account_id: row.account_id,
@@ -137,28 +149,6 @@ const ChartOfAccounts = () => {
     } finally {
       setLoadingBalances(false);
     }
-  };
-
-  // =====================================================
-  // EFFECTS - Inicialização e sincronização
-  // =====================================================
-
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  useEffect(() => {
-    if (accounts.length > 0) {
-      loadBalances();
-    }
-  }, [selectedYear, selectedMonth, accounts]);
-
-  // =====================================================
-  // HANDLERS DE AÇÕES
-  // =====================================================
-
-  const handleViewLedger = (accountId: string) => {
-    navigate(`/livro-razao?account=${accountId}`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,6 +235,16 @@ const ChartOfAccounts = () => {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      code: "",
+      name: "",
+      account_type: "DESPESA",
+      nature: "DEVEDORA",
+      parent_id: "",
+    });
+  };
+
   const handleEdit = (account: ChartAccount) => {
     setEditingAccount(account);
     setFormData({
@@ -255,20 +255,6 @@ const ChartOfAccounts = () => {
       parent_id: account.parent_id || "",
     });
     setOpen(true);
-  };
-
-  // =====================================================
-  // FUNÇÕES AUXILIARES
-  // =====================================================
-
-  const resetForm = () => {
-    setFormData({
-      code: "",
-      name: "",
-      account_type: "DESPESA",
-      nature: "DEVEDORA",
-      parent_id: "",
-    });
   };
 
   const getParentAccounts = () => {
@@ -318,16 +304,33 @@ const ChartOfAccounts = () => {
 
   return (
     <Layout>
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Plano de Contas</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold">Plano de Contas</h1>
+            <p className="text-muted-foreground">
               Período: {getMonthName(selectedMonth)}/{selectedYear} |
               Total: {accounts.length} contas
             </p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant={showInactive ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowInactive(!showInactive)}
+            >
+              {showInactive ? (
+                <>
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Ocultar Inativas
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Mostrar Inativas
+                </>
+              )}
+            </Button>
             <Button
               variant="outline"
               size="sm"

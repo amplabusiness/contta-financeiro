@@ -82,8 +82,7 @@ async function buscarClientesAtivos(supabase: any): Promise<Cliente[]> {
       cnpj,
       email,
       monthly_fee,
-      status,
-      metadata
+      status
     `)
     .eq('status', 'active')
     .gt('monthly_fee', 0);
@@ -97,7 +96,7 @@ async function buscarClientesAtivos(supabase: any): Promise<Cliente[]> {
     email: c.email,
     valorHonorarios: parseFloat(c.monthly_fee) || 0,
     ativo: c.status === 'active',
-    contaAnaliticaCode: c.metadata?.conta_analitica,
+    contaAnaliticaCode: undefined, // Será buscado na função buscarOuCriarContaCliente
   }));
 }
 
@@ -122,12 +121,6 @@ async function buscarOuCriarContaCliente(supabase: any, cliente: Cliente): Promi
     .limit(1);
 
   if (contaPorNome && contaPorNome.length > 0) {
-    // Atualizar metadata do cliente com a conta encontrada
-    await supabase
-      .from('clients')
-      .update({ metadata: { conta_analitica: contaPorNome[0].code } })
-      .eq('id', cliente.id);
-
     return contaPorNome[0].code;
   }
 
@@ -166,12 +159,6 @@ async function buscarOuCriarContaCliente(supabase: any, cliente: Cliente): Promi
     accepts_entries: true,
     description: `Conta a receber do cliente ${cliente.name}`,
   });
-
-  // Atualizar metadata do cliente
-  await supabase
-    .from('clients')
-    .update({ metadata: { conta_analitica: novoCodigo } })
-    .eq('id', cliente.id);
 
   console.log(`[gerar-honorarios] Conta criada: ${novoCodigo} para ${cliente.name}`);
 

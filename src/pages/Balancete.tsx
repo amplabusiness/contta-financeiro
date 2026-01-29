@@ -45,26 +45,41 @@ const Balancete = () => {
         return
       }
 
-      // Buscar TODOS os lançamentos de uma vez
-      let linesQuery = supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit, 
-          credit, 
-          account_id,
-          entry_id!inner(entry_date)
-        `)
+      // Buscar TODOS os lançamentos com paginação (Supabase limita a 1000 por padrão)
+      const allLines: any[] = []
+      let page = 0
+      const pageSize = 1000
 
-      if (start) {
-        linesQuery = linesQuery.gte('entry_id.entry_date', start)
+      while (true) {
+        let linesQuery = supabase
+          .from('accounting_entry_lines')
+          .select(`
+            debit,
+            credit,
+            account_id,
+            entry_id!inner(entry_date)
+          `)
+          .range(page * pageSize, (page + 1) * pageSize - 1)
+
+        if (start) {
+          linesQuery = linesQuery.gte('entry_id.entry_date', start)
+        }
+        if (end) {
+          linesQuery = linesQuery.lte('entry_id.entry_date', end)
+        }
+
+        const { data: pageData, error: linesError } = await linesQuery
+
+        if (linesError) throw linesError
+
+        if (!pageData || pageData.length === 0) break
+        allLines.push(...pageData)
+
+        if (pageData.length < pageSize) break
+        page++
       }
-      if (end) {
-        linesQuery = linesQuery.lte('entry_id.entry_date', end)
-      }
 
-      const { data: allLines, error: linesError } = await linesQuery
-
-      if (linesError) throw linesError
+      console.log(`[Balancete] Carregadas ${allLines.length} linhas contábeis`)
 
       // Criar mapa de saldos por conta
       const accountTotals = new Map<string, { debit: number; credit: number }>()

@@ -19,6 +19,19 @@ import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
 import { CashFlowWidget } from "@/components/dashboard/CashFlowWidget";
 
+// Interface para títulos problemáticos (cobrança)
+interface TituloProblematico {
+  cliente: string;
+  clientId: string;
+  totalAberto: number;
+  qtdBoletos: number;
+  diasAtraso: number;
+  meses: number;
+  custoManutencao: number;
+  prioridade: 'CRITICO' | 'ALTO' | 'MEDIO' | 'BAIXO';
+  vencimentoAntigo: string;
+}
+
 // Tipos para agentes IA
 interface AgentStatus {
   name: string;
@@ -75,13 +88,13 @@ const Dashboard = () => {
       saldoFinal: number;
     };
   } | null>(null);
-
   const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [clientsHealth, setClientsHealth] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  // Novo estado para títulos problemáticos reais
-  const [titulosProblematicos, setTitulosProblematicos] = useState<any[]>([]);
+
+  // Estado para títulos problemáticos (cobrança) - dados do banco
+  const [titulosProblematicos, setTitulosProblematicos] = useState<TituloProblematico[]>([]);
 
   // Estados dos agentes IA
   const [isAutomationActive, setIsAutomationActive] = useState(true);
@@ -126,11 +139,22 @@ const Dashboard = () => {
     type: "invoices",
   });
 
+  useEffect(() => {
+    if (isOfflineMode && offlineData) {
+      // Carregar dados do cache quando offline
+      setStats(offlineData.dashboardStats || stats);
+      setClients(offlineData.clients || []);
+      setRecentInvoices(offlineData.invoices || []);
+      setLoading(false);
+    } else {
+      // Carregar dados do servidor quando online
+      loadDashboardData();
+    }
+  }, [selectedClientId, isOfflineMode]); // Recarregar quando mudar o cliente selecionado ou modo offline
+
   const loadDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
-
-      // 1. PREPARAÇÃO DAS QUERIES (COM LIMITES)
+      // Construir queries com filtro de cliente se selecionado
       let clientsQuery = supabase
         .from("clients")
         .select("*", { count: "exact" })
@@ -139,24 +163,14 @@ const Dashboard = () => {
         .not("monthly_fee", "eq", 0)
         .order("name");
 
-      let recentInvoicesQuery = supabase
-        .from("invoices")
-        .select("*, clients(name)")
-        .order("created_at", { ascending: false })
-        .limit(10);
+      let recentInvoicesQuery = supabase.from("invoices").select("*, clients(name)").order("created_at", { ascending: false }).limit(10);
 
-      let allInvoicesQuery = supabase
-        .from("invoices")
-        .select("*")
-        .order('due_date', { ascending: true })
-        .limit(200);
+      // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
 
-      let openingBalanceQuery = supabase
-        .from("client_opening_balance")
-        .select("*, clients(name)")
-        .in("status", ["pending", "partial", "overdue"])
-        .limit(200);
+      let allInvoicesQuery = supabase.from("invoices").select("*");
+      let openingBalanceQuery = supabase.from("client_opening_balance").select("*, clients(name)").in("status", ["pending", "partial", "overdue"]);
 
+      // Aplicar filtro de cliente se selecionado
       if (selectedClientId) {
         clientsQuery = clientsQuery.eq("id", selectedClientId);
         recentInvoicesQuery = recentInvoicesQuery.eq("client_id", selectedClientId);
@@ -164,13 +178,18 @@ const Dashboard = () => {
         openingBalanceQuery = openingBalanceQuery.eq("client_id", selectedClientId);
       }
 
-      // 2. EXECUÇÃO PARALELA (BD + CONTABILIDADE)
-      const [results, dashboardBalances, adiantamentos, expensesData] = await Promise.all([
-        Promise.allSettled([clientsQuery, recentInvoicesQuery, allInvoicesQuery, openingBalanceQuery]),
-        getDashboardBalances(selectedYear, selectedMonth),
-        getAdiantamentosSocios(selectedYear, selectedMonth),
-        getExpenses(selectedYear, selectedMonth)
+      // Usar Promise.allSettled para não falhar se uma query falhar
+      const results = await Promise.allSettled([
+        clientsQuery,
+        recentInvoicesQuery,
+        allInvoicesQuery,
+        openingBalanceQuery,
       ]);
+
+      // FONTE DA VERDADE: Buscar saldos direto das contas contábeis
+      // Cada tela consulta a conta que precisa - alteração reflete imediato
+      const dashboardBalances = await getDashboardBalances(selectedYear, selectedMonth);
+      const adiantamentos = await getAdiantamentosSocios(selectedYear, selectedMonth);
 
       setAccountingBalances({
         bank_balance: dashboardBalances.saldoBanco,
@@ -178,21 +197,27 @@ const Dashboard = () => {
         partner_advances: adiantamentos.total,
         total_revenue: dashboardBalances.totalReceitas,
         total_expenses: dashboardBalances.totalDespesas,
+        // Formato de razão: SI + D - C = SF
         banco: dashboardBalances.banco,
         receber: dashboardBalances.receber,
       });
 
-      // 3. EXTRAÇÃO DE DADOS
+      // Extrair dados com fallback para array vazio
       const clientsRes = results[0].status === 'fulfilled' ? results[0].value : { count: 0, data: [] };
       const recentInvoicesRes = results[1].status === 'fulfilled' ? results[1].value : { data: [] };
       const allInvoicesRes = results[2].status === 'fulfilled' ? results[2].value : { data: [] };
       const openingBalanceRes = results[3].status === 'fulfilled' ? results[3].value : { data: [] };
 
+      // Logar erros se houver
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
-          console.warn(`Query falhou (Index ${index}):`, result.reason);
+          const queryNames = ['clients', 'recentInvoices', 'allInvoices', 'openingBalance'];
+          console.warn(`Erro ao carregar ${queryNames[index]}:`, result.reason?.message || String(result.reason));
         }
       });
+
+      // FONTE DA VERDADE: Buscar despesas da contabilidade (grupo 4.*)
+      const expensesData = await getExpenses(selectedYear, selectedMonth);
 
       const totalClients = clientsRes.count || 0;
       const recentInvoices = recentInvoicesRes.data || [];
@@ -200,8 +225,45 @@ const Dashboard = () => {
       const allInvoices = allInvoicesRes.data || [];
       const openingBalances = openingBalanceRes.data || [];
 
-      // 4. CÁLCULOS DE SAÚDE (HEALTH DATA)
-      const calculatedHealthData: Record<string, any> = {};
+      // CORRIGIDO: Calcular KPIs com TODAS as invoices + saldos de abertura
+      // Honorários Pendentes = pending + overdue (tudo que ainda não foi pago)
+      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
+      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
+
+      // Calcular saldos de abertura pendentes
+      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
+      const openingBalanceOverdue = openingBalances.filter(ob => {
+        // Considerar vencido se data de vencimento já passou
+        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
+        const isOverdue = dueDate && dueDate < new Date();
+        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
+      });
+
+      // Total de saldo de abertura pendente (valor - valor pago)
+      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
+      // Total de saldo de abertura vencido
+      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
+        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
+        return sum + (remaining > 0 ? remaining : 0);
+      }, 0);
+
+      setStats({
+        totalClients,
+        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
+        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
+        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
+        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
+        // FONTE DA VERDADE: accounting_entries (despesas são contas do grupo 4.*)
+        pendingExpenses: expensesData.entries.length,
+        totalExpenses: expensesData.totalExpenses,
+      });
+
+      // Calcular saúde financeira de cada cliente (incluindo saldo de abertura)
+      const healthData: Record<string, any> = {};
       clientsList.forEach((client) => {
         const clientInvoices = allInvoices.filter((inv) => inv.client_id === client.id);
         const clientOpeningBalances = openingBalances.filter((ob) => ob.client_id === client.id);
@@ -210,6 +272,7 @@ const Dashboard = () => {
         const pending = clientInvoices.filter((inv) => inv.status === "pending");
         const paid = clientInvoices.filter((inv) => inv.status === "paid");
 
+        // Saldos de abertura vencidos
         const obOverdue = clientOpeningBalances.filter(ob => {
           const dueDate = ob.due_date ? new Date(ob.due_date) : null;
           const isOverdue = dueDate && dueDate < new Date();
@@ -217,11 +280,12 @@ const Dashboard = () => {
         });
         const obPending = clientOpeningBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
 
-        const totalOverdueVal = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+        const totalOverdue = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0) +
           obOverdue.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
-        const totalPendingVal = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
+        const totalPending = pending.reduce((sum, inv) => sum + Number(inv.amount), 0) +
           obPending.reduce((sum, ob) => sum + (Number(ob.amount || 0) - Number(ob.paid_amount || 0)), 0);
 
+        // Última movimentação (última fatura paga ou criada)
         const sortedInvoices = clientInvoices.sort((a, b) =>
           new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
         );
@@ -230,113 +294,170 @@ const Dashboard = () => {
         const totalOverdueCount = overdue.length + obOverdue.length;
         const totalPendingCount = pending.length + obPending.length;
 
-        calculatedHealthData[client.id] = {
+        healthData[client.id] = {
           overdueCount: totalOverdueCount,
-          overdueAmount: totalOverdueVal,
+          overdueAmount: totalOverdue,
           pendingCount: totalPendingCount,
-          pendingAmount: totalPendingVal,
+          pendingAmount: totalPending,
           paidCount: paid.length,
           lastActivity: lastActivity ? new Date(lastActivity.updated_at || lastActivity.created_at) : null,
           healthStatus: totalOverdueCount > 0 ? "critical" : totalPendingCount > 2 ? "warning" : "healthy",
         };
       });
 
-      // 5. CÁLCULO DE ESTATÍSTICAS GERAIS
-      const pendingInvoices = allInvoices.filter((i) => i.status === "pending" || i.status === "overdue");
-      const overdueInvoices = allInvoices.filter((i) => i.status === "overdue");
-
-      const openingBalancePending = openingBalances.filter(ob => ob.status === "pending" || ob.status === "partial");
-      const openingBalanceOverdue = openingBalances.filter(ob => {
-        const dueDate = ob.due_date ? new Date(ob.due_date) : null;
-        const isOverdue = dueDate && dueDate < new Date();
-        return ob.status === "overdue" || (isOverdue && (ob.status === "pending" || ob.status === "partial"));
-      });
-
-      const openingBalancePendingTotal = openingBalancePending.reduce((sum, ob) => {
-        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
-
-      const openingBalanceOverdueTotal = openingBalanceOverdue.reduce((sum, ob) => {
-        const remaining = Number(ob.amount || 0) - Number(ob.paid_amount || 0);
-        return sum + (remaining > 0 ? remaining : 0);
-      }, 0);
-
-      const newStats = {
-        totalClients,
-        pendingInvoices: pendingInvoices.length + openingBalancePending.length,
-        overdueInvoices: overdueInvoices.length + openingBalanceOverdue.length,
-        totalPending: pendingInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalancePendingTotal,
-        totalOverdue: overdueInvoices.reduce((sum, i) => sum + Number(i.amount), 0) + openingBalanceOverdueTotal,
-        pendingExpenses: expensesData.entries.length,
-        totalExpenses: expensesData.totalExpenses,
-      };
-
-      setClientsHealth(calculatedHealthData);
+      setClientsHealth(healthData);
       setRecentInvoices(recentInvoices);
       setClients(clientsList);
-      setStats(newStats);
 
-      // Busca de boletos do Sicredi (separado para não bloquear o resto)
-      const { data: overdueInvoicesData } = await supabase
-        .from("invoices")
-        .select("id, client_id, amount, due_date, status, clients(name)")
-        .eq("status", "overdue")
-        .limit(200);
-
-      if (overdueInvoicesData) {
-        const agrupados: Record<string, any> = {};
-        overdueInvoicesData.forEach(inv => {
-          const cliente = inv.clients?.name || inv.client_id || "N/D";
-          if (!agrupados[cliente]) {
-            agrupados[cliente] = {
-              cliente,
-              totalAberto: 0,
-              qtdBoletos: 0,
-              diasAtraso: 0,
-              meses: 0,
-              custoManutencao: 0,
-              prioridade: "BAIXO",
-            };
-          }
-          agrupados[cliente].totalAberto += Number(inv.amount);
-          agrupados[cliente].qtdBoletos += 1;
-          const due = inv.due_date ? new Date(inv.due_date) : null;
-          if (due) {
-            const diff = Math.floor((Date.now() - due.getTime()) / (1000 * 60 * 60 * 24));
-            agrupados[cliente].diasAtraso = Math.max(agrupados[cliente].diasAtraso, diff);
-            agrupados[cliente].meses = Math.floor(diff / 30);
-          }
-          agrupados[cliente].custoManutencao += 2.02;
-          agrupados[cliente].prioridade = agrupados[cliente].diasAtraso > 60 ? "CRITICO" : agrupados[cliente].diasAtraso > 30 ? "ALTO" : agrupados[cliente].diasAtraso > 15 ? "MEDIO" : "BAIXO";
-        });
-
-        let titulosArr = Object.values(agrupados);
-        if (selectedClientId) {
-          titulosArr = titulosArr.filter((t: any) => clientsList.some(c => c.id === selectedClientId && c.name === t.cliente));
-        }
-        setTitulosProblematicos(titulosArr);
-      }
-
+      // Salvar dados no cache para modo offline
       saveOfflineData({
-        dashboardStats: newStats,
+        dashboardStats: stats,
         clients: clientsList,
         invoices: recentInvoices,
       });
-
     } catch (error) {
-      console.error("Erro crítico na Dashboard:", error);
-      // Fallback para dados offline em caso de erro (não precisa estar nas deps)
+      console.error("Erro crítico ao carregar dados da Dashboard:", {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Se falhar e houver dados em cache, usar dados em cache
+      if (offlineData) {
+        console.log("Usando dados em cache devido a erro de conexão");
+        setStats(offlineData.dashboardStats || stats);
+        setClients(offlineData.clients || []);
+        setRecentInvoices(offlineData.invoices || []);
+      }
+
+      // Mostrar toast com erro amigável
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        console.warn("Problema de conectividade com o servidor. Verifique sua internet.");
+      }
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId, selectedYear, selectedMonth]);
+  }, [selectedClientId, selectedYear, selectedMonth, saveOfflineData, offlineData]);
 
-  // Efeito para carregar dados quando mudar cliente, período ou modo offline
   useEffect(() => {
     loadDashboardData();
-  }, [selectedClientId, selectedYear, selectedMonth, loadDashboardData]);
+  }, [loadDashboardData]); // Recarregar quando mudar o cliente ou período selecionado
+
+  // =====================================================
+  // COBRANÇA: Buscar títulos problemáticos do banco
+  // Regra: Após 3 meses de atraso, Sicredi cobra taxa de manutenção
+  // =====================================================
+  const loadTitulosProblematicos = useCallback(async () => {
+    try {
+      // Buscar todos os honorários pendentes com data de vencimento
+      const { data: honorarios, error } = await supabase
+        .from('client_opening_balance')
+        .select('id, client_id, competence, amount, paid_amount, due_date, status, clients(id, name)')
+        .in('status', ['pending', 'partial', 'overdue'])
+        .not('due_date', 'is', null)
+        .order('due_date', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao buscar honorários para cobrança:', error);
+        return;
+      }
+
+      if (!honorarios || honorarios.length === 0) {
+        setTitulosProblematicos([]);
+        return;
+      }
+
+      const hoje = new Date();
+      const CUSTO_MANUTENCAO_POR_MES = 2.02; // R$ 2,02 por boleto por mês após 3 meses
+
+      // Agrupar por cliente
+      const porCliente: Record<string, {
+        clientId: string;
+        cliente: string;
+        boletos: Array<{ valor: number; diasAtraso: number; vencimento: string }>;
+      }> = {};
+
+      honorarios.forEach(h => {
+        const clienteNome = h.clients?.name || 'DESCONHECIDO';
+        const clienteId = h.client_id;
+        const vencimento = new Date(h.due_date);
+        const diasAtraso = Math.floor((hoje.getTime() - vencimento.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Só considerar se está vencido (dias > 0)
+        if (diasAtraso <= 0) return;
+
+        const valorAberto = Number(h.amount || 0) - Number(h.paid_amount || 0);
+        if (valorAberto <= 0) return;
+
+        if (!porCliente[clienteId]) {
+          porCliente[clienteId] = {
+            clientId: clienteId,
+            cliente: clienteNome,
+            boletos: []
+          };
+        }
+
+        porCliente[clienteId].boletos.push({
+          valor: valorAberto,
+          diasAtraso,
+          vencimento: h.due_date
+        });
+      });
+
+      // Converter para array de títulos problemáticos
+      const titulos: TituloProblematico[] = Object.values(porCliente)
+        .map(cliente => {
+          const totalAberto = cliente.boletos.reduce((s, b) => s + b.valor, 0);
+          const qtdBoletos = cliente.boletos.length;
+          const diasAtrasoMax = Math.max(...cliente.boletos.map(b => b.diasAtraso));
+          const meses = Math.floor(diasAtrasoMax / 30);
+          const vencimentoMaisAntigo = cliente.boletos.reduce((oldest, b) =>
+            b.vencimento < oldest ? b.vencimento : oldest,
+            cliente.boletos[0]?.vencimento || ''
+          );
+
+          // Custo de manutenção: só após 3 meses completos (90 dias)
+          // Cobra R$ 2,02 por boleto por cada mês APÓS os 3 primeiros
+          const mesesComCobranca = Math.max(0, meses - 3);
+          const custoManutencao = mesesComCobranca > 0 ? qtdBoletos * CUSTO_MANUTENCAO_POR_MES * mesesComCobranca : 0;
+
+          // Prioridade baseada nos dias de atraso
+          let prioridade: 'CRITICO' | 'ALTO' | 'MEDIO' | 'BAIXO';
+          if (diasAtrasoMax > 180) prioridade = 'CRITICO';      // > 6 meses
+          else if (diasAtrasoMax > 90) prioridade = 'ALTO';     // > 3 meses (já está pagando taxa)
+          else if (diasAtrasoMax > 60) prioridade = 'MEDIO';    // > 2 meses (próximo de pagar taxa)
+          else prioridade = 'BAIXO';                             // < 2 meses
+
+          return {
+            cliente: cliente.cliente,
+            clientId: cliente.clientId,
+            totalAberto,
+            qtdBoletos,
+            diasAtraso: diasAtrasoMax,
+            meses,
+            custoManutencao,
+            prioridade,
+            vencimentoAntigo: vencimentoMaisAntigo
+          };
+        })
+        // Ordenar por prioridade (crítico primeiro) e depois por valor
+        .sort((a, b) => {
+          const prioridadeOrder = { 'CRITICO': 0, 'ALTO': 1, 'MEDIO': 2, 'BAIXO': 3 };
+          if (prioridadeOrder[a.prioridade] !== prioridadeOrder[b.prioridade]) {
+            return prioridadeOrder[a.prioridade] - prioridadeOrder[b.prioridade];
+          }
+          return b.totalAberto - a.totalAberto;
+        });
+
+      setTitulosProblematicos(titulos);
+    } catch (error) {
+      console.error('Erro ao carregar títulos problemáticos:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTitulosProblematicos();
+  }, [loadTitulosProblematicos]);
 
   // =====================================================
   // AUTOMAÇÃO DOS AGENTES IA (executa a cada 60s)
@@ -657,12 +778,12 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+          <h1 className="text-3xl font-bold">
             {selectedClientId ? `Dashboard - ${selectedClientName}` : "Dashboard Geral"}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground">
             {selectedClientId
               ? "Visão financeira do cliente selecionado"
               : "Visão geral do sistema financeiro - selecione um cliente para filtrar"
@@ -674,16 +795,16 @@ const Dashboard = () => {
 
         {/* ========== DASHBOARD DOS AGENTES IA ========== */}
         <Card className="bg-gradient-to-r from-violet-50 to-blue-50 border-violet-200">
-          <CardHeader className="pb-3 p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 sm:gap-3">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600" />
-                  <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-500 absolute -top-1 -right-1" />
+                  <Bot className="h-6 w-6 text-violet-600" />
+                  <Zap className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1" />
                 </div>
                 <div>
-                  <CardTitle className="text-base sm:text-lg">Agentes IA</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">
+                  <CardTitle className="text-lg">Agentes IA</CardTitle>
+                  <CardDescription>
                     Automação 100% - Ciclo #{cycleCount} | Atualizado: {lastAgentUpdate.toLocaleTimeString('pt-BR')}
                   </CardDescription>
                 </div>
@@ -691,7 +812,7 @@ const Dashboard = () => {
               <Badge
                 variant={isAutomationActive ? "default" : "secondary"}
                 className={cn(
-                  "px-2 py-0.5 sm:px-3 sm:py-1 text-xs",
+                  "px-3 py-1",
                   isAutomationActive && "bg-green-600 animate-pulse"
                 )}
               >
@@ -705,10 +826,10 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {agents.map((agent, idx) => (
-                <div key={idx} className="bg-white rounded-lg p-2 sm:p-3 border shadow-sm">
-                  <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
+                <div key={idx} className="bg-white rounded-lg p-3 border shadow-sm">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={cn("p-2 rounded-lg", agent.bgColor)}>
                         <agent.icon className={cn("h-4 w-4", agent.color)} />
@@ -753,7 +874,7 @@ const Dashboard = () => {
 
         {/* Saldos Contábeis - Formato Razão (SI + D - C = SF) */}
         {accountingBalances && (
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* Saldo Banco */}
             <Card>
               <CardHeader className="pb-2">
@@ -884,8 +1005,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-2 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
             <div onClick={() => showDetail("clients")} className="cursor-pointer">
               <MetricCard
                 title="Clientes Ativos"
@@ -939,17 +1060,17 @@ const Dashboard = () => {
 
         {stats.overdueInvoices > 0 && (
           <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-destructive text-base sm:text-lg">⚠️ Atenção: Inadimplência Detectada</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">
+                  <CardTitle className="text-destructive">⚠️ Atenção: Inadimplência Detectada</CardTitle>
+                  <CardDescription>
                     Existem {stats.overdueInvoices} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
                   </CardDescription>
                 </div>
-                <Button onClick={() => navigate("/reports")} variant="destructive" size="sm" className="w-full sm:w-auto">
+                <Button onClick={() => navigate("/reports")} variant="destructive">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  <span className="text-xs sm:text-sm">Ver Relatório</span>
+                  Ver Relatório Completo
                 </Button>
               </div>
             </CardHeader>
@@ -959,34 +1080,33 @@ const Dashboard = () => {
         {/* 🚨 ALERTA: BOLETOS VENCIDOS NO SICREDI - COBRANÇA */}
         {titulosProblematicos.length > 0 && (
           <Card className="border-amber-500 bg-amber-50">
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-amber-800 flex items-center gap-2 text-sm sm:text-base lg:text-lg">
-                    <BanknoteIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <CardTitle className="text-amber-800 flex items-center gap-2">
+                    <BanknoteIcon className="h-5 w-5" />
                     ⚠️ COBRANÇA: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.totalAberto, 0))} em Boletos Vencidos
                   </CardTitle>
-                  <CardDescription className="text-amber-700 text-xs sm:text-sm mt-1">
+                  <CardDescription className="text-amber-700">
                     {titulosProblematicos.length} clientes com {titulosProblematicos.reduce((s, t) => s + t.qtdBoletos, 0)} boletos vencidos no Sicredi. 
                     Custo de manutenção: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.custoManutencao, 0))}/mês
                   </CardDescription>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="destructive" className="text-xs">
+                <div className="flex gap-2">
+                  <Badge variant="destructive" className="text-sm">
                     {titulosProblematicos.filter(t => t.prioridade === 'CRITICO').length} CRÍTICOS
                   </Badge>
-                  <Badge className="bg-orange-500 text-xs">
+                  <Badge className="bg-orange-500 text-sm">
                     {titulosProblematicos.filter(t => t.prioridade === 'ALTO').length} ALTO RISCO
                   </Badge>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <div className="text-xs sm:text-sm text-amber-700 mb-3 sm:mb-4">
+            <CardContent>
+              <div className="text-sm text-amber-700 mb-4">
                 ⚡ <strong>AÇÃO:</strong> Baixar boletos no Sicredi (evitar taxa R$ 2/mês) e cobrar via PIX/transferência ou acordar com cliente.
               </div>
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-              <Table className="min-w-full">
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Prioridade</TableHead>
@@ -1026,14 +1146,13 @@ const Dashboard = () => {
                   ))}
                 </TableBody>
               </Table>
-              </div>
               {titulosProblematicos.length > 15 && (
-                <p className="text-center text-xs sm:text-sm text-amber-600 mt-3 sm:mt-4">
+                <p className="text-center text-sm text-amber-600 mt-4">
                   + {titulosProblematicos.length - 15} clientes adicionais com boletos em aberto
                 </p>
               )}
-              <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-amber-100 rounded-lg">
-                <p className="text-xs sm:text-sm text-amber-800">
+              <div className="mt-4 p-3 bg-amber-100 rounded-lg">
+                <p className="text-sm text-amber-800">
                   💡 <strong>Dica:</strong> Cancele os boletos no Sicredi (baixa sem pagamento) e mantenha a cobrança apenas no sistema.
                   Cobre via PIX ou transferência para evitar as taxas de manutenção.
                 </p>
@@ -1043,17 +1162,17 @@ const Dashboard = () => {
         )}
 
         <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">Clientes Ativos</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Acesso rápido aos dashboards individuais dos clientes</CardDescription>
+          <CardHeader>
+            <CardTitle>Clientes Ativos</CardTitle>
+            <CardDescription>Acesso rápido aos dashboards individuais dos clientes</CardDescription>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6">
+          <CardContent>
             {clients.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Nenhum cliente ativo cadastrado
               </p>
             ) : (
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {clients.map((client) => {
                   const health = clientsHealth[client.id] || {};
                   const healthStatus = health.healthStatus || "healthy";

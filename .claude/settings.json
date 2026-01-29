@@ -70,5 +70,10 @@
     "superConciliador": true,
     "smartAccounting": true,
     "aiAccountant": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)"
+    ]
   }
 }

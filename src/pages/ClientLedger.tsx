@@ -81,7 +81,7 @@ const ClientLedger = () => {
 
   const loadLedger = async () => {
     if (!selectedClient) return;
-    
+
     setLoading(true);
     try {
         let startDateStr = '';
@@ -97,63 +97,48 @@ const ClientLedger = () => {
             endDateStr = dateRange.end;
         } else {
              setLoading(false);
-             return; 
+             return;
         }
 
         console.log(`Loading ledger for ${startDateStr} to ${endDateStr}`);
 
-        // STRATEGY CHANGE: Fetch from INVOICES directly because client_ledger table is empty/unreliable
-        
-        const { data: invoices, error: invError } = await supabase
-            .from("invoices")
-            .select("*, bank_transactions(id)")
-            .eq("client_id", selectedClient)
-            .order("competence", { ascending: true });
-
-        if (invError) throw invError;
-        
-        let ledgerLines = [];
-        
-        invoices.forEach(inv => {
-            // Debit Date logic
-            let debitDate = inv.created_at || new Date().toISOString();
-            if (inv.competence) {
-                const [m, y] = inv.competence.split('/');
-                const lastDay = new Date(parseInt(y), parseInt(m), 0);
-                // Use local date parts to avoid UTC shift causing 30th instead of 31st
-                const year = lastDay.getFullYear();
-                const month = String(lastDay.getMonth() + 1).padStart(2, '0');
-                const day = String(lastDay.getDate()).padStart(2, '0');
-                debitDate = `${year}-${month}-${day}`;
-            }
-            
-            // Debit Entry (Issuance)
-            ledgerLines.push({
-                id: `debit-${inv.id}`,
-                transaction_date: debitDate,
-                description: inv.description || `Fatura Ref: ${inv.competence}`,
-                notes: inv.notes,
-                debit: inv.amount,
-                credit: 0,
-                invoice_id: inv,
-                type: 'bill'
+        // =====================================================
+        // FONTE DA VERDADE: CONTABILIDADE (Seção 11)
+        // Usando fn_get_extrato_contabil_cliente ao invés de invoices
+        // =====================================================
+        const { data: extratoContabil, error: extratoError } = await supabase
+            .rpc('fn_get_extrato_contabil_cliente', {
+                p_client_id: selectedClient,
+                p_data_inicio: null, // Buscar tudo para calcular saldo anterior
+                p_data_fim: endDateStr
             });
 
-            // Credit Entry (Payment)
-            if (inv.status === 'paid' && inv.paid_date) {
-                ledgerLines.push({
-                    id: `credit-${inv.id}`,
-                    transaction_date: inv.paid_date,
-                    description: `Pagamento: ${inv.description}`,
-                    notes: `Via ${inv.payment_method || 'N/D'}`,
-                    debit: 0,
-                    credit: inv.paid_amount || inv.amount, 
-                    invoice_id: inv,
-                    type: 'payment'
-                });
-            }
+        if (extratoError) {
+            console.warn("Erro ao buscar extrato contábil, usando fallback para invoices:", extratoError);
+            // Fallback para invoices caso a função não exista
+            await loadLedgerFromInvoices(startDateStr, endDateStr);
+            return;
+        }
+
+        let ledgerLines: any[] = [];
+
+        // Processar extrato contábil
+        extratoContabil?.forEach((entry: any) => {
+            ledgerLines.push({
+                id: entry.entry_id,
+                transaction_date: entry.data_lancamento,
+                description: entry.descricao || entry.historico || 'Lançamento Contábil',
+                notes: `${entry.conta_codigo} - ${entry.conta_nome}`,
+                debit: Number(entry.debito) || 0,
+                credit: Number(entry.credito) || 0,
+                type: entry.entry_type,
+                document_type: entry.document_type,
+                saldo_acumulado: Number(entry.saldo_acumulado) || 0,
+                invoice_id: null // Dados contábeis não têm referência direta
+            });
         });
-        
+
+        // Ordenar por data
         ledgerLines.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
 
         let filteredLines = [];
@@ -163,14 +148,13 @@ const ClientLedger = () => {
 
         for (const line of ledgerLines) {
             const lineDate = line.transaction_date;
-            const effect = (line.debit || 0) - (line.credit || 0);
-            
+
             if (lineDate < startDateStr) {
-                openingBalance += effect;
+                openingBalance += (line.debit || 0) - (line.credit || 0);
                 openingDebit += (line.debit || 0);
                 openingCredit += (line.credit || 0);
             } else if (lineDate <= endDateStr) {
-                filteredLines.push({ ...line }); 
+                filteredLines.push({ ...line });
             }
         }
 
@@ -179,7 +163,7 @@ const ClientLedger = () => {
         finalLedger.push({
             id: 'opening',
             transaction_date: startDateStr,
-            description: 'Saldo Anterior',
+            description: 'Saldo Anterior (Contábil)',
             debit: 0,
             credit: 0,
             balance: openingBalance,
@@ -206,6 +190,130 @@ const ClientLedger = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fallback para invoices (mantido para compatibilidade)
+  const loadLedgerFromInvoices = async (startDateStr: string, endDateStr: string) => {
+    const { data: invoices, error: invError } = await supabase
+        .from("invoices")
+        .select("*, bank_transactions(id)")
+        .eq("client_id", selectedClient)
+        .order("competence", { ascending: true });
+
+    if (invError) throw invError;
+
+    const { data: openingBalances } = await supabase
+        .from("client_opening_balance")
+        .select("*")
+        .eq("client_id", selectedClient)
+        .order("competence", { ascending: true });
+
+    let ledgerLines: any[] = [];
+
+    invoices?.forEach(inv => {
+        let debitDate = inv.created_at || new Date().toISOString();
+        if (inv.competence) {
+            const [m, y] = inv.competence.split('/');
+            const lastDay = new Date(parseInt(y), parseInt(m), 0);
+            debitDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+        }
+
+        ledgerLines.push({
+            id: `debit-${inv.id}`,
+            transaction_date: debitDate,
+            description: inv.description || `Fatura Ref: ${inv.competence}`,
+            notes: `⚠️ Dados Financeiros (não contábil)`,
+            debit: inv.amount,
+            credit: 0,
+            invoice_id: inv,
+            type: 'bill'
+        });
+
+        if (inv.status === 'paid' && inv.paid_date) {
+            ledgerLines.push({
+                id: `credit-${inv.id}`,
+                transaction_date: inv.paid_date,
+                description: `Pagamento: ${inv.description}`,
+                notes: `Via ${inv.payment_method || 'N/D'}`,
+                debit: 0,
+                credit: inv.paid_amount || inv.amount,
+                invoice_id: inv,
+                type: 'payment'
+            });
+        }
+    });
+
+    openingBalances?.forEach(ob => {
+        let debitDate = ob.due_date || new Date().toISOString();
+        if (!ob.due_date && ob.competence) {
+            const [m, y] = ob.competence.split('/');
+            const lastDay = new Date(parseInt(y), parseInt(m), 0);
+            debitDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+        }
+
+        ledgerLines.push({
+            id: `ob-debit-${ob.id}`,
+            transaction_date: debitDate,
+            description: ob.description || `Honorário Ref: ${ob.competence}`,
+            notes: `⚠️ Saldo Abertura (não contábil)`,
+            debit: ob.amount,
+            credit: 0,
+            invoice_id: { ...ob, payment_method: 'Saldo Abertura' },
+            type: 'opening_balance'
+        });
+
+        if (ob.status === 'paid' && ob.paid_date) {
+            ledgerLines.push({
+                id: `ob-credit-${ob.id}`,
+                transaction_date: ob.paid_date,
+                description: `Pagamento: ${ob.description || ob.competence}`,
+                notes: 'Saldo de Abertura',
+                debit: 0,
+                credit: ob.paid_amount || ob.amount,
+                invoice_id: { ...ob, payment_method: 'Saldo Abertura' },
+                type: 'opening_balance_payment'
+            });
+        }
+    });
+
+    ledgerLines.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+
+    let filteredLines = [];
+    let openingBalance = 0;
+    let openingDebit = 0;
+    let openingCredit = 0;
+
+    for (const line of ledgerLines) {
+        const lineDate = line.transaction_date;
+        if (lineDate < startDateStr) {
+            openingBalance += (line.debit || 0) - (line.credit || 0);
+            openingDebit += (line.debit || 0);
+            openingCredit += (line.credit || 0);
+        } else if (lineDate <= endDateStr) {
+            filteredLines.push({ ...line });
+        }
+    }
+
+    const finalLedger = [{
+        id: 'opening',
+        transaction_date: startDateStr,
+        description: '⚠️ Saldo Anterior (Financeiro)',
+        debit: 0,
+        credit: 0,
+        balance: openingBalance,
+        isOpening: true,
+        openingDetails: { totalDebit: openingDebit, totalCredit: openingCredit }
+    }];
+
+    let currentBalance = openingBalance;
+    const visualLines = filteredLines.map(line => {
+         const effect = (line.debit || 0) - (line.credit || 0);
+         currentBalance += effect;
+         return { ...line, balance: currentBalance };
+    });
+
+    setLedger([...finalLedger, ...visualLines]);
+    setBalance(currentBalance);
   };
 
   return (

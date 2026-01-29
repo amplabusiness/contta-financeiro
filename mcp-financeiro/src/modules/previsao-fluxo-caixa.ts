@@ -90,6 +90,20 @@ export interface AlertaFluxo {
 }
 
 // ============================================
+// UTILIDADES
+// ============================================
+
+/**
+ * Formata valor para exibição (uso interno)
+ */
+function formatarMoedaInterno(valor: number): string {
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+// ============================================
 // CONFIGURAÇÕES DE PREVISÃO
 // ============================================
 
@@ -493,38 +507,28 @@ export function gerarPrevisaoFluxoCaixa(
 }
 
 /**
- * Formata valor para exibição
- */
-export function formatarMoeda(valor: number): string {
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
-/**
  * Gera relatório resumido de fluxo de caixa
  */
 export function gerarRelatorioResumo(previsao: PrevisaoFluxoCaixa): string {
   let relatorio = `📊 **PREVISÃO DE FLUXO DE CAIXA**\n`;
   relatorio += `Período: ${previsao.periodo.inicio} a ${previsao.periodo.fim}\n\n`;
 
-  relatorio += `💰 **Saldo Atual:** ${formatarMoeda(previsao.saldoAtual)}\n`;
-  relatorio += `📉 **Saldo Mínimo Projetado:** ${formatarMoeda(previsao.indicadores.saldoMinimoProjetado)}`;
+  relatorio += `💰 **Saldo Atual:** ${formatarMoedaInterno(previsao.saldoAtual)}\n`;
+  relatorio += `📉 **Saldo Mínimo Projetado:** ${formatarMoedaInterno(previsao.indicadores.saldoMinimoProjetado)}`;
   relatorio += ` (${previsao.indicadores.dataSaldoMinimo})\n`;
   relatorio += `📈 **Tendência:** ${previsao.indicadores.tendencia}\n`;
   relatorio += `🔄 **Dias de Cobertura:** ${previsao.indicadores.diasCoberturaOperacional}\n\n`;
 
   if (previsao.indicadores.necessidadeCapitalGiro > 0) {
-    relatorio += `⚠️ **Necessidade de Capital:** ${formatarMoeda(previsao.indicadores.necessidadeCapitalGiro)}\n\n`;
+    relatorio += `⚠️ **Necessidade de Capital:** ${formatarMoedaInterno(previsao.indicadores.necessidadeCapitalGiro)}\n\n`;
   }
 
   relatorio += `📅 **Resumo Semanal:**\n`;
   for (const semana of previsao.resumoSemanal) {
     relatorio += `• Semana ${semana.semana}: `;
-    relatorio += `Entradas ${formatarMoeda(semana.entradasPrevistas)} | `;
-    relatorio += `Saídas ${formatarMoeda(semana.saidasPrevistas)} | `;
-    relatorio += `Saldo ${formatarMoeda(semana.saldoProjetado)}\n`;
+    relatorio += `Entradas ${formatarMoedaInterno(semana.entradasPrevistas)} | `;
+    relatorio += `Saídas ${formatarMoedaInterno(semana.saidasPrevistas)} | `;
+    relatorio += `Saldo ${formatarMoedaInterno(semana.saldoProjetado)}\n`;
   }
 
   if (previsao.alertas.length > 0) {
@@ -552,6 +556,5 @@ export default {
   calcularIndicadores,
   gerarAlertas,
   gerarPrevisaoFluxoCaixa,
-  gerarRelatorioResumo,
-  formatarMoeda
+  gerarRelatorioResumo
 };
