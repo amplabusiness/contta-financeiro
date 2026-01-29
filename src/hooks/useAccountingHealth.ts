@@ -96,6 +96,18 @@ async function runHealthCheck() {
 }
 
 async function cleanupOrphans() {
+  // ============================================================================
+  // DESABILITADO POR DR. CÍCERO - 29/01/2026
+  // ============================================================================
+  // Esta função deletava entries sem linhas automaticamente, mas isso causava
+  // perda de dados quando as linhas não eram gravadas por erro de schema/RLS.
+  // Agora o cleanup só acontece manualmente pelo admin.
+  // ============================================================================
+  console.log('[AccountingHealth] cleanup_orphans DESABILITADO - Dr. Cícero');
+  return;
+  
+  // CÓDIGO ORIGINAL ABAIXO (preservado para referência)
+  /*
   try {
     // Contar entries e lines
     const [entriesResult, linesResult] = await Promise.all([
@@ -151,6 +163,7 @@ async function cleanupOrphans() {
   } catch (error) {
     console.debug('[AccountingHealth] Error checking orphans (non-critical):', error);
   }
+  */
 }
 
 async function ensureChartOfAccounts() {
