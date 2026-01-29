@@ -19,8 +19,10 @@ export const ACCOUNT_MAPPING = {
   SALDO_BANCO_SICREDI: "1.1.1.05",      // Banco Sicredi (disponibilidades)
   CONTAS_A_RECEBER: "1.1.2.01",          // Clientes a Receber
 
-  // Adiantamentos a Sócios (grupo 1.1.3.04.* - dinâmico por tenant)
-  ADIANTAMENTO_SOCIOS_PREFIX: "1.1.3.04", // Prefixo do grupo de adiantamentos a sócios
+  // Adiantamentos a Sócios (cada sócio tem sua conta)
+  ADIANTAMENTO_SERGIO: "1.1.3.04.01",    // Adiantamento Sergio Carneiro
+  ADIANTAMENTO_VICTOR: "1.1.3.04.02",    // Adiantamento Victor Hugo
+  ADIANTAMENTO_JOSE: "1.1.3.04.03",      // Adiantamento José Carlos
 
   // DRE - Receitas (grupo 3)
   RECEITA_HONORARIOS: "3.1.1.01",        // Honorários Contábeis
@@ -102,10 +104,10 @@ export async function getAccountBalance(
   balance: number;         // Saldo Final
   nature: string;
 }> {
-  // Buscar a conta
+  // Buscar a conta principal
   const { data: account, error: accountError } = await supabase
     .from("chart_of_accounts")
-    .select("id, code, name, nature, account_type")
+    .select("id, code, name, nature, account_type, is_analytical")
     .eq("code", accountCode)
     .single();
 
@@ -122,6 +124,26 @@ export async function getAccountBalance(
     };
   }
 
+  // =====================================================
+  // BUSCAR CONTA PRINCIPAL + SUBCONTAS (para contas sintéticas)
+  // Ex: 1.1.2.01 busca também 1.1.2.01.0001, 1.1.2.01.0002, etc.
+  // IGNORA contas [CONSOLIDADO] que são duplicadas de migração
+  // =====================================================
+  const accountIds: string[] = [account.id];
+
+  // Se a conta não é analítica (é sintética), buscar subcontas
+  if (!account.is_analytical) {
+    const { data: subAccounts } = await supabase
+      .from("chart_of_accounts")
+      .select("id, name")
+      .like("code", `${accountCode}.%`)
+      .not("name", "ilike", "%[CONSOLIDADO]%"); // Ignorar contas duplicadas de migração
+
+    if (subAccounts?.length) {
+      subAccounts.forEach(sub => accountIds.push(sub.id));
+    }
+  }
+
   // Calcular datas do período
   let startDate: string | null = null;
   let endDate: string | null = null;
@@ -135,60 +157,56 @@ export async function getAccountBalance(
   }
 
   // =====================================================
+  // FONTE ÚNICA DA VERDADE: accounting_entry_items
+  // 
+  // Após análise em 28/01/2026, confirmamos que:
+  // - accounting_entry_items está BALANCEADO (D = C)
+  // - accounting_entry_lines tem dados duplicados/inconsistentes
+  // - Equação patrimonial fecha usando só items
+  // =====================================================
+
+  let openingBalance = 0;
+  let totalDebit = 0;
+  let totalCredit = 0;
+
+  // =====================================================
   // 1. SALDO INICIAL: Lançamentos ANTES do período
   // =====================================================
-  let openingBalance = 0;
-
   if (startDate) {
-    const { data: priorEntries, error: priorError } = await supabase
-      .from("accounting_entry_lines")
+    const { data: priorItems } = await supabase
+      .from("accounting_entry_items")
       .select("debit, credit, accounting_entries!inner(entry_date)")
-      .eq("account_id", account.id)
+      .in("account_id", accountIds)
       .lt("accounting_entries.entry_date", startDate)
-      .range(0, 49999); // Garantir que todos os registros sejam retornados
+      .range(0, 49999);
 
-    if (!priorError && priorEntries) {
-      const priorDebit = priorEntries.reduce((sum, e) => sum + Number(e.debit || 0), 0);
-      const priorCredit = priorEntries.reduce((sum, e) => sum + Number(e.credit || 0), 0);
-      openingBalance = account.nature === "DEVEDORA"
-        ? priorDebit - priorCredit
-        : priorCredit - priorDebit;
-    }
+    const priorDebit = priorItems?.reduce((sum, e) => sum + Number(e.debit || 0), 0) || 0;
+    const priorCredit = priorItems?.reduce((sum, e) => sum + Number(e.credit || 0), 0) || 0;
+
+    openingBalance = account.nature === "DEVEDORA"
+      ? priorDebit - priorCredit
+      : priorCredit - priorDebit;
   }
 
   // =====================================================
   // 2. MOVIMENTOS DO PERÍODO: Débitos e Créditos
   // =====================================================
-  let periodQuery = supabase
-    .from("accounting_entry_lines")
+  let itemsQuery = supabase
+    .from("accounting_entry_items")
     .select("debit, credit, accounting_entries!inner(entry_date)")
-    .eq("account_id", account.id)
-    .range(0, 49999); // Garantir que todos os registros sejam retornados
+    .in("account_id", accountIds)
+    .range(0, 49999);
 
   if (startDate && endDate) {
-    periodQuery = periodQuery
+    itemsQuery = itemsQuery
       .gte("accounting_entries.entry_date", startDate)
       .lte("accounting_entries.entry_date", endDate);
   }
 
-  const { data: periodEntries, error: periodError } = await periodQuery;
+  const { data: periodItems } = await itemsQuery;
 
-  if (periodError) {
-    console.error(`Erro ao buscar lançamentos da conta ${accountCode}:`, periodError);
-    return {
-      code: account.code,
-      name: account.name,
-      openingBalance: 0,
-      debit: 0,
-      credit: 0,
-      balance: 0,
-      nature: account.nature,
-    };
-  }
-
-  // Somar débitos e créditos do período
-  const totalDebit = periodEntries?.reduce((sum, e) => sum + Number(e.debit || 0), 0) || 0;
-  const totalCredit = periodEntries?.reduce((sum, e) => sum + Number(e.credit || 0), 0) || 0;
+  totalDebit = periodItems?.reduce((sum, e) => sum + Number(e.debit || 0), 0) || 0;
+  totalCredit = periodItems?.reduce((sum, e) => sum + Number(e.credit || 0), 0) || 0;
 
   // =====================================================
   // 3. SALDO FINAL: Saldo Inicial + Débitos - Créditos
@@ -235,7 +253,6 @@ export async function getMultipleAccountBalances(
 
 /**
  * Busca saldo de um grupo de contas (ex: todas as receitas "3%")
- * OTIMIZADO: Usa RPC fn_get_accounts_balance para evitar URL longa
  *
  * Para grupos de contas:
  * - Grupo 1 (Ativo), 2 (Passivo), 5 (PL): saldo ACUMULADO
@@ -252,46 +269,65 @@ export async function getAccountGroupBalance(
   balance: number;
   accounts: Array<{ code: string; name: string; balance: number }>;
 }> {
+  // Buscar todas as contas analíticas do grupo
+  const { data: accounts, error: accountsError } = await supabase
+    .from("chart_of_accounts")
+    .select("id, code, name, nature, account_type")
+    .like("code", `${groupPrefix}%`)
+    .eq("is_analytical", true)
+    .eq("is_active", true);
+
+  if (accountsError || !accounts?.length) {
+    return {
+      prefix: groupPrefix,
+      totalDebit: 0,
+      totalCredit: 0,
+      balance: 0,
+      accounts: [],
+    };
+  }
+
+  const accountIds = accounts.map((a) => a.id);
+
   // Determinar se é grupo patrimonial (1, 2, 5) ou de resultado (3, 4)
   const firstDigit = groupPrefix.charAt(0);
   const isPatrimonial = ["1", "2", "5"].includes(firstDigit);
 
-  // Calcular datas de acordo com o tipo de grupo
-  let startDate: string | null = null;
-  let endDate: string | null = null;
+  // Construir query
+  let query = supabase
+    .from("accounting_entry_items")
+    .select("account_id, debit, credit, accounting_entries!inner(entry_date)")
+    .in("account_id", accountIds)
+    .range(0, 49999); // Garantir que todos os registros sejam retornados
 
+  // Filtrar por período
   if (isPatrimonial) {
     // Grupos patrimoniais: saldo ACUMULADO até o final do período
     if (year && month) {
-      endDate = new Date(year, month, 0).toISOString().split("T")[0];
+      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
+      query = query.lte("accounting_entries.entry_date", endDate);
     } else if (year) {
-      endDate = `${year}-12-31`;
+      query = query.lte("accounting_entries.entry_date", `${year}-12-31`);
     }
   } else {
     // Grupos de resultado: saldo do PERÍODO específico
     if (year && month) {
-      startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-      endDate = new Date(year, month, 0).toISOString().split("T")[0];
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
+      query = query
+        .gte("accounting_entries.entry_date", startDate)
+        .lte("accounting_entries.entry_date", endDate);
     } else if (year) {
-      startDate = `${year}-01-01`;
-      endDate = `${year}-12-31`;
+      query = query
+        .gte("accounting_entries.entry_date", `${year}-01-01`)
+        .lte("accounting_entries.entry_date", `${year}-12-31`);
     }
   }
 
-  // Chamar RPC (evita URL longa com muitos UUIDs)
-  const { data: rpcData, error: rpcError } = await supabase.rpc(
-    "fn_get_accounts_balance",
-    {
-      p_tenant_id: null, // usa get_my_tenant_id()
-      p_account_ids: null,
-      p_group_prefix: groupPrefix,
-      p_end_date: endDate,
-      p_start_date: startDate,
-    }
-  );
+  const { data: entries, error: entriesError } = await query;
 
-  if (rpcError) {
-    console.error(`Erro ao buscar saldos do grupo ${groupPrefix} via RPC:`, rpcError);
+  if (entriesError) {
+    console.error(`Erro ao buscar lançamentos do grupo ${groupPrefix}:`, entriesError);
     return {
       prefix: groupPrefix,
       totalDebit: 0,
@@ -301,37 +337,41 @@ export async function getAccountGroupBalance(
     };
   }
 
-  if (!rpcData?.length) {
-    return {
-      prefix: groupPrefix,
-      totalDebit: 0,
-      totalCredit: 0,
-      balance: 0,
-      accounts: [],
-    };
-  }
+  // Agrupar por conta
+  const accountMap = new Map<string, { debit: number; credit: number }>();
+  entries?.forEach((e) => {
+    const current = accountMap.get(e.account_id) || { debit: 0, credit: 0 };
+    accountMap.set(e.account_id, {
+      debit: current.debit + Number(e.debit || 0),
+      credit: current.credit + Number(e.credit || 0),
+    });
+  });
 
-  // Processar resultados da RPC
-  const accountBalances = rpcData.map((row: {
-    account_code: string;
-    account_name: string;
-    balance: number;
-  }) => ({
-    code: row.account_code,
-    name: row.account_name,
-    balance: Number(row.balance),
-  }));
+  // Calcular saldos por conta
+  const accountBalances = accounts.map((account) => {
+    const totals = accountMap.get(account.id) || { debit: 0, credit: 0 };
+    const balance =
+      account.nature === "DEVEDORA"
+        ? totals.debit - totals.credit
+        : totals.credit - totals.debit;
+    return {
+      code: account.code,
+      name: account.name,
+      balance,
+    };
+  });
 
   // Totais do grupo
   let totalDebit = 0;
   let totalCredit = 0;
-  rpcData.forEach((row: { total_debit: number; total_credit: number }) => {
-    totalDebit += Number(row.total_debit || 0);
-    totalCredit += Number(row.total_credit || 0);
+  accountMap.forEach((v) => {
+    totalDebit += v.debit;
+    totalCredit += v.credit;
   });
 
   // Saldo do grupo (assumindo natureza baseada no prefixo)
   // 1-2 = Ativo (Devedora), 3 = Receita (Credora), 4 = Despesa (Devedora), 5 = PL (Credora)
+  // Reutiliza firstDigit declarado anteriormente
   const isDevedora = firstDigit === "1" || firstDigit === "4";
   const balance = isDevedora
     ? totalDebit - totalCredit
@@ -342,7 +382,7 @@ export async function getAccountGroupBalance(
     totalDebit,
     totalCredit,
     balance,
-    accounts: accountBalances.filter((a: { balance: number }) => a.balance !== 0),
+    accounts: accountBalances.filter((a) => a.balance !== 0),
   };
 }
 
@@ -353,22 +393,16 @@ export async function getAccountGroupBalance(
 /**
  * Dashboard / CashFlow: Retorna saldos principais com formato de razão
  * Saldo Inicial + Débitos - Créditos = Saldo Final
- *
- * IMPORTANTE:
- * - Banco: conta única 1.1.1.05
- * - Contas a Receber: grupo 1.1.2.01.* (clientes individuais)
- * - Receitas: grupo 3.* (todas as contas de receita)
- * - Despesas: grupo 4.* (todas as contas de despesa)
  */
 export async function getDashboardBalances(year?: number, month?: number) {
-  const [saldoBanco, contasReceberGroup, receitas, despesas] = await Promise.all([
+  const [saldoBanco, contasReceber, receitas, despesas] = await Promise.all([
     getAccountBalance(ACCOUNT_MAPPING.SALDO_BANCO_SICREDI, year, month),
-    getAccountGroupBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month), // Grupo 1.1.2.01.* (clientes)
+    getAccountBalance(ACCOUNT_MAPPING.CONTAS_A_RECEBER, year, month),
     getAccountGroupBalance("3", year, month), // Todas as receitas
     getAccountGroupBalance("4", year, month), // Todas as despesas
   ]);
 
-  const result = {
+  return {
     // Banco - formato de razão
     saldoBanco: saldoBanco.balance,
     banco: {
@@ -377,69 +411,36 @@ export async function getDashboardBalances(year?: number, month?: number) {
       creditos: saldoBanco.credit,
       saldoFinal: saldoBanco.balance,
     },
-    // Contas a Receber - formato de razão (soma de todas as contas de clientes)
-    contasReceber: contasReceberGroup.balance,
+    // Contas a Receber - formato de razão
+    contasReceber: contasReceber.balance,
     receber: {
-      saldoInicial: 0, // Grupo não tem saldo inicial individual
-      debitos: contasReceberGroup.totalDebit,
-      creditos: contasReceberGroup.totalCredit,
-      saldoFinal: contasReceberGroup.balance,
+      saldoInicial: contasReceber.openingBalance,
+      debitos: contasReceber.debit,
+      creditos: contasReceber.credit,
+      saldoFinal: contasReceber.balance,
     },
     // Receitas e Despesas
     totalReceitas: receitas.balance,
     totalDespesas: despesas.balance,
     resultado: receitas.balance - despesas.balance,
   };
-
-  return result;
 }
 
 /**
- * Adiantamentos a Sócios: Retorna saldo de cada sócio DINAMICAMENTE
- *
- * Busca todas as contas analíticas sob o prefixo 1.1.3.04.* (Adiantamentos a Sócios)
- * e retorna os saldos individuais e o total.
- *
- * Cada tenant pode ter seus próprios sócios cadastrados no plano de contas.
+ * Adiantamentos a Sócios: Retorna saldo de cada sócio
  */
-export async function getAdiantamentosSocios(year?: number, month?: number): Promise<{
-  partners: Array<{ code: string; name: string; balance: number }>;
-  total: number;
-}> {
-  // Buscar todas as contas analíticas de adiantamento a sócios (grupo 1.1.3.04.*)
-  const { data: partnerAccounts, error: accountsError } = await supabase
-    .from("chart_of_accounts")
-    .select("id, code, name")
-    .like("code", `${ACCOUNT_MAPPING.ADIANTAMENTO_SOCIOS_PREFIX}.%`)
-    .eq("is_analytical", true)
-    .eq("is_active", true);
-
-  if (accountsError || !partnerAccounts?.length) {
-    return {
-      partners: [],
-      total: 0,
-    };
-  }
-
-  // Buscar saldos de todas as contas em paralelo
-  const balancePromises = partnerAccounts.map((account) =>
-    getAccountBalance(account.code, year, month)
-  );
-  const balances = await Promise.all(balancePromises);
-
-  // Montar resultado
-  const partners = balances.map((balance) => ({
-    code: balance.code,
-    name: balance.name,
-    balance: balance.balance,
-  }));
-
-  // Calcular total
-  const total = partners.reduce((sum, p) => sum + p.balance, 0);
+export async function getAdiantamentosSocios(year?: number, month?: number) {
+  const [sergio, victor, jose] = await Promise.all([
+    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_SERGIO, year, month),
+    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_VICTOR, year, month),
+    getAccountBalance(ACCOUNT_MAPPING.ADIANTAMENTO_JOSE, year, month),
+  ]);
 
   return {
-    partners,
-    total,
+    sergio: sergio.balance,
+    victor: victor.balance,
+    jose: jose.balance,
+    total: sergio.balance + victor.balance + jose.balance,
   };
 }
 
@@ -534,7 +535,7 @@ interface ClientReceivable {
 /**
  * Busca saldos de Clientes a Receber por cliente
  *
- * FONTE DA VERDADE PURA: accounting_entries + accounting_entry_lines
+ * FONTE DA VERDADE PURA: accounting_entries + accounting_entry_items
  * Extrai o nome do cliente diretamente da descrição do lançamento
  * Padrão: "Receita Honorarios: NOME DO CLIENTE" ou "Recebimento: ... NOME DO CLIENTE"
  *
@@ -593,7 +594,7 @@ export async function getReceivablesByClient(
   // 1. SALDO INICIAL: Lançamentos ANTES do período
   // =====================================================
   const { data: priorEntries, error: priorError } = await supabase
-    .from("accounting_entry_lines")
+    .from("accounting_entry_items")
     .select(`
       debit,
       credit,
@@ -610,7 +611,7 @@ export async function getReceivablesByClient(
   // 2. MOVIMENTOS DO PERÍODO: Lançamentos no período
   // =====================================================
   const { data: periodEntries, error: periodError } = await supabase
-    .from("accounting_entry_lines")
+    .from("accounting_entry_items")
     .select(`
       debit,
       credit,
@@ -781,7 +782,7 @@ export async function getReceivablesByClient(
  * Busca detalhes dos lançamentos de um cliente específico na conta Clientes a Receber
  * Para exibir o extrato/razão do cliente
  *
- * FONTE DA VERDADE PURA: Busca diretamente dos accounting_entries + accounting_entry_lines
+ * FONTE DA VERDADE PURA: Busca diretamente dos accounting_entries + accounting_entry_items
  * O clientId aqui é o NOME do cliente (extraído da descrição do lançamento)
  */
 export async function getClientReceivablesDetail(
@@ -818,7 +819,7 @@ export async function getClientReceivablesDetail(
 
   // Buscar TODOS os lançamentos na conta Clientes a Receber até o período
   const { data: entries, error } = await supabase
-    .from("accounting_entry_lines")
+    .from("accounting_entry_items")
     .select(`
       debit,
       credit,
@@ -971,12 +972,12 @@ export async function getExpenses(
 
   // Buscar lançamentos de despesas no período
   const { data: periodEntries, error: entriesError } = await supabase
-    .from("accounting_entry_lines")
+    .from("accounting_entry_items")
     .select(`
       id,
       debit,
       credit,
-      description,
+      history,
       account_id,
       accounting_entries!inner(
         id,
@@ -1019,7 +1020,7 @@ export async function getExpenses(
     return {
       id: e.id,
       date: e.accounting_entries.entry_date,
-      description: e.description || e.accounting_entries.description,
+      description: e.history || e.accounting_entries.description,
       amount: Number(e.debit || 0),
       accountCode: account?.code || "",
       accountName: account?.name || "Conta não encontrada",
@@ -1142,7 +1143,7 @@ export async function getAccountsPayable(
 
   // Buscar TODOS os lançamentos nas contas de passivo até o período
   const { data: allEntries, error: entriesError } = await supabase
-    .from("accounting_entry_lines")
+    .from("accounting_entry_items")
     .select(`
       id,
       debit,

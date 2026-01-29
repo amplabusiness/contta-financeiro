@@ -349,13 +349,33 @@ const Clients = () => {
     const action = newStatus ? "ativado" : "suspenso";
 
     try {
+      // Quando suspender, registrar data de fim do contrato
+      // Quando ativar, limpar data de fim
+      const updateData: any = {
+        is_active: newStatus,
+        status: newStatus ? 'active' : 'inactive'
+      };
+
+      // Se está suspendendo, registrar data de fim do contrato
+      if (!newStatus) {
+        updateData.contract_end_date = new Date().toISOString().split('T')[0];
+      } else {
+        // Se está reativando, limpar data de fim
+        updateData.contract_end_date = null;
+      }
+
       const { error } = await supabase
         .from("clients")
-        .update({ is_active: newStatus })
+        .update(updateData)
         .eq("id", client.id);
 
       if (error) throw new Error(getErrorMessage(error));
-      toast.success(`Cliente ${action} com sucesso!`);
+
+      toast.success(`Cliente ${action} com sucesso!`, {
+        description: !newStatus
+          ? "Data de fim do contrato registrada. Não serão gerados novos honorários."
+          : "Cliente reativado e pronto para gerar novos honorários."
+      });
       loadClients();
     } catch (error: any) {
       toast.error("Erro ao atualizar status do cliente: " + getErrorMessage(error));

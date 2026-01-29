@@ -119,6 +119,7 @@ import AIWorkspace from "./pages/AIWorkspace";
 import CodeEditor from "./pages/CodeEditor";
 import NotFound from "./pages/NotFound";
 import InadimplenciaDashboard from "./pages/InadimplenciaDashboard";
+import AgingReport from "./pages/AgingReport";
 import DREAnalytics from "./pages/DREAnalytics";
 import RazaoContabil from "./pages/RazaoContabil";
 import BalanceteVerificacao from "./pages/BalanceteVerificacao";
@@ -177,6 +178,7 @@ const appRoutes = [
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/debt-negotiation", element: <DebtNegotiation /> },
   { path: "/default-analysis", element: <DefaultAnalysis /> },
+  { path: "/aging-report", element: <AgingReport /> },
   { path: "/dre", element: <DRE /> },
   { path: "/dre-analytics", element: <DREAnalytics /> },
   { path: "/economic-group-analysis", element: <EconomicGroupAnalysis /> },
@@ -315,6 +317,7 @@ const App = () => (
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/cash-flow-projections" element={<CashFlowProjections />} />
             <Route path="/default-analysis" element={<DefaultAnalysis />} />
+            <Route path="/aging-report" element={<AgingReport />} />
             <Route path="/import-default-report" element={<ImportDefaultReport />} />
             <Route path="/ai-insights" element={<AIInsights />} />
             <Route path="/ai-accountant" element={<AIAccountant />} />

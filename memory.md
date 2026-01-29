@@ -224,6 +224,32 @@ O sistema suporta múltiplos escritórios contábeis (tenants). Cada escritório
 
 ---
 
+## REGRAS DE CLASSIFICAÇÃO - DESPESAS PESSOAIS vs EMPRESA
+
+### ENERGIA ELÉTRICA
+- **ENERGISA** = Lago das Brisas (pessoal) → Adiantamento Família (1.1.3.04.99)
+- **EQUATORIAL** = Verificar endereço:
+  - Rua 27 Setor Marista = Residência Sérgio → Adiantamento (1.1.3.04.01)
+  - Sede da Ampla = Despesa Operacional → Energia (4.1.2.02)
+
+### CONDOMÍNIOS (Todos são de Sérgio Carneiro Leão)
+- **MUNDI CONSCIENTE** = Edifício Mundi → Adiantamento Sérgio (1.1.3.04.01)
+- **CONDOMINIO DA GAL** = Residência → Adiantamento Sérgio (1.1.3.04.01)
+- Inclui parcela mensal E rateio extra
+
+### CRC (Conselho Regional de Contabilidade)
+- Anuidades de **Carla** e **Sérgio** = Despesa da Ampla (4.1.4.04)
+- Motivo: Ambos são responsáveis técnicos da empresa
+
+### CONTRAPARTIDA DAS DESPESAS (OFX)
+Todas as despesas vindas do extrato bancário têm contrapartida no Banco:
+```
+D: 4.x.x.xx (Despesa) ou 1.1.3.04.xx (Adiantamento)
+C: 1.1.1.05 (Banco Sicredi)
+```
+
+---
+
 ## REGRAS DE CLASSIFICAÇÃO
 
 ### 1. Recebimento de Honorários
@@ -249,14 +275,44 @@ Centro de custo: Nome do sócio
 **IMPORTANTE:** Despesas pessoais NUNCA são despesa (4.x), sempre Adiantamento (1.1.3.x)
 
 ### 4. Folha de Pagamento
+
+**DATAS DE PAGAMENTO:**
+- **Adiantamento salarial:** Dia 14 ou 15 do mês
+- **Pagamento de salários:** Dia 29 ou 30 do mês
+- **Terceirizados/PJ:** Dia 10 de cada mês
+
+**FUNCIONÁRIOS AMPLA (CLT):**
+- JOSIMAR DOS SANTOS MOTA (também faz pequenas compras/despesas para empresa - reembolso)
+- ROSEMEIRE RODRIGUES
+- TAYLANE BELLE
+- LILIAN MOREIRA
+- FABIANA MARIA
+- DEUZA RESENDE
+- THAYNARA CONCEICAO
+
+**TERCEIRIZADOS (PJ - pago dia 10):**
+- DANIEL RODRIGUES RIBEIRO (CNPJ: 41787134000181)
+- FABRICIO SOARES
+- ANDREA FERREIRA
+- CORACI ALINE
+- ALEXSSANDRA FERREIRA
+- ANDREA LEONE
+
+**REGRA DE PROVISIONAMENTO:**
+Se há provisão de salários, deve fazer baixa no pagamento.
+
 ```
-Provisionamento:
-D: 4.1.2.01 (Salários)
+Provisionamento (Regime Competência):
+D: 4.1.1.01 (Salários e Ordenados)
 C: 2.1.1.01 (Salários a Pagar)
 
-Pagamento:
+Pagamento (Baixa da Provisão):
 D: 2.1.1.01 (Salários a Pagar)
-C: 1.1.1.05 (Banco)
+C: 1.1.1.05 (Banco Sicredi)
+
+SEM Provisionamento (Regime Caixa):
+D: 4.1.1.01 (Salários e Ordenados)
+C: 1.1.1.05 (Banco Sicredi)
 ```
 
 ---
@@ -1264,8 +1320,18 @@ RETURNS TABLE (
 ## ÚLTIMA ATUALIZAÇÃO
 - **Data:** 11/01/2026
 - **Por:** Claude Code + Dr. Cícero
-- **Versão:** 5.1
+- **Versão:** 5.4
 - **Alterações:**
+  - **PAGINAÇÃO CORRIGIDA**: DRE.tsx, Balancete.tsx e CashFlowStatement.tsx agora buscam TODOS os registros
+  - **PROBLEMA IDENTIFICADO**: Supabase limita queries a 1.000 registros por padrão
+  - **TOTAL REGISTROS**: 11.264 entries + 20.922 linhas contábeis
+  - **ANÁLISE COMPLETA**: R$ 5.663.252,28 Receitas / R$ 2.018.450,98 Despesas / R$ 3.644.801,30 Resultado
+  - **SCRIPTS DIAGNÓSTICO**: analise_completa.mjs, verificar_integridade.mjs, check_source_types.mjs
+  - **DESMEMBRAMENTO COB**: 1.000 lançamentos individuais criados para 2025 (R$ 1.205.397,65)
+  - **SCRIPTS AUTOMÁTICOS**: gerar_lancamentos_todos_meses.mjs, processar_novos_boletos.mjs
+  - **RAZÃO DO BANCO**: Agora mostra nome do cliente ao invés de "LIQ.COBRANCA SIMPLES"
+  - **ESTRUTURA ARQUIVOS BANCÁRIOS**: Documentação completa da pasta banco/ e baixa_clientes/
+  - **CÓDIGO COB**: Explicação da vinculação entre extrato OFX e relatório de baixas
   - **DRE ANALYTICS**: Novo DRE com análise vertical e comparativo de 3+ meses
   - **RAZÃO CONTÁBIL**: Nova página do Livro Razão com navegação por contas
   - **BALANCETE VERIFICAÇÃO**: Balancete de 6 colunas com verificação de partidas dobradas
@@ -1299,6 +1365,244 @@ RETURNS TABLE (
   - Grupos Econômicos por sócios em comum (client_partners)
   - 80+ migrations para classificação Jan/2025
   - Edge functions para IA e processamento de CSV
+
+---
+
+## ESTRUTURA DE ARQUIVOS BANCÁRIOS (PASTA banco/)
+
+### Problema: Extrato Bancário Consolidado
+O banco Sicredi (748) faz **depósitos consolidados** na conta corrente. Ou seja, quando vários clientes pagam boletos no mesmo dia, o banco deposita um valor único (ex: R$ 20.000,00) com descrição genérica:
+```
+LIQ.COBRANCA SIMPLES-COB000002
+```
+O extrato OFX **NÃO informa quais clientes** compõem esse valor consolidado.
+
+### Solução: Relatório de Baixa de Clientes
+Para identificar quais clientes pagaram, é necessário usar o **relatório de baixa de boletos** do Sicredi, disponível na pasta `banco/baixa_clientes/`.
+
+### Estrutura dos Arquivos
+
+#### 1. Extratos Bancários (OFX)
+**Localização:** `banco/*.ofx`
+**Arquivos:** `jan 2025.ofx`, `fev 2025.ofx`, `mar 2025.ofx`, etc.
+**Estrutura:**
+```xml
+<STMTTRN>
+  <TRNTYPE>CREDIT</TRNTYPE>
+  <DTPOSTED>20250203</DTPOSTED>
+  <TRNAMT>5092.01</TRNAMT>
+  <FITID>16692843014</FITID>
+  <MEMO>LIQ.COBRANCA SIMPLES-COB000002</MEMO>  <!-- Código COB agrupa pagamentos -->
+</STMTTRN>
+```
+
+#### 2. Relatório de Baixa de Clientes (CSV)
+**Localização:** `banco/baixa_clientes/*.csv` e `banco/clientes de boleto *.csv`
+**Arquivos:** Por mês (fevereiro, março, abril, etc.)
+**Estrutura CSV:**
+```csv
+Documento;N do boleto;Pagador;Data Vencimento;Data Liquidação;valor boleto;valor recebido;data do extrato
+COB000002;25/200076-6;MARO - AGROPECUARIA E PARTICIPACOES S/A;05/02/2025;31/01/2025;R$ 2.897,90;R$ 2.897,90;03/02/2025
+COB000002;25/200083-9;MUNDIM SA E GUIMARAES ADVOGADOS ASSOCIAD;05/02/2025;31/01/2025;R$ 2.194,11;R$ 2.194,11;03/02/2025
+```
+
+### Campos do Relatório de Baixa
+| Campo | Descrição |
+|-------|-----------|
+| **Documento** | Código COB (COB000002, COB000009, etc.) - vincula ao extrato |
+| **N do boleto** | Nosso Número do boleto (25/200076-6) |
+| **Pagador** | Nome do cliente que pagou |
+| **Data Vencimento** | Vencimento original do boleto |
+| **Data Liquidação** | Data que o cliente efetivamente pagou |
+| **valor boleto** | Valor original do boleto |
+| **valor recebido** | Valor efetivamente recebido (pode ter juros/multa) |
+| **data do extrato** | Data que aparece no extrato bancário |
+
+### Fluxo de Conciliação
+```
+1. Importar extrato OFX → bank_transactions
+2. Identificar transações "LIQ.COBRANCA SIMPLES-COBxxxxxx"
+3. Buscar no CSV de baixas todos os pagamentos com mesmo COBxxxxxx
+4. Vincular cada pagamento ao cliente correto
+5. Gerar lançamentos contábeis individuais por cliente
+```
+
+### Código COB - Chave de Vinculação
+O código **COBxxxxxx** é a chave que vincula:
+- **Extrato OFX:** `MEMO` contém `COB000002`
+- **CSV Baixas:** Campo `Documento` = `COB000002`
+
+Exemplo: `COB000002` no extrato com R$ 5.092,01 é composto por:
+- FAZENDA DA TOCA: R$ 2.182,01
+- GEANINNE AGROPECUARIA: R$ 363,15
+- (outros clientes até totalizar R$ 5.092,01)
+
+### Arquivos Disponíveis
+
+**Extratos OFX (pasta banco/):**
+- jan 2025.ofx, fev 2025.ofx, mar 2025.ofx, abr 2025.ofx
+- mai 2025.ofx, jun 2025.ofx, jul 2025.ofx, ago 2025.ofx
+- set 2025.ofx, out e nov 2025.ofx, extrato (2) dez.ofx
+
+**Baixas de Clientes (pasta banco/baixa_clientes/):**
+- clientes de boleto março 2.csv, clientes de boleto abril 2.csv
+- clientes de boleto maio 2.csv, clientes de boleto junho 2.csv
+- boletos clientes julho 2.csv, clientes de boleto agosto 2.csv
+- boletos clientes setembro 2.csv, clientes de boleto out 2.csv
+- clientes de boleto nov 2.csv, clientes boletos dez 2.csv
+
+**Baixas de Clientes (pasta banco/):**
+- clientes boletos jan.csv, clientes de boleto fev.csv
+
+### Tabela boleto_payments
+Os dados de baixa são importados para a tabela `boleto_payments`:
+```sql
+boleto_payments (
+  cob VARCHAR(20),           -- Código COB (vincula ao extrato)
+  nosso_numero VARCHAR(50),  -- Nosso número do boleto
+  client_id UUID,            -- Cliente que pagou
+  invoice_id UUID,           -- Fatura vinculada
+  data_vencimento DATE,
+  data_liquidacao DATE,      -- Data do pagamento
+  valor_original DECIMAL,
+  valor_liquidado DECIMAL,
+  juros, multa, desconto
+)
+```
+
+---
+
+## DESMEMBRAMENTO DE COB - LANÇAMENTOS INDIVIDUAIS (11/01/2026)
+
+### Problema Resolvido
+O Sicredi fazia depósitos consolidados (ex: R$ 20.000) sem identificar os clientes.
+No Razão do Banco aparecia apenas: `LIQ.COBRANCA SIMPLES-COB000009 R$ 20.000`
+
+### Solução Implementada
+Scripts que leem os CSVs de baixa e geram **lançamentos individuais por cliente**:
+```
+Antes:  LIQ.COBRANCA SIMPLES-COB000009       R$ 20.000,00
+Depois: Recebimento CLIENTE A - COB000009   R$  5.000,00
+        Recebimento CLIENTE B - COB000009   R$  8.000,00
+        Recebimento CLIENTE C - COB000009   R$  7.000,00
+```
+
+### Resultado da Execução (11/01/2026)
+- **1.000 lançamentos** criados para 2025
+- **R$ 1.205.397,65** em recebimentos identificados por cliente
+- Cada lançamento com nome do pagador extraído do CSV
+
+### Scripts Disponíveis
+
+#### 1. gerar_lancamentos_todos_meses.mjs
+Processa TODOS os boletos de um ano e gera lançamentos.
+```bash
+# Simulação
+node scripts/gerar_lancamentos_todos_meses.mjs
+
+# Execução real
+node scripts/gerar_lancamentos_todos_meses.mjs --execute
+```
+
+#### 2. processar_novos_boletos.mjs
+Processa apenas boletos NOVOS (não duplica existentes).
+```bash
+# Simulação
+node scripts/processar_novos_boletos.mjs
+
+# Execução real
+node scripts/processar_novos_boletos.mjs --execute
+
+# Apenas um mês específico
+node scripts/processar_novos_boletos.mjs --execute --mes 1
+```
+
+#### 3. gerar_lancamentos_boletos_v2.mjs
+Processa boletos de um mês específico.
+```bash
+node scripts/gerar_lancamentos_boletos_v2.mjs --mes 2 --execute
+```
+
+### Fluxo Automático para Novos Meses
+1. Baixar CSV de boletos liquidados do Sicredi
+2. Salvar em `banco/` ou `banco/baixa_clientes/`
+3. Executar: `node scripts/processar_novos_boletos.mjs --execute`
+4. Lançamentos criados automaticamente com nome do cliente
+
+### Estrutura dos Lançamentos Gerados
+```
+accounting_entries:
+  entry_type: 'recebimento'
+  source_type: 'boleto_sicredi'
+  description: 'Recebimento NOME_CLIENTE - COBxxxxxx'
+
+accounting_entry_lines:
+  D: 1.1.1.05 (Banco Sicredi)     - valor
+  C: 1.1.2.01 (Clientes a Receber) - valor
+```
+
+### Verificação
+```bash
+# Ver lançamentos criados
+node -e "
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+dotenv.config();
+const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { count } = await supabase.from('accounting_entries').select('*', { count: 'exact', head: true }).eq('source_type', 'boleto_sicredi');
+console.log('Lançamentos boleto_sicredi:', count);
+"
+```
+
+---
+
+## SALDO DE ABERTURA - SCRIPT 33 (OBRIGATÓRIO) - 11/01/2026
+
+### REGRA FUNDAMENTAL
+> **NUNCA usar conta sintética 1.1.2.01 para lançamentos de saldo de abertura!**
+> Sempre usar contas ANALÍTICAS (1.1.2.01.xxxx) específicas de cada cliente.
+
+### Problema Corrigido
+Os triggers antigos (`trg_blindagem_saldo_abertura` e `trg_auto_accounting_opening_balance`) estavam criando lançamentos diretamente na conta **sintética** 1.1.2.01, violando a NBC TG 26.
+
+**Triggers Desabilitados (migration 20260111200000):**
+- `trg_blindagem_saldo_abertura`
+- `trg_auto_accounting_opening_balance`
+
+### Script Obrigatório para Saldo de Abertura
+**Arquivo:** `scripts/correcao_contabil/33_lancamentos_saldo_abertura.cjs`
+
+**Usar sempre este script para criar lançamentos de saldo de abertura:**
+```bash
+node scripts/correcao_contabil/33_lancamentos_saldo_abertura.cjs
+```
+
+**O que o script faz:**
+1. Busca saldos pendentes na tabela `client_opening_balance`
+2. Para cada saldo, busca a conta **analítica** do cliente (1.1.2.01.xxxx)
+3. Cria lançamento contábil correto:
+   - **Débito:** 1.1.2.01.xxxx (conta analítica do cliente)
+   - **Crédito:** 5.2.1.01 (Lucros Acumulados)
+4. Verifica equação contábil ao final
+
+### Contrapartida Correta
+| Errado | Correto |
+|--------|---------|
+| 5.3.02.02 (Saldo de Abertura) | **5.2.1.01 (Lucros Acumulados)** |
+| 3.x.x.xx (Receitas) | **5.2.1.01 (Lucros Acumulados)** |
+
+### Scripts Relacionados (pasta scripts/correcao_contabil/)
+| Script | Descrição |
+|--------|-----------|
+| 33_lancamentos_saldo_abertura.cjs | Cria lançamentos de saldo de abertura |
+| 35_deletar_lancamentos_conta_sintetica.cjs | Remove lançamentos da conta sintética |
+| 36_deletar_lancamentos_trigger_blindagem.cjs | Remove lançamentos do trigger incorreto |
+
+### Verificação
+Após criar lançamentos, verificar:
+1. **Conta 1.1.2.01 deve ter 0 linhas** (sintética não recebe lançamentos)
+2. **Equação balanceada:** Débitos = Créditos
+3. **Contas analíticas com saldo:** 1.1.2.01.xxxx
 
 ---
 

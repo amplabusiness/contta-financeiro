@@ -1,0 +1,202 @@
+{
+  "data_backup": "2026-01-29T11:11:31.086Z",
+  "autorizado_por": "Dr. Cícero",
+  "motivo": "Correção de lançamentos OFX - Transitória errada",
+  "lancamentos": [
+    {
+      "id": "811d6bd0-2d0d-40b9-81ea-9bd7495c2016",
+      "date": "2025-01-21",
+      "description": "PIX ACTION",
+      "internal_code": "PIX_CLASS_ACTION_74761",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 74761.78,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "5e8838af-6d99-4874-8572-b3d8c0b692a0",
+      "date": "2025-01-14",
+      "description": "PIX ACTION",
+      "internal_code": "PIX_CLASS_ACTION_70046",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 70046.9,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "c73d441b-c7eb-4212-8750-0054d0c9239e",
+      "date": "2025-01-10",
+      "description": "PIX G3",
+      "internal_code": "PIX_CLASS_G3_31253",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 31253.06,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "ab2901ae-8f04-40cf-bcd3-01e5b6e088ce",
+      "date": "2025-01-03",
+      "description": "PIX ESSER",
+      "internal_code": "PIX_CLASS_ESSER_8000",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 8000,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "4d7a0961-220d-4006-a86e-5bd93a3e694a",
+      "date": "2025-01-13",
+      "description": "PIX ESSER",
+      "internal_code": "PIX_CLASS_ESSER_2000",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 2000,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "bde213ea-8811-4e08-acfc-e442cedffd42",
+      "date": "2025-01-20",
+      "description": "PIX ESSER",
+      "internal_code": "PIX_CLASS_ESSER_2000_2",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 2000,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "b21c0b9b-a1d8-4939-ac7e-b829c1b80e52",
+      "date": "2025-01-23",
+      "description": "PIX FABY",
+      "internal_code": "PIX_CLASS_FABY_1461",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 1461.19,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "ff163bab-047f-4fb9-bfdd-4859624081da",
+      "date": "2025-01-14",
+      "description": "PIX FABY",
+      "internal_code": "PIX_CLASS_FABY_1206",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 1206,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "eb7e247c-ee08-429a-b058-35c65dd67136",
+      "date": "2025-01-06",
+      "description": "PIX AI",
+      "internal_code": "PIX_CLASS_AI_375_01",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 375,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "c8516515-d741-49bd-938b-2dd8f949a808",
+      "date": "2025-01-27",
+      "description": "PIX AI",
+      "internal_code": "PIX_CLASS_AI_375_04",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 375,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "a86685c6-b6cc-494a-a3d4-b97f53b88e68",
+      "date": "2025-01-09",
+      "description": "PIX SERGIO",
+      "internal_code": "PIX_CLASS_SERGIOFILHO_650",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 650,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "e2e10109-47c5-4a47-84c4-31456030581e",
+      "date": "2025-01-13",
+      "description": "PIX AI",
+      "internal_code": "PIX_CLASS_AI_375_02",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 375,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "7e432635-c14b-4a01-bcf0-28e994edba13",
+      "date": "2025-01-20",
+      "description": "PIX AI",
+      "internal_code": "PIX_CLASS_AI_375_03",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 375,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "8550e9c1-68d0-4d1a-8bd3-e6680c399443",
+      "date": "2025-01-27",
+      "description": "PIX PAULA",
+      "internal_code": "PIX_CLASS_PAULA_200",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 200,
+          "credit": 0
+        }
+      ]
+    },
+    {
+      "id": "f7fb2a3d-f451-4102-a21e-1a92db5cd21c",
+      "date": "2025-01-20",
+      "description": "PIX TAYLANE",
+      "internal_code": "PIX_CLASS_TAYLANE_6",
+      "entry_type": "NORMAL",
+      "lines": [
+        {
+          "debit": 6.03,
+          "credit": 0
+        }
+      ]
+    }
+  ]
+}

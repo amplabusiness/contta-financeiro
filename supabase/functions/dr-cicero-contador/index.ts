@@ -112,6 +112,47 @@ DESPESAS DA EMPRESA (Centro de Custo: Empresa/Sede):
 === OBJETIVO ===
 Separar corretamente o que é DESPESA DA EMPRESA do que é MOVIMENTAÇÃO PARTICULAR DOS SÓCIOS
 para não distorcer o resultado contábil da Ampla Contabilidade.
+
+=== FOLHA DE PAGAMENTO - REGIME DE COMPETÊNCIA (NBC TG 26) ===
+
+FUNCIONÁRIOS CLT DA AMPLA:
+- JOSIMAR DOS SANTOS MOTA (também faz pequenas compras/reembolso)
+- ROSEMEIRE RODRIGUES
+- TAYLANE BELLE FERREIRA SARAIVA
+- LILIAN MOREIRA DA COSTA
+- FABIANA MARIA DA SILVA MENDONÇA
+- DEUZA RESENDE DE JESUS
+- THAYNARA CONCEIÇÃO DE MELO
+
+TERCEIRIZADOS (PJ - pago dia 10):
+- DANIEL RODRIGUES RIBEIRO (CNPJ: 41787134000181)
+- FABRICIO SOARES
+- ANDREA FERREIRA / ANDREA LEONE
+- CORACI ALINE
+- ALEXSSANDRA FERREIRA
+
+DATAS DE PAGAMENTO:
+- Adiantamento salarial: Dia 14/15 do mês
+- Pagamento de salários: Dia 29/30 do mês
+- Terceirizados PJ: Dia 10 de cada mês
+
+REGIME DE COMPETÊNCIA (OBRIGATÓRIO):
+1. PROVISIONAMENTO (último dia do mês trabalhado):
+   D: 4.1.1.01 (Salários e Ordenados) → Despesa entra no mês correto
+   C: 2.1.1.01 (Salários a Pagar)    → Passivo fica registrado
+
+2. PAGAMENTO (quando efetua o PIX/transferência):
+   D: 2.1.1.01 (Salários a Pagar)    → Baixa do passivo
+   C: 1.1.1.05 (Banco Sicredi)       → Saída do caixa
+
+⚠️ IMPORTANTE: Quando identificar pagamento a funcionário CLT pelo extrato,
+   verificar se há provisão. Se houver, fazer BAIXA DO PASSIVO (2.1.1.01).
+   Se não houver provisão, criar lançamento de regime de caixa (despesa + banco).
+
+JOSIMAR - CASO ESPECIAL:
+- Funcionário CLT que também faz compras pequenas para a empresa
+- Valores BAIXOS (< R$ 200) podem ser reembolsos de despesas
+- Perguntar ao usuário quando identificar pagamento a Josimar
 `;
 
 // Plano de contas resumido para contexto
@@ -122,6 +163,7 @@ ATIVO (1):
 - 1.1.2.01 Clientes a Receber - SINTÉTICA (NUNCA lançar direto!)
 - 1.1.2.01.xxxx Contas analíticas dos clientes (usar estas!)
 - 1.1.9.01 Recebimentos a Conciliar (transitória para OFX/cobranças)
+- 1.1.9.99 Valores Pendentes de Classificação (NOVA - entradas não classificadas)
 - 1.1.3.01 Adiantamento a Sócios - Sérgio Carneiro Leão
 - 1.1.3.02 Adiantamento a Sócios - Carla Leão
 - 1.1.3.03 Adiantamento a Sócios - Sérgio Augusto
@@ -132,8 +174,18 @@ ATIVO (1):
 
 PASSIVO (2):
 - 2.1.1.01 Fornecedores a Pagar
-- 2.1.2 Obrigações Trabalhistas
-- 2.1.3 Obrigações Tributárias
+- 2.1.2 Obrigações Trabalhistas - SINTÉTICA
+- 2.1.2.01 Salários a Pagar (provisionamento folha CLT)
+- 2.1.2.02 FGTS a Recolher
+- 2.1.2.03 INSS a Recolher
+- 2.1.2.04 Férias a Pagar
+- 2.1.2.05 13º Salário a Pagar
+- 2.1.2.06 Terceirizados a Pagar (PJ/MEI)
+- 2.1.3 Obrigações Tributárias - SINTÉTICA
+- 2.1.3.01 ISS a Recolher
+- 2.1.3.02 IRRF a Recolher
+- 2.1.3.03 Simples Nacional a Pagar
+- 2.1.9.99 Saídas Pendentes de Classificação (NOVA - saídas não classificadas)
 
 RECEITAS (3):
 - 3.1.1.01 Honorários Contábeis
@@ -151,12 +203,32 @@ DESPESAS (4):
 - 4.1.2.05 Serviços de Terceiros
 - 4.1.2.06 Manutenção Sede
 - 4.1.3.01 Juros e Multas
-- 4.1.3.02 Tarifas Bancárias
+- 4.1.3.02 Tarifas Bancárias - SINTÉTICA (não usar!)
+- 4.1.3.02.01 Manutenção de Títulos (títulos > 3 meses sem quitar)
+- 4.1.3.02.02 Tarifa Liquidação Cobrança (gerar boleto)
+- 4.1.3.02.03 Cesta de Relacionamento (tarifa mensal banco)
+- 4.1.3.02.99 Outras Tarifas Bancárias
+
+⚠️ REGRA FUNDAMENTAL - CONTAS SINTÉTICAS:
+- Contas sintéticas são TOTALIZADORAS (ex: 4.1.3.02, 1.1.2.01)
+- NUNCA usar contas sintéticas para lançamentos!
+- SEMPRE usar contas ANALÍTICAS (ex: 4.1.3.02.01, 1.1.2.01.0001)
+- Contas sintéticas = RESULTADO automático da soma das filhas
 
 PATRIMÔNIO LÍQUIDO (5):
 - 5.1.1.01 Capital Social
-- 5.2.1.01 Lucros Acumulados
+- 5.2.1.01 Lucros Acumulados (CONTRAPARTIDA CORRETA para saldo de abertura!)
 - 5.2.1.02 Saldos de Abertura (ajustes de exercícios anteriores)
+
+=== SALDO DE ABERTURA DE CLIENTES ===
+IMPORTANTE: Para criar lançamentos de saldo de abertura de clientes, usar:
+  - Script: scripts/correcao_contabil/33_lancamentos_saldo_abertura.cjs
+  - DÉBITO: 1.1.2.01.xxxx (conta ANALÍTICA do cliente, nunca a sintética!)
+  - CRÉDITO: 5.2.1.01 (Lucros Acumulados)
+  - NUNCA usar 5.3.02.02 ou contas de resultado como contrapartida!
+
+Os triggers automáticos (trg_blindagem_saldo_abertura) foram DESABILITADOS
+porque criavam lançamentos na conta sintética 1.1.2.01 incorretamente.
 
 CENTROS DE CUSTO:
 - EMPRESA/SEDE - Despesas operacionais da Ampla Contabilidade
@@ -168,6 +240,39 @@ CENTROS DE CUSTO:
 - NAYARA - Adiantamentos/despesas (inclui babá)
 - SÍTIO - Despesas do sítio de lazer
 - CASAS PARTICULARES - Manutenção residências dos sócios
+
+=== FLUXO DE CONCILIAÇÃO BANCÁRIA (ATUALIZADO 28/01/2026) ===
+
+⚠️ REGRA CRÍTICA: Transações bancárias SÓ geram lançamentos contábeis APÓS classificação!
+
+FLUXO CORRETO:
+1. Import OFX → Cria bank_transaction (SEM entry contábil!)
+2. Transação fica 'pending' aguardando classificação
+3. Usuário acessa SUPER CONCILIADOR (/super-conciliation)
+4. Usuário seleciona rubrica/conta para cada transação
+5. Sistema chama fn_classificar_transacao_bancaria()
+6. Entry contábil COMPLETO criado (SEMPRE 2 items - partida dobrada)
+7. Transação marcada como 'reconciled'
+
+CONTAS TRANSITÓRIAS PARA PENDÊNCIAS:
+- 1.1.9.99 Valores Pendentes de Classificação (entradas não classificadas)
+- 2.1.9.99 Saídas Pendentes de Classificação (saídas não classificadas)
+
+FUNÇÃO DE CLASSIFICAÇÃO:
+fn_classificar_transacao_bancaria(p_transaction_id, p_rubrica_id, p_account_id)
+- Cria entry completo com 2 items
+- Garante partida dobrada (D = C)
+- NUNCA cria entry com apenas 1 item
+
+❌ PROIBIDO:
+- Criar entry no momento do import OFX
+- Criar entry com apenas 1 item (desbalanceado)
+- Usar conta 4.1.9.99 (sintética) para classificação
+
+✅ CORRETO:
+- Aguardar classificação no Super Conciliador
+- Usar contas ANALÍTICAS (4.1.x.xx.xx)
+- Entry sempre com 2 items balanceados
 `;
 
 interface Transaction {
@@ -991,18 +1096,51 @@ async function ruleBasedClassificationAsync(
     }
   } else {
     // Débitos (despesas)
-    // Tarifas bancárias
-    if (desc.includes('tarifa') || desc.includes('tar.') || desc.includes('ted') || desc.includes('doc')) {
+    // Tarifas bancárias - Classificação analítica por tipo
+    // IMPORTANTE: LIQ.COBRANCA NÃO é tarifa - é recebimento de cliente!
+    if (!desc.includes('liq.cobranca') && !desc.includes('liq cobranca') &&
+        (desc.includes('tarifa') || desc.includes('tar.') || desc.includes('manutencao de titulos') || desc.includes('cesta de relacionamento'))) {
+
+      // Classificar na conta analítica correta
+      let debitAccount = '4.1.3.02.99'; // Outras Tarifas Bancárias (fallback)
+      let debitAccountName = 'Outras Tarifas Bancárias';
+
+      if (desc.includes('manutencao de titulos')) {
+        debitAccount = '4.1.3.02.01';
+        debitAccountName = 'Manutenção de Títulos';
+      } else if (desc.includes('tarifa com r liquidacao') || desc.includes('tarifa liquidacao')) {
+        debitAccount = '4.1.3.02.02';
+        debitAccountName = 'Tarifa Liquidação Cobrança';
+      } else if (desc.includes('cesta de relacionamento')) {
+        debitAccount = '4.1.3.02.03';
+        debitAccountName = 'Cesta de Relacionamento';
+      }
+
       return {
         confidence: 0.95,
-        debit_account: '4.1.3.02',
-        debit_account_name: 'Tarifas Bancárias',
-        credit_account: '1.1.1.02',
-        credit_account_name: 'Banco Sicredi C/C',
-        entry_type: 'despesa_bancaria',
-        description: `Tarifa bancária: ${transaction.description}`,
+        debit_account: debitAccount,
+        debit_account_name: debitAccountName,
+        credit_account: '1.1.1.05',
+        credit_account_name: 'Banco Sicredi',
+        entry_type: 'DESPESA_BANCARIA',
+        description: `${debitAccountName}: ${transaction.description}`,
         needs_confirmation: false,
-        reasoning: 'Identificado como tarifa bancária pela descrição.',
+        reasoning: `Identificado como ${debitAccountName} pela descrição.`,
+      };
+    }
+
+    // TED/DOC são tarifas genéricas
+    if (desc.includes('ted') || desc.includes('doc')) {
+      return {
+        confidence: 0.90,
+        debit_account: '4.1.3.02.99',
+        debit_account_name: 'Outras Tarifas Bancárias',
+        credit_account: '1.1.1.05',
+        credit_account_name: 'Banco Sicredi',
+        entry_type: 'DESPESA_BANCARIA',
+        description: `Tarifa TED/DOC: ${transaction.description}`,
+        needs_confirmation: false,
+        reasoning: 'Identificado como tarifa de transferência (TED/DOC).',
       };
     }
 
@@ -1012,8 +1150,8 @@ async function ruleBasedClassificationAsync(
         confidence: 0.4,
         debit_account: '4.1.2.05',
         debit_account_name: 'Serviços de Terceiros',
-        credit_account: '1.1.1.02',
-        credit_account_name: 'Banco Sicredi C/C',
+        credit_account: '1.1.1.05',
+        credit_account_name: 'Banco Sicredi',
         entry_type: 'pagamento',
         description: `Transferência: ${transaction.description}`,
         needs_confirmation: true,

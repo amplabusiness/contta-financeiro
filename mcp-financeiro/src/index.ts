@@ -693,6 +693,40 @@ const TOOLS = [
       required: ["descricao"],
     },
   },
+  {
+    name: "classificar_transacao_bancaria",
+    description: "Classifica uma transação bancária e cria o lançamento contábil completo (partida dobrada). Usado pelo Super Conciliador para confirmar classificações.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        transaction_id: { type: "string", description: "ID da transação bancária (UUID)" },
+        rubrica_id: { type: "string", description: "ID da rubrica contábil para classificação (UUID)" },
+        account_id: { type: "string", description: "ID da conta contábil de destino (opcional, pode vir da rubrica)" },
+      },
+      required: ["transaction_id", "rubrica_id"],
+    },
+  },
+  {
+    name: "listar_transacoes_pendentes",
+    description: "Lista transações bancárias pendentes de classificação (sem rubrica_id ou sem lançamento contábil)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        competencia: { type: "string", description: "Competência no formato MM/YYYY" },
+        limite: { type: "number", description: "Quantidade máxima de resultados (padrão: 50)" },
+      },
+    },
+  },
+  {
+    name: "consultar_contas_transitorias",
+    description: "Consulta saldos das contas transitórias (valores pendentes de classificação)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        data_corte: { type: "string", description: "Data de corte para saldos (YYYY-MM-DD, padrão: hoje)" },
+      },
+    },
+  },
 
   // === DASHBOARD DE METAS / OKRs ===
   {
@@ -797,6 +831,95 @@ const TOOLS = [
         valor: { type: "number", description: "Valor recebido" },
       },
       required: ["descricao_pix"],
+    },
+  },
+
+  // === GUARDIÃO MCP - LANÇAMENTOS CONTÁBEIS ===
+  {
+    name: "validar_lancamento",
+    description: "GUARDIÃO: Valida um lançamento contábil ANTES de executar. Verifica: partida dobrada, contas sintéticas, idempotência.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        tipo: { type: "string", description: "Tipo do lançamento (receita_honorarios, recebimento, despesa, saldo_abertura, desmembramento)" },
+        linhas: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              conta_code: { type: "string", description: "Código da conta (ex: 1.1.2.01.0001)" },
+              debito: { type: "number", description: "Valor do débito" },
+              credito: { type: "number", description: "Valor do crédito" },
+            },
+            required: ["conta_code"],
+          },
+          description: "Linhas do lançamento (débitos e créditos)"
+        },
+        reference_id: { type: "string", description: "ID único para idempotência" },
+        reference_type: { type: "string", description: "Tipo da referência (honorarios, bank_transaction, etc)" },
+      },
+      required: ["tipo", "linhas"],
+    },
+  },
+  {
+    name: "criar_lancamento_contabil",
+    description: "GUARDIÃO: Cria um lançamento contábil COM VALIDAÇÃO. Rejeita automaticamente: contas sintéticas, desbalanceamento, duplicações.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        tipo: { type: "string", description: "Tipo do lançamento" },
+        data: { type: "string", description: "Data do lançamento (YYYY-MM-DD)" },
+        competencia: { type: "string", description: "Data de competência (YYYY-MM-DD)" },
+        descricao: { type: "string", description: "Descrição do lançamento" },
+        linhas: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              conta_code: { type: "string", description: "Código da conta" },
+              debito: { type: "number", description: "Valor do débito" },
+              credito: { type: "number", description: "Valor do crédito" },
+              historico: { type: "string", description: "Histórico da linha" },
+            },
+            required: ["conta_code"],
+          },
+        },
+        reference_id: { type: "string", description: "ID único para idempotência" },
+        reference_type: { type: "string", description: "Tipo da referência" },
+      },
+      required: ["tipo", "data", "descricao", "linhas"],
+    },
+  },
+  {
+    name: "gerar_honorarios_competencia",
+    description: "GUARDIÃO: Gera honorários para todos os clientes ativos de uma competência. Valida e cria lançamentos D-Cliente C-Receita.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        competencia: { type: "string", description: "Competência no formato YYYY-MM (ex: 2025-01)" },
+      },
+      required: ["competencia"],
+    },
+  },
+  {
+    name: "buscar_conta_cliente",
+    description: "GUARDIÃO: Busca ou cria conta analítica para um cliente (subcontas de 1.1.2.01)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        cliente_id: { type: "string", description: "ID do cliente" },
+        cliente_nome: { type: "string", description: "Nome do cliente (se não tiver ID)" },
+      },
+    },
+  },
+  {
+    name: "verificar_integridade",
+    description: "GUARDIÃO: Executa diagnóstico completo de integridade contábil",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        competencia: { type: "string", description: "Competência específica (opcional)" },
+      },
     },
   },
 ];
@@ -1792,6 +1915,169 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
       };
     }
 
+    case "classificar_transacao_bancaria": {
+      const transactionId = args.transaction_id as string;
+      const rubricaId = args.rubrica_id as string;
+      const accountId = args.account_id as string | undefined;
+
+      // Chamar a função do banco de dados
+      const { data, error } = await supabase.rpc("fn_classificar_transacao_bancaria", {
+        p_transaction_id: transactionId,
+        p_rubrica_id: rubricaId,
+        p_account_id: accountId || null,
+      });
+
+      if (error) {
+        return {
+          success: false,
+          error: error.message,
+          detalhes: "Erro ao classificar transação bancária",
+        };
+      }
+
+      return {
+        success: data?.success ?? false,
+        entry_id: data?.entry_id,
+        debit_account: data?.debit_account,
+        credit_account: data?.credit_account,
+        amount: data?.amount ? formatCurrency(data.amount) : null,
+        error: data?.error,
+        mensagem: data?.success
+          ? "Transação classificada com sucesso! Lançamento contábil criado com partida dobrada."
+          : `Falha na classificação: ${data?.error}`,
+      };
+    }
+
+    case "listar_transacoes_pendentes": {
+      const competencia = args.competencia as string;
+      const limite = (args.limite as number) || 50;
+
+      let query = supabase
+        .from("bank_transactions")
+        .select(`
+          id,
+          transaction_date,
+          description,
+          amount,
+          status,
+          rubrica_id,
+          bank_account:bank_accounts(name)
+        `)
+        .is("rubrica_id", null)
+        .order("transaction_date", { ascending: false })
+        .limit(limite);
+
+      if (competencia) {
+        const { start, end } = getCompetenceRange(competencia);
+        query = query.gte("transaction_date", start).lte("transaction_date", end);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      // Separar entradas e saídas
+      const entradas = (data || []).filter((t) => t.amount > 0);
+      const saidas = (data || []).filter((t) => t.amount < 0);
+
+      return {
+        total: data?.length || 0,
+        entradas: {
+          quantidade: entradas.length,
+          total: formatCurrency(entradas.reduce((s, t) => s + t.amount, 0)),
+          transacoes: entradas.map((t) => ({
+            id: t.id,
+            data: formatDate(t.transaction_date),
+            descricao: t.description?.substring(0, 60),
+            valor: formatCurrency(t.amount),
+            conta: (t.bank_account as any)?.name,
+          })),
+        },
+        saidas: {
+          quantidade: saidas.length,
+          total: formatCurrency(saidas.reduce((s, t) => s + Math.abs(t.amount), 0)),
+          transacoes: saidas.map((t) => ({
+            id: t.id,
+            data: formatDate(t.transaction_date),
+            descricao: t.description?.substring(0, 60),
+            valor: formatCurrency(t.amount),
+            conta: (t.bank_account as any)?.name,
+          })),
+        },
+        instrucoes: [
+          "Use 'classificar_transacao_bancaria' para classificar cada transação",
+          "Informe transaction_id e rubrica_id para criar o lançamento contábil",
+          "O sistema garante partida dobrada (débito = crédito)",
+        ],
+      };
+    }
+
+    case "consultar_contas_transitorias": {
+      const dataCorte = (args.data_corte as string) || format(new Date(), "yyyy-MM-dd");
+
+      // Contas transitórias: 1.1.9.99 (entradas) e 2.1.9.99 (saídas)
+      const { data: contas, error: contasError } = await supabase
+        .from("chart_of_accounts")
+        .select("id, code, name")
+        .in("code", ["1.1.9.99", "2.1.9.99"]);
+
+      if (contasError || !contas?.length) {
+        return {
+          success: false,
+          error: "Contas transitórias não encontradas",
+          instrucoes: [
+            "Execute a migration 20260128170000_fix_bank_transaction_workflow.sql",
+            "Isso criará as contas 1.1.9.99 e 2.1.9.99",
+          ],
+        };
+      }
+
+      const resultado: Record<string, any> = {};
+
+      for (const conta of contas) {
+        // Buscar saldo da conta transitória
+        const { data: items } = await supabase
+          .from("accounting_entry_items")
+          .select(`
+            debit,
+            credit,
+            entry:accounting_entries!inner(entry_date, is_draft)
+          `)
+          .eq("account_id", conta.id)
+          .eq("entry.is_draft", false)
+          .lte("entry.entry_date", dataCorte);
+
+        const totalDebitos = (items || []).reduce((s, i) => s + Number(i.debit || 0), 0);
+        const totalCreditos = (items || []).reduce((s, i) => s + Number(i.credit || 0), 0);
+
+        // Para conta de ativo (1.x), saldo = débitos - créditos
+        // Para conta de passivo (2.x), saldo = créditos - débitos
+        const saldo = conta.code.startsWith("1")
+          ? totalDebitos - totalCreditos
+          : totalCreditos - totalDebitos;
+
+        resultado[conta.code] = {
+          nome: conta.name,
+          debitos: formatCurrency(totalDebitos),
+          creditos: formatCurrency(totalCreditos),
+          saldo: formatCurrency(saldo),
+          status: Math.abs(saldo) < 0.01 ? "✅ Zerado" : "⚠️ Pendente classificação",
+        };
+      }
+
+      return {
+        data_corte: formatDate(dataCorte),
+        contas_transitorias: resultado,
+        instrucoes: [
+          "Saldos pendentes indicam transações aguardando classificação",
+          "Use o Super Conciliador para classificar as transações",
+          "Ou use 'listar_transacoes_pendentes' e 'classificar_transacao_bancaria'",
+        ],
+      };
+    }
+
     // === DASHBOARD DE METAS / OKRs ===
     case "metas_padrao_contabilidade": {
       const area = args.area as string;
@@ -2192,6 +2478,440 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
             valor: formatCurrency(t.amount),
             data: formatDate(t.transaction_date),
           })),
+      };
+    }
+
+    // === GUARDIÃO MCP - IMPLEMENTAÇÃO ===
+
+    case "validar_lancamento": {
+      const tipo = args.tipo as string;
+      const linhas = args.linhas as Array<{ conta_code: string; debito?: number; credito?: number }>;
+      const referenceId = args.reference_id as string | undefined;
+      const referenceType = args.reference_type as string | undefined;
+
+      const erros: string[] = [];
+      const avisos: string[] = [];
+
+      // Regra 1: Partida dobrada
+      const totalDebitos = linhas.reduce((s, l) => s + (l.debito || 0), 0);
+      const totalCreditos = linhas.reduce((s, l) => s + (l.credito || 0), 0);
+
+      if (Math.abs(totalDebitos - totalCreditos) > 0.01) {
+        erros.push(`BLOQUEADO: Débitos (${formatCurrency(totalDebitos)}) ≠ Créditos (${formatCurrency(totalCreditos)})`);
+      }
+
+      // Regra 2: Contas sintéticas
+      for (const linha of linhas) {
+        const { data: conta } = await supabase
+          .from("chart_of_accounts")
+          .select("code, name, is_synthetic")
+          .eq("code", linha.conta_code)
+          .single();
+
+        if (!conta) {
+          erros.push(`BLOQUEADO: Conta ${linha.conta_code} não encontrada`);
+        } else if (conta.is_synthetic) {
+          erros.push(`BLOQUEADO: Conta ${linha.conta_code} (${conta.name}) é SINTÉTICA - use conta analítica`);
+        }
+      }
+
+      // Regra 3: Idempotência
+      if (referenceId && referenceType) {
+        const { count } = await supabase
+          .from("accounting_entries")
+          .select("id", { count: "exact" })
+          .eq("reference_id", referenceId)
+          .eq("reference_type", referenceType);
+
+        if ((count || 0) > 0) {
+          erros.push(`BLOQUEADO: Já existe lançamento com reference_id=${referenceId}`);
+        }
+      } else {
+        avisos.push("AVISO: Sem reference_id - risco de duplicação");
+      }
+
+      return {
+        valido: erros.length === 0,
+        pode_executar: erros.length === 0,
+        erros,
+        avisos,
+        resumo: erros.length === 0
+          ? `✅ Lançamento válido: D=${formatCurrency(totalDebitos)} C=${formatCurrency(totalCreditos)}`
+          : `❌ Lançamento BLOQUEADO: ${erros.length} erro(s)`,
+      };
+    }
+
+    case "criar_lancamento_contabil": {
+      const tipo = args.tipo as string;
+      const data = args.data as string;
+      const competencia = args.competencia as string | undefined;
+      const descricao = args.descricao as string;
+      const linhas = args.linhas as Array<{ conta_code: string; debito?: number; credito?: number; historico?: string }>;
+      const referenceId = args.reference_id as string | undefined;
+      const referenceType = args.reference_type as string | undefined;
+
+      // Primeiro, validar
+      const validacao = await executeTool("validar_lancamento", {
+        tipo,
+        linhas,
+        reference_id: referenceId,
+        reference_type: referenceType,
+      }) as { valido: boolean; erros: string[]; avisos: string[] };
+
+      if (!validacao.valido) {
+        return {
+          sucesso: false,
+          bloqueado_pelo_guardiao: true,
+          erros: validacao.erros,
+          mensagem: "❌ Lançamento REJEITADO pelo Guardião MCP",
+        };
+      }
+
+      // Criar entry
+      const totalDebitos = linhas.reduce((s, l) => s + (l.debito || 0), 0);
+
+      const { data: entry, error: entryError } = await supabase
+        .from("accounting_entries")
+        .insert({
+          entry_date: data,
+          competence_date: competencia || data,
+          entry_type: tipo,
+          description: descricao,
+          reference_type: referenceType,
+          reference_id: referenceId,
+          source_type: "mcp_guardiao",
+          source_module: "mcp-financeiro",
+          total_debit: totalDebitos,
+          total_credit: totalDebitos,
+          balanced: true,
+        })
+        .select("id")
+        .single();
+
+      if (entryError) {
+        return {
+          sucesso: false,
+          erro: entryError.message,
+        };
+      }
+
+      // Criar linhas
+      const linhasParaInserir = [];
+      for (const linha of linhas) {
+        const { data: conta } = await supabase
+          .from("chart_of_accounts")
+          .select("id")
+          .eq("code", linha.conta_code)
+          .single();
+
+        if (conta) {
+          linhasParaInserir.push({
+            entry_id: entry.id,
+            account_id: conta.id,
+            debit: linha.debito || 0,
+            credit: linha.credito || 0,
+            description: linha.historico || descricao,
+          });
+        }
+      }
+
+      const { error: linhasError } = await supabase
+        .from("accounting_entry_lines")
+        .insert(linhasParaInserir);
+
+      if (linhasError) {
+        // Rollback
+        await supabase.from("accounting_entries").delete().eq("id", entry.id);
+        return {
+          sucesso: false,
+          erro: linhasError.message,
+        };
+      }
+
+      return {
+        sucesso: true,
+        entry_id: entry.id,
+        tipo,
+        valor: formatCurrency(totalDebitos),
+        linhas: linhas.length,
+        mensagem: `✅ Lançamento criado com sucesso (ID: ${entry.id})`,
+        validado_por: "Guardião MCP",
+      };
+    }
+
+    case "gerar_honorarios_competencia": {
+      const competencia = args.competencia as string; // YYYY-MM
+      const dataLancamento = `${competencia}-28`;
+      const contaReceita = "3.1.1.01";
+
+      // Buscar clientes ativos
+      const { data: clientes } = await supabase
+        .from("clients")
+        .select("id, name, monthly_fee")
+        .eq("status", "active")
+        .gt("monthly_fee", 0);
+
+      let gerados = 0;
+      let jaExistentes = 0;
+      let erros = 0;
+      let valorTotal = 0;
+      const detalhes: Array<{ cliente: string; status: string; valor?: string }> = [];
+
+      for (const cliente of clientes || []) {
+        const referenceId = `hon_${cliente.id}_${competencia}`;
+
+        // Verificar idempotência
+        const { count } = await supabase
+          .from("accounting_entries")
+          .select("id", { count: "exact" })
+          .eq("reference_id", referenceId)
+          .eq("reference_type", "honorarios");
+
+        if ((count || 0) > 0) {
+          jaExistentes++;
+          detalhes.push({ cliente: cliente.name, status: "já existente" });
+          continue;
+        }
+
+        // Buscar conta do cliente
+        const contaCliente = await executeTool("buscar_conta_cliente", {
+          cliente_id: cliente.id,
+          cliente_nome: cliente.name,
+        }) as { sucesso: boolean; conta_code?: string; erro?: string };
+
+        if (!contaCliente.sucesso || !contaCliente.conta_code) {
+          erros++;
+          detalhes.push({ cliente: cliente.name, status: `erro: ${contaCliente.erro}` });
+          continue;
+        }
+
+        // Criar lançamento via guardião
+        const resultado = await executeTool("criar_lancamento_contabil", {
+          tipo: "receita_honorarios",
+          data: dataLancamento,
+          competencia: `${competencia}-01`,
+          descricao: `Honorários ${competencia} - ${cliente.name.substring(0, 40)}`,
+          linhas: [
+            { conta_code: contaCliente.conta_code, debito: cliente.monthly_fee, credito: 0, historico: `Honorários ${competencia}` },
+            { conta_code: contaReceita, debito: 0, credito: cliente.monthly_fee, historico: `Receita honorários ${competencia}` },
+          ],
+          reference_id: referenceId,
+          reference_type: "honorarios",
+        }) as { sucesso: boolean };
+
+        if (resultado.sucesso) {
+          gerados++;
+          valorTotal += Number(cliente.monthly_fee);
+          detalhes.push({ cliente: cliente.name, status: "gerado", valor: formatCurrency(cliente.monthly_fee) });
+        } else {
+          erros++;
+          detalhes.push({ cliente: cliente.name, status: "erro ao criar" });
+        }
+      }
+
+      return {
+        sucesso: erros === 0,
+        competencia,
+        resumo: {
+          total_clientes: clientes?.length || 0,
+          gerados,
+          ja_existentes: jaExistentes,
+          erros,
+          valor_total: formatCurrency(valorTotal),
+        },
+        detalhes: detalhes.slice(0, 20), // Limitar detalhes
+        mensagem: `✅ Honorários ${competencia}: ${gerados} gerados, ${jaExistentes} já existentes, ${erros} erros`,
+      };
+    }
+
+    case "buscar_conta_cliente": {
+      const clienteId = args.cliente_id as string | undefined;
+      const clienteNome = args.cliente_nome as string | undefined;
+
+      let nome = clienteNome;
+
+      // Se tem ID, buscar nome
+      if (clienteId) {
+        const { data: cliente } = await supabase
+          .from("clients")
+          .select("name")
+          .eq("id", clienteId)
+          .single();
+        nome = cliente?.name || clienteNome;
+      }
+
+      if (!nome) {
+        return { sucesso: false, erro: "Nome do cliente não informado" };
+      }
+
+      // Buscar conta existente
+      const { data: contaExistente } = await supabase
+        .from("chart_of_accounts")
+        .select("id, code, name")
+        .ilike("name", `%${nome.substring(0, 20)}%`)
+        .like("code", "1.1.2.01.%")
+        .not("name", "ilike", "%[CONSOLIDADO]%")
+        .limit(1)
+        .maybeSingle();
+
+      if (contaExistente) {
+        return {
+          sucesso: true,
+          conta_id: contaExistente.id,
+          conta_code: contaExistente.code,
+          conta_nome: contaExistente.name,
+          criada: false,
+        };
+      }
+
+      // Criar nova conta
+      const { data: ultimaConta } = await supabase
+        .from("chart_of_accounts")
+        .select("code")
+        .like("code", "1.1.2.01.%")
+        .not("name", "ilike", "%[CONSOLIDADO]%")
+        .order("code", { ascending: false })
+        .limit(1)
+        .single();
+
+      const ultimoNumero = ultimaConta ? parseInt(ultimaConta.code.split(".").pop() || "0") : 0;
+      const novoCodigo = `1.1.2.01.${String(ultimoNumero + 1).padStart(4, "0")}`;
+
+      const { data: contaPai } = await supabase
+        .from("chart_of_accounts")
+        .select("id")
+        .eq("code", "1.1.2.01")
+        .single();
+
+      const { data: novaConta, error } = await supabase
+        .from("chart_of_accounts")
+        .insert({
+          code: novoCodigo,
+          name: nome.substring(0, 60),
+          account_type: "ATIVO",
+          nature: "DEVEDORA",
+          level: 5,
+          is_analytical: true,
+          is_synthetic: false,
+          accepts_entries: true,
+          parent_id: contaPai?.id,
+        })
+        .select("id, code, name")
+        .single();
+
+      if (error) {
+        return { sucesso: false, erro: error.message };
+      }
+
+      return {
+        sucesso: true,
+        conta_id: novaConta.id,
+        conta_code: novaConta.code,
+        conta_nome: novaConta.name,
+        criada: true,
+        mensagem: `Conta ${novoCodigo} criada para ${nome}`,
+      };
+    }
+
+    case "verificar_integridade": {
+      const erros: string[] = [];
+      const avisos: string[] = [];
+      const resultados: Record<string, unknown> = {};
+
+      // Teste 1: Entries desbalanceados
+      const { data: entries } = await supabase
+        .from("accounting_entries")
+        .select("id, description")
+        .order("entry_date", { ascending: false })
+        .limit(200);
+
+      let desbalanceados = 0;
+      for (const entry of entries || []) {
+        const { data: lines } = await supabase
+          .from("accounting_entry_lines")
+          .select("debit, credit")
+          .eq("entry_id", entry.id);
+
+        const totalD = (lines || []).reduce((s, l) => s + Number(l.debit || 0), 0);
+        const totalC = (lines || []).reduce((s, l) => s + Number(l.credit || 0), 0);
+
+        if (Math.abs(totalD - totalC) > 0.01) {
+          erros.push(`Entry desbalanceado: ${entry.id} (D=${totalD} C=${totalC})`);
+          desbalanceados++;
+        }
+      }
+      resultados.entries_verificados = entries?.length || 0;
+      resultados.desbalanceados = desbalanceados;
+
+      // Teste 2: Duplicações
+      const { data: refs } = await supabase
+        .from("accounting_entries")
+        .select("reference_id, reference_type")
+        .not("reference_id", "is", null);
+
+      const contagem: Record<string, number> = {};
+      for (const r of refs || []) {
+        const chave = `${r.reference_type}:${r.reference_id}`;
+        contagem[chave] = (contagem[chave] || 0) + 1;
+      }
+
+      let duplicacoes = 0;
+      for (const [chave, qtd] of Object.entries(contagem)) {
+        if (qtd > 1) {
+          erros.push(`Duplicação: ${chave} (${qtd}x)`);
+          duplicacoes++;
+        }
+      }
+      resultados.duplicacoes = duplicacoes;
+
+      // Teste 3: Saldo banco Sicredi
+      const { data: contaBanco } = await supabase
+        .from("chart_of_accounts")
+        .select("id")
+        .eq("code", "1.1.1.05")
+        .single();
+
+      if (contaBanco) {
+        const { data: movsBanco } = await supabase
+          .from("accounting_entry_lines")
+          .select("debit, credit")
+          .eq("account_id", contaBanco.id);
+
+        const saldoBanco = (movsBanco || []).reduce((s, m) => s + Number(m.debit || 0) - Number(m.credit || 0), 0);
+        resultados.saldo_banco_sicredi = formatCurrency(saldoBanco);
+      }
+
+      // Teste 4: Conta transitória
+      const { data: contaTrans } = await supabase
+        .from("chart_of_accounts")
+        .select("id")
+        .eq("code", "1.1.9.01")
+        .single();
+
+      if (contaTrans) {
+        const { data: movsTrans } = await supabase
+          .from("accounting_entry_lines")
+          .select("debit, credit")
+          .eq("account_id", contaTrans.id);
+
+        const saldoTrans = (movsTrans || []).reduce((s, m) => s + Number(m.debit || 0) - Number(m.credit || 0), 0);
+        resultados.saldo_transitoria = formatCurrency(saldoTrans);
+
+        if (Math.abs(saldoTrans) > 0.01) {
+          avisos.push(`Conta transitória com saldo pendente: ${formatCurrency(saldoTrans)}`);
+        }
+      }
+
+      return {
+        integridade_ok: erros.length === 0,
+        erros_encontrados: erros.length,
+        avisos_encontrados: avisos.length,
+        erros,
+        avisos,
+        resultados,
+        mensagem: erros.length === 0
+          ? "✅ Sistema contábil íntegro"
+          : `❌ ${erros.length} erro(s) de integridade encontrado(s)`,
       };
     }
 

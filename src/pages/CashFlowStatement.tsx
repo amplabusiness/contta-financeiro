@@ -97,14 +97,27 @@ const CashFlowStatement = () => {
 
       const contasCaixaIds = contasCaixa?.map(c => c.id) || [];
 
-      // 2. Buscar saldo inicial de caixa (até o período anterior)
-      const { data: saldoInicialData } = await supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit, credit, account_id,
-          entry_id(entry_date)
-        `)
-        .in('account_id', contasCaixaIds);
+      // 2. Buscar saldo inicial de caixa (até o período anterior) com paginação
+      const saldoInicialData: any[] = [];
+      let saldoPage = 0;
+      const pageSize = 1000;
+
+      while (true) {
+        const { data: pageData } = await supabase
+          .from('accounting_entry_lines')
+          .select(`
+            debit, credit, account_id,
+            entry_id(entry_date)
+          `)
+          .in('account_id', contasCaixaIds)
+          .range(saldoPage * pageSize, (saldoPage + 1) * pageSize - 1);
+
+        if (!pageData || pageData.length === 0) break;
+        saldoInicialData.push(...pageData);
+
+        if (pageData.length < pageSize) break;
+        saldoPage++;
+      }
 
       let saldoInicial = 0;
       saldoInicialData?.forEach((line: any) => {
@@ -128,13 +141,25 @@ const CashFlowStatement = () => {
         .eq('is_active', true)
         .eq('is_analytical', true);
 
-      // 5. Buscar todos os lançamentos do período
-      const { data: lancamentos } = await supabase
-        .from('accounting_entry_lines')
-        .select(`
-          debit, credit, account_id,
-          entry_id(entry_date, description, entry_type)
-        `);
+      // 5. Buscar todos os lançamentos do período com paginação
+      const lancamentos: any[] = [];
+      let lancPage = 0;
+
+      while (true) {
+        const { data: pageData } = await supabase
+          .from('accounting_entry_lines')
+          .select(`
+            debit, credit, account_id,
+            entry_id(entry_date, description, entry_type)
+          `)
+          .range(lancPage * pageSize, (lancPage + 1) * pageSize - 1);
+
+        if (!pageData || pageData.length === 0) break;
+        lancamentos.push(...pageData);
+
+        if (pageData.length < pageSize) break;
+        lancPage++;
+      }
 
       // Filtrar por período
       const lancamentosPeriodo = lancamentos?.filter((l: any) => {

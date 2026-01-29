@@ -95,7 +95,8 @@ export const regrasContabeis = {
       "5": { nome: "PATRIMÔNIO LÍQUIDO", natureza: "CREDORA" },
       "5.1": { nome: "Capital Social", natureza: "CREDORA" },
       "5.2": { nome: "Reservas", natureza: "CREDORA" },
-      "5.2.1.02": { nome: "Saldos de Abertura", natureza: "CREDORA", analitica: true }
+      "5.2.1.01": { nome: "Lucros Acumulados", natureza: "CREDORA", analitica: true, contrapartida_saldo_abertura: true },
+      "5.2.1.02": { nome: "Saldos de Abertura (legado)", natureza: "CREDORA", analitica: true, deprecado: true }
     },
     regras: [
       "Contas de 1 dígito = Grupo (ATIVO, PASSIVO, etc)",
@@ -105,8 +106,57 @@ export const regrasContabeis = {
     ]
   },
 
+  // Contas Transitórias (para conciliação bancária)
+  contasTransitorias: {
+    "1.1.9.99": {
+      nome: "Valores Pendentes de Classificação",
+      natureza: "DEVEDORA",
+      uso: "Entradas bancárias não classificadas (aguardando conciliação)",
+      fluxo: "Após classificação → movida para conta definitiva"
+    },
+    "2.1.9.99": {
+      nome: "Saídas Pendentes de Classificação",
+      natureza: "CREDORA",
+      uso: "Saídas bancárias não classificadas (aguardando conciliação)",
+      fluxo: "Após classificação → movida para conta definitiva"
+    }
+  },
+
+  // Fluxo de Conciliação Bancária
+  conciliacaoBancaria: {
+    descricao: "Transações bancárias só geram lançamentos contábeis APÓS classificação",
+    fluxo: [
+      "1. Import OFX → Cria bank_transaction (sem entry contábil)",
+      "2. Transação fica em 'pending' aguardando classificação",
+      "3. Usuário seleciona rubrica/conta no conciliador",
+      "4. Sistema chama fn_classificar_transacao_bancaria()",
+      "5. Entry contábil COMPLETO criado (sempre 2 items - partida dobrada)",
+      "6. Transação marcada como 'reconciled'"
+    ],
+    funcaoClassificacao: "fn_classificar_transacao_bancaria(p_transaction_id, p_rubrica_id, p_account_id)",
+    garantias: [
+      "Transação sem rubrica = sem entry contábil",
+      "Entry sempre com partida dobrada (D = C)",
+      "Nunca cria entry com apenas 1 item",
+      "Contas transitórias para pendências"
+    ],
+    importante: "NUNCA criar entries incompletos no import - sempre aguardar classificação"
+  },
+
   // Tipos de Lançamentos
   tiposLancamento: {
+    conciliacao_bancaria: {
+      descricao: "Lançamento criado após classificação de transação bancária",
+      entrada: {
+        debito: "1.1.1.XX (Banco)",
+        credito: "Conta da rubrica (receita/cliente)"
+      },
+      saida: {
+        debito: "Conta da rubrica (despesa)",
+        credito: "1.1.1.XX (Banco)"
+      },
+      quando: "Quando usuário classifica a transação no conciliador"
+    },
     receita_honorarios: {
       descricao: "Registro de receita de honorários (provisão)",
       debito: "1.1.2.01.XXX (Cliente a Receber)",
@@ -121,10 +171,12 @@ export const regrasContabeis = {
     },
     saldo_abertura: {
       descricao: "Registro de saldo de abertura de cliente",
-      debito: "1.1.2.01.XXX (Cliente a Receber)",
-      credito: "5.2.1.02 (Saldos de Abertura no PL)",
+      debito: "1.1.2.01.XXXX (Conta ANALÍTICA do Cliente - NUNCA usar a sintética 1.1.2.01!)",
+      credito: "5.2.1.01 (Lucros Acumulados - contrapartida correta conforme NBC TG 26)",
       quando: "No início do período, para valores pré-existentes",
-      importante: "NUNCA creditar em Receita - saldo de abertura NÃO é receita do período"
+      importante: "NUNCA creditar em Receita - saldo de abertura NÃO é receita do período",
+      script: "scripts/correcao_contabil/33_lancamentos_saldo_abertura.cjs",
+      nota_tecnica: "Os triggers automáticos (trg_blindagem_saldo_abertura) foram DESABILITADOS porque criavam lançamentos na conta sintética 1.1.2.01. Usar SEMPRE o script 33 para criar saldos de abertura."
     },
     despesa_provisao: {
       descricao: "Registro de despesa a pagar",

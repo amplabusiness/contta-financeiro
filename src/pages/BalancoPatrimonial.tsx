@@ -150,7 +150,7 @@ const BalancoPatrimonial = () => {
         .from("chart_of_accounts")
         .select("id, code, name, type, nature, is_synthetic, is_analytical")
         .eq("is_active", true)
-        .or("code.like.1%,code.like.2%")
+        .or("code.like.1%,code.like.2%,code.like.5%")
         .order("code");
 
       if (chartError) throw chartError;
@@ -247,7 +247,8 @@ const BalancoPatrimonial = () => {
         } else if (acc.code.startsWith("2.2")) {
           passivoNaoCirculante.push(item);
           if (!acc.is_synthetic) totalPassivoNaoCirculante += Math.abs(value);
-        } else if (acc.code.startsWith("2.3") || acc.code.startsWith("2.4") || acc.code.startsWith("2.5")) {
+        } else if (acc.code.startsWith("2.3") || acc.code.startsWith("2.4") || acc.code.startsWith("2.5") || acc.code.startsWith("5")) {
+          // Grupo 5 = Patrimônio Líquido (Lucros Acumulados, Capital, etc)
           patrimonioLiquido.push(item);
           if (!acc.is_synthetic) totalPL += Math.abs(value);
         }
@@ -255,7 +256,8 @@ const BalancoPatrimonial = () => {
         // Calcular totais anteriores
         if (acc.code.startsWith("1") && !acc.is_synthetic) {
           prevTotalAtivo += Math.abs(prevValue);
-        } else if (acc.code.startsWith("2") && !acc.is_synthetic) {
+        } else if ((acc.code.startsWith("2") || acc.code.startsWith("5")) && !acc.is_synthetic) {
+          // Grupos 2 (Passivo) e 5 (PL) vão para Passivo + PL
           prevTotalPassivoMaisPL += Math.abs(prevValue);
         }
       });
