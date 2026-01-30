@@ -265,7 +265,9 @@ const BalanceSheet = () => {
             accounts.map((account) => (
               <tr key={account.code} className={`border-b ${getRowStyle(account)}`}>
                 <td className="p-2 font-mono text-sm">{account.code}</td>
-                <td className="p-2">{account.name}</td>
+                <td className="p-2">
+                  <div style={{ paddingLeft: (account.level - 1) * 12 }}>{account.name}</div>
+                </td>
                 <td className="p-2 text-right font-medium">
                   {account.balance !== 0 ? formatCurrency(Math.abs(account.balance)) : "-"}
                 </td>

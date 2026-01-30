@@ -19,6 +19,7 @@ interface BalanceteEntry {
   saldo: number
   isDevedora: boolean // true = natureza devedora (Ativo, Despesa), false = credora (Passivo, PL, Receita)
   isSynthetic: boolean // true = conta sintética (grupo), false = conta analítica (folha)
+  level: number
 }
 
 const Balancete = () => {
@@ -45,80 +46,52 @@ const Balancete = () => {
         return
       }
 
-      // Buscar TODOS os lançamentos com paginação (Supabase limita a 1000 por padrão)
-      const allLines: any[] = []
-      let page = 0
-      const pageSize = 1000
+      // Buscar saldos via RPC (base oficial)
+      const { data: balances, error: balancesError } = await supabase.rpc('get_account_balances', {
+        p_period_start: start,
+        p_period_end: end,
+      })
 
-      while (true) {
-        let linesQuery = supabase
-          .from('accounting_entry_lines')
-          .select(`
-            debit,
-            credit,
-            account_id,
-            entry_id!inner(entry_date)
-          `)
-          .range(page * pageSize, (page + 1) * pageSize - 1)
+      if (balancesError) throw balancesError
 
-        if (start) {
-          linesQuery = linesQuery.gte('entry_id.entry_date', start)
-        }
-        if (end) {
-          linesQuery = linesQuery.lte('entry_id.entry_date', end)
-        }
-
-        const { data: pageData, error: linesError } = await linesQuery
-
-        if (linesError) throw linesError
-
-        if (!pageData || pageData.length === 0) break
-        allLines.push(...pageData)
-
-        if (pageData.length < pageSize) break
-        page++
-      }
-
-      console.log(`[Balancete] Carregadas ${allLines.length} linhas contábeis`)
-
-      // Criar mapa de saldos por conta
-      const accountTotals = new Map<string, { debit: number; credit: number }>()
-
-      allLines?.forEach(line => {
-        const current = accountTotals.get(line.account_id) || { debit: 0, credit: 0 }
-        current.debit += line.debit || 0
-        current.credit += line.credit || 0
-        accountTotals.set(line.account_id, current)
+      const balanceMap = new Map<string, { total_debits: number; total_credits: number }>()
+      balances?.forEach((b: any) => {
+        balanceMap.set(b.account_id, {
+          total_debits: Number(b.total_debits) || 0,
+          total_credits: Number(b.total_credits) || 0,
+        })
       })
 
       // Processar contas e calcular saldos
       const balanceteData: BalanceteEntry[] = []
 
-      for (const account of accounts) {
-        let totalDebito = 0
-        let totalCredito = 0
-
-        if (account.is_synthetic) {
-          // Para contas sintéticas, somar os valores das contas filhas
-          const childAccounts = accounts.filter(a => 
-            a.code.startsWith(account.code + '.') && !a.is_synthetic
-          )
-          
-          childAccounts.forEach(child => {
-            const childTotals = accountTotals.get(child.id)
-            if (childTotals) {
-              totalDebito += childTotals.debit
-              totalCredito += childTotals.credit
-            }
-          })
-        } else {
-          // Para contas analíticas, usar os valores diretos
-          const accountTotal = accountTotals.get(account.id)
-          if (accountTotal) {
-            totalDebito = accountTotal.debit
-            totalCredito = accountTotal.credit
+      const getTotals = (account: any) => {
+        if (!account.is_synthetic) {
+          const totals = balanceMap.get(account.id)
+          return {
+            debit: totals?.total_debits || 0,
+            credit: totals?.total_credits || 0,
           }
         }
+
+        const childAccounts = accounts.filter(a =>
+          a.code.startsWith(account.code + '.') && !a.is_synthetic
+        )
+
+        return childAccounts.reduce(
+          (sum, child) => {
+            const totals = balanceMap.get(child.id)
+            sum.debit += totals?.total_debits || 0
+            sum.credit += totals?.total_credits || 0
+            return sum
+          },
+          { debit: 0, credit: 0 }
+        )
+      }
+
+      for (const account of accounts) {
+        const { debit: totalDebito, credit: totalCredito } = getTotals(account)
+        const level = account.code.split('.').length
 
         // Se mostrar apenas com movimento, pular contas sem movimento
         if (showOnlyWithMovement && totalDebito === 0 && totalCredito === 0) {
@@ -155,11 +128,12 @@ const Balancete = () => {
           total_credito: totalCredito,
           saldo: saldo,
           isDevedora: isDevedora,
-          isSynthetic: account.is_synthetic
+          isSynthetic: account.is_synthetic,
+          level
         })
       }
 
-      setEntries(balanceteData)
+      setEntries(balanceteData.sort((a, b) => a.codigo_conta.localeCompare(b.codigo_conta)))
     } catch (error) {
       console.error('Erro ao carregar balancete:', error)
       setEntries([])
@@ -200,15 +174,6 @@ const Balancete = () => {
 
   // Balancete está fechado quando saldo devedor = saldo credor
   const isBalanced = Math.abs(totalSaldoDevedor - totalSaldoCredor) < 0.01
-
-  // Agrupar por tipo de conta
-  const groupedByType = entries.reduce((acc, entry) => {
-    if (!acc[entry.tipo_conta]) {
-      acc[entry.tipo_conta] = []
-    }
-    acc[entry.tipo_conta].push(entry)
-    return acc
-  }, {} as Record<string, BalanceteEntry[]>)
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -358,67 +323,49 @@ const Balancete = () => {
         {/* Tabela do Balancete */}
         <Card>
           <CardHeader>
-            <CardTitle>Balancete por Tipo de Conta</CardTitle>
+            <CardTitle>Balancete por Plano de Contas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {Object.entries(groupedByType).map(([type, typeEntries]) => (
-                <div key={type} className="space-y-2">
-                  <h3 className="text-lg font-semibold text-primary">{getTypeLabel(type)}</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Código</TableHead>
-                        <TableHead>Nome da Conta</TableHead>
-                        <TableHead className="text-right">Débito</TableHead>
-                        <TableHead className="text-right">Crédito</TableHead>
-                        <TableHead className="text-right">Saldo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {typeEntries.map((entry) => (
-                        <TableRow key={entry.codigo_conta}>
-                          <TableCell className="font-mono">{entry.codigo_conta}</TableCell>
-                          <TableCell>{entry.nome_conta}</TableCell>
-                          <TableCell className="text-right">
-                            {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {entry.saldo !== 0 && (
-                              <Badge variant={entry.saldo > 0 ? "default" : "secondary"}>
-                                {formatCurrency(Math.abs(entry.saldo))}
-                                {entry.saldo > 0 ? ' D' : ' C'}
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {/* Subtotal por tipo */}
-                      <TableRow className="bg-muted/50 font-semibold">
-                        <TableCell colSpan={2}>Subtotal {getTypeLabel(type)}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_debito, 0))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(typeEntries.reduce((sum, e) => sum + e.total_credito, 0))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(Math.abs(typeEntries.reduce((sum, e) => sum + e.saldo, 0)))}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
-
-              {/* Totais Gerais */}
               <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nome da Conta</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead className="text-right">Débito</TableHead>
+                    <TableHead className="text-right">Crédito</TableHead>
+                    <TableHead className="text-right">Saldo</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
+                  {entries.map((entry) => (
+                    <TableRow key={entry.codigo_conta} className={entry.isSynthetic ? "bg-muted/50 font-semibold" : ""}>
+                      <TableCell className="font-mono">{entry.codigo_conta}</TableCell>
+                      <TableCell>
+                        <div style={{ paddingLeft: (entry.level - 1) * 12 }}>{entry.nome_conta}</div>
+                      </TableCell>
+                      <TableCell>{getTypeLabel(entry.tipo_conta)}</TableCell>
+                      <TableCell className="text-right">
+                        {entry.total_debito > 0 ? formatCurrency(entry.total_debito) : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {entry.total_credito > 0 ? formatCurrency(entry.total_credito) : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {entry.saldo !== 0 && (
+                          <Badge variant={entry.saldo > 0 ? "default" : "secondary"}>
+                            {formatCurrency(Math.abs(entry.saldo))}
+                            {entry.saldo > 0 ? ' D' : ' C'}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Totais Gerais */}
                   <TableRow className="bg-primary/10 font-bold text-lg">
-                    <TableCell colSpan={2}>TOTAIS GERAIS</TableCell>
+                    <TableCell colSpan={3}>TOTAIS GERAIS</TableCell>
                     <TableCell className="text-right">{formatCurrency(totalDebito)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(totalCredito)}</TableCell>
                     <TableCell className="text-right">

@@ -212,7 +212,11 @@ const TrialBalance = () => {
                   {balances.map((account) => (
                     <tr key={account.code} className={`border-b ${getRowStyle(account)}`}>
                       <td className="p-2">{account.code}</td>
-                      <td className="p-2">{account.name}</td>
+                      <td className="p-2">
+                        <div style={{ paddingLeft: (account.code.split(".").length - 1) * 12 }}>
+                          {account.name}
+                        </div>
+                      </td>
                       <td className="p-2">
                         <span className={`text-xs px-2 py-1 rounded ${
                           account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
