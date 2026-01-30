@@ -340,6 +340,10 @@ const RazaoContabil = () => {
     return groups;
   }, {} as Record<string, Account[]>);
 
+  Object.values(groupedAccounts).forEach((group) =>
+    group.sort((a, b) => a.code.localeCompare(b.code))
+  );
+
   const getGroupName = (group: string) => {
     const names: Record<string, string> = {
       "1": "1 - ATIVO",
@@ -487,6 +491,8 @@ const RazaoContabil = () => {
                             {groupAccounts.map((acc) => {
                               const balance = accountBalances.get(acc.id);
                               const hasMovement = balance && (balance.total_debits > 0 || balance.total_credits > 0);
+                              const level = acc.code.split(".").length;
+                              const indent = (level - 1) * 12;
                               
                               return (
                                 <button
@@ -502,7 +508,7 @@ const RazaoContabil = () => {
                                       <span className="font-mono text-xs text-muted-foreground w-20">
                                         {acc.code}
                                       </span>
-                                      <span className={`${acc.is_synthetic ? "" : "text-sm"}`}>
+                                      <span className={`${acc.is_synthetic ? "" : "text-sm"}`} style={{ paddingLeft: indent }}>
                                         {acc.name}
                                       </span>
                                     </div>

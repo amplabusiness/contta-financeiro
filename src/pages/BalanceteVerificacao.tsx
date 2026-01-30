@@ -303,12 +303,41 @@ const BalanceteVerificacao = () => {
     link.click();
   };
 
+  const buildHierarchy = (items: BalanceteAccount[]) => {
+    const nodesByCode = new Map<string, BalanceteAccount>();
+
+    items
+      .sort((a, b) => a.account_code.localeCompare(b.account_code))
+      .forEach((acc) => {
+        nodesByCode.set(acc.account_code, { ...acc, children: [] });
+      });
+
+    const roots: BalanceteAccount[] = [];
+
+    nodesByCode.forEach((node, code) => {
+      const parentCode = code.split(".").slice(0, -1).join(".");
+      if (parentCode && nodesByCode.has(parentCode)) {
+        nodesByCode.get(parentCode)!.children!.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    nodesByCode.forEach((node) =>
+      node.children?.sort((a, b) => a.account_code.localeCompare(b.account_code))
+    );
+
+    return roots.sort((a, b) => a.account_code.localeCompare(b.account_code));
+  };
+
   // Renderizar linha de conta
-  const renderAccountRow = (acc: BalanceteAccount) => {
+  const renderAccountRows = (acc: BalanceteAccount): JSX.Element[] => {
     const isDebitNature = acc.nature === "DEVEDORA";
     const indent = (acc.level - 1) * 16;
+    const hasChildren = (acc.children?.length || 0) > 0;
+    const isExpanded = expandedGroups.has(acc.account_code);
 
-    return (
+    const row = (
       <TableRow 
         key={acc.account_id}
         className={`
@@ -318,7 +347,18 @@ const BalanceteVerificacao = () => {
       >
         <TableCell className="font-mono text-xs">{acc.account_code}</TableCell>
         <TableCell>
-          <div style={{ paddingLeft: indent }}>{acc.account_name}</div>
+          <div className="flex items-center gap-2" style={{ paddingLeft: indent }}>
+            {hasChildren && (
+              <button
+                onClick={() => toggleGroup(acc.account_code)}
+                className="p-0.5 hover:bg-muted rounded"
+                type="button"
+              >
+                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+            )}
+            <span>{acc.account_name}</span>
+          </div>
         </TableCell>
         <TableCell className="text-center">
           <Badge variant={isDebitNature ? "outline" : "secondary"} className="text-xs">
@@ -352,6 +392,13 @@ const BalanceteVerificacao = () => {
         </TableCell>
       </TableRow>
     );
+
+    if (!hasChildren || !isExpanded) {
+      return [row];
+    }
+
+    const children = acc.children!.flatMap((child) => renderAccountRows(child));
+    return [row, ...children];
   };
 
   return (
@@ -541,7 +588,7 @@ const BalanceteVerificacao = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAccounts.map((acc) => renderAccountRow(acc))}
+                    {buildHierarchy(filteredAccounts).flatMap((acc) => renderAccountRows(acc))}
                     
                     {/* Linha de Totais */}
                     <TableRow className="bg-primary/10 font-bold text-lg">

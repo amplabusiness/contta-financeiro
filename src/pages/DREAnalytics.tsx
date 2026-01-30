@@ -272,49 +272,56 @@ const DREAnalytics = () => {
         });
       });
 
-      // Organizar em estrutura hierárquica
-      const revenues: DRELineItem[] = [];
-      const expenses: DRELineItem[] = [];
+      // Organizar em estrutura hierárquica completa (sintéticas + analíticas)
+      const hasValues = (item: DRELineItem) =>
+        Object.values(item.values).some((v) => v > 0);
 
-      accounts?.forEach((acc) => {
-        const item = accountMap.get(acc.id);
-        if (!item) return;
+      const buildHierarchy = (prefix: string) => {
+        const nodesByCode = new Map<string, DRELineItem>();
+        const sortedAccounts = (accounts || [])
+          .filter(acc => acc.code.startsWith(prefix))
+          .sort((a, b) => a.code.localeCompare(b.code));
 
-        // Só incluir contas com valores
-        const hasValues = Object.values(item.values).some((v) => v > 0);
-        if (!hasValues && !acc.is_synthetic) return;
+        sortedAccounts.forEach((acc) => {
+          const item = accountMap.get(acc.id);
+          if (!item) return;
+          item.children = [];
 
-        if (acc.code.startsWith("3")) {
-          if (acc.code.split(".").length === 1 || acc.code.split(".").length === 2) {
-            revenues.push(item);
+          const include = hasValues(item) || acc.is_synthetic;
+          if (!include) return;
+
+          nodesByCode.set(acc.code, item);
+        });
+
+        const roots: DRELineItem[] = [];
+        nodesByCode.forEach((node, code) => {
+          const parentCode = code.split(".").slice(0, -1).join(".");
+          if (parentCode && nodesByCode.has(parentCode)) {
+            const parent = nodesByCode.get(parentCode)!;
+            parent.children = parent.children || [];
+            parent.children.push(node);
+          } else {
+            roots.push(node);
           }
-        } else if (acc.code.startsWith("4")) {
-          if (acc.code.split(".").length === 1 || acc.code.split(".").length === 2) {
-            expenses.push(item);
-          }
-        }
-      });
+        });
 
-      // Adicionar filhas às sintéticas
-      revenues.forEach((parent) => {
-        if (parent.is_synthetic) {
-          parent.children = Array.from(accountMap.values()).filter(
-            (a) => a.account_code.startsWith(parent.account_code + ".") && 
-                   !a.is_synthetic &&
-                   Object.values(a.values).some((v) => v > 0)
-          );
-        }
-      });
+        const prune = (node: DRELineItem): DRELineItem | null => {
+          const children = (node.children || [])
+            .map(prune)
+            .filter(Boolean) as DRELineItem[];
+          node.children = children;
 
-      expenses.forEach((parent) => {
-        if (parent.is_synthetic) {
-          parent.children = Array.from(accountMap.values()).filter(
-            (a) => a.account_code.startsWith(parent.account_code + ".") && 
-                   !a.is_synthetic &&
-                   Object.values(a.values).some((v) => v > 0)
-          );
-        }
-      });
+          const keep = hasValues(node) || children.length > 0;
+          return keep ? node : null;
+        };
+
+        return roots
+          .map(prune)
+          .filter(Boolean) as DRELineItem[];
+      };
+
+      const revenues = buildHierarchy("3");
+      const expenses = buildHierarchy("4");
 
       setDreStructure({
         revenues: revenues.sort((a, b) => a.account_code.localeCompare(b.account_code)),
@@ -435,80 +442,70 @@ const DREAnalytics = () => {
     link.click();
   };
 
-  // Renderizar linha de conta
-  const renderAccountRow = (item: DRELineItem, isExpense: boolean = false) => {
+  // Renderizar linha de conta (hierarquia completa)
+  const renderAccountRows = (
+    item: DRELineItem,
+    level: number,
+    isExpense: boolean = false
+  ): JSX.Element[] => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedAccounts.has(item.account_code);
+    const nameIndent = level * 16;
+    const codeIndent = level * 8;
 
-    return (
-      <>
-        <TableRow
-          key={item.account_code}
-          className={`${item.is_synthetic ? "bg-muted/50 font-semibold" : "hover:bg-muted/30"}`}
-        >
-          <TableCell className="font-mono text-xs">{item.account_code}</TableCell>
-          <TableCell>
-            <div className="flex items-center gap-2">
-              {hasChildren && (
-                <button
-                  onClick={() => toggleExpand(item.account_code)}
-                  className="p-0.5 hover:bg-muted rounded"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </button>
-              )}
-              <span className={hasChildren ? "" : "pl-6"}>{item.account_name}</span>
-            </div>
+    const row = (
+      <TableRow
+        key={item.account_code}
+        className={`${item.is_synthetic ? "bg-muted/50 font-semibold" : "hover:bg-muted/30"}`}
+      >
+        <TableCell className="font-mono text-xs" style={{ paddingLeft: codeIndent }}>
+          {item.account_code}
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-2" style={{ paddingLeft: nameIndent }}>
+            {hasChildren && (
+              <button
+                onClick={() => toggleExpand(item.account_code)}
+                className="p-0.5 hover:bg-muted rounded"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+            )}
+            <span className={hasChildren ? "" : "pl-6"}>{item.account_name}</span>
+          </div>
+        </TableCell>
+        {dreStructure.periods.map((period) => (
+          <TableCell
+            key={`${item.account_code}-${period.period}-value`}
+            className={`text-right font-medium ${isExpense ? "text-red-600" : "text-green-600"}`}
+          >
+            {formatCurrency(item.values[period.period] || 0)}
           </TableCell>
-          {dreStructure.periods.map((period) => (
-            <TableCell
-              key={`${item.account_code}-${period.period}-value`}
-              className={`text-right font-medium ${isExpense ? "text-red-600" : "text-green-600"}`}
-            >
-              {formatCurrency(item.values[period.period] || 0)}
-            </TableCell>
-          ))}
-          {dreStructure.periods.map((period) => (
-            <TableCell
-              key={`${item.account_code}-${period.period}-pct`}
-              className="text-right text-muted-foreground text-sm"
-            >
-              {formatPercent(item.percentages[period.period] || 0)}
-            </TableCell>
-          ))}
-        </TableRow>
-        {hasChildren && isExpanded && (
-          <>
-            {item.children!.map((child) => (
-              <TableRow key={child.account_code} className="text-sm">
-                <TableCell className="font-mono text-xs pl-8">{child.account_code}</TableCell>
-                <TableCell className="pl-12">{child.account_name}</TableCell>
-                {dreStructure.periods.map((period) => (
-                  <TableCell
-                    key={`${child.account_code}-${period.period}-value`}
-                    className={`text-right ${isExpense ? "text-red-500" : "text-green-500"}`}
-                  >
-                    {formatCurrency(child.values[period.period] || 0)}
-                  </TableCell>
-                ))}
-                {dreStructure.periods.map((period) => (
-                  <TableCell
-                    key={`${child.account_code}-${period.period}-pct`}
-                    className="text-right text-muted-foreground text-xs"
-                  >
-                    {formatPercent(child.percentages[period.period] || 0)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </>
-        )}
-      </>
+        ))}
+        {dreStructure.periods.map((period) => (
+          <TableCell
+            key={`${item.account_code}-${period.period}-pct`}
+            className="text-right text-muted-foreground text-sm"
+          >
+            {formatPercent(item.percentages[period.period] || 0)}
+          </TableCell>
+        ))}
+      </TableRow>
     );
+
+    if (!hasChildren || !isExpanded) {
+      return [row];
+    }
+
+    const childRows = item.children!.flatMap((child) =>
+      renderAccountRows(child, level + 1, isExpense)
+    );
+
+    return [row, ...childRows];
   };
 
   return (
@@ -692,7 +689,7 @@ const DREAnalytics = () => {
                           RECEITAS OPERACIONAIS
                         </TableCell>
                       </TableRow>
-                      {dreStructure.revenues.map((item) => renderAccountRow(item, false))}
+                      {dreStructure.revenues.flatMap((item) => renderAccountRows(item, 0, false))}
                       <TableRow className="bg-green-100 dark:bg-green-900/30 font-bold">
                         <TableCell></TableCell>
                         <TableCell>TOTAL RECEITAS</TableCell>
@@ -720,7 +717,7 @@ const DREAnalytics = () => {
                           DESPESAS OPERACIONAIS
                         </TableCell>
                       </TableRow>
-                      {dreStructure.expenses.map((item) => renderAccountRow(item, true))}
+                      {dreStructure.expenses.flatMap((item) => renderAccountRows(item, 0, true))}
                       <TableRow className="bg-red-100 dark:bg-red-900/30 font-bold">
                         <TableCell></TableCell>
                         <TableCell>TOTAL DESPESAS</TableCell>

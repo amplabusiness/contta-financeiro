@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
-import { TrendingUp, TrendingDown, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw, ArrowRightLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { isEdgeFunctionError } from "@/lib/edgeFunctionUtils";
 import { PeriodFilter } from "@/components/PeriodFilter";
@@ -476,37 +476,96 @@ const DRE = () => {
       );
     }
 
+    type DRENode = DREAccount & { children?: DRENode[] };
+
+    const buildHierarchy = (items: DREAccount[]) => {
+      const nodesByCode = new Map<string, DRENode>();
+
+      items
+        .sort((a, b) => a.account_code.localeCompare(b.account_code))
+        .forEach((acc) => {
+          nodesByCode.set(acc.account_code, { ...acc, children: [] });
+        });
+
+      const roots: DRENode[] = [];
+
+      nodesByCode.forEach((node, code) => {
+        const parentCode = code.split(".").slice(0, -1).join(".");
+        if (parentCode && nodesByCode.has(parentCode)) {
+          nodesByCode.get(parentCode)!.children!.push(node);
+        } else {
+          roots.push(node);
+        }
+      });
+
+      nodesByCode.forEach((node) =>
+        node.children?.sort((a, b) => a.account_code.localeCompare(b.account_code))
+      );
+
+      return roots.sort((a, b) => a.account_code.localeCompare(b.account_code));
+    };
+
+    const renderNode = (node: DRENode, level: number): JSX.Element[] => {
+      const hasChildren = (node.children?.length || 0) > 0;
+      const isExpanded = expandedAccounts.has(node.account_code);
+      const isParent = node.isSynthetic;
+      const isClickable = !isParent;
+
+      const row = (
+        <div
+          key={node.account_code}
+          className={`py-2 ${
+            isParent ? "font-semibold bg-muted/50 px-3 rounded mt-2" : "pl-3"
+          }`}
+          style={{ paddingLeft: `${level * 1.5 + 0.75}rem` }}
+        >
+          <div
+            className={`flex justify-between items-center ${
+              isClickable ? "cursor-pointer hover:bg-muted/30 rounded px-2 py-1 -mx-2 transition-colors" : ""
+            }`}
+            onClick={() => isClickable && loadAccountEntries(node)}
+          >
+            <span className={`flex items-center gap-2 ${isParent ? "text-base" : "text-sm"}`}>
+              {hasChildren && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleAccountExpansion(node.account_code);
+                  }}
+                  className="p-0.5 hover:bg-muted rounded"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+              <span className={isClickable ? "text-primary hover:underline" : ""}>
+                {node.account_code} - {node.account_name}
+              </span>
+            </span>
+            <span className={`${isParent ? "font-bold" : "font-medium"} ${isExpense ? "text-destructive" : "text-success"}`}>
+              {formatCurrency(node.total)}
+            </span>
+          </div>
+        </div>
+      );
+
+      if (!hasChildren || !isExpanded) {
+        return [row];
+      }
+
+      const children = node.children!.flatMap((child) => renderNode(child, level + 1));
+      return [row, ...children];
+    };
+
+    const tree = buildHierarchy(accounts);
+
     return (
       <>
-        {accounts.map((account) => {
-          const indent = getIndentLevel(account.account_code);
-          const isParent = account.isSynthetic;
-          const isClickable = !isParent;
-
-          return (
-            <div
-              key={account.account_code}
-              className={`py-2 ${
-                isParent ? 'font-semibold bg-muted/50 px-3 rounded mt-2' : 'pl-3'
-              }`}
-              style={{ paddingLeft: `${indent * 1.5 + 0.75}rem` }}
-            >
-              <div
-                className={`flex justify-between items-center ${
-                  isClickable ? 'cursor-pointer hover:bg-muted/30 rounded px-2 py-1 -mx-2 transition-colors' : ''
-                }`}
-                onClick={() => isClickable && loadAccountEntries(account)}
-              >
-                <span className={`${isParent ? 'text-base' : 'text-sm'} ${isClickable ? 'text-primary hover:underline' : ''}`}>
-                  {account.account_code} - {account.account_name}
-                </span>
-                <span className={`${isParent ? 'font-bold' : 'font-medium'} ${isExpense ? 'text-destructive' : 'text-success'}`}>
-                  {formatCurrency(account.total)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+        {tree.flatMap((node) => renderNode(node, 0))}
       </>
     );
   };
