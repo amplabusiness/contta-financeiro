@@ -1,7 +1,7 @@
 {
   "name": "contta-financeiro",
   "private": true,
-  "version": "1.30.6",
+  "version": "2.0.0",
   "description": "Contta Financeiro - Sistema de Gestão Financeira e Contábil",
   "author": "Ampla Business <sergio@amplabusiness.com.br>",
   "repository": {

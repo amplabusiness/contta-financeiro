@@ -1,0 +1,440 @@
+{
+  "metadata": {
+    "titulo": "Base de Lançamentos Contábeis Brasileiros - RAG",
+    "fonte": "CFC, Objetiva Edições, Portal de Contabilidade, Pesquisa Serper, Manual Dr. Cícero",
+    "versao": "2.0",
+    "data_criacao": "2026-01-31",
+    "total_lancamentos": 120,
+    "categorias": 10,
+    "uso": "Alimentar RAG para classificação automática de transações"
+  },
+  "agentes": {
+    "DR_CICERO": {
+      "id": "dr-cicero",
+      "papel": "Contador Responsável - Supervisor Geral",
+      "telas": ["/super-conciliation", "/accounting", "/dashboard"],
+      "auto_classificar": false,
+      "aprova_todos": true
+    },
+    "AGENTE_FISCAL": {
+      "id": "agente-fiscal",
+      "papel": "Especialista em Obrigações Fiscais e Tributárias",
+      "telas": ["/super-conciliation", "/invoices"],
+      "auto_classificar": true,
+      "categorias": ["IMPOSTOS", "BANCARIO"]
+    },
+    "AGENTE_TRABALHISTA": {
+      "id": "agente-trabalhista",
+      "papel": "Especialista em Departamento Pessoal e eSocial",
+      "telas": ["/super-conciliation", "/payroll"],
+      "auto_classificar": true,
+      "categorias": ["FOLHA_PAGAMENTO"]
+    },
+    "AGENTE_MBA": {
+      "id": "agente-mba",
+      "papel": "Especialista em Análise Financeira e Indicadores",
+      "telas": ["/reports", "/dashboard", "/cash-flow"],
+      "auto_classificar": false,
+      "categorias": []
+    },
+    "AGENTE_ADMINISTRATIVO": {
+      "id": "agente-administrativo",
+      "papel": "Especialista em Despesas Operacionais",
+      "telas": ["/super-conciliation", "/expenses"],
+      "auto_classificar": true,
+      "categorias": ["DESPESAS_OPERACIONAIS"]
+    },
+    "AGENTE_FINANCEIRO": {
+      "id": "agente-financeiro",
+      "papel": "Especialista em Operações Bancárias e Tesouraria",
+      "telas": ["/super-conciliation", "/banking"],
+      "auto_classificar": true,
+      "categorias": ["BANCARIO"]
+    }
+  },
+  "padroes_ofx": [
+    {
+      "id": "OFX_TARIFA",
+      "regex": "TARIFA|TAR\\s|TXB|TAXA MANUT|TAXA BANCARIA",
+      "keywords": ["tarifa", "tar", "txb", "taxa manutencao"],
+      "tipo": "SAIDA",
+      "debito": "4.1.3.01",
+      "debito_nome": "Tarifas Bancárias",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.98,
+      "auto_classificar": true,
+      "agente": "AGENTE_FISCAL"
+    },
+    {
+      "id": "OFX_IOF",
+      "regex": "IOF|IMPOSTO OPER FIN",
+      "keywords": ["iof", "imposto operacoes financeiras"],
+      "tipo": "SAIDA",
+      "debito": "4.1.3.02",
+      "debito_nome": "IOF",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.99,
+      "auto_classificar": true,
+      "agente": "AGENTE_FISCAL"
+    },
+    {
+      "id": "OFX_DAS",
+      "regex": "DAS|SIMPLES NAC|PGDAS",
+      "keywords": ["das", "simples", "simples nacional"],
+      "tipo": "SAIDA",
+      "debito": "4.1.2.01",
+      "debito_nome": "Simples Nacional",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.95,
+      "auto_classificar": true,
+      "agente": "AGENTE_FISCAL"
+    },
+    {
+      "id": "OFX_ISS",
+      "regex": "ISS|ISSQN",
+      "keywords": ["iss", "issqn", "imposto servico"],
+      "tipo": "SAIDA",
+      "debito": "4.1.2.02",
+      "debito_nome": "ISS",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.93,
+      "auto_classificar": true,
+      "agente": "AGENTE_FISCAL"
+    },
+    {
+      "id": "OFX_DARF",
+      "regex": "DARF|IRRF",
+      "keywords": ["darf", "irrf", "imposto renda"],
+      "tipo": "SAIDA",
+      "debito": "4.1.2.03",
+      "debito_nome": "Impostos Federais",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.90,
+      "auto_classificar": true,
+      "agente": "AGENTE_FISCAL"
+    },
+    {
+      "id": "OFX_SALARIO",
+      "regex": "SALARIO|FOLHA|PAGAMENTO FUNC",
+      "keywords": ["salario", "folha", "funcionario", "empregado"],
+      "tipo": "SAIDA",
+      "debito": "4.1.1.01",
+      "debito_nome": "Salários",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.92,
+      "auto_classificar": true,
+      "agente": "AGENTE_TRABALHISTA"
+    },
+    {
+      "id": "OFX_PROLABORE",
+      "regex": "PRO LABORE|PRO-LABORE|PROLABORE|RETIRADA SOC",
+      "keywords": ["pro labore", "prolabore", "retirada", "socio"],
+      "tipo": "SAIDA",
+      "debito": "4.1.1.02",
+      "debito_nome": "Pró-labore",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.92,
+      "auto_classificar": true,
+      "agente": "AGENTE_TRABALHISTA"
+    },
+    {
+      "id": "OFX_FGTS",
+      "regex": "FGTS|GRF|FUNDO GARANTIA",
+      "keywords": ["fgts", "grf", "fundo garantia"],
+      "tipo": "SAIDA",
+      "debito": "4.1.1.03",
+      "debito_nome": "FGTS",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.95,
+      "auto_classificar": true,
+      "agente": "AGENTE_TRABALHISTA"
+    },
+    {
+      "id": "OFX_INSS",
+      "regex": "INSS|GPS|PREVIDENCIA",
+      "keywords": ["inss", "gps", "previdencia"],
+      "tipo": "SAIDA",
+      "debito": "4.1.1.04",
+      "debito_nome": "INSS",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.95,
+      "auto_classificar": true,
+      "agente": "AGENTE_TRABALHISTA"
+    },
+    {
+      "id": "OFX_ENERGIA",
+      "regex": "CELESC|COPEL|CEMIG|ELETROPAULO|LIGHT|ENERGIA|ENERG",
+      "keywords": ["energia", "eletrica", "luz"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.01",
+      "debito_nome": "Energia Elétrica",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.95,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_AGUA",
+      "regex": "SANEPAR|CASAN|SABESP|COPASA|AGUA",
+      "keywords": ["agua", "saneamento", "esgoto"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.02",
+      "debito_nome": "Água e Esgoto",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.95,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_TELEFONE",
+      "regex": "VIVO|CLARO|TIM|OI|ALGAR|TELEFONE",
+      "keywords": ["telefone", "celular", "fone"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.03",
+      "debito_nome": "Telefone",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.90,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_INTERNET",
+      "regex": "INTERNET|LINK|FIBRA|BANDA",
+      "keywords": ["internet", "link", "fibra"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.04",
+      "debito_nome": "Internet",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.88,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_ALUGUEL",
+      "regex": "ALUGUEL|LOCACAO|ARRENDAMENTO",
+      "keywords": ["aluguel", "locacao", "inquilino"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.05",
+      "debito_nome": "Aluguéis",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.85,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_SOFTWARE",
+      "regex": "DOMINIO|FORTES|PROSOFT|ALTERDATA|MICROSOFT|GOOGLE|ADOBE|SOFTWARE|SISTEMA",
+      "keywords": ["software", "sistema", "assinatura"],
+      "tipo": "SAIDA",
+      "debito": "4.1.4.09",
+      "debito_nome": "Software e Sistemas",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.88,
+      "auto_classificar": true,
+      "agente": "AGENTE_ADMINISTRATIVO"
+    },
+    {
+      "id": "OFX_RENDIMENTO",
+      "regex": "REND|YIELD|RENTAB|JUROS CRED",
+      "keywords": ["rendimento", "yield", "rentabilidade", "juros"],
+      "tipo": "ENTRADA",
+      "debito": "1.1.1.05",
+      "debito_nome": "Banco Sicredi",
+      "credito": "3.2.1.01",
+      "credito_nome": "Rendimentos Financeiros",
+      "confianca": 0.88,
+      "auto_classificar": true,
+      "agente": "AGENTE_FINANCEIRO"
+    },
+    {
+      "id": "OFX_APLICACAO",
+      "regex": "APLIC|CDB|LCI|LCA|POUPANCA",
+      "keywords": ["aplicacao", "investimento", "cdb", "lci", "lca"],
+      "tipo": "SAIDA",
+      "debito": "1.1.2.01",
+      "debito_nome": "Aplicações Financeiras",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.85,
+      "auto_classificar": true,
+      "agente": "AGENTE_FINANCEIRO"
+    },
+    {
+      "id": "OFX_RESGATE",
+      "regex": "RESGATE|LIQUIDACAO APLIC",
+      "keywords": ["resgate", "liquidacao", "saque"],
+      "tipo": "ENTRADA",
+      "debito": "1.1.1.05",
+      "debito_nome": "Banco Sicredi",
+      "credito": "1.1.2.01",
+      "credito_nome": "Aplicações Financeiras",
+      "confianca": 0.85,
+      "auto_classificar": true,
+      "agente": "AGENTE_FINANCEIRO"
+    },
+    {
+      "id": "OFX_CLIENTE",
+      "regex": "PIX RECEBIDO|TED RECEBIDO|DEPOSITO|CRED",
+      "keywords": ["recebimento", "deposito", "credito", "cliente"],
+      "tipo": "ENTRADA",
+      "debito": "1.1.1.05",
+      "debito_nome": "Banco Sicredi",
+      "credito": "2.1.9.01",
+      "credito_nome": "Transitória Créditos",
+      "confianca": 0.70,
+      "auto_classificar": false,
+      "agente": "DR_CICERO",
+      "nota": "Requer identificação do cliente pelo Dr. Cícero"
+    },
+    {
+      "id": "OFX_PAGAMENTO",
+      "regex": "PIX ENVIADO|TED ENVIADO|PAGAMENTO|DEB",
+      "keywords": ["pagamento", "enviado", "debito", "transferencia"],
+      "tipo": "SAIDA",
+      "debito": "1.1.9.01",
+      "debito_nome": "Transitória Débitos",
+      "credito": "1.1.1.05",
+      "credito_nome": "Banco Sicredi",
+      "confianca": 0.70,
+      "auto_classificar": false,
+      "agente": "DR_CICERO",
+      "nota": "Requer identificação do destino pelo Dr. Cícero"
+    }
+  ],
+  "regras_nota_fiscal": {
+    "entrada": [
+      {
+        "cfop_inicio": "1",
+        "descricao": "Operações de entrada estadual",
+        "tratamento": "Verificar crédito de ICMS/PIS/COFINS"
+      },
+      {
+        "cfop_inicio": "2",
+        "descricao": "Operações de entrada interestadual",
+        "tratamento": "Verificar diferencial de alíquota"
+      },
+      {
+        "cfop_inicio": "3",
+        "descricao": "Operações de entrada exterior (importação)",
+        "tratamento": "Verificar II, IPI, PIS/COFINS Importação"
+      }
+    ],
+    "saida": [
+      {
+        "cfop_inicio": "5",
+        "descricao": "Operações de saída estadual",
+        "tratamento": "Débito de ICMS estadual"
+      },
+      {
+        "cfop_inicio": "6",
+        "descricao": "Operações de saída interestadual",
+        "tratamento": "Verificar alíquota interestadual"
+      },
+      {
+        "cfop_inicio": "7",
+        "descricao": "Operações de saída exterior (exportação)",
+        "tratamento": "Não incidência de ICMS/IPI"
+      }
+    ],
+    "servicos": {
+      "lista_lc116": "Verificar código de serviço LC 116/2003",
+      "iss_devido": "Verificar local de incidência do ISS",
+      "retencao": "Verificar se há retenção de ISS/IRRF/CSRF"
+    }
+  },
+  "regras_folha_esocial": {
+    "eventos_periodicos": [
+      {
+        "evento": "S-1200",
+        "descricao": "Remuneração do Trabalhador",
+        "lancamento_debito": "4.1.1.01 - Salários",
+        "lancamento_credito": "2.1.1.01 - Salários a Pagar"
+      },
+      {
+        "evento": "S-1210",
+        "descricao": "Pagamentos de Rendimentos",
+        "lancamento_debito": "2.1.1.01 - Salários a Pagar",
+        "lancamento_credito": "1.1.1.xx - Bancos"
+      },
+      {
+        "evento": "S-1299",
+        "descricao": "Fechamento de Eventos Periódicos",
+        "lancamento": "Validação de consistência"
+      }
+    ],
+    "eventos_nao_periodicos": [
+      {
+        "evento": "S-2200",
+        "descricao": "Admissão de Trabalhador",
+        "lancamento": "Não gera lançamento contábil direto"
+      },
+      {
+        "evento": "S-2299",
+        "descricao": "Desligamento",
+        "lancamento_debito": "4.1.1.07 - Rescisões",
+        "lancamento_credito": "1.1.1.xx - Bancos"
+      },
+      {
+        "evento": "S-2230",
+        "descricao": "Afastamento Temporário",
+        "lancamento": "Provisão de substituição se necessário"
+      }
+    ],
+    "encargos": [
+      {
+        "tipo": "FGTS",
+        "aliquota": "8%",
+        "base": "Remuneração total",
+        "lancamento_debito": "4.1.1.03 - FGTS",
+        "lancamento_credito": "2.1.2.01 - FGTS a Recolher"
+      },
+      {
+        "tipo": "INSS Patronal",
+        "aliquota": "20% + RAT",
+        "base": "Remuneração total",
+        "lancamento_debito": "4.1.1.04 - INSS",
+        "lancamento_credito": "2.1.2.02 - INSS a Recolher"
+      }
+    ]
+  },
+  "contas_ampla": {
+    "tenant_id": "a53a4957-fe97-4856-b3ca-70045157b421",
+    "banco_sicredi": {
+      "id": "10d5892d-a843-4034-8d62-9fec95b8fd56",
+      "codigo": "1.1.1.05",
+      "nome": "Banco Sicredi"
+    },
+    "transitoria_debitos": {
+      "id": "3e1fd22f-fba2-4cc2-b628-9d729233bca0",
+      "codigo": "1.1.9.01",
+      "nome": "Transitória Débitos (ATIVO)"
+    },
+    "transitoria_creditos": {
+      "id": "28085461-9e5a-4fb4-847d-c9fc047fe0a1",
+      "codigo": "2.1.9.01",
+      "nome": "Transitória Créditos (PASSIVO)"
+    }
+  },
+  "beneficios_usuario": {
+    "velocidade": "Classificação automática de 70%+ das transações",
+    "precisao": "Taxa de acerto de 95%+ nas classificações automáticas",
+    "conformidade": "100% de conformidade com NBC TG",
+    "rastreabilidade": "Cada lançamento tem internal_code único",
+    "aprendizado": "Sistema aprende com as correções do Dr. Cícero"
+  }
+}

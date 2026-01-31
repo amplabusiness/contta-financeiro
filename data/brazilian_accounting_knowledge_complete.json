@@ -1,0 +1,667 @@
+{
+  "metadata": {
+    "titulo": "Base de Conhecimento Contábil Brasileiro",
+    "versao": "1.0.0",
+    "data_criacao": "2026-01-31",
+    "autor": "Sistema Contta Financeiro",
+    "contador_responsavel": "Dr. Cícero",
+    "empresa": "Ampla Contabilidade LTDA",
+    "tenant_id": "a53a4957-fe97-4856-b3ca-70045157b421"
+  },
+
+  "principios_contabeis": {
+    "partidas_dobradas": {
+      "descricao": "Todo débito corresponde a um crédito de igual valor",
+      "equacao": "ATIVO = PASSIVO + PATRIMÔNIO LÍQUIDO",
+      "regra": "Σ Débitos = Σ Créditos (sempre)"
+    },
+    "natureza_contas": {
+      "ATIVO": { "aumenta_com": "DÉBITO", "diminui_com": "CRÉDITO", "natureza": "DEVEDORA" },
+      "PASSIVO": { "aumenta_com": "CRÉDITO", "diminui_com": "DÉBITO", "natureza": "CREDORA" },
+      "RECEITA": { "aumenta_com": "CRÉDITO", "diminui_com": "DÉBITO", "natureza": "CREDORA" },
+      "DESPESA": { "aumenta_com": "DÉBITO", "diminui_com": "CRÉDITO", "natureza": "DEVEDORA" },
+      "PL": { "aumenta_com": "CRÉDITO", "diminui_com": "DÉBITO", "natureza": "CREDORA" }
+    }
+  },
+
+  "contas_especiais_ampla": {
+    "banco_principal": {
+      "codigo": "1.1.1.05",
+      "nome": "Banco Sicredi",
+      "id": "10d5892d-a843-4034-8d62-9fec95b8fd56",
+      "tipo": "ATIVO"
+    },
+    "transitoria_debitos": {
+      "codigo": "1.1.9.01",
+      "nome": "Transitória Débitos Pendentes",
+      "id": "3e1fd22f-fba2-4cc2-b628-9d729233bca0",
+      "tipo": "ATIVO",
+      "uso": "Saídas de dinheiro aguardando classificação"
+    },
+    "transitoria_creditos": {
+      "codigo": "2.1.9.01",
+      "nome": "Transitória Créditos Pendentes",
+      "id": "28085461-9e5a-4fb4-847d-c9fc047fe0a1",
+      "tipo": "PASSIVO",
+      "uso": "Entradas de dinheiro aguardando classificação"
+    }
+  },
+
+  "fluxo_importacao_ofx": {
+    "entrada_dinheiro": {
+      "descricao": "Quando entra dinheiro no banco (crédito no extrato)",
+      "lancamento_importacao": {
+        "debito": { "conta": "1.1.1.xx", "nome": "Banco" },
+        "credito": { "conta": "2.1.9.01", "nome": "Transitória Créditos" }
+      },
+      "lancamento_classificacao": {
+        "debito": { "conta": "2.1.9.01", "nome": "Transitória Créditos" },
+        "credito": { "conta": "XXX", "nome": "Conta de Origem (Cliente/Receita)" }
+      }
+    },
+    "saida_dinheiro": {
+      "descricao": "Quando sai dinheiro do banco (débito no extrato)",
+      "lancamento_importacao": {
+        "debito": { "conta": "1.1.9.01", "nome": "Transitória Débitos" },
+        "credito": { "conta": "1.1.1.xx", "nome": "Banco" }
+      },
+      "lancamento_classificacao": {
+        "debito": { "conta": "XXX", "nome": "Conta de Destino (Despesa/Fornecedor)" },
+        "credito": { "conta": "1.1.9.01", "nome": "Transitória Débitos" }
+      }
+    }
+  },
+
+  "lancamentos_por_categoria": {
+    "RECEITAS": [
+      {
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "credito": { "codigo": "3.1.1.01", "nome": "Receita de Vendas de Mercadorias" },
+        "historico": "Venda de mercadorias conf. NF {nf} - {cliente}",
+        "keywords": ["venda", "mercadoria", "nf", "nota fiscal", "receita"],
+        "documentos": ["NF-e", "NFC-e"]
+      },
+      {
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": { "codigo": "1.1.2.01", "nome": "Clientes/Duplicatas a Receber" },
+        "credito": { "codigo": "3.1.1.01", "nome": "Receita de Vendas de Mercadorias" },
+        "historico": "Venda a prazo conf. NF {nf} - {cliente}",
+        "keywords": ["venda", "prazo", "duplicata", "cliente", "receber"],
+        "documentos": ["NF-e"]
+      },
+      {
+        "operacao": "Recebimento de Duplicata/Cliente",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "credito": { "codigo": "1.1.2.01", "nome": "Clientes/Duplicatas a Receber" },
+        "historico": "Recebimento {cliente} - Ref. NF {nf}",
+        "keywords": ["recebimento", "duplicata", "baixa", "cliente", "pix", "ted", "transferência"],
+        "documentos": ["Extrato OFX", "Comprovante PIX/TED"]
+      },
+      {
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "credito": { "codigo": "3.1.2.01", "nome": "Receita de Prestação de Serviços" },
+        "historico": "Serviços prestados conf. NFS-e {nf} - {cliente}",
+        "keywords": ["serviço", "honorário", "consultoria", "nfse", "prestação"],
+        "documentos": ["NFS-e"]
+      },
+      {
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": { "codigo": "1.1.2.01", "nome": "Clientes a Receber" },
+        "credito": { "codigo": "3.1.2.01", "nome": "Receita de Prestação de Serviços" },
+        "historico": "Serviços prestados a prazo conf. NFS-e {nf} - {cliente}",
+        "keywords": ["serviço", "prazo", "honorário", "receber"],
+        "documentos": ["NFS-e"]
+      },
+      {
+        "operacao": "Receita de Juros Ativos",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "credito": { "codigo": "3.2.1.01", "nome": "Receitas Financeiras - Juros Ativos" },
+        "historico": "Juros recebidos s/ {descricao}",
+        "keywords": ["juros", "recebidos", "rendimento", "aplicação", "mora"],
+        "documentos": ["Extrato OFX"]
+      },
+      {
+        "operacao": "Receita de Desconto Obtido",
+        "debito": { "codigo": "2.1.1.xx", "nome": "Fornecedores" },
+        "credito": { "codigo": "3.2.1.02", "nome": "Descontos Obtidos" },
+        "historico": "Desconto obtido pagamento {fornecedor}",
+        "keywords": ["desconto", "obtido", "abatimento"],
+        "documentos": ["NF fornecedor", "Boleto"]
+      },
+      {
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": { "codigo": "1.1.3.xx", "nome": "Aplicações Financeiras" },
+        "credito": { "codigo": "3.2.1.01", "nome": "Receitas Financeiras" },
+        "historico": "Rendimento aplicação {banco} - {periodo}",
+        "keywords": ["rendimento", "aplicação", "investimento", "poupança", "cdb", "lci", "lca"],
+        "documentos": ["Extrato de investimentos", "Informe de rendimentos"]
+      }
+    ],
+
+    "DESPESAS": [
+      {
+        "operacao": "Pagamento de Aluguel",
+        "debito": { "codigo": "4.1.1.01", "nome": "Despesas com Aluguel" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento aluguel ref. {mes}/{ano} - {locador}",
+        "keywords": ["aluguel", "locação", "imóvel", "sala", "escritório"],
+        "documentos": ["Recibo de aluguel", "Boleto"],
+        "auto_classificar": false
+      },
+      {
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": { "codigo": "4.1.1.02", "nome": "Despesas com Energia Elétrica" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento energia ref. {mes}/{ano} - {concessionaria}",
+        "keywords": ["energia", "elétrica", "luz", "enel", "celg", "cemig", "copel", "light", "cpfl"],
+        "documentos": ["Fatura de energia"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Pagamento de Água",
+        "debito": { "codigo": "4.1.1.03", "nome": "Despesas com Água e Esgoto" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento água ref. {mes}/{ano} - {concessionaria}",
+        "keywords": ["água", "esgoto", "saneago", "sabesp", "copasa", "cedae"],
+        "documentos": ["Fatura de água"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": { "codigo": "4.1.1.04", "nome": "Despesas com Comunicação" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento telefone/internet ref. {mes}/{ano}",
+        "keywords": ["telefone", "internet", "comunicação", "vivo", "claro", "tim", "oi", "net"],
+        "documentos": ["Fatura de telefone/internet"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Material de Escritório",
+        "debito": { "codigo": "4.1.1.05", "nome": "Material de Escritório" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Compra material escritório conf. NF {nf}",
+        "keywords": ["material", "escritório", "papelaria", "suprimento"],
+        "documentos": ["NF-e", "Cupom fiscal"]
+      },
+      {
+        "operacao": "Despesa com Combustível",
+        "debito": { "codigo": "4.1.1.06", "nome": "Despesas com Combustível" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Abastecimento veículo placa {placa}",
+        "keywords": ["combustível", "gasolina", "álcool", "etanol", "diesel", "abastecimento", "posto", "shell", "ipiranga", "br"],
+        "documentos": ["NF-e", "Cupom fiscal posto"]
+      },
+      {
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": { "codigo": "4.2.1.01", "nome": "Despesas Bancárias" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Tarifa bancária - {banco}",
+        "keywords": ["tarifa", "taxa", "bancária", "manutenção", "ted", "doc", "pix", "cobrança", "liquidação"],
+        "documentos": ["Extrato OFX"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Despesas com Juros",
+        "debito": { "codigo": "4.2.1.02", "nome": "Juros Passivos" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Juros s/ {descricao}",
+        "keywords": ["juros", "mora", "atraso", "multa", "encargos"],
+        "documentos": ["Extrato OFX", "Boleto com juros"]
+      },
+      {
+        "operacao": "Despesa com Publicidade",
+        "debito": { "codigo": "4.1.2.01", "nome": "Despesas com Publicidade" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Despesa publicidade/propaganda conf. NF {nf}",
+        "keywords": ["publicidade", "propaganda", "marketing", "anúncio", "mídia", "google ads", "facebook"],
+        "documentos": ["NF-e", "NFS-e"]
+      },
+      {
+        "operacao": "Despesa com Seguros",
+        "debito": { "codigo": "4.1.2.02", "nome": "Despesas com Seguros" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento seguro {tipo} apólice {numero}",
+        "keywords": ["seguro", "apólice", "prêmio", "sinistro"],
+        "documentos": ["Apólice", "Boleto seguradora"]
+      },
+      {
+        "operacao": "Honorários Contábeis",
+        "debito": { "codigo": "4.1.2.03", "nome": "Honorários Contábeis" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Honorários contabilidade ref. {mes}/{ano}",
+        "keywords": ["honorário", "contabilidade", "contador", "escritório contábil"],
+        "documentos": ["NFS-e", "Recibo"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Honorários Advocatícios",
+        "debito": { "codigo": "4.1.2.04", "nome": "Honorários Advocatícios" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Honorários advocatícios - {advogado}",
+        "keywords": ["honorário", "advogado", "advocatício", "jurídico"],
+        "documentos": ["NFS-e", "Recibo"]
+      }
+    ],
+
+    "FOLHA_PAGAMENTO": [
+      {
+        "operacao": "Provisão de Salários",
+        "debito": { "codigo": "4.1.3.01", "nome": "Despesas com Salários" },
+        "credito": { "codigo": "2.1.3.01", "nome": "Salários a Pagar" },
+        "historico": "Provisão salários ref. {mes}/{ano}",
+        "keywords": ["salário", "folha", "pagamento", "provisão", "funcionário"],
+        "documentos": ["Folha de pagamento"]
+      },
+      {
+        "operacao": "Pagamento de Salários",
+        "debito": { "codigo": "2.1.3.01", "nome": "Salários a Pagar" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento salários ref. {mes}/{ano}",
+        "keywords": ["salário", "pagamento", "folha"],
+        "documentos": ["Extrato OFX", "Comprovante transferência"]
+      },
+      {
+        "operacao": "Provisão de INSS Patronal",
+        "debito": { "codigo": "4.1.3.02", "nome": "INSS Patronal" },
+        "credito": { "codigo": "2.1.4.01", "nome": "INSS a Recolher" },
+        "historico": "Provisão INSS patronal ref. {mes}/{ano}",
+        "keywords": ["inss", "patronal", "previdência", "contribuição"],
+        "documentos": ["Folha de pagamento"]
+      },
+      {
+        "operacao": "Pagamento de INSS",
+        "debito": { "codigo": "2.1.4.01", "nome": "INSS a Recolher" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento GPS/INSS ref. {mes}/{ano}",
+        "keywords": ["gps", "inss", "guia previdência"],
+        "documentos": ["GPS", "DARF"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Provisão de FGTS",
+        "debito": { "codigo": "4.1.3.03", "nome": "FGTS" },
+        "credito": { "codigo": "2.1.4.02", "nome": "FGTS a Recolher" },
+        "historico": "Provisão FGTS ref. {mes}/{ano}",
+        "keywords": ["fgts", "fundo garantia"],
+        "documentos": ["Folha de pagamento"]
+      },
+      {
+        "operacao": "Pagamento de FGTS",
+        "debito": { "codigo": "2.1.4.02", "nome": "FGTS a Recolher" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento FGTS ref. {mes}/{ano}",
+        "keywords": ["fgts", "grf", "guia fgts"],
+        "documentos": ["GRF"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Pró-labore - Provisão",
+        "debito": { "codigo": "4.1.3.06", "nome": "Pró-labore" },
+        "credito": { "codigo": "2.1.3.04", "nome": "Pró-labore a Pagar" },
+        "historico": "Provisão pró-labore {sócio} ref. {mes}/{ano}",
+        "keywords": ["pró-labore", "prolabore", "sócio", "administrador", "retirada"],
+        "documentos": ["Recibo pró-labore"]
+      },
+      {
+        "operacao": "Pró-labore - Pagamento",
+        "debito": { "codigo": "2.1.3.04", "nome": "Pró-labore a Pagar" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento pró-labore {sócio} ref. {mes}/{ano}",
+        "keywords": ["pró-labore", "prolabore", "pagamento"],
+        "documentos": ["Extrato OFX", "Comprovante"]
+      },
+      {
+        "operacao": "Férias - Provisão",
+        "debito": { "codigo": "4.1.3.04", "nome": "Despesas com Férias" },
+        "credito": { "codigo": "2.1.3.02", "nome": "Férias a Pagar" },
+        "historico": "Provisão férias funcionário {nome}",
+        "keywords": ["férias", "provisão"],
+        "documentos": ["Folha de pagamento"]
+      },
+      {
+        "operacao": "Férias - Pagamento",
+        "debito": { "codigo": "2.1.3.02", "nome": "Férias a Pagar" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento férias funcionário {nome}",
+        "keywords": ["férias", "pagamento"],
+        "documentos": ["Recibo de férias"]
+      },
+      {
+        "operacao": "13º Salário - Provisão",
+        "debito": { "codigo": "4.1.3.05", "nome": "Despesas com 13º Salário" },
+        "credito": { "codigo": "2.1.3.03", "nome": "13º Salário a Pagar" },
+        "historico": "Provisão 13º salário ref. {mes}/{ano}",
+        "keywords": ["13", "décimo terceiro", "gratificação", "natalina"],
+        "documentos": ["Folha de pagamento"]
+      },
+      {
+        "operacao": "13º Salário - Pagamento",
+        "debito": { "codigo": "2.1.3.03", "nome": "13º Salário a Pagar" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento 13º salário ref. {ano}",
+        "keywords": ["13", "décimo terceiro"],
+        "documentos": ["Recibo 13º"]
+      }
+    ],
+
+    "IMPOSTOS": [
+      {
+        "operacao": "ICMS sobre Vendas",
+        "debito": { "codigo": "3.1.1.01.D", "nome": "(-) ICMS sobre Vendas" },
+        "credito": { "codigo": "2.1.5.01", "nome": "ICMS a Recolher" },
+        "historico": "ICMS s/ vendas NF {nf}",
+        "keywords": ["icms", "imposto", "circulação", "mercadoria"],
+        "documentos": ["NF-e"]
+      },
+      {
+        "operacao": "Pagamento de ICMS",
+        "debito": { "codigo": "2.1.5.01", "nome": "ICMS a Recolher" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento ICMS ref. {mes}/{ano}",
+        "keywords": ["icms", "guia", "dare", "gnre"],
+        "documentos": ["DARE", "GNRE"]
+      },
+      {
+        "operacao": "PIS sobre Faturamento",
+        "debito": { "codigo": "3.1.1.01.D", "nome": "(-) PIS sobre Faturamento" },
+        "credito": { "codigo": "2.1.5.02", "nome": "PIS a Recolher" },
+        "historico": "PIS s/ faturamento ref. {mes}/{ano}",
+        "keywords": ["pis", "contribuição", "faturamento"],
+        "documentos": ["Apuração fiscal"]
+      },
+      {
+        "operacao": "COFINS sobre Faturamento",
+        "debito": { "codigo": "3.1.1.01.D", "nome": "(-) COFINS sobre Faturamento" },
+        "credito": { "codigo": "2.1.5.03", "nome": "COFINS a Recolher" },
+        "historico": "COFINS s/ faturamento ref. {mes}/{ano}",
+        "keywords": ["cofins", "contribuição", "faturamento"],
+        "documentos": ["Apuração fiscal"]
+      },
+      {
+        "operacao": "Pagamento de PIS/COFINS",
+        "debito": { "codigo": "2.1.5.02/03", "nome": "PIS/COFINS a Recolher" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento DARF PIS/COFINS ref. {mes}/{ano}",
+        "keywords": ["pis", "cofins", "darf"],
+        "documentos": ["DARF"]
+      },
+      {
+        "operacao": "ISS sobre Serviços",
+        "debito": { "codigo": "3.1.2.01.D", "nome": "(-) ISS sobre Serviços" },
+        "credito": { "codigo": "2.1.5.04", "nome": "ISS a Recolher" },
+        "historico": "ISS s/ serviços NFS-e {nf}",
+        "keywords": ["iss", "issqn", "serviço", "municipal"],
+        "documentos": ["NFS-e"]
+      },
+      {
+        "operacao": "Pagamento de ISS",
+        "debito": { "codigo": "2.1.5.04", "nome": "ISS a Recolher" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento ISS ref. {mes}/{ano}",
+        "keywords": ["iss", "guia", "dam"],
+        "documentos": ["DAM", "Guia ISS"]
+      },
+      {
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": { "codigo": "4.3.1.03", "nome": "Simples Nacional" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento DAS Simples Nacional ref. {mes}/{ano}",
+        "keywords": ["das", "simples", "nacional", "mei", "microempresa", "pgdas"],
+        "documentos": ["DAS"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "IRPJ Estimativa",
+        "debito": { "codigo": "4.3.1.01", "nome": "Despesa com IRPJ" },
+        "credito": { "codigo": "2.1.5.05", "nome": "IRPJ a Recolher" },
+        "historico": "Provisão IRPJ ref. {trimestre}/{ano}",
+        "keywords": ["irpj", "imposto renda", "pessoa jurídica"],
+        "documentos": ["Apuração IRPJ"]
+      },
+      {
+        "operacao": "CSLL Estimativa",
+        "debito": { "codigo": "4.3.1.02", "nome": "Despesa com CSLL" },
+        "credito": { "codigo": "2.1.5.06", "nome": "CSLL a Recolher" },
+        "historico": "Provisão CSLL ref. {trimestre}/{ano}",
+        "keywords": ["csll", "contribuição social"],
+        "documentos": ["Apuração CSLL"]
+      }
+    ],
+
+    "BANCARIO": [
+      {
+        "operacao": "Depósito em Conta Corrente",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Banco Conta Movimento" },
+        "credito": { "codigo": "1.1.1.01", "nome": "Caixa" },
+        "historico": "Depósito em conta corrente {banco}",
+        "keywords": ["depósito", "banco", "conta", "dinheiro"],
+        "documentos": ["Extrato OFX"]
+      },
+      {
+        "operacao": "Saque/Retirada",
+        "debito": { "codigo": "1.1.1.01", "nome": "Caixa" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Banco Conta Movimento" },
+        "historico": "Saque/retirada conta corrente {banco}",
+        "keywords": ["saque", "retirada", "caixa"],
+        "documentos": ["Extrato OFX"]
+      },
+      {
+        "operacao": "Transferência Entre Contas Próprias",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Banco Destino" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Banco Origem" },
+        "historico": "Transferência entre contas próprias",
+        "keywords": ["transferência", "ted", "pix", "mesma titularidade", "entre contas"],
+        "documentos": ["Extrato OFX"]
+      },
+      {
+        "operacao": "Aplicação Financeira",
+        "debito": { "codigo": "1.1.3.xx", "nome": "Aplicações Financeiras" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Banco Conta Movimento" },
+        "historico": "Aplicação financeira {tipo} - {banco}",
+        "keywords": ["aplicação", "investimento", "cdb", "poupança", "fundo", "lci", "lca"],
+        "documentos": ["Extrato OFX", "Comprovante"]
+      },
+      {
+        "operacao": "Resgate de Aplicação",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Banco Conta Movimento" },
+        "credito": { "codigo": "1.1.3.xx", "nome": "Aplicações Financeiras" },
+        "historico": "Resgate aplicação financeira - {banco}",
+        "keywords": ["resgate", "aplicação", "investimento"],
+        "documentos": ["Extrato OFX"]
+      },
+      {
+        "operacao": "IOF sobre Operações",
+        "debito": { "codigo": "4.2.1.04", "nome": "IOF" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Banco" },
+        "historico": "IOF s/ operação financeira",
+        "keywords": ["iof", "imposto", "operação financeira"],
+        "documentos": ["Extrato OFX"],
+        "auto_classificar": true
+      },
+      {
+        "operacao": "Empréstimo - Liberação",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Banco Conta Movimento" },
+        "credito": { "codigo": "2.1.6.01", "nome": "Empréstimos a Pagar CP" },
+        "historico": "Liberação empréstimo {banco} contrato {numero}",
+        "keywords": ["empréstimo", "liberação", "financiamento", "crédito"],
+        "documentos": ["Contrato", "Extrato OFX"]
+      },
+      {
+        "operacao": "Empréstimo - Pagamento Parcela",
+        "debito": { "codigo": "2.1.6.01", "nome": "Empréstimos a Pagar" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Banco" },
+        "historico": "Pagamento parcela empréstimo {banco}",
+        "keywords": ["empréstimo", "parcela", "amortização", "financiamento"],
+        "documentos": ["Extrato OFX", "Boleto"]
+      }
+    ],
+
+    "ATIVO_IMOBILIZADO": [
+      {
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": { "codigo": "1.2.3.xx", "nome": "Imobilizado - {tipo}" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Aquisição {bem} conf. NF {nf}",
+        "keywords": ["imobilizado", "aquisição", "compra", "ativo fixo", "máquina", "equipamento", "veículo", "móvel", "computador"],
+        "documentos": ["NF-e"]
+      },
+      {
+        "operacao": "Depreciação Mensal",
+        "debito": { "codigo": "4.1.4.01", "nome": "Despesa com Depreciação" },
+        "credito": { "codigo": "1.2.3.xx.D", "nome": "(-) Depreciação Acumulada" },
+        "historico": "Depreciação ref. {mes}/{ano}",
+        "keywords": ["depreciação", "desgaste", "vida útil"],
+        "documentos": ["Planilha de depreciação"]
+      },
+      {
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "credito": { "codigo": "1.2.3.xx", "nome": "Imobilizado" },
+        "historico": "Venda {bem} conf. NF {nf}",
+        "keywords": ["venda", "baixa", "alienação", "imobilizado"],
+        "documentos": ["NF-e de venda"]
+      }
+    ],
+
+    "ESTOQUE": [
+      {
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": { "codigo": "1.1.4.01", "nome": "Estoque de Mercadorias" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Compra mercadorias conf. NF {nf} - {fornecedor}",
+        "keywords": ["compra", "mercadoria", "estoque", "fornecedor"],
+        "documentos": ["NF-e entrada"]
+      },
+      {
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": { "codigo": "1.1.4.01", "nome": "Estoque de Mercadorias" },
+        "credito": { "codigo": "2.1.1.xx", "nome": "Fornecedores" },
+        "historico": "Compra mercadorias a prazo conf. NF {nf}",
+        "keywords": ["compra", "prazo", "fornecedor", "duplicata"],
+        "documentos": ["NF-e entrada", "Boleto"]
+      },
+      {
+        "operacao": "Pagamento a Fornecedor",
+        "debito": { "codigo": "2.1.1.xx", "nome": "Fornecedores" },
+        "credito": { "codigo": "1.1.1.xx", "nome": "Caixa/Banco" },
+        "historico": "Pagamento NF {nf} - {fornecedor}",
+        "keywords": ["pagamento", "fornecedor", "duplicata", "quitação"],
+        "documentos": ["Extrato OFX", "Comprovante"]
+      },
+      {
+        "operacao": "CMV - Custo das Mercadorias Vendidas",
+        "debito": { "codigo": "3.1.1.01.C", "nome": "CMV" },
+        "credito": { "codigo": "1.1.4.01", "nome": "Estoque de Mercadorias" },
+        "historico": "CMV ref. venda NF {nf}",
+        "keywords": ["cmv", "custo", "venda", "baixa estoque"],
+        "documentos": ["NF-e saída"]
+      }
+    ]
+  },
+
+  "padroes_ofx": {
+    "entradas": {
+      "RECEBIMENTO_CLIENTE": {
+        "patterns": ["PIX REC", "TED REC", "DEPOSITO", "TRANSF REC", "CREDITO"],
+        "classificacao_sugerida": "Recebimento de Cliente"
+      },
+      "RENDIMENTO": {
+        "patterns": ["RENDIMENTO", "JUROS CRED", "CREDITO POUPAN"],
+        "classificacao_sugerida": "Receita Financeira"
+      },
+      "RESGATE": {
+        "patterns": ["RESGATE", "APLIC LIQUID"],
+        "classificacao_sugerida": "Resgate de Aplicação"
+      },
+      "ESTORNO": {
+        "patterns": ["ESTORNO", "DEVOLUÇ", "CANCEL"],
+        "classificacao_sugerida": "Estorno"
+      }
+    },
+    "saidas": {
+      "TARIFA": {
+        "patterns": ["TARIFA", "TAR COM", "TAR COB", "TAR LIQ", "CUSTODIA"],
+        "classificacao_sugerida": "Despesa Bancária",
+        "auto_classificar": true
+      },
+      "ENERGIA": {
+        "patterns": ["ENERGIA", "CELG", "ENEL", "CEMIG", "LIGHT", "CPFL"],
+        "classificacao_sugerida": "Energia Elétrica",
+        "auto_classificar": true
+      },
+      "AGUA": {
+        "patterns": ["AGUA", "SANEAGO", "SABESP", "COPASA"],
+        "classificacao_sugerida": "Água e Esgoto",
+        "auto_classificar": true
+      },
+      "TELEFONE": {
+        "patterns": ["TELEFONE", "INTERNET", "VIVO", "CLARO", "TIM", "OI"],
+        "classificacao_sugerida": "Comunicação",
+        "auto_classificar": true
+      },
+      "SIMPLES": {
+        "patterns": ["DAS", "SIMPLES NACIONAL", "MEI", "PGDAS"],
+        "classificacao_sugerida": "Simples Nacional",
+        "auto_classificar": true
+      },
+      "INSS": {
+        "patterns": ["GPS", "INSS", "PREVIDENCIA"],
+        "classificacao_sugerida": "INSS",
+        "auto_classificar": true
+      },
+      "FGTS": {
+        "patterns": ["FGTS", "GRF"],
+        "classificacao_sugerida": "FGTS",
+        "auto_classificar": true
+      },
+      "SALARIO": {
+        "patterns": ["SALARIO", "FOLHA", "PGTO FUNC"],
+        "classificacao_sugerida": "Salários"
+      },
+      "PROLABORE": {
+        "patterns": ["PRO-LABORE", "PROLABORE", "RETIRADA SOCIO"],
+        "classificacao_sugerida": "Pró-labore"
+      },
+      "COMBUSTIVEL": {
+        "patterns": ["COMBUSTIVEL", "GASOLINA", "POSTO", "SHELL", "IPIRANGA"],
+        "classificacao_sugerida": "Combustível"
+      },
+      "APLICACAO": {
+        "patterns": ["APLICACAO", "INVESTIMENTO", "CDB", "LCI", "LCA"],
+        "classificacao_sugerida": "Aplicação Financeira"
+      }
+    }
+  },
+
+  "regras_dr_cicero": {
+    "obrigatorias": [
+      "Todo lançamento DEVE ter internal_code único",
+      "Partidas dobradas: Σ Débitos = Σ Créditos (sempre)",
+      "Transitórias DEVEM zerar ao final de cada período",
+      "NENHUM ajuste sem autorização do Dr. Cícero",
+      "Banco + Transitória = Extrato (sempre)",
+      "Lançamento de importação NÃO pode ser alterado",
+      "Toda transação bancária DEVE ter lançamento contábil"
+    ],
+    "proibicoes": [
+      "NUNCA deletar lançamentos de importação OFX",
+      "NUNCA fazer lançamento sem contrapartida",
+      "NUNCA movimentar banco sem passar pela transitória",
+      "NUNCA criar ajustes genéricos sem identificação",
+      "NUNCA modificar internal_code após criação"
+    ]
+  },
+
+  "fontes_pesquisa": [
+    "contabeis.com.br",
+    "portaldecontabilidade.com.br",
+    "ottimizza.com.br",
+    "netsuite.com/portal/br",
+    "treasy.com.br",
+    "estrategiaconcursos.com.br",
+    "crcba.org.br",
+    "lefisc.com.br"
+  ]
+}

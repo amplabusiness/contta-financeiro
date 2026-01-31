@@ -134,12 +134,16 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import TrialExpired from "./pages/TrialExpired";
 import { SubscriptionGuard } from "./components/SubscriptionGuard";
+import EducatorPage from "./pages/EducatorPage";
+import DataLakePage from "./pages/DataLakePage";
+import ComplianceDashboard from "./pages/ComplianceDashboard";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
   { path: "/accounts-payable", element: <AccountsPayable /> },
   { path: "/ai-accountant", element: <AIAccountant /> },
   { path: "/ai-agents", element: <AIAgents /> },
+  { path: "/ai-educator", element: <EducatorPage /> },
   { path: "/ai-insights", element: <AIInsights /> },
   { path: "/ai-network", element: <AINetwork /> },
   { path: "/auth", element: <Auth /> },
@@ -172,10 +176,12 @@ const appRoutes = [
   { path: "/collection-dashboard", element: <CollectionDashboard /> },
   { path: "/collection-letters", element: <CollectionLetters /> },
   { path: "/collection-work-orders", element: <CollectionWorkOrders /> },
+  { path: "/compliance-dashboard", element: <ComplianceDashboard /> },
   { path: "/convert-pro-bono-to-barter", element: <ConvertProBonoToBarter /> },
   { path: "/contracts", element: <Contracts /> },
   { path: "/cost-center-analysis", element: <CostCenterAnalysis /> },
   { path: "/dashboard", element: <Dashboard /> },
+  { path: "/data-lake", element: <DataLakePage /> },
   { path: "/debt-negotiation", element: <DebtNegotiation /> },
   { path: "/default-analysis", element: <DefaultAnalysis /> },
   { path: "/aging-report", element: <AgingReport /> },
@@ -270,6 +276,8 @@ const App = () => (
             <Route path="/client-ledger" element={<ClientLedger />} />
             <Route path="/regularize-accounting" element={<RegularizeAccounting />} />
             <Route path="/ai-agents" element={<AIAgents />} />
+            <Route path="/ai-educator" element={<EducatorPage />} />
+            <Route path="/data-lake" element={<DataLakePage />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
             <Route path="/cost-center-assets" element={<CostCenterAssets />} />
             <Route path="/cost-center-audit" element={<CostCenterAudit />} />

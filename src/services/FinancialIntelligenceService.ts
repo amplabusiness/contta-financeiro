@@ -1,6 +1,27 @@
 import { supabase } from "@/integrations/supabase/client";
 import { accountingService } from "@/services/AccountingService";
 
+/**
+ * ============================================================================
+ * FINANCIAL INTELLIGENCE SERVICE
+ * ============================================================================
+ * 
+ * REGRA DE OURO (Dr. Cícero - 30/01/2026):
+ * 
+ * 🔴 PIX NUNCA GERA RECEITA AUTOMATICAMENTE
+ * 🔴 BANCO GERA APENAS CONTAS PATRIMONIAIS
+ * 🔴 RECEITA NASCE EXCLUSIVAMENTE DO MÓDULO DE HONORÁRIOS
+ * 
+ * Fluxo correto:
+ * 1. Entrada no banco → D Banco / C Transitória Créditos
+ * 2. Classificação → D Transitória / C [Conta de Origem]
+ * 
+ * A conta de origem NUNCA é receita (3.x) direto do banco!
+ * Receita vem do cadastro de honorários (fee_configurations)
+ * 
+ * ============================================================================
+ */
+
 // Tipos
 export interface OpeningBalance {
     clientId: string;
@@ -11,13 +32,20 @@ export interface OpeningBalance {
 
 export interface ClassificationSuggestion {
     description: string;
-    type: 'revenue_current' | 'revenue_past' | 'expense_current' | 'split';
+    type: 'pending_classification' | 'ai_suggestion' | 'revenue_current' | 'revenue_past' | 'expense_current' | 'split' | 'loan' | 'transfer';
+    rule_id?: string;
+    confidence?: number;
     entries: {
         debit: { account: string; name: string };
         credit: { account: string; name: string };
         value: number;
     }[];
     reasoning: string;
+    
+    // Novo: flag para indicar se precisa de revisão obrigatória
+    requires_review?: boolean;
+    // Novo: contas sugeridas para classificação
+    suggested_accounts?: { id: string; code: string; name: string }[];
 }
 
 export const FinancialIntelligenceService = {
@@ -144,113 +172,285 @@ export const FinancialIntelligenceService = {
 
     /**
      * Analisa uma transação bancária e sugere a contabilização
+     * 
+     * ⚠️ REGRA DE OURO (Dr. Cícero):
+     * - PIX NUNCA gera Receita automaticamente
+     * - Banco gera APENAS contas patrimoniais
+     * - Receita de Honorários nasce do módulo de Honorários
      */
     async analyzeBankTransaction(
         amount: number, 
         date: string, 
         description: string,
-        bankAccountCode: string = "1.1.1.01" // Fallback seguro (Caixa) se não informado
+        bankAccountCode: string = "1.1.1.05", // Banco Sicredi padrão
+        tenantId?: string
     ): Promise<ClassificationSuggestion> {
         const transactionDate = new Date(date);
         const isReceipt = amount > 0;
+        const absAmount = Math.abs(amount);
         
-        // 0. Memória Muscular (Dr. Cicero Auto-Learn)
+        // Contas transitórias (SEMPRE usadas na importação)
+        const TRANSITORIA_CREDITOS = { code: '2.1.9.01', name: 'Transitória Créditos (Entradas)' };
+        const TRANSITORIA_DEBITOS = { code: '1.1.9.01', name: 'Transitória Débitos (Saídas)' };
+        
+        // =====================================================================
+        // PASSO 1: Verificar regras de aprendizado assistido
+        // =====================================================================
         const learnedRule = await this.findRule(description);
+        
         if (learnedRule) {
-             if (isReceipt) {
+            // Verificar se a regra aprendida é para conta de RECEITA
+            // Se for, BLOQUEAR - PIX não pode gerar receita diretamente!
+            if (learnedRule.code.startsWith('3.')) {
+                console.warn('[FinancialIntelligence] BLOQUEADO: Regra tentou classificar PIX como receita diretamente');
+                
+                // Retornar para classificação manual com sugestão de cliente
                 return {
-                    description: `Recebimento: ${learnedRule.name}`,
-                    type: "revenue_current",
+                    description: "⚠️ ATENÇÃO: Possível recebimento de cliente",
+                    type: "ai_suggestion",
+                    confidence: 70,
+                    requires_review: true,
                     entries: [{
-                        debit: { account: bankAccountCode, name: 'Banco' },
-                        credit: { account: learnedRule.code, name: learnedRule.name },
-                        value: amount
+                        // Lançamento 1: Importação (SEMPRE transitória)
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        value: absAmount
                     }],
-                    reasoning: `Identificado padrão aprendido: "${learnedRule.name}"`
-                };
-             } else {
-                return {
-                    description: `Pagamento: ${learnedRule.name}`,
-                    type: "expense_current",
-                    entries: [{
-                        debit: { account: learnedRule.code, name: learnedRule.name },
-                        credit: { account: bankAccountCode, name: 'Banco' },
-                        value: Math.abs(amount)
-                    }],
-                    reasoning: `Identificado padrão aprendido: "${learnedRule.name}"`
-                };
-             }
-        }
-
-        if (isReceipt) {
-            // RECEBIMENTO
-            
-            // 1. Verificar se é um agrupamento (Lote)
-            if (description.toUpperCase().includes("LOTE") || description.toUpperCase().includes("LIQUIDACAO")) {
-                return {
-                    description: "Recebimento em Lote",
-                    type: "split",
-                    entries: [],
-                    reasoning: "Transação de alto valor identificada como LOTE. Necessário arquivo de detalhamento."
+                    reasoning: `⚠️ Padrão identificado: "${learnedRule.name}" mas PIX não pode gerar receita diretamente. ` +
+                              `Verifique se há fatura pendente para este cliente. ` +
+                              `Classificação correta: D Transitória / C Clientes a Receber`,
+                    suggested_accounts: [
+                        { id: '', code: '1.1.2.01', name: 'Clientes a Receber (baixa de honorários)' },
+                        { id: '', code: '2.1.2.03', name: 'Empréstimos de Sócios (aporte)' },
+                        { id: '', code: '2.4.1.01', name: 'Adiant. Futuro Aumento Capital' }
+                    ]
                 };
             }
-
-            // 2. Verificar Competência (Dr. Cicero Regra de Corte)
-            const is2025 = transactionDate.getFullYear() >= 2025;
-
-            if (is2025) {
+            
+            // Regra aprendida para conta patrimonial - OK usar
+            if (isReceipt) {
                 return {
-                    description: "Recebimento de Honorários (Competência Corrente)",
-                    type: "revenue_current",
+                    description: `Sugestão IA: ${learnedRule.name}`,
+                    type: "ai_suggestion",
+                    confidence: 80,
+                    requires_review: true,
                     entries: [{
-                        debit: { account: bankAccountCode, name: 'Banco' },
-                        credit: { account: '1.1.2.01', name: 'Clientes a Receber' },
-                        value: amount
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        value: absAmount
+                    }, {
+                        // Sugestão de classificação
+                        debit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        credit: { account: learnedRule.code, name: learnedRule.name },
+                        value: absAmount
                     }],
-                    reasoning: "Data em 2025. Assume-se recebimento de provisão corrente."
+                    reasoning: `Regra aprendida aplicada. Aguardando validação.`
                 };
             } else {
                 return {
-                    description: "Recebimento de Exercício Anterior",
-                    type: "revenue_past",
+                    description: `Sugestão IA: ${learnedRule.name}`,
+                    type: "ai_suggestion",
+                    confidence: 80,
+                    requires_review: true,
                     entries: [{
-                        debit: { account: bankAccountCode, name: 'Banco' },
-                        credit: { account: '1.1.2.01', name: 'Clientes a Receber' },
-                        value: amount
+                        debit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                        credit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        value: absAmount
+                    }, {
+                        debit: { account: learnedRule.code, name: learnedRule.name },
+                        credit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                        value: absAmount
                     }],
-                    reasoning: "Possível recebimento de dívida antiga."
+                    reasoning: `Regra aprendida aplicada. Aguardando validação.`
                 };
             }
+        }
 
-        } else {
-            // PAGAMENTO (Despesa)
-            // Tenta adivinhar categoria pelo nome
-            let expenseAccount = '';
-            let expenseName = 'Selecione a Conta';
+        // =====================================================================
+        // PASSO 2: Tentar identificar automaticamente pelo padrão
+        // =====================================================================
+        const descUpper = (description || '').toUpperCase();
+        
+        if (isReceipt) {
+            // ========================================
+            // ENTRADA DE DINHEIRO
+            // ========================================
             
-            // Exemplo simples de classificação (o ideal seria buscar do banco ou usar IA)
-            const descUpper = (description || '').toUpperCase();
-            const isBankFee = /\bTARIFA\b|\bPACOTE\b|\bTAXA\b/.test(descUpper) || descUpper.includes("LIQUIDACAO");
-
-            if (isBankFee) {
-                 const acc = accountingService.getExpenseAccountCode('tarifas'); // 4.1.3.02 Tarifa Bancária
-                 expenseAccount = acc.code;
-                 expenseName = acc.name;
-
-                 // Ensina regra específica para futuras ocorrências
-                 const basePattern = descUpper.includes('LIQUIDACAO') ? 'TARIFA LIQUIDACAO COBRANCA' : 'TARIFA BANCARIA';
-                 await this.learnRule(basePattern, acc.code, acc.name, 'debit').catch(() => {});
+            // Verificar se é LOTE (precisa split)
+            if (descUpper.includes("LOTE") || descUpper.includes("LIQUIDACAO")) {
+                return {
+                    description: "Recebimento em Lote (requer split)",
+                    type: "split",
+                    requires_review: true,
+                    entries: [{
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        value: absAmount
+                    }],
+                    reasoning: "Transação identificada como LOTE. Necessário arquivo de detalhamento para classificação individual."
+                };
             }
-
+            
+            // Detectar possível empréstimo de sócio
+            const socioKeywords = ['SERGIO', 'CARNEIRO', 'SOCIO', 'APORTE', 'EMPRESTIMO'];
+            const isSocioRelated = socioKeywords.some(kw => descUpper.includes(kw));
+            
+            if (isSocioRelated || absAmount >= 50000) {
+                return {
+                    description: "⚠️ Possível empréstimo/aporte de sócio",
+                    type: "loan",
+                    requires_review: true,
+                    entries: [{
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        value: absAmount
+                    }],
+                    reasoning: absAmount >= 50000 
+                        ? `Valor alto (R$ ${absAmount.toLocaleString('pt-BR')}). Verificar se é empréstimo de sócio ou aporte.`
+                        : `Padrão de nome de sócio detectado. Verificar se é empréstimo ou aporte.`,
+                    suggested_accounts: [
+                        { id: '', code: '2.1.2.03', name: 'Empréstimos de Sócios (Passivo)' },
+                        { id: '', code: '2.4.1.01', name: 'Adiant. Futuro Aumento Capital (PL)' },
+                        { id: '', code: '1.1.2.01', name: 'Clientes a Receber (se for honorário)' }
+                    ]
+                };
+            }
+            
+            // Detectar transferência entre contas
+            if (descUpper.includes('TRANSF') && descUpper.includes('AMPLA')) {
+                return {
+                    description: "Transferência entre contas",
+                    type: "transfer",
+                    requires_review: true,
+                    entries: [{
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                        value: absAmount
+                    }],
+                    reasoning: "Transferência interna detectada. Classificar para outra conta bancária.",
+                    suggested_accounts: [
+                        { id: '', code: '1.1.1.01', name: 'Caixa Geral' },
+                        { id: '', code: '1.1.1.xx', name: 'Outro Banco' }
+                    ]
+                };
+            }
+            
+            // ========================================
+            // PADRÃO: Entrada sem classificação
+            // NUNCA gerar receita automaticamente!
+            // ========================================
             return {
-                description: expenseAccount ? "Pagamento de Despesa (Automático)" : "Pagamento de Despesa (A Classificar)",
-                type: "expense_current",
+                description: "📋 PENDENTE: Entrada não classificada",
+                type: "pending_classification",
+                requires_review: true,
                 entries: [{
-                    debit: { account: expenseAccount, name: expenseName }, 
-                    credit: { account: bankAccountCode, name: 'Banco' },
-                    value: Math.abs(amount)
+                    debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                    credit: { account: TRANSITORIA_CREDITOS.code, name: TRANSITORIA_CREDITOS.name },
+                    value: absAmount
                 }],
-                reasoning: expenseAccount ? "Classificado por palavra-chave." : "Pagamento realizado. Necessário classificar a despesa."
+                reasoning: "Entrada de dinheiro registrada na conta transitória. " +
+                          "CLASSIFICAÇÃO OBRIGATÓRIA: Identificar se é baixa de cliente, empréstimo, aporte ou outro. " +
+                          "PIX nunca gera receita automaticamente.",
+                suggested_accounts: [
+                    { id: '', code: '1.1.2.01', name: 'Clientes a Receber (mais comum)' },
+                    { id: '', code: '2.1.2.03', name: 'Empréstimos de Sócios' },
+                    { id: '', code: '2.4.1.01', name: 'Adiant. Futuro Aumento Capital' },
+                    { id: '', code: '1.1.1.xx', name: 'Transferência de outra conta' }
+                ]
+            };
+            
+        } else {
+            // ========================================
+            // SAÍDA DE DINHEIRO
+            // ========================================
+            
+            // Detectar tarifas bancárias (pode classificar automaticamente)
+            // Inclui:
+            // - TARIFA COM R LIQUIDACAO-COB = R$ 1,89 por boleto liquidado
+            // - MANUTENCAO DE TITULOS-COB = R$ 1,89 por título em carteira
+            // - CESTA DE RELACIONAMENTO = pacote mensal de serviços
+            const isBankFee = /\bTARIFA\b|\bPACOTE\b|\bTAXA\b|\bIOF\b|\bMANUTENCAO.*TITULO|\bCESTA.*RELACIONAMENTO/i.test(descUpper) || 
+                            (descUpper.includes('LIQUIDACAO') && descUpper.includes('COB'));
+            
+            if (isBankFee) {
+                const acc = accountingService.getExpenseAccountCode('tarifas');
+                
+                // Calcular explicação baseada no tipo de tarifa
+                let reasoning = "Tarifa bancária identificada pelo padrão. Classificação automática permitida.";
+                
+                if (/TARIFA.*LIQUIDACAO.*COB/i.test(description)) {
+                    const cobNum = description.match(/COB(\d+)/)?.[1] || '?';
+                    const qtdBoletos = Math.round(absAmount / 1.89);
+                    reasoning = `Tarifa de cobrança COB${cobNum}: R$ 1,89 × ${qtdBoletos} boletos = R$ ${absAmount.toFixed(2)}. Despesa bancária automática.`;
+                } else if (/MANUTENCAO.*TITULO.*COB/i.test(description)) {
+                    const cobNum = description.match(/COB(\d+)/)?.[1] || '?';
+                    const qtdTitulos = Math.round(absAmount / 1.89);
+                    reasoning = `Manutenção de títulos COB${cobNum}: R$ 1,89 × ${qtdTitulos} títulos em carteira = R$ ${absAmount.toFixed(2)}. Despesa bancária automática.`;
+                } else if (/CESTA.*RELACIONAMENTO/i.test(description)) {
+                    reasoning = `Cesta de relacionamento bancário: pacote mensal de serviços R$ ${absAmount.toFixed(2)}. Despesa bancária automática.`;
+                }
+                
+                return {
+                    description: "Tarifa Bancária (auto-classificável)",
+                    type: "expense_current",
+                    confidence: 95,
+                    requires_review: false, // Tarifas podem ser automáticas
+                    entries: [{
+                        debit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                        credit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        value: absAmount
+                    }, {
+                        debit: { account: acc.code, name: acc.name },
+                        credit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                        value: absAmount
+                    }],
+                    reasoning
+                };
+            }
+            
+            // Detectar impostos
+            const isTax = /\bDARF\b|\bGPS\b|\bINSS\b|\bFGTS\b|\bSIMPLES\b|\bDAS\b|\bISS\b/.test(descUpper);
+            
+            if (isTax) {
+                return {
+                    description: "Pagamento de Imposto/Taxa",
+                    type: "expense_current",
+                    confidence: 90,
+                    requires_review: true,
+                    entries: [{
+                        debit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                        credit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        value: absAmount
+                    }],
+                    reasoning: "Pagamento de tributo identificado. Verificar conta específica.",
+                    suggested_accounts: [
+                        { id: '', code: '2.1.3.01', name: 'ISS a Recolher' },
+                        { id: '', code: '2.1.3.02', name: 'IRRF a Recolher' },
+                        { id: '', code: '2.1.3.03', name: 'Simples Nacional a Pagar' }
+                    ]
+                };
+            }
+            
+            // ========================================
+            // PADRÃO: Saída sem classificação
+            // ========================================
+            return {
+                description: "📋 PENDENTE: Saída não classificada",
+                type: "pending_classification",
+                requires_review: true,
+                entries: [{
+                    debit: { account: TRANSITORIA_DEBITOS.code, name: TRANSITORIA_DEBITOS.name },
+                    credit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                    value: absAmount
+                }],
+                reasoning: "Saída de dinheiro registrada na conta transitória. " +
+                          "CLASSIFICAÇÃO OBRIGATÓRIA: Identificar natureza da despesa ou pagamento.",
+                suggested_accounts: [
+                    { id: '', code: '4.1.1.01', name: 'Salários e Ordenados' },
+                    { id: '', code: '4.1.2.xx', name: 'Despesas Administrativas' },
+                    { id: '', code: '4.1.3.02', name: 'Tarifas Bancárias' },
+                    { id: '', code: '2.1.1.01', name: 'Fornecedores a Pagar (baixa)' }
+                ]
             };
         }
     }

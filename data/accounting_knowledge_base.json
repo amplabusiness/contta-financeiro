@@ -1,0 +1,2114 @@
+{
+  "metadata": {
+    "generated_at": "2026-01-31T12:56:23.484Z",
+    "source": "Pesquisa web via Serper.dev + Base de conhecimento estruturada",
+    "version": "1.0.0"
+  },
+  "knowledge_base": {
+    "RECEITAS": [
+      {
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        },
+        "historico": "Venda de mercadorias conf. NF {nf} - {cliente}",
+        "keywords": [
+          "venda",
+          "mercadoria",
+          "nf",
+          "nota fiscal",
+          "receita"
+        ]
+      },
+      {
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        },
+        "historico": "Venda a prazo conf. NF {nf} - {cliente}",
+        "keywords": [
+          "venda",
+          "prazo",
+          "duplicata",
+          "cliente",
+          "receber"
+        ]
+      },
+      {
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "historico": "Recebimento duplicata {cliente} - NF {nf}",
+        "keywords": [
+          "recebimento",
+          "duplicata",
+          "baixa",
+          "cliente",
+          "pix",
+          "ted",
+          "transferência"
+        ]
+      },
+      {
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        },
+        "historico": "Serviços prestados conf. NFS-e {nf} - {cliente}",
+        "keywords": [
+          "serviço",
+          "honorário",
+          "consultoria",
+          "nfse",
+          "prestação"
+        ]
+      },
+      {
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        },
+        "historico": "Serviços prestados a prazo conf. NFS-e {nf} - {cliente}",
+        "keywords": [
+          "serviço",
+          "prazo",
+          "honorário",
+          "receber"
+        ]
+      },
+      {
+        "operacao": "Receita de Juros Ativos",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras - Juros Ativos"
+        },
+        "historico": "Juros recebidos s/ {descricao}",
+        "keywords": [
+          "juros",
+          "recebidos",
+          "rendimento",
+          "aplicação"
+        ]
+      },
+      {
+        "operacao": "Receita de Desconto Obtido",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "3.2.1.02",
+          "nome": "Descontos Obtidos"
+        },
+        "historico": "Desconto obtido pagamento {fornecedor}",
+        "keywords": [
+          "desconto",
+          "obtido",
+          "abatimento"
+        ]
+      },
+      {
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        },
+        "historico": "Rendimento aplicação {banco} - {periodo}",
+        "keywords": [
+          "rendimento",
+          "aplicação",
+          "investimento",
+          "poupança",
+          "cdb"
+        ]
+      }
+    ],
+    "DESPESAS": [
+      {
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento aluguel ref. {mes}/{ano} - {locador}",
+        "keywords": [
+          "aluguel",
+          "locação",
+          "imóvel",
+          "sala",
+          "escritório"
+        ]
+      },
+      {
+        "operacao": "Provisão de Aluguel a Pagar",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "2.1.2.01",
+          "nome": "Aluguéis a Pagar"
+        },
+        "historico": "Provisão aluguel ref. {mes}/{ano}",
+        "keywords": [
+          "provisão",
+          "aluguel",
+          "pagar"
+        ]
+      },
+      {
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento energia ref. {mes}/{ano} - {concessionaria}",
+        "keywords": [
+          "energia",
+          "elétrica",
+          "luz",
+          "enel",
+          "celg",
+          "cemig",
+          "copel"
+        ]
+      },
+      {
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento água ref. {mes}/{ano} - {concessionaria}",
+        "keywords": [
+          "água",
+          "esgoto",
+          "saneago",
+          "sabesp",
+          "copasa"
+        ]
+      },
+      {
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento telefone/internet ref. {mes}/{ano}",
+        "keywords": [
+          "telefone",
+          "internet",
+          "comunicação",
+          "vivo",
+          "claro",
+          "tim",
+          "oi"
+        ]
+      },
+      {
+        "operacao": "Despesa com Material de Escritório",
+        "debito": {
+          "codigo": "4.1.1.05",
+          "nome": "Material de Escritório"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Compra material escritório conf. NF {nf}",
+        "keywords": [
+          "material",
+          "escritório",
+          "papelaria",
+          "suprimento"
+        ]
+      },
+      {
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Abastecimento veículo placa {placa}",
+        "keywords": [
+          "combustível",
+          "gasolina",
+          "álcool",
+          "diesel",
+          "abastecimento",
+          "posto"
+        ]
+      },
+      {
+        "operacao": "Despesa com Manutenção",
+        "debito": {
+          "codigo": "4.1.1.07",
+          "nome": "Despesas com Manutenção"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Manutenção/reparo conf. NF {nf}",
+        "keywords": [
+          "manutenção",
+          "reparo",
+          "conserto",
+          "serviço"
+        ]
+      },
+      {
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Tarifa bancária - {banco}",
+        "keywords": [
+          "tarifa",
+          "taxa",
+          "bancária",
+          "manutenção conta",
+          "ted",
+          "doc",
+          "pix"
+        ]
+      },
+      {
+        "operacao": "Despesas com Juros Passivos",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Juros s/ {descricao}",
+        "keywords": [
+          "juros",
+          "mora",
+          "atraso",
+          "multa"
+        ]
+      },
+      {
+        "operacao": "Despesa com Desconto Concedido",
+        "debito": {
+          "codigo": "4.2.1.03",
+          "nome": "Descontos Concedidos"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "historico": "Desconto concedido cliente {cliente}",
+        "keywords": [
+          "desconto",
+          "concedido",
+          "abatimento"
+        ]
+      },
+      {
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Despesa publicidade/propaganda conf. NF {nf}",
+        "keywords": [
+          "publicidade",
+          "propaganda",
+          "marketing",
+          "anúncio",
+          "mídia"
+        ]
+      },
+      {
+        "operacao": "Despesa com Seguros",
+        "debito": {
+          "codigo": "4.1.2.02",
+          "nome": "Despesas com Seguros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento seguro {tipo} apólice {numero}",
+        "keywords": [
+          "seguro",
+          "apólice",
+          "prêmio",
+          "sinistro"
+        ]
+      },
+      {
+        "operacao": "Despesa com Honorários Contábeis",
+        "debito": {
+          "codigo": "4.1.2.03",
+          "nome": "Honorários Contábeis"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Honorários contabilidade ref. {mes}/{ano}",
+        "keywords": [
+          "honorário",
+          "contabilidade",
+          "contador",
+          "escritório contábil"
+        ]
+      },
+      {
+        "operacao": "Despesa com Honorários Advocatícios",
+        "debito": {
+          "codigo": "4.1.2.04",
+          "nome": "Honorários Advocatícios"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Honorários advocatícios - {advogado}",
+        "keywords": [
+          "honorário",
+          "advogado",
+          "advocatício",
+          "jurídico"
+        ]
+      }
+    ],
+    "FOLHA_PAGAMENTO": [
+      {
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "historico": "Provisão salários ref. {mes}/{ano}",
+        "keywords": [
+          "salário",
+          "folha",
+          "pagamento",
+          "provisão",
+          "funcionário"
+        ]
+      },
+      {
+        "operacao": "Pagamento de Salários",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento salários ref. {mes}/{ano}",
+        "keywords": [
+          "salário",
+          "pagamento",
+          "folha"
+        ]
+      },
+      {
+        "operacao": "Provisão de INSS Patronal",
+        "debito": {
+          "codigo": "4.1.3.02",
+          "nome": "INSS Patronal"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "historico": "Provisão INSS patronal ref. {mes}/{ano}",
+        "keywords": [
+          "inss",
+          "patronal",
+          "previdência",
+          "contribuição"
+        ]
+      },
+      {
+        "operacao": "Retenção de INSS Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "historico": "Retenção INSS funcionário ref. {mes}/{ano}",
+        "keywords": [
+          "inss",
+          "retenção",
+          "desconto",
+          "funcionário"
+        ]
+      },
+      {
+        "operacao": "Pagamento de INSS",
+        "debito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento GPS/INSS ref. {mes}/{ano}",
+        "keywords": [
+          "gps",
+          "inss",
+          "guia previdência"
+        ]
+      },
+      {
+        "operacao": "Provisão de FGTS",
+        "debito": {
+          "codigo": "4.1.3.03",
+          "nome": "FGTS"
+        },
+        "credito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        },
+        "historico": "Provisão FGTS ref. {mes}/{ano}",
+        "keywords": [
+          "fgts",
+          "fundo garantia"
+        ]
+      },
+      {
+        "operacao": "Pagamento de FGTS",
+        "debito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento FGTS ref. {mes}/{ano}",
+        "keywords": [
+          "fgts",
+          "grf",
+          "guia fgts"
+        ]
+      },
+      {
+        "operacao": "Retenção de IRRF Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        },
+        "historico": "Retenção IRRF funcionário ref. {mes}/{ano}",
+        "keywords": [
+          "irrf",
+          "imposto renda",
+          "retenção"
+        ]
+      },
+      {
+        "operacao": "Pagamento de IRRF",
+        "debito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento DARF IRRF ref. {mes}/{ano}",
+        "keywords": [
+          "darf",
+          "irrf",
+          "imposto renda"
+        ]
+      },
+      {
+        "operacao": "Provisão de Férias",
+        "debito": {
+          "codigo": "4.1.3.04",
+          "nome": "Despesas com Férias"
+        },
+        "credito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        },
+        "historico": "Provisão férias funcionário {nome}",
+        "keywords": [
+          "férias",
+          "provisão"
+        ]
+      },
+      {
+        "operacao": "Pagamento de Férias",
+        "debito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento férias funcionário {nome}",
+        "keywords": [
+          "férias",
+          "pagamento"
+        ]
+      },
+      {
+        "operacao": "Provisão de 13º Salário",
+        "debito": {
+          "codigo": "4.1.3.05",
+          "nome": "Despesas com 13º Salário"
+        },
+        "credito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        },
+        "historico": "Provisão 13º salário ref. {mes}/{ano}",
+        "keywords": [
+          "13",
+          "décimo terceiro",
+          "gratificação",
+          "natalina"
+        ]
+      },
+      {
+        "operacao": "Pagamento de 13º Salário",
+        "debito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento 13º salário ref. {ano}",
+        "keywords": [
+          "13",
+          "décimo terceiro"
+        ]
+      },
+      {
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        },
+        "historico": "Provisão pró-labore {sócio} ref. {mes}/{ano}",
+        "keywords": [
+          "pró-labore",
+          "prolabore",
+          "sócio",
+          "administrador",
+          "retirada"
+        ]
+      },
+      {
+        "operacao": "Pró-labore - Pagamento",
+        "debito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento pró-labore {sócio} ref. {mes}/{ano}",
+        "keywords": [
+          "pró-labore",
+          "prolabore",
+          "pagamento"
+        ]
+      },
+      {
+        "operacao": "Vale Transporte - Compra",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Compra vale transporte ref. {mes}/{ano}",
+        "keywords": [
+          "vale transporte",
+          "vt",
+          "passagem"
+        ]
+      },
+      {
+        "operacao": "Vale Transporte - Apropriação",
+        "debito": {
+          "codigo": "4.1.3.07",
+          "nome": "Despesas com Vale Transporte"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        },
+        "historico": "Apropriação vale transporte ref. {mes}/{ano}",
+        "keywords": [
+          "vale transporte",
+          "apropriação"
+        ]
+      },
+      {
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Compra vale refeição/alimentação ref. {mes}/{ano}",
+        "keywords": [
+          "vale refeição",
+          "vale alimentação",
+          "vr",
+          "va",
+          "ticket"
+        ]
+      }
+    ],
+    "IMPOSTOS": [
+      {
+        "operacao": "ICMS sobre Vendas",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) ICMS sobre Vendas"
+        },
+        "credito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "historico": "ICMS s/ vendas NF {nf}",
+        "keywords": [
+          "icms",
+          "imposto",
+          "circulação",
+          "mercadoria"
+        ]
+      },
+      {
+        "operacao": "ICMS sobre Compras (Crédito)",
+        "debito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "historico": "Crédito ICMS s/ compra NF {nf}",
+        "keywords": [
+          "icms",
+          "crédito",
+          "recuperar",
+          "compra"
+        ]
+      },
+      {
+        "operacao": "Apuração de ICMS (transferência)",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "historico": "Apuração ICMS ref. {mes}/{ano}",
+        "keywords": [
+          "apuração",
+          "icms",
+          "compensação"
+        ]
+      },
+      {
+        "operacao": "Pagamento de ICMS",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento ICMS ref. {mes}/{ano}",
+        "keywords": [
+          "icms",
+          "guia",
+          "dare",
+          "pagamento"
+        ]
+      },
+      {
+        "operacao": "PIS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) PIS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.02",
+          "nome": "PIS a Recolher"
+        },
+        "historico": "PIS s/ faturamento ref. {mes}/{ano}",
+        "keywords": [
+          "pis",
+          "contribuição",
+          "faturamento"
+        ]
+      },
+      {
+        "operacao": "COFINS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) COFINS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.03",
+          "nome": "COFINS a Recolher"
+        },
+        "historico": "COFINS s/ faturamento ref. {mes}/{ano}",
+        "keywords": [
+          "cofins",
+          "contribuição",
+          "faturamento"
+        ]
+      },
+      {
+        "operacao": "Pagamento de PIS/COFINS",
+        "debito": {
+          "codigo": "2.1.5.02/03",
+          "nome": "PIS/COFINS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento DARF PIS/COFINS ref. {mes}/{ano}",
+        "keywords": [
+          "pis",
+          "cofins",
+          "darf"
+        ]
+      },
+      {
+        "operacao": "ISS sobre Serviços",
+        "debito": {
+          "codigo": "3.1.2.01.D",
+          "nome": "(-) ISS sobre Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "historico": "ISS s/ serviços NFS-e {nf}",
+        "keywords": [
+          "iss",
+          "issqn",
+          "serviço",
+          "municipal"
+        ]
+      },
+      {
+        "operacao": "Pagamento de ISS",
+        "debito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento ISS ref. {mes}/{ano}",
+        "keywords": [
+          "iss",
+          "guia",
+          "dam",
+          "pagamento"
+        ]
+      },
+      {
+        "operacao": "IRPJ Estimativa",
+        "debito": {
+          "codigo": "4.3.1.01",
+          "nome": "Despesa com IRPJ"
+        },
+        "credito": {
+          "codigo": "2.1.5.05",
+          "nome": "IRPJ a Recolher"
+        },
+        "historico": "Provisão IRPJ ref. {trimestre}/{ano}",
+        "keywords": [
+          "irpj",
+          "imposto renda",
+          "pessoa jurídica"
+        ]
+      },
+      {
+        "operacao": "CSLL Estimativa",
+        "debito": {
+          "codigo": "4.3.1.02",
+          "nome": "Despesa com CSLL"
+        },
+        "credito": {
+          "codigo": "2.1.5.06",
+          "nome": "CSLL a Recolher"
+        },
+        "historico": "Provisão CSLL ref. {trimestre}/{ano}",
+        "keywords": [
+          "csll",
+          "contribuição social"
+        ]
+      },
+      {
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento DAS Simples Nacional ref. {mes}/{ano}",
+        "keywords": [
+          "das",
+          "simples",
+          "nacional",
+          "mei",
+          "microempresa"
+        ]
+      },
+      {
+        "operacao": "Retenção de IR sobre Serviços (Tomador)",
+        "debito": {
+          "codigo": "4.1.2.xx",
+          "nome": "Despesa com Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.4.04",
+          "nome": "IR Retido a Recolher"
+        },
+        "historico": "Retenção IR s/ serviços NF {nf}",
+        "keywords": [
+          "irrf",
+          "retenção",
+          "serviço",
+          "tomador"
+        ]
+      },
+      {
+        "operacao": "Retenção de IR sobre Serviços (Prestador)",
+        "debito": {
+          "codigo": "1.1.8.02",
+          "nome": "IR a Compensar"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "historico": "IR retido s/ serviços NFS-e {nf}",
+        "keywords": [
+          "irrf",
+          "retenção",
+          "compensar",
+          "prestador"
+        ]
+      }
+    ],
+    "BANCARIO": [
+      {
+        "operacao": "Depósito em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        },
+        "historico": "Depósito em conta corrente {banco}",
+        "keywords": [
+          "depósito",
+          "banco",
+          "conta"
+        ]
+      },
+      {
+        "operacao": "Saque/Retirada em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "historico": "Saque/retirada conta corrente {banco}",
+        "keywords": [
+          "saque",
+          "retirada",
+          "caixa"
+        ]
+      },
+      {
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        },
+        "historico": "Transferência entre contas próprias",
+        "keywords": [
+          "transferência",
+          "ted",
+          "pix",
+          "mesma titularidade",
+          "entre contas"
+        ]
+      },
+      {
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "historico": "Aplicação financeira {tipo} - {banco}",
+        "keywords": [
+          "aplicação",
+          "investimento",
+          "cdb",
+          "poupança",
+          "fundo"
+        ]
+      },
+      {
+        "operacao": "Resgate de Aplicação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "historico": "Resgate aplicação financeira - {banco}",
+        "keywords": [
+          "resgate",
+          "aplicação",
+          "investimento"
+        ]
+      },
+      {
+        "operacao": "IOF sobre Aplicação",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "IOF s/ aplicação/operação financeira",
+        "keywords": [
+          "iof",
+          "imposto",
+          "operação financeira"
+        ]
+      },
+      {
+        "operacao": "Empréstimo Bancário - Liberação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar CP"
+        },
+        "historico": "Liberação empréstimo {banco} contrato {numero}",
+        "keywords": [
+          "empréstimo",
+          "liberação",
+          "financiamento",
+          "crédito"
+        ]
+      },
+      {
+        "operacao": "Empréstimo Bancário - Pagamento Parcela",
+        "debito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "Pagamento parcela empréstimo {banco}",
+        "keywords": [
+          "empréstimo",
+          "parcela",
+          "amortização"
+        ]
+      },
+      {
+        "operacao": "Juros sobre Empréstimo",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "Juros s/ empréstimo {banco}",
+        "keywords": [
+          "juros",
+          "empréstimo",
+          "encargo"
+        ]
+      },
+      {
+        "operacao": "Cheque Devolvido",
+        "debito": {
+          "codigo": "1.1.2.02",
+          "nome": "Cheques a Receber"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "Cheque devolvido {cliente} - motivo {motivo}",
+        "keywords": [
+          "cheque",
+          "devolvido",
+          "sustado",
+          "sem fundo"
+        ]
+      },
+      {
+        "operacao": "Cobrança Bancária - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "Tarifa cobrança bancária {banco}",
+        "keywords": [
+          "tarifa",
+          "cobrança",
+          "boleto",
+          "liquidação"
+        ]
+      },
+      {
+        "operacao": "CPMF/IOF Débito Automático",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF/Tributos Financeiros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        },
+        "historico": "IOF s/ movimentação bancária",
+        "keywords": [
+          "iof",
+          "débito",
+          "automático"
+        ]
+      }
+    ],
+    "ATIVO_IMOBILIZADO": [
+      {
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Aquisição {bem} conf. NF {nf}",
+        "keywords": [
+          "imobilizado",
+          "aquisição",
+          "compra",
+          "ativo fixo",
+          "máquina",
+          "equipamento",
+          "veículo",
+          "móvel"
+        ]
+      },
+      {
+        "operacao": "Aquisição de Imobilizado a Prazo",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores de Imobilizado"
+        },
+        "historico": "Aquisição {bem} a prazo conf. NF {nf}",
+        "keywords": [
+          "imobilizado",
+          "prazo",
+          "financiamento"
+        ]
+      },
+      {
+        "operacao": "Depreciação Mensal",
+        "debito": {
+          "codigo": "4.1.4.01",
+          "nome": "Despesa com Depreciação"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        },
+        "historico": "Depreciação ref. {mes}/{ano}",
+        "keywords": [
+          "depreciação",
+          "desgaste",
+          "vida útil"
+        ]
+      },
+      {
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        },
+        "historico": "Venda {bem} conf. NF {nf}",
+        "keywords": [
+          "venda",
+          "baixa",
+          "alienação",
+          "imobilizado"
+        ]
+      },
+      {
+        "operacao": "Ganho na Venda de Imobilizado",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.3.1.01",
+          "nome": "Ganho na Alienação de Imobilizado"
+        },
+        "historico": "Ganho venda {bem}",
+        "keywords": [
+          "ganho",
+          "lucro",
+          "venda",
+          "alienação"
+        ]
+      },
+      {
+        "operacao": "Perda na Venda de Imobilizado",
+        "debito": {
+          "codigo": "4.3.2.01",
+          "nome": "Perda na Alienação de Imobilizado"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        },
+        "historico": "Perda venda {bem}",
+        "keywords": [
+          "perda",
+          "prejuízo",
+          "venda",
+          "alienação"
+        ]
+      },
+      {
+        "operacao": "Baixa Depreciação Acumulada (Venda)",
+        "debito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        },
+        "historico": "Baixa depreciação acumulada {bem}",
+        "keywords": [
+          "depreciação",
+          "baixa",
+          "acumulada"
+        ]
+      },
+      {
+        "operacao": "Aquisição de Software/Intangível",
+        "debito": {
+          "codigo": "1.2.4.01",
+          "nome": "Software/Intangível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Aquisição software {nome}",
+        "keywords": [
+          "software",
+          "intangível",
+          "licença",
+          "sistema"
+        ]
+      },
+      {
+        "operacao": "Amortização de Intangível",
+        "debito": {
+          "codigo": "4.1.4.02",
+          "nome": "Despesa com Amortização"
+        },
+        "credito": {
+          "codigo": "1.2.4.01.D",
+          "nome": "(-) Amortização Acumulada"
+        },
+        "historico": "Amortização intangível ref. {mes}/{ano}",
+        "keywords": [
+          "amortização",
+          "intangível",
+          "software"
+        ]
+      }
+    ],
+    "ESTOQUE": [
+      {
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Compra mercadorias conf. NF {nf} - {fornecedor}",
+        "keywords": [
+          "compra",
+          "mercadoria",
+          "estoque",
+          "fornecedor"
+        ]
+      },
+      {
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "historico": "Compra mercadorias a prazo conf. NF {nf}",
+        "keywords": [
+          "compra",
+          "prazo",
+          "fornecedor",
+          "duplicata"
+        ]
+      },
+      {
+        "operacao": "Pagamento a Fornecedor",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "historico": "Pagamento NF {nf} - {fornecedor}",
+        "keywords": [
+          "pagamento",
+          "fornecedor",
+          "duplicata",
+          "quitação"
+        ]
+      },
+      {
+        "operacao": "Custo das Mercadorias Vendidas (CMV)",
+        "debito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV - Custo das Mercadorias Vendidas"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "historico": "CMV ref. venda NF {nf}",
+        "keywords": [
+          "cmv",
+          "custo",
+          "venda",
+          "baixa estoque"
+        ]
+      },
+      {
+        "operacao": "Devolução de Compra",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "historico": "Devolução compra conf. NF {nf}",
+        "keywords": [
+          "devolução",
+          "compra",
+          "retorno"
+        ]
+      },
+      {
+        "operacao": "Devolução de Venda",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) Devoluções de Vendas"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "historico": "Devolução venda conf. NF {nf}",
+        "keywords": [
+          "devolução",
+          "venda",
+          "cliente"
+        ]
+      },
+      {
+        "operacao": "Entrada de Estoque por Devolução de Venda",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV"
+        },
+        "historico": "Entrada estoque - devolução NF {nf}",
+        "keywords": [
+          "entrada",
+          "estoque",
+          "devolução"
+        ]
+      },
+      {
+        "operacao": "Perda de Estoque",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "historico": "Perda estoque - {motivo}",
+        "keywords": [
+          "perda",
+          "quebra",
+          "avaria",
+          "sinistro"
+        ]
+      },
+      {
+        "operacao": "Ajuste de Inventário (Sobra)",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.3.1.02",
+          "nome": "Outras Receitas"
+        },
+        "historico": "Ajuste inventário - sobra",
+        "keywords": [
+          "ajuste",
+          "inventário",
+          "sobra"
+        ]
+      },
+      {
+        "operacao": "Ajuste de Inventário (Falta)",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "historico": "Ajuste inventário - falta",
+        "keywords": [
+          "ajuste",
+          "inventário",
+          "falta"
+        ]
+      },
+      {
+        "operacao": "Compra de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "historico": "Compra matéria-prima conf. NF {nf}",
+        "keywords": [
+          "matéria-prima",
+          "insumo",
+          "fabricação"
+        ]
+      },
+      {
+        "operacao": "Requisição de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        },
+        "credito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        },
+        "historico": "Requisição matéria-prima OP {numero}",
+        "keywords": [
+          "requisição",
+          "produção",
+          "ordem"
+        ]
+      },
+      {
+        "operacao": "Transferência para Produto Acabado",
+        "debito": {
+          "codigo": "1.1.4.04",
+          "nome": "Estoque de Produtos Acabados"
+        },
+        "credito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        },
+        "historico": "Entrada produto acabado OP {numero}",
+        "keywords": [
+          "produto acabado",
+          "transferência",
+          "produção"
+        ]
+      }
+    ],
+    "TRANSITÓRIAS": [
+      {
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        },
+        "historico": "OFX: {descricao_extrato}",
+        "keywords": [
+          "ofx",
+          "importação",
+          "entrada",
+          "crédito",
+          "recebimento",
+          "pix",
+          "ted",
+          "transferência recebida"
+        ]
+      },
+      {
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "historico": "OFX: {descricao_extrato}",
+        "keywords": [
+          "ofx",
+          "importação",
+          "saída",
+          "débito",
+          "pagamento",
+          "pix",
+          "ted",
+          "transferência enviada"
+        ]
+      },
+      {
+        "operacao": "Classificação ENTRADA - Baixa Transitória",
+        "debito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS"
+        },
+        "credito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Origem - Cliente/Receita/etc}"
+        },
+        "historico": "Classificação: {descricao_operacao}",
+        "keywords": [
+          "classificação",
+          "entrada",
+          "recebimento",
+          "baixa"
+        ]
+      },
+      {
+        "operacao": "Classificação SAÍDA - Baixa Transitória",
+        "debito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Destino - Despesa/Fornecedor/etc}"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS"
+        },
+        "historico": "Classificação: {descricao_operacao}",
+        "keywords": [
+          "classificação",
+          "saída",
+          "pagamento",
+          "baixa"
+        ]
+      }
+    ]
+  },
+  "ofx_patterns": {
+    "RECEITAS": {
+      "patterns": [
+        {
+          "regex": {},
+          "tipo": "RECEBIMENTO_CLIENTE"
+        },
+        {
+          "regex": {},
+          "tipo": "RECEBIMENTO_CLIENTE"
+        },
+        {
+          "regex": {},
+          "tipo": "DEPOSITO"
+        },
+        {
+          "regex": {},
+          "tipo": "RESGATE_APLICACAO"
+        },
+        {
+          "regex": {},
+          "tipo": "RENDIMENTO_APLICACAO"
+        },
+        {
+          "regex": {},
+          "tipo": "JUROS_RECEBIDOS"
+        },
+        {
+          "regex": {},
+          "tipo": "ESTORNO"
+        }
+      ]
+    },
+    "DESPESAS": {
+      "patterns": [
+        {
+          "regex": {},
+          "tipo": "PAGAMENTO_PIX"
+        },
+        {
+          "regex": {},
+          "tipo": "PAGAMENTO_TED"
+        },
+        {
+          "regex": {},
+          "tipo": "TARIFA_BANCARIA"
+        },
+        {
+          "regex": {},
+          "tipo": "SAQUE"
+        },
+        {
+          "regex": {},
+          "tipo": "APLICACAO_FINANCEIRA"
+        },
+        {
+          "regex": {},
+          "tipo": "IOF"
+        },
+        {
+          "regex": {},
+          "tipo": "ENERGIA_ELETRICA"
+        },
+        {
+          "regex": {},
+          "tipo": "AGUA_ESGOTO"
+        },
+        {
+          "regex": {},
+          "tipo": "TELEFONE_INTERNET"
+        },
+        {
+          "regex": {},
+          "tipo": "ALUGUEL"
+        },
+        {
+          "regex": {},
+          "tipo": "SIMPLES_NACIONAL"
+        },
+        {
+          "regex": {},
+          "tipo": "DARF_IMPOSTO"
+        },
+        {
+          "regex": {},
+          "tipo": "GPS_INSS"
+        },
+        {
+          "regex": {},
+          "tipo": "FGTS"
+        },
+        {
+          "regex": {},
+          "tipo": "ISS"
+        },
+        {
+          "regex": {},
+          "tipo": "ICMS"
+        },
+        {
+          "regex": {},
+          "tipo": "SALARIO"
+        },
+        {
+          "regex": {},
+          "tipo": "PRO_LABORE"
+        },
+        {
+          "regex": {},
+          "tipo": "FERIAS"
+        },
+        {
+          "regex": {},
+          "tipo": "DECIMO_TERCEIRO"
+        },
+        {
+          "regex": {},
+          "tipo": "COMBUSTIVEL"
+        },
+        {
+          "regex": {},
+          "tipo": "HONORARIOS_CONTABEIS"
+        },
+        {
+          "regex": {},
+          "tipo": "HONORARIOS_ADVOCATICIOS"
+        },
+        {
+          "regex": {},
+          "tipo": "SEGURO"
+        }
+      ]
+    },
+    "TRANSFERENCIAS": {
+      "patterns": [
+        {
+          "regex": {},
+          "tipo": "TRANSFERENCIA_PROPRIA"
+        },
+        {
+          "regex": {},
+          "tipo": "TRANSFERENCIA_PROPRIA"
+        },
+        {
+          "regex": {},
+          "tipo": "TRANSFERENCIA_PROPRIA"
+        }
+      ]
+    }
+  },
+  "search_results": [
+    {
+      "query": "lançamentos contábeis débito crédito exemplos práticos site:contabeis.com.br",
+      "category": "GERAL",
+      "results": [
+        {
+          "title": "o que lançamos primeiro, o débito ou o crédito?",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/41172/o-que-lancamos-primeiro-o-debito-ou-o-credito/",
+          "snippet": "Estou com dúvida quanto aos lançamentos.Verifiquei que o programa que uso faz a sequência de lançamentos conforme é digitado. Eu nuca me preocupei em lançar ...",
+          "position": 1
+        },
+        {
+          "title": "Débito e Crédito - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/115228/debito-e-credito/",
+          "snippet": "Já estou praticando lançamentos, mas não entendo o por que de debitar e creditar. Exemplo: Despesa com aluguel no valor de R$ 2.000,00. D ...",
+          "position": 2
+        },
+        {
+          "title": "Entendendo o significado de débito e crédito na ...",
+          "link": "https://www.contabeis.com.br/artigos/8163/entendendo-o-significado-de-debito-e-credito-na-contabilidade/",
+          "snippet": "É uma operação triangular entre empresa, conta devedora e conta credora;; Todo recurso que entrou, tem que sair;; Todo recurso que a empresa ...",
+          "position": 3
+        },
+        {
+          "title": "lançamentos contabeis - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/55164/lancamentos-contabeis/",
+          "snippet": "Consulte o lançamento original e veja em que contrapartida foi lançado. Exemplo: Pela aquisição: Débito : Instrumentos radiológicos (ANC) Crédito : Fornecedores ...",
+          "position": 4
+        },
+        {
+          "title": "contabilizacao de cartao de credito - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/21029/contabilizacao-de-cartao-de-credito/",
+          "snippet": "Quanto aos lançamentos com cartão de débito, a metodologia seria a mesma que a dos cartões de crédito. Considere que não é possível lançar uma venda com cartão ...",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "plano de contas exemplo completo débito crédito site:portaldecontabilidade.com.br",
+      "category": "PLANO_CONTAS",
+      "results": [
+        {
+          "title": "VALE TRANSPORTE - CONTABILIZAÇÃO",
+          "link": "https://www.portaldecontabilidade.com.br/guia/valetransporte.htm",
+          "snippet": "Exemplo · 1) Pela aquisição do vale-transporte: D - Vale-Transporte em Estoque (Ativo Circulante) · 2) Pelo adiantamento dos vales aos empregados: · 3) Pelo ...",
+          "position": 1
+        },
+        {
+          "title": "GLOSSÁRIO DE TERMOS CONTÁBEIS",
+          "link": "https://www.portaldecontabilidade.com.br/glossario.htm",
+          "snippet": "CONTAS DE RESULTADO: Registram as receitas e despesas, permitindo demonstrar o resultado do exercício. CONTAS PATRIMONIAIS: Representam os elementos ativos e ...",
+          "position": 2
+        }
+      ]
+    },
+    {
+      "query": "manual lançamentos contábeis folha pagamento site:contabeis.com.br",
+      "category": "FOLHA_PAGAMENTO",
+      "results": [
+        {
+          "title": "Contabilização da Folha de Pagamento - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/256280/contabilizacao-da-folha-de-pagamento/",
+          "snippet": "Bom dia Pessoal! Gostaria de saber se alguém pode me ajudar com a contabilização da folha abaixo: Folha de Pagamento Mês de Competência: Março de 2017",
+          "position": 1
+        },
+        {
+          "title": "Lançamento contábeis de provisão - Folha de Pagamento",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/335580/lancamento-contabeis-de-provisao-folha-de-pagamento/",
+          "snippet": "Lançamento contábeis de provisão - Folha de Pagamento · 1. Salário Bruto = R$ 2.800,00 · 2. Desconto INSS do funcionário (11%) · 3. INSS Patronal (26,8%) · 4.",
+          "position": 2
+        },
+        {
+          "title": "Procedimentos de Calculo e Contabilização da Folha de ...",
+          "link": "https://www.contabeis.com.br/artigos/1112/procedimentos-de-calculo-e-contabilizacao-da-folha-de-pagamento/",
+          "snippet": "Este artigo foi desenvolvido para auxiliar discentes e docentes no cálculo e na contabilização da folha de pagamento.",
+          "position": 3
+        },
+        {
+          "title": "Lançamento de Folha de Pagamento - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/174761/lancamento-de-folha-de-pagamento/",
+          "snippet": "Tenho que criar os lançamentos no sistema alterdata e no sistema só serve lançamentos com um crédito e um débito. Gostaria de saber os lançamento de provisão e ...",
+          "position": 4
+        },
+        {
+          "title": "Contabilizando folha de pagamento - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/9598/contabilizando-folha-de-pagamento/",
+          "snippet": "Você deve então criar a conta: Seguro c/ Acidente do Trabalho, no grupo de despesas em Contas de Resultado. Lançamento: Debitar - Seguro c/ Acidente do Trabalho",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "lançamentos contábeis nota fiscal ICMS PIS COFINS débito crédito",
+      "category": "IMPOSTOS",
+      "results": [
+        {
+          "title": "PIS/PASEP e COFINS NÃO-CUMULATIVO",
+          "link": "https://www.lefisc.com.br/materias/2007/4112007pispasep.asp",
+          "snippet": "PIS/PASEP e COFINS NÃO-CUMULATIVO - CONTABILIZAÇÃO. O valor dos créditos apurados não constitui receita bruta da pessoa jurídica, servindo somente para dedução ...",
+          "position": 1
+        },
+        {
+          "title": "Crédito Fiscal de ICMS, PIS e COFINS: Guia Completo",
+          "link": "https://clicknotas.com.br/credito-fiscal-icms-pis-cofins/",
+          "snippet": "Seja no caso do ICMS, PIS ou COFINS, é indispensável que os créditos estejam devidamente registrados nos livros contábeis e fiscais, com base em ...",
+          "position": 2
+        },
+        {
+          "title": "Contabilização ICMS - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/25122/contabilizacao-icms/",
+          "snippet": "Quando uma conta de icms a recuperar apresenta saldo, provavelmente que fazia a contabilidade esqueceu de apurar o saldo da conta ( no caso R$ 67,53), ...",
+          "position": 3
+        },
+        {
+          "title": "Como contabilizar créditos de PIS e COFINS conforme conta ...",
+          "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=2106",
+          "snippet": "Como contabilizar créditos de PIS e COFINS conforme conta contábil no cadastro do acumulador? · 1 - Acesse o menu Arquivos > Impostos; · 2 - Localize os impostos ...",
+          "position": 4
+        },
+        {
+          "title": "Créditos do PIS/Pasep e da Cofins",
+          "link": "http://www.crcba.org.br/boletim/edicoes/pispasep.htm",
+          "snippet": "Com relação a contabilização dos créditos do ICMS, a pessoa jurídica deve antes despojar (tirar) o valor do ICMS das compras de mercadorias, de forma que o ...",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "lançamentos contábeis extrato bancário conciliação",
+      "category": "BANCARIO",
+      "results": [
+        {
+          "title": "Como fazer conciliação bancária? - Portal do Cliente",
+          "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=209",
+          "snippet": "1 - Acesse o menu Movimentos > Conciliação > Bancária; · 2 - No quadro Dados, informe a Conta contábil do banco; · 3 - Defina o Período Inicial e Final da ...",
+          "position": 1
+        },
+        {
+          "title": "MANUAL SIMPLIFICADO DE CONCILIAÇÃO BANCÁRIA",
+          "link": "https://www.economia.df.gov.br/documents/d/seec/manual-simplificado-de-conciliacao-bancaria-completo_ajustado",
+          "snippet": "I - Para realização da Conciliação Bancária é necessário o extrato bancário e o razão analítico da conta contábil da conta única, movimento ou aplicação ...",
+          "position": 2
+        },
+        {
+          "title": "PRÁTICA CONTÁBIL: EXTRATOS BANCÁRIOS",
+          "link": "https://www.youtube.com/watch?v=TUE6FrVJJvc",
+          "snippet": "Este conteúdo é essencial para profissionais que buscam excelência na prática contábil.",
+          "position": 3
+        },
+        {
+          "title": "MANUAL DE PROCEDIMENTO DO USUÁRIO",
+          "link": "https://contabilidade.ro.gov.br/wp-content/uploads/2022/01/Manual-Mo%CC%81dulo-de-Conciliac%CC%A7a%CC%83o-Banca%CC%81ria.pdf",
+          "snippet": "A conciliação consiste na comparação do saldo de uma conta bancária com uma informação externa à contabilidade (extrato bancário), de maneira que se possa ter ...",
+          "position": 4
+        },
+        {
+          "title": "Sistema para Lançamentos Contábeis | Conciliador",
+          "link": "https://conciliadorcontabil.com.br/",
+          "snippet": "Faça o cruzamento de arquivos bancários com arquivos financeiros e tenha a conciliação em minutos · Busca extrato bancário diretamente no banco do seu cliente ...",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "contabilização receitas despesas exemplo prático débito crédito",
+      "category": "RECEITAS_DESPESAS",
+      "results": [
+        {
+          "title": "Débito versus crédito na contabilidade: Guia, exemplos e ...",
+          "link": "https://translate.google.com/translate?u=https://quickbooks.intuit.com/r/bookkeeping/debit-vs-credit-accounting/&hl=pt&sl=en&tl=pt&client=srp",
+          "snippet": "Em geral, as contas a débito incluem ativos e caixa, enquanto as contas a crédito incluem patrimônio líquido, passivos e receitas.Debits and credits are two equal and opposite sides of every transaction in double-entry bookkeeping. · A debit is an accounting entry that ...",
+          "position": 1
+        },
+        {
+          "title": "Débitos e Créditos: Explicação Detalhada com Exemplos",
+          "link": "https://translate.google.com/translate?u=https://www.accountingcoach.com/debits-and-credits/explanation&hl=pt&sl=en&tl=pt&client=srp",
+          "snippet": "Despesas e perdas geralmente são debitadas. As despesas normalmente têm saldos devedores que aumentam com um lançamento a débito. Como as despesas geralmente ...Debits and credits are terms used by bookkeepers and accountants when recording transactions in the accounting records. The amount in every transaction must be ...",
+          "position": 2
+        },
+        {
+          "title": "Lançamento Contábil: O Que É, Exemplos E Como Fazer",
+          "link": "https://ottimizza.com.br/lancamento-contabil/",
+          "snippet": "Débito E Crédito No Lançamento​​ Em cada lançamento contábil deve ser incluída a conta contábil a ser debitada, e outra conta para ser creditada. As contas ...",
+          "position": 3
+        },
+        {
+          "title": "Débitos e Créditos na Contabilidade: Como Funcionam?",
+          "link": "https://www.netsuite.com/portal/br/resource/articles/accounting/debits-credits.shtml",
+          "snippet": "Débitos e créditos indicam onde o valor está fluindo para dentro e para fora de uma empresa. Eles devem ser iguais para manter os livros em ...",
+          "position": 4
+        },
+        {
+          "title": "Débito e Crédito - Contabilidade",
+          "link": "https://www.contabeis.com.br/forum/contabilidade/115228/debito-e-credito/",
+          "snippet": "Estou iniciando os meus estudos na área contábil e estou com uma dúvida termenda em relação a Débito e Crédito.",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "contabilização importação extrato OFX lançamento automático",
+      "category": "OFX_IMPORTACAO",
+      "results": [
+        {
+          "title": "Como gerar os lançamentos contábeis do Extrato Bancário?",
+          "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=1880",
+          "snippet": "1 - Acesse o menu Arquivos > Configuração para contabilizar extrato Bancário; · 2 - Preencha o código da Conta contábil do banco; · 3 - Clique no botão [Listar] ...",
+          "position": 1
+        },
+        {
+          "title": "Como automatizar lançamentos contábeis através de um ...",
+          "link": "https://www.youtube.com/watch?v=OviE4IS8Hu8",
+          "snippet": "Neste vídeo iremos demonstrar o funcionamento da rotina que automatiza a geração de lançamentos contábeis através dos arquivos ofx de extrato",
+          "position": 2
+        },
+        {
+          "title": "Importação de extrato bancário",
+          "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36601847084051-Importa%C3%A7%C3%A3o-de-extrato-banc%C3%A1rio",
+          "snippet": "1. Acesse o menu Financeiro, clique em Minhas contas, selecione a conta, acione Mais ações e clique em Ver extrato. · 2. Em Integração bancária, ...",
+          "position": 3
+        },
+        {
+          "title": "Configuração e importação do Extrato OFX PART 1",
+          "link": "https://www.youtube.com/watch?v=Hvh_Hj0zxXI",
+          "snippet": "Configuração e importação do Extrato OFX PART 1- DOMINIO SISTEMAS ... PRÁTICA CONTÁBIL: EXTRATOS BANCÁRIOS - LANÇAMENTOS E PARTICULARIDADES.",
+          "position": 4
+        },
+        {
+          "title": "Extrato OFX: O Que É E Como Funciona",
+          "link": "https://contaazul.com/blog/extrato-ofx/",
+          "snippet": "Veja como o extrato OFX funciona e como ele pode simplificar sua conciliação bancária com automação e mais precisão nos lançamentos.",
+          "position": 5
+        }
+      ]
+    },
+    {
+      "query": "regras partidas dobradas ativo passivo receita despesa",
+      "category": "REGRAS_CONTABEIS",
+      "results": [
+        {
+          "title": "Classificação das contas contábeis: ativo, passivo, receita ...",
+          "link": "https://www.treasy.com.br/blog/o-que-classificacao-contabil-ativo-passivo-receita-e-despesa/",
+          "snippet": "Método das partidas dobradas​​ Porém, uma conta do caixa deve ser creditada, pois a empresa teve um desembolso para pagar ao fornecedor, então ...",
+          "position": 1
+        },
+        {
+          "title": "Introdução à contabilidade: Débito, Crédito, Partidas ...",
+          "link": "https://www.estrategiaconcursos.com.br/blog/introducao-a-contabilidade-debito-credito-partidas-dobradas/",
+          "snippet": "Dessa forma, como já mencionado, o método das partidas dobradas determina que, para cada lançamento a débito em uma conta, deve haver um lanç ...",
+          "position": 2
+        },
+        {
+          "title": "Entendendo o Sistema de Partidas Dobradas na ...",
+          "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/d/double-entry.asp&hl=pt&sl=en&tl=pt&client=srp",
+          "snippet": "O sistema de partidas dobradas registra as transações como um ativo e um passivo. Isso satisfaz a equação contábil: Ativos = Passivos + Patrimônio Líquido.Learn how double-entry accounting records transactions twice, ensuring balance and accuracy by showing both a credit and a debit for each financial action.",
+          "position": 3
+        },
+        {
+          "title": "Débitos e Créditos na Contabilidade: Como Funcionam?",
+          "link": "https://www.netsuite.com/portal/br/resource/articles/accounting/debits-credits.shtml",
+          "snippet": "Cada transação na contabilidade de partidas dobradas é registrada com pelo menos um débito e um crédito. · Débitos e créditos indicam onde o ...",
+          "position": 4
+        },
+        {
+          "title": "Método das partidas dobradas: o que é, como funciona e ...",
+          "link": "https://emasistemas.com.br/blog/metodo-das-partidas-dobradas-o-que-e-como-funciona-e-quais-as-vantagens/",
+          "snippet": "1. Identificação da Transação: Ao realizar uma transação, o primeiro passo é identificar quais contas (ativos, passivos, patrimônio líquido, ...",
+          "position": 5
+        }
+      ]
+    }
+  ]
+}

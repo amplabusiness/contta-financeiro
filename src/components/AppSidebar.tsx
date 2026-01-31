@@ -221,6 +221,8 @@ export function AppSidebar() {
       label: "Ferramentas IA",
       items: [
         { title: "Central IA (100%)", url: "/ai-automation", icon: Zap },
+        { title: "Educador IA", url: "/ai-educator", icon: BookOpen },
+        { title: "Data Lake (RAG)", url: "/data-lake", icon: Database },
         { title: "Code Editor", url: "/code-editor", icon: Code2 },
         { title: "Contador IA", url: "/ai-accountant", icon: Bot },
         { title: "Gestor IA", url: "/business-manager", icon: Brain },

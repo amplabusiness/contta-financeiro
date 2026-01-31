@@ -8,7 +8,7 @@ import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoRecon
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain, RefreshCw, Trash2, MessageSquare, GraduationCap, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,15 @@ import { CobrancaImporter } from "@/components/CobrancaImporter";
 import { CollectionClientBreakdown } from "@/components/CollectionClientBreakdown";
 import { ReconciliationReport } from "@/components/ReconciliationReport";
 import { AIClassificationReport } from "@/components/AIClassificationReport";
+import { ClassificationDialog } from "@/components/ClassificationDialog";
+import { DrCiceroChat } from "@/components/DrCiceroChat";
+import { AIAgentSuggestions, AIBatchSummary } from "@/components/AIAgentSuggestions";
+import { ImpactPreviewPanel } from "@/components/ImpactPreviewPanel";
+import { EducatorPanel } from "@/components/EducatorPanel";
+import { useImpactCalculation } from "@/hooks/useImpactCalculation";
+import { useEducatorExplanation } from "@/hooks/useEducatorExplanation";
+import { buscarModeloLancamento, identificarSiglas, MODELOS_LANCAMENTOS } from "@/lib/drCiceroKnowledge";
+import { classificarTransacaoOFX, ClassificacaoAutomatica } from "@/lib/classificadorAutomatico";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
 import { parseOFX } from "@/lib/ofxParser";
 import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
@@ -135,6 +144,7 @@ export default function SuperConciliation() {
   const [availableAccounts, setAvailableAccounts] = useState<{code: string, name: string}[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastFetchedEntryId = useRef<string | null>(null); // Evitar loops de fetch
   
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = localStorage.getItem('super-conciliation-date');
@@ -151,6 +161,10 @@ export default function SuperConciliation() {
   const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [identifyingPayers, setIdentifyingPayers] = useState(false);
+  const [classificationDialogOpen, setClassificationDialogOpen] = useState(false);
+  const [drCiceroChatOpen, setDrCiceroChatOpen] = useState(false);
+  const [impactPanelOpen, setImpactPanelOpen] = useState(false);
+  const [educatorPanelOpen, setEducatorPanelOpen] = useState(false);
   const [balances, setBalances] = useState({ prev: 0, start: 0, final: 0 });
   const [balanceDetails, setBalanceDetails] = useState({
       base: 0,
@@ -160,6 +174,218 @@ export default function SuperConciliation() {
       monthDebits: 0,
       divergence: 0
   });
+  
+  // Hooks para painéis premium
+  const { 
+    impact, 
+    isCalculating, 
+    calculateImpact, 
+    clearImpact 
+  } = useImpactCalculation();
+  
+  const { 
+    explanation, 
+    isLoading: isEducatorLoading, 
+    generateExplanation, 
+    clearExplanation 
+  } = useEducatorExplanation();
+  
+  // Estado para armazenar classificações conhecidas pelo Dr. Cícero
+  // Chave: descrição normalizada, Valor: sugestão de classificação
+  const [knownClassifications, setKnownClassifications] = useState<Map<string, {
+    accountCode: string;
+    accountName: string;
+    confidence: number;
+  }>>(new Map());
+  
+  // Função para normalizar descrição para busca
+  const normalizeDescription = useCallback((desc: string) => {
+    return desc.toLowerCase()
+      .replace(/\d{4,}/g, '') // Remove números longos (datas, códigos)
+      .replace(/[^\w\s]/g, '') // Remove caracteres especiais
+      .trim();
+  }, []);
+  
+  // Função para verificar se Dr. Cícero conhece a classificação
+  const getDrCiceroKnowledge = useCallback((tx: BankTransaction): { known: boolean; accountCode?: string; accountName?: string; confidence?: number; sigla?: string } => {
+    // 1. Se já tem sugestão do sistema com alta confiança
+    if (tx.suggested_client_name && tx.identification_confidence && tx.identification_confidence >= 0.8) {
+      return { 
+        known: true, 
+        accountName: tx.amount > 0 ? `Clientes - ${tx.suggested_client_name}` : `Fornecedor - ${tx.suggested_client_name}`,
+        confidence: tx.identification_confidence
+      };
+    }
+    
+    // 2. Padrões conhecidos (regras fixas do Dr. Cícero - Base de Conhecimento Treinada)
+    const desc = tx.description.toUpperCase();
+    
+    // ============ TARIFAS BANCÁRIAS ============
+    if (desc.includes('TARIFA') || desc.includes('TAR ') || desc.match(/\bTAR\b/) || 
+        desc.includes('TXB') || desc.includes('ANUIDADE') || desc.includes('MANUT CONTA')) {
+      return { known: true, accountCode: '4.1.3.01', accountName: 'Despesas Bancárias', confidence: 0.95, sigla: 'TAR' };
+    }
+    if (desc.includes('IOF')) {
+      return { known: true, accountCode: '4.1.3.01', accountName: 'IOF', confidence: 0.95, sigla: 'IOF' };
+    }
+    
+    // ============ FAMÍLIA LEÃO - ADIANTAMENTOS ============
+    const familiaLeao = ['SERGIO', 'CARLA', 'VICTOR HUGO', 'NAYARA', 'SERGIO AUGUSTO', 'LEAO', 'LEÃO'];
+    if (familiaLeao.some(nome => desc.includes(nome)) && tx.amount < 0) {
+      return { known: true, accountCode: '1.1.3.01', accountName: 'Adiantamento a Sócios (Família Leão)', confidence: 0.92 };
+    }
+    
+    // ============ FOLHA DE PAGAMENTO ============
+    if (desc.includes('SALARIO') || desc.includes('FOLHA') || desc.includes('13º') || 
+        desc.includes('13°') || desc.includes('DECIMO') || desc.includes('FERIAS') || 
+        desc.includes('RESCISAO') || desc.includes('AVISO PREVIO')) {
+      return { known: true, accountCode: '4.1.2.01', accountName: 'Despesas com Pessoal', confidence: 0.88, sigla: 'SALARIO' };
+    }
+    
+    // ============ ENCARGOS SOCIAIS ============
+    if (desc.includes('FGTS')) {
+      return { known: true, accountCode: '4.1.2.02', accountName: 'FGTS', confidence: 0.95, sigla: 'FGTS' };
+    }
+    if (desc.includes('INSS') || desc.includes('GPS') || desc.includes('PREVIDENCIA') || desc.includes('DARF PREV')) {
+      return { known: true, accountCode: '4.1.2.03', accountName: 'INSS', confidence: 0.95, sigla: 'INSS' };
+    }
+    
+    // ============ IMPOSTOS MUNICIPAIS ============
+    if (desc.match(/\bISS\b/) || desc.includes('ISSQN')) {
+      return { known: true, accountCode: '4.1.3.02', accountName: 'ISS', confidence: 0.95, sigla: 'ISS' };
+    }
+    if (desc.includes('IPTU')) {
+      return { known: true, accountCode: '4.1.3.03', accountName: 'IPTU', confidence: 0.95, sigla: 'IPTU' };
+    }
+    
+    // ============ IMPOSTOS FEDERAIS ============
+    if (desc.includes('DARF') && !desc.includes('PREV')) {
+      return { known: true, accountCode: '4.1.3.04', accountName: 'Impostos Federais (DARF)', confidence: 0.85, sigla: 'DARF' };
+    }
+    if (desc.includes('DAS ') || desc.includes('SIMPLES NACIONAL')) {
+      return { known: true, accountCode: '4.1.3.05', accountName: 'Simples Nacional (DAS)', confidence: 0.95, sigla: 'DAS' };
+    }
+    
+    // ============ SERVIÇOS PÚBLICOS - ENERGIA ============
+    if (desc.includes('ENEL') || desc.includes('CELG') || desc.includes('EQUATORIAL') ||
+        desc.includes('CPFL') || desc.includes('CEMIG') || desc.includes('COPEL') ||
+        desc.includes('ENERGIA') || desc.includes('ELETRIC') || desc.includes('LUZ')) {
+      return { known: true, accountCode: '4.1.1.02', accountName: 'Energia Elétrica', confidence: 0.92, sigla: 'ENERGIA' };
+    }
+    
+    // ============ SERVIÇOS PÚBLICOS - ÁGUA ============
+    if (desc.includes('SANEAGO') || desc.includes('SABESP') || desc.includes('COPASA') ||
+        desc.includes('CEDAE') || desc.includes('COMPESA') || desc.match(/\bAGUA\b/) || 
+        desc.includes('ESGOTO')) {
+      return { known: true, accountCode: '4.1.1.03', accountName: 'Água e Esgoto', confidence: 0.92, sigla: 'AGUA' };
+    }
+    
+    // ============ TELECOMUNICAÇÕES ============
+    if (desc.includes('VIVO') || desc.includes('CLARO') || desc.includes('TIM') || 
+        desc.match(/\bOI\b/) || desc.includes('INTERNET') || desc.includes('TELEFON') ||
+        desc.includes('CELULAR') || desc.includes('BANDA LARGA')) {
+      return { known: true, accountCode: '4.1.1.04', accountName: 'Telefone/Internet', confidence: 0.88, sigla: 'TELECOM' };
+    }
+    
+    // ============ ALUGUEL ============
+    if (desc.includes('ALUGUEL') || desc.includes('LOCACAO') || desc.includes('CONDOMINIO')) {
+      return { known: true, accountCode: '4.1.1.01', accountName: 'Aluguel e Condomínio', confidence: 0.90, sigla: 'ALUGUEL' };
+    }
+    
+    // ============ PRÓ-LABORE ============
+    if (desc.includes('PRO LABORE') || desc.includes('PROLABORE') || desc.includes('PRÓ-LABORE')) {
+      return { known: true, accountCode: '4.1.2.04', accountName: 'Pró-labore', confidence: 0.95, sigla: 'PROLABORE' };
+    }
+    
+    // ============ APLICAÇÕES FINANCEIRAS ============
+    if ((desc.includes('APL ') || desc.includes('APLIC') || desc.includes('APLICACAO')) && tx.amount < 0) {
+      return { known: true, accountCode: '1.1.1.10', accountName: 'Aplicações Financeiras', confidence: 0.90, sigla: 'APL' };
+    }
+    if ((desc.includes('RESG') || desc.includes('RESGATE')) && tx.amount > 0) {
+      return { known: true, accountCode: '1.1.1.10', accountName: 'Resgate de Aplicação', confidence: 0.90, sigla: 'RESG' };
+    }
+    if ((desc.includes('REND') || desc.includes('RENDIMENTO') || desc.includes('JUROS')) && tx.amount > 0) {
+      return { known: true, accountCode: '3.2.1.01', accountName: 'Receitas Financeiras', confidence: 0.88, sigla: 'REND' };
+    }
+    
+    // ============ ESTORNOS ============
+    if (desc.includes('ESTORNO') || desc.match(/\bEST\b/) || desc.includes('DEVOLUCAO') || desc.includes('CANC')) {
+      return { known: true, accountName: 'Estorno (verificar lançamento original)', confidence: 0.70, sigla: 'EST' };
+    }
+    
+    // ============ COBRANÇA (ENTRADA) ============
+    if (tx.amount > 0 && (desc.includes('LIQUIDACAO') || desc.includes('COB') || desc.includes('BAIXA'))) {
+      return { known: true, accountCode: '1.1.2.01', accountName: 'Recebimento de Cliente', confidence: 0.80, sigla: 'COB' };
+    }
+    
+    // ============ USAR BASE DE CONHECIMENTO OBJETIVA ============
+    // Tenta encontrar modelo de lançamento na base de conhecimento
+    const modelo = buscarModeloLancamento(tx.description);
+    if (modelo) {
+      const isEntrada = tx.amount > 0;
+      // Se encontrou modelo, retorna a conta apropriada
+      if (isEntrada && modelo.credito) {
+        return { 
+          known: true, 
+          accountCode: modelo.credito.codigo, 
+          accountName: modelo.credito.nome, 
+          confidence: 0.85,
+          sigla: modelo.categoria
+        };
+      } else if (!isEntrada && modelo.debito) {
+        return { 
+          known: true, 
+          accountCode: modelo.debito.codigo, 
+          accountName: modelo.debito.nome, 
+          confidence: 0.85,
+          sigla: modelo.categoria
+        };
+      }
+    }
+    
+    // ============ IDENTIFICAR SIGLAS DO EXTRATO ============
+    // Usa a base de conhecimento para identificar siglas
+    const siglasEncontradas = identificarSiglas(tx.description);
+    if (siglasEncontradas.length > 0) {
+      const sigla = siglasEncontradas[0];
+      if (sigla.conta) {
+        return { 
+          known: true, 
+          accountCode: sigla.conta, 
+          accountName: sigla.contaNome || sigla.significado, 
+          confidence: 0.85,
+          sigla: sigla.significado.split(':')[0]
+        };
+      }
+      // Se tem sigla mas não tem conta específica, retorna como identificado mas não classificado
+      return { known: false, sigla: sigla.significado.split(':')[0] };
+    }
+    
+    // ============ TRANSFERÊNCIAS ============
+    if (desc.includes('TED') || desc.includes('DOC') || desc.match(/\bTRF\b/) || desc.includes('TRANSF')) {
+      // Transferência precisa verificar se é para terceiros ou entre contas próprias
+      return { known: false, sigla: 'TRF' }; // Não classificar automaticamente
+    }
+    
+    // ============ PIX ============
+    if (desc.includes('PIX')) {
+      // PIX precisa identificar o favorecido/pagador
+      if (tx.extracted_cnpj || tx.extracted_cpf || tx.suggested_client_name) {
+        // Se identificou, usar a sugestão
+        return { known: false }; // Deixar para identificação de pagador
+      }
+      return { known: false, sigla: 'PIX' };
+    }
+    
+    // 3. Verificar no cache de classificações conhecidas
+    const normalized = normalizeDescription(tx.description);
+    const cached = knownClassifications.get(normalized);
+    if (cached) {
+      return { known: true, ...cached };
+    }
+    
+    return { known: false };
+  }, [knownClassifications, normalizeDescription]);
   
   useEffect(() => {
      const fetchBankCode = async () => {
@@ -422,16 +648,16 @@ export default function SuperConciliation() {
             .order('transaction_date', { ascending: true });
 
         // Filtros por aba:
-        // - Pendentes: transações não conciliadas E que NÃO precisam de revisão (ainda não foram processadas)
-        // - Revisão/Auditoria: transações não conciliadas E que PRECISAM de revisão (foram processadas pela IA ou manualmente mas aguardam aprovação)
+        // - Pendentes: transações NÃO conciliadas (aguardando classificação)
+        // - Revisão/Auditoria: transações JÁ CONCILIADAS (para revisar e reclassificar se necessário)
         if (viewMode === 'pending') {
              query = query
-                .eq('matched', false)
-                .or('needs_review.is.null,needs_review.eq.false');
+                .eq('matched', false);
         } else if (viewMode === 'review') {
+             // Mostrar transações JÁ CONCILIADAS para auditoria/reclassificação
              query = query
-                .eq('matched', false)
-                .eq('needs_review', true);
+                .eq('matched', true)
+                .not('journal_entry_id', 'is', null);
         }
 
         const { data, error } = await query;
@@ -576,38 +802,107 @@ export default function SuperConciliation() {
 
   useEffect(() => {
     if (!selectedTx || isManualMode) { 
-        if (!selectedTx) setSuggestion(null);
+        if (!selectedTx) {
+            setSuggestion(null);
+            lastFetchedEntryId.current = null;
+        }
         return;
     };
     
     if (selectedTx.matched && selectedTx.journal_entry_id) {
+        // Evitar buscar o mesmo lançamento múltiplas vezes
+        if (lastFetchedEntryId.current === selectedTx.journal_entry_id) {
+            return;
+        }
+        
         const fetchJournal = async () => {
             setLoading(true);
-            const { data: lines } = await supabase
-                .from('accounting_entry_lines')
-                .select(`
-                    debit, credit, 
-                    chart_of_accounts ( code, name )
-                `)
-                .eq('entry_id', selectedTx.journal_entry_id);
+            lastFetchedEntryId.current = selectedTx.journal_entry_id!;
             
-            if (lines) {
-                const displayEntries = lines.map((line: any) => {
-                      const isDebit = Number(line.debit) > 0;
-                      const val = isDebit ? line.debit : line.credit;
-                      
-                      return {
-                          debit: isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
-                          credit: !isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
-                          value: val
-                      };
-                });
+            try {
+                // Buscar cabeçalho do lançamento
+                const { data: entryHeader, error: headerError } = await supabase
+                    .from('accounting_entries')
+                    .select('id, entry_date, description, internal_code, source_type, created_at')
+                    .eq('id', selectedTx.journal_entry_id)
+                    .single();
+                
+                if (headerError) {
+                    console.error('Erro ao buscar cabeçalho:', headerError);
+                }
+                
+                // Buscar linhas do lançamento
+                const { data: lines, error: linesError } = await supabase
+                    .from('accounting_entry_lines')
+                    .select(`
+                        id, debit, credit, description,
+                        chart_of_accounts ( id, code, name, account_type )
+                    `)
+                    .eq('entry_id', selectedTx.journal_entry_id);
+                
+                if (linesError) {
+                    console.error('Erro ao buscar linhas:', linesError);
+                }
+                
+                console.log('Lançamento carregado:', { entryHeader, lines });
+                
+                if (lines && lines.length > 0) {
+                    const displayEntries = lines.map((line: any) => {
+                          const isDebit = Number(line.debit) > 0;
+                          const val = isDebit ? line.debit : line.credit;
+                          
+                          return {
+                              lineId: line.id,
+                              accountId: line.chart_of_accounts?.id,
+                              debit: isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
+                              credit: !isDebit ? { account: line.chart_of_accounts?.code, name: line.chart_of_accounts?.name } : { account: '---', name: '' },
+                              value: val,
+                              accountType: line.chart_of_accounts?.account_type
+                          };
+                    });
 
+                    // Identificar a conta de classificação (não-bancária)
+                    const classificationLine = displayEntries.find((e: any) => 
+                        !e.debit?.account?.startsWith('1.1.1.') && e.debit?.account !== '---'
+                    ) || displayEntries.find((e: any) => 
+                        !e.credit?.account?.startsWith('1.1.1.') && e.credit?.account !== '---'
+                    );
+
+                    const sourceTypeLabel = entryHeader?.source_type === 'ofx_import' 
+                        ? '📥 Importação OFX' 
+                        : entryHeader?.source_type === 'classification'
+                        ? '🏷️ Classificação'
+                        : entryHeader?.source_type === 'manual'
+                        ? '✏️ Manual'
+                        : entryHeader?.source_type || 'Desconhecido';
+
+                    setSuggestion({
+                        description: entryHeader?.description || "Lançamento Registrado",
+                        type: 'existing_entry',
+                        reasoning: `${sourceTypeLabel} • Código: ${entryHeader?.internal_code || 'N/A'} • ${entryHeader?.created_at ? new Date(entryHeader.created_at).toLocaleString('pt-BR') : ''}`,
+                        entries: displayEntries,
+                        entryId: selectedTx.journal_entry_id,
+                        classificationAccount: classificationLine ? {
+                            code: classificationLine.debit?.account !== '---' ? classificationLine.debit?.account : classificationLine.credit?.account,
+                            name: classificationLine.debit?.account !== '---' ? classificationLine.debit?.name : classificationLine.credit?.name
+                        } : null
+                    });
+                } else {
+                    // Não encontrou linhas - mostrar mensagem de erro
+                    setSuggestion({
+                        description: "Lançamento não encontrado",
+                        type: 'error',
+                        reasoning: `ID: ${selectedTx.journal_entry_id} - Verifique se o lançamento existe no banco de dados.`,
+                        entries: []
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar lançamento:', err);
                 setSuggestion({
-                    description: "Lançamento Registrado (Banco de Dados)",
-                    type: 'revenue_current',
-                    reasoning: "Dados extraídos diretamente do lançamento contábil vinculado.",
-                    entries: displayEntries
+                    description: "Erro ao carregar lançamento",
+                    type: 'error',
+                    reasoning: String(err),
+                    entries: []
                 });
             }
             setLoading(false);
@@ -656,6 +951,112 @@ export default function SuperConciliation() {
 
     analyzeTransaction();
   }, [selectedTx, isManualMode, bankAccountCode]);
+
+  // Handler para quando a classificação obrigatória é completada
+  const handleClassificationComplete = (result: { 
+    action?: string;
+    account?: { id: string; code: string; name: string };
+    splitLines?: Array<{ account_id: string; amount: number }>;
+    createRule?: boolean;
+    success?: boolean; 
+    entryId?: string; 
+    message?: string;
+  }) => {
+    if (selectedTx) {
+      // Para reclassificação, já foi atualizado no banco pelo ClassificationDialog
+      // Apenas fechar o dialog e atualizar UI
+      if (result.action === 'reclassify' && selectedTx.matched) {
+        toast.success(result.account 
+          ? `Reclassificado para: ${result.account.code} - ${result.account.name}`
+          : 'Reclassificação realizada!'
+        );
+        setClassificationDialogOpen(false);
+        setSuggestion(null);
+        // Recarregar transações para atualizar a view
+        fetchTransactions();
+        return;
+      }
+
+      // Para classificação normal
+      if (result.success || result.action) {
+        toast.success(result.message || 'Classificação realizada com sucesso!');
+        
+        // Atualizar a transação como conciliada
+        setTransactions(prev => prev.map(t => 
+          t.id === selectedTx.id 
+            ? { ...t, matched: true, journal_entry_id: result.entryId } 
+            : t
+        ));
+        
+        // Se estiver na aba de pendentes, remover da lista
+        if (viewMode === 'pending') {
+          setTransactions(prev => prev.filter(t => t.id !== selectedTx.id));
+          setSelectedTx(null);
+        } else {
+          setSelectedTx(prev => prev ? { ...prev, matched: true, journal_entry_id: result.entryId } : null);
+        }
+        
+        // Fechar dialog e limpar sugestão
+        setClassificationDialogOpen(false);
+        setSuggestion(null);
+      } else {
+        toast.error(result.message || 'Erro ao classificar transação');
+      }
+    }
+  };
+
+  // ============================================================================
+  // AI-FIRST: Handler para aplicar sugestão do classificador automático
+  // ============================================================================
+  const handleApplyAISuggestion = useCallback(async (classificacao: ClassificacaoAutomatica) => {
+    if (!selectedTx) return;
+    
+    // Converter classificação para o formato do ClassificationSuggestion
+    const isEntrada = selectedTx.amount > 0;
+    
+    // Criar sugestão formatada e abrir dialog de classificação
+    setSuggestion({
+      type: isEntrada ? 'ENTRADA' : 'SAIDA',
+      debitAccount: classificacao.debito.codigo,
+      debitAccountName: classificacao.debito.nome,
+      creditAccount: classificacao.credito.codigo,
+      creditAccountName: classificacao.credito.nome,
+      confidence: classificacao.confianca,
+      reasoning: `Classificação automática por ${classificacao.agenteResponsavel.replace('_', ' ')}: ${classificacao.historico}`,
+      description: classificacao.descricao,
+      entries: [{
+        value: Math.abs(selectedTx.amount),
+        debit: { account: classificacao.debito.codigo, name: classificacao.debito.nome },
+        credit: { account: classificacao.credito.codigo, name: classificacao.credito.nome }
+      }]
+    });
+    
+    // Se alta confiança e auto-classificar, abrir direto o dialog de classificação
+    if (classificacao.autoClassificar && classificacao.confianca >= 0.95) {
+      setClassificationDialogOpen(true);
+    } else {
+      // Mostrar preview e aguardar confirmação
+      toast.info(`Sugestão: ${classificacao.debito.codigo} → ${classificacao.credito.codigo} (${Math.round(classificacao.confianca * 100)}% confiança)`);
+    }
+  }, [selectedTx]);
+
+  // Handler para rejeitar sugestão da IA (feedback para treinamento)
+  const handleRejectAISuggestion = useCallback((motivo: string) => {
+    if (!selectedTx) return;
+    
+    // Log para futuro treinamento
+    console.log('[AI Feedback] Sugestão rejeitada:', {
+      transactionId: selectedTx.id,
+      description: selectedTx.description,
+      amount: selectedTx.amount,
+      motivo,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Abrir chat com Dr. Cícero
+    setDrCiceroChatOpen(true);
+    toast.info('Obrigado pelo feedback! Consulte o Dr. Cícero para classificação manual.');
+  }, [selectedTx]);
 
   const handleUnmatch = async () => {
       if (!selectedTx) return;
@@ -966,7 +1367,7 @@ export default function SuperConciliation() {
                 </TabsTrigger>
                 <TabsTrigger value="review" className="flex-1 sm:flex-none px-4">
                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Revisão / Auditoria
+                    Conciliadas (Auditoria)
                 </TabsTrigger>
                 <TabsTrigger value="ai_report" className="flex-1 sm:flex-none px-4">
                     <Brain className="mr-2 h-4 w-4" />
@@ -1143,6 +1544,28 @@ export default function SuperConciliation() {
                 </div>
             )}
             
+            {/* Botão de Classificação Obrigatória - Dr. Cícero */}
+            {selectedTx && !selectedTx.matched && (
+                <Button 
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all hover:scale-[1.02]" 
+                    onClick={() => setClassificationDialogOpen(true)}
+                >
+                    <ShieldCheck className="h-4 w-4" />
+                    Classificar (Dr. Cícero)
+                </Button>
+            )}
+            
+            {/* Botão de Reclassificação - para transações já conciliadas */}
+            {selectedTx?.matched && (
+                <Button 
+                    className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-md transition-all hover:scale-[1.02]" 
+                    onClick={() => setClassificationDialogOpen(true)}
+                >
+                    <SplitSquareHorizontal className="h-4 w-4" />
+                    Reclassificar (Trocar Conta)
+                </Button>
+            )}
+            
             {selectedTx?.matched ? (
                  <Button 
                     className="w-full gap-2" 
@@ -1151,7 +1574,7 @@ export default function SuperConciliation() {
                     disabled={loading}
                 >
                     <AlertTriangle className="h-4 w-4" />
-                    Editar Lançamento
+                    Desfazer Conciliação
                 </Button>
             ) : (
                 <Button 
@@ -1168,6 +1591,55 @@ export default function SuperConciliation() {
                         </>
                     )}
                 </Button>
+            )}
+            
+            {/* Botões Premium - Impacto e Educador */}
+            {selectedTx && !selectedTx.matched && suggestion && suggestion.entries?.length > 0 && (
+              <div className="flex gap-2 w-full">
+                <Button 
+                    variant="outline" 
+                    className="flex-1 gap-1 text-xs border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                    onClick={() => {
+                      setImpactPanelOpen(true);
+                      const isEntry = selectedTx.amount > 0;
+                      const targetEntry = suggestion.entries[0];
+                      const targetAccount = isEntry ? targetEntry.credit : targetEntry.debit;
+                      
+                      calculateImpact({
+                        transactionId: selectedTx.id,
+                        amount: selectedTx.amount,
+                        description: selectedTx.description,
+                        accountCode: targetAccount?.account || "",
+                        accountName: targetAccount?.name || "",
+                        isEntry
+                      });
+                    }}
+                >
+                    <Eye className="h-3 w-3" />
+                    Impacto
+                </Button>
+                <Button 
+                    variant="outline" 
+                    className="flex-1 gap-1 text-xs border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100"
+                    onClick={() => {
+                      setEducatorPanelOpen(true);
+                      const isEntry = selectedTx.amount > 0;
+                      const targetEntry = suggestion.entries[0];
+                      const targetAccount = isEntry ? targetEntry.credit : targetEntry.debit;
+                      
+                      generateExplanation({
+                        transactionDescription: selectedTx.description,
+                        amount: selectedTx.amount,
+                        accountCode: targetAccount?.account,
+                        accountName: targetAccount?.name,
+                        isEntry
+                      }, "classification" as any);
+                    }}
+                >
+                    <GraduationCap className="h-3 w-3" />
+                    Por quê?
+                </Button>
+              </div>
             )}
         </div>
       </div>
@@ -1212,7 +1684,7 @@ export default function SuperConciliation() {
             <CardDescription>
                 {loadingTx
                     ? "Carregando..."
-                    : `${viewMode === 'pending' ? 'Pendentes' : 'Revisão/Auditoria'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
+                    : `${viewMode === 'pending' ? 'Pendentes' : 'Conciliadas (Auditoria)'} • ${format(selectedDate, "MMM/yyyy", { locale: ptBR })} (${transactions.length})`
                 }
             </CardDescription>
           </div>
@@ -1234,6 +1706,26 @@ export default function SuperConciliation() {
                             </Button>
                         </div>
                 </div>
+                
+                {/* 🤖 AI FIRST - Resumo de Classificação em Lote */}
+                {viewMode === 'pending' && transactions.filter(t => !t.matched).length > 0 && (
+                    <AIBatchSummary
+                        transactions={transactions.filter(t => !t.matched).map(t => ({
+                            id: t.id,
+                            description: t.description,
+                            amount: t.amount,
+                            date: t.date
+                        }))}
+                        onApplyAll={async (classificacoes) => {
+                            toast.info(`Aplicando ${classificacoes.length} classificações automáticas...`);
+                            // TODO: Implementar aplicação em lote
+                        }}
+                        onReviewManually={() => {
+                            toast.info('Selecione cada transação para revisar manualmente');
+                        }}
+                    />
+                )}
+                
         <ScrollArea className="flex-1">
           <div className="p-1 space-y-1">
             {loadingTx ? (
@@ -1242,7 +1734,7 @@ export default function SuperConciliation() {
                  </div>
                         ) : transactions.length === 0 ? (
                  <div className="text-center p-8 text-muted-foreground text-sm">
-                    {viewMode === 'pending' ? "Nenhuma pendência." : "Nenhuma transação aguardando revisão."}
+                    {viewMode === 'pending' ? "Nenhuma pendência para este mês." : "Nenhuma transação conciliada neste mês."}
                  </div>
                         ) : pagedTransactions.map(tx => (
               <div
@@ -1286,6 +1778,60 @@ export default function SuperConciliation() {
                 <div className={`shrink-0 font-bold text-[10px] w-[50px] text-right ${tx.amount > 0 ? "text-emerald-700" : "text-red-700"}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
+                
+                {/* Botão de consulta rápida ao Dr. Cícero */}
+                {(() => {
+                  const knowledge = getDrCiceroKnowledge(tx);
+                  const isKnown = knowledge.known;
+                  const tooltipText = isKnown 
+                    ? `✓ Dr. Cícero sugere: ${knowledge.accountName}${knowledge.sigla ? ` [${knowledge.sigla}]` : ''} (${Math.round((knowledge.confidence || 0) * 100)}% confiança) - Clique para aplicar`
+                    : knowledge.sigla 
+                      ? `Sigla identificada: ${knowledge.sigla} - Clique para consultar Dr. Cícero`
+                      : 'Consultar Dr. Cícero sobre este lançamento';
+                  
+                  return (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isKnown && knowledge.confidence && knowledge.confidence >= 0.85) {
+                          // Se Dr. Cícero tem alta confiança, aplicar sugestão direto
+                          setSelectedTx(tx);
+                          setSuggestion({
+                            type: tx.amount > 0 ? 'ENTRADA' : 'SAIDA',
+                            debitAccount: tx.amount > 0 ? bankAccountCode : knowledge.accountCode || '',
+                            debitAccountName: tx.amount > 0 ? 'Banco Sicredi' : knowledge.accountName || '',
+                            creditAccount: tx.amount > 0 ? knowledge.accountCode || '' : bankAccountCode,
+                            creditAccountName: tx.amount > 0 ? knowledge.accountName || '' : 'Banco Sicredi',
+                            confidence: knowledge.confidence,
+                            reasoning: `Classificação automática pelo Dr. Cícero: ${knowledge.accountName}${knowledge.sigla ? ` (${knowledge.sigla})` : ''}`,
+                            description: tx.description
+                          });
+                          setClassificationDialogOpen(true);
+                        } else {
+                          // Se não conhece ou baixa confiança, abrir chat
+                          setSelectedTx(tx);
+                          setDrCiceroChatOpen(true);
+                        }
+                      }}
+                      className={`shrink-0 p-1 rounded transition-colors group ${
+                        isKnown 
+                          ? 'hover:bg-green-100' 
+                          : knowledge.sigla 
+                            ? 'hover:bg-yellow-100'
+                            : 'hover:bg-blue-100'
+                      }`}
+                      title={tooltipText}
+                    >
+                      <Brain className={`h-3.5 w-3.5 transition-colors ${
+                        isKnown 
+                          ? 'text-green-500 group-hover:text-green-700' 
+                          : knowledge.sigla
+                            ? 'text-yellow-500 group-hover:text-yellow-700'
+                            : 'text-blue-400 group-hover:text-blue-600'
+                      }`} />
+                    </button>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -1324,30 +1870,225 @@ export default function SuperConciliation() {
                     <ArrowRight className="h-12 w-12 mx-auto mb-2 opacity-20" />
                     <p>Selecione uma transação para análise</p>
                 </div>
-            ) : selectedTx.matched ? (
-                 <div className="text-center">
-                    <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-emerald-500 opacity-20" />
-                    <h3 className="text-xl font-medium text-slate-700">Transação Conciliada</h3>
-                    <p className="text-sm text-slate-500 mt-2 max-w-[200px] mx-auto">
-                        Este lançamento já foi processado e registrado na contabilidade.
-                    </p>
-                    
-                    {selectedTx.journal_entry_id && (
-                        <div className="mt-4 flex flex-col gap-2 max-w-[200px] mx-auto">
-                             <Button 
-                                variant="outline" 
-                                className="w-full border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100" 
-                                onClick={() => navigate('/client-ledger')}
-                             >
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Ver no Extrato
-                             </Button>
+            ) : selectedTx.matched && suggestion ? (
+                 // TRANSAÇÃO JÁ CONCILIADA - MOSTRAR LANÇAMENTO ORIGINAL
+                 <div className="w-full h-full flex flex-col">
+                    {/* Header com status */}
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-emerald-200">
+                        <div className="bg-emerald-100 p-2 rounded-full">
+                            <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-emerald-800">Transação Conciliada</h3>
+                            <p className="text-xs text-emerald-600">{suggestion.reasoning}</p>
+                        </div>
+                    </div>
+
+                    {/* Descrição do lançamento */}
+                    <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Descrição do Lançamento</p>
+                        <p className="text-sm font-medium text-slate-800">{suggestion.description}</p>
+                    </div>
+
+                    {/* Partidas do lançamento */}
+                    <div className="flex-1 overflow-auto mb-4">
+                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Partidas Registradas</p>
+                        <div className="border rounded-lg overflow-hidden">
+                            <table className="w-full text-xs">
+                                <thead className="bg-slate-100">
+                                    <tr>
+                                        <th className="text-left p-2 font-medium text-slate-600">Conta</th>
+                                        <th className="text-right p-2 font-medium text-blue-600 w-24">Débito</th>
+                                        <th className="text-right p-2 font-medium text-red-600 w-24">Crédito</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {suggestion.entries?.map((entry: any, idx: number) => (
+                                        <tr key={idx} className="border-t hover:bg-slate-50">
+                                            <td className="p-2">
+                                                <span className="font-mono text-[10px] bg-slate-200 px-1 rounded mr-1">
+                                                    {entry.debit?.account !== '---' ? entry.debit.account : entry.credit?.account}
+                                                </span>
+                                                <span className="text-slate-700">
+                                                    {entry.debit?.account !== '---' ? entry.debit.name : entry.credit?.name}
+                                                </span>
+                                            </td>
+                                            <td className="p-2 text-right font-mono text-blue-700">
+                                                {entry.debit?.account !== '---' ? formatCurrency(entry.value) : ''}
+                                            </td>
+                                            <td className="p-2 text-right font-mono text-red-700">
+                                                {entry.credit?.account !== '---' ? formatCurrency(entry.value) : ''}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-slate-50 border-t-2">
+                                    <tr>
+                                        <td className="p-2 font-semibold text-slate-600">TOTAL</td>
+                                        <td className="p-2 text-right font-mono font-bold text-blue-700">
+                                            {formatCurrency(suggestion.entries?.reduce((sum: number, e: any) => 
+                                                sum + (e.debit?.account !== '---' ? Number(e.value) : 0), 0) || 0)}
+                                        </td>
+                                        <td className="p-2 text-right font-mono font-bold text-red-700">
+                                            {formatCurrency(suggestion.entries?.reduce((sum: number, e: any) => 
+                                                sum + (e.credit?.account !== '---' ? Number(e.value) : 0), 0) || 0)}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Desmembramento de Cobrança (COB) */}
+                    {selectedTx && (/(^|\s)[C]?OB\d+/.test(selectedTx.description) || selectedTx.description.includes('COBRANCA') || selectedTx.description.includes('Cobrança')) && (
+                        <div className="mt-4 border-t pt-4">
+                            <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">📋 Composição da Cobrança (Clientes)</p>
+                            <CollectionClientBreakdown 
+                                cobrancaDoc={selectedTx.description.match(/[C]?OB\d+/)?.[0] || ''}
+                                amount={Math.abs(selectedTx.amount)}
+                                transactionDate={selectedTx.date}
+                            />
                         </div>
                     )}
 
-                    <Button variant="destructive" className="mt-4" onClick={handleUnmatch} disabled={loading}>
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Desfazer Conciliação (Editar)
+                    {/* Ações */}
+                    <div className="flex flex-wrap gap-2 pt-3 border-t">
+                        <Button 
+                            variant="outline" 
+                            className="flex-1 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            onClick={() => setDrCiceroChatOpen(true)}
+                        >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Consultar Dr. Cícero
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            className="flex-1 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                            onClick={() => {
+                                setClassificationDialogOpen(true);
+                            }}
+                        >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Reclassificar (Trocar Conta)
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            className="flex-1 border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100" 
+                            onClick={() => navigate('/client-ledger')}
+                        >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Ver no Extrato
+                        </Button>
+                        
+                        {/* Botões Premium - Impacto e Educador */}
+                        <div className="flex gap-2 w-full mt-2">
+                          <Button 
+                              variant="outline" 
+                              className="flex-1 border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                              onClick={() => {
+                                setImpactPanelOpen(true);
+                                if (selectedTx && suggestion) {
+                                  const isEntry = selectedTx.amount > 0;
+                                  
+                                  // Para transações conciliadas, usar classificationAccount se disponível
+                                  let accountCode = "";
+                                  let accountName = "";
+                                  
+                                  if (suggestion.classificationAccount) {
+                                    accountCode = suggestion.classificationAccount.code;
+                                    accountName = suggestion.classificationAccount.name;
+                                  } else if (suggestion.entries?.length > 0) {
+                                    const targetEntry = suggestion.entries[0];
+                                    const targetAccount = isEntry ? targetEntry.credit : targetEntry.debit;
+                                    accountCode = targetAccount?.account || "";
+                                    accountName = targetAccount?.name || "";
+                                  }
+                                  
+                                  console.log('calculateImpact chamado com:', { accountCode, accountName, isEntry, amount: selectedTx.amount });
+                                  
+                                  calculateImpact({
+                                    transactionId: selectedTx.id,
+                                    amount: selectedTx.amount,
+                                    description: selectedTx.description,
+                                    accountCode,
+                                    accountName,
+                                    isEntry
+                                  });
+                                }
+                              }}
+                          >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver Impacto
+                          </Button>
+                          <Button 
+                              variant="outline" 
+                              className="flex-1 border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100"
+                              onClick={() => {
+                                setEducatorPanelOpen(true);
+                                if (selectedTx && suggestion) {
+                                  const isEntry = selectedTx.amount > 0;
+                                  
+                                  // Para transações conciliadas, usar classificationAccount se disponível
+                                  let accountCode = "";
+                                  let accountName = "";
+                                  
+                                  if (suggestion.classificationAccount) {
+                                    accountCode = suggestion.classificationAccount.code;
+                                    accountName = suggestion.classificationAccount.name;
+                                  } else if (suggestion.entries?.length > 0) {
+                                    const targetEntry = suggestion.entries[0];
+                                    const targetAccount = isEntry ? targetEntry.credit : targetEntry.debit;
+                                    accountCode = targetAccount?.account || "";
+                                    accountName = targetAccount?.name || "";
+                                  }
+                                  
+                                  generateExplanation({
+                                    transactionDescription: selectedTx.description,
+                                    amount: selectedTx.amount,
+                                    accountCode,
+                                    accountName,
+                                    isEntry
+                                  }, "classification" as any);
+                                }
+                              }}
+                          >
+                              <GraduationCap className="h-4 w-4 mr-2" />
+                              Por quê?
+                          </Button>
+                        </div>
+                        
+                        <Button 
+                            variant="destructive" 
+                            className="w-full mt-2" 
+                            onClick={handleUnmatch} 
+                            disabled={loading}
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                            Desfazer Conciliação e Excluir Lançamento
+                        </Button>
+                    </div>
+                 </div>
+            ) : selectedTx.matched && loading ? (
+                 // Carregando o lançamento
+                 <div className="text-center">
+                    <Loader2 className="h-12 w-12 mx-auto mb-4 text-blue-500 animate-spin" />
+                    <p className="text-sm text-slate-500">Carregando lançamento...</p>
+                 </div>
+            ) : selectedTx.matched && !suggestion ? (
+                 // Lançamento não encontrado
+                 <div className="text-center p-6">
+                    <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-amber-500" />
+                    <h3 className="font-semibold text-slate-700">Lançamento não encontrado</h3>
+                    <p className="text-sm text-slate-500 mt-2">
+                        O lançamento vinculado (ID: {selectedTx.journal_entry_id?.slice(0,8)}...) não foi encontrado no banco de dados.
+                    </p>
+                    <Button 
+                        variant="destructive" 
+                        className="mt-4" 
+                        onClick={handleUnmatch} 
+                        disabled={loading}
+                    >
+                        Desfazer Conciliação
                     </Button>
                  </div>
             ) : isManualMode ? (
@@ -1471,44 +2212,61 @@ export default function SuperConciliation() {
                     <p className="text-sm font-medium">Analisando regras de competência...</p>
                 </div>
             ) : (
-                <div className="w-full h-full flex flex-col gap-6">
-                    <div className="bg-white p-4 rounded-xl border shadow-sm">
-                        <h3 className="font-semibold text-slate-700 mb-1">Diagnóstico</h3>
-                        <p className="text-lg text-slate-900">{suggestion?.description}</p>
-                        {suggestion?.reasoning && (
-                            <div className="mt-3 bg-amber-50 text-amber-800 text-sm p-3 rounded-md flex items-start gap-2 border border-amber-200">
-                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                                {suggestion.reasoning}
-                            </div>
-                        )}
-                        
-                        {suggestion?.type === 'split' && (
-                             <div className="mt-4">
-                                <input 
-                                    type="file" 
-                                    className="hidden" 
-                                    ref={fileInputRef}
-                                    accept=".csv,.xlsx,.txt"
-                                    aria-label="Upload de Arquivo de Retorno"
-                                    onChange={handleFileUpload}
-                                />
-                                <Button 
-                                    variant="outline" 
-                                    className="w-full gap-2 border-dashed border-2 hover:bg-blue-50 hover:border-blue-300"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Upload className="h-4 w-4" />
-                                    Importar Arquivo de Retorno (Detalhar Clientes)
-                                </Button>
-                             </div>
-                        )}
-                    </div>
+                <div className="w-full h-full flex flex-col gap-4 overflow-auto">
+                    {/* 🤖 AI FIRST - Sugestão Automática do Agente */}
+                    <AIAgentSuggestions
+                        transaction={{
+                            id: selectedTx.id,
+                            description: selectedTx.description,
+                            amount: selectedTx.amount,
+                            date: selectedTx.date
+                        }}
+                        onApplySuggestion={handleApplyAISuggestion}
+                        onReject={handleRejectAISuggestion}
+                        onAskDrCicero={() => setDrCiceroChatOpen(true)}
+                    />
+                    
+                    {/* Diagnóstico Original (caso AI não tenha classificado) */}
+                    {suggestion?.description && (
+                        <div className="bg-white p-4 rounded-xl border shadow-sm">
+                            <h3 className="font-semibold text-slate-700 mb-1">Diagnóstico Complementar</h3>
+                            <p className="text-sm text-slate-900">{suggestion.description}</p>
+                            {suggestion?.reasoning && (
+                                <div className="mt-3 bg-amber-50 text-amber-800 text-xs p-3 rounded-md flex items-start gap-2 border border-amber-200">
+                                    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                                    {suggestion.reasoning}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {suggestion?.type === 'split' && (
+                         <div className="mt-2">
+                            <input 
+                                type="file" 
+                                className="hidden" 
+                                ref={fileInputRef}
+                                accept=".csv,.xlsx,.txt"
+                                aria-label="Upload de Arquivo de Retorno"
+                                onChange={handleFileUpload}
+                            />
+                            <Button 
+                                variant="outline" 
+                                className="w-full gap-2 border-dashed border-2 hover:bg-blue-50 hover:border-blue-300"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Upload className="h-4 w-4" />
+                                Importar Arquivo de Retorno (Detalhar Clientes)
+                            </Button>
+                         </div>
+                    )}
                 </div>
             )}
          </div>
       </Card>
 
-      {/* COLUNA 3: Efetivação Contábil */}
+      {/* COLUNA 3: Efetivação Contábil - Só mostra para transações NÃO conciliadas */}
+      {!selectedTx?.matched && (
       <Card className={`flex flex-col bg-slate-50/50 overflow-hidden transition-all duration-300 ${isListExpanded ? 'lg:col-span-3' : 'lg:col-span-4'} col-span-1 min-h-[500px] lg:min-h-0 lg:h-full w-full max-w-full`}>
         <CardHeader>
              <CardTitle className="text-lg flex items-center gap-2">
@@ -1627,8 +2385,61 @@ export default function SuperConciliation() {
              )}
         </CardContent>
       </Card>
-      
+      )}
       </div>
+      )}
+
+      {/* Dialog de Classificação Obrigatória - Dr. Cícero */}
+      <ClassificationDialog
+        open={classificationDialogOpen}
+        onOpenChange={setClassificationDialogOpen}
+        transaction={selectedTx ? {
+          id: selectedTx.id,
+          amount: selectedTx.amount,
+          date: selectedTx.date,
+          description: selectedTx.description,
+          suggested_account_id: undefined,
+          suggested_account_code: undefined,
+          suggested_account_name: undefined,
+          journal_entry_id: selectedTx.journal_entry_id,
+          is_reclassification: selectedTx.matched,
+        } : null}
+        onClassificationComplete={handleClassificationComplete}
+      />
+      
+      {/* Chat de Consulta com Dr. Cícero */}
+      <DrCiceroChat
+        open={drCiceroChatOpen}
+        onOpenChange={setDrCiceroChatOpen}
+        transaction={selectedTx}
+      />
+
+      {/* Painel de Impacto Contábil - ANTES/DEPOIS */}
+      {impactPanelOpen && selectedTx && (
+        <div className="fixed bottom-4 right-4 z-50 w-[480px] max-h-[600px] overflow-hidden">
+          <ImpactPreviewPanel
+            isCalculating={isCalculating}
+            impact={impact}
+            onClose={() => {
+              setImpactPanelOpen(false);
+              clearImpact();
+            }}
+          />
+        </div>
+      )}
+
+      {/* Painel Educador - Por quê? */}
+      {educatorPanelOpen && (
+        <div className="fixed bottom-4 left-4 z-50 w-[480px] max-h-[600px] overflow-hidden">
+          <EducatorPanel
+            loading={isEducatorLoading}
+            explanation={explanation}
+            onClose={() => {
+              setEducatorPanelOpen(false);
+              clearExplanation();
+            }}
+          />
+        </div>
       )}
     </Tabs>
   );

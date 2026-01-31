@@ -1,0 +1,1350 @@
+{
+  "data_analise": "2026-01-30T18:34:39.137Z",
+  "periodo": "01/2025",
+  "resumo": {
+    "dre_atual": 668446.2999999992,
+    "esperado": 136821.59000000003,
+    "diferenca": 531624.7099999993
+  },
+  "lancamentos_suspeitos": [
+    {
+      "entry_id": "f3e744c5-9a6c-4ab2-a911-d0d0974a732d",
+      "internal_code": "hon_8bc18c3e-7ad4-48ed-94d0-2639e9c0528b_2025-01",
+      "valor": 963.1,
+      "descricao": "Honorários 2025-01 - EXPRESS RIOVERDENSE",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "510798e2-894b-47d9-95b8-3866824aebe8",
+      "internal_code": "hon_f3f6f424-ec32-4ef4-8e9a-2bcf911b6fb2_2025-01",
+      "valor": 375.73,
+      "descricao": "Honorários 2025-01 - AMETISTA GESTÃO EMPRESARIAL LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "237508fe-3342-4b3d-8953-3e3159955710",
+      "internal_code": "hon_943c4c68-45b8-414f-8dd3-097484aaa2ff_2025-01",
+      "valor": 300,
+      "descricao": "Honorários 2025-01 - FUTURA AGROPECUARIA  LTDA - SOLMA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b903cb1f-8ddd-42c3-b381-7e93729256ad",
+      "internal_code": "hon_d98a951d-e182-4486-aacc-aeae2c6e963d_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - L.A.R CONSTRUTORA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "811d6bd0-2d0d-40b9-81ea-9bd7495c2016",
+      "internal_code": "PIX_CLASS_ACTION_74761",
+      "valor": 74761.78,
+      "descricao": "PIX ACTION",
+      "source_type": null
+    },
+    {
+      "entry_id": "5e8838af-6d99-4874-8572-b3d8c0b692a0",
+      "internal_code": "PIX_CLASS_ACTION_70046",
+      "valor": 70046.9,
+      "descricao": "PIX ACTION",
+      "source_type": null
+    },
+    {
+      "entry_id": "c73d441b-c7eb-4212-8750-0054d0c9239e",
+      "internal_code": "PIX_CLASS_G3_31253",
+      "valor": 31253.06,
+      "descricao": "PIX G3",
+      "source_type": null
+    },
+    {
+      "entry_id": "ab2901ae-8f04-40cf-bcd3-01e5b6e088ce",
+      "internal_code": "PIX_CLASS_ESSER_8000",
+      "valor": 8000,
+      "descricao": "PIX ESSER",
+      "source_type": null
+    },
+    {
+      "entry_id": "4d7a0961-220d-4006-a86e-5bd93a3e694a",
+      "internal_code": "PIX_CLASS_ESSER_2000",
+      "valor": 2000,
+      "descricao": "PIX ESSER",
+      "source_type": null
+    },
+    {
+      "entry_id": "bde213ea-8811-4e08-acfc-e442cedffd42",
+      "internal_code": "PIX_CLASS_ESSER_2000_2",
+      "valor": 2000,
+      "descricao": "PIX ESSER",
+      "source_type": null
+    },
+    {
+      "entry_id": "b21c0b9b-a1d8-4939-ac7e-b829c1b80e52",
+      "internal_code": "PIX_CLASS_FABY_1461",
+      "valor": 1461.19,
+      "descricao": "PIX FABY",
+      "source_type": null
+    },
+    {
+      "entry_id": "ff163bab-047f-4fb9-bfdd-4859624081da",
+      "internal_code": "PIX_CLASS_FABY_1206",
+      "valor": 1206,
+      "descricao": "PIX FABY",
+      "source_type": null
+    },
+    {
+      "entry_id": "eb7e247c-ee08-429a-b058-35c65dd67136",
+      "internal_code": "PIX_CLASS_AI_375_01",
+      "valor": 375,
+      "descricao": "PIX AI",
+      "source_type": null
+    },
+    {
+      "entry_id": "c8516515-d741-49bd-938b-2dd8f949a808",
+      "internal_code": "PIX_CLASS_AI_375_04",
+      "valor": 375,
+      "descricao": "PIX AI",
+      "source_type": null
+    },
+    {
+      "entry_id": "a86685c6-b6cc-494a-a3d4-b97f53b88e68",
+      "internal_code": "PIX_CLASS_SERGIOFILHO_650",
+      "valor": 650,
+      "descricao": "PIX SERGIO",
+      "source_type": null
+    },
+    {
+      "entry_id": "e2e10109-47c5-4a47-84c4-31456030581e",
+      "internal_code": "PIX_CLASS_AI_375_02",
+      "valor": 375,
+      "descricao": "PIX AI",
+      "source_type": null
+    },
+    {
+      "entry_id": "7e432635-c14b-4a01-bcf0-28e994edba13",
+      "internal_code": "PIX_CLASS_AI_375_03",
+      "valor": 375,
+      "descricao": "PIX AI",
+      "source_type": null
+    },
+    {
+      "entry_id": "8550e9c1-68d0-4d1a-8bd3-e6680c399443",
+      "internal_code": "PIX_CLASS_PAULA_200",
+      "valor": 200,
+      "descricao": "PIX PAULA",
+      "source_type": null
+    },
+    {
+      "entry_id": "f7fb2a3d-f451-4102-a21e-1a92db5cd21c",
+      "internal_code": "PIX_CLASS_TAYLANE_6",
+      "valor": 6.03,
+      "descricao": "PIX TAYLANE",
+      "source_type": null
+    },
+    {
+      "entry_id": "3c13a318-dea0-41cd-bbff-d2efec677ef3",
+      "internal_code": "hon_35e4f21c-8d0e-435a-905d-95f0de3def28_2025-01",
+      "valor": 5000,
+      "descricao": "Honorários 2025-01 - AVIZ ALIMENTOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d558382a-9912-42f7-8507-0931c2f6bcb6",
+      "internal_code": "hon_18f183c1-3a25-4111-bb5d-4e988c2e1c3e_2025-01",
+      "valor": 637.8,
+      "descricao": "Honorários 2025-01 - COMERCIAL DINIZ EIRELI ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "342719e2-fb06-475a-8ce5-4de2d8797000",
+      "internal_code": "hon_33f6f324-a7c9-4fdc-9f5c-a49fc1cdd68e_2025-01",
+      "valor": 472.06,
+      "descricao": "Honorários 2025-01 - F E CONSULTORIA JURIDICA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "58267e06-8496-40e6-8d64-9a41aed6a164",
+      "internal_code": "hon_91fc1d1f-4bc0-4f21-bdab-4a80c5ddcb91_2025-01",
+      "valor": 2182.01,
+      "descricao": "Honorários 2025-01 - FAZENDA DA TOCA PARTICIPAÇÕES EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "370ed0d5-275e-4f5b-a67f-77fa60011286",
+      "internal_code": "hon_33b167c0-cf23-4b0c-b111-42085ce8bc69_2025-01",
+      "valor": 919.95,
+      "descricao": "Honorários 2025-01 - CARRO DE OURO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "a965eac5-6fdd-45cc-ab23-708bf798570e",
+      "internal_code": "hon_b7e50813-4cf2-4e39-8d63-faff187524be_2025-01",
+      "valor": 379.5,
+      "descricao": "Honorários 2025-01 - COVAS SERVIÇOS DE PINTURAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "e334913c-b61c-4b33-be8c-9f4bca8686f0",
+      "internal_code": "hon_92e8e23a-a279-428f-9c74-8beb66ffa7af_2025-01",
+      "valor": 900,
+      "descricao": "Honorários 2025-01 - CARVALHO E MELO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "df447aed-a98a-4fc8-8e7f-4b5bc6f28852",
+      "internal_code": "hon_daa8fc75-ee59-43f7-8967-58a7c1dbc544_2025-01",
+      "valor": 1000,
+      "descricao": "Honorários 2025-01 - FFA PARTICIPACOES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d8a2559b-1089-4407-9b31-35cfe20b8af0",
+      "internal_code": "hon_233b8709-7103-4b95-a6c2-fdc5dc1562d8_2025-01",
+      "valor": 603.73,
+      "descricao": "Honorários 2025-01 - CDC PLAYGROUND E BRINQUEDOS EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "273b57f1-2529-421d-8d12-80c191dcd983",
+      "internal_code": "hon_8c91b37f-5418-4f56-8592-36ab257efe86_2025-01",
+      "valor": 485.77,
+      "descricao": "Honorários 2025-01 - DIAS FERNANDES ELETRODOMESTICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "85479ec7-d442-4bca-9b0a-dcadd147b1f0",
+      "internal_code": "hon_33faf6ea-f461-4223-9029-7183c6988987_2025-01",
+      "valor": 2322.8,
+      "descricao": "Honorários 2025-01 - AMG INDUSTRIA E COMERCIO DE GESSO EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "c52b46fc-af2d-4eb5-b8c0-4582f546944b",
+      "internal_code": "hon_685657a9-adc3-4608-b234-8a884d5c25a3_2025-01",
+      "valor": 1500,
+      "descricao": "Honorários 2025-01 - ANAPOLIS VISTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f96b8fbd-34d6-4e3e-a415-c5ad80cf14b3",
+      "internal_code": "hon_abfc96dc-e28f-4ee9-83ea-5f52d1049f21_2025-01",
+      "valor": 3500,
+      "descricao": "Honorários 2025-01 - CENTRO OESTE SERVIÇO DE VISTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "fbe36772-961f-4e63-85a8-9ae21eba795d",
+      "internal_code": "hon_5c1f28c9-212d-4038-ae1d-65ed06b0c617_2025-01",
+      "valor": 1525.86,
+      "descricao": "Honorários 2025-01 - COVALE USINAGEM INDUSTRIA E DE CANETAS E",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "51f45c22-e8d6-4b02-99be-739d29a285c0",
+      "internal_code": "hon_14336b6b-46b8-4169-a572-2db656b4c7a8_2025-01",
+      "valor": 577.85,
+      "descricao": "Honorários 2025-01 - DEL PAPA ARQUITETURA LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "cc26b153-3056-4567-9d80-3b82e6addecb",
+      "internal_code": "hon_7d6f13c4-deb7-4c6e-939d-a4ea682f538d_2025-01",
+      "valor": 1034.97,
+      "descricao": "Honorários 2025-01 - DINO BRINQUEDOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "9283b2ea-a938-479b-a565-13314d7dc9f6",
+      "internal_code": "hon_e9a47af5-5fa8-44e4-8058-da1429660260_2025-01",
+      "valor": 551.97,
+      "descricao": "Honorários 2025-01 - HOKMA ELETROMONTAGEM LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "c1f109e7-e53c-4cb3-b1d5-0609e0ebd48c",
+      "internal_code": "hon_7b1cafa1-6cfb-45c6-9bb7-c3cad5451f0b_2025-01",
+      "valor": 4244.67,
+      "descricao": "Honorários 2025-01 - MURANO ADM E PARTICIPAÇÕES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "054331e6-a347-4d46-bcac-b86bdfc73679",
+      "internal_code": "hon_0e743d4e-7fa2-4a89-92a5-252b716fbdca_2025-01",
+      "valor": 860,
+      "descricao": "Honorários 2025-01 - MARIO CESAR PEREIRA DA SILVA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1ba0d767-b5d8-47ce-8a6d-489fa351e65a",
+      "internal_code": "hon_64da8dec-a081-4c5e-bc29-c73703638816_2025-01",
+      "valor": 574.96,
+      "descricao": "Honorários 2025-01 - MV LG CLINICA VETERINARIA PET FERA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "85496ddf-304d-4d19-8c92-3b437d9f66e6",
+      "internal_code": "hon_42230d47-af5b-48c0-8290-ab5033883bad_2025-01",
+      "valor": 125.25,
+      "descricao": "Honorários 2025-01 - MARIO LUCIO PINHEIRO MILAZZO - FAZ",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "cd341983-1723-4e54-8ba4-681f1d905bb5",
+      "internal_code": "hon_6869b050-94ca-428e-83f1-36a81e613ba4_2025-01",
+      "valor": 2879.9,
+      "descricao": "Honorários 2025-01 - MARO - INVESTIMENTOS E PARTICIPACOES S/A",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "605d1975-fc42-47d5-b152-c0ad70e6521a",
+      "internal_code": "hon_174cd5bf-6795-4741-855e-3937254d17e1_2025-01",
+      "valor": 2276.85,
+      "descricao": "Honorários 2025-01 - NUTRYMED INDUSTRIAL FARMACEUTICA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "eedcdd6d-6585-4895-9eba-e86d07888626",
+      "internal_code": "hon_a4e9e69b-e69b-446f-a400-b5ee012620e1_2025-01",
+      "valor": 344.98,
+      "descricao": "Honorários 2025-01 - PREMIER SOLUÇOES INDUSTRIAL LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "18e6a491-0a79-44cf-af96-70c83c711905",
+      "internal_code": "hon_1f759ac5-a12f-4791-a9e1-773945260670_2025-01",
+      "valor": 4346.3,
+      "descricao": "Honorários 2025-01 - JPL AGROPECUARIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "28fa4101-cd68-4d29-bb07-4142b479cbde",
+      "internal_code": "hon_5523de4a-a0b2-4156-803d-0a7270e2bdf7_2025-01",
+      "valor": 3556.72,
+      "descricao": "Honorários 2025-01 - MATA PRAGAS CONTROLE DE PRAGAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "9598f348-4341-4c7e-879e-799363c3e383",
+      "internal_code": "hon_22d50084-2673-4b08-ae73-bbbe9d87284f_2025-01",
+      "valor": 9479.11,
+      "descricao": "Honorários 2025-01 - MG MECANICA INDUSTRIAL LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8885d4ee-4f9b-45fe-b87e-ad94fbfddcd8",
+      "internal_code": "hon_a0a5d257-29b0-418b-9a82-4d9551b44352_2025-01",
+      "valor": 706,
+      "descricao": "Honorários 2025-01 - MINERACAO SERRANO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "c1d7f760-2f17-4d1f-82b4-6835717dfea9",
+      "internal_code": "hon_3c09ec0b-694b-49be-a55e-ee002f76e5c5_2025-01",
+      "valor": 172.5,
+      "descricao": "Honorários 2025-01 - MARCUS ABDULMASSIH DEL PAPA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2db8f21c-febc-4760-b560-b83d4e0de5a2",
+      "internal_code": "hon_42c749f3-4346-42ba-8c26-32f6288af855_2025-01",
+      "valor": 767.58,
+      "descricao": "Honorários 2025-01 - MOTTA COMERCIO DE INFORMATICA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "daeee445-fb9e-41e4-a6ca-dcb3ddead456",
+      "internal_code": "hon_8b2d76a3-b6fd-4a3b-be75-7699bdea74f9_2025-01",
+      "valor": 152.1,
+      "descricao": "Honorários 2025-01 - MARCUS VINICIUS  LEAL PIRES - MEI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "48cd604e-a065-4dc9-b26c-b6cb697a713e",
+      "internal_code": "hon_8545268d-d93e-42ea-99c0-4110f22f6929_2025-01",
+      "valor": 2194.11,
+      "descricao": "Honorários 2025-01 - MUNDIM AS GUIMARÃES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "91b8d049-e0e4-4d50-b727-dfd92f32cc4d",
+      "internal_code": "hon_a8066e49-0a12-4f67-bd71-b7f2fce055a5_2025-01",
+      "valor": 1138.48,
+      "descricao": "Honorários 2025-01 - LAJES MORADA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "968c96d2-ac51-4fd0-bbc5-da501f425a5a",
+      "internal_code": "hon_ae6f5b9a-532b-4306-92cc-cb26950d5022_2025-01",
+      "valor": 1001.95,
+      "descricao": "Honorários 2025-01 - PM ADMINSTRAÇÃO E SERVIÇOS",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "9d3da6f4-2efc-42c4-8c64-40f36345adb5",
+      "internal_code": "hon_bb83f7ba-eeb4-442b-8fc9-eb8b3b8274b6_2025-01",
+      "valor": 250,
+      "descricao": "Honorários 2025-01 - LEMS HOLDINGS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "4ea31a7a-5f37-4bd9-ad4a-b394808cdd5c",
+      "internal_code": "hon_b3862f55-e5cc-4665-ac2a-e9120ca5eee0_2025-01",
+      "valor": 603.75,
+      "descricao": "Honorários 2025-01 - LIVRE VISTORIA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f003ad30-f2d6-4e4a-a901-6a34a30bee62",
+      "internal_code": "hon_04965477-8781-4e2a-bbe5-0be150daa8be_2025-01",
+      "valor": 330,
+      "descricao": "Honorários 2025-01 - LOPES CONSULTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ac00070d-c474-486a-82b0-299528e0fa1d",
+      "internal_code": "hon_41f72a96-f012-48b1-92d9-1587625973d0_2025-01",
+      "valor": 1655.93,
+      "descricao": "Honorários 2025-01 - ML PINHEIRO MILLAZO LTDDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "122e8093-1778-4e98-a318-037129025554",
+      "internal_code": "hon_3ac184eb-2f6e-4b4b-891c-a4a1c63b4767_2025-01",
+      "valor": 1725,
+      "descricao": "Honorários 2025-01 - UNICAIXAS INDUSTRIA E FERRAMENTAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "de32bec1-6e1a-4bbb-bd14-982058bbab2f",
+      "internal_code": "hon_532910cd-e4a6-4457-856d-49b732b7c4db_2025-01",
+      "valor": 334.97,
+      "descricao": "Honorários 2025-01 - SÃO LUIZ INDUSTRIA E COMERCIO DE AGUA MI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "fe7f4bce-4875-45b5-ba89-09bcd46b2bd2",
+      "internal_code": "hon_ae99bfd8-e732-4a81-a0bf-5c7fa5f5fef0_2025-01",
+      "valor": 724.88,
+      "descricao": "Honorários 2025-01 - SOLUTTI TECNOLOGIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1082ede9-0aee-476b-a97b-f7d7c097abd4",
+      "internal_code": "hon_050d3d74-79b5-4709-b20c-bdf9b5354519_2025-01",
+      "valor": 709.5,
+      "descricao": "Honorários 2025-01 - STAR EMPORIO DE BEBIDAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "5796ad87-38e6-4373-9b76-c7365b73e095",
+      "internal_code": "hon_ccc7501b-bc1e-4431-8ff5-33f1be5506a7_2025-01",
+      "valor": 2889.92,
+      "descricao": "Honorários 2025-01 - SUITE MOTEL LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "88d5dbe4-1374-4e14-905e-185a48555c32",
+      "internal_code": "hon_0502041f-05a1-43ed-8459-bd349df8b0e9_2025-01",
+      "valor": 1130.3,
+      "descricao": "Honorários 2025-01 - TIMES NEGOCIOS IMOBILIARIOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "57ec4aeb-f721-475c-a64b-cf318a7632b7",
+      "internal_code": "hon_cca5abc2-a34f-4a8c-86ee-f48dab227a91_2025-01",
+      "valor": 4563.02,
+      "descricao": "Honorários 2025-01 - TSD DISTRIBUIDORA DE CARTÕES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1dcaac3f-3a5f-4b2b-9cab-483e94cfad78",
+      "internal_code": "hon_b5a1bb23-ef78-4fb7-8f5e-2c116963b059_2025-01",
+      "valor": 977.45,
+      "descricao": "Honorários 2025-01 - BCS GOIAS SERVIÇOS MEDICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "89133170-ef21-41d1-b770-240fb3ee6cbb",
+      "internal_code": "hon_79f57242-39df-4fd5-a0b7-39a5e38f642a_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - TANNUS E MOTA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f41afef9-8ca5-4b84-8d31-7d2a4168d96b",
+      "internal_code": "hon_e170749f-0204-4857-ad1f-66933e0dbbfe_2025-01",
+      "valor": 537.5,
+      "descricao": "Honorários 2025-01 - AGROPECUARIA ADM LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "037c72b8-cd01-4aaa-adf7-75159c5bf52c",
+      "internal_code": "hon_177369ad-808a-4633-8edc-42583d3ee833_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - CASA NOVA TINTAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "49269527-9d54-40d0-aa4d-5eaf8020e36b",
+      "internal_code": "hon_86f4d91a-ec96-4e9b-b92e-63da2a2e6ce8_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - D ANGE2 COMERCIO DE BICHO DE PELUCIA LTD",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f20c055c-6f0f-4353-819f-77284826e83e",
+      "internal_code": "hon_0ca8e050-0c11-4124-865e-42d8380354ad_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - PET SHOP E CAOPANHIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ac3a52c1-2d9e-4a64-b193-b4c585f99512",
+      "internal_code": "hon_a1674d59-970f-483a-bf51-c7425454f191_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - CONTRONWEB TECNOLOGIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ed6d7df8-e88c-48fb-b23b-9e167f43ac12",
+      "internal_code": "hon_dfc1df26-e264-4fec-b427-effcda2e6dd4_2025-01",
+      "valor": 275.98,
+      "descricao": "Honorários 2025-01 - C.R.J MANUTENÇAO EM AR CONDICIONADO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ab78f501-dfb0-42a5-9af7-57435bba3a4f",
+      "internal_code": "hon_183d2e36-cf1a-4708-a656-1750a39e7f51_2025-01",
+      "valor": 963.1,
+      "descricao": "Honorários 2025-01 - KROVER ENGENHARIA E SERVIÇOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2bb1f98d-eb45-4864-bfed-627229c06f49",
+      "internal_code": "hon_c3d76a06-a85e-4887-b53e-e3c01a5c7ece_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - RAMAYOLI INDUSTRIA DE SALGADOS EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "db98960f-e464-4373-bf53-c057a72527d0",
+      "internal_code": "hon_a9532f88-d365-452f-87db-133c22a3d5bd_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - FGS COMERCIO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "6ca317b9-0a58-4d3f-9d68-45f35edb05da",
+      "internal_code": "hon_6ea8cafa-3780-4fe0-a77e-366ce406a4cf_2025-01",
+      "valor": 500,
+      "descricao": "Honorários 2025-01 - KORSICA COM ATAC DE PNEUS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "5072f1f7-e3e1-44d7-a43a-afb3437015a8",
+      "internal_code": "hon_3bd17681-6880-476a-83a5-efdb2ad8f329_2025-01",
+      "valor": 322.5,
+      "descricao": "Honorários 2025-01 - ELETROSOL ENERGIA SOLAR LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "33557f09-a1b9-4199-a68c-8ab26699264b",
+      "internal_code": "hon_eea670cd-6f00-4a0a-9425-aeed5d3fc233_2025-01",
+      "valor": 506,
+      "descricao": "Honorários 2025-01 - P.A INDUSTRIA DE ROUPAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ca2a6b09-4aba-4965-8100-0aaf826daca8",
+      "internal_code": "hon_ea9411d2-5bc3-4bdb-abef-5541dd634983_2025-01",
+      "valor": 977.45,
+      "descricao": "Honorários 2025-01 - BCS MINAS SERVIÇOS MEDICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "9841cc30-9c88-445e-8cda-388855de78b2",
+      "internal_code": "hon_5f7c0c62-ffa1-486f-a40d-e2d9183427d8_2025-01",
+      "valor": 300,
+      "descricao": "Honorários 2025-01 - HOLDING BOM FUTURO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f87082e9-a64e-4871-8b61-ff02610b7862",
+      "internal_code": "hon_744c9872-be69-45f4-9c51-f60f581ac48c_2025-01",
+      "valor": 3036,
+      "descricao": "Honorários 2025-01 - R&P AVIAÇÃO COMERCIO IMPORTAÇÃO E EXPORT",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "97a02f62-3e2c-42aa-bc94-5307a8019310",
+      "internal_code": "hon_878c797c-39c9-48ca-becd-21422210a3b7_2025-01",
+      "valor": 766.88,
+      "descricao": "Honorários 2025-01 - RESTAURANTE IUVACI LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2dc4da02-20a7-45c5-971e-c1d9dad0bb18",
+      "internal_code": "hon_888b75da-b434-4a48-a929-cfe422033b53_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - SHARKSAPACE GASTRO PARK LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b4d360ae-a489-4909-a61e-ba042e1ebe35",
+      "internal_code": "hon_06b604d4-a3d2-4e5a-8716-169bde1dceb3_2025-01",
+      "valor": 506,
+      "descricao": "Honorários 2025-01 - CAGI INDUSTRIA DE ROUPAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "a98c26b9-975f-495e-919b-3e0c8ff20fbc",
+      "internal_code": "hon_b4bbebaa-fe94-406c-a036-8baa71dc8a1b_2025-01",
+      "valor": 500,
+      "descricao": "Honorários 2025-01 - ROSELIS TORMIN MUNDIM - FAZENDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "10111d03-d56d-425e-8295-043391554098",
+      "internal_code": "hon_48fd6593-adec-447b-91db-9ad7847daaf5_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - D ANGE COMERCIO DE BICHO DE PELUCIA EIRE",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "3689b75c-1093-4b9e-a9f7-1251ea55dece",
+      "internal_code": "hon_6883c0f7-70f2-43f7-9b5a-e5c7548d3aab_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - JJC PRESTADORA DE SERVICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d9152e4d-3d3b-4684-9552-03426a3ffe68",
+      "internal_code": "hon_f6d9a90f-d1f1-4bad-8d92-cf31b6fb2f09_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - QUICK COMERCIO DE PECAS PARA VEICULOS LT",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "20a099ac-05ff-4c41-8058-c1fce9a925c0",
+      "internal_code": "hon_03e969d2-d4be-4972-bd0c-60b440612984_2025-01",
+      "valor": 100,
+      "descricao": "Honorários 2025-01 - TEREZA CRISTINA DA SILVA PAES - DOMESTIC",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "bb963f81-f475-4fc9-8399-e5016caf53b0",
+      "internal_code": "hon_d3a203cf-1e94-476a-8e44-12e4112755dc_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - M.M LANCHES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "e1b1274a-efcf-46ca-986c-d865ffff84a1",
+      "internal_code": "hon_96c05bb8-2009-464b-a1c3-cfbdb22b8829_2025-01",
+      "valor": 977.45,
+      "descricao": "Honorários 2025-01 - HOLDING BCS GUIMARÃES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "cb54c5e3-fbc6-4ee1-adbb-d406a0cbde02",
+      "internal_code": "hon_61346d91-1fd4-41bf-9567-bab696f9475e_2025-01",
+      "valor": 322.5,
+      "descricao": "Honorários 2025-01 - NUNES MOTA AGROPECUARIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "0954491b-0d79-4d1d-b445-f699fa1a9635",
+      "internal_code": "hon_441b3984-912f-4aec-baee-7e46682bf7e4_2025-01",
+      "valor": 500,
+      "descricao": "Honorários 2025-01 - OURO CAR SERVICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "81c1147e-6968-4095-bb05-dec1a3036611",
+      "internal_code": "hon_01247d35-327e-416f-b928-b85e64e8b070_2025-01",
+      "valor": 977.45,
+      "descricao": "Honorários 2025-01 - DR BERNASRDO GUIMARÃES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "0e7215a9-a79b-4c4f-b0f1-6654e5ac5d95",
+      "internal_code": "hon_d346239a-9c52-41f8-a740-ba6dd85baef4_2025-01",
+      "valor": 3036,
+      "descricao": "Honorários 2025-01 - MARIAH PARTICIPAÇÕES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "087485cb-7c62-45dc-a134-825788734886",
+      "internal_code": "hon_259892f5-f2f4-4004-9861-2f8177871575_2025-01",
+      "valor": 275.98,
+      "descricao": "Honorários 2025-01 - RODRIGO AUGUSTO RODRIGUES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "274359af-2692-4890-aaf2-52a9d0af0e51",
+      "internal_code": "hon_18a91e2f-27e4-4478-bb28-021d6d9789ef_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - KRYAS CONSTRUCAO E MAQUINAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "41cf9023-5233-433f-931b-5110c020dce0",
+      "internal_code": "hon_4fcc8826-3cd6-402b-a619-328c622e0ea2_2025-01",
+      "valor": 766.88,
+      "descricao": "Honorários 2025-01 - WESLEY MARTNS DE MOURA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2fc46d19-24d9-4709-94be-d4f0f56b30bd",
+      "internal_code": "hon_0bb2c8bc-69e4-468a-89c2-50021b724a21_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - MEDITERRANE SERVIÇOS DE COWORKING LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "87b26e62-da91-4829-be93-17c5a93e668a",
+      "internal_code": "hon_692968c3-009b-4b9b-a044-d5215e278e6b_2025-01",
+      "valor": 537.5,
+      "descricao": "Honorários 2025-01 - PORTO FINO MAQUINAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "3d4d4cd3-e65f-48a9-bc3d-2582d16ba861",
+      "internal_code": "hon_76d31568-8388-4a98-a1de-10cb6d38dbc4_2025-01",
+      "valor": 100,
+      "descricao": "Honorários 2025-01 - TAISSA TORMIN MUNDIM - DOMESTICA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "3a56552e-761f-4927-878d-b1daba03f895",
+      "internal_code": "hon_574cbdfa-4bde-4a8b-a582-c975c30783a9_2025-01",
+      "valor": 162,
+      "descricao": "Honorários 2025-01 - VR CONSULTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f5fd9f10-236f-467c-bb44-550e5245a61a",
+      "internal_code": "hon_f1b01a43-38b8-4521-94cf-6a2b6087c80e_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - COLLOR GEL COMERCIO E INDUSTRIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "11a50046-ecc1-4ebf-af79-045b7374ce28",
+      "internal_code": "hon_711b0c84-1365-494f-b877-7b5da7c996c3_2025-01",
+      "valor": 300,
+      "descricao": "Honorários 2025-01 - 60.489.571 MONICA LOPES TEIXEIRA BORGES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d01fd3ca-f5e3-4a3f-a6f9-409735c6564c",
+      "internal_code": "hon_b014406f-6497-49b2-bf03-483353ae99a0_2025-01",
+      "valor": 12143.72,
+      "descricao": "Honorários 2025-01 - ASI SERVIÇOS INDUSTRIAIS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "78e1d980-8533-47be-8b4c-0551d51d4d23",
+      "internal_code": "hon_8d125b22-fa6d-4b86-bcc3-4795a60f2096_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - AMAGU FESTA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f7bc22fd-373e-4af6-acbd-b862b0cdaa27",
+      "internal_code": "hon_8fe85a29-d159-43dd-8874-f85da9375e32_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - CENTRO MEDICO MILHOMEM",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "14667719-abda-459f-a550-ad6fc96fa948",
+      "internal_code": "hon_597a27ec-471b-40f0-bd66-432063b5676a_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - ARANTES NEGOCIOS EIRELI -ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f299978e-2bb8-4007-b823-ae4ba463a465",
+      "internal_code": "hon_d3d69d2a-061c-4910-8639-2bdc6560fde4_2025-01",
+      "valor": 275.98,
+      "descricao": "Honorários 2025-01 - CHRISTIANE RODRIGEUS MACHADO",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "be78d204-dc95-4ac3-9ef0-41e7efb3c89b",
+      "internal_code": "hon_5bc57657-5577-4f21-b3d0-9ad1c3666a62_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - EVEREST GESTAO E ADMINISTRACAO DE P",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "7511fca7-11fb-4b2d-907b-848cc11cc09c",
+      "internal_code": "hon_1a9a9308-1b0c-4fdb-8a3e-b04651e4fc90_2025-01",
+      "valor": 375.73,
+      "descricao": "Honorários 2025-01 - LEM ESCOLA DE IDIOMAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ffcad5c1-6427-43ac-a350-2b3464d71b0a",
+      "internal_code": "hon_0105c761-a740-49c5-a487-71a3123f6296_2025-01",
+      "valor": 766.82,
+      "descricao": "Honorários 2025-01 - ADMIR DE OLIVEIRA ALVES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "18ac3a4f-1f1b-447c-a772-2ec8cbc1708b",
+      "internal_code": "hon_9e424064-7d0d-46a2-9996-782599c51913_2025-01",
+      "valor": 322.5,
+      "descricao": "Honorários 2025-01 - ELETROSOL SOLUÇÕES EM ENCERGIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "6bcbf271-a53f-44f9-b15f-45651b789521",
+      "internal_code": "hon_ae96ded5-e2dc-42c2-bdb1-4e3c5e0c2298_2025-01",
+      "valor": 3036,
+      "descricao": "Honorários 2025-01 - LAJES NUNES EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "cb3dbf8c-9717-4ef7-8a4c-457959599635",
+      "internal_code": "hon_1818eda2-6bf8-4756-af26-24e103761562_2025-01",
+      "valor": 12143.72,
+      "descricao": "Honorários 2025-01 - ACTION SOLUÇÕES I NDUSTRIAIS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "98293ea7-a7fb-4bd2-bb2a-26be0fecaa59",
+      "internal_code": "hon_f7d613c4-3862-4e5a-a244-8ce68650d52a_2025-01",
+      "valor": 162,
+      "descricao": "Honorários 2025-01 - CARLA DAIANE CASTRO OLIVEIRA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "dc999ead-303d-4600-aa68-8d825bc658e3",
+      "internal_code": "hon_d6fbe42e-4262-4fdf-b3be-afa23e8f1ff9_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - AÇAI DO MADRUGA CAMPINAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1f2d9710-0459-4430-a3b2-3b8acc926ac1",
+      "internal_code": "hon_6eb56959-eb7e-44d0-b3cd-92f898b798b3_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - CANAL PET DISTRIBUIDORA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1d3e9d74-83ec-4510-ac39-8fb52e03f2c6",
+      "internal_code": "hon_692166ce-e85d-4436-9714-07fc9891c315_2025-01",
+      "valor": 275.98,
+      "descricao": "Honorários 2025-01 - JULLYANA MENDONÇA RODRIGUES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "6226ccb7-2957-4ad1-99dc-8ca423dd1ac3",
+      "internal_code": "hon_6500afb1-3c18-4bdd-abbc-fc509d79ab34_2025-01",
+      "valor": 379.48,
+      "descricao": "Honorários 2025-01 - FORMA COMUNICAÇÃO VISUAL LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2c9e819a-5e3d-4cec-a783-769ac249c6d1",
+      "internal_code": "hon_9841edf9-1767-4710-aa25-7abc8223d29f_2025-01",
+      "valor": 506,
+      "descricao": "Honorários 2025-01 - A.I EMPREENDIMENTOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "bb394153-14ec-4943-9929-68db8b56924d",
+      "internal_code": "hon_ea06b1b8-077f-4d84-83dc-cd134f7a9032_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - KOPA REVESTIMENTOS DE MADEIRAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "4ac4922a-bba1-4c31-9f59-0d42f462b4da",
+      "internal_code": "hon_2eada929-32cd-45b2-b7a8-63bdc9a779ea_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - JOHNANTHAN MACHADO RODRIGUES ESPETINHOS ",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "937983e3-6b73-42e2-97da-432eae4aed38",
+      "internal_code": "hon_fa58a22a-634b-491a-b45a-eaeca3fc4184_2025-01",
+      "valor": 766.82,
+      "descricao": "Honorários 2025-01 - ADMIR OLIVEIRA ALVES - DOMESTICA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "4f5aa303-b7f2-4122-9649-cfd23a250d13",
+      "internal_code": "hon_1d8445bf-725d-4a01-a9a4-6196d14fd45b_2025-01",
+      "valor": 1518,
+      "descricao": "Honorários 2025-01 - JR SOLUÇÕES INDUSTRIAIS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8da45648-f936-4431-aa1e-af1346f32514",
+      "internal_code": "hon_4a8d09b1-54be-4d9d-ad7d-e765c29608e4_2025-01",
+      "valor": 537.5,
+      "descricao": "Honorários 2025-01 - AGROPECUARIA SCA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "cafd208f-2866-4b7e-90ea-4ccdf28915eb",
+      "internal_code": "hon_99ed45bb-c259-4748-b65b-35ef084631cd_2025-01",
+      "valor": 379.48,
+      "descricao": "Honorários 2025-01 - FERNANDA COVAS VALE",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "aa267ac1-b51e-4dc7-9355-ab1474f006e1",
+      "internal_code": "hon_a18a8600-1d67-443f-b576-b77d253191a0_2025-01",
+      "valor": 759,
+      "descricao": "Honorários 2025-01 - JULIANO SOUZA GARROTE- PROLUX",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "753b6f69-1371-4033-803a-70ac00045e68",
+      "internal_code": "hon_e52b3c94-37eb-4154-8bf8-0b5c35e4a9ea_2025-01",
+      "valor": 506,
+      "descricao": "Honorários 2025-01 - ALLIANCE EMPREENDIMETOS",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "48fae99c-4dfb-45e7-a362-406c0a6d53ef",
+      "internal_code": "REPROC_HON_10111d03-d56d-425e-8295-043391554098",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - D ANGE COMERCIO DE BICHO DE PELUCIA EIRE",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ca62aeb9-7cf6-40dc-bd66-908e460c8316",
+      "internal_code": "REPROC_HON_122e8093-1778-4e98-a318-037129025554",
+      "valor": 3450,
+      "descricao": "REPROCESSADO Honorários 2025-01 - UNICAIXAS INDUSTRIA E FERRAMENTAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "0af7654d-e030-4efe-9287-3f7ae1e7c4ca",
+      "internal_code": "REPROC_HON_14667719-abda-459f-a550-ad6fc96fa948",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ARANTES NEGOCIOS EIRELI -ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8e759867-8b3a-4587-a784-6651c7b76713",
+      "internal_code": "REPROC_HON_18ac3a4f-1f1b-447c-a772-2ec8cbc1708b",
+      "valor": 645,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ELETROSOL SOLUÇÕES EM ENCERGIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1e60c93d-bbf9-4788-970e-8bb912b64191",
+      "internal_code": "REPROC_HON_18e6a491-0a79-44cf-af96-70c83c711905",
+      "valor": 8692.6,
+      "descricao": "REPROCESSADO Honorários 2025-01 - JPL AGROPECUARIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "014bf3d1-74a8-46ea-87de-d3fd2cb46060",
+      "internal_code": "REPROC_HON_1ba0d767-b5d8-47ce-8a6d-489fa351e65a",
+      "valor": 1149.92,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MV LG CLINICA VETERINARIA PET FERA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f5431c19-c5e7-4f37-822b-492cc506d925",
+      "internal_code": "REPROC_HON_1d3e9d74-83ec-4510-ac39-8fb52e03f2c6",
+      "valor": 551.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - JULLYANA MENDONÇA RODRIGUES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "0c555cab-a3ec-4f1b-af59-b75daff220b3",
+      "internal_code": "REPROC_HON_274359af-2692-4890-aaf2-52a9d0af0e51",
+      "valor": 3036,
+      "descricao": "REPROCESSADO Honorários 2025-01 - KRYAS CONSTRUCAO E MAQUINAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d1c0a2e0-d31d-4e3a-a9be-b242e3179a6c",
+      "internal_code": "REPROC_HON_2bb1f98d-eb45-4864-bfed-627229c06f49",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - RAMAYOLI INDUSTRIA DE SALGADOS EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "740cc9a6-2a85-44d1-a32c-afaa5c13929d",
+      "internal_code": "REPROC_HON_2db8f21c-febc-4760-b560-b83d4e0de5a2",
+      "valor": 1535.16,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MOTTA COMERCIO DE INFORMATICA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "fbf24169-19c6-4bbc-9032-2768a7484e8e",
+      "internal_code": "REPROC_HON_342719e2-fb06-475a-8ce5-4de2d8797000",
+      "valor": 944.12,
+      "descricao": "REPROCESSADO Honorários 2025-01 - F E CONSULTORIA JURIDICA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1cbab9e7-4721-4fe5-8de0-69de2612700b",
+      "internal_code": "REPROC_HON_3689b75c-1093-4b9e-a9f7-1251ea55dece",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - JJC PRESTADORA DE SERVICOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b0f7e748-f90d-4a5e-afe0-26d938317b17",
+      "internal_code": "REPROC_HON_370ed0d5-275e-4f5b-a67f-77fa60011286",
+      "valor": 1839.9,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CARRO DE OURO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "abe73dba-af0d-48c8-8ae4-bd30dcca8689",
+      "internal_code": "REPROC_HON_48cd604e-a065-4dc9-b26c-b6cb697a713e",
+      "valor": 4388.22,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MUNDIM AS GUIMARÃES",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f3159222-0ef4-4258-a5cf-38bec237b2c3",
+      "internal_code": "REPROC_HON_49269527-9d54-40d0-aa4d-5eaf8020e36b",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - D ANGE2 COMERCIO DE BICHO DE PELUCIA LTD",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "e2228a71-89ff-44e0-8646-d1e90e2998dc",
+      "internal_code": "REPROC_HON_4f5aa303-b7f2-4122-9649-cfd23a250d13",
+      "valor": 3036,
+      "descricao": "REPROCESSADO Honorários 2025-01 - JR SOLUÇÕES INDUSTRIAIS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b49e82f3-d323-455e-b71e-1b5c4ba349ed",
+      "internal_code": "REPROC_HON_57ec4aeb-f721-475c-a64b-cf318a7632b7",
+      "valor": 9126.04,
+      "descricao": "REPROCESSADO Honorários 2025-01 - TSD DISTRIBUIDORA DE CARTÕES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "51ebaddb-96b2-4a0d-bdc4-83fce13e2c94",
+      "internal_code": "REPROC_HON_6226ccb7-2957-4ad1-99dc-8ca423dd1ac3",
+      "valor": 758.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - FORMA COMUNICAÇÃO VISUAL LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "234e9252-850f-44ea-8d4b-ddfb0f3d7a92",
+      "internal_code": "REPROC_HON_6bcbf271-a53f-44f9-b15f-45651b789521",
+      "valor": 6072,
+      "descricao": "REPROCESSADO Honorários 2025-01 - LAJES NUNES EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8a9c9dee-e93b-4303-825b-76a6056c1bfc",
+      "internal_code": "REPROC_HON_6ca317b9-0a58-4d3f-9d68-45f35edb05da",
+      "valor": 1000,
+      "descricao": "REPROCESSADO Honorários 2025-01 - KORSICA COM ATAC DE PNEUS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "eb923d2d-7004-4df9-a31a-2d630df11b29",
+      "internal_code": "REPROC_HON_78e1d980-8533-47be-8b4c-0551d51d4d23",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - AMAGU FESTA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b74ad81a-e7fa-4615-b809-0aad2f3087b9",
+      "internal_code": "REPROC_HON_81c1147e-6968-4095-bb05-dec1a3036611",
+      "valor": 1954.9,
+      "descricao": "REPROCESSADO Honorários 2025-01 - DR BERNASRDO GUIMARÃES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "3bc6fc73-215c-4899-8c58-6bb26f3fb956",
+      "internal_code": "REPROC_HON_85479ec7-d442-4bca-9b0a-dcadd147b1f0",
+      "valor": 4645.6,
+      "descricao": "REPROCESSADO Honorários 2025-01 - AMG INDUSTRIA E COMERCIO DE GESSO EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "79218ecb-9ee4-4538-91e6-d8dd9f5b13ba",
+      "internal_code": "REPROC_HON_85496ddf-304d-4d19-8c92-3b437d9f66e6",
+      "valor": 250.5,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MARIO LUCIO PINHEIRO MILAZZO - FAZ",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8d3b75ff-37b3-47a4-b395-b57b3bfed579",
+      "internal_code": "REPROC_HON_91b8d049-e0e4-4d50-b727-dfd92f32cc4d",
+      "valor": 2276.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - LAJES MORADA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "dade2448-ec75-4f23-8465-9573c0b5347f",
+      "internal_code": "REPROC_HON_937983e3-6b73-42e2-97da-432eae4aed38",
+      "valor": 1533.64,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ADMIR OLIVEIRA ALVES - DOMESTICA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "bb5b23a6-2cdf-4067-933f-6bdb4c15c870",
+      "internal_code": "REPROC_HON_9598f348-4341-4c7e-879e-799363c3e383",
+      "valor": 18958.22,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MG MECANICA INDUSTRIAL LTDA ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "f6c9a076-e367-46c9-94a4-6644c0ee57aa",
+      "internal_code": "REPROC_HON_968c96d2-ac51-4fd0-bbc5-da501f425a5a",
+      "valor": 2003.9,
+      "descricao": "REPROCESSADO Honorários 2025-01 - PM ADMINSTRAÇÃO E SERVIÇOS",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "52abb9bf-b0d2-4ac1-a5c9-d5177b612ae9",
+      "internal_code": "REPROC_HON_a965eac5-6fdd-45cc-ab23-708bf798570e",
+      "valor": 759,
+      "descricao": "REPROCESSADO Honorários 2025-01 - COVAS SERVIÇOS DE PINTURAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "9c263db8-c913-45ff-a7b4-b10f87d658d7",
+      "internal_code": "REPROC_HON_aa267ac1-b51e-4dc7-9355-ab1474f006e1",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - JULIANO SOUZA GARROTE- PROLUX",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "638a0dc8-43e7-4bb1-a0d6-6dace937fa91",
+      "internal_code": "REPROC_HON_ab78f501-dfb0-42a5-9af7-57435bba3a4f",
+      "valor": 1926.2,
+      "descricao": "REPROCESSADO Honorários 2025-01 - KROVER ENGENHARIA E SERVIÇOS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "85c088ec-a204-417b-8b60-1670cbbf616d",
+      "internal_code": "REPROC_HON_ac00070d-c474-486a-82b0-299528e0fa1d",
+      "valor": 3311.86,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ML PINHEIRO MILLAZO LTDDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "4ee0a8e7-0efe-4248-9c60-716eac7d4bbe",
+      "internal_code": "REPROC_HON_b903cb1f-8ddd-42c3-b381-7e93729256ad",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - L.A.R CONSTRUTORA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b0a104ca-e89c-4007-8505-9ade4bff250d",
+      "internal_code": "REPROC_HON_bb963f81-f475-4fc9-8399-e5016caf53b0",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - M.M LANCHES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "5346c1be-ee4b-4772-adf8-7dd7a508e554",
+      "internal_code": "REPROC_HON_be78d204-dc95-4ac3-9ef0-41e7efb3c89b",
+      "valor": 3036,
+      "descricao": "REPROCESSADO Honorários 2025-01 - EVEREST GESTAO E ADMINISTRACAO DE P",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "04007b24-8505-4470-80db-1532ff4b0f8e",
+      "internal_code": "REPROC_HON_c1f109e7-e53c-4cb3-b1d5-0609e0ebd48c",
+      "valor": 8489.34,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MURANO ADM E PARTICIPAÇÕES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "51764a99-874f-4f5f-ad52-958535248660",
+      "internal_code": "REPROC_HON_c52b46fc-af2d-4eb5-b8c0-4582f546944b",
+      "valor": 3000,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ANAPOLIS VISTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "61554c06-cf93-40ae-8618-75c4b01fbc1b",
+      "internal_code": "REPROC_HON_d01fd3ca-f5e3-4a3f-a6f9-409735c6564c",
+      "valor": 24287.44,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ASI SERVIÇOS INDUSTRIAIS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1d474652-dfb9-4f24-835b-c270d8ef551e",
+      "internal_code": "REPROC_HON_d558382a-9912-42f7-8507-0931c2f6bcb6",
+      "valor": 1275.6,
+      "descricao": "REPROCESSADO Honorários 2025-01 - COMERCIAL DINIZ EIRELI ME",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "1e02c6e4-f31e-466e-9456-108b0fe70f9c",
+      "internal_code": "REPROC_HON_d8a2559b-1089-4407-9b31-35cfe20b8af0",
+      "valor": 1207.46,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CDC PLAYGROUND E BRINQUEDOS EIRELI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2a62e5ef-edd5-4adf-a113-d7c1e0aedee1",
+      "internal_code": "REPROC_HON_d9152e4d-3d3b-4684-9552-03426a3ffe68",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - QUICK COMERCIO DE PECAS PARA VEICULOS LT",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b54f9a81-5295-4883-9d5f-d9512db910fa",
+      "internal_code": "REPROC_HON_daeee445-fb9e-41e4-a6ca-dcb3ddead456",
+      "valor": 304.2,
+      "descricao": "REPROCESSADO Honorários 2025-01 - MARCUS VINICIUS  LEAL PIRES - MEI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "fa0a5387-1836-4076-ae36-345f1544f13d",
+      "internal_code": "REPROC_HON_dc999ead-303d-4600-aa68-8d825bc658e3",
+      "valor": 1518,
+      "descricao": "REPROCESSADO Honorários 2025-01 - AÇAI DO MADRUGA CAMPINAS LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "a4a33954-4161-42fb-aa18-93d87c3c3529",
+      "internal_code": "REPROC_HON_de32bec1-6e1a-4bbb-bd14-982058bbab2f",
+      "valor": 669.94,
+      "descricao": "REPROCESSADO Honorários 2025-01 - SÃO LUIZ INDUSTRIA E COMERCIO DE AGUA MI",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "018a52ec-ab67-4509-b2de-6c47d34554f7",
+      "internal_code": "REPROC_HON_e1b1274a-efcf-46ca-986c-d865ffff84a1",
+      "valor": 1954.9,
+      "descricao": "REPROCESSADO Honorários 2025-01 - HOLDING BCS GUIMARÃES LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b839bdfa-e0f5-480f-ace8-f6b0d4ceb6a7",
+      "internal_code": "REPROC_HON_e334913c-b61c-4b33-be8c-9f4bca8686f0",
+      "valor": 1800,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CARVALHO E MELO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "777fcd80-2e61-42ce-9d64-1a5c59ade24f",
+      "internal_code": "REPROC_HON_ed6d7df8-e88c-48fb-b23b-9e167f43ac12",
+      "valor": 551.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - C.R.J MANUTENÇAO EM AR CONDICIONADO LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "a0487402-90cc-49b5-b626-a9e1e8ce2145",
+      "internal_code": "REPROC_HON_eedcdd6d-6585-4895-9eba-e86d07888626",
+      "valor": 689.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - PREMIER SOLUÇOES INDUSTRIAL LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ec03d2eb-70f4-4f6a-92b9-9245f85e6a60",
+      "internal_code": "REPROC_HON_f299978e-2bb8-4007-b823-ae4ba463a465",
+      "valor": 551.96,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CHRISTIANE RODRIGEUS MACHADO",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "ecf4d9ba-6070-4b60-a2e4-88d15cac0c4d",
+      "internal_code": "REPROC_HON_f3e744c5-9a6c-4ab2-a911-d0d0974a732d",
+      "valor": 1926.2,
+      "descricao": "REPROCESSADO Honorários 2025-01 - EXPRESS RIOVERDENSE",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "d1176549-d1c9-4344-9ce8-5acdcb72aa9f",
+      "internal_code": "REPROC_HON_f5fd9f10-236f-467c-bb44-550e5245a61a",
+      "valor": 3036,
+      "descricao": "REPROCESSADO Honorários 2025-01 - COLLOR GEL COMERCIO E INDUSTRIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "8d3f8270-3a32-42ee-9ce2-d2c48b8352ce",
+      "internal_code": "REPROC_HON_f7bc22fd-373e-4af6-acbd-b862b0cdaa27",
+      "valor": 3036,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CENTRO MEDICO MILHOMEM",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "e51c4033-4d9e-409c-bac0-bd96321bb9e5",
+      "internal_code": "REPROC_HON_f87082e9-a64e-4871-8b61-ff02610b7862",
+      "valor": 6072,
+      "descricao": "REPROCESSADO Honorários 2025-01 - R&P AVIAÇÃO COMERCIO IMPORTAÇÃO E EXPORT",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "2f1b5a6a-9fd8-4d5b-93a4-a517245280c5",
+      "internal_code": "REPROC_HON_f96b8fbd-34d6-4e3e-a415-c5ad80cf14b3",
+      "valor": 7000,
+      "descricao": "REPROCESSADO Honorários 2025-01 - CENTRO OESTE SERVIÇO DE VISTORIA LTDA",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "c60aa49d-1465-45d0-a81f-4231d7a5b317",
+      "internal_code": "REPROC_HON_fbe36772-961f-4e63-85a8-9ae21eba795d",
+      "valor": 3051.72,
+      "descricao": "REPROCESSADO Honorários 2025-01 - COVALE USINAGEM INDUSTRIA E DE CANETAS E",
+      "source_type": "honorarios"
+    },
+    {
+      "entry_id": "b1bf5081-47c5-483c-9380-7f0ba7503cc6",
+      "internal_code": "REPROC_HON_ffcad5c1-6427-43ac-a350-2b3464d71b0a",
+      "valor": 1533.64,
+      "descricao": "REPROCESSADO Honorários 2025-01 - ADMIR DE OLIVEIRA ALVES",
+      "source_type": "honorarios"
+    }
+  ],
+  "transacoes_alto_valor": [
+    {
+      "id": "7271605c-601f-4749-8087-28bb9928f1f0",
+      "valor": 74761.78,
+      "descricao": "RECEBIMENTO PIX-PIX_CRED  31458451000109 ACTION SOLUCOES INDU",
+      "data": "2025-01-21",
+      "conciliado": true
+    },
+    {
+      "id": "25fc7a69-0c08-4578-ba46-91ab38f9fb80",
+      "valor": 70046.9,
+      "descricao": "RECEBIMENTO PIX-PIX_CRED  31458451000109 ACTION SOLUCOES INDU",
+      "data": "2025-01-07",
+      "conciliado": true
+    },
+    {
+      "id": "dd952281-e0d3-4a60-bc5c-5fe5be3fa63d",
+      "valor": 44725.72,
+      "descricao": "LIQ.COBRANCA SIMPLES-COB000030",
+      "data": "2025-01-13",
+      "conciliado": true
+    },
+    {
+      "id": "c32e7aea-35fa-42d4-ada2-ef014422bb46",
+      "valor": 29660.14,
+      "descricao": "RECEBIMENTO PIX-PIX_CRED  07119310000179 MATA PRAGAS CONTROLE DE PRAGAS LTDA",
+      "data": "2025-01-27",
+      "conciliado": true
+    },
+    {
+      "id": "c54248aa-9165-4fce-9bd6-3a3577f23c8d",
+      "valor": 17076.85,
+      "descricao": "LIQ.COBRANCA SIMPLES-COB000022",
+      "data": "2025-01-07",
+      "conciliado": true
+    },
+    {
+      "id": "d5e41bac-ea76-4046-8911-3cb03273972c",
+      "valor": 11018.83,
+      "descricao": "LIQ.COBRANCA SIMPLES-COB000007",
+      "data": "2025-01-16",
+      "conciliado": true
+    }
+  ]
+}

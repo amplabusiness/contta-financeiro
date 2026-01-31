@@ -1,0 +1,2710 @@
+{
+  "versao": "2.0.0",
+  "gerado_em": "2026-01-31T12:13:23.770Z",
+  "autor": "Dr. Cícero - Treinamento com Objetiva Edições e Sites Especializados",
+  "modelos_lancamentos": [
+    {
+      "categoria": "FOLHA_PAGAMENTO",
+      "nome": "Apropriação de Salários",
+      "debito": {
+        "codigo": "4.1.2.01",
+        "nome": "Despesas com Salários"
+      },
+      "credito": {
+        "codigo": "2.1.1.01",
+        "nome": "Salários a Pagar"
+      },
+      "observacao": "Regime de competência - reconhecer no mês trabalhado",
+      "keywords": [
+        "salario",
+        "folha",
+        "ordenado",
+        "remuneracao"
+      ]
+    },
+    {
+      "categoria": "FOLHA_PAGAMENTO",
+      "nome": "Pagamento de Salários",
+      "debito": {
+        "codigo": "2.1.1.01",
+        "nome": "Salários a Pagar"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Baixa da obrigação",
+      "keywords": [
+        "pagamento",
+        "salario",
+        "liquidacao"
+      ]
+    },
+    {
+      "categoria": "FOLHA_PAGAMENTO",
+      "nome": "Provisão de Férias",
+      "debito": {
+        "codigo": "4.1.2.05",
+        "nome": "Despesas com Férias"
+      },
+      "credito": {
+        "codigo": "2.1.1.05",
+        "nome": "Provisão de Férias"
+      },
+      "observacao": "1/12 avos por mês + 1/3 constitucional",
+      "keywords": [
+        "ferias",
+        "provisao",
+        "terco"
+      ]
+    },
+    {
+      "categoria": "FOLHA_PAGAMENTO",
+      "nome": "Provisão de 13º Salário",
+      "debito": {
+        "codigo": "4.1.2.06",
+        "nome": "Despesas com 13º Salário"
+      },
+      "credito": {
+        "codigo": "2.1.1.06",
+        "nome": "Provisão de 13º Salário"
+      },
+      "observacao": "1/12 avos por mês",
+      "keywords": [
+        "13",
+        "decimo",
+        "terceiro",
+        "gratificacao"
+      ]
+    },
+    {
+      "categoria": "FOLHA_PAGAMENTO",
+      "nome": "Rescisão Trabalhista",
+      "debito": {
+        "codigo": "4.1.2.07",
+        "nome": "Despesas com Rescisões"
+      },
+      "credito": {
+        "codigo": "2.1.1.07",
+        "nome": "Rescisões a Pagar"
+      },
+      "observacao": "Verbas rescisórias devidas ao empregado",
+      "keywords": [
+        "rescisao",
+        "demissao",
+        "desligamento",
+        "aviso"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "Provisão de FGTS",
+      "debito": {
+        "codigo": "4.1.2.02",
+        "nome": "Despesas com FGTS"
+      },
+      "credito": {
+        "codigo": "2.1.1.02",
+        "nome": "FGTS a Recolher"
+      },
+      "observacao": "8% sobre remuneração bruta",
+      "keywords": [
+        "fgts",
+        "fundo",
+        "garantia"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "Recolhimento de FGTS",
+      "debito": {
+        "codigo": "2.1.1.02",
+        "nome": "FGTS a Recolher"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Vencimento: dia 7 do mês seguinte",
+      "keywords": [
+        "fgts",
+        "recolhimento",
+        "grf"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "INSS Patronal",
+      "debito": {
+        "codigo": "4.1.2.03",
+        "nome": "Despesas com INSS"
+      },
+      "credito": {
+        "codigo": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "observacao": "20% patronal + RAT + Terceiros",
+      "keywords": [
+        "inss",
+        "patronal",
+        "previdencia"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "INSS Retido do Empregado",
+      "debito": {
+        "codigo": "2.1.1.01",
+        "nome": "Salários a Pagar"
+      },
+      "credito": {
+        "codigo": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "observacao": "Retenção progressiva conforme tabela",
+      "keywords": [
+        "inss",
+        "desconto",
+        "retencao"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "Recolhimento de INSS (GPS)",
+      "debito": {
+        "codigo": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Vencimento: dia 20 do mês seguinte",
+      "keywords": [
+        "inss",
+        "gps",
+        "recolhimento",
+        "darf"
+      ]
+    },
+    {
+      "categoria": "ENCARGOS_SOCIAIS",
+      "nome": "Salário-Família - Compensação com INSS",
+      "debito": {
+        "codigo": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "credito": {
+        "codigo": "4.1.2.08",
+        "nome": "Salário-Família (Recuperação)"
+      },
+      "observacao": "Dedução do INSS devido - conforme Objetiva Edições",
+      "keywords": [
+        "salario",
+        "familia",
+        "compensacao"
+      ]
+    },
+    {
+      "categoria": "PRO_LABORE",
+      "nome": "Apropriação de Pró-labore",
+      "debito": {
+        "codigo": "4.1.2.04",
+        "nome": "Despesas com Pró-labore"
+      },
+      "credito": {
+        "codigo": "2.1.1.04",
+        "nome": "Pró-labore a Pagar"
+      },
+      "observacao": "Remuneração dos sócios administradores",
+      "keywords": [
+        "pro labore",
+        "prolabore",
+        "socio",
+        "administrador"
+      ]
+    },
+    {
+      "categoria": "PRO_LABORE",
+      "nome": "INSS sobre Pró-labore (Parte Empresa)",
+      "debito": {
+        "codigo": "4.1.2.03",
+        "nome": "Despesas com INSS"
+      },
+      "credito": {
+        "codigo": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "observacao": "20% sobre pró-labore (não optante Simples)",
+      "keywords": [
+        "inss",
+        "prolabore",
+        "patronal"
+      ]
+    },
+    {
+      "categoria": "DISTRIBUICAO_LUCROS",
+      "nome": "Distribuição de Lucros",
+      "debito": {
+        "codigo": "5.3.1.01",
+        "nome": "Lucros Acumulados"
+      },
+      "credito": {
+        "codigo": "2.1.4.01",
+        "nome": "Lucros a Distribuir"
+      },
+      "observacao": "Isento de IR até limite da presunção",
+      "keywords": [
+        "lucro",
+        "distribuicao",
+        "dividendo"
+      ]
+    },
+    {
+      "categoria": "DISTRIBUICAO_LUCROS",
+      "nome": "Pagamento de Lucros Distribuídos",
+      "debito": {
+        "codigo": "2.1.4.01",
+        "nome": "Lucros a Distribuir"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Pagamento aos sócios",
+      "keywords": [
+        "lucro",
+        "pagamento",
+        "socio"
+      ]
+    },
+    {
+      "categoria": "JCP",
+      "nome": "Juros sobre Capital Próprio",
+      "debito": {
+        "codigo": "4.3.1.01",
+        "nome": "JCP - Juros s/ Capital Próprio"
+      },
+      "credito": {
+        "codigo": "2.1.4.02",
+        "nome": "JCP a Pagar"
+      },
+      "observacao": "Limitado à TJLP sobre PL - dedutível IRPJ/CSLL",
+      "keywords": [
+        "jcp",
+        "juros",
+        "capital",
+        "proprio"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_FEDERAIS",
+      "nome": "IRPJ Trimestral - Lucro Presumido",
+      "debito": {
+        "codigo": "4.3.2.01",
+        "nome": "Despesas com IRPJ"
+      },
+      "credito": {
+        "codigo": "2.1.2.01",
+        "nome": "IRPJ a Recolher"
+      },
+      "observacao": "15% + 10% adicional sobre lucro presumido",
+      "keywords": [
+        "irpj",
+        "imposto",
+        "renda",
+        "presumido"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_FEDERAIS",
+      "nome": "CSLL Trimestral - Lucro Presumido",
+      "debito": {
+        "codigo": "4.3.2.02",
+        "nome": "Despesas com CSLL"
+      },
+      "credito": {
+        "codigo": "2.1.2.02",
+        "nome": "CSLL a Recolher"
+      },
+      "observacao": "9% sobre base presumida",
+      "keywords": [
+        "csll",
+        "contribuicao",
+        "social"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_FEDERAIS",
+      "nome": "PIS sobre Faturamento",
+      "debito": {
+        "codigo": "4.3.2.03",
+        "nome": "Despesas com PIS"
+      },
+      "credito": {
+        "codigo": "2.1.2.03",
+        "nome": "PIS a Recolher"
+      },
+      "observacao": "0,65% cumulativo ou 1,65% não cumulativo",
+      "keywords": [
+        "pis",
+        "faturamento"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_FEDERAIS",
+      "nome": "COFINS sobre Faturamento",
+      "debito": {
+        "codigo": "4.3.2.04",
+        "nome": "Despesas com COFINS"
+      },
+      "credito": {
+        "codigo": "2.1.2.04",
+        "nome": "COFINS a Recolher"
+      },
+      "observacao": "3% cumulativo ou 7,6% não cumulativo",
+      "keywords": [
+        "cofins",
+        "faturamento"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_FEDERAIS",
+      "nome": "Retenções Federais (CSRF) Sofridas",
+      "debito": {
+        "codigo": "1.1.5.01",
+        "nome": "IRRF a Recuperar"
+      },
+      "credito": {
+        "codigo": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "observacao": "PIS/COFINS/CSLL/IR retidos pelo tomador",
+      "keywords": [
+        "retencao",
+        "csrf",
+        "fonte",
+        "recuperar"
+      ]
+    },
+    {
+      "categoria": "SIMPLES_NACIONAL",
+      "nome": "Provisão DAS - Simples Nacional",
+      "debito": {
+        "codigo": "4.3.2.10",
+        "nome": "Despesas com Simples Nacional"
+      },
+      "credito": {
+        "codigo": "2.1.2.10",
+        "nome": "Simples Nacional a Recolher"
+      },
+      "observacao": "Alíquota conforme Anexo e faturamento",
+      "keywords": [
+        "das",
+        "simples",
+        "nacional"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_MUNICIPAIS",
+      "nome": "ISS sobre Serviços Prestados",
+      "debito": {
+        "codigo": "4.3.3.01",
+        "nome": "Despesas com ISS"
+      },
+      "credito": {
+        "codigo": "2.1.2.05",
+        "nome": "ISS a Recolher"
+      },
+      "observacao": "2% a 5% conforme município",
+      "keywords": [
+        "iss",
+        "issqn",
+        "servico",
+        "municipal"
+      ]
+    },
+    {
+      "categoria": "IMPOSTOS_MUNICIPAIS",
+      "nome": "ISS Retido na Fonte",
+      "debito": {
+        "codigo": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "credito": {
+        "codigo": "4.3.3.01",
+        "nome": "Despesas com ISS (Dedução)"
+      },
+      "observacao": "ISS retido pelo tomador - responsabilidade substituída",
+      "keywords": [
+        "iss",
+        "retido",
+        "fonte",
+        "substituicao"
+      ]
+    },
+    {
+      "categoria": "OPERACOES_FINANCEIRAS",
+      "nome": "Desconto de Duplicatas - Recebimento",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "credito": {
+        "codigo": "2.1.5.01",
+        "nome": "Duplicatas Descontadas"
+      },
+      "observacao": "Passivo exigível até liquidação - conforme Objetiva",
+      "keywords": [
+        "duplicata",
+        "desconto",
+        "antecipacao"
+      ]
+    },
+    {
+      "categoria": "OPERACOES_FINANCEIRAS",
+      "nome": "Desconto de Duplicatas - Encargos",
+      "debito": {
+        "codigo": "4.2.1.01",
+        "nome": "Despesas Financeiras - Juros"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Taxa de desconto cobrada pelo banco",
+      "keywords": [
+        "juros",
+        "desconto",
+        "encargo",
+        "financeiro"
+      ]
+    },
+    {
+      "categoria": "OPERACOES_FINANCEIRAS",
+      "nome": "Duplicata Descontada - Liquidação pelo Cliente",
+      "debito": {
+        "codigo": "2.1.5.01",
+        "nome": "Duplicatas Descontadas"
+      },
+      "credito": {
+        "codigo": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "observacao": "Baixa simultânea do passivo e do ativo",
+      "keywords": [
+        "duplicata",
+        "liquidacao",
+        "baixa"
+      ]
+    },
+    {
+      "categoria": "EMPRESTIMOS",
+      "nome": "Contratação de Empréstimo Bancário",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "credito": {
+        "codigo": "2.1.3.01",
+        "nome": "Empréstimos Bancários CP"
+      },
+      "observacao": "Valor líquido recebido",
+      "keywords": [
+        "emprestimo",
+        "contratacao",
+        "banco"
+      ]
+    },
+    {
+      "categoria": "EMPRESTIMOS",
+      "nome": "Apropriação de Juros de Empréstimo",
+      "debito": {
+        "codigo": "4.2.1.01",
+        "nome": "Despesas Financeiras - Juros"
+      },
+      "credito": {
+        "codigo": "2.1.3.02",
+        "nome": "Juros a Pagar"
+      },
+      "observacao": "Regime de competência - pro rata temporis",
+      "keywords": [
+        "juros",
+        "emprestimo",
+        "apropriacao"
+      ]
+    },
+    {
+      "categoria": "EMPRESTIMOS",
+      "nome": "Pagamento de Parcela de Empréstimo",
+      "debito": {
+        "codigo": "2.1.3.01",
+        "nome": "Empréstimos Bancários CP"
+      },
+      "debito2": {
+        "codigo": "2.1.3.02",
+        "nome": "Juros a Pagar"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Principal + juros",
+      "keywords": [
+        "parcela",
+        "emprestimo",
+        "amortizacao"
+      ]
+    },
+    {
+      "categoria": "IMOBILIZADO",
+      "nome": "Aquisição de Imobilizado à Vista",
+      "debito": {
+        "codigo": "1.2.3.01",
+        "nome": "Imobilizado"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Inclui frete e instalação",
+      "keywords": [
+        "imobilizado",
+        "aquisicao",
+        "compra",
+        "ativo"
+      ]
+    },
+    {
+      "categoria": "IMOBILIZADO",
+      "nome": "Depreciação Mensal",
+      "debito": {
+        "codigo": "4.1.4.01",
+        "nome": "Despesas com Depreciação"
+      },
+      "credito": {
+        "codigo": "1.2.3.99",
+        "nome": "(-) Depreciação Acumulada"
+      },
+      "observacao": "Conforme vida útil e método linear",
+      "keywords": [
+        "depreciacao",
+        "imobilizado",
+        "desgaste"
+      ]
+    },
+    {
+      "categoria": "IMOBILIZADO",
+      "nome": "Baixa de Imobilizado por Venda",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "debito2": {
+        "codigo": "1.2.3.99",
+        "nome": "(-) Depreciação Acumulada"
+      },
+      "credito": {
+        "codigo": "1.2.3.01",
+        "nome": "Imobilizado"
+      },
+      "credito2": {
+        "codigo": "3.2.2.01",
+        "nome": "Ganho na Venda de Imobilizado"
+      },
+      "observacao": "Diferença entre valor de venda e valor contábil",
+      "keywords": [
+        "venda",
+        "imobilizado",
+        "baixa",
+        "alienacao"
+      ]
+    },
+    {
+      "categoria": "IMOBILIZADO",
+      "nome": "Construção em Andamento",
+      "debito": {
+        "codigo": "1.2.3.50",
+        "nome": "Construções em Andamento"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Transferir para Imobilizado ao término - Objetiva",
+      "keywords": [
+        "construcao",
+        "andamento",
+        "obra"
+      ]
+    },
+    {
+      "categoria": "ESTOQUE",
+      "nome": "Compra de Mercadorias à Vista",
+      "debito": {
+        "codigo": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Valor líquido de impostos recuperáveis",
+      "keywords": [
+        "compra",
+        "mercadoria",
+        "estoque"
+      ]
+    },
+    {
+      "categoria": "ESTOQUE",
+      "nome": "CMV - Custo das Mercadorias Vendidas",
+      "debito": {
+        "codigo": "4.1.1.01",
+        "nome": "CMV"
+      },
+      "credito": {
+        "codigo": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "observacao": "Baixa no momento da venda",
+      "keywords": [
+        "cmv",
+        "custo",
+        "mercadoria",
+        "vendida"
+      ]
+    },
+    {
+      "categoria": "ESTOQUE",
+      "nome": "Ajuste de Inventário - Perda",
+      "debito": {
+        "codigo": "4.1.1.02",
+        "nome": "Perdas de Estoque"
+      },
+      "credito": {
+        "codigo": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "observacao": "Diferença apurada no inventário físico",
+      "keywords": [
+        "ajuste",
+        "inventario",
+        "perda",
+        "quebra"
+      ]
+    },
+    {
+      "categoria": "ESTOQUE",
+      "nome": "Bonificação em Mercadorias Recebida",
+      "debito": {
+        "codigo": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "credito": {
+        "codigo": "3.1.2.01",
+        "nome": "Outras Receitas Operacionais"
+      },
+      "observacao": "Mercadoria recebida sem ônus",
+      "keywords": [
+        "bonificacao",
+        "mercadoria",
+        "brinde"
+      ]
+    },
+    {
+      "categoria": "RECEITAS",
+      "nome": "Receita de Serviços Prestados",
+      "debito": {
+        "codigo": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "credito": {
+        "codigo": "3.1.1.01",
+        "nome": "Receita de Serviços"
+      },
+      "observacao": "Regime de competência - momento da prestação",
+      "keywords": [
+        "receita",
+        "servico",
+        "honorario",
+        "faturamento"
+      ]
+    },
+    {
+      "categoria": "RECEITAS",
+      "nome": "Recebimento de Clientes",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "credito": {
+        "codigo": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "observacao": "Baixa do direito a receber",
+      "keywords": [
+        "recebimento",
+        "cliente",
+        "pagamento"
+      ]
+    },
+    {
+      "categoria": "RECEITAS",
+      "nome": "Receita Financeira - Juros",
+      "debito": {
+        "codigo": "1.1.1.10",
+        "nome": "Aplicações Financeiras"
+      },
+      "credito": {
+        "codigo": "3.2.1.01",
+        "nome": "Receitas Financeiras"
+      },
+      "observacao": "Rendimento de aplicações",
+      "keywords": [
+        "juros",
+        "rendimento",
+        "aplicacao",
+        "receita"
+      ]
+    },
+    {
+      "categoria": "DESPESAS",
+      "nome": "Despesas Bancárias",
+      "debito": {
+        "codigo": "4.1.3.01",
+        "nome": "Despesas Bancárias"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Tarifas, manutenção, TED, DOC",
+      "keywords": [
+        "tarifa",
+        "bancaria",
+        "taxa",
+        "manutencao"
+      ]
+    },
+    {
+      "categoria": "DESPESAS",
+      "nome": "Aluguel de Imóvel",
+      "debito": {
+        "codigo": "4.1.1.01",
+        "nome": "Despesas com Aluguel"
+      },
+      "credito": {
+        "codigo": "2.1.3.10",
+        "nome": "Aluguéis a Pagar"
+      },
+      "observacao": "Apropriação mensal",
+      "keywords": [
+        "aluguel",
+        "locacao",
+        "imovel"
+      ]
+    },
+    {
+      "categoria": "DESPESAS",
+      "nome": "Energia Elétrica",
+      "debito": {
+        "codigo": "4.1.1.02",
+        "nome": "Energia Elétrica"
+      },
+      "credito": {
+        "codigo": "2.1.3.11",
+        "nome": "Contas a Pagar"
+      },
+      "observacao": "Conforme fatura da concessionária",
+      "keywords": [
+        "energia",
+        "luz",
+        "eletrica",
+        "enel",
+        "celg"
+      ]
+    },
+    {
+      "categoria": "DESPESAS",
+      "nome": "Brindes - Distribuição",
+      "debito": {
+        "codigo": "4.1.1.20",
+        "nome": "Despesas com Brindes"
+      },
+      "credito": {
+        "codigo": "1.1.4.05",
+        "nome": "Estoque de Brindes"
+      },
+      "observacao": "Atenção: não dedutível se > R$ 90/ano por pessoa - Objetiva",
+      "keywords": [
+        "brinde",
+        "propaganda",
+        "distribuicao"
+      ]
+    },
+    {
+      "categoria": "PROVISOES",
+      "nome": "Provisão para Créditos de Liquidação Duvidosa",
+      "debito": {
+        "codigo": "4.1.5.01",
+        "nome": "Despesas com PCLD"
+      },
+      "credito": {
+        "codigo": "1.1.2.99",
+        "nome": "(-) PCLD"
+      },
+      "observacao": "Conforme critérios fiscais ou gerenciais",
+      "keywords": [
+        "pcld",
+        "provisao",
+        "credito",
+        "duvidosa",
+        "perda"
+      ]
+    },
+    {
+      "categoria": "PROVISOES",
+      "nome": "Reversão de PCLD",
+      "debito": {
+        "codigo": "1.1.2.99",
+        "nome": "(-) PCLD"
+      },
+      "credito": {
+        "codigo": "3.2.3.01",
+        "nome": "Reversão de Provisões"
+      },
+      "observacao": "Quando crédito é recebido ou prescrito",
+      "keywords": [
+        "reversao",
+        "pcld",
+        "recuperacao"
+      ]
+    },
+    {
+      "categoria": "PROVISOES",
+      "nome": "Provisão para Contingências",
+      "debito": {
+        "codigo": "4.1.5.02",
+        "nome": "Despesas com Contingências"
+      },
+      "credito": {
+        "codigo": "2.2.1.01",
+        "nome": "Provisão para Contingências"
+      },
+      "observacao": "Obrigação presente com saída provável",
+      "keywords": [
+        "contingencia",
+        "provisao",
+        "processo",
+        "judicial"
+      ]
+    },
+    {
+      "categoria": "ADIANTAMENTOS",
+      "nome": "Adiantamento a Fornecedores",
+      "debito": {
+        "codigo": "1.1.3.01",
+        "nome": "Adiantamentos a Fornecedores"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Direito a receber mercadoria/serviço",
+      "keywords": [
+        "adiantamento",
+        "fornecedor",
+        "antecipacao"
+      ]
+    },
+    {
+      "categoria": "ADIANTAMENTOS",
+      "nome": "Compensação Adiantamento Fornecedor",
+      "debito": {
+        "codigo": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "credito": {
+        "codigo": "1.1.3.01",
+        "nome": "Adiantamentos a Fornecedores"
+      },
+      "observacao": "Recebimento da mercadoria",
+      "keywords": [
+        "compensacao",
+        "adiantamento",
+        "fornecedor"
+      ]
+    },
+    {
+      "categoria": "ADIANTAMENTOS",
+      "nome": "Adiantamento a Sócios",
+      "debito": {
+        "codigo": "1.1.3.10",
+        "nome": "Adiantamentos a Sócios"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "NUNCA é despesa - deve ser regularizado",
+      "keywords": [
+        "adiantamento",
+        "socio",
+        "retirada",
+        "pessoal"
+      ]
+    },
+    {
+      "categoria": "ADIANTAMENTOS",
+      "nome": "Adiantamento de Clientes",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "credito": {
+        "codigo": "2.1.4.10",
+        "nome": "Adiantamentos de Clientes"
+      },
+      "observacao": "Obrigação de entregar bem/serviço",
+      "keywords": [
+        "adiantamento",
+        "cliente",
+        "sinal",
+        "antecipado"
+      ]
+    },
+    {
+      "categoria": "CONSORCIO",
+      "nome": "Pagamento de Parcela de Consórcio (antes contemplação)",
+      "debito": {
+        "codigo": "1.2.2.01",
+        "nome": "Consórcios a Receber"
+      },
+      "credito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "observacao": "Direito a crédito futuro - conforme Objetiva",
+      "keywords": [
+        "consorcio",
+        "parcela",
+        "contemplacao"
+      ]
+    },
+    {
+      "categoria": "CONSORCIO",
+      "nome": "Contemplação de Consórcio - Aquisição de Bem",
+      "debito": {
+        "codigo": "1.2.3.01",
+        "nome": "Imobilizado"
+      },
+      "credito": {
+        "codigo": "1.2.2.01",
+        "nome": "Consórcios a Receber"
+      },
+      "credito2": {
+        "codigo": "2.2.2.01",
+        "nome": "Consórcios a Pagar LP"
+      },
+      "observacao": "Transferir para imobilizado e registrar saldo devedor",
+      "keywords": [
+        "consorcio",
+        "contemplacao",
+        "carta",
+        "credito"
+      ]
+    },
+    {
+      "categoria": "CAPITAL_SOCIAL",
+      "nome": "Integralização de Capital em Dinheiro",
+      "debito": {
+        "codigo": "1.1.1.02",
+        "nome": "Bancos c/ Movimento"
+      },
+      "credito": {
+        "codigo": "5.1.1.01",
+        "nome": "Capital Social"
+      },
+      "observacao": "Aporte dos sócios",
+      "keywords": [
+        "capital",
+        "integralizacao",
+        "aporte",
+        "socio"
+      ]
+    },
+    {
+      "categoria": "CAPITAL_SOCIAL",
+      "nome": "Aumento de Capital com Lucros",
+      "debito": {
+        "codigo": "5.3.1.01",
+        "nome": "Lucros Acumulados"
+      },
+      "credito": {
+        "codigo": "5.1.1.01",
+        "nome": "Capital Social"
+      },
+      "observacao": "Incorporação de lucros ao capital",
+      "keywords": [
+        "aumento",
+        "capital",
+        "lucro",
+        "incorporacao"
+      ]
+    },
+    {
+      "categoria": "CAPITAL_SOCIAL",
+      "nome": "Reserva Legal",
+      "debito": {
+        "codigo": "5.3.1.01",
+        "nome": "Lucros Acumulados"
+      },
+      "credito": {
+        "codigo": "5.2.1.01",
+        "nome": "Reserva Legal"
+      },
+      "observacao": "5% do lucro até 20% do capital",
+      "keywords": [
+        "reserva",
+        "legal",
+        "lucro"
+      ]
+    },
+    {
+      "categoria": "ENCERRAMENTO",
+      "nome": "Encerramento de Receitas (ARE)",
+      "debito": {
+        "codigo": "3.X.X.XX",
+        "nome": "Contas de Receita"
+      },
+      "credito": {
+        "codigo": "5.3.2.01",
+        "nome": "Apuração do Resultado"
+      },
+      "observacao": "Transferir saldo credor para ARE",
+      "keywords": [
+        "encerramento",
+        "receita",
+        "are",
+        "resultado"
+      ]
+    },
+    {
+      "categoria": "ENCERRAMENTO",
+      "nome": "Encerramento de Despesas (ARE)",
+      "debito": {
+        "codigo": "5.3.2.01",
+        "nome": "Apuração do Resultado"
+      },
+      "credito": {
+        "codigo": "4.X.X.XX",
+        "nome": "Contas de Despesa"
+      },
+      "observacao": "Transferir saldo devedor para ARE",
+      "keywords": [
+        "encerramento",
+        "despesa",
+        "are",
+        "resultado"
+      ]
+    },
+    {
+      "categoria": "ENCERRAMENTO",
+      "nome": "Transferência de Lucro do Exercício",
+      "debito": {
+        "codigo": "5.3.2.01",
+        "nome": "Apuração do Resultado"
+      },
+      "credito": {
+        "codigo": "5.3.1.01",
+        "nome": "Lucros Acumulados"
+      },
+      "observacao": "Saldo credor do ARE = Lucro",
+      "keywords": [
+        "lucro",
+        "exercicio",
+        "transferencia",
+        "are"
+      ]
+    }
+  ],
+  "categorias": [
+    "FOLHA_PAGAMENTO",
+    "ENCARGOS_SOCIAIS",
+    "PRO_LABORE",
+    "DISTRIBUICAO_LUCROS",
+    "JCP",
+    "IMPOSTOS_FEDERAIS",
+    "SIMPLES_NACIONAL",
+    "IMPOSTOS_MUNICIPAIS",
+    "OPERACOES_FINANCEIRAS",
+    "EMPRESTIMOS",
+    "IMOBILIZADO",
+    "ESTOQUE",
+    "RECEITAS",
+    "DESPESAS",
+    "PROVISOES",
+    "ADIANTAMENTOS",
+    "CONSORCIO",
+    "CAPITAL_SOCIAL",
+    "ENCERRAMENTO"
+  ],
+  "fontes": [
+    {
+      "dominio": "objetivaedicoes.com.br",
+      "quantidade": 17,
+      "exemplos": [
+        "Curso: CONTABILIZAÇÃO DA FOLHA DE PAGAMENTO",
+        "Perguntas e Respostas - Objetiva",
+        "intensivo de contas a receber e cobrança"
+      ]
+    },
+    {
+      "dominio": "www.objetivaedicoes.com.br",
+      "quantidade": 30,
+      "exemplos": [
+        "Menu de Matérias - CONTABILIDADE - Objetiva",
+        "Matérias/Procedimentos",
+        "Curso: DCTF web x EFD-REINF x e-Social x PerdComp Web"
+      ]
+    },
+    {
+      "dominio": "web.objetivaedicoes.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "ENCONTRO DE PROFISSIONAIS DE CONTABILIDADE"
+      ]
+    },
+    {
+      "dominio": "www.contabeis.com.br",
+      "quantidade": 111,
+      "exemplos": [
+        "Contabilização da Folha de Pagamento - Contabilidade",
+        "contabilização de folha de pagamento - Contabilidade",
+        "Folha de Pagamento - Regime de Caixa - Contabilidade"
+      ]
+    },
+    {
+      "dominio": "www.portaldecontabilidade.com.br",
+      "quantidade": 30,
+      "exemplos": [
+        "LANÇAMENTOS CONTÁBEIS",
+        "PRINCIPAIS LANÇAMENTOS CONTÁBEIS ...",
+        "REGISTROS CONTABEIS"
+      ]
+    },
+    {
+      "dominio": "www.jornalcontabil.com.br",
+      "quantidade": 18,
+      "exemplos": [
+        "Lançamentos contábeis: 7 dicas para fazer de forma mais eficiente",
+        "Planilha de Fluxo de Caixa Excel: Nova ferramenta para ...",
+        "Lucro Real: 12 Armadilhas Contábeis que sua Empresa Deve ..."
+      ]
+    },
+    {
+      "dominio": "jornalcontabil.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Folha de pagamento descomplicada: passos para uma ..."
+      ]
+    },
+    {
+      "dominio": "cfc.org.br",
+      "quantidade": 26,
+      "exemplos": [
+        "Normas Completas",
+        "Normas Simplificadas para PMEs",
+        "Normas Brasileiras de Contabilidade"
+      ]
+    },
+    {
+      "dominio": "informanet.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "adiantamento_a_fornecedores_...",
+        "GCON - Lançamentos Contábeis"
+      ]
+    },
+    {
+      "dominio": "erpvalor.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "Adiantamento a Fornecedores - Contabilização - VLR",
+        "Dicas Contabilização - Juros sobre o capital próprio (JSCP)",
+        "Regularização de divergências entre estoque físico e contábil"
+      ]
+    },
+    {
+      "dominio": "www.prosyst.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilização de Pagamento Antecipado"
+      ]
+    },
+    {
+      "dominio": "comperve.ufrn.br",
+      "quantidade": 23,
+      "exemplos": [
+        "Modelo Lançamentos Contábeis",
+        "Modelo Lançamentos Contábeis",
+        "Modelo Lançamentos Contábeis"
+      ]
+    },
+    {
+      "dominio": "www.cienciascontabeis.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como Contabilizar Adiantamento a Fornecedores?"
+      ]
+    },
+    {
+      "dominio": "www.youtube.com",
+      "quantidade": 19,
+      "exemplos": [
+        "🧾✒️ Como contabilizar adiantamentos a fornecedores",
+        "Como contabilizar adiantamentos de clientes - Mega Vídeo ...",
+        "Como lançar Empréstimos Bancários."
+      ]
+    },
+    {
+      "dominio": "pt.scribd.com",
+      "quantidade": 8,
+      "exemplos": [
+        "Contabilização de Adiantamentos | PDF | Business",
+        "Arrendamento Mercantil: Contabilização e Aspectos Fiscais",
+        "Contabilização de Importações e Impostos"
+      ]
+    },
+    {
+      "dominio": "www.nomus.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Adiantamento de clientes e a fornecedores",
+        "Adiantamento de clientes e a fornecedores"
+      ]
+    },
+    {
+      "dominio": "autoatendimento.supersoft.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Baixando Adiantamento à Fornecedores",
+        "Exportando Dados para a Contabilidade"
+      ]
+    },
+    {
+      "dominio": "www.crc-ce.org.br",
+      "quantidade": 4,
+      "exemplos": [
+        "MODELO DE PLANO DE CONTAS",
+        "MODELO DE PLANO DE CONTAS",
+        "Lucro Real 03-2020 IRPJ-CSLL (CRC)"
+      ]
+    },
+    {
+      "dominio": "agergs.rs.gov.br",
+      "quantidade": 6,
+      "exemplos": [
+        "MODELO DE PLANO DE CONTAS PARA EMPRESAS DE ...",
+        "MODELO DE PLANO DE CONTAS PARA EMPRESAS DE ...",
+        "MODELO DE PLANO DE CONTAS PARA EMPRESAS DE ..."
+      ]
+    },
+    {
+      "dominio": "www.lefisc.com.br",
+      "quantidade": 10,
+      "exemplos": [
+        "Perguntas e Respostas",
+        "Perguntas e Respostas",
+        "Perguntas e Respostas"
+      ]
+    },
+    {
+      "dominio": "www.scribd.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Adiantamento de Clientes | PDF"
+      ]
+    },
+    {
+      "dominio": "webmaissistemas.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Adiantamento De Clientes: O Que É E Como Fazer?"
+      ]
+    },
+    {
+      "dominio": "www.estrategiaconcursos.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Principais Lançamentos Contábeis"
+      ]
+    },
+    {
+      "dominio": "www.crcsc.org.br",
+      "quantidade": 5,
+      "exemplos": [
+        "PREPARAÇÃO DAS DEMONSTRAÇÕES CONTÁBEIS E ...",
+        "PREPARAÇÃO DAS DEMONSTRAÇÕES CONTÁBEIS E ...",
+        "PREPARAÇÃO DAS DEMONSTRAÇÕES CONTÁBEIS E ..."
+      ]
+    },
+    {
+      "dominio": "www.informanet.com.br",
+      "quantidade": 6,
+      "exemplos": [
+        "Empréstimo bancário",
+        "GCON - Lançamentos Contábeis",
+        "variacao-48b-2000.htm"
+      ]
+    },
+    {
+      "dominio": "e-diariooficial.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Como Lançar Empréstimo na Contabilidade Corretamente"
+      ]
+    },
+    {
+      "dominio": "ajuda.wk.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "emprestimos-tomados.pdf"
+      ]
+    },
+    {
+      "dominio": "translate.google.com",
+      "quantidade": 9,
+      "exemplos": [
+        "Exemplos de lançamentos contábeis de empréstimo para ...",
+        "Dividendos a Pagar | Fórmula + Exemplos de Lançamento ...",
+        "IFRS 16 Arrendamentos: Resumo, Exemplo, Lançamentos ..."
+      ]
+    },
+    {
+      "dominio": "crcmg.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilização de Operações de Crédito"
+      ]
+    },
+    {
+      "dominio": "revistacgg.org",
+      "quantidade": 1,
+      "exemplos": [
+        "Juros sobre o capital Próprio"
+      ]
+    },
+    {
+      "dominio": "www.escoplan.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Juros sobre o Capital Próprio | Contabilização"
+      ]
+    },
+    {
+      "dominio": "blbescoladenegocios.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "JCP: tributação dos juros sobre capital próprio por holding ...",
+        "IFRS 16: aplicação prática da norma contábil",
+        "CPC 48 (IFRS 9) – PECLD. Parte 1: abordagem prática e ..."
+      ]
+    },
+    {
+      "dominio": "www.cenofisco.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "Contabilização dos Juros Sobre o Capital Próprio",
+        "Importação de Mercadorias para Revenda - Contabilização",
+        "SERVIÇOS DE PROPAGANDA E PUBLICIDADE ..."
+      ]
+    },
+    {
+      "dominio": "www.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Nova legislação sobre Juros sobre Capital Próprio (JCP)."
+      ]
+    },
+    {
+      "dominio": "www.comunidadecontabilbrasil.com",
+      "quantidade": 4,
+      "exemplos": [
+        "Como contabilizar os Juros sobre o Capital Próprio?",
+        "Reversão de despesa no Lucro Presumido",
+        "Desconto de vale transporte - lançamento contábil"
+      ]
+    },
+    {
+      "dominio": "www.appvizer.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Lucros acumulados: entendendo e contabilizando-os - Appvizer",
+        "Lucros acumulados: entendendo e contabilizando-os - Appvizer"
+      ]
+    },
+    {
+      "dominio": "www.contadorperito.com",
+      "quantidade": 3,
+      "exemplos": [
+        "Lançamentos contábeis - Exemplos práticos",
+        "Lançamentos contábeis - Exemplos práticos",
+        "Lançamentos contábeis - Exemplos práticos"
+      ]
+    },
+    {
+      "dominio": "www.ozai.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Modelo de Ata de Aprovação das Contas e Distribuição ...",
+        "Modelo de Ata de Aprovação das Contas e Distribuição ..."
+      ]
+    },
+    {
+      "dominio": "suporte.contabilizei.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Modelo - ATA DE REUNIÃO DE DISTRIBUIÇÃO DE ...",
+        "Quesitos para se encaixar como Exportador de Serviços"
+      ]
+    },
+    {
+      "dominio": "www.comececomopedireito.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Capital social subscrito: como fazer o lançamento"
+      ]
+    },
+    {
+      "dominio": "silvalopes.adv.br",
+      "quantidade": 1,
+      "exemplos": [
+        "AFAC - Adiantamento para o Futuro Aumento de Capital: o ..."
+      ]
+    },
+    {
+      "dominio": "www.jucemat.mt.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "alteracao-de-aumento-de-capital-social- ..."
+      ]
+    },
+    {
+      "dominio": "portal.jucepe.pe.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "MODELO BÁSICO ALTERAÇÃO CONTRATUAL DE ..."
+      ]
+    },
+    {
+      "dominio": "www.normaslegais.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Ltda - Aumento de Capital com Reservas",
+        "CONTRATO DE IMPORTAÇÃO POR CONTA E ORDEM ..."
+      ]
+    },
+    {
+      "dominio": "www.comocontabilizar.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Como Contabilizar a Reserva Legal e sua Contabilização",
+        "Como Contabilizar Despesas Antecipadas: Passo a passo..."
+      ]
+    },
+    {
+      "dominio": "www.serasaexperian.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Você sabe como funciona a reserva legal de lucros ..."
+      ]
+    },
+    {
+      "dominio": "patrimonio.uff.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilidade Empresarial"
+      ]
+    },
+    {
+      "dominio": "cage.fazenda.rs.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "GUIA DE LANÇAMENTOS CONTÁBEIS PROVISÕES ... - CAGE"
+      ]
+    },
+    {
+      "dominio": "portal.fazenda.sp.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Política Contábil de Provisões e Passivos Contingentes"
+      ]
+    },
+    {
+      "dominio": "contabilidade.ro.gov.br",
+      "quantidade": 2,
+      "exemplos": [
+        "MANUAL DE PROCEDIMENTOS CONTÁBEIS ESPECIAIS ...",
+        "Roteiro-de-Contabilizacao-006-2019-Procedimentos-de- ..."
+      ]
+    },
+    {
+      "dominio": "www.teses.usp.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Provisões, contingências e normas contábeis"
+      ]
+    },
+    {
+      "dominio": "www.suno.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Entenda o que é a provisão para contingências e suas ...",
+        "Despesas antecipadas: entenda o que significa esse tipo ..."
+      ]
+    },
+    {
+      "dominio": "api.mziq.com",
+      "quantidade": 1,
+      "exemplos": [
+        "POLÍTICA DE PROVISÕES, PASSIVOS CONTINGENTES ..."
+      ]
+    },
+    {
+      "dominio": "grupoinvestor.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Baixa de ativo imobilizado: Importância para o controle ..."
+      ]
+    },
+    {
+      "dominio": "www.afixcode.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Baixa de Ativo Imobilizado: Conceito, Tipos e Contabilização",
+        "Venda do ativo imobilizado: Tributação, Contabilização e ..."
+      ]
+    },
+    {
+      "dominio": "autoatendimento.contmatic.com.br",
+      "quantidade": 6,
+      "exemplos": [
+        "Baixa de bens do ativo imobilizado",
+        "Exportação de lançamentos contábeis",
+        "Cadastro de Custo de Mercadoria Vendida (CMV)"
+      ]
+    },
+    {
+      "dominio": "portaldacontabilidade.clmcontroller.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Baixa de ativos imobilizados: Principais conceitos"
+      ]
+    },
+    {
+      "dominio": "it.scribd.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Formulário de Baixa de Ativo Imobilizado | PDF"
+      ]
+    },
+    {
+      "dominio": "grupocpcon.com",
+      "quantidade": 2,
+      "exemplos": [
+        "Baixa de ativo imobilizado - Como Contabilizar?",
+        "Venda do ativo imobilizado: Tributação, Contabilização e ..."
+      ]
+    },
+    {
+      "dominio": "gomesbertolazzo.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Venda de ativo imobilizado - Gomes ..."
+      ]
+    },
+    {
+      "dominio": "gmaisac.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como contabilizar a venda de um ativo imobilizado"
+      ]
+    },
+    {
+      "dominio": "crcpb.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CPC 27 Ativo Imobilizado"
+      ]
+    },
+    {
+      "dominio": "revistas.unifan.edu.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Arrendamento mercantil: Contabilização dos contratos de ..."
+      ]
+    },
+    {
+      "dominio": "repositorio.ufsc.br",
+      "quantidade": 1,
+      "exemplos": [
+        "LEASING : ASPECTOS CONCEITUAIS E CONTÁBEIS"
+      ]
+    },
+    {
+      "dominio": "makevalue.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como contabilizar leasing financeiro e operacional após a ..."
+      ]
+    },
+    {
+      "dominio": "conteudo.cvm.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CPC 06 (R1) Operações de Arrendamento Mercantil ..."
+      ]
+    },
+    {
+      "dominio": "www.leasingabel.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Pronunciamento Técnico CPC 06 (R2) Operações de ... - Abel"
+      ]
+    },
+    {
+      "dominio": "fortaleza.inf.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Contabilização de operação de e entrada de importação 1",
+        "11 - Lancamento nota subst ipi icms normal"
+      ]
+    },
+    {
+      "dominio": "www.3scorporate.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Importação de mercadorias por empresa tributada pelo ..."
+      ]
+    },
+    {
+      "dominio": "www.erpvalor.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Importação de bens para o Ativo Imobilizado"
+      ]
+    },
+    {
+      "dominio": "ajuda.fortestecnologia.com.br",
+      "quantidade": 6,
+      "exemplos": [
+        "Modelos de Contabilização",
+        "Modelos de Contabilização",
+        "Pensão Alimentícia: Cálculo no Adiantamento de Folha de ..."
+      ]
+    },
+    {
+      "dominio": "wiki.atua.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Domínio - Configuração e exportação"
+      ]
+    },
+    {
+      "dominio": "contabnet.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Cuidados na contabilidade da exportação de serviços"
+      ]
+    },
+    {
+      "dominio": "fcassessoriacontabil.cnt.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como Realizar Exportação de Serviços?"
+      ]
+    },
+    {
+      "dominio": "clicknotas.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Guia de como emitir Nota Fiscal de Exportação na ..."
+      ]
+    },
+    {
+      "dominio": "www.calcbank.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como contabilizar operações em dólar e variação cambial"
+      ]
+    },
+    {
+      "dominio": "autoatendimento.grupoallegus.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Impressão do Relatório de Variação Cambial (Moeda ..."
+      ]
+    },
+    {
+      "dominio": "www.institutoanaabreu.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "IFRIC LL (ICPC LN) ADIANTAMENTOS EM MOEDA ..."
+      ]
+    },
+    {
+      "dominio": "www.tce.sp.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Anexo III - Roteiros Contábeis Essenciais - 2024 - v_003.xlsx"
+      ]
+    },
+    {
+      "dominio": "www.crcrs.org.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Revista-50",
+        "MANUAL DE ORIENTAÇÃO E DE PROCEDIMENTOS ..."
+      ]
+    },
+    {
+      "dominio": "www.gjacintho.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como lançar a variação do câmbio na contabilidade?"
+      ]
+    },
+    {
+      "dominio": "lume.ufrgs.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Provisão para Crédito de Liquidação Duvidosa (PCLD) ..."
+      ]
+    },
+    {
+      "dominio": "revista.crcmg.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "perda estimada com créditos de liquidação duvidosa ( ..."
+      ]
+    },
+    {
+      "dominio": "vali.qconcursos.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Aula 04 – Ativo Circulante. PECLD. Operações com ..."
+      ]
+    },
+    {
+      "dominio": "codern.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "NORMADE PROCEDIMENTOS PARA PECLD Perdas ..."
+      ]
+    },
+    {
+      "dominio": "danielebanco.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "PCLD: Como reduzir impactos na saúde financeira da ..."
+      ]
+    },
+    {
+      "dominio": "www.seteco.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Agenda: Perdas em crédito de liquidação, Despesas ... - seteco"
+      ]
+    },
+    {
+      "dominio": "www.abscm.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Provisão para créditos de liquidação duvidosa nas ..."
+      ]
+    },
+    {
+      "dominio": "ajudaonline.ebs.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "Provisão de Férias - IOB Gestão Contábil",
+        "Provisão de 13º Salário - IOB Gestão Contábil",
+        "Fornecimento de Vale Transporte e Vale Refeição - IOB"
+      ]
+    },
+    {
+      "dominio": "ajuda.sankhya.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Reversão / Recuperação de Devedores Duvidosos Baixa ..."
+      ]
+    },
+    {
+      "dominio": "portalcontabilsc.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Despesas que viram receitas: pode isso?"
+      ]
+    },
+    {
+      "dominio": "www.tcm.go.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "04.10.00 lançamentos contábeis típicos do setor público"
+      ]
+    },
+    {
+      "dominio": "www.sef.sc.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilização da Provisão"
+      ]
+    },
+    {
+      "dominio": "www.analisecontabilidade.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Registro de Inventário | Procedimentos para escrituração ..."
+      ]
+    },
+    {
+      "dominio": "groups.google.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilização da movimentação de estoques"
+      ]
+    },
+    {
+      "dominio": "help.sap.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Como criar documentos de inventário físico com ajustar ..."
+      ]
+    },
+    {
+      "dominio": "www.e-auditoria.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "Inventário no SPED: como informar, corrigir e evitar multas",
+        "Como Contabilizar Rescisão de Contrato: Guia Completo",
+        "Como Contabilizar Rescisão de Contrato: Guia Completo"
+      ]
+    },
+    {
+      "dominio": "easyjur.com",
+      "quantidade": 1,
+      "exemplos": [
+        "[MODELO] Regularização das Diferenças entre Estoques ..."
+      ]
+    },
+    {
+      "dominio": "fia.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CMV (Custo da Mercadoria Vendida): O que é e como ..."
+      ]
+    },
+    {
+      "dominio": "pt.slideshare.net",
+      "quantidade": 2,
+      "exemplos": [
+        "Cálculo do custo das mercadorias vendidas (cmv) | PDF",
+        "Despesas antecipadas contabil | PDF"
+      ]
+    },
+    {
+      "dominio": "sac.fluxis.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "01- Como Realizar o Cadastro do CMV (Custo da Mercadoria ..."
+      ]
+    },
+    {
+      "dominio": "f360.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CMV: guia completo sobre o Custo de Mercadorias Vendidas!"
+      ]
+    },
+    {
+      "dominio": "suporte.dominioatendimento.com",
+      "quantidade": 4,
+      "exemplos": [
+        "Como apurar o custo das mercadorias vendidas (CMV)?",
+        "Como contabilizar IRPJ e CSLL mensalmente Lucro ...",
+        "Como lançar nota fiscal de serviço prestado com retenção de ..."
+      ]
+    },
+    {
+      "dominio": "contabilidadefacil.no.comunidades.net",
+      "quantidade": 2,
+      "exemplos": [
+        "Lançamentos Contábeis - Contabilidade Fácil",
+        "Lançamentos Contábeis - Contabilidade Fácil"
+      ]
+    },
+    {
+      "dominio": "www.prosoft.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como funciona a contabilização de aplicações financeiras?"
+      ]
+    },
+    {
+      "dominio": "antecipafacil.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Contabilização de Antecipação de Recebíveis: IFRS, CPC ..."
+      ]
+    },
+    {
+      "dominio": "atendimento.tron.com.br",
+      "quantidade": 3,
+      "exemplos": [
+        "Lançamentos Padrão para Rescisão - Tron",
+        "Lançamentos Padrão para Rescisão - Tron",
+        "Modelo Simples Nacional para inicialização de período contábil"
+      ]
+    },
+    {
+      "dominio": "www.coad.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "5.1.19.8. EXEMPLO PRÁTICO A seguir, exemplificaremos ...",
+        "12.1 contribuição sindical patronal"
+      ]
+    },
+    {
+      "dominio": "sitecontabil.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Termo de Rescisão do Contrato de Trabalho"
+      ]
+    },
+    {
+      "dominio": "www.policont.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "RESCISÃO DE CONTRATO DE TRABALHO"
+      ]
+    },
+    {
+      "dominio": "www.crcpa.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Distrato de Prestação de Serviços Profissionais"
+      ]
+    },
+    {
+      "dominio": "modeloinicial.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Modelo Recibo de Rescisão Trabalhista"
+      ]
+    },
+    {
+      "dominio": "www.policontcontabilidade.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "MODELO 2 - Aviso prévio para dispensa de funcionário"
+      ]
+    },
+    {
+      "dominio": "www.fazcont.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Downloads"
+      ]
+    },
+    {
+      "dominio": "metodocontabilidade.cnt.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Modelos de Documentos - Método Contabilidade"
+      ]
+    },
+    {
+      "dominio": "dnacontabil.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Formulários - DNA Contábil"
+      ]
+    },
+    {
+      "dominio": "atendimento.nasajon.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Como efetuar a contabilização do Benefício Vale Transporte ..."
+      ]
+    },
+    {
+      "dominio": "sefaz.es.gov.br",
+      "quantidade": 2,
+      "exemplos": [
+        "MANUAL DE ORIENTAÇÕES CONTÁBEIS DA FOLHA DE ...",
+        "SEFAZ - MANUAL DE CONTABILIZAÇÃO DA FOLHA DE ..."
+      ]
+    },
+    {
+      "dominio": "www.ugt.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Manual de orientações para aplicação e registro contábil ..."
+      ]
+    },
+    {
+      "dominio": "www.econeteditora.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Lançamentos Contábeis"
+      ]
+    },
+    {
+      "dominio": "crcto.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CONTABILIDADE DO 3° SETOR PARA AS ENTIDADES ..."
+      ]
+    },
+    {
+      "dominio": "cursosmodulos.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Aprenda como fazer a contabilização da folha de pagamento",
+        "Aprenda como fazer a contabilização da folha de pagamento"
+      ]
+    },
+    {
+      "dominio": "www.jusbrasil.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Modelos sobre Desconto de Pensão Alimentícia",
+        "Desconto de Pensão em Folha de Pagamentos - Modelos"
+      ]
+    },
+    {
+      "dominio": "novoajuda.alterdata.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "FP824 - Desconto de Pensão Alimentícia no Recibo."
+      ]
+    },
+    {
+      "dominio": "contadorperito.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Lucro real trimestral ou anual - Prejuízo fiscal (IRPJ) e ..."
+      ]
+    },
+    {
+      "dominio": "www.contabilizei.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "O que é a CSLL: como é feito o cálculo e quais os modelos ..."
+      ]
+    },
+    {
+      "dominio": "material.grupoblb.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Planilha gratuita: Memória de cálculo de IRPJ e CSLL"
+      ]
+    },
+    {
+      "dominio": "www.athenas.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Manual Contabilização da Provisão Simples Nacional por ..."
+      ]
+    },
+    {
+      "dominio": "www8.receita.fazenda.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Manual do PGDAS-D e Defis - Simples Nacional"
+      ]
+    },
+    {
+      "dominio": "silvascontabilidade.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "CONTABILIZAÇÃO-PELO-REGIME-DE-CAIXA-SIMPLES ..."
+      ]
+    },
+    {
+      "dominio": "revistas.apet.org.br",
+      "quantidade": 1,
+      "exemplos": [
+        "contabilização do icms substituição tributária e a qualidade ..."
+      ]
+    },
+    {
+      "dominio": "unisantacruz.edu.br",
+      "quantidade": 1,
+      "exemplos": [
+        "O que é Substituição Tributária de ICMS e sua contabilização"
+      ]
+    },
+    {
+      "dominio": "blog.esimplesauditoria.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "ICMS-ST no Simples Nacional, como funciona?"
+      ]
+    },
+    {
+      "dominio": "itcnet.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "emissão e escrituração dos documentos fiscais de"
+      ]
+    },
+    {
+      "dominio": "www.fazenda.pr.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "ICMS - Substituição tributária"
+      ]
+    },
+    {
+      "dominio": "ajuda.calimaerp.com",
+      "quantidade": 1,
+      "exemplos": [
+        "Como fazer lançamento de crédito e débito de IPI?"
+      ]
+    },
+    {
+      "dominio": "www.dinamicasistemas.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "LIVRO REGISTRO DE APURAÇÃO DO IPI"
+      ]
+    },
+    {
+      "dominio": "sped.rfb.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Guia Prático EFD-ICMS/IPI - SPED"
+      ]
+    },
+    {
+      "dominio": "legislacao.fazenda.sp.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "REGISTRO DE APURAÇÃO DO IPI - Modelo 8 (Folha 1)"
+      ]
+    },
+    {
+      "dominio": "docsnew.erpflex.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Processo de contabilização da apuração de impostos"
+      ]
+    },
+    {
+      "dominio": "www.jettax.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Retenções Federais 2025: O que é importante saber?"
+      ]
+    },
+    {
+      "dominio": "nobrecontabilidadesp.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Retenções em notas de serviço: ISS, INSS, IRRF e CSRF (PIS ..."
+      ]
+    },
+    {
+      "dominio": "precisao.neositecontabil.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "RETENÇÃO CSRF 4,65% - ALGUMAS ORIENTAÇÕES"
+      ]
+    },
+    {
+      "dominio": "cefis.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Perguntas e Respostas Csrf"
+      ]
+    },
+    {
+      "dominio": "qive.com.br",
+      "quantidade": 2,
+      "exemplos": [
+        "Retenções do Simples Nacional: INSS, IRRF, CSLL e Mais",
+        "Como contabilizar nota fiscal de serviço com imposto retido"
+      ]
+    },
+    {
+      "dominio": "ajsolucoes.com.br",
+      "quantidade": 1,
+      "exemplos": [
+        "Veja como contabilizar nota fiscal de serviço com imposto ..."
+      ]
+    },
+    {
+      "dominio": "www.contabilizasp.fazenda.sp.gov.br",
+      "quantidade": 1,
+      "exemplos": [
+        "MANUAL DE IRRF"
+      ]
+    }
+  ],
+  "snippets_referencia": [
+    {
+      "titulo": "Perguntas e Respostas",
+      "texto": "... brindes e materiais promocionais poderá tomar crédito do imposto em tais aquisições. ... contábil do lucro real sujeito à tributação em cada período de apuração.",
+      "fonte": "https://objetivaedicoes.com.br/perguntas_respostas.php",
+      "relevancia": 3
+    },
+    {
+      "titulo": "ECD - Escrituração Contábil Digital (Geração do Arquivo ...",
+      "texto": "ECD - Escrituração Contábil Digital (Geração do Arquivo Digital e a Integração das Informações) Curso certificado e pontuado em 8h no sistema Web CFC · Início ...",
+      "fonte": "https://objetivaedicoes.com.br/cursos/curso_detalhe.php?id=Nzc4",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Curso: SPED Contábil e ECF - Geração do Arquivo Digital e a ...",
+      "texto": "Objetivo: analisar os procedimentos para a geração do arquivo digital da ECD - Escrituração Contábil Digital (SPED Contábil) e da ECF - Escrituração Contábil ...",
+      "fonte": "https://www.objetivaedicoes.com.br/ver_curso.php?get_codigo=NDcx",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Curso: Controle de crédito do ativo permanente (CIAP) - Bloco G",
+      "texto": "Objetivo: Estudos revelam que boa parte dos contribuintes não aproveitam corretamente o benefício do crédito de ativo imobilizado bem como ...",
+      "fonte": "https://www.objetivaedicoes.com.br/ver_curso.php?get_codigo=NTI2",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Contabilização da Folha de Pagamento - Contabilidade",
+      "texto": "Os lançamentos são conforme abaixo. Pelo lançamentos dos proventos. D - Salarios ( res. C - Salarios a pagar ( PC) Pelo lançamento do Pro Labore",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/256280/contabilizacao-da-folha-de-pagamento/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "contabilização de folha de pagamento - Contabilidade",
+      "texto": "Prezados Consultores, gostaria de um modelo de lançamento contábil de folha de pagamento onde conste desc.de credito consignado, desconto de pensão ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/9688/contabilizacao-de-folha-de-pagamento/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Folha de Pagamento - Regime de Caixa - Contabilidade",
+      "texto": "1)Pelo pagamento Salários D-Despesa de Salário C-Banco ou Caixa........70,00 · 2)Pelo Recolhimento INSS D-Despesa de Salário C-Banco Ou Caixa...............20,00",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/27506/folha-de-pagamento-regime-de-caixa/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Contabilizar Folha de Pagamento - Contabilidade",
+      "texto": "- Por ocasião do pagamento das Férias e ou do 13º Salários, se deve dar baixa da provisão pelo débito na respectiva conta. - Todos os lançamentos devem ser ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/1842/contabilizar-folha-de-pagamento/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Contabilização da Folha de Pagamento - Contabilidade",
+      "texto": "Os lançamentos são conforme abaixo. Pelo lançamentos dos proventos. D - Salarios ( res. C - Salarios a pagar ( PC) Pelo lançamento do Pro Labore",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/256280/contabilizacao-da-folha-de-pagamento/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Folha de Pagamento - Regime de Caixa - Contabilidade",
+      "texto": "1)Pelo pagamento Salários D-Despesa de Salário C-Banco ou Caixa........70,00 · 2)Pelo Recolhimento INSS D-Despesa de Salário C-Banco Ou Caixa...............20,00",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/27506/folha-de-pagamento-regime-de-caixa/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Contabilização de Pro-labore - Contabilidade",
+      "texto": "Os lançamentos de Pro-Labore são lançados da seguinte maneira: Do lançamento do Pro-Labore: D - Pro-Labore (Resultado) C - Pro-Labore à pagar (PC) Dos ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/46664/contabilizacao-de-pro-labore/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Lançamentos PIS e COFINS - Lucro Real - Contabilidade",
+      "texto": "Sobre o total das Receitas no mês deve ser calculado o PIS a alíquota de 1,65% o que dá origem ao débito do PIS e que deve ser contabilizado levando-se a débito ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/4619/lancamentos-pis-e-cofins-lucro-real/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Demonstrativo Pis/Cofins - Tributos Federais",
+      "texto": "Bom dia,Voces poderiam me ajudar a montar um relatório de apuração e também de credito desses imposto?Como seria o demonstrativo/lançamento.Grata,Thata .",
+      "fonte": "https://www.contabeis.com.br/forum/tributos-federais/25424/demonstrativo-pis-cofins/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "PIS E Cofins a compensar - Contabilidade",
+      "texto": "Bom a primeiro modo sim seu lançamento está correto. Na compensação você irá lançar o padrão: D- PII S/Faturamento a Recolher -PC C- PIS a ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/186304/pis-e-cofins-a-compensar/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "PIS e CONFINS Regime Cumulativo - Contabilidade",
+      "texto": "Tenho uma empresa Prestação de Serviços. Emitimos uma nota fiscal de serviço (CFOP: 5933) R$ 10.00,00. Gostaria de saber como devo contabilizar de PIS e COFINS?",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/183520/pis-e-confins-regime-cumulativo/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "LANÇAMENTOS CONTÁBEIS",
+      "texto": "É o registro do fato contábil que envolve uma conta devedora e outra conta credora. Exemplo: D – Banco Bradesco S/A (Ativo Circulante). Histórico: N/depósito em ...",
+      "fonte": "https://www.portaldecontabilidade.com.br/guia/lancamcont.htm",
+      "relevancia": 4
+    },
+    {
+      "titulo": "PRINCIPAIS LANÇAMENTOS CONTÁBEIS ...",
+      "texto": "DEPÓSITO EM DINHEIRO REFERENTE SAÍDA DE CAIXA. No caso de depósito bancário em dinheiro proveniente de saída de caixa: D – Bancos Cta.",
+      "fonte": "https://www.portaldecontabilidade.com.br/guia/transbancarias.htm",
+      "relevancia": 3
+    },
+    {
+      "titulo": "adiantamento_a_fornecedores_...",
+      "texto": "4. EXEMPLO DE CONTABILIZAÇÃO · 1 - Pelo adiantamento recebido do cliente em 01.03.201X: Lançamento. Contas. Valores. Débito. Adiantamento a Fornecedor (AC) · 2 - ...",
+      "fonte": "https://informanet.com.br/Prodinfo/boletim/2017/imposto/adiantamento_a_fornecedores_36_2017.html",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Adiantamento a Fornecedores - Contabilização - VLR",
+      "texto": "Esse lançamento contábil terá como contrapartida (à crédito) uma conta de disponibilidade, na qual o numerário adiantado ao fornecedor deu saída ...",
+      "fonte": "https://erpvalor.com.br/adiantamento_a_fornecedores.html",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Contabilização de Pagamento Antecipado",
+      "texto": "Modelo de Lançamentos · 1 - Conta de antecipação do cadastro do fornecedor · 2 - Conta débito do portador x conta (Adiantamento) · 3 - Conta geral de antecipação ( ...",
+      "fonte": "https://www.prosyst.com.br/wiki/enduser/erp/controladoria/contabilidade/movimento/contantecipado",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "A empresa adianta determinado valor em cheque a seus fornecedores, para o recebimento, posterior, de mercadorias ou produtos. Contas Contábeis. Débito. Crédito.",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "PREPARAÇÃO DAS DEMONSTRAÇÕES CONTÁBEIS E ...",
+      "texto": "prestação pública de contas, podem adotar o modelo Contábil previsto na NBC TG. 1002 do CFC – Conselho Federal de Contabilidade. 2º Modelo contábil. Por outro ...",
+      "fonte": "https://www.crcsc.org.br/uploads/evento/9019/7gBYyXXhKZtE_RIK4ToSKDzpBg8OrmdJ.pdf",
+      "relevancia": 5
+    },
+    {
+      "titulo": "Contabilização Emprestimos - Contabilidade",
+      "texto": "Bom dia Senhores (a), estou com uma duvida em relação a contabilização de emprestimos bancários onde foi fixado uma conta bancaria para o credito do ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/94054/contabilizacao-emprestimos/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Perguntas e Respostas",
+      "texto": "Solicito orientação para lançamento contábil da seguinte transação: Empresa recebeu empréstimo do Pronampe no valor de R$ 150.000,00 em 21/06/2024",
+      "fonte": "https://www.lefisc.com.br/perguntasRespostas/resposta/8631",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "A empresa entrega ao banco títulos como garantia para pagamento de empréstimos. Contas Contábeis. Débito. Crédito. Banco Cta. Caução - AC 3. 87.000,00. Títulos ...",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Juros sobre Capital Próprio",
+      "texto": "Os juros sobre o capital social estão sujeitos à incidência do imposto de renda na fonte, à alíquota de 15%, na data do pagamento ou crédito, os ...",
+      "fonte": "https://www.contabeis.com.br/artigos/3250/juros-sobre-capital-proprio/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Juros sobre o capital Próprio",
+      "texto": "Dispõe sobre a contabilização dos juros sobre o capital próprio previstos na Lei 9249/95. Disponível em <http:// www.cvm.gov.br/>. Acesso em 01/03/2008 ...",
+      "fonte": "https://revistacgg.org/index.php/contabil/article/download/245/pdf_108/1069",
+      "relevancia": 3
+    },
+    {
+      "titulo": "lançamento de distribuição lucros - Contabilidade",
+      "texto": "Ao encerrar o balanço anual da empresa fica apurado o lucro e conforme determinação da empresa distribuição do mesmo. D - Lucro do Exercicio (Passivo) c - ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/283173/lancamento-de-distribuicao-lucros/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Capital social subscrito: como fazer o lançamento",
+      "texto": "O lançamento contábil do capital social subscrito é feito conforme as partidas dobradas de débito e crédito. Geralmente, ocorre da seguinte ...",
+      "fonte": "https://www.comececomopedireito.com.br/blog/capital-social-subscrito/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "AFAC - Adiantamento para o Futuro Aumento de Capital: o ...",
+      "texto": "Conheça o AFAC - Adiantamento para o Futuro Aumento de Capital, impactos contábeis e tributários e diferenças para o Mútuo Conversível.",
+      "fonte": "https://silvalopes.adv.br/afac-adiantamento-para-o-futuro-aumento-de-capital-o-que-e/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "Situação em que a empresa ou a companhia, contabiliza e constitui a reserva obrigatória de 5% do lucro liquido do exercício. Contas Contábeis. Débito. Crédito.",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "GUIA DE LANÇAMENTOS CONTÁBEIS PROVISÕES ... - CAGE",
+      "texto": "Este Guia de Lançamentos Contábeis tem por objetivo demonstrar os registros contábeis relacionados à Instrução Normativa CAGE nº 08/2017, que ...",
+      "fonte": "https://cage.fazenda.rs.gov.br/upload/arquivos/202503/26143327-2020040220231110.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "Exemplo de contabilização no caso da empresa iniciar o processo de importação de bens para o seu imobilizado, adiantando valores. Contas Contábeis. Débito.",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Baixa de ativo imobilizado: Importância para o controle ...",
+      "texto": "Lançamento da baixa contábil​​ O lançamento contábil para a baixa do ativo imobilizado deve ser feito da seguinte forma: Débito: Conta de Depreciação Acumulada ( ...",
+      "fonte": "https://grupoinvestor.com.br/baixa-de-ativo-imobilizado/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Roteiro-de-Contabilizacao-006-2019-Procedimentos-de- ...",
+      "texto": "Lançamento deverá refletir a baixa do Ativo Imobilizado para controle. (CASO O. GESTOR DETERMINE APURAÇÃO DE RESPONSABILIDADE). 4.3.1 - Lançamento de baixa do ...",
+      "fonte": "https://contabilidade.ro.gov.br/wp-content/uploads/2019/11/Roteiro-de-Contabilizacao-006-2019-Procedimentos-de-Reavaliacao-dos-Bens-MoveisR1.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "Exemplo de contabilização no caso da empresa iniciar o processo de importação de bens para o seu imobilizado, adiantando valores. Contas Contábeis. Débito.",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Arrendamento mercantil: Contabilização dos contratos de ...",
+      "texto": "de GS de Brito · 2020 — O objetivo geral deste artigo é demonstrar a forma de contabilização dos contratos de arrendamento mercantil, em busca de responder quais são os procedimentos ...",
+      "fonte": "https://revistas.unifan.edu.br/index.php/RevistaICSA/article/download/535/422",
+      "relevancia": 3
+    },
+    {
+      "titulo": "LEASING : ASPECTOS CONCEITUAIS E CONTÁBEIS",
+      "texto": "de CL Figueiredo · 1997 · Citado por 2 — produzir outros bens ou serviços. Por isso, em alguns países existe o registro contábil desse Leasing como se fosse ... 1- MODELO DE CONTRATO DE ARRENDAMENTO ...",
+      "fonte": "https://repositorio.ufsc.br/bitstream/handle/123456789/110271/CCN0316-M.pdf?sequence=1",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Como contabilizar operações em dólar e variação cambial",
+      "texto": "Para contabilização da Variação Cambial temos que efetuar um lançamento contábil a débito ou a crédito da conta atualizada: Variação Cambial ...",
+      "fonte": "https://www.calcbank.com.br/blog/como-contabilizar-operacoes-em-dolar-e-variacao-cambial/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "variacao-48b-2000.htm",
+      "texto": "Lançamentos Contábeis pela apropriação da variação cambial em 30.09.00: D - CLIENTES DO EXTERIOR. (Ativo Circulante). C - VARIAÇÃO MONETÁRIA ATIVA. (Resultado).",
+      "fonte": "https://www.informanet.com.br/Prodinfo/boletim/2000/Imposto/imp-rend-juri/variacao-48b-2000.htm",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Como contabilizo uma importação com variação cambial?",
+      "texto": "A variação cambial deve ser registrada contabilmente como crédito ou débito na conta que gerou o direito ou a obrigação, em contrapartida às ...",
+      "fonte": "https://www.lefisc.com.br/perguntasRespostas/resposta/15161",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Provisão para Crédito de Liquidação Duvidosa (PCLD) ...",
+      "texto": "de HS Negreiros · 2013 · Citado por 1 — A provisão para. Crédito de Liquidação Duvidosa (PCLD) é constituída para reconhecer no resultado, as prováveis perdas no recebimento de créditos registrados no ...",
+      "fonte": "https://lume.ufrgs.br/bitstream/10183/127308/1/000972656.pdf",
+      "relevancia": 5
+    },
+    {
+      "titulo": "perda estimada com créditos de liquidação duvidosa ( ...",
+      "texto": "de J dos Santos Santana · 2021 · Citado por 2 — O estudo teve por objetivo geral avaliar se houve impacto relevante na perda estimada com créditos de liquidação duvidosa (PECLD) com a nova ...",
+      "fonte": "https://revista.crcmg.org.br/rmc/article/download/1191/577817/579994",
+      "relevancia": 5
+    },
+    {
+      "titulo": "Aula 04 – Ativo Circulante. PECLD. Operações com ...",
+      "texto": "Além disso, também estudaremos os lançamentos referentes às Perdas Estimadas com Créditos de Liquidação Duvidosa. Para finalizar a aula estudaremos os conceitos ...",
+      "fonte": "https://vali.qconcursos.com/odin/topics/cc414628-e7de-46af-992e-d4d17e6c3e9c.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "CPC 48 (IFRS 9) – PECLD. Parte 1: abordagem prática e ...",
+      "texto": "Neste artigo tratamos das Perdas Estimadas em Créditos de Liquidação Duvidosa (PECLD) conforme as normas CPC 48 e IFRS 9.",
+      "fonte": "https://blbescoladenegocios.com.br/blog/cpc-48-ifrs-9-pecld-parte-1-abordagem-pratica-e-simplificada/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "NORMADE PROCEDIMENTOS PARA PECLD Perdas ...",
+      "texto": "A presente norma tem por objetivo estabelecer os procedimentos para análise e mensuração da perda estimada com créditos de liquidação duvidosa ...",
+      "fonte": "https://codern.com.br/userfiles/files/COOCRI/ABRIL-2023/NR_2031_01_NORMA_DE_PROCEDIMENTOS_PARA_PECLD_Versao_1_0_Original.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "PCLD: Como reduzir impactos na saúde financeira da ...",
+      "texto": "A PCLD, em sua essência, representa uma reserva contábil destinada a cobrir potenciais perdas decorrentes de créditos de difícil recuperação.",
+      "fonte": "https://danielebanco.com.br/blog/pcld-provisao-para-creditos-de-liquidacao-duvidosa/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Agenda: Perdas em crédito de liquidação, Despesas ... - seteco",
+      "texto": "PDD/PECLD – PERDAS ESTIMADAS EM CRÉDITOS DE LIQUIDAÇÃO DUVIDOSA Sabe quando a empresa vende e fica na dúvida se vai receber de volta?",
+      "fonte": "https://www.seteco.com.br/agenda-perdas-estimadas-em-credito-de-liquidacao-duvidosa-despesas-de-doacoes-dedutiveis-notas-de-debito-e-procedimento-de-devolucao-decorrente-a-nao-entrega-ao-destinatario/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Provisão para Créditos Liquidação Duvidosa - Contabilidade",
+      "texto": "O documento discute a provisão para créditos de liquidação duvidosa, explicando que: (1) ela deve cobrir as perdas estimadas na cobrança de contas a receber ...",
+      "fonte": "https://pt.scribd.com/doc/15231776/Provisao-para-Creditos-Liquidacao-Duvidosa",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Reversão de despesa no Lucro Presumido",
+      "texto": "Como realizar o registro contábil de Reversão de Provisão ... Se efetuou um lançamento de um provisão desta forma: D - Provisão (Resultado ...",
+      "fonte": "https://www.comunidadecontabilbrasil.com/contabil/post/reversao-de-despesa-no-lucro-presumido-nwDUGcoUZCi5AkV",
+      "relevancia": 4
+    },
+    {
+      "titulo": "CMV (Custo da Mercadoria Vendida): O que é e como ...",
+      "texto": "CMV = EI + C – EF. Sendo: EI = Estoque Inicial; C = Compras realizadas dentro do período analisado; EF = Estoque Final. Se o objetivo ...",
+      "fonte": "https://fia.com.br/blog/cmv/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "GCON - Lançamentos Contábeis",
+      "texto": "... vendas realizadas no período. O custo das mercadorias vendidas pode ser apurado através da equação: CMV = EI + C - EF. Onde: CMV = Custo das Mercadorias ...",
+      "fonte": "https://www.informanet.com.br/Prodinfo/gcon/lancamentos/lancamentos-1-20.html",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Lançamentos Contábeis - Contabilidade Fácil",
+      "texto": "a) Pela apropriação da receita diferida com venda de imóveis para receita do período: D - RECEITA DIFERIDA COM VENDA DE IMÓVEIS (Resultado de Exercícios ...",
+      "fonte": "https://contabilidadefacil.no.comunidades.net/index.php?pagina=1064025066",
+      "relevancia": 3
+    },
+    {
+      "titulo": "COMO CONTABILIZO AVISO PREVIO ? - Contabilidade",
+      "texto": "Bem, caso seja contabilidade. O Aviso Prévio indenizado pelo funcionário é com certeza um Crédito, portanto pode ser lançado como receita não operacional ou ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/15316/como-contabilizo-aviso-previo/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Lançamentos Contábeis - Contabilidade Fácil",
+      "texto": "XI - Pelos valores relativos à assistência médica, vale-transporte e vale-refeição descontados dos funcionários: D - SALÁRIOS E ORDENADOS A PAGAR (Passivo ...",
+      "fonte": "https://contabilidadefacil.no.comunidades.net/index.php?pagina=1064025066",
+      "relevancia": 3
+    },
+    {
+      "titulo": "12.1 contribuição sindical patronal",
+      "texto": "... lançamento do crédito tributário poderia ser procedido ou da data em que se ... A seguir, apresentamos o modelo da nova Guia de Recolhimento de Contribuição ...",
+      "fonte": "https://www.coad.com.br/files/trab/pdf/mdp/12-1-mdp.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "A empresa concede descontos sobre duplicatas ou títulos que tem a receber. Contas Contábeis. Débito. Crédito. Descontos Concedidos - DO 3. 324,00. Clientes ( ...",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "A empresa efetua o cálculo e contabiliza o valor das depreciações de seus bens depreciáveis da área administrativa. Contas Contábeis. Débito. Crédito. Despesas ...",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Como incluir lançamento contábil simples?",
+      "texto": "Lançamento contábil simples, é quando lançamos uma conta a débito e uma conta a crédito. Para começar a gravar os lançamentos, pela primeira ...",
+      "fonte": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36703393346963-Como-incluir-lan%C3%A7amento-cont%C3%A1bil-simples",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Como fazer lançamento de crédito e débito de IPI?",
+      "texto": "Acesse Módulo Fiscal > Manutenção > Impostos > Lançamentos de Débito e Crédito > IPI. ; Clique no botão \"Incluir ➕\" e preencha os campos conforme ...",
+      "fonte": "https://ajuda.calimaerp.com/pt/article/como-fazer-lancamento-de-credito-e-debito-de-ipi-17w67n2/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Lançamentos PIS e COFINS - Lucro Real - Contabilidade",
+      "texto": "Os créditos relativos a aquisição de mercadorias devem ser contabilizados levando-se a débito da conta \"PIS Não-Cumulativo\" no grupo \"Impostos a Recuperar\" do ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/4619/lancamentos-pis-e-cofins-lucro-real/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "PIS/PASEP e COFINS NÃO-CUMULATIVO",
+      "texto": "... lançamento a débito de conta de resultados acumulados e a crédito de: I - conta do ativo onde foi contabilizada a aquisição dos bens, direitos ou serviços e ...",
+      "fonte": "https://www.lefisc.com.br/materias/2007/4112007pispasep.asp",
+      "relevancia": 4
+    },
+    {
+      "titulo": "LIVRO REGISTRO DE APURAÇÃO DO IPI",
+      "texto": "LIVRO REGISTRO DE APURAÇÃO DO IPI - Modelo 8 (Art. 303, X - RICMS/RO) ... 014 - DÉBITO TOTAL (- ITEM 013). 015 - CRÉDITO TOTAL (- ITEM 008). 016 - SALDO ...",
+      "fonte": "https://www.dinamicasistemas.com.br/upload/files/livro_reg_apuracao_ipi(1).pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "LANÇAMENTOS CONTÁBEIS NA COMPRA/VENDA DE ...",
+      "texto": "✓ Tratamento dado ao ICMS e IPI nas Compras e Vendas de Mercadorias ✓ Exemplo prático de Lançamentos Contábeis de Débito e Crédito.",
+      "fonte": "https://www.youtube.com/watch?v=tS3sEvkfh_I",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Modelo Lançamentos Contábeis",
+      "texto": "A empresa adquire matéria prima a prazo, para elaboração de seus produtos e registra o IPI a compensar. Contas Contábeis. Débito. Crédito. IPI a compensar - AC ...",
+      "fonte": "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Guia Prático EFD-ICMS/IPI - SPED",
+      "texto": "Capítulo I – Informações gerais sobre a EFD-ICMS/IPI. Seção 1 – Apresentação. Seção 2 – Legislação. Seção 3 – Da apresentação do arquivo da EFD-ICMS/IPI.",
+      "fonte": "http://sped.rfb.gov.br/estatico/0A/63A36FB8B822321BB3FBF60DEDB566A6F2BD03/Guia%20Pr%C3%A1tico%20EFD%20-%20Vers%C3%A3o%203.0.9.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "REGISTRO DE APURAÇÃO DO IPI - Modelo 8 (Folha 1)",
+      "texto": "I.P.I. – VALORES FISCAIS. CODIFICAÇÃO. OPERAÇÕES COM CRÉDITO DO IMPOSTO. OPERAÇÕES SEM CRÉDITO DO IMPOSTO. CONTÁBIL. FISCAL. NATUREZA. VALORES. CONTÁBEIS. BASE ...",
+      "fonte": "https://legislacao.fazenda.sp.gov.br/Documents/1508544/modelo8.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Manual de procedimentos contábeis para Micro e ...",
+      "texto": "É esse livro que permite conhecer a movimentação de débito e crédito de cada elemento que compõe o patrimônio da empresa. Page 31. 31. Manual de procedimentos ...",
+      "fonte": "https://cfc.org.br/wp-content/uploads/2018/03/ManuMicro.pdf",
+      "relevancia": 3
+    },
+    {
+      "titulo": "Processo de contabilização da apuração de impostos",
+      "texto": "Saiba que os créditos ou débitos de tributos são armazenados nos serviços associado em Cadastros > Ferramentas do Sistema > Parâmetros > Vendas, aba Tributos.",
+      "fonte": "https://docsnew.erpflex.com.br/processo-de-contabilizacao-da-apuracao-de-impostos/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "RETENÇÃO NA FONTE NA PRESTAÇÃO DE SERVIÇOS",
+      "texto": "Por crédito do rendimento deve ser entendido o lançamento contábil, feito pela pessoa jurídica nominal ao fornecedor do serviço, a débito de despesas em.",
+      "fonte": "https://www.crc-ce.org.br/crcnovo/files/RETEN%C3%87%C3%95ESNAFONTENAPRESTA%C3%87%C3%83ODESERVI%C3%87OS.pdf",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Retenções Federais 2025: O que é importante saber?",
+      "texto": "Retenções Federais: veja o que muda em 2025 e como adaptar seu escritório contábil às novas exigências com eficiência e segurança.",
+      "fonte": "https://www.jettax.com.br/blog/retencoes-federais-2025/",
+      "relevancia": 3
+    },
+    {
+      "titulo": "contabilização IRRF sobre prestação de serviços",
+      "texto": "Estou contabilizando uma NF de prestação de serviços, a qual tem 5% ISS e 1,5% IRRF. Entendo que o lançamento deverá ser: Exemplo: D - Clientes ...",
+      "fonte": "https://www.contabeis.com.br/forum/contabilidade/247495/contabilizacao-irrf-sobre-prestacao-de-servicos/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "Como contabilizar nota fiscal de serviço com imposto retido",
+      "texto": "Lançamentos dos registros contábeis do tomador de serviços · No registro do IRRF, ocorrerá junto ao crédito contábil pois esse será o fato gerador do imposto: · A ...",
+      "fonte": "https://qive.com.br/blog/contabilizar-nfse-imposto-retido/",
+      "relevancia": 4
+    },
+    {
+      "titulo": "GCON - Lançamentos Contábeis",
+      "texto": "Os valores retidos na fonte em razão de fornecimento de bens ou prestação de serviços irão constituir-se em créditos que podem ser compensados com o imposto e ...",
+      "fonte": "https://informanet.com.br/Prodinfo/gcon/lancamentos/lancamentos-81-fim.html",
+      "relevancia": 3
+    }
+  ],
+  "estatisticas": {
+    "total_modelos": 60,
+    "total_categorias": 19,
+    "total_fontes": 147,
+    "total_snippets": 505,
+    "snippets_relevantes": 74
+  }
+}

@@ -1,0 +1,522 @@
+{
+  "data_execucao": "2026-01-30T18:39:43.263Z",
+  "autorizacao": "PARECER TÉCNICO DR. CÍCERO - 30/01/2026",
+  "acoes": [
+    {
+      "timestamp": "2026-01-30T18:39:44.194Z",
+      "msg": "✅ Contas identificadas",
+      "data": {
+        "receita": "3273fd5b-a16f-4a10-944e-55c8cb27f363",
+        "transitoria": "28085461-9e5a-4fb4-847d-c9fc047fe0a1"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:44.468Z",
+      "msg": "Encontrados 15 lançamentos PIX em Receita",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:44.468Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_ACTION_74761",
+      "data": {
+        "valor": 74761.78,
+        "descricao": "PIX ACTION"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:44.767Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:44.767Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_ACTION_70046",
+      "data": {
+        "valor": 70046.9,
+        "descricao": "PIX ACTION"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.059Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.059Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_G3_31253",
+      "data": {
+        "valor": 31253.06,
+        "descricao": "PIX G3"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.343Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.343Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_ESSER_8000",
+      "data": {
+        "valor": 8000,
+        "descricao": "PIX ESSER"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.609Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.609Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_ESSER_2000",
+      "data": {
+        "valor": 2000,
+        "descricao": "PIX ESSER"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.868Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:45.868Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_ESSER_2000_2",
+      "data": {
+        "valor": 2000,
+        "descricao": "PIX ESSER"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.136Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.136Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_FABY_1461",
+      "data": {
+        "valor": 1461.19,
+        "descricao": "PIX FABY"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.430Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.430Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_FABY_1206",
+      "data": {
+        "valor": 1206,
+        "descricao": "PIX FABY"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.703Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.703Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_AI_375_01",
+      "data": {
+        "valor": 375,
+        "descricao": "PIX AI"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.953Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:46.953Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_AI_375_04",
+      "data": {
+        "valor": 375,
+        "descricao": "PIX AI"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.225Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.225Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_SERGIOFILHO_650",
+      "data": {
+        "valor": 650,
+        "descricao": "PIX SERGIO"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.498Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.498Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_AI_375_02",
+      "data": {
+        "valor": 375,
+        "descricao": "PIX AI"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.775Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:47.775Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_AI_375_03",
+      "data": {
+        "valor": 375,
+        "descricao": "PIX AI"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.148Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.148Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_PAULA_200",
+      "data": {
+        "valor": 200,
+        "descricao": "PIX PAULA"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.423Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.424Z",
+      "msg": "🔄 Estornando PIX: PIX_CLASS_TAYLANE_6",
+      "data": {
+        "valor": 6.03,
+        "descricao": "PIX TAYLANE"
+      }
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.691Z",
+      "msg": "❌ Erro ao criar estorno: Não foi possível determinar o tenant_id. Usuário pode não estar autenticado ou não vinculado a um tenant.",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.700Z",
+      "msg": "📊 Total estornado de PIX: R$ 193.084,96",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:48.977Z",
+      "msg": "Encontrados 56 lançamentos REPROC_HON",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:49.227Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_10111d03-d56d-425e-8295-043391554098",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:49.497Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_122e8093-1778-4e98-a318-037129025554",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:49.753Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_14667719-abda-459f-a550-ad6fc96fa948",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:50.015Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_18ac3a4f-1f1b-447c-a772-2ec8cbc1708b",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:50.288Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_18e6a491-0a79-44cf-af96-70c83c711905",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:50.531Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_1ba0d767-b5d8-47ce-8a6d-489fa351e65a",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:50.786Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_1d3e9d74-83ec-4510-ac39-8fb52e03f2c6",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:51.043Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_274359af-2692-4890-aaf2-52a9d0af0e51",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:51.274Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_2bb1f98d-eb45-4864-bfed-627229c06f49",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:51.537Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_2db8f21c-febc-4760-b560-b83d4e0de5a2",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:51.774Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_342719e2-fb06-475a-8ce5-4de2d8797000",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:52.036Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_3689b75c-1093-4b9e-a9f7-1251ea55dece",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:52.570Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_370ed0d5-275e-4f5b-a67f-77fa60011286",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:52.833Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_48cd604e-a065-4dc9-b26c-b6cb697a713e",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:53.093Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_49269527-9d54-40d0-aa4d-5eaf8020e36b",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:53.334Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_4f5aa303-b7f2-4122-9649-cfd23a250d13",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:53.573Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_57ec4aeb-f721-475c-a64b-cf318a7632b7",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:53.828Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_6226ccb7-2957-4ad1-99dc-8ca423dd1ac3",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:54.090Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_6bcbf271-a53f-44f9-b15f-45651b789521",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:54.352Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_6ca317b9-0a58-4d3f-9d68-45f35edb05da",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:54.606Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_78e1d980-8533-47be-8b4c-0551d51d4d23",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:54.867Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_81c1147e-6968-4095-bb05-dec1a3036611",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:55.129Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_85479ec7-d442-4bca-9b0a-dcadd147b1f0",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:55.372Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_85496ddf-304d-4d19-8c92-3b437d9f66e6",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:55.637Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_91b8d049-e0e4-4d50-b727-dfd92f32cc4d",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:55.905Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_937983e3-6b73-42e2-97da-432eae4aed38",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:56.145Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_9598f348-4341-4c7e-879e-799363c3e383",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:56.406Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_968c96d2-ac51-4fd0-bbc5-da501f425a5a",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:56.644Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_a965eac5-6fdd-45cc-ab23-708bf798570e",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:56.887Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_aa267ac1-b51e-4dc7-9355-ab1474f006e1",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:57.153Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_ab78f501-dfb0-42a5-9af7-57435bba3a4f",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:57.433Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_ac00070d-c474-486a-82b0-299528e0fa1d",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:57.684Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_b903cb1f-8ddd-42c3-b381-7e93729256ad",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:57.924Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_bb963f81-f475-4fc9-8399-e5016caf53b0",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:58.192Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_be78d204-dc95-4ac3-9ef0-41e7efb3c89b",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:58.448Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_c1f109e7-e53c-4cb3-b1d5-0609e0ebd48c",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:58.709Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_c52b46fc-af2d-4eb5-b8c0-4582f546944b",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:58.965Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_d01fd3ca-f5e3-4a3f-a6f9-409735c6564c",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:59.239Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_d558382a-9912-42f7-8507-0931c2f6bcb6",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:59.491Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_d8a2559b-1089-4407-9b31-35cfe20b8af0",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:59.753Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_d9152e4d-3d3b-4684-9552-03426a3ffe68",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:39:59.998Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_daeee445-fb9e-41e4-a6ca-dcb3ddead456",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:00.270Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_dc999ead-303d-4600-aa68-8d825bc658e3",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:00.527Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_de32bec1-6e1a-4bbb-bd14-982058bbab2f",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:00.795Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_e1b1274a-efcf-46ca-986c-d865ffff84a1",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:01.043Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_e334913c-b61c-4b33-be8c-9f4bca8686f0",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:01.286Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_ed6d7df8-e88c-48fb-b23b-9e167f43ac12",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:01.527Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_eedcdd6d-6585-4895-9eba-e86d07888626",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:01.782Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f299978e-2bb8-4007-b823-ae4ba463a465",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:02.051Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f3e744c5-9a6c-4ab2-a911-d0d0974a732d",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:02.320Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f5fd9f10-236f-467c-bb44-550e5245a61a",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:02.584Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f7bc22fd-373e-4af6-acbd-b862b0cdaa27",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:02.833Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f87082e9-a64e-4871-8b61-ff02610b7862",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:04.011Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_f96b8fbd-34d6-4e3e-a415-c5ad80cf14b3",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:04.288Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_fbe36772-961f-4e63-85a8-9ae21eba795d",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:04.551Z",
+      "msg": "ℹ️ REPROC sem original (mantido): REPROC_HON_ffcad5c1-6427-43ac-a350-2b3464d71b0a",
+      "data": null
+    },
+    {
+      "timestamp": "2026-01-30T18:40:04.551Z",
+      "msg": "📊 Total estornado de duplicados: R$ 0,00",
+      "data": null
+    }
+  ],
+  "resumo": {
+    "dre_anterior": 668446.3,
+    "pix_estornados": 193084.96,
+    "duplicados_estornados": 0,
+    "dre_corrigida": 668446.2999999992,
+    "valor_esperado": 136821.59,
+    "qtd_pix_estornados": 0,
+    "qtd_duplicados_estornados": 0
+  },
+  "detalhes": {
+    "pix": [],
+    "duplicados": []
+  }
+}

@@ -1,0 +1,2217 @@
+{
+  "versao": "1.0.0",
+  "gerado_em": "2026-01-31T12:35:25.689Z",
+  "autor": "Dr. Cícero - Treinamento Completo",
+  "cfop": {
+    "1.102": {
+      "descricao": "Compra para comercialização",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.403": {
+      "descricao": "Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.556": {
+      "descricao": "Compra de bem para o ativo imobilizado",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.551": {
+      "descricao": "Compra de bem para o ativo imobilizado",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.201": {
+      "descricao": "Devolução de venda de produção do estabelecimento",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.202": {
+      "descricao": "Devolução de venda de mercadoria adquirida ou recebida de terceiros",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.411": {
+      "descricao": "Devolução de venda de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.910": {
+      "descricao": "Entrada de bonificação, doação ou brinde",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "1.949": {
+      "descricao": "Outra entrada de mercadoria ou prestação de serviço não especificada",
+      "tipo": "ENTRADA",
+      "uf": "INTERNA"
+    },
+    "2.102": {
+      "descricao": "Compra para comercialização",
+      "tipo": "ENTRADA",
+      "uf": "INTERESTADUAL"
+    },
+    "2.403": {
+      "descricao": "Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária",
+      "tipo": "ENTRADA",
+      "uf": "INTERESTADUAL"
+    },
+    "3.102": {
+      "descricao": "Compra para comercialização",
+      "tipo": "ENTRADA",
+      "uf": "EXTERIOR"
+    },
+    "5.102": {
+      "descricao": "Venda de mercadoria adquirida ou recebida de terceiros",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.405": {
+      "descricao": "Venda de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária, na condição de contribuinte substituído",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.101": {
+      "descricao": "Venda de produção do estabelecimento",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.401": {
+      "descricao": "Venda de produção do estabelecimento em operação com produto sujeito ao regime de substituição tributária, na condição de contribuinte substituto",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.202": {
+      "descricao": "Devolução de compra para comercialização",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.411": {
+      "descricao": "Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.910": {
+      "descricao": "Remessa em bonificação, doação ou brinde",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.911": {
+      "descricao": "Remessa de amostra grátis",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.912": {
+      "descricao": "Remessa de mercadoria ou bem para demonstração",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.915": {
+      "descricao": "Remessa de mercadoria ou bem para conserto ou reparo",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.916": {
+      "descricao": "Retorno de mercadoria ou bem recebido para conserto ou reparo",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.933": {
+      "descricao": "Prestação de serviço tributado pelo ISSQN",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "5.949": {
+      "descricao": "Outra saída de mercadoria ou prestação de serviço não especificado",
+      "tipo": "SAIDA",
+      "uf": "INTERNA"
+    },
+    "6.102": {
+      "descricao": "Venda de mercadoria adquirida ou recebida de terceiros",
+      "tipo": "SAIDA",
+      "uf": "INTERESTADUAL"
+    },
+    "6.108": {
+      "descricao": "Venda de mercadoria adquirida ou recebida de terceiros, destinada a não contribuinte",
+      "tipo": "SAIDA",
+      "uf": "INTERESTADUAL"
+    },
+    "7.102": {
+      "descricao": "Venda de mercadoria adquirida ou recebida de terceiros",
+      "tipo": "SAIDA",
+      "uf": "EXTERIOR"
+    }
+  },
+  "cst_icms": {
+    "10": {
+      "descricao": "Tributada e com cobrança do ICMS por substituição tributária",
+      "regime": "NORMAL"
+    },
+    "20": {
+      "descricao": "Com redução de base de cálculo",
+      "regime": "NORMAL"
+    },
+    "30": {
+      "descricao": "Isenta ou não tributada e com cobrança do ICMS por substituição tributária",
+      "regime": "NORMAL"
+    },
+    "40": {
+      "descricao": "Isenta",
+      "regime": "NORMAL"
+    },
+    "41": {
+      "descricao": "Não tributada",
+      "regime": "NORMAL"
+    },
+    "50": {
+      "descricao": "Suspensão",
+      "regime": "NORMAL"
+    },
+    "51": {
+      "descricao": "Diferimento",
+      "regime": "NORMAL"
+    },
+    "60": {
+      "descricao": "ICMS cobrado anteriormente por substituição tributária",
+      "regime": "NORMAL"
+    },
+    "70": {
+      "descricao": "Com redução de base de cálculo e cobrança do ICMS por substituição tributária",
+      "regime": "NORMAL"
+    },
+    "90": {
+      "descricao": "Outros",
+      "regime": "NORMAL"
+    },
+    "00": {
+      "descricao": "Tributada integralmente",
+      "regime": "NORMAL"
+    }
+  },
+  "csosn": {
+    "101": {
+      "descricao": "Tributada pelo Simples Nacional com permissão de crédito",
+      "regime": "SIMPLES"
+    },
+    "102": {
+      "descricao": "Tributada pelo Simples Nacional sem permissão de crédito",
+      "regime": "SIMPLES"
+    },
+    "103": {
+      "descricao": "Isenção do ICMS no Simples Nacional para faixa de receita bruta",
+      "regime": "SIMPLES"
+    },
+    "201": {
+      "descricao": "Tributada pelo Simples Nacional com permissão de crédito e com cobrança do ICMS por substituição tributária",
+      "regime": "SIMPLES"
+    },
+    "202": {
+      "descricao": "Tributada pelo Simples Nacional sem permissão de crédito e com cobrança do ICMS por substituição tributária",
+      "regime": "SIMPLES"
+    },
+    "203": {
+      "descricao": "Isenção do ICMS no Simples Nacional para faixa de receita bruta e com cobrança do ICMS por substituição tributária",
+      "regime": "SIMPLES"
+    },
+    "300": {
+      "descricao": "Imune",
+      "regime": "SIMPLES"
+    },
+    "400": {
+      "descricao": "Não tributada pelo Simples Nacional",
+      "regime": "SIMPLES"
+    },
+    "500": {
+      "descricao": "ICMS cobrado anteriormente por substituição tributária (substituído) ou por antecipação",
+      "regime": "SIMPLES"
+    },
+    "900": {
+      "descricao": "Outros",
+      "regime": "SIMPLES"
+    }
+  },
+  "cst_pis_cofins": {
+    "49": {
+      "descricao": "Outras Operações de Saída",
+      "tipo": "SAIDA"
+    },
+    "50": {
+      "descricao": "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita Tributada no Mercado Interno",
+      "tipo": "ENTRADA"
+    },
+    "51": {
+      "descricao": "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita Não Tributada no Mercado Interno",
+      "tipo": "ENTRADA"
+    },
+    "52": {
+      "descricao": "Operação com Direito a Crédito - Vinculada Exclusivamente a Receita de Exportação",
+      "tipo": "ENTRADA"
+    },
+    "53": {
+      "descricao": "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno",
+      "tipo": "ENTRADA"
+    },
+    "54": {
+      "descricao": "Operação com Direito a Crédito - Vinculada a Receitas Tributadas no Mercado Interno e de Exportação",
+      "tipo": "ENTRADA"
+    },
+    "55": {
+      "descricao": "Operação com Direito a Crédito - Vinculada a Receitas Não-Tributadas no Mercado Interno e de Exportação",
+      "tipo": "ENTRADA"
+    },
+    "56": {
+      "descricao": "Operação com Direito a Crédito - Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno, e de Exportação",
+      "tipo": "ENTRADA"
+    },
+    "60": {
+      "descricao": "Crédito Presumido - Operação de Aquisição Vinculada Exclusivamente a Receita Tributada no Mercado Interno",
+      "tipo": "ENTRADA"
+    },
+    "70": {
+      "descricao": "Operação de Aquisição sem Direito a Crédito",
+      "tipo": "ENTRADA"
+    },
+    "71": {
+      "descricao": "Operação de Aquisição com Isenção",
+      "tipo": "ENTRADA"
+    },
+    "72": {
+      "descricao": "Operação de Aquisição com Suspensão",
+      "tipo": "ENTRADA"
+    },
+    "73": {
+      "descricao": "Operação de Aquisição a Alíquota Zero",
+      "tipo": "ENTRADA"
+    },
+    "74": {
+      "descricao": "Operação de Aquisição sem Incidência da Contribuição",
+      "tipo": "ENTRADA"
+    },
+    "75": {
+      "descricao": "Operação de Aquisição por Substituição Tributária",
+      "tipo": "ENTRADA"
+    },
+    "98": {
+      "descricao": "Outras Operações de Entrada",
+      "tipo": "ENTRADA"
+    },
+    "99": {
+      "descricao": "Outras Operações",
+      "tipo": "AMBOS"
+    },
+    "01": {
+      "descricao": "Operação Tributável com Alíquota Básica",
+      "tipo": "SAIDA"
+    },
+    "02": {
+      "descricao": "Operação Tributável com Alíquota Diferenciada",
+      "tipo": "SAIDA"
+    },
+    "03": {
+      "descricao": "Operação Tributável com Alíquota por Unidade de Medida de Produto",
+      "tipo": "SAIDA"
+    },
+    "04": {
+      "descricao": "Operação Tributável Monofásica - Revenda a Alíquota Zero",
+      "tipo": "SAIDA"
+    },
+    "05": {
+      "descricao": "Operação Tributável por Substituição Tributária",
+      "tipo": "SAIDA"
+    },
+    "06": {
+      "descricao": "Operação Tributável a Alíquota Zero",
+      "tipo": "SAIDA"
+    },
+    "07": {
+      "descricao": "Operação Isenta da Contribuição",
+      "tipo": "SAIDA"
+    },
+    "08": {
+      "descricao": "Operação sem Incidência da Contribuição",
+      "tipo": "SAIDA"
+    },
+    "09": {
+      "descricao": "Operação com Suspensão da Contribuição",
+      "tipo": "SAIDA"
+    }
+  },
+  "servicos_lc116": {
+    "10": "Serviços de intermediação e congêneres",
+    "11": "Serviços de guarda, estacionamento, armazenamento, vigilância e congêneres",
+    "12": "Serviços de diversões, lazer, entretenimento e congêneres",
+    "13": "Serviços relativos a fonografia, fotografia, cinematografia e reprografia",
+    "14": "Serviços relativos a bens de terceiros",
+    "15": "Serviços relacionados ao setor bancário ou financeiro, inclusive aqueles prestados por instituições financeiras autorizadas a funcionar pela União ou por quem de direito",
+    "16": "Serviços de transporte de natureza municipal",
+    "17": "Serviços de apoio técnico, administrativo, jurídico, contábil, comercial e congêneres",
+    "18": "Serviços de regulação de sinistros vinculados a contratos de seguros; inspeção e avaliação de riscos para cobertura de contratos de seguros; prevenção e gerência de riscos seguráveis e congêneres",
+    "19": "Serviços de distribuição e venda de bilhetes e demais produtos de loteria, bingos, cartões, pules ou cupons de apostas, sorteios, prêmios, inclusive os decorrentes de títulos de capitalização e congêneres",
+    "20": "Serviços portuários, aeroportuários, ferroportuários, de terminais rodoviários, ferroviários e metroviários",
+    "21": "Serviços de registros públicos, cartorários e notariais",
+    "22": "Serviços de exploração de rodovia",
+    "23": "Serviços de programação e comunicação visual, desenho industrial e congêneres",
+    "24": "Serviços de chaveiros, confecção de carimbos, placas, sinalização visual, banners, adesivos e congêneres",
+    "25": "Serviços funerários",
+    "26": "Serviços de coleta, remessa ou entrega de correspondências, documentos, objetos, bens ou valores, inclusive pelos correios e suas agências franqueadas; courrier e congêneres",
+    "27": "Serviços de assistência social",
+    "28": "Serviços de avaliação de bens e serviços de qualquer natureza",
+    "29": "Serviços de biblioteconomia",
+    "30": "Serviços de biologia, biotecnologia e química",
+    "31": "Serviços técnicos em edificações, eletrônica, eletrotécnica, mecânica, telecomunicações e congêneres",
+    "32": "Serviços de desenhos técnicos",
+    "33": "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres",
+    "34": "Serviços de investigações particulares, detetives e congêneres",
+    "35": "Serviços de reportagem, assessoria de imprensa, jornalismo e relações públicas",
+    "36": "Serviços de meteorologia",
+    "37": "Serviços de artistas, atletas, modelos e manequins",
+    "38": "Serviços de museologia",
+    "39": "Serviços de ourivesaria e lapidação",
+    "40": "Serviços relativos a obras de arte sob encomenda",
+    "01": "Serviços de informática e congêneres",
+    "02": "Serviços de pesquisas e desenvolvimento de qualquer natureza",
+    "03": "Serviços prestados mediante locação, cessão de direito de uso e congêneres",
+    "04": "Serviços de saúde, assistência médica e congêneres",
+    "05": "Serviços de medicina e assistência veterinária e congêneres",
+    "06": "Serviços de cuidados pessoais, estética, atividades físicas e congêneres",
+    "07": "Serviços relativos a engenharia, arquitetura, geologia, urbanismo, construção civil, manutenção, limpeza, meio ambiente, saneamento e congêneres",
+    "08": "Serviços de educação, ensino, orientação pedagógica e educacional, instrução, treinamento e avaliação pessoal de qualquer grau ou natureza",
+    "09": "Serviços relativos a hospedagem, turismo, viagens e congêneres"
+  },
+  "snippets": [
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Tabela de CFOP - Código Fiscal de Operações e Prestação",
+      "snippet": "1.923 - Entrada de mercadoria recebida do vendedor remetente, em venda à ordem. 1.924 - Entrada para industrialização por conta e ordem do adquirente da ...",
+      "link": "https://idealsoftwares.com.br/notas/tabela_cfop.pdf",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "CFOP",
+      "snippet": "Classificam-se neste código as entradas de mercadorias industrializadas por terceiros, compreendendo os valores referentes aos serviços prestados e os das ...",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Tabela CFOP Completa: consulte aqui e veja como ...",
+      "snippet": "Confira aqui a Tabela CFOP de Venda Completa. Venda fora do Estado, devolução de compra, entrada de mercadorias e todos os tipos de CFOP.",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/tabela-cfop-completa/",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Tabela CFOP - SPED - Receita Federal",
+      "snippet": "... Selecione, MDF-e · NF-e · CT-e · Página Inicial · Arquivos · Tabela CFOP · Tabela CFOP. Baixe o Arquivo: Tabela_CFOPOperacoesGeradorasCreditos.xls · Receita ...",
+      "link": "http://sped.rfb.gov.br/item/show/85",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "CFOP",
+      "snippet": "Entrada decorrente de devolução simbólica de mercadoria remetida p/ formação de lote de exportação, de produto industrializado ou produzido pelo próprio ...",
+      "link": "https://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=v5%20r0ZIuBKk=",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "CFOP de Entrada: saiba quais são e confira as tabelas!",
+      "snippet": "Cada CFOP é estruturado por um número de 4 dígitos, onde o primeiro dígito indica o tipo de operação (entrada ou saída) e a origem da operação ( ...",
+      "link": "https://focusnfe.com.br/blog/cfop-de-entrada/",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Tabela CFOP completa: o que é e como funciona",
+      "snippet": "A tabela CFOP serve como um guia que padroniza as operações fiscais em todo o Brasil. Cada código tem quatro dígitos que indicam se a operação é uma entrada ou ...",
+      "link": "https://www.omie.com.br/blog/entenda-a-tabela-cfop-e-sua-importancia/",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Tabela II - Saída",
+      "snippet": "As operações praticadas pelos contribuintes do ICMS e/ou IPI estão relacionadas e codificadas através dos Códigos Fiscais de Operações e Prestações (CFOP).",
+      "link": "https://www.boletimcontabil.com.br/bolet2/saida.php",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "O que é CFOP e tabela completa 2026",
+      "snippet": "A tabela completa CFOP não muda drasticamente a cada ano, mas pode receber ajustes pontuais conforme novas regras fiscais surgem.",
+      "link": "https://blog.vhsys.com.br/tabela-cfop-completa/",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CFOP completa operações entrada saída",
+      "titulo": "Códigos Fiscais de Operações e Prestações (CFOP)",
+      "snippet": "Documento que reúne códigos e respectivas notas explicativas utilizados no preenchimento de documentos fiscais para fins de codificação das ...",
+      "link": "https://www.sef.sc.gov.br/orientacoes/codigos-fiscais-de-operacoes-e-prestacoes-cfop",
+      "extraido_em": "2026-01-31T12:32:12.435Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP 5102 ou 5405? - Tributos Estaduais/Municipais",
+      "snippet": "Classificam-se neste código as vendas de mercadorias adquiridas ou recebidas de terceiros, na condição de contribuinte substituto, em operação com mercadorias ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/26175/cfop-5102-ou-5405/7",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP 5949: o que é, estrutura e quando usar",
+      "snippet": "Para vendas, o contribuinte deve utilizar CFOPs específicos, como 5.102 (venda de mercadoria adquirida para comercialização), 5.405 (venda ...",
+      "link": "https://foccoerp.com.br/blog/cfop-5949/",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "Tabela CFOP Completa: consulte aqui e veja como ...",
+      "snippet": "5102 – Venda de mercadoria adquirida ou recebida de terceiros, Venda de um produto para um cliente do mesmo estado e que não possui substituição tributária.",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/tabela-cfop-completa/",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP",
+      "snippet": "Classificam-se neste código as compras de mercadorias a serem utilizadas em processo de industrialização, em vendas à ordem, já recebidas do vendedor remetente, ...",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP: quais são os Códigos Fiscais de Operações e ...",
+      "snippet": "O CFOP 5.102 é usado para venda de mercadoria adquirida ou recebida de terceiros. Já o CFOP 5.405 se aplica à venda de mercadoria adquirida ...",
+      "link": "https://focusnfe.com.br/blog/o-que-e-o-codigo-de-natureza-de-operacao-ou-cfop/",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP Simples Nacional – Quais deles influenciam o ...",
+      "snippet": "5.102 — Venda de mercadoria adquirida de terceiros (operação interna); 6.102 — Venda de mercadoria adquirida de terceiros (operação ...",
+      "link": "https://www.esimplesauditoria.com/cfop-simples-nacional",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP 5.102",
+      "snippet": "Classificam-se neste código as vendas de mercadorias adquiridas ou recebidas de terceiros para industrialização ou comercialização, que não tenham sido objeto ...",
+      "link": "https://guiatributario.net/cfop-5-102/",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "CFOP 5102: venda de mercadorias adquiridas ou ...",
+      "snippet": "A venda da peça, adquirida de fornecedor externo, destinada ao consumo final (uso no veículo) do cliente, configura operação típica de CFOP 5102 ...",
+      "link": "https://clicknotas.com.br/cfop-5102/",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "Perguntas e Respostas",
+      "snippet": "Por ocasião da revenda do veículo, será emitida a nota fiscal de venda, CFOP 5.102 – Venda de mercadoria adquirida ou recebida de terceiros, conforme o Apêndice ...",
+      "link": "https://www.lefisc.com.br/perguntasRespostas/resposta/14559",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 5.102 5.405 5.949 venda mercadoria",
+      "titulo": "Guia rápido de CFOP de venda: 5.102, 6.102 ou 5.405? Saiba ...",
+      "snippet": "Se você está revendendo um produto com ST, o CFOP muda! CFOP 5.405: Para a revenda de mercadoria com ST para um cliente dentro do seu estado.",
+      "link": "https://www.luxsistemas.com.br/post/cfop-de-venda",
+      "extraido_em": "2026-01-31T12:32:13.725Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "CFOP",
+      "snippet": "Compra de mercadoria, a ser utilizada em processo de industrialização ou produção rural, quando da entrada real da mercadoria, cuja aquisição tenha sido ...",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "Código Fiscal de Operações e Prestações - CFOP",
+      "snippet": "Classificam-se neste código as compras de mercadorias para serem comercializadas, quando da entrada real da mercadoria, cuja aquisição tenha sido classificada ...",
+      "link": "https://www.contadorperito.com/html/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "CFOP - Tabela I – Entradas de mercadorias, bens ou ...",
+      "snippet": "Classificam-se neste código as compras de mercadorias a serem comercializadas, quando da entrada real da mercadoria, cuja aquisição tenha sido classificada, ...",
+      "link": "https://www.sincop.com.br/710/cfop_-_tabela_i_%E2%80%93_entradas_de_mercadorias_bens_ou_aquisicoes_de_servicos",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "Tabela de CFOP - Código Fiscal de Operações e Prestação",
+      "snippet": "1.556 - Compra de material para uso ou consumo ... 2.407 - Compra de mercadoria para uso ou consumo cuja mercadoria está sujeita ao regime de substituição.",
+      "link": "https://idealsoftwares.com.br/notas/tabela_cfop.pdf",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "CFOP: O que é e por que ele é essencial para sua gestão fiscal",
+      "snippet": "O CFOP é basicamente um código de quatro números que determina a natureza de uma transação: se é uma venda, uma compra, uma devolução, uma ...",
+      "link": "https://nttdata-solutions.com/br/blog/cfop-o-que-e-e-por-que-ele-e-essencial-para-sua-gestao-fiscal/",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "AJUSTE SINIEF 03/24 — Conselho Nacional de ... - Confaz",
+      "snippet": "Classificam-se neste código as compras de mercadorias para serem utilizadas em processo de industrialização ou produção rural. 1.102 - Compra para ...",
+      "link": "https://www.confaz.fazenda.gov.br/legislacao/ajustes/2024/AJ003_24",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "CFOP de Entrada: saiba quais são e confira as tabelas!",
+      "snippet": "1.102 - Compra para comercialização 1.111 - Compra para industrialização de mercadoria recebida anteriormente em consignação industrial",
+      "link": "https://focusnfe.com.br/blog/cfop-de-entrada/",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "Tabela I - Entrada",
+      "snippet": "Compra de mercadoria para comercialização pelo adquirente originário ... 1.556 ou 2.556 - \"Compra de material para uso ou consumo\". 1.125. 2.125.",
+      "link": "https://www.boletimcontabil.com.br/bolet2/entrada.php",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "CFOP: o que é, como aplicar e onde encontrar a tabela",
+      "snippet": "1.102 - Compra para comercialização · 1.556 - Compra de material para uso ou consumo · 2.205 - Anulação de valor relativo à prestação de serviço de comunicação ...",
+      "link": "https://enotas.com.br/blog/cfop/",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 1.102 1.556 entrada mercadoria compra",
+      "titulo": "Tabela de CFOP",
+      "snippet": "Classificam-se neste código as compras de mercadorias a serem utilizadas em processo de industrialização ou produção rural. 1.102, Compra para ...",
+      "link": "https://www.datacaixa.com.br/ajuda/duvidas-gerais/informacoes-fiscais/tabela-de-cfop/?srsltid=AfmBOorKpDv-26EkDAKchoMXBwGdd_GxrVttQN4wXigK0BOYTKyO-The",
+      "extraido_em": "2026-01-31T12:32:14.942Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "Qual a diferença entre a utilização da CFOP 6102 para ...",
+      "snippet": "Charlene, boa tarde. O CFOP 6.102 serve para vendas interestaduais com contribuintes do ICMS, já o CFOP 6.108 é para venda para não ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/292114/qual-a-diferenca-entre-a-utilizacao-da-cfop-6102-para-a-cfop-6108/",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "CFOP 6108: guia da venda de mercadoria de terceiros ...",
+      "snippet": "CFOP 6108 é sobre a venda interestadual de mercadorias que sua empresa comprou de terceiros e destina a não contribuintes do ICMS. Este ...",
+      "link": "https://clicknotas.com.br/cfop-6108/",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "CFOP 6102: Como e quando utilizar?",
+      "snippet": "O CFOP a ser utilizado para venda para outro estado é o 6102. Pois, este CFOP, indica uma saída de mercadorias interestadual. Para que serve o ...",
+      "link": "https://focusnfe.com.br/blog/cfop-6102-como-e-quando-utilizar/",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "CFOP 6108: O que é e quando usar?",
+      "snippet": "Onde o CFOP 6108 é usado? · A mercadoria foi comprada de terceiros (revenda) · A venda é feita para outro estado (operação interestadual) · O ...",
+      "link": "https://blog.contmatic.com.br/cfop-6108-o-que-e-e-quando-usar/",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "Resposta à Consulta Nº 16089 DE 21/08/2017 - Estadual",
+      "snippet": "Pode utilizar os CFOPs 6.102 (“Venda de mercadoria adquirida ou recebida de ... CFOP 6.108. 4.2. As Notas Fiscais Eletrônicas devem ser emitidas sem o ...",
+      "link": "https://www.legisweb.com.br/legislacao/?id=385738",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "CFOP 6102: Entenda O que é e Quando Usar",
+      "snippet": "O CFOP 6102 refere-se à venda interestadual de mercadorias adquiridas ou recebidas de terceiros. Esse código é utilizado em notas fiscais para ...",
+      "link": "https://webmaissistemas.com.br/blog/cfop-6102/",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "Perguntas e Respostas",
+      "snippet": "Em se tratando de PF não contribuinte não retirar no ato da aquisição emite CFOP Interestadual 6.107 ou CFOP 6.108. Sendo o que tínhamos para o momento, ...",
+      "link": "https://www.lefisc.com.br/perguntasRespostas/resposta/7355",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "RC 26535/2022 - Legislação Tributária - Secretaria da Fazenda",
+      "snippet": "O CFOP a ser utilizado na Nota Fiscal Eletrônica – NF-e é o 6.108 (“Venda de mercadoria adquirida ou recebida de terceiros, destinada a não ...",
+      "link": "https://legislacao.fazenda.sp.gov.br/Paginas/RC26535_2022.aspx",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "Boa tarde! Comercio atacadista revende mercadoria para ...",
+      "snippet": "Nas vendas interestaduais a consumidor final contribuinte do ICMS, o CFOP será 6.102 e com destino a não-contribuinte, o código 6.108 (Anexo V do RICMS/SP).",
+      "link": "https://www.comunidadecontabilbrasil.com/tributario/post/boa-tarde-comercio-atacadista-revende-mercadoria-para-consumidor-final-F1fRnCI7jk38yvg?highlight=MKiwpPQtqNTt7Xw",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP 6.102 6.108 venda interestadual",
+      "titulo": "CFOP 6102 - Venda de mercadoria adquirida ou recebida de ...",
+      "snippet": "Neste post demonstraremos a emissão de NF-e (Nota Fiscal Eletrônica) de Venda Interestadual de mercadorias adquiridas ou recebidas de...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360013315754-Regra-Tributaria-CFOP-6102-Venda-de-mercadoria-adquirida-ou-recebida-de-terceiros",
+      "extraido_em": "2026-01-31T12:32:16.405Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CFOP 5949 OU 5933 - Tributos Estaduais/Municipais",
+      "snippet": "O CFOP 5933 são para as prestações de serviços, de competência municipal, desde que informados em documentos autorizados pelo Estado. já o 5949 são para saídas ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/341348/cfop-5949-ou-5933/",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CFOP",
+      "snippet": "Classificam-se neste código as entradas de mercadorias industrializadas por terceiros, compreendendo os valores referentes aos serviços prestados e os das ...",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CFOP - 5933 - Prestação de serviço tributado pelo ISSQN.",
+      "snippet": "Classificam-se neste código as prestações de serviços, de competência municipal, desde que informados em documentos autorizados pelo Estado.",
+      "link": "https://www.contadores.cnt.br/cfop/5933-prestacao-de-servico-tributado-pelo-issqn.html",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CFOP: quais são os Códigos Fiscais de Operações e ...",
+      "snippet": "Ou ainda, pode-se utilizar o CFOP 5.949, que corresponde a outra saída de mercadoria ou prestação de serviço não especificado. O que significa ...",
+      "link": "https://focusnfe.com.br/blog/o-que-e-o-codigo-de-natureza-de-operacao-ou-cfop/",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CÓDIGO FISCAL DE OPERAÇÕES E DE PRESTAÇÕES ...",
+      "snippet": "5.933 - Prestação de serviço tributado pelo ISSQN. Classificam-se neste ... 5.949 - Outra saída de mercadoria ou prestação de serviço não especificado.",
+      "link": "http://www.econeteditora.com.br/agenda/oe-est/10/ba/cfop.php",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "CFOP 5.949",
+      "snippet": "CFOP 5.949 – Outra saída de mercadoria ou prestação de serviço não especificado. Classificam-se neste código as outras saídas de mercadorias ou prestações ...",
+      "link": "https://guiatributario.net/cfop-5-949/",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "Bom dia, uma empresa que utiliza nota fiscal série1 ...",
+      "snippet": "A natureza da operação será 'Remessa em locação', e o CFOP será 5.949, pois o CFOP 5.933 é apenas para operações que configuram prestação de serviços. Nessa ...",
+      "link": "https://www.comunidadecontabilbrasil.com/tributario/post/bom-dia-uma-empresa-que-utiliza-nota-fiscal-serie1-conjugada-com-uFOAipAku7iDdLR",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "TABELA DE CÓDIGOS FISCAIS DE OPERAÇÕES E ...",
+      "snippet": "Remessa simbólica de mercadoria depositada em armazém geral ou depósito fechado. 5.949. 6.949. 7.949. Outra saída de mercadoria ou prestação de serviço não.",
+      "link": "https://www.gestaocontabilidade.net/uploads/downloads/cfops-20170201141558.pdf",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "DAPI - Operações / Prestações - Saídas - Para o Estado",
+      "snippet": "Obs: O CFOP 5.933 será lançado na linha 50 quando ocorrer saída de serviço tributado somente pelo ISSQN, ou seja, o campo Vlr. ICMS da nota ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=1832",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP prestação serviço 5.933 5.949",
+      "titulo": "Tabela de CFOP - Código Fiscal de Operações e Prestação",
+      "snippet": "5.933 - Prestação de serviço tributado pelo ISSQN. 5.949 - Outra saída de mercadoria ou prestação de serviço não especificado. 6.000 - SAÍDAS OU PRESTAÇÕES DE ...",
+      "link": "https://idealsoftwares.com.br/notas/tabela_cfop.pdf",
+      "extraido_em": "2026-01-31T12:32:17.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "Notas de devoluções CFOP 5.411/5.202",
+      "snippet": "Boa tarde a todos... Estou com uma dúvida na emissão das notas de devoluções CFOP 5.411 / 5.202. Itens com ST, alguns fornecedores de meus clientes dizem ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/23141/notas-de-devolucoes-cfop-5-411-5-202/",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP 5202: o que significa, quando usar e devolução - Gsoft",
+      "snippet": "Comparação: CFOP 5202 ou 5411? Tanto o CFOP 5.202 quanto o 5.411 tratam de devoluções de compras para comercialização. A diferença ...",
+      "link": "https://gsoft.com.br/artigos/cfop-5202-o-que-significa-quando-usar-e-devolu%C3%A7%C3%A3o",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "Devolução e Retorno de Mercadorias",
+      "snippet": "Emitir documento fiscal de devolução (CFOP 5.411/5.412/5.413/5.661 ou respectivos possíveis interestaduais), referenciando o documento fiscal de recebimento ...",
+      "link": "https://atendimento.receita.rs.gov.br/devolucao-e-retorno-de-mercadorias",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP de Devolução: consulte a tabela de classificação",
+      "snippet": "O código CFOP de devolução mais usado é o CFOP 5.202 – Devolução de compra para comercialização. ... 5.411, Devolução de compra para comercialização em ...",
+      "link": "https://blog.cefis.com.br/cfop-de-devolucao/",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP 5202: Devolução de compra para comercialização",
+      "snippet": "O CFOP 5202 serve para operações de devolução de mercadorias adquiridas para comercialização. Um guia completo sobre esse código!",
+      "link": "https://webmaissistemas.com.br/blog/cfop-5202/",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP - 5202 - Devolução de compra para comercialização",
+      "snippet": "Classificam-se neste código as devoluções de mercadorias adquiridas para serem comercializadas, cujas entradas tenham sido classificadas como “Compra para ...",
+      "link": "https://www.contadores.cnt.br/cfop/5202-devolucao-de-compra-para-comercializacao.html",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP",
+      "snippet": "Classificam-se neste código as devoluções de vendas de mercadorias adquiridas ou recebidas de terceiros, que não tenham sido objeto de industrialização no ...",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "CFOP 5.412",
+      "snippet": "CFOP 5.412 – Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária. Classificam-se neste código as ...",
+      "link": "https://guiatributario.net/cfop-5-412/",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "Tabela de CFOP - Código Fiscal de Operações e Prestação",
+      "snippet": "5.412 - Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária. 5.413 - Devolução de mercadoria ...",
+      "link": "https://idealsoftwares.com.br/notas/tabela_cfop.pdf",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP devolução 5.202 5.411 5.412",
+      "titulo": "Código Fiscal de Operações e Prestações - CFOP",
+      "snippet": "5.202 - Devolução de compra para comercialização, ou qualquer devolução de mercadorias efetuada pelo MEI com exceção das classificadas no código 5.503.",
+      "link": "https://www.contadorperito.com/html/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:18.834Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "Nota de Transferência – CFOP 5.152 (CST 051) e 5.409 ( ...",
+      "snippet": "09) Vendas -> A – Venda Comércio: Para a rotina de transferência funcionar 100% corretamente, deve-se sempre informar o CFOP 5.409 no cabeçalho, ...",
+      "link": "https://www.mcsistemas.eti.br/download/file_20210618_144835.pdf",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "CFOP para transferência de estoque entre matriz e filial",
+      "snippet": "O CFOP 5409 é um dos códigos fiscais mais utilizados na transferência de mercadorias entre filiais do mesmo estado, de mercadorias adquiridas de ...",
+      "link": "https://www.hdtec.com.br/post/cfop-para-transfer%C3%AAncia-de-estoque-entre-matriz-e-filial",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "Transferência de mercadorias entre matriz e filial",
+      "snippet": "Uma vez que é identificado 5152 são produtos tributados e não irá gerar o crédito de ICMS na operação e no caso do 5409 para produtos com substituição sendo ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/313890/transferencia-de-mercadorias-entre-matriz-e-filial/",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "CFOP",
+      "snippet": "Transferência para industrialização ou produção rural (NR Ajuste SINIEF 05 ... 5.152. Transferência de mercadoria adquirida ou recebida de terceiros.",
+      "link": "https://www.sefaz.pe.gov.br/legislacao/tributaria/documents/legislacao/tabelas/cfop.htm",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "TRANSFERÊNCIA DE MERCADORIA ENTRE EMPRESAS",
+      "snippet": "A operação é regular e existe CFOP especifico para a emissão de nota fiscal: CFOP operação interna: 5.152. CFOP operação interestadual: 6.152.",
+      "link": "https://www.contabilidadefrancis.com/blog-headlines/transferencia-de-mercadoria-entre-empresas",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "CFOP 5409: a transferência de estoque entre matriz e filial",
+      "snippet": "O CFOP 5409 é um dos códigos fiscais usados na transferência de mercadorias, devendo ser inserido na nota fiscal.",
+      "link": "https://blog.tagplus.com.br/cfop-5409/",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "Perguntas e Respostas",
+      "snippet": "CFOP: 5.152 e 5.409? Tributa a alíquota interna referente ao produto ou os 3,5% do R.D.A? Caso for alíquota integral, é possível o crédito ...",
+      "link": "https://www.lefisc.com.br/perguntasRespostas/resposta/11302",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "NF-e de Transferência para Filial: Como emitir?",
+      "snippet": "5.409 – Transferência de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária; ...",
+      "link": "https://blog.maino.com.br/nf-e-de-transferencia-para-filial-como-emitir/",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "CFOP 5.409",
+      "snippet": "CFOP 5.409 – Transferência de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária.",
+      "link": "https://guiatributario.net/cfop-5-409/",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP transferência 5.152 5.409",
+      "titulo": "NF-e de transferência",
+      "snippet": "5.409 – Transferência de mercadoria adquirida ou recebida de terceiros em operação com mercadoria sujeita ao regime de substituição tributária;.",
+      "link": "https://notalivre.com.br/nf-e-de-transferencia/",
+      "extraido_em": "2026-01-31T12:32:20.141Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "5912 - Remessa de mercadoria ou bem para demonstração",
+      "snippet": "CFOP - 5912 - Remessa de mercadoria ou bem para demonstração · 5901 - Remessa para industrialização por encomenda · 5902 - Retorno de mercadoria utilizada na ...",
+      "link": "https://www.contadores.cnt.br/cfop/5912-remessa-de-mercadoria-ou-bem-para-demonstracao.html",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "Regra Tributaria - CFOP 5912 - Remessa de mercadorias ou ...",
+      "snippet": "Neste post demonstraremos a emissão de NF-e (Nota Fiscal Eletrônica) de Remessa de mercadorias para fins de demonstração à terceiros, ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360013317514-Regra-Tributaria-CFOP-5912-Remessa-de-mercadorias-ou-bem-para-demonstra%C3%A7%C3%A3o",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "..:: Tabelas Práticas - CFOP ::..",
+      "snippet": "5.915. Remessa de mercadoria ou bem para conserto ou reparo. Classificam-se neste código as remessas de mercadorias ou bens para conserto ou reparo. 5.916.",
+      "link": "https://www.sitecontabil.com.br/tabelas/cfop/pag_oito.html",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "Nota Fiscal de Remessa: o que é, tipos e como emitir",
+      "snippet": "Qual o CFOP de uma nota fiscal de remessa · 5.915 / 6.915 – Remessa para conserto ou reparo · 5.912 / 6.912 – Remessa para demonstração · 5.922 / 6.922 – Remessa ...",
+      "link": "https://qive.com.br/blog/nota-fiscal-de-remessa/",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "CFOP 5915: Remessa De Mercadoria Ou Bem Para ...",
+      "snippet": "O CFOP 5915 é usado para remessas de mercadorias ou bens enviados para conserto, ou reparo. Para entender confira o nosso artigo completo!",
+      "link": "https://webmaissistemas.com.br/blog/cfop-5915/",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "5915-remessa-de-mercadoria-ou-bem-para-conserto-ou- ...",
+      "snippet": "5912, Remessa de mercadoria ou bem para demonstração, mostruário ou treinamento. 5913, Retorno de mercadoria ou bem recebido para demonstração ou mostruário.",
+      "link": "https://tabelas.maino.com.br/cfop/5915-remessa-de-mercadoria-ou-bem-para-conserto-ou-reparo",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "Instruções para emissão de Nota Fiscal Remessa para Conserto",
+      "snippet": "Natureza da Operação: Remessa para Conserto. 2. CFOP: 5.915 (operações internas) ou 6.915 (operações interestaduais). 3. CST: 040 (Isento) 041 (Não tributado) ...",
+      "link": "https://www.profissionalsomfy.com.br/documents/46462392/0/Instru%C3%A7%C3%B5es+Remessa+para+Conserto.pdf",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "Nota fiscal de remessa: quando usar e como preencher ...",
+      "snippet": "Aqui vão alguns exemplos comuns: 5.915 / 6.915 – Remessa para conserto ou reparo; 5.905 / 6.905 – Remessa para depósito fechado ou armazém geral ...",
+      "link": "https://clicknotas.com.br/nota-fiscal-de-remessa-como-preencher/",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "Remessa para \"Demonstração ou Conserto\": Quando usar ...",
+      "snippet": "Remessa para \"Demonstração ou Conserto\": Quando usar? Qual o CFOP? 302 views · 1 year ago. #demonstração #conserto #remessa ...more ...",
+      "link": "https://www.youtube.com/watch?v=Bo8LTFyxc74",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP remessa conserto demonstração 5.915 5.912",
+      "titulo": "NF-e de Remessa e Retorno: O Guia para Movimentar ...",
+      "snippet": "NF-e de remessa e retorno: O guia para movimentar mercadorias sem venda · CFOP 5.915: Se o laboratório for dentro do seu estado (SC). · CFOP 6.915 ...",
+      "link": "https://www.luxsistemas.com.br/post/nf-e-de-remessa-e-retorno-conserto",
+      "extraido_em": "2026-01-31T12:32:21.606Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP - 5910 - Remessa em bonificação, doação ou brinde",
+      "snippet": "Classificam-se neste código as remessas de mercadorias a título de bonificação, doação ou brinde. Cursos que recomendamos para você. Planilha Fluxo de Caixa.",
+      "link": "https://www.contadores.cnt.br/cfop/5910-remessa-em-bonificacao-doacao-ou-brinde.html",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP 5910 - Remessa em bonificação, doação ou brinde",
+      "snippet": "Neste artigo, demonstraremos a emissão de Nota Fiscal Eletrônica (NF-e) de remessa em bonificação, doação ou brinde. Apesar de terem o mesmo CFOP, ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360013286894-Regra-Tributaria-CFOP-5910-Remessa-em-bonifica%C3%A7%C3%A3o-doa%C3%A7%C3%A3o-ou-brinde",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP 5910 - Mentor Fiscal",
+      "snippet": "Descrição oficial. Os códigos CFOP 5910 e CFOP 6910 são utilizados em notas fiscais de remessa gratuita de mercadorias, sem cobrança de valores.",
+      "link": "https://mentorfiscal.com.br/cfop-5910/",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "ICMS/SP - Operações a título gratuito - Regras gerais",
+      "snippet": "Por fim, para essas operações, os CFOP a serem utilizados serão: 5.910/6.910 para a Remessa em bonificação, doação ou brinde; 5.911/6.911 para a ...",
+      "link": "https://netcpa.com.br/colunas/icmssp-operacoes-a-titulo-gratuito-regras-gerais/12089",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP 5910 - Remessa em bonificação, doação ou brinde",
+      "snippet": "O CFOP 5 910 é utilizado para registrar a saída de mercadorias do seu estabelecimento a título de bonificação, doação ou brinde para clientes ou parceiros ...",
+      "link": "https://cfop.com.br/cfop-5910-remessa-em-bonificacao-doacao-ou-brinde/",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP | 5910-remessa-em-bonificacao-doacao-ou-brinde",
+      "snippet": "5910 - Remessa em bonificação, doação ou brinde. Classificam-se neste código as remessas de mercadorias a título de bonificação, doação ou brinde.",
+      "link": "https://tabelas.maino.com.br/cfop/5910-remessa-em-bonificacao-doacao-ou-brinde",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP 5910 - Remessa em bonificação, doação ou brinde",
+      "snippet": "O CFOP 5910 é usado, em resumo, quando a empresa envia um produto gratuitamente, sem cobrança. Especificamente, ele se aplica a remessas em ...",
+      "link": "https://blog.nfemais.com.br/cfop-5910-remessa-em-bonificacao-doacao-ou-brinde/",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "CFOP 5.910",
+      "snippet": "CFOP 5.910 – Remessa em bonificação, doação ou brinde. Classificam-se neste código as remessas de mercadorias a título de bonificação, doação ou brinde.",
+      "link": "https://guiatributario.net/cfop-5-910/",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "Regra Tributaria - CFOP 5911 - Remessa de amostra grátis",
+      "snippet": "Primeiramente, lançaremos o CRT = 3 – Regime Normal, tendo como CFOP 5.911, levaremos em consideração a Origem da Mercadoria, que no nosso Ex.= ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360013521793-Regra-Tributaria-CFOP-5911-Remessa-de-amostra-gr%C3%A1tis",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP bonificação brinde 5.910 5.911",
+      "titulo": "Cross Segmentos - Linha Datasul - MLF - EFD Contribuições",
+      "snippet": "Notas fiscais de remessas, brinde, bonificação, doação CFOP 5910 e amostra grátis CFOP 5911 devem ser apresentadas no arquivo do EFD ...",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360036518273-Cross-Segmentos-Linha-Datasul-MLF-EFD-Contribui%C3%A7%C3%B5es-Notas-fiscais-de-remessas-brinde-bonifica%C3%A7%C3%A3o-doa%C3%A7%C3%A3o-CFOP-5910-e-amostra-gr%C3%A1tis-CFOP-5911",
+      "extraido_em": "2026-01-31T12:32:23.038Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "cfop 5125 x 5124 - Tributos Estaduais/Municipais",
+      "snippet": "5.124/6.124-Industrialização efetuada para outra empresa. Classificam-se neste código as saídas de mercadorias industrializadas para terceiros, ...",
+      "link": "https://www.contabeis.com.br/forum/tributos-estaduais-municipais/78203/cfop-5125-x-5124/",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "CFOP - 5124 - Industrialização efetuada para outra empresa",
+      "snippet": "Classificam-se neste código as saídas de mercadorias industrializadas para terceiros, compreendendo os valores referentes aos serviços prestados e os das ...",
+      "link": "https://www.contadores.cnt.br/cfop/5124-industrializacao-efetuada-para-outra-empresa.html",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "CFOP 5.125",
+      "snippet": "CFOP 5.125 – Industrialização efetuada para outra empresa quando a mercadoria recebida para utilização no processo de industrialização não transitar pelo ...",
+      "link": "https://guiatributario.net/cfop-5-125/",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "RC 29138/2024 - Legislação Tributária - Secretaria da Fazenda",
+      "snippet": "Acrescenta que, na Nota Fiscal de retorno do produto industrializado ao autor da encomenda, utiliza o CFOP 5124/6124 ou o CFOP 5125/6125, ...",
+      "link": "https://legislacao.fazenda.sp.gov.br/Paginas/RC29138_2024.aspx",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "CFOP 5124: Industrialização efetuada para outra empresa",
+      "snippet": "O CFOP 5124 significa a ocorrência da movimentação de remessa de mercadorias para industrialização por conta de terceiros. Esse código ...",
+      "link": "https://webmaissistemas.com.br/blog/cfop-5124/",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "ICMS - Industrialização - Retorno - Esclarecimentos",
+      "snippet": "Utilizaremos as duas operações com CFOPs 5.124 (simples) e 5125 (triangular) ou pode fazer a cobrança apenas com o CFOP 5.125 para as duas industrializações, ...",
+      "link": "https://netcpa.com.br/colunas/icms-industrializacao-retorno-esclarecimentos/633",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "Resposta à Consulta Nº 29138 DE 22/01/2024 - Estadual",
+      "snippet": "Acrescenta que, na Nota Fiscal de retorno do produto industrializado ao autor da encomenda, utiliza o CFOP 5124/6124 ou o CFOP 5125/6125, ...",
+      "link": "https://www.legisweb.com.br/legislacao/?id=455509",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "Perguntas e Respostas",
+      "snippet": "Gostaria de solicitar sua orientação em relação à cobrança de ICMS nas operações de industrialização (CFOP 5124/5125 e 5924) no estado do Rio Grande do Sul ...",
+      "link": "https://www.lefisc.com.br/perguntasRespostas/resposta/10795",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "Industrializacao por conta e ordem",
+      "snippet": "Quando da utilização do CFOP 5.124/6.124 (que compreende os serviços prestados e as mercadorias empregadas no processo industrial) na Nota Fiscal Eletrônica ...",
+      "link": "https://www.rotinafiscal.com.br/operacoes-fiscais/industrializacao-por-conta-e-ordem",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CFOP industrialização 5.124 5.125",
+      "titulo": "CFOP 5124: industrialização efetuada para outra empresa",
+      "snippet": "Esse código deve ser utilizado quando uma empresa industrializadora finaliza a produção de um item sob encomenda e o entrega ao cliente, seja ...",
+      "link": "https://clicknotas.com.br/cfop-5124-industrializacao-para-outra-empresa/",
+      "extraido_em": "2026-01-31T12:32:24.162Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Tabela CST ICMS",
+      "snippet": "Tabela – Código de Situação Tributária (CST)​​ 7 – Estrangeira – Adquirida no mercado interno, sem similar nacional, constante em lista de Resolução Camex e gás ...",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-icms/",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Tabela de Códigos de Situação Tributária - CST TEL",
+      "snippet": "O código de Situação Tributária é composto de 3 (três) dígitos na forma ABB, sendo que o primeiro dígito deve indicar a origem da mercadoria ou do serviço ...",
+      "link": "https://www.policontcontabilidade.com.br/arquivos/TABELA%20CST%20ICMS%20-%20Lucro%20Presumido%20e%20Lucro%20Real.pdf",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Código de Situação Tributária - CST",
+      "snippet": "TABELA B - TRIBUTAÇÃO PELO ICMS. 00. Tributada integralmente. 10. Tributada e com cobrança do ICMS por substituição tributária. 20. Com redução ...",
+      "link": "https://www.contabeis.com.br/tributario/cst/",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "ANEXO 14 - CÓDIGO DE SITUAÇÃO TRIBUTÁRIA - CST",
+      "snippet": "O código de Situação Tributária é composto de três dígitos na forma ABB, onde o 1º dígito deve indicar a origem da mercadoria ou serviço, com base na Tabela A e ...",
+      "link": "https://www.sefaz.pb.gov.br/legislacao/99-regulamentos/anexos-icms/1532-anexo-14-codigo-de-situacao-tributaria-cst",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "CÓDIGO DE SITUAÇÃO TRIBUTÁRIA – CST Tabela A",
+      "snippet": "1. O código de Situação Tributária é composto de três dígitos na forma ABB, onde o 1º dígito deve indicar a origem da mercadoria ou serviço, com base na Tabela ...",
+      "link": "https://www.sefin.ro.gov.br/portalsefin/anexos/ANEXO-I.pdf",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Entenda quais são os Códigos de Situação Tributária",
+      "snippet": "Tabela B — Tributação pelo ICMS · 0 — Tributada integralmente. · 1 — Tributada pelo Simples Nacional sem permissão de crédito. · 10 — Tributada ...",
+      "link": "https://contaazul.com/blog/codigos-de-situacao-tributaria-quais-sao/",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "RICMS01 - Anexo 10 - Códigos Fiscais - com red. passada",
+      "snippet": "1. O Código de Situação Tributária é composto de três dígitos na forma ABB, em que o 1º dígito deve indicar a origem da mercadoria ou do serviço ...",
+      "link": "https://legislacao.sef.sc.gov.br/html/regulamentos/icms/ricms_01_10.htm",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Tabela CST ICMS",
+      "snippet": "O CST é composto por três dígitos: Primeiro dígito (Tabela A) – Indica a origem do produto ou serviço, especificando se é nacional ou importado.",
+      "link": "https://www.datacaixa.com.br/ajuda/duvidas-gerais/informacoes-fiscais/tabela-cst-icms/?srsltid=AfmBOoqoWX6eaXJDpv4q63Qgwb-fULUWxV2zZIGFgyDxFCA_dPcJW-RZ",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Código de Situação Tributária (CST)",
+      "snippet": "Tabela A – Origem da Mercadoria. Tabela B – Tributação pelo ICMS (Vigente desde 1-1-2001). 00. Tributada integralmente. 10. Tributada e com cobrança do ICMS ...",
+      "link": "https://sys.grupodpg.com.br/public/utilitarios/1432232327Codigo%20de%20Situa%C3%A7%C3%A3o%20Tribut%C3%A1ria.pdf",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST ICMS código situação tributária",
+      "titulo": "Anexo XVI - Código De Situação Tributária (CST)",
+      "snippet": "Classificam-se neste código as operações e prestações tributadas realizadas por contribuintes do Regime Normal, por optantes do Simples Nacional que tenham ...",
+      "link": "https://www.lefisc.com.br/regulamentos/ricmsAL/anexoXVI.asp",
+      "extraido_em": "2026-01-31T12:32:25.443Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Tabela CST ICMS",
+      "snippet": "Tributação do ICMS. TABELA “B” – TRIBUTAÇÃO PELO ICMS. 00 – Tributada integralmente. 10 – Tributada e com cobrança do ICMS por substituição tributária. 20 – Com ...",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-icms/",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Código de Situação Tributária - CST",
+      "snippet": "O CST 00 é utilizado quando a operação é tributada integralmente pelo ICMS, ou seja, não há isenções, reduções de base de cálculo ou qualquer ...",
+      "link": "https://www.contabeis.com.br/tributario/cst/",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Regra Tributaria - CST - Tributação do ICMS",
+      "snippet": "O Código da Situação Tributária (CST) é o valor que identifica a origem da mercadoria e a forma de tributação que deverá incidir sobre a mesma.",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360012274453-Regra-Tributaria-CST-Tributa%C3%A7%C3%A3o-do-ICMS",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Tabela de Códigos de Situação Tributária - CST TEL",
+      "snippet": "O código de Situação Tributária é composto de 3 (três) dígitos na forma ABB, sendo que o primeiro dígito deve indicar a origem da mercadoria ou do serviço, com ...",
+      "link": "https://www.policontcontabilidade.com.br/arquivos/TABELA%20CST%20ICMS%20-%20Lucro%20Presumido%20e%20Lucro%20Real.pdf",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "ICMS - CST - Entradas para consumo",
+      "snippet": "... 00, efeitos a partir de 01.01.01. Tabela B - Tributação pelo ICMS 00 - Tributada integralmente 10 - Tributada e com cobrança do ICMS por substituição tributária",
+      "link": "https://netcpa.com.br/colunas/icms-cst-entradas-para-consumo/150",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Entenda quais são os Códigos de Situação Tributária",
+      "snippet": "00 — Tributada integralmente. 10 — Tributada e com cobrança do ICMS por substituição tributária. 20 — Com redução de base de cálculo. 30 — ...",
+      "link": "https://contaazul.com/blog/codigos-de-situacao-tributaria-quais-sao/",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "CST - O que significa cada código de situação tributária do ...",
+      "snippet": "00 - Tributada integralmente: Esse código é utilizado quando a operação é tributada de forma integral pelo ICMS. 10 - Tributada e com cobrança do ICMS por ...",
+      "link": "https://ajuda.webmania.com.br/pt-BR/articles/12680777-cst-o-que-significa-cada-codigo-de-situacao-tributaria-do-icms",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "O que é CST e como ele impacta o ICMS da sua empresa",
+      "snippet": "CST 00 – Tributada integralmente. CST 10 – Tributada com ICMS por substituição tributária. CST 20 – Com redução de base de cálculo. CST 30 ...",
+      "link": "https://andersonsouzaoficial.com.br/cst/",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Anexo XVI - Código De Situação Tributária (CST)",
+      "snippet": "Tributada com ICMS devido por substituição tributária relativo às operações e prestações concomitantes. Classificam-se neste código as operações e prestações ...",
+      "link": "https://www.lefisc.com.br/regulamentos/ricmsAL/anexoXVI.asp",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 00 01 10 20 tributação integral ICMS",
+      "titulo": "Código de Situação Tributária: saiba tudo sobre o CST",
+      "snippet": "A sigla CST significa Código de Situação Tributária, o classificador que determina a incidência do Imposto sobre Circulação de Mercadorias e Serviços (ICMS).",
+      "link": "https://www.taxgroup.com.br/intelligence/o-que-e-cst-entenda-o-codigo-de-situacao-tributaria-e-como-aplica-la-corretamente/",
+      "extraido_em": "2026-01-31T12:32:26.646Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Tabela CST ICMS",
+      "snippet": "ICMS por substituição tributária 40 – Isenta 41 – Não tributada 50 – Suspensão 51 – Diferimento 841 Suspensão 50. Isenção do ICMS",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-icms/",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "CST - O que significa cada código de situação tributária do ...",
+      "snippet": "40 - Isenta: Esse código indica que a operação é isenta de ICMS, isso quer ... 50 - Suspensão: Indica que a cobrança do ICMS é suspensa, portanto a ...",
+      "link": "https://ajuda.webmania.com.br/pt-BR/articles/12680777-cst-o-que-significa-cada-codigo-de-situacao-tributaria-do-icms",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Como fazer uma nota com ICMS desonerado (CST 20, 30 ...",
+      "snippet": "ICMS30 – CST 30: Isenta ou não tributada e com cobrança do ICMS por ST; ICMS40 – CST 40,41, 50: Isenta, Não tributada ou Suspensão; ICMS70 – CST 70: Redução de ...",
+      "link": "https://docsnew.erpflex.com.br/icms_desonerado/",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Regra Tributaria - CST - Tributação do ICMS",
+      "snippet": "Com redução da BC. 30, Isenta / não tributada e com cobrança do ICMS por substituição tributária. 40, Isenta. 41, Não tributada. 50, Com suspensão. 51, Com ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360012274453-Regra-Tributaria-CST-Tributa%C3%A7%C3%A3o-do-ICMS",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Código de Situação Tributária - CST",
+      "snippet": "O CST 40 é utilizado quando a operação é isenta de ICMS, ou seja, não há a incidência do imposto sobre a operação. Essa isenção pode ser ...",
+      "link": "https://www.contabeis.com.br/tributario/cst/",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Entenda quais são os Códigos de Situação Tributária",
+      "snippet": "40 — Isenta. 41 — Não é tributada. 50 — Suspensão. 51 — Diferimento. 60 — ICMS cobrado anteriormente por substituição tributária. Isenção do ...",
+      "link": "https://contaazul.com/blog/codigos-de-situacao-tributaria-quais-sao/",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Tabela 5.2",
+      "snippet": "40 CST 41 CST 50 CST ・ isenção,redução. ICMS. De 50% (cinquenta por cento) do imposto incidente na operação ao estabelecimento ・ a isenção ...",
+      "link": "https://www.sef.sc.gov.br/api-portal/Documento/ver/1188",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Diferença entre Isento e Não Tributado",
+      "snippet": "CST 40 – Isenta: A operação é isenta de ICMS, isso quer dizer que em vias normais, esta operação seria tributada, mas existe algum beneficio ...",
+      "link": "https://site.guinzo.com.br/diferenca-entre-isento-e-nao-tributado/",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "ICMS = CST 40, 41 e 50",
+      "snippet": "AULÃO ICMS - CFOP (CÓDIGO FISCAL DE OPERAÇÕES). ACADEMIA FISCAL•52K views ; Emissão de Nota Fiscal de Importação. Tatiane Scremin•2K views.",
+      "link": "https://www.youtube.com/watch?v=7soVvsAfz48",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 40 41 50 isenção ICMS",
+      "titulo": "Tabela de Códigos de Benefício Fiscal por CST",
+      "snippet": "Isenção prevista no item 40 do Anexo V do RICMS/2017. Isenção. PR810041. SIM. 01/08/2018. Isenção prevista no item 41 do Anexo V do RICMS/2017.",
+      "link": "https://sped.fazenda.pr.gov.br/sites/sped/arquivos_restritos/files/documento/2022-07/TABELA_cbenef_PR_portal_nacional_JUNHO_2022_V4.pdf",
+      "extraido_em": "2026-01-31T12:32:27.783Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Tabela CST ICMS",
+      "snippet": "60 – ICMS cobrado anteriormente por substituição tributária. 70 – Com redução de base de cálculo e cobrança do ICMS por substituição tributária. 90 – Outras ...",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-icms/",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Código de Situação Tributária - CST",
+      "snippet": "O Código de Situação Tributária é utilizado para classificar situações fiscais das operações sujeitas ao ICMS.",
+      "link": "https://www.contabeis.com.br/tributario/cst/",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Entenda quais são os Códigos de Situação Tributária",
+      "snippet": "60 — ICMS cobrado anteriormente por substituição tributária. 70 — Com redução de base de cálculo e cobrança do ICMS por substituição tributária.",
+      "link": "https://contaazul.com/blog/codigos-de-situacao-tributaria-quais-sao/",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Regra Tributaria - CST - Tributação do ICMS",
+      "snippet": "60, ICMS cobrado anteriormente por substituição tributária. 70, Com redução da BC e cobrança do ICMS por substituição tributária. 90, Outras. Veja no vídeo mais ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/360012274453-Regra-Tributaria-CST-Tributa%C3%A7%C3%A3o-do-ICMS",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "RICMS01 - Anexo 10 - Códigos Fiscais - com red. passada",
+      "snippet": "Isenta ou não tributada com ICMS devido por substituição tributária: classificam-se neste código as operações e prestações isentas ou não ...",
+      "link": "https://legislacao.sef.sc.gov.br/html/regulamentos/icms/ricms_01_10.htm",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Tabela de Códigos de Situação Tributária - CST TEL",
+      "snippet": "60 - ICMS Cobrado na Operação Anterior por Substituição Tributária. 060. 360. 460. 560. 860. 160. 660. 260. 760. 70 - Com redução de base de cálculo no ICMS ST.",
+      "link": "https://www.policontcontabilidade.com.br/arquivos/TABELA%20CST%20ICMS%20-%20Lucro%20Presumido%20e%20Lucro%20Real.pdf",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "Anexo XVI - Código De Situação Tributária (CST)",
+      "snippet": "Tributada com ICMS devido por substituição tributária relativo às operações e prestações concomitantes. Classificam-se neste código as operações e prestações ...",
+      "link": "https://www.lefisc.com.br/regulamentos/ricmsAL/anexoXVI.asp",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "CST - O que significa cada código de situação tributária do ...",
+      "snippet": "60 - ICMS cobrado anteriormente por substituição tributária: Esse código é utilizado quando o contribuinte emitente do documento fiscal estiver na condição ...",
+      "link": "https://ajuda.webmania.com.br/pt-BR/articles/12680777-cst-o-que-significa-cada-codigo-de-situacao-tributaria-do-icms",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "CST: o que é o Código de Situação Tributária, qual usar e ...",
+      "snippet": "60 - ICMS Cobrado na Operação Anterior por Substituição Tributária ... 70 - Com redução de base de cálculo no ICMS ST, 070 370 470 570 870 ...",
+      "link": "https://focusnfe.com.br/blog/cst/",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 60 70 substituição tributária ICMS",
+      "titulo": "RESPOSTA À CONSULTA TRIBUTÁRIA N",
+      "snippet": "60 - ICMS cobrado anteriormente por substituição tributária. 70 - Com redução de base de cálculo e cobrança do ICMS por substituição tributária. 90 - Outras ...",
+      "link": "http://www.econeteditora.com.br/icms_sao_paulo/consultas/2015/resp_cons_5298_2015.php",
+      "extraido_em": "2026-01-31T12:32:29.203Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "Tabela CSOSN Simples Nacional",
+      "snippet": "Tabela CSOSN Simples Nacional. TABELA A - Código de Regime Tributário - CRT. 1 - Simples Nacional. 2 - Simples Nacional - excesso de sublimite da receita bruta.",
+      "link": "https://www.gestaocontabilidade.net/uploads/downloads/csosn-20170324103201.pdf",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "TABELA CST / CSOSN",
+      "snippet": "• 102 - Tributada pelo Simples Nacional sem permissão de crédito. • 103 - Isenção do ICMS no Simples Nacional para faixa de receita bruta. • 201 - Tributada ...",
+      "link": "http://www.ccentral.com.br/web/documentos/CST-CSOSN.pdf",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "CSOSN Explicado: Um Guia Prático Contadores",
+      "snippet": "Tabela CSOSN – Operação ; 103, Isenção do ICMS no Simples Nacional para faixa de receita bruta ; 201, Tributada pelo Simples Nacional com ...",
+      "link": "https://blog.esimplesauditoria.com.br/csosn/",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "tabela b código de situação da operação no simples nacional",
+      "snippet": "TABELA B CÓDIGO DE SITUAÇÃO DA OPERAÇÃO NO SIMPLES NACIONAL – CSOSN. 101 – Tributada pelo Simples Nacional com permissão de crédito. - Classificam-se neste ...",
+      "link": "http://app1.sefaz.mt.gov.br/sistema/legislacao/regulamentoicms.nsf/cc90333e16d28a8c0425736e0076800a/f62915c4fa28e3d1842577920077112f?OpenDocument",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "CSOSN: o que é e Tabela do Código Simples Nacional - Sygma",
+      "snippet": "O CSOSN utilizado para indicar isenção de ICMS dentro do regime do Simples Nacional é o 101, o qual se aplica especificamente a operações ...",
+      "link": "https://www.sygmasistemas.com.br/csosn/",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "CSOSN: o que é, como utilizar e quais são as regras",
+      "snippet": "O código CSOSN possui 3 dígitos, o primeiro indica a origem da mercadoria e os 2 últimos se referem a operação do simples nacional. Tabela CSOSN ...",
+      "link": "https://nsdocs.com.br/blog/csosn-o-que-e",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "Código de Situação da Operação do Simples Nacional",
+      "snippet": "Para empresas optante pelo \"Simples Nacional\" será habilitado para seleção a tabela do \"CSOSN\" com todas as situações previstas pela legislação:.",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=6862",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "TABELA CST/CSOSN",
+      "snippet": "Origem mais três números. • 101 - Tributada pelo Simples Nacional com permissão de crédito;. • 102 - Tributada pelo Simples Nacional sem permissão de crédito;.",
+      "link": "https://www.brasilcontabil.com.br/fiscal/TABELA-CST-CSOSN.pdf",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "tabela de códigos de situação tributária - csosn icms ...",
+      "snippet": "1. O código de Situação Tributária é composto por três dígitos, onde o 1º dígito indica a origem da mercadoria ou serviço, com base na Tabela A e os 2º e 3º dí ...",
+      "link": "http://serviconta.com.br/anexos/1233/41807/tabela-csosn-pdf",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CSOSN Simples Nacional tabela completa",
+      "titulo": "CSOSN: o que é esse código do Simples Nacional e pra ...",
+      "snippet": "O CSOSN será usado na Nota Fiscal somente quando o Código de Regime Tributário (CRT) for igual a “1” e substituirá os códigos da tabela B — ...",
+      "link": "https://focusnfe.com.br/blog/csosn/",
+      "extraido_em": "2026-01-31T12:32:30.527Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabela CST – PIS / COFINS",
+      "snippet": "Tabela CST – PIS / COFINS ; 1, Operação Tributável com Alíquota Básica ; 2, Operação Tributável com Alíquota Diferenciada ; 3, Operação Tributável com Alíquota por ...",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabelas utilizadas na apuração das Contribuições para o PIS ...",
+      "snippet": "Tabelas utilizadas na apuração das Contribuições para o PIS/Pasep e da Cofins · Tabela 4.3.3 - Tabela Código da Situação Tributária Referente ao PIS/Pasep – CST- ...",
+      "link": "http://sped.rfb.gov.br/item/show/1616",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "tabelas de cst pis e cofins",
+      "snippet": "CÓDIGO DA SITUAÇÃO TRIBUTÁRIA REFERENTE AO PIS/PASEP (CST-PIS):. Código, Descrição. 01. Operação Tributável com Alíquota Básica. 02. Operação Tributável com ...",
+      "link": "https://idealsoftwares.com.br/tabelas/tabela.php?id=347",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabela Código da Situação Tributária Referente ao PIS/Pasep",
+      "snippet": "Sistema Público de Escrituração Digital · EFD Contribuições · Tabela 4.3.3 - Tabela Código da Situação Tributária Referente ao PIS/Pasep – CST-PIS - Versão ...",
+      "link": "http://sped.rfb.gov.br/item/show/1629",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Código de Situação Tributária (CST/PIS e CST/Cofins)",
+      "snippet": "Os contribuintes da Cofins deverão utilizar a Tabela de CST/Cofins abaixo indicada: Tabela III - Código da Situação Tributária referente à Cofins (CST/Cofins).",
+      "link": "http://www.exatos.com.br/wp-content/uploads/2017/03/cst-pis-cofins.pdf",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabela CST-PIS e CST-COFINS",
+      "snippet": "CST significa Código de Situação Tributária. Esses códigos foram criados para identificar o cálculo da tributação aplicado a uma mercadoria ...",
+      "link": "https://site.guinzo.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabela CST PIS COFINS: confira o que é e como escolher",
+      "snippet": "Tabela CST PIS COFINS ; CST 05, Operação Tributável por Substituição Tributária ; CST 06, Operação Tributável a Alíquota Zero ; CST 07, Operação ...",
+      "link": "https://nsdocs.com.br/blog/cst-pis-cofins",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "Tabela de Códigos de Situação Tributária - CST TEL",
+      "snippet": "1. O código de Situação Tributária é composto de 3 (três) dígitos na forma ABB, sendo que o primeiro dígito deve indicar a origem da mercadoria ou do serviço, ...",
+      "link": "https://www.policontcontabilidade.com.br/arquivos/TABELA%20CST%20ICMS%20-%20Lucro%20Presumido%20e%20Lucro%20Real.pdf",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "PIS/COFINS - Portal do Sped Tabelas",
+      "snippet": "Tabelas do sistema: Sistema Pis Cofins. Pacote. Selecione um pacote, Consumo, CST, Tabelas de Apuração de Contribuição e Crédito, Tabelas de Operações com ...",
+      "link": "https://www.sped.fazenda.gov.br/spedtabelas/AppConsulta/publico/aspx/ConsultaTabelasExternas.aspx?CodSistema=SpedPisCofins",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela CST PIS COFINS código situação tributária",
+      "titulo": "CST 98 para PIS e Cofins: O Que É e Como Aplicar",
+      "snippet": "O CST 98 é um dos códigos da Tabela de Situação Tributária (CST) utilizados para classificar as operações de PIS (Programa de Integração Social) e COFINS ( ...",
+      "link": "https://www.e-auditoria.com.br/blog/cst-98-pis-e-cofins/",
+      "extraido_em": "2026-01-31T12:32:32.068Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Tabela CST-PIS/PASEP e COFINS",
+      "snippet": "Código. Descrição. 01, Operação Tributável com Alíquota Básica. 02. Operação Tributável com Alíquota Diferenciada. 03. Operação Tributável com Alíquota por ...",
+      "link": "https://www.boletimcontabil.com.br/bolet2/cstpis.html",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Tabela CST – PIS / COFINS",
+      "snippet": "Tabela CST – PIS / COFINS ; 1, Operação Tributável com Alíquota Básica ; 2, Operação Tributável com Alíquota Diferenciada ; 3, Operação Tributável com Alíquota por ...",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Tabela CST-PIS e CST-COFINS",
+      "snippet": "01, Operação Tributável com Alíquota Básica ; 02, Operação Tributável com Alíquota Diferenciada ; 03, Operação Tributável com Alíquota por Unidade ...",
+      "link": "https://site.guinzo.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "O que é código de situação tributária (CST) e como ...",
+      "snippet": "CST para PIS/COFINS · 01 – Operação tributável com alíquota básica no regime cumulativo; · 02 – Operação tributável com alíquota diferenciada; · 04 ...",
+      "link": "https://clicknotas.com.br/codigo-de-situacao-tributaria-cst/",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Tabela CST PIS COFINS: confira o que é e como escolher",
+      "snippet": "CST 01, Operação Tributável com Alíquota Básica. CST 02, Operação Tributável com Alíquota Diferenciada. CST 03, Operação Tributável com Alíquota ...",
+      "link": "https://nsdocs.com.br/blog/cst-pis-cofins",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Tabelas utilizadas na apuração das Contribuições para o PIS ...",
+      "snippet": "Tabelas utilizadas na apuração das Contribuições para o PIS/Pasep e da Cofins · Tabela 4.3.3 - Tabela Código da Situação Tributária Referente ao PIS/Pasep – CST- ...",
+      "link": "http://sped.rfb.gov.br/item/show/1616",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "PIS/COFINS | 01-operacao-tributavel-com-aliquota-basica",
+      "snippet": "01 - Operação Tributável com Alíquota Básica. Este código é utilizado para operações que estão sujeitas às alíquotas básicas de PIS e COFINS.",
+      "link": "https://tabelas.maino.com.br/cst-pis-cofins/01-operacao-tributavel-com-aliquota-basica",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "CST - Tabela de Código da Situação Tributária | EFD e NF-e",
+      "snippet": "... TRIBUTÁRIA REFERENTE AO PIS/PASEP (CST-PIS):. Código. Descrição. 01. Operação Tributável com Alíquota Básica. 02. Operação Tributável com Alíquota Diferenciada.",
+      "link": "https://www.sincop.com.br/5763/cst_-_tabela_de_codigo_da_situacao_tributaria_-_efd_e_nf-e",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "PIS/Cofins 01 Operação Tributável com Alíquota Básica",
+      "snippet": "CST de PIS e Cofins 01 Operação Tributável com Alíquota Básica, confira os detalhes deste Código de Situação Tributária e veja alguns produtos classificados ...",
+      "link": "https://cosmos.bluesoft.com.br/tabelas/cst/pis-cofins/01-operacao-tributavel-com-aliquota-basica",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 01 02 PIS COFINS operação tributável",
+      "titulo": "Perguntas e Respostas",
+      "snippet": "... Tributária: Código Descrição 01 Operação Tributável com Alíquota Básica (Operações de saídas cujas receitas estejam sujeitas às alíquotas de: 0,65% PIS e 3,00% ...",
+      "link": "https://www.lefisc.com.br/perguntasRespostas/resposta/15294",
+      "extraido_em": "2026-01-31T12:32:33.267Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tabela CST-PIS/PASEP e COFINS",
+      "snippet": "04. Operação Tributável Monofásica – Revenda a Alíquota Zero. 05. Operação Tributável por Substituição Tributária. 06. Operação Tributável a Alíquota Zero. 07.",
+      "link": "https://www.boletimcontabil.com.br/bolet2/cstpis.html",
+      "extraido_em": "2026-01-31T12:32:34.544Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tabela CST Pis/Cofins Monofásico",
+      "snippet": "Produtos Sujeitos a Alíquotas Diferenciadas: Incidência Monofásica e por Pauta (Bebidas Frias) - CST 02 e 04 ; Código004, Descrição do ProdutoRevenda de bebidas ...",
+      "link": "https://portal.consultatributaria.com.br/tabelas/pis-cofins-cst",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tabelas utilizadas na apuração das Contribuições para o PIS ...",
+      "snippet": "Tabelas utilizadas na apuração das Contribuições para o PIS/Pasep e da Cofins · Tabela 4.3.3 - Tabela Código da Situação Tributária Referente ao PIS/Pasep – CST- ...",
+      "link": "http://sped.rfb.gov.br/item/show/1616",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tabela CST – PIS / COFINS",
+      "snippet": "Confira a tabela CST PIS/COFINS e mantenha sua empresa em dia com as obrigações fiscais. Somos especialista em soluções contábeis.",
+      "link": "https://cdmcontabilidade.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tabela CST-PIS e CST-COFINS",
+      "snippet": "Tabela CST-PIS e CST-COFINS: ; 04, Operação Tributável Monofásica – Revenda a Alíquota Zero ; 05, Operação Tributável por Substituição Tributária.",
+      "link": "https://site.guinzo.com.br/tabela-cst-pis-cofins/",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Produtos Monofásicos - Entenda tudo sobre eles!",
+      "snippet": "CST 04: Tributação monofásica. CST 05: Substituição tributária de PIS e COFINS. Esses códigos indicam que a tributação foi paga na origem e não deve ser ...",
+      "link": "https://blog.esimplesauditoria.com.br/quais-os-tipos-de-produtos-sujeitos-a-tributacao-monofasica/",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "TABELA PRÁTICA PIS E COFINS",
+      "snippet": "TABELA PRÁTICA PIS E COFINS. (Alíquota Zero, Substituição Tributária, Não Incidência, Isenção). ALÍQUOTA ZERO – CST 06. INSUMOS E PRODUTOS AGROPECUÁRIOS.",
+      "link": "https://lefisc.com.br/materias/2008/122008piscofins.asp",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "contribuições de pis e cofins no regime monofásico",
+      "snippet": "O Simples Nacional é um regime compartilhado de arrecadação, cobrança e fiscalização de tributos, com proposta de redução da carga de impostos e simplificação ...",
+      "link": "https://home.unicruz.edu.br/wp-content/uploads/2021/03/CONTRIBUI%C3%87%C3%95ES-DE-PIS-E-COFINS-NO-REGIME-MONOF%C3%81SICO-PARA-EMPRESAS-DO-SIMPLES-NACIONAL.pdf",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "Tributação monofásica de PIS/Pasep e COFINS",
+      "snippet": "Neste artigo, você entenderá o que é a tributação monofásica, quando ela deve ser aplicada e o que mudou para os combustíveis após as alterações da Lei ...",
+      "link": "https://www.jettax.com.br/blog/tributacao-monofasica/",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "CST 04 05 06 07 08 09 PIS COFINS monofásico ST",
+      "titulo": "CST -PIS COFINS: clique, acesse a tabela e entenda tudo",
+      "snippet": "04, Operação Tributável Monofásica – Revenda a Alíquota Zero ; 05, Operação Tributável por Substituição Tributária ; 06, Operação Tributável a ...",
+      "link": "https://makrosystem.com.br/blog/tabela-cst-pis-cofins/?srsltid=AfmBOoqiRqL6X0dBf4_1-6JFsJIy_hxH9bI-sC5qHS5aWvYHHMCqbly3",
+      "extraido_em": "2026-01-31T12:32:34.545Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "NCM — Receita Federal - Portal Gov.br",
+      "snippet": "A classificação fiscal de mercadorias é o processo de determinação do código numérico representativo da mercadoria, obedecendo-se aos critérios ...",
+      "link": "https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/classificacao-fiscal-de-mercadorias/ncm",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Download NCM - Nomenclatura Comum do MERCOSUL",
+      "snippet": "O download da tabela Nomenclatura Comum do Mercosul (NCM) vigente pode ser feito no sistema Classif nos seguintes formatos: JSON: tabela NCM no ...",
+      "link": "https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/classificacao-fiscal-de-mercadorias/download-ncm-nomenclatura-comum-do-mercosul",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Tabela NCM Completa - Faça a consulta Aqui",
+      "snippet": "O NCM é composto de 8 dígitos: ; NT, 0102.21.10, Prenhes ou com cria ao pé ; NT, 0102.21.90, Outros ; 0102.29, OUTROS ; 0102.29.1, PARA REPRODUÇÃO.",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/ncm/",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Tabela de NCM com unidade tributária de Comércio Exterior",
+      "snippet": "Tabela de NCM e respectiva UTrib (Comércio Exterior) - Vigência 01/10/2021 - Publicada em 14/09/2021 - Os NCMs extintos serão aceitos até 30/11/2021, EXCETO ...",
+      "link": "http://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=/NJarYc9nus=",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Classificação Fiscal de Mercadorias: Guia Prático para ...",
+      "snippet": "Classificação Fiscal de Mercadorias é o processo de atribuir a cada produto um código numérico padronizado — no Brasil, geralmente o NCM ( ...",
+      "link": "https://www.esimplesauditoria.com/classificacao-fiscal-de-mercadorias",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Código NCM - Rio de Janeiro",
+      "snippet": "NCM (Nomenclatura Comum do Mercosul) é um código de oito dígitos estabelecido pela legislação federal para identificar as mercadorias e facilitar o comércio ...",
+      "link": "https://portal.fazenda.rj.gov.br/dfe/codigo-ncm/",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Tabela NCM o que é",
+      "snippet": "O NCM representa uma nomenclatura que identifica códigos de oito dígitos para produtos diversos, que vão desde: produtos de origem animal, como o leite, têxteis ...",
+      "link": "https://www.fazcomex.com.br/ncm/",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Classificação Fiscal de Mercadorias — Receita Federal",
+      "snippet": "Compêndio de Ementas do Centro de Classificação Fiscal de Mercadorias (Ceclam) · NCM · Download NCM - Nomenclatura Comum do MERCOSUL.",
+      "link": "https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/classificacao-fiscal-de-mercadorias",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "tabela NCM classificação fiscal mercadorias",
+      "titulo": "Tabela NCM 2026: Guia Completo e Atualizações Mensais ...",
+      "snippet": "A tabela NCM — Nomenclatura Comum do Mercosul — é um sistema de classificação numérica desenvolvido para categorizar os produtos comercializados ...",
+      "link": "https://qive.com.br/blog/tabela-ncm/",
+      "extraido_em": "2026-01-31T12:32:35.738Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "NCM — Receita Federal - Portal Gov.br",
+      "snippet": "A Nomenclatura Comum do Mercosul (NCM) é fundamental para determinar os tributos envolvidos nas operações de comércio exterior e de saída de ...",
+      "link": "https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/classificacao-fiscal-de-mercadorias/ncm",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "Tabela NCM - MDIC",
+      "snippet": "Produtos da indústria de moagem; malte; amidos e féculas; inulina; glúten de trigo. Sementes e frutos oleaginosos; grãos, sementes e frutos diversos; plantas ...",
+      "link": "https://www.gov.br/antaq/pt-br/assuntos/instalacoes-portuarias/Tabela_NCM_Completa.pdf",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "Tabela NCM Completa - Faça a consulta Aqui",
+      "snippet": "O NCM é composto de 8 dígitos:​​ O terceiro e o quarto dígito dita um desdobramento da característica de um produto. O quinto e sexto dígitos ditam mais uma ...",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/ncm/",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "NCM - TEC - TIPI - classificação fiscal de mercadorias",
+      "snippet": "Capítulo 6 NCM-TIPI - Plantas vivas e produtos de floricultura. Capítulo 7 NCM-TIPI - Produtos hortícolas, plantas, raízes e tubérculos, comestíveis. Capítulo ...",
+      "link": "https://classificadorfiscal.com.br/ncm---tec---tipi.html",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "Tabela NCM o que é",
+      "snippet": "O NCM representa uma nomenclatura que identifica códigos de oito dígitos para produtos diversos, que vão desde: produtos de origem animal, como o leite, têxteis ...",
+      "link": "https://www.fazcomex.com.br/ncm/",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "TABELA DE PRODUTOS NCM",
+      "snippet": "CÓDIGO NCM. DESCRIÇÃO DO PRODUTO. UNIDADE MEDIDA. 53052100. ABACA EM BRUTO kg. 53052900. ABACA TRABALHADO,NAO FIADO,ESTOPAS E DESPERDICIOS.",
+      "link": "https://www.sefaz.go.gov.br/netaccess/exportacao/manual/tabelancm.pdf",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "anexo i nomenclatura comum do mercosul (ncm) e tarifa ...",
+      "snippet": "3 Peixes e crustáceos, moluscos e outros invertebrados aquáticos. 4 Leite e lacticínios; ovos de aves; mel natural; produtos comestíveis de origem animal, não ...",
+      "link": "https://www.coad.com.br/imagensMat/id230961.pdf",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "Classificação Fiscal de Mercadorias: Guia Prático para ...",
+      "snippet": "Os quatro primeiros identificam a posição do produto dentro do capítulo. O quinto dígito representa o desdobramento da posição, e o sexto ...",
+      "link": "https://www.esimplesauditoria.com/classificacao-fiscal-de-mercadorias",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "NCM 05 - Outros produtos de origem animal, não ...",
+      "snippet": "NCM 05 - Outros produtos de origem animal, não especificados nem compreendidos noutros Capítulos. Garanta a NCM correta para todas as suas mercadorias. 05.",
+      "link": "https://www.systax.com.br/classificacaofiscal/ncm/05-outros-produtos-origem-animal-nao-especificados-nem-compreendidos-noutros-capitulos",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "NCM capítulos principais produtos",
+      "titulo": "Saiba como identificar a NCM de um produto",
+      "snippet": "Identificar a NCM de um produto é um processo fundamental para a classificação correta de qualquer mercadoria comercializada por um varejo.",
+      "link": "https://www.alertafiscal.com.br/blog/saiba-como-identificar-a-ncm-de-um-produto/",
+      "extraido_em": "2026-01-31T12:32:37.311Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Tabelas de Códigos - SPED - Receita Federal",
+      "snippet": "Código do serviço prestado: Lista de serviços anexa à Lei Complementar nº 116, de 31 de julho de 2003: 1 – Serviços de informática e congêneres. 1.01 ...",
+      "link": "http://sped.rfb.gov.br/item/show/1601",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Lcp 116 - Planalto",
+      "snippet": "6.05 – Centros de emagrecimento, spa e congêneres. 6.06 - Aplicação de tatuagens, piercings e congêneres. (Incluído pela Lei Complementar nº 157, de 2016). 7 – ...",
+      "link": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp116.htm",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Tabela CNAE x Lista de Serviços LC 116/2003",
+      "snippet": "0772/17-00. ALUGUEL DE EQUIPAMENTOS RECREATIVOS E ESPORTIVOS. 00,00. Locação de bens móveis. 0772/25-00. ALUGUEL DE FITAS DE VÍDEO, DVDS E SIMILARES.",
+      "link": "https://bracodonorte.sc.gov.br/uploads/sites/297/2023/07/2199998_TABELA_CNAE_X_ISS_BN_pronta.pdf",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Tabela de correlação ISS/NBS – Reforma tributária",
+      "snippet": "Publicada a tabela de correlação entre os itens/subitens de serviços previstos na Lei Complementar 116/2003, os códigos da Nomenclatura ...",
+      "link": "https://smabr.com/tabela-de-correlacao-iss-nbs/",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Lista de Serviços",
+      "snippet": "TABELA DE SERVIÇOS DO ANO BASE DE 2026. CÓDIGO, SERVIÇO, REDUÇÃO BASE CALC. ALIQUOTA, REDUÇÃO, INICIO, FIM, CÓD SERVIÇO LEI116.",
+      "link": "https://wwwx.gissonline.com.br/Rel/rol_servicos.cfm?pid=3633",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Cnae_X_Item_Lista_Servicos.pdf",
+      "snippet": "0162-8/01 Serviço de inseminação artificial em animais. 05.04. Inseminação artificial, fertilização in vitro e congêneres. 7500-1/00 Atividades veterinárias.",
+      "link": "https://nfse.sefaz.salvador.ba.gov.br/OnLine/Documentos/Cnae_X_Item_Lista_Servicos.pdf",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Relação CNAE x Código de Serviço (LC 116) da NFS-e",
+      "snippet": "O código de serviço é um campo de preenchimento obrigatório para emissão da NFS-e (Nota Fiscal de Serviço Eletrônica), composto por uma sequência numérica ...",
+      "link": "https://ajuda.webmania.com.br/pt-BR/articles/12680651-relacao-cnae-x-codigo-de-servico-lc-116-da-nfs-e",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Portal da Nota Fiscal de Serviço eletrônica",
+      "snippet": "Lista de Serviços Anexa à Lei Complementar nº 116, de 31 de julho de 2003 · Consumidor dos serviços · Consultar Nota Fiscal · Apps NFSe Mobile.",
+      "link": "https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/rtc/anexoviii-correlacaoitemnbsindopcclasstrib_ibscbs_v1-00-00.xlsx/view",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "Como identificar seus códigos de serviço",
+      "snippet": "Código do serviço LC116 é lista de atividades pelas quais há a cobrança tributária de ISS (Imposto Sobre Serviço), todas são destacadas na Lei Complementar ...",
+      "link": "https://ajuda.nibo.com.br/pt-BR/articles/8766203-como-identificar-seus-codigos-de-servico",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "código serviço NFS-e LC 116 lista",
+      "titulo": "CODIGOS DE SERVIÇOS DO MUNICIPIO DE SÃO PAULO ...",
+      "snippet": "2321. 16.01. Transporte Público De Passageiros, Realizado Pela Companhia Do Metropolitano De São Paulo – METRÔ. 2330. 16.01. Transporte Por Ônibus ( ...",
+      "link": "https://dga.unicamp.br/arquivo/fiscal-e-tributario/cod-de-servico-sp-x-campinas/",
+      "extraido_em": "2026-01-31T12:32:38.464Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "NFS-e - SPED - Receita Federal",
+      "snippet": "A Natureza da Operação for Tributação no Município; Exigibilidade suspensa por decisão judicial ou Exigibilidade suspensa por procedimento administrativo e o ...",
+      "link": "http://sped.rfb.gov.br/item/show/488",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Natureza de operação da NFS-e: onde consultar e como ...",
+      "snippet": "A natureza de operação (também chamada de Tipo de tributação ou Exigibilidade) indica se há geração de imposto a pagar e quem é o ...",
+      "link": "https://ajuda.contaazul.com/hc/pt-br/articles/42702943087885-Natureza-de-opera%C3%A7%C3%A3o-da-NFS-e-onde-consultar-e-como-preencher",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Sistema Nacional Nota Fiscal de Serviço",
+      "snippet": "Emissão Web: sistema para gerenciamento por parte do contribuinte, onde ele poderá se cadastrar, emitir, consultar e cancelar as NFS-e emitidas.",
+      "link": "https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual/guia-emissorpubliconacionalweb_snnfse-ern-v12.pdf",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Quando a natureza da operação for tributação fora do ...",
+      "snippet": "Quando a natureza da operação for tributação fora do município, o campo município da prestação do serviço deverá ser diferente do município do ...",
+      "link": "https://ajuda.sankhya.com.br/hc/pt-br/articles/5727337219479--Quando-a-natureza-da-opera%C3%A7%C3%A3o-for-tributa%C3%A7%C3%A3o-fora-do-munic%C3%ADpio-o-campo-munic%C3%ADpio-da-presta%C3%A7%C3%A3o-do-servi%C3%A7o-dever%C3%A1-ser-diferente-do-munic%C3%ADpio-do-prestador",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "14725 - NFS-e - Rejeição - natureza operação tributação fora ...",
+      "snippet": "RPS: 525, Série: 1 - Quando a natureza da operação for tributação fora do município, o campo município da prestação do serviço deverá ser ...",
+      "link": "https://suporte.senior.com.br/hc/pt-br/articles/4408993664660-14725-NFS-e-Rejei%C3%A7%C3%A3o-natureza-opera%C3%A7%C3%A3o-tributa%C3%A7%C3%A3o-fora-munic%C3%ADpio-X-Prestador",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Manual para emissão de Nota fiscal eletrônica (NF-e/NFS-e)",
+      "snippet": "Natureza da operação: verifique com sua contabilidade a natureza da operação dessas tributações. Hipóteses: Exigível, Não incidência, Isenção, Exportação, ...",
+      "link": "https://suporte.legalone.com.br/central/faces/solucao.html?codigo=654",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "NFeI® - Nota Fiscal Eletrônica de Serviços.",
+      "snippet": "- A Natureza da Operação for Tributação fora do Município, nesse caso os campos Alíquota de Serviço e Valor do ISS ficarão abertos para o prestador indicar os ...",
+      "link": "http://www2.ibam.org.br/webiss/nfse04.html",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Campo Natureza da Operação",
+      "snippet": "Atenção: A definição da natureza da operação acarreta na geração ou não de imposto a pagar para a respectiva NFS-e, definindo, também, o responsável tributário.",
+      "link": "https://www.pmpf.rs.gov.br/nfse/wp-content/uploads/sites/63/2022/01/natureza_operacao_atualizado.pdf",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Nota Explicativa - Emissão de NFS-e por cooperativas",
+      "snippet": "Natureza da Operação: Selecionar obrigatoriamente a opção \"Tributação no município de Natal\". 3. Quadro Resumo para Emissão. Tipo de Receita.",
+      "link": "https://www.legisweb.com.br/noticia/?id=32474",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "natureza operação NFS-e tributação município",
+      "titulo": "Campos Da NFSe: Quais São E Como Preencher",
+      "snippet": "Tributação do ISSQN (Situação Tributária): Indique a situação do imposto, que pode ser “Tributação no município”, “Isenção”, “Imunidade” ou “Retenção na fonte”.",
+      "link": "https://qive.com.br/blog/campos-nfse/",
+      "extraido_em": "2026-01-31T12:32:39.710Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Retenção de impostos: tabela de alíquotas e nota fiscal",
+      "snippet": "Tabela completa de alíquotas de retenção ; COFINS, 3 %, Retida junto ao PIS e CSLL em notas de serviços. ; INSS, 11 %, Serviços que envolvem ...",
+      "link": "https://contaazul.com/blog/retencao-de-impostos/",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Fato gerador das retenções federais",
+      "snippet": "Descubra o que é retenção federal, quais tributos estão envolvidos e como ela impacta empresas no pagamento de impostos como IRRF, PIS, Cofins e INSS.",
+      "link": "https://www.jettax.com.br/blog/fato-gerador-das-retencoes-federais/",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Retenções do Simples Nacional: INSS, IRRF, CSLL e Mais",
+      "snippet": "Entenda quais são as retenções do Simples Nacional e quando cada um dos itens deve ou não ser retido!",
+      "link": "https://qive.com.br/blog/simples-nacional-quais-as-retencoes-em-geral/",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Retenção de Impostos na Fonte: Como Funciona a ...",
+      "snippet": "As alíquotas somadas correspondem a 4,65% (0,65% de PIS/PASEP, 3% de COFINS e 1% de CSLL). Esses valores são destinados ao financiamento de ...",
+      "link": "https://www.emrichleao.adv.br/blog/6-artigos/177-retencao-de-impostos-na-fonte-como-funciona-a-retencao-de-tributos-como-ir-contribuicao-ao-inss-pis-e-cofins-nas-operacoes-de-prestacao-de-servicos-e-em-contratos-com-empresas",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Cartilha-de-Retencoes-Tributarias-1.pdf",
+      "snippet": "De acordo com o art. 32, inciso III, da Lei nº 10.833/03, é dispensada a retenção dos tributos PIS/COFINS/CSLL para as empresas optantes do Simples Nacional.",
+      "link": "https://www.scge.pe.gov.br/wp-content/uploads/2021/12/Cartilha-de-Retencoes-Tributarias-1.pdf",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Retenções de Impostos em Notas Fiscais de Serviço (NFS-e)",
+      "snippet": "A emissão de notas fiscais de serviço envolve diferentes tributações conforme o regime tributário e o tipo de serviço.",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/31991080905879-Reten%C3%A7%C3%B5es-de-Impostos-em-Notas-Fiscais-de-Servi%C3%A7o-NFS-e",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Tabela de impostos nota fiscal prestação de serviços",
+      "snippet": "Tabela de impostos nota fiscal prestação de serviços ; INSS, 0%, 3,5% ou 11%, Incide retenção deste tributo sobre a empresa contratante do serviço de mão de obra ...",
+      "link": "https://www.contabilizei.com.br/contabilizei-responde/tabela-de-impostos-nota-fiscal-prestacao-de-servicos/",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Legislação",
+      "snippet": "Os pagamentos forem efetuados à entidade aberta de previdência complementar sem fins lucrativos, não haverá retenção em relação ao Imposto de Renda, cabendo, ...",
+      "link": "https://www.econeteditora.com.br/boletim_imposto_renda/ir-07/tributosfederais_irpj-csll-pis-cofins_pagamentos-orgaos-fede",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Retenção sobre nota fiscal - Portal Gov.br",
+      "snippet": "A retenção de 11% (onze por cento) a título de contribuição previdenciária, na forma do art. 31 da Lei n. 8.212/91, não configura nova ...",
+      "link": "https://www.gov.br/pgfn/pt-br/cidadania-tributaria/por-assunto/tributacao-sobre-a-folhas-de-salarios-e-outras/contribuicoes-previdenciarias-1/retencao-sobre-nota-fiscal",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    },
+    {
+      "categoria": "NOTA_FISCAL",
+      "query": "retenções NFS-e ISS IRRF INSS PIS COFINS CSLL",
+      "titulo": "Emissão de NFS-e no Portal Nacional - Tributos Federais",
+      "snippet": "- Informar PIS/COFINS como Retido e preencher o campo “Valor Retido PIS/COFINS/CSLL” apenas com o valor correspondente à retenção de CSLL (1%).",
+      "link": "https://www.contabeis.com.br/forum/tributos-federais/412344/emissao-de-nfs-e-no-portal-nacional-tributos-federais/",
+      "extraido_em": "2026-01-31T12:32:40.983Z"
+    }
+  ]
+}

@@ -1,0 +1,3023 @@
+{
+  "versao": "1.0.0",
+  "gerado_em": "2026-01-31T12:35:25.691Z",
+  "autor": "Agente MBA - Base de Conhecimento",
+  "indicadores": {
+    "liquidez": {
+      "Liquidez Corrente": {
+        "formula": "Ativo Circulante / Passivo Circulante",
+        "interpretacao": "> 1 indica capacidade de pagar obrigações de curto prazo",
+        "ideal": "> 1,5"
+      },
+      "Liquidez Seca": {
+        "formula": "(Ativo Circulante - Estoques) / Passivo Circulante",
+        "interpretacao": "Exclui estoques por serem menos líquidos",
+        "ideal": "> 1,0"
+      },
+      "Liquidez Imediata": {
+        "formula": "Disponível / Passivo Circulante",
+        "interpretacao": "Capacidade de pagamento imediato",
+        "ideal": "> 0,2"
+      },
+      "Liquidez Geral": {
+        "formula": "(AC + RLP) / (PC + PNC)",
+        "interpretacao": "Capacidade de pagamento total",
+        "ideal": "> 1,0"
+      },
+      "Capital Circulante Líquido": {
+        "formula": "Ativo Circulante - Passivo Circulante",
+        "interpretacao": "Folga financeira de curto prazo",
+        "ideal": "Positivo"
+      }
+    },
+    "rentabilidade": {
+      "ROE (Return on Equity)": {
+        "formula": "Lucro Líquido / Patrimônio Líquido",
+        "interpretacao": "Retorno sobre capital próprio",
+        "ideal": "> 15%"
+      },
+      "ROA (Return on Assets)": {
+        "formula": "Lucro Líquido / Ativo Total",
+        "interpretacao": "Retorno sobre ativos totais",
+        "ideal": "> 5%"
+      },
+      "ROI (Return on Investment)": {
+        "formula": "(Ganho - Custo) / Custo",
+        "interpretacao": "Retorno sobre investimento específico",
+        "ideal": "> 0"
+      },
+      "Margem Bruta": {
+        "formula": "(Receita - CMV) / Receita",
+        "interpretacao": "Lucro bruto por real de venda",
+        "ideal": "Varia por setor"
+      },
+      "Margem Operacional": {
+        "formula": "Lucro Operacional / Receita",
+        "interpretacao": "Eficiência operacional",
+        "ideal": "> 10%"
+      },
+      "Margem Líquida": {
+        "formula": "Lucro Líquido / Receita",
+        "interpretacao": "Lucro final por real de venda",
+        "ideal": "> 5%"
+      },
+      "EBITDA": {
+        "formula": "Lucro Operacional + Depreciação + Amortização",
+        "interpretacao": "Geração de caixa operacional",
+        "ideal": "Positivo crescente"
+      }
+    },
+    "endividamento": {
+      "Endividamento Geral": {
+        "formula": "(PC + PNC) / Ativo Total",
+        "interpretacao": "Proporção de capital de terceiros",
+        "ideal": "< 60%"
+      },
+      "Composição Endividamento": {
+        "formula": "Passivo Circulante / (PC + PNC)",
+        "interpretacao": "Concentração no curto prazo",
+        "ideal": "< 50%"
+      },
+      "Grau Alavancagem Financeira": {
+        "formula": "ROE / ROA",
+        "interpretacao": "Efeito da dívida na rentabilidade",
+        "ideal": "> 1"
+      },
+      "Cobertura de Juros": {
+        "formula": "EBITDA / Despesas Financeiras",
+        "interpretacao": "Capacidade de pagar juros",
+        "ideal": "> 3x"
+      }
+    },
+    "atividade": {
+      "PMR (Prazo Médio Recebimento)": {
+        "formula": "(Contas a Receber / Receita) x 360",
+        "interpretacao": "Dias para receber vendas",
+        "ideal": "< 45 dias"
+      },
+      "PMP (Prazo Médio Pagamento)": {
+        "formula": "(Fornecedores / Compras) x 360",
+        "interpretacao": "Dias para pagar fornecedores",
+        "ideal": "> PMR"
+      },
+      "PME (Prazo Médio Estocagem)": {
+        "formula": "(Estoque / CMV) x 360",
+        "interpretacao": "Dias de estoque",
+        "ideal": "< 60 dias"
+      },
+      "Ciclo Operacional": {
+        "formula": "PME + PMR",
+        "interpretacao": "Ciclo completo de operação",
+        "ideal": "Menor possível"
+      },
+      "Ciclo Financeiro": {
+        "formula": "PME + PMR - PMP",
+        "interpretacao": "Necessidade de capital de giro",
+        "ideal": "< 30 dias"
+      },
+      "Giro do Ativo": {
+        "formula": "Receita / Ativo Total",
+        "interpretacao": "Vendas geradas por ativo",
+        "ideal": "> 1x"
+      }
+    },
+    "valuation": {
+      "EV/EBITDA": {
+        "formula": "Enterprise Value / EBITDA",
+        "interpretacao": "Múltiplo de valor da empresa",
+        "ideal": "< 10x"
+      },
+      "P/L": {
+        "formula": "Preço por Ação / Lucro por Ação",
+        "interpretacao": "Múltiplo de lucro",
+        "ideal": "< 15x"
+      },
+      "P/VPA": {
+        "formula": "Preço por Ação / Valor Patrimonial por Ação",
+        "interpretacao": "Múltiplo de patrimônio",
+        "ideal": "< 2x"
+      },
+      "WACC": {
+        "formula": "Ke x (E/(D+E)) + Kd x (1-t) x (D/(D+E))",
+        "interpretacao": "Custo médio ponderado de capital",
+        "ideal": "Menor que ROA"
+      }
+    }
+  },
+  "dupont": {
+    "DuPont 3 Fatores": {
+      "formula": "ROE = Margem Líquida x Giro do Ativo x Multiplicador de Alavancagem",
+      "componentes": [
+        "Lucro/Receita",
+        "Receita/Ativo",
+        "Ativo/PL"
+      ],
+      "interpretacao": "Decomposição do ROE em eficiência operacional, uso de ativos e alavancagem"
+    },
+    "DuPont 5 Fatores": {
+      "formula": "ROE = (EBIT/Receita) x (Receita/Ativo) x (Ativo/PL) x (EBT/EBIT) x (LL/EBT)",
+      "componentes": [
+        "Margem Operacional",
+        "Giro do Ativo",
+        "Alavancagem",
+        "Efeito Juros",
+        "Efeito IR"
+      ],
+      "interpretacao": "Análise detalhada dos drivers de rentabilidade"
+    }
+  },
+  "relatorios": {
+    "Dashboard Financeiro": {
+      "indicadores": [
+        "Liquidez Corrente",
+        "ROE",
+        "Margem EBITDA",
+        "Ciclo Financeiro"
+      ],
+      "frequencia": "Mensal",
+      "visualizacao": "Gráficos de tendência + scorecards"
+    },
+    "Análise de Desempenho": {
+      "indicadores": [
+        "Receita",
+        "Margem Bruta",
+        "EBITDA",
+        "Lucro Líquido"
+      ],
+      "frequencia": "Mensal/Trimestral",
+      "visualizacao": "Real vs Orçado vs Ano Anterior"
+    },
+    "Análise de Liquidez": {
+      "indicadores": [
+        "Liquidez Corrente",
+        "Liquidez Seca",
+        "CCL",
+        "Ciclo Financeiro"
+      ],
+      "frequencia": "Mensal",
+      "visualizacao": "Evolução + alerta se abaixo do ideal"
+    },
+    "Análise de Rentabilidade": {
+      "indicadores": [
+        "ROE",
+        "ROA",
+        "ROIC",
+        "Margens"
+      ],
+      "frequencia": "Trimestral",
+      "visualizacao": "Decomposição DuPont + benchmark setor"
+    },
+    "Fluxo de Caixa Projetado": {
+      "indicadores": [
+        "Saldo inicial",
+        "Entradas",
+        "Saídas",
+        "Saldo final"
+      ],
+      "frequencia": "Semanal/Mensal",
+      "visualizacao": "Projeção 12 meses + cenários"
+    }
+  },
+  "snippets": [
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Qual é a fórmula do índice de liquidez corrente?",
+      "snippet": "Para calcular o índice de liquidez corrente, divida o ativo circulante da empresa pelo passivo circulante. Normalmente, os ativos circulantes ...",
+      "link": "https://stripe.com/br/resources/more/what-is-the-current-ratio-why-businesses-need-to-know-this-metric",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Índice de Liquidez Corrente: importância e como analisar",
+      "snippet": "O índice de liquidez corrente é utilizado para medir o potencial que uma empresa tem de cumprir seus compromissos financeiros de curto prazo.",
+      "link": "https://vexpenses.com.br/blog/indice-liquidez-corrente/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Índice de Liquidez Corrente: Fórmula e Como Calcular",
+      "snippet": "Interpretação do resultado · ILC > 1: a empresa tem ativos suficientes para cobrir suas obrigações de curto prazo. · ILC entre 1,5 e 2: geralmente ...",
+      "link": "https://flashapp.com.br/blog/indice-de-liquidez-corrente-formula-como-calcular",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Liquidez corrente: o que é, fórmula e valor ideal",
+      "snippet": "Liquidez corrente é a razão entre ativo circulante (direitos a curto prazo) e passivo circulante (dívidas a curto prazo).",
+      "link": "https://www.suno.com.br/artigos/liquidez-corrente/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Liquidez Corrente: entenda o que é e como analisar esse ...",
+      "snippet": "Dessa forma, temos a seguinte fórmula: Liquidez geral = (ativo circulante – ativo não circulante)/ (passivo circulante – passivo não circulante)",
+      "link": "https://statusinvest.com.br/termos/l/liquidez-corrente",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Liquidez Corrente: o que é, como calcular e interpretar ...",
+      "snippet": "O cálculo da Liquidez Corrente é feito a partir de duas contas principais de um Balanço Patrimonial: o Ativo Circulante e o Passivo Circulante.",
+      "link": "https://www.klooks.com.br/blog/o-que-e-liquidez-corrente/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Indicadores de Liquidez: Corrente, Seca, Imediata e Geral",
+      "snippet": "Liquidez Corrente = Ativo Circulante / Passivo Circulante​​ A partir do resultado obtido podemos fazer a seguinte análise: Maior que 1: demonstra ...",
+      "link": "https://www.treasy.com.br/blog/indicadores-de-liquidez-corrente-seca-imediata-e-geral/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Indicadores de Liquidez em Empresas",
+      "snippet": "O Índice de Liquidez Corrente (ILC) calcula a relação entre o Ativo Circulante e o Passivo Circulante da empresa. Com base no BP, pega-se o ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/indicadores-liquidez-empresas/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Índice de Liquidez Corrente - Current Ratio",
+      "snippet": "A fórmula do índice de liquidez corrente é calculada dividindo-se o ativo circulante de uma empresa pelo seu passivo circulante. Um índice de ...Current Ratio measures a company's near-term liquidity, or more specifically, the short-term obligations coming due within one year.",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/current-ratio/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez corrente fórmula interpretação",
+      "titulo": "Índice de Liquidez Corrente: O que é e como calcular",
+      "snippet": "Essa fórmula fornece uma maneira direta de avaliar a liquidez de uma empresa e sua capacidade de cumprir obrigações financeiras de curto prazo.",
+      "link": "https://br.investing.com/academy/analysis/liquidez-corrente/",
+      "extraido_em": "2026-01-31T12:34:17.372Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Liquidez Seca: o que é, como calcular e como avaliar esse ...",
+      "snippet": "A fórmula é: Liquidez Seca = (Ativo Circulante – Estoque) / Passivo Circulante. Quando a liquidez seca é boa? Uma liquidez seca é considerada ...",
+      "link": "https://www.empiricus.com.br/explica/liquidez-seca/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Índice de liquidez seca: como calcular + planilha gratuita",
+      "snippet": "No cálculo da liquidez seca, a prioridade são ativos como dinheiro e contas a receber (mais facilmente acessíveis em momentos de necessidade).",
+      "link": "https://vexpenses.com.br/blog/indice-de-liquidez-seca/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Indicadores de Liquidez: Corrente, Seca, Imediata e Geral",
+      "snippet": "Liquidez Corrente = Ativo Circulante / Passivo Circulante · Liquidez Seca = (Ativo Circulante - Estoques) / Passivo Circulante · Liquidez Imediata ...",
+      "link": "https://www.treasy.com.br/blog/indicadores-de-liquidez-corrente-seca-imediata-e-geral/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Liquidez seca: como calcular e interpretar esse indicador",
+      "snippet": "A fórmula da liquidez seca é a seguinte: Fórmula liquidez seca Liquidez Seca = Ativo Circulante - Estoques / Passivo Circulante. Onde: Ativo ...",
+      "link": "https://flashapp.com.br/blog/liquidez-seca",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "O que é e como calcular a liquidez seca da empresa",
+      "snippet": "A liquidez seca é um importante indicador da saúde financeira de empresas e investimentos. Saiba como calcular e como medir os resultados.",
+      "link": "https://www.serasa.com.br/carteira-digital/blog/como-calcular-a-liquidez-seca/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Liquidez seca: entenda o que é e como calcular",
+      "snippet": "Como calcular? A fórmula da liquidez seca é simples: Liquidez Seca = (Ativo Circulante – Estoques) / Passivo Circulante. Onde: Ativos ...",
+      "link": "https://paytrack.com.br/blog/liquidez-seca/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "COMO CALCULAR E ANALISAR O INDICE DE LIQUIDEZ ...",
+      "snippet": "COMO CALCULAR E ANALISAR O INDICE DE LIQUIDEZ SECA. 2.5K views · 3 ... Giro de Estoque: Como calcular (Indicador de logística). 3ens ...",
+      "link": "https://www.youtube.com/watch?v=n4OIFbDVDyk",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Liquidez seca: conheça esse indicador e saiba como fazer ...",
+      "snippet": "O QUE É LIQUIDEZ SECA? A liquidez seca é um indicador que mostra se a empresa é capaz de honrar seus compromissos de curto prazo.",
+      "link": "https://statusinvest.com.br/termos/l/liquidez-seca",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Indicadores de Liquidez em Empresas",
+      "snippet": "Esse controle se dá por meio de análise ... fórmula: ILC = AC / PC. Onde: AC = Ativo Circulante. PC = Passivo Circulante. Índice de Liquidez Seca ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/indicadores-liquidez-empresas/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez seca fórmula análise",
+      "titulo": "Liquidez seca: o que é, vantagens e como calcular ...",
+      "snippet": "A liquidez seca analisa a saúde financeira de um negócio e se o seu fluxo de caixa é suficiente para liquidar rapidamente quaisquer ativos ...",
+      "link": "https://www.topinvest.com.br/liquidez-seca/",
+      "extraido_em": "2026-01-31T12:34:18.560Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Como a liquidez imediata é calculada?",
+      "snippet": "(Ativos circulantes - estoque - contas a receber) / Passivos circulantes = Liquidez imediata. Os ativos circulantes são aqueles hábeis à rápida ...",
+      "link": "https://maisretorno.com/portal/termos/l/liquidez-imediata",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Liquidez Imediata: o que é, como calcular e qual a ...",
+      "snippet": "A liquidez imediata é um indicador financeiro que visa apontar a capacidade de uma empresa em pagar dívidas e outras obrigações no curto prazo.",
+      "link": "https://www.empiricus.com.br/explica/liquidez-imediata/",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Capacidade de pagamento da empresa: como calcular e ...",
+      "snippet": "Fórmula: Liquidez Imediata = Caixa e Equivalentes de Caixa / Passivo Circulante · Fórmula: Liquidez Corrente = Ativo Circulante / Passivo ...",
+      "link": "https://www.iugu.com/blog/capacidade-pagamento",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Tudo que você precisa saber sobre índices de liquidez na ...",
+      "snippet": "Liquidez imediata = disponível / passivo circulante. Para exemplificar, vamos seguir usando o passivo circulante de R$ 8.555, mas com R ...",
+      "link": "https://www.concur.com.br/blog/article/indices-de-liquidez",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Indicadores de Liquidez: Corrente, Seca, Imediata e Geral",
+      "snippet": "Liquidez Corrente = Ativo Circulante / Passivo Circulante · Liquidez Seca = (Ativo Circulante - Estoques) / Passivo Circulante · Liquidez Imediata ...",
+      "link": "https://www.treasy.com.br/blog/indicadores-de-liquidez-corrente-seca-imediata-e-geral/",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Qual é a fórmula do índice de liquidez corrente?",
+      "snippet": "Para calcular o índice de liquidez corrente, divida o ativo circulante da empresa pelo passivo circulante. Normalmente, os ativos circulantes ...",
+      "link": "https://stripe.com/br/resources/more/what-is-the-current-ratio-why-businesses-need-to-know-this-metric",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Liquidez imediata: entenda como analisar este indicador",
+      "snippet": "O cálculo da liquidez imediata considera somente o caixa e seus equivalentes, por exemplo, Certificados de Depósito Bancário (CDBs) e Letras de ...",
+      "link": "https://statusinvest.com.br/termos/l/liquidez-imediata",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Liquidez imediata: o que é, qual a importância e ...",
+      "snippet": "A liquidez imediata é um indicador de desempenho cujo objetivo é mensurar se uma empresa tem capacidade de cumprir com suas obrigações e ...",
+      "link": "https://www.topinvest.com.br/glossario/liquidez-imediata/",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "COMO CALCULAR E ANALISAR A LIQUIDEZ IMEDIATA ...",
+      "snippet": "COMO CALCULAR E ANALISAR A LIQUIDEZ IMEDIATA DE UMA EMPRESA. 3.5K views · 3 years ago. BRASIL ...more. Múltiplos Assuntos. 2.47K. Subscribe.",
+      "link": "https://www.youtube.com/watch?v=yGdHWrN50OU",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez imediata cálculo",
+      "titulo": "Liquidez Imediata: o que é e qual a importância desse ...",
+      "snippet": "A liquidez imediata é um indicador financeiro que busca mostrar a capacidade de uma empresa de quitar suas dívidas e obrigações de curto prazo.",
+      "link": "https://blog.inco.vc/financas/liquidez-imediata/",
+      "extraido_em": "2026-01-31T12:34:19.618Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Aprenda como usar a fórmula de liquidez geral corretamente",
+      "snippet": "A liquidez geral é um indicador financeiro que mede a capacidade da empresa de honrar suas obrigações de curto e longo prazo com os recursos ...",
+      "link": "https://www.concur.com.br/blog/article/formula-liquidez-geral",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Liquidez geral: o que é, qual a importância e como calcular",
+      "snippet": "A liquidez geral é um indicador financeiro que mensura a capacidade de uma organização de cumprir com suas obrigações a curto e longo prazo.",
+      "link": "https://www.topinvest.com.br/glossario/liquidez-geral/",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Indicadores de Liquidez em Empresas",
+      "snippet": "O Índice de Liquidez Corrente (ILC) calcula a relação entre o Ativo Circulante e o Passivo Circulante da empresa. Com base no BP, pega-se o ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/indicadores-liquidez-empresas/",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Índice de Liquidez Geral: entenda a importância, o cálculo ...",
+      "snippet": "O índice de liquidez geral é uma métrica financeira que avalia a capacidade de uma empresa em honrar suas obrigações de longo prazo.",
+      "link": "https://vexpenses.com.br/blog/indice-de-liquidez-geral/",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Liquidez Geral: O que é, Fórmula, Cálculo e Interpretação ...",
+      "snippet": "A Liquidez Geral (LG) é um indicador financeiro que mede a capacidade de uma empresa em cumprir suas obrigações de curto e longo prazos ...",
+      "link": "https://blog.leverpro.com.br/post/entendendo-a-liquidez-geral",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Índices de liquidez: o que são, tipos e como calcular",
+      "snippet": "O índice de liquidez é um conjunto de indicadores financeiros que medem a capacidade de uma empresa de pagar suas obrigações de curto e longo ...",
+      "link": "https://sejaefi.com.br/blog/indices-de-liquidez",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Liquidez Geral: entenda o que é e como é calculada",
+      "snippet": "A liquidez geral é um indicador utilizado para medir a capacidade que uma empresa tem de honrar com as suas obrigações de curto e longo prazo.",
+      "link": "https://maisretorno.com/portal/termos/l/liquidez-geral",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Índices de Liquidez: o que são e quais os principais",
+      "snippet": "O índice de liquidez geral (LG) avalia a capacidade de uma empresa de cumprir suas obrigações considerando todos os ativos, incluindo aqueles ...",
+      "link": "https://investnews.com.br/guias/indicadores-de-liquidez-entenda/",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "Risco de liquidez: como manter a saúde financeira da sua ...",
+      "snippet": "Para calcular a liquidez geral, soma-se tudo o que a empresa pode converter em dinheiro a curto e longo prazo (ativo circulante e realizável a longo prazo) e ...",
+      "link": "https://www.itau.com.br/sustentabilidade/itaumulherempreendedora/plataforma/conteudos/risco-de-liquidez-como-manter-a-saude-financeira-da-sua-empresa/",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "indicador liquidez geral empresa",
+      "titulo": "O que são Indicadores de Liquidez ...",
+      "snippet": "A liquidez é a folga financeira, a capacidade que uma empresa tem de honrar com seus compromissos. Os indicadores de liquidez irão revelar o ...",
+      "link": "https://www.youtube.com/watch?v=ONdu3yOd4AE",
+      "extraido_em": "2026-01-31T12:34:20.972Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital Circulante Líquido (CCL): o que é, como calcular e ...",
+      "snippet": "O Capital Circulante Líquido é um indicador que mede a capacidade de uma organização cumprir suas obrigações. Saiba o que é o Capital ...",
+      "link": "https://www.empiricus.com.br/explica/capital-circulante-liquido/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital circulante líquido: o que é e como calcular?",
+      "snippet": "A análise do CCL também permite que você consiga se planejar para atravessar crises financeiras e econômicas. Nesses períodos de recessão, é comum que o volume ...",
+      "link": "https://buzaneli.com.br/capital-circulante-liquido-o-que-e-e-como-calcular/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital circulante líquido (CCL): o que é e como calcular?",
+      "snippet": "O CCL (Capital Circulante Líquido) é um índice que indica a diferença entre o Ativo Circulante e o Passivo Circulante. Sendo assim, esse índice ...",
+      "link": "https://www.h4money.com.br/fundamentos/capital-circulante-liquido-ccl-o-que-e-e-como-calcular",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "O que é capital circulante líquido? - Contador Responde",
+      "snippet": "Um CCL positivo sugere que a empresa está em boa posição para cumprir suas obrigações, enquanto um CCL negativo pode indicar dificuldades de ...",
+      "link": "https://www.contabilizei.com.br/contabilizei-responde/o-que-e-capital-circulante-liquido/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "1 Análise Empírica dos Impactos dos Accruals na Variação do ...",
+      "snippet": "O capital circulante líquido (CCL) contempla também recursos provenientes de operações próprias da empresa, as quais são representadas por meio do lucro ou ...",
+      "link": "https://congressousp.fipecafi.org/anais/artigos52005/58.pdf",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "CCL (Capital Circulante Líquido): saiba o que é e como ...",
+      "snippet": "O CCL é um indicador que representa o compromisso de uma empresa com suas contas. Descubra como analisá-lo!",
+      "link": "https://maisretorno.com/portal/termos/c/ccl-capital-circulante-liquido",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital Circulante Líquido: o que é e como calcular?",
+      "snippet": "O CCL é a representação da diferença entre o ativo circulante e o passivo circulante de uma empresa. Com ele, se indica a capacidade que a ...",
+      "link": "https://www.facilite.co/capital-circulante-liquido",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital circulante líquido (CCL): domine este indicador!",
+      "snippet": "Já o capital circulante líquido (CCL) mostra a diferença entre os recursos de curto prazo disponíveis e as dívidas a pagar no mesmo prazo. Em ...",
+      "link": "https://www.danielebanco.com.br/blog/capital-circulante-liquido/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "CCL: Conheça Mais Sobre o Capital Circulante Líquido",
+      "snippet": "O CCL é um dado utilizado para entender a diferença existente entre o passivo e o ativo circulante de uma empresa. Clique e saiba mais sobre ...",
+      "link": "https://www.certifiquei.com.br/ccl/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "capital circulante líquido CCL análise",
+      "titulo": "Capital Circulante Líquido: A Saúde Financeira de Curto ...",
+      "snippet": "O Capital Circulante Líquido (CCL) é um indicador financeiro crucial para avaliar a saúde financeira de uma empresa no curto prazo. Ele revela a capacidade da ...",
+      "link": "https://grupoinvestor.com.br/glossario/capital-circulante-liquido-a-saude-financeira-de-curto-prazo-da-sua-empresa/",
+      "extraido_em": "2026-01-31T12:34:22.171Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROI, ROA e ROE: fórmula, o que são e como fazer o cálculo",
+      "snippet": "ROE = (lucro líquido / patrimônio líquido) x 100. No exemplo para essa fórmula, a sua empresa vai considerar novamente o lucro líquido de R$200 mil relativo ao ...",
+      "link": "https://www.docusign.com/pt-br/blog/roi-roa-roe-formula",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "Cálculo do Retorno sobre o Patrimônio Líquido (ROE) e ...",
+      "snippet": "A fórmula para calcular a TCS é: ROE x (Lucros Retidos ÷ Lucro Líquido). Você também pode usar a taxa de pagamento: ROE x ( 1 - Índice de Distribuição de ...To calculate return on equity (ROE), divide a company's net income by its shareholders' equity. ROE is a gauge of a corporation's profitability and how ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/r/returnonequity.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "O que é Retorno sobre Patrimônio Líquido (ROE)? - Toro Blog",
+      "snippet": "Podemos simplificar ainda mais e apresentar a fórmula exata para determinar o ROE: ROE = Lucro líquido ÷ Patrimônio líquido. Ao calcular o ...",
+      "link": "https://blog.toroinvestimentos.com.br/investimentos/roe-retorno-sobre-patrimonio-liquido/",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROE (Retorno sobre Patrimônio): saiba como analisar ...",
+      "snippet": "Sua fórmula é: ROE = Lucro Líquido/Patrimônio Líquido. Exemplo: empresa com lucro líquido de R$ 100 mil e patrimônio de R$ 500 mil apresenta ...",
+      "link": "https://www.suno.com.br/artigos/roe-utilidade/",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROE - Retorno sobre o Patrimônio Líquido: o que é e como ...",
+      "snippet": "ROE = (Lucro Líquido / Patrimônio Líquido) x 100. É importante salientar que o lucro líquido é relativo ao ano fiscal completo, antes de ser ...",
+      "link": "https://maisretorno.com/portal/termos/r/roe",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "Guia completo sobre o que é ROE",
+      "snippet": "Ou seja, para descobrir o ROE da sua empresa, basta dividir o Lucro Líquido pelo Patrimônio Líquido e multiplicar por 100 para obter o valor em ...",
+      "link": "https://www.omie.com.br/blog/o-que-e-roe/",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROE: entenda o Retorno sobre o Patrimônio Líquido",
+      "snippet": "ROE = (Lucro Líquido / Patrimônio Líquido) x 100 ... Utilizando a fórmula do ROE, temos: Fórmula ROE. Aplicando os valores: Exemplo fórmula ROE ...",
+      "link": "https://flashapp.com.br/blog/roe-retorno-sobre-patrimonio-liquido-return-of-equity",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "Como calcular o retorno sobre o patrimônio líquido (ROE) e ...",
+      "snippet": "É importante observar que o ROE é calculado utilizando o lucro líquido e o patrimônio líquido dos acionistas durante um período determinado — ...DuPont formula analysis incorporates financial leverage, net profit margin, and asset turnover into your original ROE equation and allows you to ...",
+      "link": "https://translate.google.com/translate?u=https://online.hbs.edu/blog/post/return-on-equity-formula&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROI, ROA e ROE: o que são, diferenças e como calcular",
+      "snippet": "ROE = Lucro Líquido / Patrimônio Líquido x 100. Esse indicador é muito usado por investidores que desejam entender a rentabilidade de suas ...",
+      "link": "https://www.totvs.com/blog/gestao-financeira/roi-roa-roe/",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROE retorno sobre patrimônio líquido fórmula",
+      "titulo": "ROE E ROA - COMO CALCULAR? Rentabilidade do ...",
+      "snippet": "O retorno sobre o patrimônio líquido (ROE) é uma medida do desempenho financeiro calculado pela divisão do lucro líquido pelo patrimônio lí ...",
+      "link": "https://www.youtube.com/watch?v=cKWFUvkWRCk",
+      "extraido_em": "2026-01-31T12:34:23.400Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Retorno sobre o Ativo: o que é e como calcular o ROA",
+      "snippet": "O cálculo de Retorno sobre o Ativo é utilizado para analisar a capacidade que uma empresa tem de gerar lucros a partir de seus ativos.",
+      "link": "https://www.treasy.com.br/blog/roa-retorno-sobre-o-ativo/",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Retorno sobre Ativos - Fórmula, Cálculo e Exemplos de ROA",
+      "snippet": "Você pode calcular o retorno sobre ativos usando a fórmula: ROA = Lucro Líquido / Ativos Totais Médios.Key Takeaways · Return on assets is a profitability ratio that reveals how efficiently a company converts its assets into profit. · The ROA ...",
+      "link": "https://translate.google.com/translate?u=https://corporatefinanceinstitute.com/resources/accounting/return-on-assets-roa-formula/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "ROA: como analisar e calcular esse indicador?",
+      "snippet": "O cálculo do ROA é o lucro líquido dividido pelo ativo total da empresa. O resultado vai dizer quanto é possível gerar de ganhos com os recursos ...",
+      "link": "https://investnews.com.br/guias/roa-como-analisar-e-calcular-esse-indicador/",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "ROI, ROA e ROE: fórmula, o que são e como fazer o cálculo",
+      "snippet": "O ROA é a sigla em inglês para \"Retorno sobre o Ativo\". Ele observa qual é a capacidade da empresa de ser lucrativa a partir dos ativos demonstrados em balanço, ...",
+      "link": "https://www.docusign.com/pt-br/blog/roi-roa-roe-formula",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Retorno sobre Ativos (ROA): como avaliar a eficiência de ...",
+      "snippet": "Ao analisar o indicador, é possível verificar se a companhia está utilizando seus ativos de maneira eficiente e rentável.",
+      "link": "https://www.nordinvestimentos.com.br/blog/roa-retorno-sobre-ativos/",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "ROA: o que é e como calcular o indicador no setor financeiro",
+      "snippet": "O retorno sobre ativos mostra se a empresa está conseguindo usar seus recursos para gerar lucro de forma eficiente. · Um ROA alto pode indicar ...",
+      "link": "https://flashapp.com.br/blog/roa-retorno-sobre-ativos",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Entendendo o Índice de Retorno sobre Ativos (ROA) para ...",
+      "snippet": "O Retorno sobre Ativos (ROA) mede a eficácia com que uma empresa utiliza seus ativos para gerar lucros. · Um ROA mais elevado indica que uma empresa é eficiente ...Learn how the return on assets (ROA) ratio measures a company's profitability in relation to its total assets, indicating efficiency in asset management.",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/r/returnonassets.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Cálculo dos índices de rentabilidade",
+      "snippet": "O ROA indica a capacidade da empresa de transformar ativos em lucro. Para calculá-lo, divide-se o lucro operacional pelo ativo total médio e multiplica-se o ...",
+      "link": "https://www.fortbrasil.com.br/post/calculo-dos-indices-de-rentabilidade",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "ROA: saiba o que é e como calcular esse indicador",
+      "snippet": "ROA (Return on Assets), ou Retorno sobre o Ativo, é um índice de rentabilidade de ativos que demonstra o quanto uma empresa é rentável em ...",
+      "link": "https://statusinvest.com.br/termos/r/roa",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROA retorno sobre ativos cálculo análise",
+      "titulo": "Retorno Sobre Ativos (ROA): o que é, como analisar e como ...",
+      "snippet": "Já o cálculo do ROA é simples e realizado a partir da seguinte fórmula: ROA = (Lucro líquido / Ativos totais da companhia) x 100. Como o ROA ...",
+      "link": "https://blog.genialinvestimentos.com.br/o-que-e-roa/",
+      "extraido_em": "2026-01-31T12:34:24.966Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI calcula o retorno de seus investimentos",
+      "snippet": "ROI é a sigla, em inglês, de return on investments, retorno sobre investimentos. Trata-se de um indicador importante, utilizado principalmente na área de ...",
+      "link": "https://sebrae.com.br/sites/PortalSebrae/artigos/roi-calcula-o-retorno-de-seus-investimentos,17870ffe48437810VgnVCM1000001b00320aRCRD",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "O que é ROI: como calcular retorno sobre o investimento?",
+      "snippet": "A fórmula para calcular o ROI considera o ganho obtido menos o investimento inicial. Trata-se de um indicador gerencial usado para saber qual foi o resultado ...",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/o-que-e-roi-como-calcular-retorno-sobre-o-investimento/",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI: o que é o Retorno sobre Investimento [+ calculadora]",
+      "snippet": "É muito usado na área de Marketing e sua fórmula é: (receita gerada – custos e investimentos) / custos e investimentos.",
+      "link": "https://www.rdstation.com/blog/marketing/roi/",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "O que é ROI e como melhorar o seu?",
+      "snippet": "ROI – Retorno sobre Investimento. O ROI é uma métrica abrangente que avalia a eficácia geral de um investimento, seja em projetos, campanhas de ...",
+      "link": "https://www.salesforce.com/br/blog/roi/",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "Retorno sobre o investimento",
+      "snippet": "A fórmula para a realização do cálculo é a seguinte: [ROI = (Ganho obtido – Investimento inicial) / Investimento inicial.",
+      "link": "https://pt.wikipedia.org/wiki/Retorno_sobre_o_investimento",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "O que é ROI e como calcular? - Sebrae SC",
+      "snippet": "Por meio desse indicador, é possível saber quanto a empresa está ganhando (ou perdendo) em cada investimento realizado.",
+      "link": "https://www.sebrae-sc.com.br/blog/o-que-e-roi-e-como-calcular",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI, ROA e ROE: fórmula, o que são e como fazer o cálculo",
+      "snippet": "ROI = [(receita - custo) / custo] x 100. Vamos imaginar, por exemplo, que a sua empresa quer medir o retorno sobre o investimento em uma cultura paperless, isto ...",
+      "link": "https://www.docusign.com/pt-br/blog/roi-roa-roe-formula",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI em marketing: conceito e aplicação prática",
+      "snippet": "O Return On Investment (ROI), ou retorno sobre investimento, é um dos indicadores mais importantes para avaliar o desempenho de campanhas e estratégias.",
+      "link": "https://www.serasaexperian.com.br/conteudos/roi-em-marketing/",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI – Retorno Sobre o Investimento: tudo é sobre ele!",
+      "snippet": "O mais comum é utilizar o indicador de ROI para avaliar a viabilidade de Investimentos Operacionais, como a aquisição de máquinas, equipamentos, ...",
+      "link": "https://www.treasy.com.br/blog/roi-retorno-sobre-o-investimento/",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ROI retorno sobre investimento",
+      "titulo": "ROI Guide: What it is, How to Calculate it, and ...",
+      "snippet": "Você sabe o que é ROI e como ele pode transformar seus resultados? Neste vídeo, vamos explorar tudo sobre o Retorno sobre Investimento (ROI) ...",
+      "link": "https://www.youtube.com/watch?v=1etj9aSMENo",
+      "extraido_em": "2026-01-31T12:34:25.990Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Saiba quais as diferenças entre margem bruta, ...",
+      "snippet": "A margem EBITDA ou LAJIDA (Lucro Antes de Juros, Impostos, Depreciação e Amortização) é muito semelhante à margem operacional. Consiste na ...",
+      "link": "https://maisretorno.com/portal/margem-de-lucro-de-uma-empresa-qual-a-diferencas-entre-margem-bruta-operacional-ebitda-liquida-ou-mark-up",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Margem Bruta, Líquida e EBITDA",
+      "snippet": "A fórmula para o cálculo é: Margem EBITDA = (EBITDA / Receita líquida) x 100. Note que a margem EBITDA mostra um lucro “limpo”, sem a presença ...",
+      "link": "https://integradeconsulting.com.br/margem-bruta-liquida-e-ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Margem EBITDA: o que é e como calcular esse importante ...",
+      "snippet": "Para calcular a margem EBITDA, é simples: basta dividir o lucro operacional pela receita líquida. ... MARGEM EBITDA = LUCRO OPERACIONAL (EBITDA) / RECEITA LÍQUIDA.",
+      "link": "https://simplifica.contasimples.com/margem-ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Conheça os 10 principais indicadores financeiros de uma ...",
+      "snippet": "A Margem EBITDA, ou margem LAJIDA, refere-se ao cálculo do lucro da empresa, antes dos juros, impostos, depreciação e amortização; e a receita ...",
+      "link": "https://www.insper.edu.br/content/insper-portal/pt/noticias/2022/11/conheca-os-10-principais-indicadores-financeiros-de-uma-empresa.html",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Entenda o EBITDA: cálculo, análise e importância financeira",
+      "snippet": "A margem EBITDA é o percentual que ele representa em relação à receita líquida. Ele mostra, de forma proporcional, quanto da receita está ...",
+      "link": "https://clarke.com.br/post/ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Margem EBITDA vs. Margem de Lucro: Qual a diferença?",
+      "snippet": "A margem EBITDA representa a margem de lucro, adicionando-se a depreciação e a amortização. · O termo geralmente utilizado \"margem de lucro\" pode ser dividido em ...The difference between the EBITDA profit margin and standard profit margins is simply a matter of its exclusion from the GAAP.",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/ask/answers/032715/what-difference-between-ebitda-margin-and-profit-margin.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Entenda a diferença entre margem Bruta, líquida, de ...",
+      "snippet": "EBITDA · Margem bruta: indica a rentabilidade das vendas, excluindo despesas operacionais. · Margem líquida: indica a rentabilidade líquida das ...",
+      "link": "https://dennisnepomuceno.com.br/gestao-financeira/diferenca-margem-bruta-liquida-de-custos-ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Margem EBITDA: analisando a lucratividade operacional ...",
+      "snippet": "A margem EBITDA (em português, margem LAJIDA) se refere à razão do lucro antes de juros, impostos, depreciação e amortização pela receita ...",
+      "link": "https://www.suno.com.br/artigos/margem-ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "Margem bruta: o que é, sua importância e como calcular?",
+      "snippet": "A margem bruta mede a eficiência operacional de uma empresa, mostrando o percentual da receita líquida que sobra após deduzir os custos diretos ...",
+      "link": "https://flashapp.com.br/blog/margem-bruta",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem bruta líquida operacional EBITDA",
+      "titulo": "EBITDA: o que é e como calcular com eficiência",
+      "snippet": "Esse indicador mostra a margem que a empresa obtém diretamente de suas vendas, sem considerar despesas operacionais, financeiras ou impostos.",
+      "link": "https://www.totvs.com/blog/gestao-financeira/ebitda/",
+      "extraido_em": "2026-01-31T12:34:27.396Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT e EBITDA: o que são e quais as diferenças entre eles",
+      "snippet": "Em resumo, a única diferença entre o EBIT e o EBITDA é que o primeiro considera em seu cálculo os efeitos das depreciações e amortizações, ...",
+      "link": "https://www.treasy.com.br/blog/ebit-x-ebitda-o-que-sao-estes-indicadores-e-qual-a-diferenca-entre-eles/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT e EBITDA: diferenças, cálculo e como analisar",
+      "snippet": "A principal distinção entre EBIT e EBITDA está no tratamento dos custos não monetários, como depreciação e amortização. Enquanto o último exclui ...",
+      "link": "https://vexpenses.com.br/blog/ebit-e-ebtida/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT e EBITDA: conceito, diferenças e relevância nas ...",
+      "snippet": "EBIT: é usado para medir o lucro operacional desconsiderando juros e impostos. · EBITDA: além de excluir juros e impostos, ele também ...",
+      "link": "https://paytrack.com.br/blog/ebit-e-ebitda-diferencas/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT e EBITDA: as diferenças e como calcular - Espresso",
+      "snippet": "Diferenças fundamentais entre EBIT e EBITDA · Custos considerados: O EBIT inclui depreciação e amortização, enquanto o EBITDA não. · Visão da lucratividade: O ...",
+      "link": "https://www.espressoapp.com.br/blog/ebit-e-ebitda-as-diferencas-e-como-calcular",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "Ebitda: o que é, para que serve e como calcular?",
+      "snippet": "As expressões Ebit e Ebitda são parecidas. No entanto, os indicadores medem aspectos diferentes da performance financeira de uma empresa.",
+      "link": "https://content.btgpactual.com/blog/financas/ebitda-o-que-e-para-que-serve-e-como-calcular",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBT, EBIT e EBITDA: Entenda as Diferenças e Como ...",
+      "snippet": "Cálculo do EBT: Lucro Líquido + Impostos; EBT = EBIT - Juros + Outras Receitas/Despesas. Cálculo do EBIT: EBITDA - Depreciação e Amortização.",
+      "link": "https://blog.leverpro.com.br/post/ebt-ebit-e-ebitda",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBITDA: o que é e como calcular esse indicador financeiro",
+      "snippet": "A diferença entre EBIT e EBITDA é que o EBIT considera a depreciação e amortização, enquanto o EBITDA exclui esses impactos para mostrar apenas ...",
+      "link": "https://contaazul.com/blog/ebitda/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT vs. EBITDA vs. Lucro Líquido: Métricas de Avaliação ...",
+      "snippet": "Como calcular EBIT, EBITDA e lucro líquido​​ O EBITDA (Lucro antes de Juros, Impostos, Depreciação e Amortização) é o EBIT, mais a Depreciação e Amortização, ...EBITDA deducts OpEx, but no CapEx (both the initial amount and the Depreciation afterward are ignored). Net Income is similar to EBIT: it deducts OpEx and ...",
+      "link": "https://translate.google.com/translate?u=https://breakingintowallstreet.com/kb/valuation/ebit-vs-ebitda/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "Como calcular EBIT: fórmula, diferença para EBITDA e ... - F360",
+      "snippet": "A diferença está na depreciação e amortização. O EBITDA inclui essas despesas não monetárias, enquanto o EBIT não. Por outro lado, o EBITDA ...",
+      "link": "https://f360.com.br/blog/financas/como-calcular-ebit/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "EBITDA EBIT cálculo diferença",
+      "titulo": "EBIT: o que é e como calcular? + Diferença entre EBITDA",
+      "snippet": "Já para calcular a margem EBIT, você deve dividir o valor alcançado com a fórmula anterior (R$ 535 mil) pela receita líquida da empresa no período de análise ( ...",
+      "link": "https://www.agendor.com.br/blog/ebit/",
+      "extraido_em": "2026-01-31T12:34:28.860Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Margem De Contribuição e Ponto De Equilíbrio",
+      "snippet": "O Ponto de Equilíbrio de uma empresa, é o volume de vendas que a empresa precisa realizar para poder pagar os custos e despesas TOTAIS, ou seja, pela ótica ...",
+      "link": "https://portercontabilidade.com.br/margem-de-contribuicao-e-ponto-de-equilibrio-como-calcular/",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Margem de contribuição: você sabe calcular?",
+      "snippet": "A margem de contribuição é uma das principais bases para o cálculo do ponto de equilíbrio de uma empresa – que é o mínimo que uma empresa precisa faturar ...",
+      "link": "https://sebrae.com.br/sites/PortalSebrae/artigos/margem-de-contribuicao-voce-sabe-calcular,24d2b05a4c7c3810VgnVCM100000d701210aRCRD",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "uma análise da margem de contribuição e ponto ...",
+      "snippet": "Na seqüência, apurou-se o custo de cada serviço, a margem de contribuição e por fim o cálculo do ponto de equilíbrio contábil dos serviços. Neste cálculo ...",
+      "link": "https://anaiscbc.emnuvens.com.br/anais/article/download/889/889/889",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "ANÁLISE DA MARGEM DE CONTRIBUIÇÃO E PONTO DE ...",
+      "snippet": "“O ponto de equilíbrio corresponde ao nível em que o volume de vendas cobre os custos fixos dos recursos comprometidos, ou seja, o momento em que a empresa ...",
+      "link": "https://www.unifacvest.edu.br/assets/uploads/files/arquivos/10dc1-trabalho-de-conclusao-de-curso---analise-da-margem-de-contribuicao-e-ponto-de-equilibrio,-e-sua-importancia-para-a-tomada-de-decisoes.pdf",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Fórmula ponto de equilíbrio: o que é e como calcular cada ...",
+      "snippet": "Para chegar à fórmula ponto de equilíbrio, basta dividir os custos fixos pela margem de contribuição e então multiplicar por 100 para achar a porcentagem. Da ...",
+      "link": "https://www.contabilizei.com.br/contabilidade-online/formula-ponto-de-equilibrio-o-que-e-e-como-calcular-cada-um-dos-tipos/",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "AULA 18 | RESUMÃO | PONTO DE EQUILÍBRIO",
+      "snippet": "AULA 18 | RESUMÃO | PONTO DE EQUILÍBRIO | MARGEM DE CONTRIBUIÇÃO E SEGURANÇA | CUSTOS | GRÁFICOS ... AULA 16 | PONTO DE EQUILÍBRIO | Contábil, ...",
+      "link": "https://www.youtube.com/watch?v=bo3zqxzdER8",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Fluxo de caixa, margem de contribuição e ponto de equilíbrio",
+      "snippet": "A margem de contribuição é um indicador que mede a rentabilidade de cada serviço prestado pelo escritório contábil. Ela representa a diferença ...",
+      "link": "https://fabricadecontabilidade.com.br/fluxo-de-caixa-margem-de-contribuicao-e-ponto-de-equilibrio/",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Precificação, margem de lucro e ponto de equilíbrio",
+      "snippet": "Fórmula da margem de contribuição = valor das vendas – (custos variáveis + despesas variáveis). Exemplo: (Floricultura, vende buquês ...",
+      "link": "https://sebraepr.com.br/comunidade/artigo/precificacao,-margem-de-lucro-e-ponto-de-equilibrio-voce-domina-esses-conceitos?srsltid=AfmBOopZF-ObPwe9UJ2vB9CVobUL1kH9rZ9vlhVP24IB4D-Oc3GhHMu1",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "Ponto de equilíbrio: entenda a importância para o seu ...",
+      "snippet": "Ponto de equilíbrio (vendas em reais) = Custos fixos / Índice de margem de contribuição. Esse é o ponto de equilíbrio. Exemplo. Se você tem R ...",
+      "link": "https://nac.cni.com.br/blog/ponto-de-equilibrio-financeiro/",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem de contribuição análise ponto equilíbrio",
+      "titulo": "ANÁLISE DO PONTO DE EQUILÍBRIO E MARGEM DE ...",
+      "snippet": "de LP Oliveira · 2005 — a análise do ponto de equilíbrio e margem de contribuição, aliadas ao monitoramento das práticas comerciais do mercado, poderão permitir a tomada de decisão ...",
+      "link": "https://repositorio.ufc.br/bitstream/riufc/40569/1/2005_tcc_lpoliveira.pdf",
+      "extraido_em": "2026-01-31T12:34:30.439Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: saiba o que é e como fazer o cálculo",
+      "snippet": "O payback é um cálculo que permite saber em quanto tempo um investimento trará retorno. Aprenda a calcular, quais os tipos e como analisar.",
+      "link": "https://www.rdstation.com/blog/vendas/payback/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: o que é e como calcular?",
+      "snippet": "Aliás, também podemos dizer que o payback mostra o tempo que o seu investimento vai levar para trazer retorno, que pode ser traduzido em lucros.",
+      "link": "https://www.salesforce.com/br/blog/payback/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "O Que é Payback? Como Calcular, Diferenças e Quando ...",
+      "snippet": "O principal objetivo do payback é medir o risco e a rapidez do retorno, pois traz maior visibilidade na hora de comparar opções de investimento ...",
+      "link": "https://www.c6bank.com.br/blog/payback-o-que-e",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: qual é o retorno dos investimentos na empresa?",
+      "snippet": "Payback é um indicador financeiro responsável por medir o tempo necessário para o retorno de um investimento. Ou seja, é a métrica que identifica o período ...",
+      "link": "https://deltamaquinastexteis.com.br/payback/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: o que é, como calcular e quando usar",
+      "snippet": "Payback é um indicador financeiro que representa o tempo de retorno de um investimento.O próprio termo significa “retorno” em inglês, e ele ...",
+      "link": "https://contaazul.com/blog/indicador-payback/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: método para Análise do Tempo de Retorno ...",
+      "snippet": "Começando primeiro pelo conceito: Payback é um cálculo simples do tempo que levará para um investimento se pagar. O método Payback pode ser ...",
+      "link": "https://www.treasy.com.br/blog/payback-tempo-de-retorno-do-investimentos/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Payback: entenda o retorno dos seus investimentos",
+      "snippet": "Esse período é calculado por meio do payback, um indicador financeiro que mede o tempo necessário para recuperar o valor aplicado inicialmente.",
+      "link": "https://blog.itau.com.br/empresas/descubra-o-que-e-payback",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "análise de retorno do investimento: um estudo aplicado em",
+      "snippet": "de I Colpo · Citado por 12 — Para fins de cálculo do período do retorno do investimento, no Payback Simples não é usado nenhum tipo de taxa de desconto, ou seja, esse método leva em ...",
+      "link": "https://www.caxias.ideau.com.br/wp-content/files_mf/ec8352a14a0eaed6a252f337529fa4d2327_1.pdf",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "O que é payback e como calcular o retorno de investimento?",
+      "snippet": "O payback é um indicador que permite saber quanto tempo leva para que um investimento se pague. Ou seja, em quanto tempo as receitas de um ...",
+      "link": "https://agilize.com.br/blog/gestao-do-dia-a-dia/o-que-e-payback/",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "payback período retorno investimento",
+      "titulo": "Período de retorno: definição, fórmula e cálculo",
+      "snippet": "O período de retorno refere-se ao tempo necessário para recuperar o custo de um investimento ou quanto tempo leva para um investidor atingir o ponto de ...The payback period formula is often used by investors, consumers, and corporations to determine how long it will take the business to recover the initial ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/p/paybackperiod.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:31.734Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "Taxa Interna de Retorno (TIR): o que é e como calcular na ...",
+      "snippet": "A Taxa Interna de Retorno (TIR) é um método utilizado para avaliar a viabilidade de um projeto ou investimento. Acesse para entender como ...",
+      "link": "https://warren.com.br/magazine/taxa-interna-de-retorno-tir/",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "O que é TIR e como calcular? Entenda! - Expert XP",
+      "snippet": "A Taxa Interna de Retorno (TIR) é um indicador financeiro que representa uma taxa de desconto calculada com base em uma estimativa de fluxo de caixa, ou seja, ...",
+      "link": "https://conteudos.xpi.com.br/aprenda-a-investir/relatorios/tir/",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "Como calcular a taxa interna de retorno (TIR) de um ...",
+      "snippet": "Para calcular a Taxa Interna de Retorno (TIR) de um investimento, é necessário estimar os fluxos de caixa futuros do projeto e igualar o Valor ...",
+      "link": "https://www.contadoragora.com/taxa-interna-de-retorno/",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "método manual para cálculo da taxa interna de retorno",
+      "snippet": "de WA Pereira · Citado por 30 — A Taxa Interna de Retorno (TIR) é a taxa de juros (desconto) que iguala, em determinado momento do tempo, o valor presente das entradas (recebimentos) com o das ...",
+      "link": "https://www.home.ufam.edu.br/andersonlfc/MacroI/MetodoManualTIR.pdf",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "A Taxa Interna de Retorno (TIR) como método para ...",
+      "snippet": "A TIR é, portanto, a taxa que remunera o investimento. Para se calcular a TIR, utiliza-se equações da Matemática Financeira, hoje disponíveis em programas ...",
+      "link": "https://fida.tcm.sp.gov.br/Pagina/68185",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "Taxa Interna de Retorno (TIR): o que é e como calcular",
+      "snippet": "A Taxa Interna de Retorno (TIR) é uma taxa de desconto, obtida a partir de uma estimativa de fluxo de caixa futuro (projeção geradas por um investimento ao ...",
+      "link": "https://www.nomadglobal.com/portal/artigos/tir",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "Desvendando o cálculo da TIR",
+      "snippet": "de OFO Balarine · Citado por 13 — Como indicado anteriormente, o cálculo da Taxa Interna de Retorno pode adotar o Método de Newton-Raphson em sua formulação. Para melhor compreensão dessa ...",
+      "link": "http://rausp.usp.br/wp-content/uploads/files/V3801015.pdf",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "O que é a TIR e como calcular",
+      "snippet": "Taxa Interna de Retorno (TIR) é uma taxa calculada para o Valor Presente Líquido (VPL) nulo, utilizada na análise financeira de projetos de investimentos.",
+      "link": "https://www.dicionariofinanceiro.com/tir-taxa-interna-retorno/",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "Taxa Interna de Retorno: você sabe como aplicar a TIR?",
+      "snippet": "A TIR calcula a taxa de desconto que deve ter um fluxo de caixa para que seu Valor Presente Líquido (VPL) iguale-se a zero.",
+      "link": "https://www.treasy.com.br/blog/taxa-interna-de-retorno-tir/",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "TIR taxa interna retorno cálculo",
+      "titulo": "TIR (Função TIR) - Suporte da Microsoft",
+      "snippet": "A taxa de retorno calculada por TIR é a taxa de juros correspondente a um valor presente líquido zero. A seguinte fórmula demonstra como VPL e TIR estão ...",
+      "link": "https://support.microsoft.com/pt-br/office/tir-fun%C3%A7%C3%A3o-tir-64925eaa-9988-495b-b290-3ad0c163c1bc",
+      "extraido_em": "2026-01-31T12:34:32.872Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor Presente Líquido (VPL): O que significa e como ...",
+      "snippet": "O valor presente líquido (VPL) mede se um projeto ou investimento será lucrativo , comparando o valor presente dos fluxos de caixa futuros com seus custos. Em ...To calculate NPV, you need to estimate the timing and amount of future cash flows and pick a discount rate equal to the minimum acceptable rate of return. The ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/n/npv.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor Presente Líquido (VPL): o guia mais completo da ...",
+      "snippet": "Resumindo: O VPL traz ao valor presente um valor futuro. Ele representa a diferença entre os recebimentos e os pagamentos de um projeto de ...",
+      "link": "https://www.treasy.com.br/blog/valor-presente-liquido-vpl/",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Como calcular o Valor Presente Líquido (VPL)",
+      "snippet": "O Valor Presente Líquido (VPL) é um indicador utilizado para analisar a viabilidade de um investimento, atualizando todas as entradas e saídas de caixa para a ...",
+      "link": "https://hinc.com.br/blog/valor-presente-liquido/",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Análise de Investimento para SEFAZ-RJ: Matemática ...",
+      "snippet": "O Valor Presente Líquido (VPL) é um método utilizado para avaliar a viabilidade de um investimento. Ele calcula o valor atual/presente (data 0) ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/analise-investimento-sefaz-rj/",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "VPL: Entenda o Valor Presente Líquido e Como Calcular",
+      "snippet": "O valor presente líquido ajuda empresários e investidores a entenderem a viabilidade e o valor real de um investimento, dando a eles uma visão ...",
+      "link": "https://www.cobrefacil.com.br/blog/vpl",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "ANLISE DE INVESTIMENTOS",
+      "snippet": "de LHF Marquezan · 2006 · Citado por 89 — Indicadores como Valor Presente Líquido (VPL), Taxa. Interna de Retorno (TIR) e Payback Descontado são utilizados nestas análises, visando, demonstrar a ...",
+      "link": "https://periodicos.ufsm.br/contabilidade/article/download/21/3644",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor Presente Líquido: o que é, como calcular e aplicar ...",
+      "snippet": "O Valor Presente Líquido (VPL) é uma das métricas mais completas para análise de investimentos. Ele transforma expectativas futuras em valor ...",
+      "link": "https://www.nordinvestimentos.com.br/blog/valor-presente-liquido-mercado-financeiro/",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor presente líquido – Wikipédia, a enciclopédia livre",
+      "snippet": "O valor presente líquido (VPL), também conhecido como valor atual líquido (VAL) ou método do valor atual, é a fórmula econômico-financeira capaz de determinar ...",
+      "link": "https://pt.wikipedia.org/wiki/Valor_presente_l%C3%ADquido",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor Presente Líquido (VPL)",
+      "snippet": "A análise do Valor Presente Líquido (VPL) é utilizada para ajudar a determinar o valor de um investimento, projeto ou qualquer série de fluxos de caixa. Trata- ...Net Present Value (NPV) is the value of all future cash flows (positive and negative) over the entire life of an investment discounted to the present.",
+      "link": "https://translate.google.com/translate?u=https://corporatefinanceinstitute.com/resources/valuation/net-present-value-npv/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "VPL valor presente líquido análise",
+      "titulo": "Valor Presente Líquido",
+      "snippet": "O resultado ficou abaixo do esperado pelo consenso do mercado, que previa aumento de 0,40%. O medidor havia apresentado deflação de 0,18% em julho.",
+      "link": "https://professor.pucgoias.edu.br/sitedocente/admin/arquivosUpload/6852/material/02%20-%20Valor%20Presente%20L%C3%ADquido.pdf",
+      "extraido_em": "2026-01-31T12:34:34.287Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Índice de Endividamento Geral: saiba como utilizar esse ...",
+      "snippet": "Logo, a fórmula do Índice de Endividamento Geral é: EG = (Capital de terceiros / Ativos totais) x 100.",
+      "link": "https://www.suno.com.br/artigos/indice-de-endividamento-geral/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Índice de Endividamento Geral (EG): o que é e como ...",
+      "snippet": "Esse índice é obtido dividindo-se o passivo total pelo ativo total da empresa. O passivo total inclui todas as dívidas e obrigações da ...",
+      "link": "https://investidorsardinha.r7.com/aprender/indice-de-endividamento-geral-eg/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Patrimônio líquido e índice de endividamento: saiba como ...",
+      "snippet": "5 – Índice de Endividamento Geral (EG)​​ O EG é definido pela seguinte fórmula: EG = (Capital de terceiros / Ativos totais) x 100.",
+      "link": "https://www.topinvest.com.br/patrimonio-liquido-e-indice-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Índice de Endividamento: como calcular e evitar dívidas ...",
+      "snippet": "Para formular o cálculo, deverá ser dividido o valor da soma do passivo exigível (1.000.000 + 75.000 = 1.075.000) com o total ativo (5.000.000).",
+      "link": "https://centraldofranqueado.com.br/gestao-de-franquias/indice-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Indicadores de endividamento: 6 métricas indispensáveis",
+      "snippet": "EF = (Dívida Bruta ÷ Patrimônio Líquido) x 100. Quanto maior a porcentagem do EF, maior é o grau de endividamento da empresa. 6. Endividamento ...",
+      "link": "https://esferaenergia.com.br/blog/gestao-empresarial/indicadores-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Grau de Endividamento Geral",
+      "snippet": "Utiliza os valores do saldo atual das contas: 21 - Passivo Circulante; ​22 - Passivo não Circulante; ​1 - Ativo. (21 + 22) / (1 * -1).",
+      "link": "https://ajuda.hubcount.com.br/pt-BR/articles/8396259-grau-de-endividamento-geral",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Índice de Endividamento Geral (IEG): O que é",
+      "snippet": "O cálculo do EG é feito dividindo-se o total da dívida (de curto prazo e longo prazo) pelo total do ativo e multiplicando o resultado por 100. ...",
+      "link": "https://renovainvest.com.br/blog/indice-de-endividamento-geral-ieg/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Endividamento: entenda os principais índices. Qualidade e ...",
+      "snippet": "Endividamento: entenda os principais índices. Qualidade e quantidade da dívida ...",
+      "link": "https://www.youtube.com/watch?v=e9zmYTS8uC8",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "10 indicadores de Endividamento e Alavancagem Financeira",
+      "snippet": "O índice de endividamento geral (EG) é calculado pela soma dos valores do passivo circulante com não circulante, divido pelo ativo total.",
+      "link": "https://blog.leverpro.com.br/post/10-indicadores-de-endividamento-e-alavancagem-financeira",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice endividamento geral fórmula",
+      "titulo": "Entenda o que é o índice de endividamento geral e como ...",
+      "snippet": "Portanto, podemos definir a equação como: CE = (Passivo Circulante (curto prazo) / Passivo Exigível Total (curto e longo prazo) x 100 Geralmente, quanto menor ...",
+      "link": "https://www.serasaexperian.com.br/conteudos/indice-de-endividamento-geral/",
+      "extraido_em": "2026-01-31T12:34:35.706Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Composição do Endividamento: como interpretar esse ...",
+      "snippet": "Para calcular a composição do endividamento é preciso dividir a soma dos passivos de curto prazo pelo total do passivo exigível da empresa ( ...",
+      "link": "https://www.suno.com.br/artigos/composicao-do-endividamento/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Composição do Endividamento: o que é e como interpretar?",
+      "snippet": "A Composição do Endividamento é um indicador que costuma ser utilizado pelos gestores para traçar estratégias e gerenciar dívidas da empresa ...",
+      "link": "https://vexpenses.com.br/blog/composicao-endividamento/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "[Área do Cliente] Índice de Endividamento: o que é e como ...",
+      "snippet": "A composição do endividamento é um indicador que tem como função mostrar a relação existente entre a dívida de curto prazo e a dívida total de uma determinada ...",
+      "link": "https://www.serasaexperian.com.br/conteudos/area-do-cliente-indice-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Principais indicadores de endividamento empresarial",
+      "snippet": "Composição do endividamento​​ Esse indicador mostra a proporção das dívidas que vencem no curto prazo em relação ao total das obrigações, ...",
+      "link": "https://clarke.com.br/post/indicadores-de-endividamento-saiba-principais-e-como-analisar/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Endividamento de Longo Prazo: saiba o que é ...",
+      "snippet": "Isso quer dizer que 30% das obrigações dessa empresa se vencem no curto prazo e 70% são de longo prazo. Para tirar uma conclusão sobre isso ...",
+      "link": "https://maisretorno.com/portal/termos/e/endividamento-de-longo-prazo",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Composição do endividamento: o que você precisa saber!",
+      "snippet": "Cálculo da composição do endividamento · Composição do Endividamento = (Valor da Fonte de Financiamento / · Total do Endividamento) x 100.",
+      "link": "https://www.concur.com.br/blog/article/composicao-do-endividamento",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Endividamento e alavancagem financeira: como se ...",
+      "snippet": "Composição do Endividamento (CE)​​ O CE representa o percentual da dívida de curto prazo em relação ao total das dívidas. Ou seja, mostra se o ...",
+      "link": "https://www.treasy.com.br/blog/endividamento-e-alavancagem-financeira/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Como interpretar o Balanço Patrimonial",
+      "snippet": "Se o resultado for superior a 1, significa que a empresa possui mais ativos de curto prazo do que dívidas a vencer no mesmo período. No entanto, valores muito ...",
+      "link": "https://site.irko.com.br/blog/interpretar-balanco-patrimonial/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Decisões referentes a endividamento de curto e longo prazo",
+      "snippet": "A análise da composição do endividamento é bastante significativa: normalmente o endividamento de curto prazo é utilizado para financiar o Ativo Circulante e o ...",
+      "link": "https://www.analisecontabilidade.com.br/5854/empreendedorismo_-_decisoes_referentes_a_endividamento_de_curto_e_longo_prazo",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "composição endividamento curto longo prazo",
+      "titulo": "Indicadores de endividamento: 6 métricas indispensáveis",
+      "snippet": "A composição do endividamento (CE) é um indicador que ajuda a averiguar o quanto da dívida existente é de curto prazo, ou seja, inferior a 12 ...",
+      "link": "https://esferaenergia.com.br/blog/gestao-empresarial/indicadores-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:37.045Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Alavancagem financeira: entenda o que é e como funciona ...",
+      "snippet": "Exemplo prático · O grau de alavancagem financeira (GAF) · GAF = Variação percentual do lucro líquido / Variação percentual do lucro operacional.",
+      "link": "https://www.nordinvestimentos.com.br/blog/alavancagem-financeira/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Alavancagem Financeira: o que é e como calcular?",
+      "snippet": "O resultado do GAF é expresso em forma de índice. Onde temos: GAF = 1,0, nulo. GAF > 1,0, favorável. GAF < ...",
+      "link": "https://blog.bluesoft.com.br/alavancagem-financeira-o-que-e-e-como-calcular/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Endividamento e alavancagem financeira: como se ...",
+      "snippet": "GAF = 1: alavancagem financeira é nula. · GAF > 1: mostra que o capital de terceiros está contribuindo para gerar retorno adicional a favor do ...",
+      "link": "https://www.treasy.com.br/blog/endividamento-e-alavancagem-financeira/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Alavancagem financeira e operacional: O que é? Como ...",
+      "snippet": "... grau de alavancagem financeira (GAF) é dado pela fórmula: GAF = LAJIR ÷ LAIR. Onde: LAJIR: Lucro antes de Juros e Imposto de Renda; LAIR ...",
+      "link": "http://gyramais.com.br/blog/alavancagem-financeira-e-operacional/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Artigo - Grau de Alavancagem Financeira (GAF)",
+      "snippet": "O Grau de Alavancagem Financeira (GAF) indica quanto o lucro é sensível ao custo da dívida. Em termos estáticos, mostra o fator de ampliação do ...",
+      "link": "https://atendimento.nasajon.com.br/nasajon/artigos/f888d03b-8754-4e62-a09c-a44c3f14ff3d",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Grau de Alavancagem Financeira (GAF)",
+      "snippet": "O Grau de Alavancagem Financeira (GAF) é a sensibilidade do lucro líquido (ou LPA) às variações no lucro operacional (LAJIR) causadas pelo endividamento.Degree of Financial Leverage (DFL) is the sensitivity of net income (or EPS) to changes in operating profit (EBIT) caused by debt.",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/degree-of-financial-leverage-dfl/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Como Calcular o Grau de Alavancagem (GAO, GAF e GAT)",
+      "snippet": "Nesse vídeo você vai aprender a calcular o Grau de Alavancagem Operacional (GAO), o Grau de Alavancagem Financeira (GAF) e o Grau de ...",
+      "link": "https://www.youtube.com/watch?v=UuRnbrp2j9Y",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "O que é Alavancagem Financeira e Exemplos",
+      "snippet": "Em termos simples, o grau de alavancagem financeira indica quantas vezes o lucro líquido varia em relação ao lucro operacional. Por exemplo, se ...",
+      "link": "https://br.investing.com/academy/stocks/alavancagem-financeira/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Grau de alavancagem financeira (GAF)",
+      "snippet": "O Grau de Alavancagem Financeira – GAF é um indicador importante de medição das alavancagens empresariais, pois, verifica se os recursos tomados a título de ...",
+      "link": "https://aprepro.org.br/conbrepro/2019/anais/arquivos/10272019_201042_5db6260e173db.pdf",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "grau alavancagem financeira GAF",
+      "titulo": "Alavancagem financeira: o que é e como fazer",
+      "snippet": "O Grau de Alavancagem Financeira (GAF) apresenta os efeitos da variação ocorrida no lucro antes dos juros e do imposto de renda, que refletem no lucro líquido. ...",
+      "link": "https://gerandoempreendedores.com.br/alavancagem-financeira-o-que-e-e-como-fazer/",
+      "extraido_em": "2026-01-31T12:34:38.761Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "índice de cobertura de juros sobre o EBITDA",
+      "snippet": "O índice de cobertura de juros sobre o EBITDA avalia a capacidade de uma empresa de pagar juros utilizando o lucro antes dos impostos. A cobertura do EBITDA ...EBITDA coverage uses earnings before interest, taxes, depreciation, and amortization, making it more inclusive than standard interest coverage. A ratio greater ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/e/ebitdacoverinterestratio.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Índice de Cobertura EBITDA | Fórmula + Calculadora",
+      "snippet": "O Índice de Cobertura do EBITDA mede a capacidade de uma empresa de honrar seus pagamentos de juros, comparando seu EBITDA com seus encargos de juros.EBITDA Coverage Ratio measures a company's capacity to meet its interest payments by comparing its EBITDA to its interest burden.",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/ebitda-coverage-ratio/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Cobertura de Juros Líquida: saiba o que é e como funciona",
+      "snippet": "Índice de cobertura de juros = EBITDA / Despesa Anual com Juros. Como funciona a cobertura de juros líquida? Para realizar esse tipo de ...",
+      "link": "https://maisretorno.com/portal/termos/c/cobertura-de-juros-liquida",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Índice de Cobertura de Juros: Definição, Fórmula e ...",
+      "snippet": "Uma abordagem é o Índice de Cobertura de Juros EBITDA , que utiliza o lucro antes de juros, impostos, depreciação e amortização (EBITDA) para determinar ...Calculating the ICR involves using earnings before interest and taxes (EBIT) or earnings before interest, taxes, depreciation, and amortization (EBITDA).",
+      "link": "https://translate.google.com/translate?u=https://www.allianz-trade.com/en_US/insights/interest-coverage-ratio.html&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Índice de cobertura de juros: entenda este conceito",
+      "snippet": "Não é o índice de cobertura de juros clássico, inclusive o nome deste indicador é “EBITDA sobre Resultado Financeiro”. Cuide para não confundir ...",
+      "link": "https://www.klooks.com.br/blog/indice-de-cobertura-de-juros/",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "5 Índices Essenciais para Análise Financeira Usando ...",
+      "snippet": "2. Cobertura de Juros do EBITDA. Interpretação: Este índice reflete a capacidade de a empresa cobrir suas despesas financeiras. Quanto maior a ...",
+      "link": "https://blog.leverpro.com.br/post/5-indices-ebitda",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "O que é o Índice de Cobertura EBITDA?",
+      "snippet": "O índice de cobertura de juros sobre o EBITDA é usado para analisar a capacidade de uma empresa de cobrir suas obrigações de juros. A fórmula ...The EBITDA coverage ratio is also known as the EBITDA-to-interest coverage ratio which is a financial ratio that is used to assess.",
+      "link": "https://translate.google.com/translate?u=https://www.fe.training/free-resources/credit/what-is-the-ebitda-coverage-ratio/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Índice de Cobertura de Juros (ICJ)",
+      "snippet": "O Índice de Cobertura de Juros (ICJ) é um índice que mede a capacidade da empresa de cumprir as obrigações de juros previstas, o número de vezes que a divida ...",
+      "link": "https://journal.comdinheiro.com.br/indice-de-cobertura-de-juros-icj/",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "Índice de Cobertura de Juros (ICJ): o que é e como calcular?",
+      "snippet": "1) Índice de Cobertura de Juros com EBITDA​​ Esse cálculo é útil para avaliar empresas com altos gastos não monetários, oferecendo uma ...",
+      "link": "https://investidorsardinha.r7.com/aprender/indice-de-cobertura-de-juros/",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "cobertura juros EBITDA",
+      "titulo": "O que é o Índice de Cobertura de Juros?",
+      "snippet": "Utilizar o EBITDA no cálculo do índice de cobertura de juros geralmente resulta em um valor melhor, pois exclui a depreciação e a amortização.One of the most prominent variations uses EBITDA (earnings before interest, taxes, depreciation, and amortisation) instead of EBIT. Using EBITDA in the ...",
+      "link": "https://translate.google.com/translate?u=https://gocardless.com/guides/posts/interest-coverage-ratio/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:40.243Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Imobilização do patrimônio líquido: o que é e como ...",
+      "snippet": "A imobilização do patrimônio líquido é uma medida usada para saber o grau de imobilização do capital de uma empresa.",
+      "link": "https://www.suno.com.br/artigos/imobilizacao-do-patrimonio-liquido/",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Imobilização do Patrimônio Líquido, o que é",
+      "snippet": "A Imobilização do Patrimônio Líquido, é um índice de endividamento utilizado para avaliar empresas pela ótica da análise fundamentalista.",
+      "link": "https://maisretorno.com/portal/termos/i/imobilizacao-do-patrimonio-liquido",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Análise das Demonstrações Contábeis para o ISS-BH",
+      "snippet": "Também chamado de Imobilização do Capital Próprio, o Índice de Imobilização do Patrimônio Líquido determina a parcela do Patrimônio Líquido que ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/analise-demonstracoes-contabeis-iss-bh/",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Patrimônio líquido: o que é, como calcular e por que importa",
+      "snippet": "A fórmula para calcular esse índice é: ||Imobilização do patrimônio líquido = ativo não circulante ÷ patrimônio líquido x 100 A flexibilidade ...",
+      "link": "https://www.c6bank.com.br/blog/o-que-e-patrimonio-liquido",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Artigo - Imobilização do Patrimônio Líquido (IPL)",
+      "snippet": "A Imobilização do Patrimônio Líquido (IPL) indica qual porcentagem do patrimônio líquido está aplicada em ativos não circulantes de natureza permanente ( ...",
+      "link": "https://atendimento.nasajon.com.br/nasajon/artigos/62f40a72-f21f-4269-846e-67413174f4f8",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Patrimônio líquido e índice de endividamento: saiba como ...",
+      "snippet": "O Índice de Imobilização do Patrimônio Líquido (IPL) avalia a proporção dos recursos próprios da empresa investidos em ativos permanentes, como ...",
+      "link": "https://www.topinvest.com.br/patrimonio-liquido-e-indice-de-endividamento/",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Imobilização do Patrimônio Líquido: Um Investimento de ...",
+      "snippet": "A imobilização do patrimônio líquido é um indicador contábil que demonstra a proporção do patrimônio líquido de uma empresa que está aplicada em ativos de longo ...",
+      "link": "https://grupoinvestor.com.br/glossario/imobilizacao-do-patrimonio-liquido/",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Imobilização do Patrimônio Líquido (IPL): o que é e como ...",
+      "snippet": "A imobilização do patrimônio líquido (IPL) é um indicador financeiro que mede a proporção de recursos próprios de uma empresa aplicados em ...",
+      "link": "https://investidorsardinha.r7.com/aprender/imobilizacao-do-patrimonio-liquido-ipl/",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Indice de Liquidez Corrente",
+      "snippet": "Imobilização do Patrimônio Líquido (IPL)​​ É um indicador importante pois seu crescimento excessivo pode provocar problemas de solvência. Os Indicadores de ...",
+      "link": "https://www.afbnb.com.br/wp-content/uploads/2024/04/INDICES-ANO-2023.pdf",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "índice imobilização patrimônio líquido",
+      "titulo": "Imobilização do Patrimônio Líquido | Adm Financeira",
+      "snippet": "Administração Financeira: Este é o 3º vídeo da série sobre os indicadores de estrutura de capital. Aqui é abordado o índice de imobilização ...",
+      "link": "https://www.youtube.com/watch?v=15CrCXgszhE",
+      "extraido_em": "2026-01-31T12:34:41.816Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo médio de recebimento (PMR): saiba como calcular!",
+      "snippet": "O Prazo Médio de Recebimento (PMR) é uma métrica financeira que indica o tempo médio que uma empresa leva para receber os pagamentos de suas vendas.",
+      "link": "https://www.omie.com.br/blog/o-que-e-prazo-medio-de-recebimento-pmr-e-como-calcular-entenda/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazos Médios de Pagamento e Recebimento: o que são e ...",
+      "snippet": "Isso significa que, em média, a empresa leva 10 dias entre a data de aquisição de bens ou serviços e o pagamento efetivo. Como calcular o Prazo ...",
+      "link": "https://www.treasy.com.br/blog/prazos-medios-de-pagamento-e-recebimento/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo médio de pagamento: aprenda a calcular passo ...",
+      "snippet": "PMP: 51 dias; PMR: 60 dias; PMRE: 90 dias. Nesse caso, o prazo médio de pagamento é inferior ao prazo de recebimento, o que ...",
+      "link": "https://contaazul.com/blog/prazo-medio-de-pagamento/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo médio de Recebimento (PMR): O que é? Como ...",
+      "snippet": "O Prazo médio de recebimento (PMR) é um indicador financeiro essencial para a gestão do fluxo de caixa e a saúde financeira das empresas. Ele ...",
+      "link": "https://flashapp.com.br/blog/pmr-prazo-medio-recebimento",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo Médio de Pagamento e Prazo Médio de Recebimento",
+      "snippet": "Já o Prazo Médio de Recebimento (PMR) ajuda a medir o tempo médio que uma empresa leva para receber o pagamento de suas vendas. É calculado ...",
+      "link": "https://belluno.digital/prazo-medio-de-pagamento-e-prazo-medio-de-recebimento/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Como calcular prazo médio de recebimento e otimizar ... - Zoop",
+      "snippet": "Neste caso, o prazo médio de recebimento será de 34,8 dias. Já com a segunda fórmula, seria algo como: PMR = total para receber / (total vendido ...",
+      "link": "https://www.zoop.com.br/blog/gestao/como-calcular-prazo-medio-de-recebimento",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "PMR e PMP: como calcular e a importância para o capital ...",
+      "snippet": "O que é o PMR e o PMP e como calcular? O PMR se refere ao Prazo Médio de Recebimento, enquanto o PMP trata-se do Prazo Médio de Pagamento.",
+      "link": "https://blog.praxio.com.br/como-calcular-pmr-e-pmp-e-qual-a-importancia-para-o-capital-de-giro-no-transporte/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo Médio de Recebimento: O que é? | Neofin",
+      "snippet": "O prazo médio de recebimento mostra em quantos dias, em média, o dinheiro das vendas entra no caixa. Já o prazo médio de pagamento indica o ...",
+      "link": "https://www.neofin.com.br/definicao/prazo-medio-de-recebimento-o-que-e",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Capital de Giro",
+      "snippet": "Prazo Médio de Pagamento (PMP). Prazo Médio de Recebimento (PMR). PMR = (360 x a receber cliente) ÷ receita de vendas. PMR = (360 x 52.500,00) ÷ 245.000,00. PMR ...",
+      "link": "https://conhecimento.sebraers.com.br/wp-content/uploads/2023/08/EBOOK_Capital-de-Giro_FEV-23-12583-1-2.pdf?utm_source=thankyoupage&utm_medium=&utm_campaign=sebraeprati_inbound&utm_content=sebraeprati_inbound_conversao_SAUDE_E_BEM_ESTAR_generico_SAU_ebook_capital_de_giro_saude",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio recebimento PMR giro",
+      "titulo": "Prazo Médio de Pagamento e Recebimento: guia + planilha",
+      "snippet": "O Prazo Médio de Recebimento (PMR) ideal varia de acordo com o setor, o modelo de negócios, as políticas de crédito adotadas pela empresa e até ...",
+      "link": "https://vexpenses.com.br/blog/prazo-medio-de-pagamento-e-recebimento/",
+      "extraido_em": "2026-01-31T12:34:43.122Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo médio de pagamento: aprenda a calcular passo ...",
+      "snippet": "... prazo médio de pagamento: PMP = Fornecedores / Compras x 360. Usando o exemplo anterior, vamos imaginar que a mesma empresa tenha pago aos ...",
+      "link": "https://contaazul.com/blog/prazo-medio-de-pagamento/",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazos Médios de Pagamento e Recebimento: o que são e ...",
+      "snippet": "É o tempo médio (em dias) entre a data da compra e o pagamento efetivo ao fornecedor. Por exemplo, se sua empresa compra matérias-primas e paga ...",
+      "link": "https://www.treasy.com.br/blog/prazos-medios-de-pagamento-e-recebimento/",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo médio de pagamento (PMP): veja como calcular",
+      "snippet": "O prazo médio de pagamento (PMP) é um indicador financeiro utilizado para calcular o tempo médio que uma empresa leva para pagar seus ...",
+      "link": "https://flashapp.com.br/blog/prazo-medio-de-pagamento",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "PMPF - Prazo Médio de Pagamento a Fornecedores",
+      "snippet": "Como calcular o Prazo Médio de Pagamento a Fornecedores? · PMPF = Fornecedores / Compras x 360 · Compras = CMV + Estoque Final - Estoque Inicial.",
+      "link": "https://maisretorno.com/portal/termos/p/pmpf-prazo-medio-de-pagamento-a-fornecedores",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "A importância do prazo médio de pagamento a fornecedores",
+      "snippet": "O prazo médio de pagamento a fornecedores (PMPF) é um indicador que revela a média de dias que uma empresa demora para arcar com os ...",
+      "link": "https://www.linkana.com/blog/prazo-medio-pagamento-fornecedores",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo Médio de Pagamento e Recebimento: guia + planilha",
+      "snippet": "Fórmula do Prazo Médio de Pagamento (PMP) ... Ou seja, a empresa leva, em média, 30 dias para pagar seus fornecedores. Obs.: Se sua análise for ...",
+      "link": "https://vexpenses.com.br/blog/prazo-medio-de-pagamento-e-recebimento/",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "5.4 Prazo médio de pagamento – PMP",
+      "snippet": "O prazo médio de pagamento – PMP – é o reverso do prazo médio de recebimento. O prazo médio de pagamento: revela o tempo médio, em dias, que a empresa tarda ...",
+      "link": "https://ead4.fgv.br/producao/avaliacao/administracao_financeira_avaliacao_desempenho_empresarial/base_rede/pag/3_5_4.html",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo médio de pagamento: como calcular e impacto no caixa",
+      "snippet": "PMP = (fornecedores ÷ compras a prazo) × 360. · Fornecedores: média do valor devido aos fornecedores no início e no final do período; · Compras a ...",
+      "link": "https://kamino.com.br/blog/prazo-medio-de-pagamento/",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo Médio de Pagamento: O que é? | Neofin",
+      "snippet": "Cerca de 2 meses comerciais. Isso significa que a empresa demora, em média, 60 dias para pagar seus fornecedores.",
+      "link": "https://www.neofin.com.br/definicao/prazo-medio-de-pagamento-o-que-e",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio pagamento PMP fornecedores",
+      "titulo": "Prazo Médio de Pagamento e Prazo Médio de Recebimento",
+      "snippet": "O resultado apresentado significa que sua empresa tem, em média, 45 dias para pagar os fornecedores e demais parceiros com os quais trabalha.",
+      "link": "https://belluno.digital/prazo-medio-de-pagamento-e-prazo-medio-de-recebimento/",
+      "extraido_em": "2026-01-31T12:34:44.862Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Prazo médio de estocagem: o que é e como calcular",
+      "snippet": "O Prazo Médio de Estocagem (PME) representa, em dias, quanto tempo os produtos permanecem no estoque antes de serem vendidos.",
+      "link": "https://www.sankhya.com.br/gestao-de-negocios/prazo-medio-de-estocagem/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Prazo médio de estocagem: fórmula e estratégias para reduzir!",
+      "snippet": "Como calcular o prazo médio de estocagem? · PME = (estoque médio / custo das mercadorias vendidas) x período analisado; · PME = (60.000 / 250.000) ...",
+      "link": "https://f360.com.br/blog/financas/prazo-medio-de-estocagem/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Entenda o prazo médio de estocagem",
+      "snippet": "Definição: quantos dias o estoque permanece na empresa. · Fórmula: refere-se ao prazo médio de estocagem = (Estoque médio / Custo da Mercadoria Vendida) x 360; ...",
+      "link": "https://blog.siacsistemas.com.br/prazo-medio-de-estocagem-entenda-o-calculo/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Entenda definitivamente como calcular o prazo médio de ...",
+      "snippet": "Por meio do Prazo Médio de Estocagem, o gestor se torna capaz de identificar, por exemplo, desperdícios que afetam os lucros da empresa. O ...",
+      "link": "https://www.totvs.com/blog/gestao-industrial/prazo-medio-de-estocagem/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Prazo médio de estocagem: saiba como fazer o cálculo",
+      "snippet": "Em síntese, o prazo médio de estocagem se traduz em quanto tempo o estoque permanece na empresa. Ou seja, exibe o intervalo, em dias, que a ...",
+      "link": "https://www.mega.com.br/blog/prazo-medio-de-estocagem-saiba-como-fazer-o-calculo-7083/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Período Médio de Estoque (PME) | Fórmula + Calculadora",
+      "snippet": "Como calcular o período médio de estoque · Número de dias no período = 365 dias · Giro de estoque = Custo dos produtos vendidos ( CPV ) ÷ Estoque médio.Average Inventory Period is the approximate number of days it takes a company to cycle through its inventory and require replenishing.",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/average-inventory-period/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Prazo Médio de Estocagem: Como usá-lo a favor da sua ...",
+      "snippet": "Para o cálculo do prazo médio de estocagem, você deve dividir o estoque médio pelo custo da mercadoria vendida, e multiplicar esse resultado por 360. Estoque M ...",
+      "link": "https://deak.com.br/blog/use-o-prazo-medio-de-estocagem-a-favor-da-sua-empresa/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Ciclo Operacional e Ciclo Financeiro da sua empresa",
+      "snippet": "CICLO OPERACIONAL = Prazo Médio de Estocagem (PME) + Prazo Médio de Recebimento (PMR) · CICLO OPERACIONAL = 40 dias (Prazo Médio de Estocagem - ...",
+      "link": "https://www.treasy.com.br/blog/ciclo-operacional-x-ciclo-financeiro/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Entenda o ciclo financeiro e evite problemas em sua ...",
+      "snippet": "O estoque gira em 30 dias (PME); O cliente paga em 20 dias (PMR); Carla paga os fornecedores em 15 dias (PMP). Ciclo Financeiro = 30 + 20 – ...",
+      "link": "https://www.contabeis.com.br/artigos/71416/entenda-o-ciclo-financeiro-e-evite-problemas-em-sua-empresa/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "prazo médio estocagem PME giro",
+      "titulo": "Como calcular o Prazo Médio de Estocagem? Exemplos ...",
+      "snippet": "O prazo médio de estocagem (PME) é um indicador crucial na gestão de estoques, que representa o tempo médio que um produto permanece armazenado ...",
+      "link": "https://tray.com.br/escola/prazo-medio-de-estocagem/",
+      "extraido_em": "2026-01-31T12:34:46.281Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Ciclo Operacional e Ciclo Financeiro da sua empresa",
+      "snippet": "O Ciclo Operacional começa com a compra de matéria-prima, passa pela venda do produto e vai até o recebimento relacionado às vendas realizadas. ...",
+      "link": "https://www.treasy.com.br/blog/ciclo-operacional-x-ciclo-financeiro/",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Diferenças entre o Ciclo Econômico, Operacional e ...",
+      "snippet": "O Ciclo Operacional, por sua vez, é o intervalo de tempo gasto pela empresa para executar todas as suas atividades operacionais. Essas ...",
+      "link": "https://blog.fortestecnologia.com.br/post/ciclo-economico-operacional",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Ciclo operacional e financeiro: fórmula, exemplos e etapas",
+      "snippet": "O ciclo operacional é o período que abrange todo o processo de produção de uma empresa, desde a compra da matéria-prima até o recebimento ...",
+      "link": "https://flashapp.com.br/blog/ciclo-operacional-e-financeiro-formula",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "CICLOS ECONMICO, FINANCEIRO E OPERACIONAL",
+      "snippet": "A elaboração do Ciclo Operacional de uma empresa tem a função de dar uma visão panorâmica ao Administrador Financeiro das entradas e saídas de recursos. Serve ...",
+      "link": "https://bibliotecas.sebrae.com.br/chronus/ARQUIVOS_CHRONUS/bds/bds.nsf/A7A999A09E5D6E9703256F980050F858/$File/NT000305C2.pdf",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Ciclo operacional, ciclo econômico e ciclo financeiro",
+      "snippet": "É o tempo médio que a sua empresa gasta para vender determinada mercadoria do estoque — ele vai desde a aquisição até a venda. Logo, é o período em que o ...",
+      "link": "https://facil123.com.br/blog/ciclo-operacional-ciclo-economico-e-ciclo-financeiro/",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "O que é ciclo financeiro, qual a importância para minha ...",
+      "snippet": "É o tempo entre quando a empresa paga os fornecedores e quando recebe o pagamento das vendas dos clientes. Isso resulta no retorno do dinheiro para o caixa da ...",
+      "link": "https://www.monkey.tech/blog/ciclo-financeiro-empresas",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Entenda o que é o ciclo operacional empresarial",
+      "snippet": "O ciclo operacional representa o período de tempo que uma empresa leva para transformar seus investimentos em estoque e produção em ...",
+      "link": "https://sankhya.com.br/gestao-de-negocios/ciclo-operacional-de-uma-empresa/",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Ciclo Operacional: O Que É, Como Calcular E Exemplo",
+      "snippet": "O ciclo operacional financeiro é o intervalo entre a saída e a entrada de dinheiro no caixa da empresa. A saída, nesse caso, é o pagamento dos ...",
+      "link": "https://webmaissistemas.com.br/blog/ciclo-operacional/",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Análise do ciclo operacional e financeiro: um estudo de ...",
+      "snippet": "de C Baldissera · 2015 · Citado por 9 — Enquanto o ciclo operacional compreende o intervalo de tempo desde a compra de matéria prima, até o recebimento da venda, o ciclo financeiro define o prazo ...",
+      "link": "https://anaiscbc.emnuvens.com.br/anais/article/download/3985/3986/4084",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "ciclo operacional financeiro empresa",
+      "titulo": "Ciclo operacional: o que é, como calcular e importância",
+      "snippet": "Portanto, podemos dizer que esse ciclo engloba todas as fases da operação de um negócio, incluindo também o monitoramento da saúde financeira.",
+      "link": "https://www.totvs.com/blog/negocios/ciclo-operacional/",
+      "extraido_em": "2026-01-31T12:34:47.345Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do ativo: tipos, fórmula e como interpretar",
+      "snippet": "Cálculo do giro do ativo total. A fórmula do giro do ativo total é: Giro do Ativo Total = Receita Líquida / Ativo Total Médio. Por exemplo, se ...",
+      "link": "https://vexpenses.com.br/blog/giro-do-ativo/",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do ativo: o que é e como calcular o indicador",
+      "snippet": "Giro do ativo = Receita Líquida / Ativo Total Médio. Receita líquida: vendas após deduções, geralmente no ano. Ativo total médio: média ...",
+      "link": "https://www.suno.com.br/artigos/como-calcular-o-indicador-giro-do-ativo/",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do Ativo: saiba que é e como calcular o indicador ...",
+      "snippet": "O Giro do Ativo é um indicador contábil que compara o total médio de ativos de uma empresa com sua receita líquida.",
+      "link": "https://statusinvest.com.br/termos/g/giro-do-ativo",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "O que é Giro de Ativos? Fórmula, Cálculo e Exemplos ...",
+      "snippet": "Giro de Ativos Totais → mostra a eficiência global da empresa no uso de todos os recursos. Giro de Ativos Fixos → foca em ativos de longo prazo, ...",
+      "link": "https://tractian.com/blog/giro-de-ativos-formula-calculo",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "O que é Giro do Ativo?",
+      "snippet": "O Giro do Ativo é um indicador essencial para a avaliação de eficiência dos ativos do seu negócio. Ele mede o quanto a empresa está gerando ...",
+      "link": "https://www.youtube.com/watch?v=sYV56ObZyv8",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do Ativo Total | Definição, Cálculo e Limitações",
+      "snippet": "O giro do ativo total mede a eficiência com que uma empresa utiliza seus ativos para gerar receita. Ele pode ser calculado dividindo-se a receita líquida de ...Total asset turnover is a measure of how efficiently a company uses its assets to generate revenue. It can be calculated by dividing the net sales revenue ...",
+      "link": "https://translate.google.com/translate?u=https://study.com/academy/lesson/total-asset-turnover-definition-formula-analysis.html&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do Ativo: fórmula, interpretação e exemplo",
+      "snippet": "O giro do ativo é uma métrica financeira usada para avaliar a eficiência de uma empresa em gerar receita a partir de seus ativos.",
+      "link": "https://br.investing.com/academy/analysis/giro-do-ativo/",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do Ativo Total (GAT) - saiba o que é e qual sua ...",
+      "snippet": "O Giro do Ativo Total é uma métrica que mede a eficiência com que uma empresa usa seus ativos para gerar vendas. É calculado dividindo-se o ...",
+      "link": "https://varos.com.br/blog/artigo/o-que-e-giro-do-ativo-total",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do ativo: aprenda a calcular esse indicador e saiba o ...",
+      "snippet": "Giro do ativo = Receita líquida / Total médio de ativos. Receita líquida: é o valor total que a empresa gerou com suas vendas em um ...",
+      "link": "https://www.nordinvestimentos.com.br/blog/giro-do-ativo-o-que-e/",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "giro do ativo total",
+      "titulo": "Giro do ativo: o que é, para que serve e como calcular",
+      "snippet": "O giro do ativo (GA) é um indicador contábil que relaciona o valor total médio dos ativos de uma empresa com sua receita líquida.",
+      "link": "https://www.topinvest.com.br/glossario/giro-do-ativo/",
+      "extraido_em": "2026-01-31T12:34:48.703Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Retorno sobre o Patrimônio Líquido (ROE) com a Fórmula ...",
+      "snippet": "Uma análise DuPont é uma avaliação do Retorno sobre o Patrimônio Líquido (ROE) de uma empresa. Utilizando a fórmula DuPont, um analista.Financial leverage, which is measured by the equity multiplier. ROE Calculation with the DuPont Formula. ROE = Net Profit Margin (Profit/Sales) ...",
+      "link": "https://translate.google.com/translate?u=https://www.meadenmoore.com/blog/atc/how-to-calculate-return-on-equity-with-a-dupont-analysis&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont: o que é, como calcular e interpretar o ROE",
+      "snippet": "Ao decompor o ROE em três partes, a Análise DuPont oferece um diagnóstico detalhado do desempenho financeiro. Ela mostra exatamente onde ...",
+      "link": "https://www.nordinvestimentos.com.br/blog/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont: o que é? Como calcular? Como aplicar na ...",
+      "snippet": "A Análise DuPont funciona decompondo o Retorno sobre o Patrimônio Líquido (ROE) em componentes mais detalhados. Isso traz informações mais ...",
+      "link": "https://www.nomus.com.br/blog-industrial/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont: Definição, Usos, Fórmulas e Exemplos",
+      "snippet": "A análise DuPont desmembra os diversos fatores que influenciam o retorno sobre o patrimônio líquido (ROE), como a rentabilidade e a utilização de ativos. Os ...The DuPont analysis is a framework for analyzing a company's fundamental performance by breaking down the drivers of its return on equity (ROE).",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/d/dupontanalysis.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Como calcular o retorno sobre o patrimônio líquido (ROE) e ...",
+      "snippet": "A análise da fórmula DuPont incorpora a alavancagem financeira, a margem de lucro líquido e o giro do ativo à sua equação original de ROE, ...DuPont formula analysis incorporates financial leverage, net profit margin, and asset turnover into your original ROE equation and allows you to ...",
+      "link": "https://translate.google.com/translate?u=https://online.hbs.edu/blog/post/return-on-equity-formula&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont do Retorno sobre o Patrimônio Líquido",
+      "snippet": "Essa decomposição ilustra que o ROE de uma empresa é influenciado por sua margem de lucro líquido, eficiência e alavancagem. A margem de lucro ...Decomposing ROE helps evaluate how different aspects of performance, such as efficiency, operating profitability, taxes, and financial leverage, ...",
+      "link": "https://translate.google.com/translate?u=https://analystprep.com/cfa-level-1-exam/financial-reporting-and-analysis/dupont-analysis-of-return-on-equity/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont - Aprenda como criar um modelo de ...",
+      "snippet": "O modelo básico da Análise DuPont é um método para decompor a equação original do ROE em três componentes: eficiência operacional, eficiência de ativos e ...The basic DuPont Analysis model is a method of breaking down the original equation for ROE into three components: operating efficiency, asset efficiency, and ...",
+      "link": "https://translate.google.com/translate?u=https://corporatefinanceinstitute.com/resources/accounting/dupont-analysis/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise DuPont: Maximize seus investimentos",
+      "snippet": "No seu núcleo, a Análise DuPont é uma técnica usada para decompor o Retorno sobre Patrimônio Líquido (ROE) em um conjunto de índices ...",
+      "link": "https://br.investing.com/academy/analysis/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "Análise da DuPont - Wikipédia",
+      "snippet": "A análise DuPont é uma ferramenta utilizada na análise financeira , onde o retorno sobre o patrimônio líquido (ROE) é decomposto em seus componentes.DuPont analysis is a tool used in financial analysis, where return on equity (ROE) is separated into its component parts. Graphical representation of DuPont ...",
+      "link": "https://translate.google.com/translate?u=https://en.wikipedia.org/wiki/DuPont_analysis&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise DuPont decomposição ROE",
+      "titulo": "UMA ANÁLISE PELO MÉTODO DUPONT",
+      "snippet": "de AL Cordeiro · 2023 — Soares e Galdi (2011) trabalharam com dois modelos de decomposição do índice ROE, modelo. DuPont e modelo DuPont modificado, buscando identificar qual dos ...",
+      "link": "http://periodicos.unifacef.com.br/facefpesquisa/article/viewFile/2381/1908",
+      "extraido_em": "2026-01-31T12:34:50.404Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont: Definição, Usos, Fórmulas e Exemplos",
+      "snippet": "A análise DuPont é uma fórmula que avalia a eficácia com que uma empresa utiliza o capital investido por seus acionistas, dividindo o lucro líquido da ...The DuPont formula has been in use since 1919. DuPont ... What Is the Difference Between the 3-Step and the 5-Step DuPont Analysis?",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/d/dupontanalysis.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont | Calculadora de Fórmulas e Proporções",
+      "snippet": "Modelo de Análise DuPont em 3 Etapas · Margem de Lucro Líquido = Lucro Líquido ÷ Receita · Giro do Ativo = Receita ÷ Ativo Total Médio · Índice de Alavancagem ...There are two additional components in the 5-step equation as compared to the 3-step equation. To expand further upon the additional parts of this formula: Tax ...",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/dupont-analysis-template/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont: o que é? Como calcular? Como aplicar na ...",
+      "snippet": "Análise DuPont é a técnica de análise financeira e de performance de empresas que identifica pontos fracos e fortes da sua empresa utilizando ...",
+      "link": "https://www.nomus.com.br/blog-industrial/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont - Aprenda como criar um modelo de ...",
+      "snippet": "O modelo básico da Análise DuPont é um método para decompor a equação original do ROE em três componentes: eficiência operacional, eficiência de ativos e ...The equation for the basic DuPont model is as follows: Basic DuPont Model - Formula. We can also represent the components as ratios: ROE Breakdown Formula.",
+      "link": "https://translate.google.com/translate?u=https://corporatefinanceinstitute.com/resources/accounting/dupont-analysis/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Decomposição ou Fórmula Dupont de 5 passos ou fatores",
+      "snippet": "Conheça a análise da decomposição Dupont com sua variante de 5 passos (ou etapas), para compreender quais são os fatores relevantes da ...",
+      "link": "https://www.youtube.com/watch?v=RlbMjHcrlUQ",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont: o que é, como calcular e interpretar o ROE",
+      "snippet": "A Análise DuPont é uma ferramenta clássica usada para entender o desempenho financeiro de uma empresa de forma mais completa. Criada no início ...",
+      "link": "https://www.nordinvestimentos.com.br/blog/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont: Definição, Fórmulas, Usos e Exemplos",
+      "snippet": "O modelo DuPont clássico começa com três alavancas principais: margem de lucro líquido , giro do ativo e alavancagem financeira . Cada uma ...By multiplying these three DuPont analysis financial ratios, you get the company's ROE. This formula can be expanded further (as in the 5 ...",
+      "link": "https://translate.google.com/translate?u=https://www.fastgraphs.com/blog/the-dupont-analysis-framework&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise DuPont: Maximize seus investimentos",
+      "snippet": "No seu núcleo, a Análise DuPont é uma técnica usada para decompor o Retorno sobre Patrimônio Líquido (ROE) em um conjunto de índices ...",
+      "link": "https://br.investing.com/academy/analysis/analise-dupont/",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Análise da DuPont - Wikipédia",
+      "snippet": "A análise DuPont é uma ferramenta utilizada na análise financeira , onde o retorno sobre o patrimônio líquido (ROE) é decomposto em seus componentes.DuPont analysis is a tool used in financial analysis, where return on equity (ROE) is separated into its component parts. Graphical representation of DuPont ...",
+      "link": "https://translate.google.com/translate?u=https://en.wikipedia.org/wiki/DuPont_analysis&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fórmula DuPont três cinco fatores",
+      "titulo": "Retorno sobre o Patrimônio Líquido (ROE) com a Fórmula ...",
+      "snippet": "Utilizando a fórmula DuPont, um analista pode facilmente determinar os pontos fortes e fracos financeiros de uma empresa. Saiba como.Financial leverage, which is measured by the equity multiplier. ROE Calculation with the DuPont Formula. ROE = Net Profit Margin (Profit/Sales) ...",
+      "link": "https://translate.google.com/translate?u=https://www.meadenmoore.com/blog/atc/how-to-calculate-return-on-equity-with-a-dupont-analysis&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:51.766Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Valuation por múltiplos: um guia completo para a ...",
+      "snippet": "O múltiplo EV/EBITDA relaciona o valor da empresa, ou Enterprise Value (EV), com o seu EBITDA (Lucros antes de Juros, Impostos, Depreciação e ...",
+      "link": "https://blbescoladenegocios.com.br/blog/valuation-por-multiplos-guia-completo/",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Entendendo o Múltiplo da Empresa (EV/EBITDA)",
+      "snippet": "O múltiplo da empresa (EV/EBITDA) é uma métrica financeira fundamental usada para avaliar o valor de uma empresa, incluindo dívidas e excluindo caixa, o que a ...The Enterprise Multiple (EV/EBITDA) is a key financial metric used to evaluate the value of a company by including debt and excluding cash, making it a useful ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/e/ev-ebitda.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Valuation por MÚLTIPLOS: P/L, EV/Ebitda, P/VP",
+      "snippet": "Você aprenderá: O que são e como calcular os múltiplos P/L, EV/Ebitda e P/VP. Como interpretar os múltiplos e comparar empresas do mesmo setor.",
+      "link": "https://www.youtube.com/watch?v=JYQavMC9nfU",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Inter Dica | P/L e EV/EBITDA",
+      "snippet": "Dentro dessa categoria, os múltiplos mais utilizados são o Preço sobre Lucro (P/L) ou Valor da Firma sobre EBITDA (EV/EBITDA).",
+      "link": "https://interinvest.inter.co/aprenda-a-investir/investimentos/inter-dica-pl-e-evebitda",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Múltiplo EV/EBITDA | Fórmula + Calculadora",
+      "snippet": "O múltiplo EV/EBITDA compara o valor das operações de uma empresa com seus lucros antes de juros, impostos, depreciação e amortização.Equity Value Multiple: Unlike a levered valuation multiple such as the price to earnings ratio (P/E ratio), the EV/EBITDA multiple accounts for the debt sitting ...",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/ev-ebitda-enterprise-value/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Tabela de Múltiplos: atualizada semanalmente - Expert XP",
+      "snippet": "O EV corresponde ao valor da empresa no mercado, enquanto o Ebitda é o lucro dela antes de abatimentos. Em termos gerais, busca uma estimativa de quanto tempo ...",
+      "link": "https://conteudos.xpi.com.br/acoes/relatorios/tabela-de-multiplos-xp/",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "O que são múltiplos de avaliação em private equity",
+      "snippet": "Os múltiplos comuns incluem valor da empresa (EV)/EBITDA, EV/receita e preço/lucro (P/L). Esses índices variam bastante de acordo com o ...EV/EBITDA (enterprise value to earnings before interest, taxes, depreciation and amortisation): This is the most widely used multiple in PE. It ...",
+      "link": "https://translate.google.com/translate?u=https://www.moonfare.com/glossary/valuation-multiples&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Valuation por múltiplos: os segredos da avaliação por ...",
+      "snippet": "Os múltiplos de lucro mais utilizados são Ebitda (EV/EBITDA) e Lucro Líquido (P/E ou P/L). Mas há ainda outros como Ebit (EV/EBIT) ou Fluxo ...",
+      "link": "https://dernegocios.com.br/valuation-por-multiplos/",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "O que é EV/Ebitda e como calculá-lo?",
+      "snippet": "O EV/Ebitda é um indicador que relaciona o valor da companhia (EV) e o seu Ebitda (geração de caixa). Em tese, mostra quantos “Ebitdas” seriam ...",
+      "link": "https://borainvestir.b3.com.br/objetivos-financeiros/o-que-e-o-evebitda-e-como-ele-ajuda-na-hora-de-investir/",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "múltiplos valuation EV/EBITDA P/L",
+      "titulo": "Índices Setoriais: Múltiplos de Valor das Empresas não ...",
+      "snippet": "Enterprise Value/EBITDA​​ O EV/EBITDA é um índice que mede a relação entre o Valor da Empresa (enterprise value) e o Lucro Antes de Juros, ...",
+      "link": "https://insight.economatica.com/indices-setoriais-multiplos-de-valor-das-empresas/",
+      "extraido_em": "2026-01-31T12:34:53.556Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Fluxo de Caixa Descontado (DCF) explicado com fórmula ...",
+      "snippet": "O fluxo de caixa descontado (DCF) é um método de avaliação que estima o valor de um investimento com base em seus fluxos de caixa futuros esperados. Por ...Discounted cash flow (DCF) is a valuation method used to estimate the attractiveness of an investment opportunity. Learn how it is calculated and when to ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/d/dcf.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Modelo de Fluxo de Caixa Descontado (DCF) - HBS Online",
+      "snippet": "O modelo de fluxo de caixa descontado (DCF) é um dos métodos de avaliação mais abrangentes para estimar o valor de uma empresa. A avaliação ...Discover how discounted cash flow (DCF) estimates a company's value by discounting future cash flows, enabling smarter investment decisions.",
+      "link": "https://translate.google.com/translate?u=https://online.hbs.edu/blog/post/discounted-cash-flow&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Fluxo de Caixa Descontado: valuation seguro da empresa",
+      "snippet": "O fluxo de caixa descontado é o método de avaliação que calcula o valor atual das riquezas que a empresa tem potencial para gerar no futuro. Portanto, parte da ...",
+      "link": "https://dernegocios.com.br/metodo-de-valuation-o-fluxo-de-caixa-descontado-em-quatro-etapas/",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Fluxo de Caixa Descontado: aspectos teóricos e práticos ...",
+      "snippet": "Objetivo: Este texto apresenta uma análise aprofundada sobre os aspectos teóricos e práticos do método do fluxo de caixa descontado e sua aplicabilidade em ...",
+      "link": "https://asaa.anpcont.org.br/asaa/article/download/1100/728/6859",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Como calcular o Fluxo de Caixa Descontado? Exemplo e ...",
+      "snippet": "O Fluxo de Caixa Descontado (FCD), ou Discounted Cash Flow (DCF), é um método que calcula quanto vale hoje uma empresa, ...",
+      "link": "https://flashapp.com.br/blog/fluxo-de-caixa-descontado",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Valuation por Fluxo de Caixa Descontado",
+      "snippet": "O Valuation por Fluxo de Caixa Descontado (DCF) é uma técnica que visa determinar o valor de uma empresa com base na projeção de seu fluxo ...",
+      "link": "https://www.afixcode.com.br/blog/valuation-fluxo-de-caixa-descontado/",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Avaliação de startups: aplicando o método do fluxo de ...",
+      "snippet": "Resumindo: ao avaliar uma startup usando o método do fluxo de caixa descontado (DCF), o valor dos lucros futuros será descontado para o seu valor presente. Isso ...Fortunately, there are multiple methods to value a startup and one of them is called the Discounted Cash Flow (DCF) method. How to perform a DCF valuation you ...",
+      "link": "https://translate.google.com/translate?u=https://www.ey.com/en_nl/services/finance-navigator/startup-valuation-applying-the-discounted-cash-flow-method-in-six-easy-step&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Análise de Fluxo de Caixa Descontado (DCF)",
+      "snippet": "A análise de fluxo de caixa descontado (DCF) representa o valor presente líquido (VPL) dos fluxos de caixa projetados disponíveis para todos ...The discounted cash flow (DCF) analysis represents the net present value (NPV) of projected cash flows available to all providers of capital.",
+      "link": "https://translate.google.com/translate?u=https://macabacus.com/valuation/dcf-overview&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "O que é e para que serve o Fluxo de Caixa Descontado?",
+      "snippet": "O Fluxo de Caixa Descontado é utilizado para determinar o valor presente de uma empresa, ativo ou projeto com base no dinheiro que pode ...",
+      "link": "https://www.treasy.com.br/blog/fluxo-de-caixa-descontado/",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "fluxo caixa descontado DCF valuation",
+      "titulo": "Fluxo de Caixa Descontado para startups: como avaliar o ...",
+      "snippet": "O fluxo de caixa descontado (DCF – Discounted Cash Flow) é um dos principais métodos para calcular o valuation de uma startup. Ele permite estimar o valor real ...",
+      "link": "https://www.acolabam.com.br/blog/fluxo-de-caixa-descontado-para-startups",
+      "extraido_em": "2026-01-31T12:34:55.146Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "Entendendo o WACC: Definição, Fórmula e Cálculo ...",
+      "snippet": "O custo médio ponderado de capital (CMPC) representa a taxa média que uma empresa espera pagar aos seus provedores de capital, refletindo o custo proporcional ...Weighted Average Cost of Capital (WACC) is a critical financial metric that combines the cost of equity and debt, reflecting the average rate a company must pay ...",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/w/wacc.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: o que é, como calcular e qual é a importância ...",
+      "snippet": "O WACC (custo médio ponderado de capital) é uma métrica essencial para a contabilidade das empresas. Saiba como o WACC funciona.",
+      "link": "https://www.empiricus.com.br/explica/wacc/",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "Como calcular o Custo Médio Ponderado de Capital ...",
+      "snippet": "Neste vídeo, você vai aprender tudo sobre o Custo Médio Ponderado de Capital (WACC) e a importância desse conceito para a análise de ...",
+      "link": "https://www.youtube.com/watch?v=ipaDOuSXgHw",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: saiba como funciona o custo médio ponderado de ...",
+      "snippet": "O custo médio ponderado de capital (WACC) de uma empresa aumenta à medida que o beta e a taxa de retorno sobre o patrimônio aumentam. Isso ...",
+      "link": "https://www.suno.com.br/artigos/wacc/",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: o que é, como calcular e como interpretar",
+      "snippet": "O WACC (Weighted Average Capital Cost, em português Custo Médio Ponderado de Capital), é um cálculo que indica os custos de capital de uma empresa, ...",
+      "link": "https://www.allstrategy.com.br/wacc/",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "CUSTO MÉDIO PONDERADO DE CAPITAL",
+      "snippet": "O Custo Médio Ponderado de Capital (CMPC), também conhecido como taxa WACC, pode ser entendida como uma média ponderada dos retornos exigidos pelos credores de ...",
+      "link": "https://www.arpe.pe.gov.br/images/COORDENADORIAS/SANEAMENTO/COMPESA/4.1---WACC---CUSTO-MEDIO-PONDERADO-DE-CAPITAL.pdf",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "Custo Médio Ponderado de Capital (WACC)",
+      "snippet": "O Custo Médio Ponderado de Capital (WACC) é uma medida financeira que representa o custo médio das fontes de financiamento de uma empresa.",
+      "link": "https://www.valini.com.br/post/_wacc",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: o que é e como funciona a sua fórmula?",
+      "snippet": "WACC, também chamado de Custo Médio Ponderado de Capital, é um indicador financeiro usado por empresas e investidores. Veja como calcular!",
+      "link": "https://ejfgv.com/blog/wacc/",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: Saiba o que é o Custo Médio ponderado de Capital",
+      "snippet": "O WACC (Weighted Average Capital Cost em inglês) é responsável por calcular o custo médio ponderado de capital e este capital pode ser levantado ...",
+      "link": "https://investimentos.one/renda-fixa/wacc-saiba-o-que-e-o-custo-medio-ponderado-de-capital/",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "WACC custo médio ponderado capital",
+      "titulo": "WACC: o que é, como é calculado e para que serve",
+      "snippet": "O WACC é a sigla para o termo em Inglês “Weighted Average Cost of Capital” que determina o custo conjunto do capital levantado por uma companhia ...",
+      "link": "https://maisretorno.com/portal/termos/w/wacc",
+      "extraido_em": "2026-01-31T12:34:56.467Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Beta alavancado e não alavancado (β) | Fórmula + ...",
+      "snippet": "Para calcular o beta desalavancado, a fórmula divide o beta alavancado por [1 mais o produto de (1 menos a taxa de imposto) e a relação dívida/patrimônio ...The most frequent use-case of beta in corporate finance is the capital asset pricing model (CAPM), in which beta is a critical component of calculating the cost ...",
+      "link": "https://translate.google.com/translate?u=https://www.wallstreetprep.com/knowledge/beta-levered-unlevered/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Beta Alavancado - O que é, conceito e mais",
+      "snippet": "O beta alavancado é um indicador que aponta a sensibilidade de uma determinada empresa em relação à tendência do mercado de forma geral.",
+      "link": "https://maisretorno.com/portal/termos/b/beta-alavancado",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "CAPM E REGULAÇÃO NO SEGMENTO DE ...",
+      "snippet": "Os betas médios alavancados e desalavancados, obtidos da Amos- tra 1, foram 0,72 e 0,26, respectivamente (Tabela 1). Tabela 1 – Beta médio alavancado e ...",
+      "link": "https://sbpe.org.br/index.php/rbe/article/download/250/231/",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "O Coeficiente Beta é um parâmetro fundamental ...",
+      "snippet": "Beta desalavancado. O Beta desalavancado elimina o efeito da dívida, isolando o risco puramente operacional do ativo. Aplicações práticas do ...",
+      "link": "https://www.valini.com.br/post/coeficiente-beta",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "capm na avaliação de empreendimentos industriais - Mercatto",
+      "snippet": "Onde β é o beta desalavancado, βALAVANCADO é o beta calculado pela regressão, t é a alíquota do imposto (também conhecida como taxa marginal), D é a parcela ...",
+      "link": "http://site.mercatto.eng.br/wp-content/uploads/2013/06/capm-avaliacao-empreendimento-industriais-xvi-cobreap-manaus-2011.pdf",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Beta sem alavancagem / Beta de ativos",
+      "snippet": "O beta desalavancado (também conhecido como beta de ativos) é o beta de uma empresa sem o impacto da dívida. Também é conhecido como a volatilidade dos retornos ...Unlevered beta (aka Asset Beta) is the beta of a company without the impact of debt. It is also known as the volatility of returns for a company.",
+      "link": "https://translate.google.com/translate?u=https://corporatefinanceinstitute.com/resources/valuation/unlevered-beta-asset-beta/&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Índice Beta - Clube de Finanças",
+      "snippet": "Basicamente, o modelo CAPM busca encontrar o retorno esperado de um investimento em um ativo que contém risco. Onde na equação, E(ri) representa o retorno ...",
+      "link": "https://clubedefinancas.com.br/materias/indice-beta/",
+      "extraido_em": "2026-01-31T12:34:57.669Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Leveraged and Unleveraged Beta",
+      "snippet": "Teoria e Prática do Beta Alavancado e Desalavancado. Neste vídeo discutimos como usamos a alavancagem e desalavancagem do Beta com exemplos ...",
+      "link": "https://www.youtube.com/watch?v=e2LAVF_AeuY",
+      "extraido_em": "2026-01-31T12:34:57.670Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "generalização do capm aplicada ao cálculo do custo de ...",
+      "snippet": ": beta alavancado para cada uma das empresas i dos EUA. EL: Capital ... Beta desalavancado médio basta calcular a média dos Betas conforme a EQ. (24):.",
+      "link": "https://www.teses.usp.br/teses/disponiveis/3/3139/tde-22042007-120807/publico/MestradoGcapmCaimi.pdf",
+      "extraido_em": "2026-01-31T12:34:57.670Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "beta alavancado desalavancado CAPM",
+      "titulo": "Um Guia Passo a Passo para Calcular o Risco de Ativos",
+      "snippet": "O processo de \"desalavancagem\" do beta consiste em extrair o impacto das obrigações de dívida de uma empresa antes de avaliar o risco de um investimento em ...The act of \"unlevering\" beta involves extracting the impact of debt obligations of a company before evaluating an investment's risk in comparison to the market.",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/ask/answers/102714/how-do-i-unlever-beta.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:34:57.670Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise vertical e horizontal: conceito, diferenças e cálculo",
+      "snippet": "A análise vertical expressa itens financeiros como porcentagem de uma base, facilitando comparações. Já a análise horizontal mede variações ...",
+      "link": "https://vexpenses.com.br/blog/analise-vertical-e-horizontal/",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise Vertical e Horizontal: O que é e como fazer ...",
+      "snippet": "A Análise Vertical permite examinar a composição de um relatório financeiro em um único período, enquanto a Análise Horizontal foca na comparação dos resultados ...",
+      "link": "https://blog.leverpro.com.br/post/analise-vertical-e-horizontal",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise Horizontal e Vertical das Demonstrações Financeiras",
+      "snippet": "Dizemos ainda que a Análise Vertical facilita a avaliação da estrutura das demonstrações financeiras (Balanço Patrimonial e DRE) e a ...",
+      "link": "https://www.treasy.com.br/blog/analise-horizontal-e-analise-vertical/",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise horizontal e vertical",
+      "snippet": "A análise vertical leva em consideração valores percentuais das demonstrações financeiras. Para isso utiliza para cálculo percentual de cada conta em relação a ...",
+      "link": "https://plataformaead.unigran.br/webaulas/103/75/arquivos/aula06.pdf",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "02. Aula de Análise vertical e horizontal ...",
+      "snippet": "Treinamento sobre os principais demonstrativos financeiros empresariais ... Go to channel Contabiliza comigo! Como fazer análise vertical e ...",
+      "link": "https://www.youtube.com/watch?v=saSi9_2-vrs",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise vertical e análise horizontal do negócio",
+      "snippet": "Por um lado, a análise vertical busca entender qual o percentual de cada setor da empresa em seus resultados. Já a a análise horizontal foca na evolução dos ...",
+      "link": "https://sebraeplay.com.br/content/analise-vertical-e-horizontal",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "A IMPORTÂNCIA DA ANÁLISE VERTICAL E HORIZONTAL ...",
+      "snippet": "Considerando que o estudo desenvolvido sobre as análises vertical e horizontal é de suma importância para o mundo empresarial, e que ao ser utilizada como ...",
+      "link": "https://www.unifacvest.edu.br/assets/uploads/files/arquivos/e1f46-felisberto,-vinicius-lopes.-a-importancia-da-analise-vertical-e-horizontal-como-ferramenta-gerencial-para-tomada-de-decisao-em-uma-empresa-comercial.-ciencias-contabeis.-lages_-unifacvest,-2020-01_.pdf",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Análise vertical e horizontal de quatro empresas listadas na ...",
+      "snippet": "de RR de Araujo · 2025 — As técnicas de análise vertical e horizontal se mostram eficazes para compreender a estrutura financeira, a eficiência operacional e a ...",
+      "link": "https://v3.cadernoscajuina.pro.br/index.php/revista/article/view/949",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Resumo das principais fórmulas de Análise ...",
+      "snippet": "Também chamada de Análise de Evolução, a Análise Horizontal permite a verificação da evolução dos elementos das Demonstrações Contábeis, ...",
+      "link": "https://www.estrategiaconcursos.com.br/blog/analise-das-demonstracoes-contabeis/",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise vertical horizontal demonstrações financeiras",
+      "titulo": "Qual a diferença entre análise vertical e horizontal? - Hiper",
+      "snippet": "A análise vertical é útil para avaliar a estrutura financeira e a saúde financeira da sua empresa, bem como para comparar a performance ...",
+      "link": "https://hiper.com.br/blog/analise-vertical-e-horizontal/",
+      "extraido_em": "2026-01-31T12:34:59.069Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Como Analisar a DRE: Indicadores e Impactos na Gestão",
+      "snippet": "Consiste em comparar os valores da DRE ao longo do tempo, identificando tendências, crescimentos ou retrações. Essa análise permite entender se as receitas e ...",
+      "link": "https://site.irko.com.br/blog/analise-demonstracao-resultado-exercicio/",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Análise de demonstrativos financeiros: entenda o balanço ...",
+      "snippet": "A análise de demonstrativos financeiros, como o balanço patrimonial e DRE, é fundamental para você compreender o estado da saúde financeira de seu negócio.",
+      "link": "https://www.serasaexperian.com.br/conteudos/analise-de-demonstrativos-financeiros-entenda-o-balanco-patrimonial-e-dre/",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Análise horizontal na contabilidade: aplicando em balanços e ...",
+      "snippet": "Ela é feita comparando os dados financeiros de anos anteriores com os dados atuais para verificar se houve melhoria ou piora na saúde financeira da empresa.",
+      "link": "https://analize.com.br/blog/analise-horizontal-na-contabilidade-saiba-como-aplica-la-em-balancos-e-dres.html",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Análise de balanços: o que Warren Buffett avalia nas ...",
+      "snippet": "Analisar o balanço de uma empresa é olhar para o passado de resultados com um olho no futuro. Nas demonstrações financeiras é possível identificar se aquela ...",
+      "link": "https://www.infomoney.com.br/guias/o-que-e-analise-de-balancos/",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Análise Vertical e Horizontal: O que é e como fazer ...",
+      "snippet": "A análise vertical foca nas demonstrações financeiras já a horizontal colabora para identificar padrões e mudanças em um período. Quer saber mais?",
+      "link": "https://blog.leverpro.com.br/post/analise-vertical-e-horizontal",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Análise das Demonstrações Contábeis - Canal CECIERJ",
+      "snippet": "Análise das demonstrações contábeis. v. 1 / Dayse Pereira. Cardoso Sousa; Roberto Martins. – 2. ed. Rio de Janeiro: Fundação CECIERJ, 2010.",
+      "link": "https://canal.cecierj.edu.br/012016/276a2d0f2640d64b618f06de97ec212c.pdf",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "análise de balanço e dre para tomada de decisão na gestão",
+      "snippet": "ANÁLISE DE BALANÇO E DRE PARA TOMADA DE DECISÃO NA GESTÃO. OPERACIONAL ... tendências futuras, baseando-se sempre no desempenho dos últimos anos. Com a ...",
+      "link": "https://repositorio.pesquisaextensaolibertas.com.br/index.php/ril/article/download/289/290/868",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Modelo de DRE: O Que É, Estrutura Ideal e Planilha Grátis",
+      "snippet": "A DRE resume as operações financeiras da sua empresa em um período de tempo específico; · Permite identificar gargalos de produção e ...",
+      "link": "https://contaazul.com/blog/modelo-de-dre/",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "Resumo das principais fórmulas de Análise ...",
+      "snippet": "Confira neste artigo um resumo das principais fórmulas de Análise das Demonstrações Contábeis para a sua prova de Contabilidade.",
+      "link": "https://www.estrategiaconcursos.com.br/blog/analise-das-demonstracoes-contabeis/",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "análise tendência balanço DRE",
+      "titulo": "O que é Demonstração de Resultado do Exercício?",
+      "snippet": "A análise vertical da DRE (que mostra cada item como percentual da receita) permite avaliar se o modelo de negócio é realmente viável no ...",
+      "link": "https://www.santander.com.br/blog/demonstracao-resultado-do-exercicio",
+      "extraido_em": "2026-01-31T12:35:00.190Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Entenda o que é break even point e como calcular o de ...",
+      "snippet": "O ponto de equilíbrio financeiro, conhecido como break even point, é um conceito e uma ferramenta de gestão financeira.",
+      "link": "https://fia.com.br/blog/break-even-point/",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "O que é Break-even Point (Ponto de Equilíbrio)?",
+      "snippet": "O Break-even Point é o nível de produção ou vendas em que as receitas totais de uma empresa são exatamente iguais aos seus custos totais. Neste ponto, a empresa ...",
+      "link": "https://strong.com.br/glossario/o-que-e-break-even-point-ponto-de-equilibrio/",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Ponto de Equilíbrio: Definição, Exemplos e Como Calcular",
+      "snippet": "A análise do ponto de equilíbrio ajuda as empresas a identificar despesas ocultas, tomar decisões objetivas, definir metas de vendas realistas, ...The breakeven point is the exact level of sales where a company's revenue equals its total expenses, meaning the business neither makes a profit nor has a loss.",
+      "link": "https://translate.google.com/translate?u=https://www.investopedia.com/terms/b/breakevenpoint.asp&hl=pt&sl=en&tl=pt&client=srp",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Breakeven: O que é, sua importância e como calcular?",
+      "snippet": "Breakeven (ou “ponto de equilíbrio) é um cálculo que ajuda a entender mais sobre a estabilidade financeira de uma empresa. Saiba como calculá-lo!",
+      "link": "https://conteudos.xpi.com.br/aprenda-a-investir/relatorios/breakeven/",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Ponto de equilíbrio: que é, como calcular e sua ...",
+      "snippet": "No ponto de equilíbrio, também chamado de break-even point, ponto de ruptura, ou, ainda, ponto crítico, o lucro da empresa é zero, ou seja, é ...",
+      "link": "https://www.treasy.com.br/blog/ponto-de-equilibrio-economico/",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "O que é break even point e como ele é calculado",
+      "snippet": "Enquanto o break even é o ponto de equilíbrio, quando as receitas e despesas se igualam, o payback é o tempo que levará para o investimento ser ...",
+      "link": "https://www.insper.edu.br/content/insper-portal/pt/noticias/2023/1/o-que-e-break-even-point-e-como-ele-e-calculado.html",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Ponto de equilíbrio como calcular o faturamento ...",
+      "snippet": "Também chamado de break-even point, ponto de ruptura ou análise custo-volume-lucro, o ponto de equilíbrio informa o volume de.",
+      "link": "https://sebrae.com.br/Sebrae/Portal%20Sebrae/UFs/PE/Anexos/Ponto%20de%20equil%C3%ADbrio%20como%20calcular%20o%20faturamento%20necess%C3%A1rio%20para%20voc%C3%AA%20obter%20lucro.pdf",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Breakeven: como calcular o ponto de equilíbrio em 3 passos",
+      "snippet": "Conforme falamos, o ponto de equilíbrio (breakeven point ou breakeven) é o momento em que as receitas igualam os custos totais, diminuindo que a ...",
+      "link": "https://flashapp.com.br/blog/ponto-de-equilibrio-financeiro-breakeven",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Breakeven: como calcular o ponto de equilíbrio financeiro?",
+      "snippet": "O break even é o ponto onde as receitas igualam os custos e despesas de um negócio em um período. Saiba como calcular o break even.",
+      "link": "https://www.suno.com.br/artigos/breakeven/",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "break even point análise equilibrio",
+      "titulo": "Ponto de equilíbrio ou Break Even point, apurou?",
+      "snippet": "Ponto de Equilíbrio, termo adotado no Brasil, no mundo empresarial, para Break Even Point, que significa empatar ou igualar, ou seja, é aquele resultado/estágio ...",
+      "link": "https://sebraepr.com.br/comunidade/artigo/ponto-de-equilibrio-ou-break-even-point-apurou?srsltid=AfmBOormrFGBvE8JP7myxW84nFFas5z34YRP1OiceVLoksaVeRH5LoW9#!",
+      "extraido_em": "2026-01-31T12:35:01.249Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Alavancagem operacional: o que é e como calcular",
+      "snippet": "Como dito, o grau de alavancagem operacional (GAO) é uma estratégia útil para empresas que desejam majorar seus lucros sem aumentar custos fixos ...",
+      "link": "https://master.clear.com.br/alavancagem-operacional/",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Grau de alavancagem operacional: o que é e como funciona",
+      "snippet": "O grau de alavancagem operacional (GAO) é a proporção entre os custos fixos e os custos variáveis. Se um produto tem GAO alto, ...",
+      "link": "https://www.topinvest.com.br/glossario/grau-de-alavancagem-operacional/",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "O que é alavancagem operacional, como calcular e reduzir ...",
+      "snippet": "... (GAO), uma medida da sensibilidade do lucro operacional (EBIT) em relação à variação na receita. Assim: GAO = Margem de Contribuição/Lucro Operacional (EBIT).",
+      "link": "https://netlex.io/blog/alavancagem-operacional",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Alavancagem operacional: cálculo GAO, riscos e vantagens",
+      "snippet": "A alavancagem operacional refere-se à capacidade de uma empresa de aumentar seus lucros à medida que suas vendas crescem, sem a necessidade de ...",
+      "link": "https://flashapp.com.br/blog/alavancagem-operacional",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Uma Revisão Bibliográfica - Revista EduFatec - Fatec Franca",
+      "snippet": "de MS de Oliveira Nascimento — A principal medida da alavancagem operacional é o Grau de Alavancagem. Operacional (GAO), que quantifica a sensibilidade do lucro operacional em relação às ...",
+      "link": "https://revistaedufatec.fatecfranca.edu.br/wp-content/uploads/2024/10/edufatec-n07v1a04.pdf",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "GAO - Grau de alavancagem operacional",
+      "snippet": "Vamos considerar uma empresa com o GAO = 4. Se as vendas aumentarem 10%, o lucro irá aumentar 40%. 4 vezes o percentual ...",
+      "link": "https://professorquintino.com.br/slides/pq0410pwp.pdf",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Entenda o que é alavancagem operacional e os riscos ...",
+      "snippet": "GAO = Variação percentual no lucro operacional (EBIT) / Variação percentual nas vendas. Esse cálculo mostra quanto o lucro operacional de uma ...",
+      "link": "https://www.nordinvestimentos.com.br/blog/alavancagem-operacional/",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Alavancagem operacional: Aprenda o segredo do ...",
+      "snippet": "O grau de alavancagem operacional mede a variação proporcional do lucro operacional em função de mudanças no nível de vendas.",
+      "link": "https://www.suno.com.br/artigos/alavancagem-operacional/",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Alavancagem operacional",
+      "snippet": "Em geral quanto maior o GAO (Grau de Alavancagem Operacional), mais perto a empresa encontra- se do ponto de equilíbrio, por este motivo dizemos que o Grau de ...",
+      "link": "https://ojs.unisanta.br/BAM/article/download/1434/1430/4300",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "alavancagem operacional GAO",
+      "titulo": "Grau de Alavancagem Operacional (GAO)",
+      "snippet": "O Grau de Alavancagem Operacional (GAO) mede como a receita operacional de uma empresa responde às mudanças nas vendas. Ele fornece uma visão ...",
+      "link": "https://br.investing.com/academy/analysis/grau-de-alavancagem-operacional-gao/",
+      "extraido_em": "2026-01-31T12:35:02.325Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem de Segurança Operacional (MSO)",
+      "snippet": "A Margem de Segurança Operacional (MSO) é um indicador do volume de atividade de vendas que supera o ponto de equilíbrio.",
+      "link": "https://www.bemparana.com.br/publicacao/colunas/contabilidade-facil/margem-de-seguranca-operacional-mso/",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Cálculo da Margem de Segurança Operacional ...",
+      "snippet": "Cálculo da Margem de Segurança Operacional (Consulplan/2018). 1.8K views · 4 years ago ...more. Explica no Quadro! 14.5K. Subscribe.",
+      "link": "https://www.youtube.com/watch?v=3c27jvQxBdU",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem operacional: para que serve e como calcular",
+      "snippet": "A margem operacional é indicador financeiro que mede a porcentagem de lucro que uma empresa obtém a partir da receita bruta. Em outras palavras, esse índice ...",
+      "link": "https://qive.com.br/blog/margem-operacional/",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem Operacional: como calcular e aumentar na empresa",
+      "snippet": "A margem operacional mede o lucro que uma empresa obtém a partir de suas vendas, considerando apenas os custos operacionais. Saiba mais!",
+      "link": "https://blog.avantiopenbanking.com.br/margem-operacional/",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "O que é, e como calcular a Margem de Segurança",
+      "snippet": "A margem de segurança é uma medida da diferença entre as vendas reais (ou orçadas) e as vendas de equilíbrio.",
+      "link": "https://blogdoprofessorari.blogspot.com/2020/09/o-que-e-como-calcular-margem-de.html",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem de Segurança e Grau de Alavancagem Operacional",
+      "snippet": "A margem de segurança representa a diferença entre o nível atual das vendas e o ponto de equilíbrio, em outras palavras, ela mostra quanto das receitas da ...",
+      "link": "https://dex.descomplica.com.br/modulo-4-custos/gestao-de-custos-pos/margem-de-seguranca-e-grau-de-alavancagem-operacional-61ef48",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Ponto de equilíbrio e margem de segurança",
+      "snippet": "Por outro lado, a Margem de Segurança aumenta de 28,6% para 37,5%, pois ela é calculada em relação ao Ponto de Equilíbrio, de 25 unidades. O ...",
+      "link": "https://www.planilhaideal.com.br/post/ponto-de-equilibrio-margem-de-seguranca-e-alavancagem-operacional",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem de segurança e alavancagem operacional",
+      "snippet": "de SFR Carvalho · 1994 — Tipo: TCC. Título: Margem de segurança e alavancagem operacional. Autor(es):, Carvalho, Silvano Fontenele R. de. Orientador: Azevedo, Eduardo Araújo de.",
+      "link": "https://repositorio.ufc.br/handle/riufc/49970",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Margem de Segurança e Grau de Alavancagem Operacional",
+      "snippet": "A margem de segurança (MS) é um conceito crucial na análise de custo-volume-lucro, diretamente relacionado ao ponto de equilíbrio.",
+      "link": "https://pt.linkedin.com/pulse/margem-de-seguran%C3%A7a-e-grau-alavancagem-operacional-para-coutinho-xgpef",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    },
+    {
+      "categoria": "MBA",
+      "query": "margem segurança operacional",
+      "titulo": "Como melhorar a Margem Operacional",
+      "snippet": "A margem operacional é um indicador financeiro que mede a porcentagem do lucro que uma empresa obtém a partir de suas atividades operacionais, ou seja, ...",
+      "link": "https://zeev.it/blog/margem-operacional/",
+      "extraido_em": "2026-01-31T12:35:03.399Z"
+    }
+  ]
+}

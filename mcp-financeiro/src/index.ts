@@ -922,6 +922,210 @@ const TOOLS = [
       },
     },
   },
+
+  // === BASE DE CONHECIMENTO EXPANDIDA - eSocial, NF, MBA ===
+  {
+    name: "consultar_evento_esocial",
+    description: "Consulta eventos do eSocial (S-1000, S-1200, S-2200, etc.) para folha de pagamento",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código do evento (ex: S-1200, S-2200)" },
+        tipo: { type: "string", enum: ["TABELA", "PERIODICO", "NAO_PERIODICO"], description: "Filtrar por tipo de evento" },
+      },
+    },
+  },
+  {
+    name: "consultar_incidencia_tributaria",
+    description: "Consulta incidências tributárias do eSocial (FGTS, INSS, IRRF)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código da incidência (00 a 93)" },
+      },
+    },
+  },
+  {
+    name: "consultar_categoria_trabalhador",
+    description: "Consulta categorias de trabalhador do eSocial",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código da categoria (101 a 905)" },
+      },
+    },
+  },
+  {
+    name: "consultar_motivo_afastamento",
+    description: "Consulta motivos de afastamento do eSocial",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código do motivo (01 a 38)" },
+      },
+    },
+  },
+  {
+    name: "consultar_motivo_desligamento",
+    description: "Consulta motivos de desligamento do eSocial",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código do motivo (01 a 44)" },
+      },
+    },
+  },
+  {
+    name: "consultar_cfop",
+    description: "Consulta CFOP (Código Fiscal de Operações e Prestações) para emissão de NF",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código CFOP (ex: 5.102, 6.101)" },
+        tipo: { type: "string", enum: ["ENTRADA", "SAIDA"], description: "Filtrar por tipo" },
+      },
+    },
+  },
+  {
+    name: "consultar_cst_icms",
+    description: "Consulta CST ICMS para regime normal",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código CST (00 a 90)" },
+      },
+    },
+  },
+  {
+    name: "consultar_csosn",
+    description: "Consulta CSOSN (Simples Nacional)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código CSOSN (101 a 900)" },
+      },
+    },
+  },
+  {
+    name: "consultar_cst_pis_cofins",
+    description: "Consulta CST PIS/COFINS",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código CST (01 a 99)" },
+      },
+    },
+  },
+  {
+    name: "consultar_servico_lc116",
+    description: "Consulta serviços da LC 116 (lista de serviços sujeitos ao ISS)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        codigo: { type: "string", description: "Código do serviço (01 a 40)" },
+      },
+    },
+  },
+  {
+    name: "consultar_indicador_mba",
+    description: "Consulta indicadores financeiros para análise MBA",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        nome: { type: "string", description: "Nome do indicador (ex: ROE, Liquidez Corrente)" },
+        categoria: { type: "string", enum: ["liquidez", "rentabilidade", "endividamento", "atividade", "valuation"], description: "Categoria do indicador" },
+      },
+    },
+  },
+  {
+    name: "buscar_modelo_lancamento",
+    description: "Busca modelo de lançamento contábil por tipo ou palavras-chave",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        texto: { type: "string", description: "Descrição da operação (ex: pagamento fornecedor, folha de pagamento)" },
+        categoria: { type: "string", enum: ["administrativo", "fiscal", "trabalhista", "juridico", "financeiro"], description: "Categoria do lançamento" },
+      },
+    },
+  },
+  {
+    name: "analise_financeira_completa",
+    description: "MBA: Gera análise financeira completa com todos os indicadores",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        empresa: { type: "string", description: "Nome da empresa" },
+        periodo: { type: "string", description: "Período da análise (ex: 2025-01)" },
+        ativo_circulante: { type: "number", description: "Ativo Circulante" },
+        ativo_nao_circulante: { type: "number", description: "Ativo Não Circulante" },
+        passivo_circulante: { type: "number", description: "Passivo Circulante" },
+        passivo_nao_circulante: { type: "number", description: "Passivo Não Circulante" },
+        patrimonio_liquido: { type: "number", description: "Patrimônio Líquido" },
+        receita: { type: "number", description: "Receita Total" },
+        lucro_liquido: { type: "number", description: "Lucro Líquido" },
+      },
+      required: ["empresa", "periodo", "ativo_circulante", "passivo_circulante", "patrimonio_liquido", "receita", "lucro_liquido"],
+    },
+  },
+  {
+    name: "calcular_ncg",
+    description: "MBA: Calcula Necessidade de Capital de Giro",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        contas_receber: { type: "number", description: "Contas a Receber" },
+        estoques: { type: "number", description: "Estoques" },
+        fornecedores: { type: "number", description: "Fornecedores" },
+        outras_operacionais: { type: "number", description: "Outras contas operacionais (passivo)" },
+      },
+      required: ["contas_receber", "fornecedores"],
+    },
+  },
+  {
+    name: "analise_dupont",
+    description: "MBA: Realiza análise DuPont (decomposição do ROE)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        lucro_liquido: { type: "number", description: "Lucro Líquido" },
+        receita: { type: "number", description: "Receita Total" },
+        ativo_total: { type: "number", description: "Ativo Total" },
+        patrimonio_liquido: { type: "number", description: "Patrimônio Líquido" },
+      },
+      required: ["lucro_liquido", "receita", "ativo_total", "patrimonio_liquido"],
+    },
+  },
+  {
+    name: "listar_eventos_esocial",
+    description: "Lista todos os eventos do eSocial por tipo",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        tipo: { type: "string", enum: ["TABELA", "PERIODICO", "NAO_PERIODICO", "todos"], description: "Tipo de evento" },
+      },
+    },
+  },
+  {
+    name: "listar_cfops",
+    description: "Lista CFOPs por tipo (entrada/saída)",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        tipo: { type: "string", enum: ["ENTRADA", "SAIDA", "todos"], description: "Tipo de operação" },
+        uf: { type: "string", enum: ["INTERNA", "INTERESTADUAL", "EXTERIOR", "todas"], description: "Abrangência da operação" },
+      },
+    },
+  },
+  {
+    name: "listar_modelos_lancamento",
+    description: "Lista todos os modelos de lançamento contábil por categoria",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        categoria: { type: "string", enum: ["administrativo", "fiscal", "trabalhista", "juridico", "financeiro", "todos"], description: "Categoria de lançamentos" },
+      },
+    },
+  },
 ];
 
 // ============================================
@@ -2912,6 +3116,372 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         mensagem: erros.length === 0
           ? "✅ Sistema contábil íntegro"
           : `❌ ${erros.length} erro(s) de integridade encontrado(s)`,
+      };
+    }
+
+    // === BASE DE CONHECIMENTO EXPANDIDA - eSocial, NF, MBA ===
+    case "consultar_evento_esocial": {
+      const { buscarEventoESocial, listarEventosESocial } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (args.codigo) {
+        const evento = buscarEventoESocial(args.codigo as string);
+        if (!evento) {
+          return { encontrado: false, mensagem: `Evento ${args.codigo} não encontrado` };
+        }
+        return {
+          encontrado: true,
+          codigo: args.codigo,
+          ...evento,
+        };
+      }
+      
+      if (args.tipo) {
+        const eventos = listarEventosESocial(args.tipo as string);
+        return {
+          tipo_filtro: args.tipo,
+          quantidade: Object.keys(eventos).length,
+          eventos,
+        };
+      }
+      
+      return {
+        eventos: listarEventosESocial(),
+        quantidade: Object.keys(listarEventosESocial()).length,
+      };
+    }
+
+    case "consultar_incidencia_tributaria": {
+      const { buscarIncidenciaTributaria } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código da incidência é obrigatório" };
+      }
+      
+      const incidencia = buscarIncidenciaTributaria(args.codigo as string);
+      if (!incidencia) {
+        return { encontrado: false, mensagem: `Incidência ${args.codigo} não encontrada` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...incidencia,
+      };
+    }
+
+    case "consultar_categoria_trabalhador": {
+      const { buscarCategoriaTrabalhador } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código da categoria é obrigatório" };
+      }
+      
+      const categoria = buscarCategoriaTrabalhador(args.codigo as string);
+      if (!categoria) {
+        return { encontrado: false, mensagem: `Categoria ${args.codigo} não encontrada` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...categoria,
+      };
+    }
+
+    case "consultar_motivo_afastamento": {
+      const { buscarMotivoAfastamento } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do motivo é obrigatório" };
+      }
+      
+      const motivo = buscarMotivoAfastamento(args.codigo as string);
+      if (!motivo) {
+        return { encontrado: false, mensagem: `Motivo de afastamento ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...motivo,
+      };
+    }
+
+    case "consultar_motivo_desligamento": {
+      const { buscarMotivoDesligamento } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do motivo é obrigatório" };
+      }
+      
+      const motivo = buscarMotivoDesligamento(args.codigo as string);
+      if (!motivo) {
+        return { encontrado: false, mensagem: `Motivo de desligamento ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...motivo,
+      };
+    }
+
+    case "consultar_cfop": {
+      const { buscarCFOP, listarCFOPs } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (args.codigo) {
+        const cfop = buscarCFOP(args.codigo as string);
+        if (!cfop) {
+          return { encontrado: false, mensagem: `CFOP ${args.codigo} não encontrado` };
+        }
+        return {
+          encontrado: true,
+          codigo: args.codigo,
+          ...cfop,
+        };
+      }
+      
+      if (args.tipo) {
+        const cfops = listarCFOPs(args.tipo as string, 'todas');
+        return {
+          tipo_filtro: args.tipo,
+          quantidade: Object.keys(cfops).length,
+          cfops,
+        };
+      }
+      
+      return { erro: "Informe o código do CFOP ou tipo (ENTRADA/SAIDA)" };
+    }
+
+    case "consultar_cst_icms": {
+      const { buscarCSTIcms } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do CST é obrigatório" };
+      }
+      
+      const cst = buscarCSTIcms(args.codigo as string);
+      if (!cst) {
+        return { encontrado: false, mensagem: `CST ICMS ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        regime: "NORMAL",
+        ...cst,
+      };
+    }
+
+    case "consultar_csosn": {
+      const { buscarCSOSN } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do CSOSN é obrigatório" };
+      }
+      
+      const csosn = buscarCSOSN(args.codigo as string);
+      if (!csosn) {
+        return { encontrado: false, mensagem: `CSOSN ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        regime: "SIMPLES_NACIONAL",
+        ...csosn,
+      };
+    }
+
+    case "consultar_cst_pis_cofins": {
+      const { buscarCSTPisCofins } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do CST é obrigatório" };
+      }
+      
+      const cst = buscarCSTPisCofins(args.codigo as string);
+      if (!cst) {
+        return { encontrado: false, mensagem: `CST PIS/COFINS ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...cst,
+      };
+    }
+
+    case "consultar_servico_lc116": {
+      const { buscarServicoLC116 } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (!args.codigo) {
+        return { erro: "Código do serviço é obrigatório" };
+      }
+      
+      const servico = buscarServicoLC116(args.codigo as string);
+      if (!servico) {
+        return { encontrado: false, mensagem: `Serviço LC 116 ${args.codigo} não encontrado` };
+      }
+      
+      return {
+        encontrado: true,
+        codigo: args.codigo,
+        ...servico,
+      };
+    }
+
+    case "consultar_indicador_mba": {
+      const { buscarIndicador, buscarIndicadoresPorCategoria } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (args.nome) {
+        const indicador = buscarIndicador(args.nome as string);
+        if (!indicador) {
+          return { encontrado: false, mensagem: `Indicador "${args.nome}" não encontrado` };
+        }
+        return {
+          encontrado: true,
+          ...indicador,
+        };
+      }
+      
+      if (args.categoria) {
+        const indicadores = buscarIndicadoresPorCategoria(args.categoria as string);
+        return {
+          categoria: args.categoria,
+          quantidade: indicadores.length,
+          indicadores,
+        };
+      }
+      
+      // Listar todos
+      const todos = buscarIndicadoresPorCategoria('todos');
+      return {
+        quantidade: todos.length,
+        indicadores: todos,
+      };
+    }
+
+    case "buscar_modelo_lancamento": {
+      const { buscarLancamento, listarLancamentosPorCategoria } = await import("./knowledge/knowledge-expandido.js");
+      
+      if (args.texto) {
+        const lancamento = buscarLancamento(args.texto as string);
+        if (!lancamento) {
+          return { encontrado: false, mensagem: `Nenhum modelo encontrado para "${args.texto}"` };
+        }
+        return {
+          encontrado: true,
+          ...lancamento,
+        };
+      }
+      
+      if (args.categoria) {
+        const lancamentos = listarLancamentosPorCategoria(args.categoria as string);
+        return {
+          categoria: args.categoria,
+          quantidade: lancamentos.length,
+          lancamentos,
+        };
+      }
+      
+      return { erro: "Informe texto de busca ou categoria" };
+    }
+
+    case "analise_financeira_completa": {
+      const { gerarAnaliseCompleta } = await import("./knowledge/knowledge-expandido.js");
+      
+      const balanco = {
+        ativoCirculante: Number(args.ativo_circulante) || 0,
+        ativoNaoCirculante: Number(args.ativo_nao_circulante) || 0,
+        passivoCirculante: Number(args.passivo_circulante) || 0,
+        passivoNaoCirculante: Number(args.passivo_nao_circulante) || 0,
+        patrimonioLiquido: Number(args.patrimonio_liquido) || 0,
+      };
+      
+      const dre = {
+        receita: Number(args.receita) || 0,
+        lucroLiquido: Number(args.lucro_liquido) || 0,
+      };
+      
+      const analise = gerarAnaliseCompleta(
+        args.empresa as string,
+        args.periodo as string,
+        balanco,
+        dre
+      );
+      
+      return analise;
+    }
+
+    case "calcular_ncg": {
+      const { calcularNCG } = await import("./knowledge/knowledge-expandido.js");
+      
+      const resultado = calcularNCG(
+        Number(args.contas_receber) || 0,
+        Number(args.estoques) || 0,
+        Number(args.fornecedores) || 0,
+        Number(args.outras_operacionais) || 0
+      );
+      
+      return {
+        ...resultado,
+        ncg_formatado: formatCurrency(resultado.ncg),
+      };
+    }
+
+    case "analise_dupont": {
+      const { analiseDuPont } = await import("./knowledge/knowledge-expandido.js");
+      
+      const resultado = analiseDuPont(
+        Number(args.lucro_liquido) || 0,
+        Number(args.receita) || 0,
+        Number(args.ativo_total) || 0,
+        Number(args.patrimonio_liquido) || 0
+      );
+      
+      return {
+        ...resultado,
+        roe_formatado: `${resultado.roe.toFixed(2)}%`,
+        margem_formatada: `${resultado.margemLiquida.toFixed(2)}%`,
+      };
+    }
+
+    case "listar_eventos_esocial": {
+      const { listarEventosESocial } = await import("./knowledge/knowledge-expandido.js");
+      
+      const eventos = listarEventosESocial(args.tipo as string || 'todos');
+      return {
+        tipo_filtro: args.tipo || 'todos',
+        quantidade: Object.keys(eventos).length,
+        eventos,
+      };
+    }
+
+    case "listar_cfops": {
+      const { listarCFOPs } = await import("./knowledge/knowledge-expandido.js");
+      
+      const cfops = listarCFOPs(
+        (args.tipo as string) || 'todos',
+        (args.uf as string) || 'todas'
+      );
+      
+      return {
+        tipo_filtro: args.tipo || 'todos',
+        uf_filtro: args.uf || 'todas',
+        quantidade: Object.keys(cfops).length,
+        cfops,
+      };
+    }
+
+    case "listar_modelos_lancamento": {
+      const { listarLancamentosPorCategoria } = await import("./knowledge/knowledge-expandido.js");
+      
+      const lancamentos = listarLancamentosPorCategoria(args.categoria as string || 'todos');
+      return {
+        categoria_filtro: args.categoria || 'todos',
+        quantidade: lancamentos.length,
+        lancamentos,
       };
     }
 

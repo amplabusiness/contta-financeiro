@@ -7,6 +7,73 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+## [2.0.0] - 2026-01-31
+
+### 🚀 RELEASE ENTERPRISE-GRADE
+
+Esta versão representa uma **evolução significativa** do sistema, incorporando
+funcionalidades enterprise-grade aprovadas pelo Dr. Cícero.
+
+### ✨ Adicionado
+
+#### 🔒 Compliance & Auditoria
+
+- **Audit Log Imutável (WORM)** - Trilha de auditoria com hash encadeado estilo blockchain
+  - Tabela `audit_log_immutable` com proteção contra UPDATE/DELETE
+  - Triggers de segurança que impedem modificação
+  - Hash SHA256 encadeado para verificação de integridade
+  - Função `verify_chain_integrity()` para validação completa
+
+- **Decisões Dr. Cícero Assinadas** - Registro de decisões com hash verificável
+  - Tabela `dr_cicero_decisions` com assinatura digital SHA256
+  - Níveis de autoridade: `auto`, `supervised`, `expert`
+  - Verificação de integridade via `verify_decision_hash()`
+  - View `v_decision_integrity_report` para relatórios
+
+- **Educação Obrigatória** - Flag para erros críticos
+  - Tabela `education_requirements` para requisitos educacionais
+  - Tabela `education_acknowledgments` para reconhecimentos
+  - Modal bloqueante até acknowledgment com hash
+  - Funções `can_proceed_after_education()` e `acknowledge_education()`
+
+- **Compliance Dashboard** - Nova página `/compliance-dashboard`
+  - Visualização do audit log WORM
+  - Verificação de integridade da cadeia
+  - Monitoramento de decisões Dr. Cícero
+  - Status de educação obrigatória
+
+#### 🧠 Base de Conhecimento Expandida
+
+- **KnowledgeBase Completa** (~700 linhas)
+  - eSocial: Eventos, categorias, incidências tributárias
+  - Nota Fiscal: CFOP, CST, CSOSN, LC 116
+  - Indicadores MBA: Liquidez, rentabilidade, endividamento
+  - Lançamentos Contábeis: 50+ templates por categoria
+
+#### 📊 Novas Páginas
+
+- **Data Lake Page** - Central de documentos com RAG
+- **Educator Page** - Agente educador interativo
+- **Premium Features** - Demonstração de funcionalidades premium
+
+#### 🔧 Serviços
+
+- **ClassificationService** - Classificação inteligente com validações Dr. Cícero
+- **DrCiceroAuditService** - Auditoria automatizada de fechamento
+
+### 🗄️ Banco de Dados
+
+- 3 migrations enterprise-grade (audit_log_immutable, dr_cicero_decisions, education_requirements)
+- 8+ novas funções SQL para compliance
+
+### 🛡️ Segurança
+
+- RLS em todas as novas tabelas
+- Triggers de proteção contra modificação
+- Hash encadeado blockchain-style
+
+---
+
 ## [1.30.5] - 2026-01-06
 
 ### Corrigido

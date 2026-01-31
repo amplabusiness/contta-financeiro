@@ -17,10 +17,27 @@ export { default as pixIdentificacao } from "./pix-identificacao.js";
 export * from "./nfse-emissao.js";
 export { default as nfseEmissao } from "./nfse-emissao.js";
 
+// Base de conhecimento expandida (eSocial, NF, MBA, Lançamentos)
+export * from "./knowledge-expandido.js";
+export { default as knowledgeExpandido } from "./knowledge-expandido.js";
+
 // Re-exportar tipos úteis
 export type {
   ResultadoIdentificacao,
 } from "./pix-identificacao.js";
+
+export type {
+  EventoESocial,
+  IncidenciaTributaria,
+  CategoriaTrabalhador,
+  MotivoAfastamento,
+  MotivoDesligamento,
+  CFOP,
+  CST,
+  ServicoLC116,
+  IndicadorFinanceiro,
+  LancamentoContabil,
+} from "./knowledge-expandido.js";
 
 /**
  * Resumo do que está disponível:
@@ -54,4 +71,11 @@ export type {
  *    - Específico Goiânia
  *    - Função calcularRetencoes()
  *    - Função gerarDescricaoServico()
+ *
+ * 4. KNOWLEDGE EXPANDIDO (knowledge-expandido.ts)
+ *    - eSocial: Eventos (S-1000 a S-2400), incidências, categorias
+ *    - Nota Fiscal: CFOP, CST ICMS, CSOSN, CST PIS/COFINS, LC 116
+ *    - MBA: Indicadores de liquidez, rentabilidade, endividamento, atividade
+ *    - Lançamentos: Modelos de administrativo, fiscal, trabalhista, jurídico, financeiro
+ *    - Funções de análise: gerarAnaliseCompleta(), calcularNCG(), analiseDuPont()
  */

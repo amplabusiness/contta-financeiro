@@ -1,0 +1,3128 @@
+{
+  "versao": "1.0.0",
+  "gerado_em": "2026-01-31T12:35:25.685Z",
+  "autor": "Dr. Cícero - Treinamento Completo",
+  "eventos": {
+    "S-1000": {
+      "nome": "Informações do Empregador",
+      "tipo": "TABELA",
+      "periodicidade": "Inicial/Alteração"
+    },
+    "S-1005": {
+      "nome": "Tabela de Estabelecimentos",
+      "tipo": "TABELA",
+      "periodicidade": "Inicial/Alteração"
+    },
+    "S-1010": {
+      "nome": "Tabela de Rubricas",
+      "tipo": "TABELA",
+      "periodicidade": "Inicial/Alteração"
+    },
+    "S-1020": {
+      "nome": "Tabela de Lotações Tributárias",
+      "tipo": "TABELA",
+      "periodicidade": "Inicial/Alteração"
+    },
+    "S-1070": {
+      "nome": "Tabela de Processos",
+      "tipo": "TABELA",
+      "periodicidade": "Inicial/Alteração"
+    },
+    "S-1200": {
+      "nome": "Remuneração do Trabalhador",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-1210": {
+      "nome": "Pagamentos de Rendimentos",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-1260": {
+      "nome": "Comercialização Produção Rural",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-1270": {
+      "nome": "Contratação Avulsos",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-1280": {
+      "nome": "Informações Complementares",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-1298": {
+      "nome": "Reabertura Eventos Periódicos",
+      "tipo": "PERIODICO",
+      "periodicidade": "Eventual"
+    },
+    "S-1299": {
+      "nome": "Fechamento Eventos Periódicos",
+      "tipo": "PERIODICO",
+      "periodicidade": "Mensal"
+    },
+    "S-2190": {
+      "nome": "Registro Preliminar",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Eventual"
+    },
+    "S-2200": {
+      "nome": "Admissão/Cadastramento",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2205": {
+      "nome": "Alteração Cadastral",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2206": {
+      "nome": "Alteração Contratual",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2210": {
+      "nome": "CAT - Acidente de Trabalho",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2220": {
+      "nome": "ASO - Monitoramento Saúde",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2230": {
+      "nome": "Afastamento Temporário",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2240": {
+      "nome": "Condições Ambientais - PPP",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2250": {
+      "nome": "Aviso Prévio",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2298": {
+      "nome": "Reintegração",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2299": {
+      "nome": "Desligamento",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2300": {
+      "nome": "TSVE - Início",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2306": {
+      "nome": "TSVE - Alteração",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2399": {
+      "nome": "TSVE - Término",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    },
+    "S-2400": {
+      "nome": "Benefício RPPS",
+      "tipo": "NAO_PERIODICO",
+      "periodicidade": "Evento"
+    }
+  },
+  "incidencias": {
+    "11": {
+      "descricao": "Base FGTS",
+      "fgts": true,
+      "inss": false,
+      "irrf": false
+    },
+    "12": {
+      "descricao": "Base FGTS 13º",
+      "fgts": true,
+      "inss": false,
+      "irrf": false
+    },
+    "21": {
+      "descricao": "Base Previdência",
+      "fgts": false,
+      "inss": true,
+      "irrf": false
+    },
+    "22": {
+      "descricao": "Base Previdência 13º",
+      "fgts": false,
+      "inss": true,
+      "irrf": false
+    },
+    "31": {
+      "descricao": "Base FGTS e Previdência",
+      "fgts": true,
+      "inss": true,
+      "irrf": false
+    },
+    "32": {
+      "descricao": "Base FGTS e Previdência 13º",
+      "fgts": true,
+      "inss": true,
+      "irrf": false
+    },
+    "91": {
+      "descricao": "Incidência suspensa FGTS",
+      "fgts": false,
+      "inss": false,
+      "irrf": false
+    },
+    "92": {
+      "descricao": "Incidência suspensa Previdência",
+      "fgts": false,
+      "inss": false,
+      "irrf": false
+    },
+    "93": {
+      "descricao": "Incidência suspensa FGTS e Previdência",
+      "fgts": false,
+      "inss": false,
+      "irrf": false
+    },
+    "00": {
+      "descricao": "Não é base de cálculo",
+      "fgts": false,
+      "inss": false,
+      "irrf": false
+    }
+  },
+  "categorias_trabalhador": {
+    "101": "Empregado - Geral",
+    "102": "Empregado - Trabalhador Rural por Pequeno Prazo",
+    "103": "Empregado - Aprendiz",
+    "104": "Empregado - Doméstico",
+    "105": "Empregado - Contrato a Termo (Lei 9.601/98)",
+    "106": "Trabalhador Temporário",
+    "107": "Empregado - Contrato Verde e Amarelo",
+    "108": "Empregado - Contrato Verde e Amarelo com Acordo",
+    "111": "Empregado - Contrato Intermitente",
+    "201": "Trabalhador Avulso Portuário",
+    "202": "Trabalhador Avulso Não Portuário",
+    "301": "Servidor Público - Titular de Cargo Efetivo",
+    "302": "Servidor Público - Exercente de Cargo em Comissão",
+    "303": "Agente Político",
+    "305": "Servidor Público - Contrato Temporário",
+    "306": "Servidor Público - Comissão sem Vínculo",
+    "309": "Agente Público - Outros",
+    "401": "Dirigente Sindical - com Vínculo",
+    "410": "Trabalhador Cedido",
+    "501": "Contribuinte Individual - Autônomo Geral",
+    "701": "Contribuinte Individual - Diretor não Empregado",
+    "711": "Contribuinte Individual - MEI",
+    "721": "Contribuinte Individual - Transportador Autônomo",
+    "722": "Contribuinte Individual - Transportador Cooperado",
+    "723": "Contribuinte Individual - Transportador Fretamento",
+    "731": "Contribuinte Individual - Cooperado Produção",
+    "734": "Contribuinte Individual - Cooperado Trabalho",
+    "738": "Contribuinte Individual - Cooperado Filiado",
+    "741": "Contribuinte Individual - Microempreendedor MEI",
+    "751": "Contribuinte Individual - Magistrado Classista",
+    "761": "Contribuinte Individual - Associado Cooperativa Eleição",
+    "771": "Contribuinte Individual - Membro Conselho Tutelar",
+    "781": "Ministro de Confissão Religiosa",
+    "901": "Estagiário",
+    "902": "Médico Residente",
+    "903": "Bolsista",
+    "904": "Participante Curso Formação",
+    "905": "Atleta não Profissional"
+  },
+  "motivos_afastamento": {
+    "10": "Afastamento por redução de jornada",
+    "11": "Cárcere",
+    "12": "Cargo Eletivo",
+    "13": "Cargo Eletivo - afastamento parcial",
+    "14": "Cessão/Requisição",
+    "15": "Gozo de férias ou recesso",
+    "16": "Licença remunerada",
+    "17": "Licença Maternidade",
+    "18": "Licença Maternidade - antecipação parto",
+    "19": "Licença Maternidade - prorrogação",
+    "20": "Licença Maternidade - aborto não criminoso",
+    "21": "Licença Maternidade - adoção",
+    "22": "Licença não remunerada/sem vencimentos",
+    "23": "Mandato Sindical",
+    "24": "Mandato Eleitoral - sem remuneração",
+    "25": "Mulher Vítima de Violência Doméstica",
+    "26": "Participação em Programa Primeiro Emprego",
+    "27": "Qualificação",
+    "28": "Representante Sindical",
+    "29": "Serviço Militar Obrigatório",
+    "30": "Suspensão Disciplinar",
+    "31": "Servidor Público em Disponibilidade",
+    "33": "Licença Paternidade",
+    "34": "Inatividade do Trabalhador Avulso",
+    "35": "Licença para Tratamento de Saúde",
+    "36": "Licença por Motivo de Doença em Pessoa da Família",
+    "37": "Afastamento para exercício em outro órgão",
+    "38": "Afastamento para estudo/missão no exterior",
+    "01": "Acidente/Doença do Trabalho",
+    "03": "Acidente/Doença não relacionada ao trabalho",
+    "05": "Afastamento/Licença prevista em regulamento",
+    "06": "Aposentadoria por invalidez",
+    "07": "Acompanhamento - cônjuge/companheiro",
+    "08": "Afastamento do empregado para participar de atividade sindical"
+  },
+  "motivos_desligamento": {
+    "10": "Rescisão por falecimento do empregado",
+    "11": "Transferência de empregado para empresa do mesmo grupo",
+    "12": "Transferência de empregado entre empresas diferentes",
+    "13": "Desligamento por encerramento da empresa",
+    "14": "Mudança de CPF do empregado",
+    "15": "Rescisão por acordo entre as partes",
+    "16": "Transferência para empregador que assumiu os encargos",
+    "17": "Rescisão indireta do contrato de trabalho",
+    "18": "Aposentadoria compulsória",
+    "19": "Aposentadoria por invalidez",
+    "20": "Aposentadoria por idade ou tempo de contribuição",
+    "21": "Exoneração/Demissão servidor público",
+    "22": "Declaração de nulidade contrato trabalho",
+    "23": "Vacância cargo público",
+    "24": "Agente Público - cessação do mandato",
+    "25": "Transferência empregado doméstico",
+    "26": "Rescisão com justa causa por iniciativa do empregador doméstico",
+    "27": "Rescisão sem justa causa por iniciativa do empregador doméstico",
+    "28": "Pedido de demissão do empregado doméstico",
+    "29": "Término do contrato de experiência do doméstico",
+    "30": "Rescisão por culpa recíproca doméstico",
+    "31": "Rescisão com justa causa durante experiência doméstico",
+    "32": "Rescisão sem justa causa durante experiência empregador doméstico",
+    "33": "Rescisão antecipada a pedido do doméstico",
+    "34": "Rescisão por acordo entre as partes doméstico",
+    "35": "Rescisão com justa causa durante experiência empregado doméstico",
+    "36": "Extinção do contrato Verde e Amarelo",
+    "37": "Rescisão antecipada a pedido do empregador Verde Amarelo",
+    "38": "Rescisão antecipada a pedido do empregado Verde Amarelo",
+    "39": "Rescisão contrato Verde Amarelo por justa causa empregador",
+    "40": "Rescisão contrato Verde Amarelo por justa causa empregado",
+    "41": "Rescisão contrato Verde Amarelo acordo",
+    "42": "Rescisão contrato Verde Amarelo culpa recíproca",
+    "43": "Término TSVE sem pagamento",
+    "44": "Término TSVE com pagamento",
+    "01": "Rescisão com justa causa por iniciativa do empregador",
+    "02": "Rescisão sem justa causa por iniciativa do empregador",
+    "03": "Rescisão antecipada do contrato a termo por iniciativa do empregador",
+    "04": "Rescisão antecipada do contrato a termo por iniciativa do empregado",
+    "05": "Rescisão por culpa recíproca",
+    "06": "Rescisão por término do contrato a termo",
+    "07": "Rescisão do contrato de trabalho por iniciativa do empregado",
+    "08": "Rescisão do contrato de trabalho por iniciativa do empregado - MP 936",
+    "09": "Rescisão por falecimento do empregador individual"
+  },
+  "snippets": [
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "4 – FOLHA DE PAGAMENTOS (EVENTOS PERIÓDICOS). S-1200 - Remuneração de trabalhador vinculado ao Regime Geral de Previd. Social. S-1202 - Remuneração de ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:21.122Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "S-1200 - Remuneração de trabalhador vinculado ao ...",
+      "snippet": "\"Este evento deve ser utilizado pelo declarante para informar rubricas de natureza remuneratória ou não para todos os seus trabalhadores, estagiários e ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1200.htm",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "S-1200 - Remuneração de Trabalhador vinculado ao ...",
+      "snippet": "Este evento deve ser utilizado pelo declarante para informar rubricas de natureza remuneratória ou não para todos os seus trabalhadores, ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/27165511465623-S-1200-Remunera%C3%A7%C3%A3o-de-Trabalhador-vinculado-ao-Regime-Geral-de-Previd-Social",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "eSocial versão S-1.2 - Leiautes (cons. até NT 02/2024)",
+      "snippet": "* Campo chave do evento. Registros do evento S-1200 - Remuneração de Trabalhador vinculado ao Regime Geral de Previd. Social. #, Grupo/Campo, Grupo Pai, Elem ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/leiautes-esocial-v-1-2-nt-02-2024/index.html",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "eSocial. Evento: S-1200 – Remuneração de trabalhador ...",
+      "snippet": "Evento: S-1200 – Remuneração de trabalhador vinculado ao Regime Geral de Previdência Social. Conceito: São as informações da remuneração de ...",
+      "link": "https://www.contadorperito.com/materia/44913/esocial-evento-s-1200-remuneracao-de-trabalhador-vinculado-ao-regime-geral-de-previdencia-social",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": ": S-1200 - Remuneração de trabalhador vinculado ao Regime ...",
+      "snippet": "O evento S-1200 é utilizado para prestar informações da remuneração dos trabalhadores com ou sem vínculo na competência. Para geração do evento de ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/tema-s-1200-remuneracao-de-trabalhador-vinculado-ao-regime-geral-de-previd-social",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "Tema: S-1200 - Remuneração de trabalhador vinculado ao ...",
+      "snippet": "Tema: S-1200 - Remuneração de trabalhador vinculado ao Regime Geral de Previd. Social · eSocial - Como conferir os Departamentos que foram enviados ao eSocial.",
+      "link": "https://ajuda.alterdata.com.br/dpbase/tema-s-1200-remuneracao-de-trabalhador-vinculado-ao-regime-geral-de-previd-social-70877694.html",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "Anexo II dos Leiautes do eSocial - Regras de validação",
+      "snippet": "O evento S-1202 só é permitido para informação de remuneração relativa a trabalhador amparado por Regime Próprio de Previdência Social ou por Regime de ...",
+      "link": "https://trabalhista.blog/wp-content/uploads/2017/05/leiautes-do-esocial-v2-2-02-anexo-ii-tabela-de-regras.pdf",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "Notícias | eSocial ( Evento S-1200 )",
+      "snippet": "1) Para cada trabalhador deve ser enviado um único evento “S-1200 - Remuneração de Trabalhador vinculado ao Regime Geral de Previdência Social” no período de ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8895",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1200 remuneração trabalhador evento tabela campos",
+      "titulo": "S-1200 - Remuneração de trabalha",
+      "snippet": "Nota ECONET: O evento S-1200 só é permitido para informação de remuneração relativa a trabalhador cujo contrato de trabalho esteja vinculado ao Regime Geral de ...",
+      "link": "http://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_1200.php",
+      "extraido_em": "2026-01-31T12:31:21.123Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "S-1210 - Pagamentos de Rendimentos do Trabalho",
+      "snippet": "Os dependentes de IR precisam ter o campo Tipo de Dependente eSocial informado, pois é uma informação obrigatória para o eSocial nesta situação. Nos casos 4 e 5 ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1210.htm",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "S-1210 - Pagamentos de Rendimentos do Trabalho — eSocial",
+      "snippet": "S-1210 - Pagamentos de Rendimentos do Trabalho · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1210-pagamentos-de-rendimentos-do-trabalho",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "eSocial - Erro no evento S-1210 - 17",
+      "snippet": "Agora para reenviar acesse a aba \"Central eSocial\", sub-aba \"Remunerações e pagamentos\", selecione o S-1210 clique em \"Detalhes- Reprocessar\";; Na aba \"Central ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-erro-no-evento-s-1210-17-os-campos-de-informacoes-de-pagamento-estao-invalidos-63588287.html",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "S-1210 - Pagamentos de Rendimentos do Trabalho",
+      "snippet": "Este arquivo é enquadrado como Evento Periódico, utilizado para prestar informações relativas aos pagamentos dos rendimentos do trabalho...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/18193419956251-S-1210-Pagamentos-de-Rendimentos-do-Trabalho-Cadastros-Gerais",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "S-1207 - Benefícios - Entes públicos. S-1210 - Pagamentos de Rendimentos do Trabalho. S-1260 - Comercialização da Produção Rural Pessoa Física. S-1270 ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "eSocial - S1210",
+      "snippet": "Ação Sugerida: Deve ser um valor atribuído pela fonte pagadora em S-1200, S-1202 ou S-1206 no campo \\”Identificador de Recibo de Pagamento\\”, obedecendo a ...",
+      "link": "https://autoatendimento.supersoft.com.br/books/esocial/chapter/esocial-s1210/export/pdf",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "Moda - RH - Como gerar o evento S - 1210 para o eSocial",
+      "snippet": "No campo Evento, envio informe o evento S-1210;; No campo Tipo apuração, informe Mensal para a folha mensal;; Pressione a tecla F4 para listar ...",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360028609631-Varejo-Moda-RH-Como-gerar-o-evento-S-1210-para-o-eSocial",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "S-1210 - Pagamentos de Rendimentos do Trabalho - Tron",
+      "snippet": "Acesse a aba eSocial e clique em Controle de Pagamentos (S-1210);; No campo Tipo de Filtro, selecione a categoria desejada: Empregados, ...",
+      "link": "https://atendimento.tron.com.br/kb/article/197778/s-1210-pagamentos-de-rendimentos-do-trabalho",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "FAQ - Evento S-1210",
+      "snippet": "Quando Ocorre: Quando há o registro do evento S-1210 (Pagamentos de Rendimentos do Trabalho ) já processado para o esocial, e o usuário tenta ...",
+      "link": "https://ajuda.fortestecnologia.com.br/kb/pt-br/article/317636/faq-evento-s-1210?ticketId=&q=",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1210 pagamentos diversos rendimentos campos",
+      "titulo": "Evento S-1210 do Manual do eSocial - Pagamentos de ...",
+      "snippet": "Deve ser informado no campo {vlrRendSusp} o valor do dos rendimentos que, em função de decisão em processo administrativo ou judicial, não sofreram retenção do ...",
+      "link": "https://www.vriconsulting.com.br/guias/guiasIndex.php?idGuia=787",
+      "extraido_em": "2026-01-31T12:31:22.384Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "S-1260 - Comercialização da Produção Rural Pessoa Física",
+      "snippet": "\"São as informações relativas à comercialização da produção rural, prestadas pelo produtor rural pessoa física e pelo segurado especial.\" Pré-requisitos. Envio ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1260.htm",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "Sistema eSocial – NO S-1.0 - 2021.05 - Portal Gov.br",
+      "snippet": "- S-1260 – Comercialização da Produção Rural Pessoa Física. Informar a comercialização de sua produção rural por tipo de comercialização –.",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/nota-orientativa-s-1-0-05-2021_revisada-em-06-08-2021_com-conceito-de-segurado-especial.pdf",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "O que é o evento S-1260 e quando será gerado no eSocial",
+      "snippet": "O que é o evento S-1260? · São as informações relativas à comercialização da produção rural prestadas pelo produtor rural pessoa física e pelo segurado especial.",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-1260-e-quando-sera-gerado-no-esocial-63595963.html",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "comercialização de produção rural produtor rural pessoa ...",
+      "snippet": "Tipo de Comercialização: 2 - Comercialização da Produção efetuada diretamente no varejo a consumidor final ou a outro produtor rural pessoa física por. Produtor ...",
+      "link": "https://www.senar-rio.com.br/wp-content/uploads/2024/06/TUTORIAL-PREENCHIMENTO-DO-EVENTO-S1260-PRODUTOR-PESSAO-FISICA-ESOCIAL.pdf",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "Produtor Rural Pessoa Física",
+      "snippet": "O produtor rural pessoa física e o segurado especial devem registrar no evento S-1260 – Comercialização da Produção Rural Pessoa Física (eSocial) ...",
+      "link": "https://www.cnabrasil.org.br/publicacoes/produtor-rural-pessoa-fisica",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "S-1260 - Comercialização de Produção Rural PF",
+      "snippet": "1 - Primeiro, você deve ter o lançamento ou importação da Comercialização da Produção Rural PF;. 2 - Em seguida, acesse o menu Relatórios > eSocial > Eventos ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=5361",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": ": S-1260 - Comercialização de Produção Rural - Tron",
+      "snippet": "Objetivo: Orientar sobre como é utilizado pelo Produtor Rural Pessoa Física e pelo Segurado Especial para prestar informações sobre a comercialização da ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/s-1260-comercializacao-de-producao-rural",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "S-1260 - Comercialização da Produção Rural Pessoa Física",
+      "snippet": "Conceito do evento: são as informações relativas à comercialização da produção rural prestadas pelo produtor rural pessoa física e pelo segurado ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=9435",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "Evento S-1260 do eSocial – Uma breve realidade ao produtor ...",
+      "snippet": "O evento S-1260 compõe a Fase 3 do eSocial e se refere à comercialização da Produção Rural para pessoa Física, com envio até o dia 15 do mês seguinte.",
+      "link": "https://www.prosoft.com.br/blog/evento-s-1260-do-esocial-uma-breve-realidade-ao-produtor-rural/",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1260 comercialização produção rural",
+      "titulo": "Aula 58: Evento S-1260 - Venda de Produção Rural. O que ...",
+      "snippet": "Aula 58: Evento S-1260 - Venda de Produção Rural. O que é FUNRURAL? | CURSO ESOCIAL. 256 views · 4 months ago. #sped #esocial #contabilidade.",
+      "link": "https://www.youtube.com/watch?v=O61KKLwm7f0",
+      "extraido_em": "2026-01-31T12:31:23.813Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "S-1270 - Contratação de Trabalhadores Avulsos Não ...",
+      "snippet": "De acordo com o Manual de Orientações do eSocial: \"São informações referentes aos serviços prestados por trabalhadores avulsos não portuários\". Pré-requisitos.",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1270.htm",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "S-1270 - Contratação de Trabalhadores Avulsos Não Portuários",
+      "snippet": "CNPJ/CPF do EMPREGADOR com problemas Colocar exatamente o CNPJ ou o CPF do empregador. Não colocar dados da contabilidade ou do trabalhador ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1270-Contratacao-de-trabalhadores-avulsos-Nao-Portuarios",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "O que é o evento S-1270 e quando será gerado no eSocial",
+      "snippet": "Este evento será gerado ao ser preenchida as informações de Pagamentos avulsos não portuários na aba Obrigações Acessórias - Movimentos avulsos - Pagamentos ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-1270-e-quando-sera-gerado-no-esocial-130877080.html",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "S-1270 - Contratação de Trabalhadores Avulsos Não Portuários",
+      "snippet": "1 - Acesse o menu Processos > Informações > Contratação de Trabalhadores Avulsos Não Portuários; · 2 - Informe a Competência da contratação e clique em [Incluir] ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=429",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "S-1270 - Contratação Trabalhadores Avulsos Não Portuários",
+      "snippet": "As empresas tomadoras de serviços deverão informar a remuneração recebida, décimo terceiro salário proporcional e as contribuições descontadas ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17824627204635-S-1270-Contrata%C3%A7%C3%A3o-Trabalhadores-Avulsos-N%C3%A3o-Portu%C3%A1rios",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "Geração S-1270 - Contratação de Trabalhadores Avulsos ...",
+      "snippet": "De acordo o manual de orientação do eSocial, a S-1270 pode ser conceituada como: \"Informações prestadas exclusivamente pelos tomadores de serviços de ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bil/FolhadePagamento/eSocial/Eventos_Peri%C3%B3dicos/geracao-s1270-contratacao-trabalhadores-avulsos-naoportuarios",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "eSocial - Envio do evento S-1270: Contratação de ... - Tron",
+      "snippet": "Objetivo: Orientar sobre o procedimento de cadastro e submissão do evento S-1270 - Contratação de Trabalhadores Avulsos Não Portuários na folha ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/article/315481/envio-do-evento-s-1270-contratacao-de-trabalhadores-avulsos-na",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "eSocial - Contratação de Trabalhadores Avulsos não ...",
+      "snippet": "Sempre que ocorrer uma inclusão, será gerada uma mensagem S-1270 - Contratação Trabalhadores Avulsos não Portuários. Sempre que ocorrer uma ...",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360055262933-RH-Linha-Datasul-eSocial-Contrata%C3%A7%C3%A3o-de-Trabalhadores-Avulsos-n%C3%A3o-Portu%C3%A1rios",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "Evento S-1270 - Contratação de Trabalhadores Avulsos ...",
+      "snippet": "O S-1270 é o evento que comporta os dados referente à prestação de serviço dos trabalhadores avulsos não portuários. 2. TRABALHADORES AVULSOS ...",
+      "link": "https://consisanet.movidesk.com/kb/pt-br/article/283140/evento-s-1270-contratacao-de-trabalhadores-avulsos-nao-portuario",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1270 contratação trabalhadores avulsos",
+      "titulo": "PREENCHIMENTO S-1270 ESOCIAL",
+      "snippet": "1.1. As empresas tomadoras dos serviços prestados pelos trabalhadores avulsos não portuários devem informar os totais das remunerações pagas, ...",
+      "link": "https://www.contabeis.com.br/forum/departamento-pessoal-e-rh/392727/preenchimento-s-1270-esocial/",
+      "extraido_em": "2026-01-31T12:31:25.312Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "S-1280 - Informações Complementares aos Eventos ...",
+      "snippet": "S-1280 - Informações Complementares aos Eventos Periódicos · Pré-requisitos. Envio do evento S-1000 e S-1020 para o OGMO. · Quem está obrigado · Prazo de envio.",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1280.htm",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "S-1280 Informações Complementares aos Eventos Periódicos",
+      "snippet": "O evento S-1280 deve ser enviado ao eSocial pelas empresas Centralizadoras (Matriz) e que optaram pela Desoneração da Folha de Pagamento (CPRB) ou pelo ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=4572",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "S-1280 - Informações Complementares aos Eventos Periódicos",
+      "snippet": "Anexos Tamanho máximo de 05 Mb - Anexar os eventos enviados e recebidos via web service do eSocial em formato XML. Para mais de um documento ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1280-Informacoes-Complementares-aos-Eventos-Periodicos",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "eSocial - Evento S-1280 - Informações Complementares ...",
+      "snippet": "Caso o evento S-1280-Informações Complementares seja transmitido indevidamente, a exclusão será realizada pelo envio do evento S-3000-Exclusão de eventos.",
+      "link": "https://ajuda.alterdata.com.br/prosoftsocial/fp110-esocial-evento-s-1280-informacoes-complementares-aos-eventos-periodicos-149145342.html",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "S-1280 - Informações Complementares aos Eventos Periódicos",
+      "snippet": "Orientar sobre o procedimento para inserir registros que comunicam informações relevantes para o cálculo da contribuição previdenciária patronal sobre as ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/tema-s-1280-informacoes-complementares-aos-eventos-periodicos",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "eSocial - S-1280 - Erro 927",
+      "snippet": "Se a geração do S-1280 foi indevida, o mesmo deverá ser excluído, para isso acesse \"eSocial > Geração de Eventos Periódicos > Histórico de ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=16070",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "Artigo - Qual a finalidade do evento S-1280 – Informações ...",
+      "snippet": "Desoneração da Folha de Pagamento: O evento indica ao eSocial se a CPP é integralmente ou parcialmente substituída. · CPP Parcialmente ...",
+      "link": "https://atendimento.nasajon.com.br/nasajon/artigos/48522916-4398-49c7-919a-a3d82764f3f3",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "S-1280 - Informações Complementares aos Eventos Periódicos. S-1298 - Reabertura dos Eventos Periódicos. S-1299 - Fechamento dos Eventos Periódicos. 5 ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "eSocial - S1280",
+      "snippet": "Ação Sugerida: O evento S-1280 (Informações Complementares aos Eventos Periódicos) somente pode ser enviado por empregador cuja Classificação Tributária ...",
+      "link": "https://autoatendimento.supersoft.com.br/books/esocial/chapter/esocial-s1280/export/pdf",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1280 informações complementares eventos periódicos",
+      "titulo": "eSocial | Fase 3 | Evento S-1280",
+      "snippet": "Eventos periódicos no eSocial: Diferença entre S-1200 e S-1210 | FOCA NO DP. FOCA no Departamento Pessoal•1.5K views · 15:04 · Go to channel ...",
+      "link": "https://www.youtube.com/watch?v=tPObZmH4HdQ",
+      "extraido_em": "2026-01-31T12:31:26.682Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "S-1298 - Reabertura dos Eventos Periódicos",
+      "snippet": "\"Este evento é utilizado para reabrir movimento de um período já encerrado, possibilitando o envio de retificações ou novos eventos periódicos.\" Pré-requisitos.",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1298.htm",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "S-1298 - Reabertura dos Eventos Periódicos — eSocial",
+      "snippet": "S-1298 - Reabertura dos Eventos Periódicos · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1298-Reabertura-dos-Eventos-Periodicos",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "eSocial - Como efetuar reabertura de folha S-1298",
+      "snippet": "Acesse a \"Central eSocial\"; · Clique na aba eSocial que aparecerá após acessar a Central eSocial; · Clique em \"Demais Eventos\" - Selecione a opção \"S-1298 - ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-como-efetuar-reabertura-de-folha-s-1298-63579889.html",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "Reabertura | Como reabrir competência no eSocial S-1298?",
+      "snippet": "1 - Na empresa Matriz, acesse o menu Relatórios > e-Social > Eventos periódicos; · 2 - Informe a Competência e o Tipo da folha; · 3 - No quadro Eventos, selecione ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=4581",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "S-1299 e S-1298 fechamento e reabertura dos eventos ...",
+      "snippet": "eSocial ponto a ponto: S-1299 e S-1298 fechamento e reabertura dos eventos periódicos ... Eventos periódicos no eSocial: Diferença entre S-1200 e ...",
+      "link": "https://www.youtube.com/watch?v=KZWrX2FD8pA",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "eSocial - S-1298 |1299 - Encerramento e Reabertura de Mês",
+      "snippet": "Para realizar a reabertura, acesse \"eSocial > Encerramento e Reabertura de Mês\", selecione a competência e clique em \"Reabrir\". Será gerado a ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=8961",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "Como realizar a reabertura da Folha com o evento S-1298?",
+      "snippet": "No quadro que exibe o evento S-1299 com sucesso, localize o botão \"Outros Eventos\" (no menu \"Ações\") e clique nele! Clique em \"Sim\" na janela ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/como-realizar-a-reabertura-da-folha-com-o-evento-s-1298-1o5jj02/",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "S-1298 - Reabertura dos Eventos Periódicos",
+      "snippet": "Este leiaute é um Evento Periódico que é utilizado para indicar que o movimento dos eventos periódicos será reaberto para possibilitar o ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17834574945051-S-1298-Reabertura-dos-Eventos-Peri%C3%B3dicos",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": ": S-1298 - Reabertura dos Eventos Periódico - Tron",
+      "snippet": "Objetivo: Orientações sobre envio do fechamento para Produtor Rural Pessoa Física, como enviar os eventos S-1000 e S-1020 de acordo com a opção de ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/s-1298-reabertura-dos-eventos-periodicos",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1298 reabertura eventos periódicos",
+      "titulo": "Como reabrir/fechar eventos periódicos – múltiplas ...",
+      "snippet": "Seleção de Eventos Periódicos: Selecione o evento de fechamento (S-1299) ou de reabertura (S-1298), conforme o tipo de evento definido no parâmetro Tipo de ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bilCloud/FolhadePagamento/eSocial/fechar-eventos-periodicos%E2%80%93multiplas-competencias-cloud",
+      "extraido_em": "2026-01-31T12:31:28.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "S-1299 - Fechamento dos Eventos Periódicos — eSocial",
+      "snippet": "S-1299 - Fechamento dos Eventos Periódicos · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1299-Fechamento-dos-Eventos-Periodicos",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "S-1299 - Fechamento dos Eventos Periódicos",
+      "snippet": "\"Destina-se a informar ao Ambiente Nacional do eSocial o encerramento da transmissão dos eventos periódicos, no período de apuração. Nesse momento são ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/periodicos/s-1299.htm",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "O que é o evento S-1299 e quando será gerado no eSocial",
+      "snippet": "O evento S-1299 - (Fechamento dos Eventos Periódicos) informa ao ambiente do eSocial o encerramento da transmissão dos eventos periódicos, no período de ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-1299-e-quando-sera-gerado-no-esocial-63591186.html",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "S-1299 e S-1298 fechamento e reabertura dos eventos ...",
+      "snippet": "eSocial ponto a ponto: S-1299 e S-1298 fechamento e reabertura dos eventos periódicos ... Eventos periódicos no eSocial: Diferença entre S-1200 e ...",
+      "link": "https://www.youtube.com/watch?v=KZWrX2FD8pA",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "Como enviar o Fechamento S-1299 para o eSocial?",
+      "snippet": "1 - Acesse o menu Relatórios > e-Social > Eventos periódicos; · 2 - Informe a Competência e o Tipo da folha; · 3 - Caso você queira enviar o fechamento para mais ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=4576",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "12/11 - eSocial ( Fechamento Mensal )",
+      "snippet": "S-1299 – Fechamento dos Eventos Periódicos Conceito do evento: Destina-se a informar ao ambiente do eSocial o encerramento da transmissão dos eventos ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8783",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "eSocial - S-1299 – Fechamento dos Eventos Periódicos",
+      "snippet": "Procedimento. a) Para enviar o Evento de Fechamento é necessário realizar o Cálculo da Folha de Pagamento. Após o cálculo será exibido um alerta ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/esocial-s-1299-fechamento-dos-eventos-periodicos-5o4z4h/",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "Fechamento dos Eventos Periódicos | CURSO ESOCIAL",
+      "snippet": "Aula 62: Evento S-1299 - Fechamento dos Eventos Periódicos | CURSO ESOCIAL ... Aula 63: Evento S-1299 Na Prática - Domínio Sistemas | CURSO ...",
+      "link": "https://www.youtube.com/watch?v=r9tQT7lbZUA",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": "RH - Linha Protheus - GPE - eSocial - S-1299",
+      "snippet": "Validação: Deve ser um mês/ano ou ano válido, igual ou posterior ao início da obrigatoriedade dos eventos periódicos para o empregador.",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360022286212-RH-Linha-Protheus-GPE-eSocial-S-1299-Como-gerar-o-evento-S-1299-fechamento-peri%C3%B3dicos-para-transmitir-ao-RET",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1299 fechamento eventos periódicos",
+      "titulo": ": S-1299 - Fechamento dos Eventos Periódicos - Tron",
+      "snippet": "Objetivo: A fim de simplificar a entrega da declaração, foi disponibilizada no eSocial uma opção de transmissão automática da DCTFWeb, que ocorre com o ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/s-1299-fechamento-dos-eventos-periodicos",
+      "extraido_em": "2026-01-31T12:31:29.713Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "eSocial versão S-1.0 - Tabelas - Portal Gov.br",
+      "snippet": "Tabela 01 - Categorias de Trabalhadores; Tabela 02 - Financiamento da Aposentadoria Especial e Redução do Tempo de Contribuição; Tabela 03 - Natureza das ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-nt-05-2022-html/tabelas.html",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "S-1000 - Informações do Empregador/Contribuinte/Órgão ...",
+      "snippet": "\"Evento onde são fornecidas pelo declarante as informações cadastrais e outros dados necessários ao preenchimento e validação dos demais eventos do eSocial, ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/tabelas/s-1000.htm",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "S-1000 - Informações do Empregador/Contribuinte/Órgão ...",
+      "snippet": "Classificação Tributaria – É o que determina o enquadramento da empresa, deve ser um valor válido conforme Tabela 08 - Classificação Tributária². • Construtora/ ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/s-1000.pdf",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "eSocial versão S-1.0 - Leiautes - Portal Gov.br",
+      "snippet": "S-1000 - Informações do Empregador/Contribuinte/Órgão Público. Tabela de Resumo dos Registros. Grupo, Grupo Pai, Nível, Descrição, Ocor. Chave, Condição.",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-nt-05-2022-html/index.html",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "S-1000 informações do empregador/contribuinte/órgão ...",
+      "snippet": "Nesse curso você aprenderá com integrantes da equipe que fez o eSocial, que explicarão ponto a ponto todos os aspectos do eSocial, desde os ...",
+      "link": "https://www.youtube.com/watch?v=4zZzgKbJOt8",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "S-1000 - Informações do Empregad",
+      "snippet": "Tabela de Resumo dos Registros. Registro. Registro Pai. Nível. Descrição. Ocorr. Chave. Condição. eSocial. 1. eSocial. Nota ECONET: Trata-se de um retorno ...",
+      "link": "http://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_5003.php",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "E-SOCIAL TABELA PRÁTICA",
+      "snippet": "Informações sobre empregador (cadastros do contribuinte e tabelas). – S-1000 a S-1080 exceto. S-1060. 8/1/2018 e atualizados desde então. 16/7/2018 e ...",
+      "link": "https://www.fecomercio.com.br/upload/pdf/esocial_tabelapratica_araraquara.pdf",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "S-1000 – Informações do Órgão Público",
+      "snippet": "O evento S-1000 é o primeiro evento – ele é responsável por cadastrar a empresa na eSocial, contendo as informações básicas (e importantes) do cadastro do ...",
+      "link": "https://suporte.smarapd.com.br/documentacao/s-1000---informacoes-do-orgao-.html",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "Orientações Sobre Evento S-1000",
+      "snippet": "Neste evento são fornecidas pelo empregador/contribuinte/órgão público as informações cadastrais, alíquotas e demais dados necessários ao preenchimento e ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bil/FolhadePagamento/eSocial/Eventos_de_Tabela/orienta%C3%A7%C3%B5es-sobre-evento-s-1000",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1000 informações empregador tabela",
+      "titulo": "esocial – prazos de envio dos eventos",
+      "snippet": "Os prazos para os eventos de tabela, embora não tenham vencimento fixado, acompanham os eventos aos quais se relacionam. Por exemplo, o evento S-1005 deve ser ...",
+      "link": "https://idealsoftwares.com.br/tabelas/tabela.php?id=734",
+      "extraido_em": "2026-01-31T12:31:31.101Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 - Tabela de Estabelecimentos, Obras ou Unidades ...",
+      "snippet": "O estabelecimento matriz do declarante deve ser cadastrado neste para correta informação do CNAE Preponderante.",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/tabelas/s-1005.htm",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 - Tabela de Estabelecimentos, Obras ou Unidades de ...",
+      "snippet": "S-1005 - Tabela de Estabelecimentos, Obras ou Unidades de Órgãos Públicos · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1005-Tabela-de-Estabelecimentos-Obras-ou-Unidades-de-orgoos-Publicos",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 – Tabela de Estabelecimentos e Obras ...",
+      "snippet": "O evento S-1005 - Tabela de Estabelecimentos, Obras ou Unidades de Órgãos Públicos é responsável pela identificação dos estabelecimentos e ...",
+      "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36521220990099-S-1005-Tabela-de-Estabelecimentos-e-Obras-de-Constru%C3%A7%C3%A3o-Civil",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 tabelas de estabelecimentos e obras ou órgãos ...",
+      "snippet": "Nesse curso você aprenderá com integrantes da equipe que fez o eSocial, que explicarão ponto a ponto todos os aspectos do eSocial, desde os ...",
+      "link": "https://www.youtube.com/watch?v=weFFtN5FaV4",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "O que é o evento S-1005 e quando será gerado no eSocial",
+      "snippet": "O evento: S-1005 é o evento do eSocial responsável por levar algumas informações complementares da empresa e ou das obras próprias.",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-1005-e-quando-sera-gerado-no-esocial-57400664.html",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 - Tabela de Estabelecimen",
+      "snippet": "Nota ECONET: O evento identifica os estabelecimentos e obras de construção civil da empresa, detalhando as informações de cada estabelecimento (matriz e filiais) ...",
+      "link": "https://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_1005.php",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "Como Implantar o Evento S-1005 do eSocial - Central de Ajuda",
+      "snippet": "Para implantar o evento S-1005, é necessário acessar o Portal eSocial, copiar o ID e o Número de Recibo da Tabela de Estabelecimento e inserir esses dados ...",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-1005-do-esocial-dc63fece",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 - Tabela de Estabelecimentos, Obras ou Unidades ...",
+      "snippet": "O evento S-1005 - Tabela de Estabelecimentos, Obras ou Unidades de Órgãos Públicos identifica os estabelecimentos e obras de construção civil ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/27165537280151-S-1005-Tabela-de-Estabelecimentos-Obras-ou-Unidades-de-%C3%93rg%C3%A3os-P%C3%BAblicos",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "S-1005 - Tabela de Estabelecimentos, Obras ou Unidades de ...",
+      "snippet": "Esse leiaute é um Evento de Tabelas que identifica os estabelecimentos e obras de construção civil da empresa, detalhando as informações...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17822766786715-S-1005-Tabela-de-Estabelecimentos-Obras-ou-Unidades-de-%C3%93rg%C3%A3os-P%C3%BAblicos",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1005 tabela estabelecimentos obras",
+      "titulo": "Orientações Sobre Evento S-1005 - | Questor Docs",
+      "snippet": "Configurações Iniciais para o E-social – S-1005. Este evento identifica os estabelecimentos e obras de construção civil da empresa detalhando as informações ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bil/FolhadePagamento/eSocial/Eventos_de_Tabela/orienta%C3%A7%C3%B5es-sobre-evento-s-1005",
+      "extraido_em": "2026-01-31T12:31:32.458Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "eSocial versão S-1.0 - Tabelas - Portal Gov.br",
+      "snippet": "SENAR - 1,25% sobre a folha de pagamento, 0,125% sobre a receita bruta da produção de pessoa jurídica e agroindústria, e 0,1% sobre a receita bruta da produção ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-nt-05-2022-html/tabelas.html",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "S-1010 - Tabela de Rubricas",
+      "snippet": "\"Apresenta o detalhamento das informações das rubricas constantes da folha de pagamento do declarante, permitindo a correlação destas com as constantes da ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/tabelas/s-1010.htm",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "S-1010 – Tabela de Rubricas",
+      "snippet": "No evento S-1010 devem constar as informações das rubricas da folha de pagamento dos órgãos aos quais vocês são ligados. Dentro do SMARrh devem ser feitas as ...",
+      "link": "https://suporte.smarapd.com.br/documentacao/rh-3.html",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "S-1010 - Tabela de Rubricas",
+      "snippet": "O que diz o e-Social. • Conceito do evento: Apresenta o detalhamento das informações das rubricas constantes da folha de pagamento do empregador/órgão ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/s-1010.pdf",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "S-1010 - Tabela de Rubricas",
+      "snippet": "O evento apresenta o detalhamento das informações das rubricas constantes da folha de pagamento do declarante, permitindo a correlação ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/27165537433879-S-1010-Tabela-de-Rubricas",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "Tabela de Rubricas de vencimento, desconto e informativas",
+      "snippet": "eSocial ponto a ponto: S-1010 - Tabela de Rubricas de vencimento, desconto e informativas ... Como configurar as rubricas na folha de pagamento e ...",
+      "link": "https://www.youtube.com/watch?v=jymLPoQqQos",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "eSocial | S-1010 – Tabela de rubricas",
+      "snippet": "O evento S-1010 - Tabela de Rubricas é responsável pela identificação das informações utilizadas nas férias, rescisões e folha de pagamento ...",
+      "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36521822641811-eSocial-S-1010-Tabela-de-rubricas",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "eSOCIAL – tabela de rubricas (S-1010)",
+      "snippet": "A Tabela de Rubricas apresenta o detalhamento das informações das rubricas constantes da folha de pagamento do empregador/órgão público, permitindo a correlação ...",
+      "link": "https://www.lefisc.com.br/boletins/2018/janeiro_semana_1/esocial_tabela/index.asp",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "S-1010 - Tabela de Rubricas - softserv.com.br",
+      "snippet": "O evento S-1010 permite que a empresa informe ao eSocial todos os códigos de pagamento e desconto que compõem a folha de pagamento. Para cada ...",
+      "link": "https://softserv.com.br/s-1010-tabela-de-rubricas/",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1010 tabela rubricas folha pagamento",
+      "titulo": "Como implantar o Evento S-1010 do eSocial - SFDPessoal",
+      "snippet": "O evento S-1010 corresponde à tabela de rubricas, que detalha as informações sobre as rubricas presentes na folha de pagamento do empregador ou órgão público.",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-1010-do-esocial-bda93373",
+      "extraido_em": "2026-01-31T12:31:33.797Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "S-1020 - Tabela de Lotações Tributárias",
+      "snippet": "O tipo de lotação tributária está no eSocial (S-1020) e nenhum leiaute está utilizando a lotação. Permite alterar e a lotação já existente no eSocial será ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/tabelas/s-1020.htm",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "eSocial versão S-1.1 Beta - Tabelas",
+      "snippet": "Tabela 12 - Compatibilidade entre Tipos de Lotação e Classificação Tributária ... 1020, Férias, Valor correspondente à remuneração a que faz jus na época da ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-v-1-1-beta/tabelas.html",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "O que é o evento S-1020 e quando será gerado no eSocial",
+      "snippet": "Departamentos tomadores com lotações dos tipos 02,04,05,06,07 e 09 será gerada no S-1020 1 lotação por departamento, isso se faz necessário, pois esse tipo de ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-1020-e-quando-sera-gerado-no-esocial-57398348.html",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "eSocial ponto a ponto: S-1020 tabela de lotações tributárias",
+      "snippet": "(nesse curso, ensinamos como tirar as suas dúvidas com o eSocial.) eSocial ponto a ponto: S-1020 tabela de lotações tributárias. 14K views ...",
+      "link": "https://www.youtube.com/watch?v=Pa63E5sUK1E",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "S-1020 – Tabela de Lotações Tributárias",
+      "snippet": "O evento S-1020 - Tabela de Lotações Tributárias é responsável pela identificação da classificação da atividade da empresa para atribuição ...",
+      "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36521486994323-S-1020-Tabela-de-Lota%C3%A7%C3%B5es-Tribut%C3%A1rias",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "S-1020 - Tabela de Lotações Tributárias",
+      "snippet": "A Lotação Tributária é necessária para atribuir o código FPAS e Terceiros quando houver. É obrigatório ao Empregador possui no mínimo uma Lotação Tributaria ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/s-1020.pdf",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "S-1020 - Tabela de Lotações Tributárias — eSocial",
+      "snippet": "S-1020 - Tabela de Lotações Tributárias · Acesso ao sistema · Acesse o eSocial · Empregador Doméstico · Manual do Doméstico · Empresas e Órgãos ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1020-Tabela-de-Lotacoes-Tributarias",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "eSocial - S-1020 - Tipos de Lotação (Preenchimento)",
+      "snippet": "Orientações de preenchimento para cada tipo de lotação: Para mais informações consulte Tabela 10 (Tipos de Lotação Tributária) e Tabela 12 ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=16147",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "Como enviar o Evento S-1020 no Calima?",
+      "snippet": "Na seleção de dados, vá até a aba do S-1020 e marque a caixinha \"Lotações Tributárias\" para enviar as informações da empresa ao eSocial.",
+      "link": "https://ajuda.calimaerp.com/pt/article/como-enviar-o-evento-s-1020-no-calima-m2xpi8/",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1020 tabela lotações tributárias",
+      "titulo": "S-1020 - Tabela de Lotações Tributárias - Suíte Gen.te nuvem",
+      "snippet": "É utilizado para inclusão, alteração e exclusão de registros na tabela de lotações do empregador. As informações consolidadas desta tabela são ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17822741629723-S-1020-Tabela-de-Lota%C3%A7%C3%B5es-Tribut%C3%A1rias",
+      "extraido_em": "2026-01-31T12:31:35.275Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 - Tabela de Processos Administrativos/Judiciais",
+      "snippet": "Para geração deste leiaute, são considerados os processos 1, 2 e 4, cadastrados em Empresas > Processos Judiciais (FR030PRO) , cujos detalhes cadastrados no ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/tabelas/s-1070.htm",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 - Tabela de Processos Administrativos/Judiciais",
+      "snippet": "S-1070 - Tabela de Processos Administrativos/Judiciais · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável.",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-1070-Tabela-de-Processos-Administrativos-Judiciais",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 - Tabela de Processos Judiciais / Administrativos",
+      "snippet": "Devem ser cadastrados todos os processos administrativos / judiciais do empregador/contribuinte, de entidade patronal com representação coletiva ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=8475",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 tabela de processos administrativos/judiciais",
+      "snippet": "(nesse curso, ensinamos como tirar as suas dúvidas com o eSocial.) eSocial ponto a ponto: S-1070 tabela de processos administrativos/judiciais.",
+      "link": "https://www.youtube.com/watch?v=bnndoF3uIbY",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "Orientações Sobre Evento S-1070",
+      "snippet": "Evento utilizado para inclusão, alteração e exclusão de registros na Tabela de Processos Administrativos/Judiciais do empregador/contribuinte/órgão público, de ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bil/FolhadePagamento/eSocial/Eventos_de_Tabela/orienta%C3%A7%C3%B5es-sobre-evento-s-1070",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 – Tabela de Processos Administrativos / Judiciais",
+      "snippet": "O evento S-1070 - Tabela de Processos Administrativos / Judiciais é responsável pela transmissão de inclusão, alteração e exclusão de registros ...",
+      "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36520605548947-S-1070-Tabela-de-Processos-Administrativos-Judiciais",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 - Tabela de Processos Administrativos/Judiciais",
+      "snippet": "Este leiaute é um Evento de Tabelas utilizado para inclusão, alteração e exclusão de registros na tabela de Processos Administrativos e ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17822971230619-S-1070-Tabela-de-Processos-Administrativos-Judiciais",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "O que é o evento S-1070 e quando será gerado no eSocial",
+      "snippet": "O evento: S-1070 é o evento utilizado para detalhamento dos Processos Administrativos/Judiciais do empregador/contribuinte/órgão público, quando se tratar de:.",
+      "link": "https://ajuda.alterdata.com.br/dpbase/o-que-e-o-evento-s-1070-e-quando-sera-gerado-no-esocial-60480058.html",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "RH - Linha Protheus - GPE - eSocial - S-1070",
+      "snippet": "O evento S-1070 é utilizado para inclusão, alteração e exclusão de registros na Tabela de Processos Administrativos/Judiciais do empregador/ ...",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360012057432-RH-Linha-Protheus-GPE-eSocial-S-1070-Onde-cadastrar-o-evento-S-1070-Processos-Administrativos-Judiciais",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-1070 tabela processos administrativos judiciais",
+      "titulo": "S-1070 – Tabela de Processos Administrativos/Judiciais - Tron",
+      "snippet": "Objetivo: Evento utilizado para inclusão, alteração e exclusão de registros na Tabela de Processos Administrativos/Judiciais do declarante, de entidade ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/s-1070-tabela-de-processos-administrativos-judiciais",
+      "extraido_em": "2026-01-31T12:31:36.756Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "S-2190 - Registro Preliminar de Trabalhador",
+      "snippet": "A geração deste leiaute será feita após o cadastramento das informações na tela de Registro Preliminar (FR034PRE) , em eSocial > Colaboradores > Admissão de ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2190.htm",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "S-2190 - Admissão de Trabalhador - Registro Preliminar",
+      "snippet": "S-2190 - Admissão de Trabalhador - Registro Preliminar · Acesso ao sistema · Acesse o eSocial · Empregador Doméstico · Manual do Doméstico ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2190-admissao-de-trabalhador-registro-preliminar",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "O que é o evento S-2190 e quando será gerado no eSocial",
+      "snippet": "Deve ser enviado até o final do dia imediatamente anterior ao do início da prestação do serviço pelo trabalhador admitido. No caso de admissão de empregado na ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2190-e-quando-sera-gerado-no-esocial-63591188.html",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "S-2190 admissão de trabalhador, registro preliminar",
+      "snippet": "(nesse curso, ensinamos como tirar as suas dúvidas com o eSocial.) eSocial ponto a ponto: S-2190 admissão de trabalhador, registro preliminar.",
+      "link": "https://www.youtube.com/watch?v=zczhBpI-Lns",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "Como funciona o registro da resolução S2190- ...",
+      "snippet": "O submenu S-2190 – Registros Preliminares serve como uma admissão provisória, garantindo que a empresa cumpra o prazo legal do eSocial mesmo ...",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/35782142107661-Como-funciona-o-registro-da-resolu%C3%A7%C3%A3o-S2190-Registros-Preliminares-no-S%C3%B3lides-Folha-Digital",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "S-2190 – Registro Preliminar de Trabalhador",
+      "snippet": "Inicialmente o processamento do leiaute S-2190 – Registro Preliminar de Trabalhador deve ser parametrizado através da funcionalidade Cadastro de ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17834869959579-S-2190-Registro-Preliminar-de-Trabalhador",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "eSocial - S-2190 - Registro Preliminar de Trabalhador",
+      "snippet": "Trata-se de um evento preliminar, contendo informações básicas do vínculo/contrato, podendo ser utilizado tanto em relação ao evento S-2200 ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=9078",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": ": S-2190 - Admissão de Trabalhador - Registro Preliminar - Tron",
+      "snippet": "Essa melhoria tem como objetivo atualizar os dados no cadastro do empregado, para que, ao enviar o S-2200, vá as mesmas informações preenchidas na admissão ...",
+      "link": "https://atendimento.tron.com.br/kb/pt-br/category/s-2190-admissao-de-trabalhador-registro-preliminar",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "eSocial: Entenda como funciona a admissão preliminar",
+      "snippet": "Evento S-2190 pode ser utilizado quando a empresa não possui todas as informações para fazer o registro completo do funcionário. · Evento S-2190.",
+      "link": "https://www.contabeis.com.br/noticias/45454/esocial-entenda-como-funciona-a-admissao-preliminar/",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2190 registro preliminar trabalhador",
+      "titulo": "Admissão e registro preliminar (S-2190, S-2200 e S-2300)",
+      "snippet": "O S-2190 deve ser enviado até o dia imediatamente anterior ao dia do início da prestação de serviços para garantir o cadastro inicial do trabalhador junto ao ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/manual-processos/admissao.htm",
+      "extraido_em": "2026-01-31T12:31:38.656Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 – Cadastramento Inicial do Vínculo e Admissão/ ...",
+      "snippet": "S-2200 – Cadastramento Inicial do Vínculo e Admissão/Ingresso de Trabalhador. Publicado em 10/01/2018 11h05 Atualizado em 08/07/2020 10h14.",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2200-cadastramento-inicial-do-vinculo-e-admissao-ingresso-de-trabalhador",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 - Cadastramento Inicial do Vínculo e Admissão/ ...",
+      "snippet": "\"Este evento registra a admissão de empregado, contratação de trabalhador temporário (Lei 6.019/74) e o ingresso de servidores estatutários, a partir da ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2200.htm",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "O que é o evento S-2200 e quando será gerado no eSocial",
+      "snippet": "O evento S-2200 - (Cadastramento Inicial do Vínculo e Admissão/Ingresso de Trabalhador) registra a admissão de empregado ou o ingresso de servidores ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2200-e-quando-sera-gerado-no-esocial-63591190.html",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "Evento S-2200: Cadastramento de Trabalhadores no ...",
+      "snippet": "O submenu S2200 - Cadastramento Trabalhadores é necessário para registrar de forma definitiva os colaboradores da sua empresa no E-Social.",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/36585196139789-Evento-S-2200-Cadastramento-de-Trabalhadores-no-eSocial-como-funciona",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 - Cadastramento Inicial do Vínculo e Admissão/ ...",
+      "snippet": "O envio do S-2200 é obrigatório em pagamentos de dissidio coletivo, rescisão complementar, plr e ações trabalhistas mesmo após desligamento do trabalhador e ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/S-2200.pdf",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 - Cadastramento Inicial d",
+      "snippet": "Nota ECONET: Este evento registra a admissão de empregado ou o ingresso de servidores estatutários, a partir da implantação do eSocial. Ele serve também para o ...",
+      "link": "https://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_2200.php",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 – Cadastro Inicial do Vínculo e Admissão/Ingresso de ...",
+      "snippet": "Este arquivo é enquadrado como Eventos não Periódicos, e Eventos Iniciais, logo se destina a registrar a admissão do trabalhador com vínculo ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17834833552667-S-2200-Cadastro-Inicial-do-V%C3%ADnculo-e-Admiss%C3%A3o-Ingresso-de-Trabalhador",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "eSocial ponto a ponto: S-2200 informações gerais",
+      "snippet": "Capítulo \"Eventos não periódicos\" Evento S-2200 Cadastramento inicial/Admissão do trabalhador. eSocial ponto a ponto: S-2200 informações gerais ...",
+      "link": "https://www.youtube.com/watch?v=2kDcO9LtzKA",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "Notícias | eSocial ( S-2200 Cadastramento Inicial/Admissão )",
+      "snippet": "Quem está obrigado: Todo empregador/contribuinte/órgão público que mantém vínculos trabalhistas, assim como as empresas de trabalho temporário (Lei nº 6.019/74) ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8630",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2200 cadastramento inicial admissão trabalhador",
+      "titulo": "S-2200 - Cadastramento Inicial do Vínculo e Admissão/ ...",
+      "snippet": "Em síntese, o evento S-2200 é essencial para formalizar o vínculo empregatício e garantir que todas as obrigações legais sejam cumpridas. Ao ...",
+      "link": "https://softserv.com.br/s-2200-cadastramento-inicial/",
+      "extraido_em": "2026-01-31T12:31:40.630Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "S-2205 - Alteração de Dados Cadastrais do Trabalhador",
+      "snippet": "Nestes casos, o empregador deverá procurar atendimento diretamente nos órgãos integrantes do eSocial - de acordo com o tema, ou, no caso de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2205-alteracao-de-dados-cadastrais-do-trabalhador",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "S-2205 - Alteração de Dados Cadastrais do Trabalhador",
+      "snippet": "De acordo com o Manual de Orientações do eSocial: \"Este evento registra as alterações de dados cadastrais do trabalhador, tais como: documentação pessoal, ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2205.htm",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "Como implantar o Evento S-2205 do eSocial - Central de Ajuda",
+      "snippet": "Este evento é utilizado para registrar alterações nos dados cadastrais do trabalhador, como: documentos pessoais, endereço, escolaridade, estado civil, ...",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-2205-do-esocial-0b611896",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "eSocial ponto a ponto: S-2205 alteração de dados cadastrais",
+      "snippet": "S-2206 e S-2205: Entenda a relação entre Alterações Contratuais e Cadastrais no eSocial · AULA 40-RETIFICAÇÕES [CURSO ESOCIAL] · COMO REGULARIZAR ...",
+      "link": "https://www.youtube.com/watch?v=1sv0pbHJrRU",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "O que é o evento S-2205 e quando será gerado no eSocial",
+      "snippet": "O evento S-2205 - (Alteração de Dados Cadastrais do Trabalhador) registra as alterações de dados cadastrais do trabalhador, tais como: documentação pessoal, ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2205-e-quando-sera-gerado-no-esocial-63591238.html",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "S-2205 - Alteração de Dados Cadastrais do Trabalhador",
+      "snippet": "Esse arquivo é um Evento Não Periódico que se destina a registrar as alterações de dados cadastrais do trabalhador, tais como: Documentos;.",
+      "link": "https://centraldocliente.lg.com.br/hc/pt-br/articles/23919710097307-S-2205-Altera%C3%A7%C3%A3o-de-Dados-Cadastrais-do-Trabalhador",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "Notícias | Alterações Cadastrais ( S-2205 )",
+      "snippet": "Conceito: este evento registra as alterações de dados cadastrais do trabalhador, tais como: documentação pessoal, escolaridade, estado civil etc.",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=11465",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "S-2205 - Alteração de Dados Cadastrais do Trabalhador",
+      "snippet": "Conceito do evento: Este evento registra as alterações de dados cadastrais do trabalhador, tais como: documentação pessoal, endereço, escolaridade, ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/S-2205.pdf",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "Como enviar Alteração Cadastral (S-2205) e Contratual (S-2206",
+      "snippet": "1. Acesse o menu Relatórios > eSocial > Eventos Não Periódicos;. 2. No quadro Eventos, selecione '[x] Alteração Contratual (S-2206 ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=4542",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2205 alteração dados cadastrais trabalhador",
+      "titulo": "S-2205 Alteração de Dados Cadastrais do Trabalhador",
+      "snippet": "Conceito do evento: Este evento registra as alterações de dados cadastrais do trabalhador, tais como: documentação pessoal, endereço, ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=9305",
+      "extraido_em": "2026-01-31T12:31:42.068Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "S-2206 - Alteração de Contrato de Trabalho",
+      "snippet": "A geração deste leiaute ocorrerá quando for alterada alguma informação referente aos dados contratuais dos trabalhadores que possuem vínculo empregatício com a ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2206.htm",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "S-2206 – Alteração de Contrato de Trabalho — eSocial",
+      "snippet": "S-2206 – Alteração de Contrato de Trabalho · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2206-alteracao-de-contrato-de-trabalho",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "O que é o evento S-2206 e quando será gerado no eSocial",
+      "snippet": "O evento S-2206 - (Alteração de Contrato de Trabalho) registra as alterações do contrato de trabalho, tais como: remuneração e periodicidade de pagamento, ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2206-e-quando-sera-gerado-no-esocial-63591429.html",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "eSocial ponto a ponto: S-2206 alteração de contrato de ...",
+      "snippet": "Veja o Curso eSocial Ponto a Ponto completo e os materiais de apoio em: https://enit.trabalho.gov.br/portal/index.php/esocial-ponto-a-ponto ...",
+      "link": "https://www.youtube.com/watch?v=d2I9oJrpxks",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "Notícias | Alterações Contratuais ( eSocial S-2206 )",
+      "snippet": "Conceito: este evento registra as alterações do contrato de trabalho, tais como: remuneração e periodicidade de pagamento, duração do contrato, local, cargo ou ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=10530",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "Como realizar alteração de cargo e enviar o leiaute S ...",
+      "snippet": "4. Quais alterações devem ser informadas pelo S-2206? · Cargo ou função · Salário contratual · Jornada de trabalho · Sindicato vinculado · Tipo de ...",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/36633414562445-Como-realizar-altera%C3%A7%C3%A3o-de-cargo-e-enviar-o-leiaute-S-2206-Altera%C3%A7%C3%A3o-Contratual-ao-eSocial-no-S%C3%B3lides-Folha-Digital",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "Como implantar o Evento S-2206 do eSocial - Central de Ajuda",
+      "snippet": "Este evento é destinado ao registro de alterações no contrato de trabalho do trabalhador, abrangendo modificações como: remuneração, duração do contrato ...",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-2206-do-esocial-08bccc91",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "S-2206 - Alteração de Contrato de Trabalho/Relação Estatutária",
+      "snippet": "Esse arquivo é um Evento Não Periódico que se destina a registrar as alterações de dados contratuais do trabalhador, tais como: Remuneração;.",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17834891583259-S-2206-Altera%C3%A7%C3%A3o-de-Contrato-de-Trabalho-Rela%C3%A7%C3%A3o-Estatut%C3%A1ria",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "S-2206 - Alteração de Contrato d",
+      "snippet": "Nota ECONET: As alterações do contrato de trabalho devem ser transmitidas antes do envio do próximo evento de remuneração deste empregado/servidor, reportando- ...",
+      "link": "http://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_2206.php",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2206 alteração contrato trabalho",
+      "titulo": "Como enviar o Evento S-2206 no Calima?",
+      "snippet": "⚠️ ATENÇÃO: O Evento S-2206 deve ser enviado até o dia 15 do mês seguinte à data da alteração contratual. Pré-requisitos. Antes de enviar o S- ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/como-enviar-o-evento-s-2206-no-calima-1wfmy9w/",
+      "extraido_em": "2026-01-31T12:31:43.382Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "S-2210 - Comunicação de Acidente de Trabalho — eSocial",
+      "snippet": "S-2210 - Comunicação de Acidente de Trabalho · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-2210-Comunicacao-de-Acidente-de-Trabalho",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "S-2210 - Comunicação de Acidente de Trabalho",
+      "snippet": "A rotina de fechamento de admissão também verifica se existem Comunicações de Acidente de Trabalho (CAT) cadastradas para os colaboradores. Caso existam, ao ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2210.htm",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "Evento S-2210: Comunicação de acidente de trabalho",
+      "snippet": "O evento 2210 (CAT) é um evento obrigatório do eSocial,que deve ser enviado pelo empregador sempre que um acidente de trabalho ocorrer com um de seus empregados ...",
+      "link": "https://esocialbrasil.com.br/blog/evento-2210-cat-esocial/",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "Manual-Orientacao-eSocial-CAT-Modulo-SST.pdf",
+      "snippet": "A Comunicação de Acidente de Trabalho (CAT) é um documento que registra formalmente os acidentes ou doenças relacionadas à atividade laboral.",
+      "link": "https://www.sead.am.gov.br/wp-content/uploads/2023/01/Manual-Orientacao-eSocial-CAT-Modulo-SST.pdf",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "SMARss Saúde e Segurança do Trabalho Evento S-2210",
+      "snippet": "São definidos como eventos de Segurança e Saúde no Trabalho – SST: • S-2210 - Comunicação de Acidente de Trabalho. Utilizado para o envio da CAT pelo empregador ...",
+      "link": "https://ws.santabarbara.sp.gov.br/instar/downloads/servidores/manuais/smarsst/Evento2210eSocial.pdf",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "Cadastrar Comunicação de Acidente de Trabalho (CAT)",
+      "snippet": "Serviço para comunicar um acidente de trabalho ou de trajeto, bem como uma doença ocupacional. O documento pode ser usado em outros órgãos além do INSS.",
+      "link": "https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "Como cadastrar CAT - Comunicação Acidente Trabalho? S ...",
+      "snippet": "No Painel de Pendências do eSocial, acompanhe a validação do evento S-2210 CAT. Após, verifique em [Validados], na guia Saúde e Segurança do Trabalho.",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=266",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "Conheça melhor o processo de Comunicação de Acidente de ...",
+      "snippet": "De maneira ampla, a Comunicação de Acidente de Trabalho (CAT) é o documento emitido, obrigatoriamente, pelo empregador para comunicar à Previdência Social ...",
+      "link": "https://cggp.cps.sp.gov.br/conheca-melhor-o-processo-de-comunicacao-de-acidente-de-trabalho-no-esocial/",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "MANUAL M N .S S O .002-00",
+      "snippet": "S-2210 – Comunicação de Acidente de Trabalho - evento a ser utilizado para comunicar acidente de trabalho pelo declarante, ainda que não haja ...",
+      "link": "https://ints.org.br/wp-content/uploads/2024/10/MN.SSO_.002-00-Cadastro-Evento-S-2210-CAT-no-eSocial-2.pdf",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 comunicação acidente trabalho CAT",
+      "titulo": "COMO REALIZAR A CAT S-2210 PELO PORTAL DO ...",
+      "snippet": "No vídeo de hoje, preparamos um tutorial completo sobre como realizar a CAT (Comunicação de Acidente de Trabalho) pelo portal do eSocial.",
+      "link": "https://www.youtube.com/watch?v=7vnq0QOTBRM",
+      "extraido_em": "2026-01-31T12:31:44.720Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "S-2220 - Monitoramento da Saúde do Trabalhador — eSocial",
+      "snippet": "Nestes casos, o empregador deverá procurar atendimento diretamente nos órgãos integrantes do eSocial - de acordo com o tema, ou, no caso de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-2220-Monitoramento-da-Saude-do-Trabalhador",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "S-2220 - Monitoramento da Saúde do Trabalhador",
+      "snippet": "O evento deve ser enviado até o dia 15 (quinze) do mês subsequente ao da emissão do correspondente ASO, salvo para o relativo à ASO admissional {tpExameOcup} = ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2220.htm",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "Evento S-2220: Monitoramento da Saúde do Trabalhador",
+      "snippet": "O Evento S-2220 é realizado através do sistema eSocial, que recolhe e armazena todas as informações necessárias para o monitoramento da saúde do trabalhador.",
+      "link": "https://esocialbrasil.com.br/blog/evento-2220/",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "Como Enviar Exames Ocupacionais no eSocial (S-2220) em ...",
+      "snippet": "TL;DR: S-2220 deve ser enviado até dia 15 do mês seguinte à realização do exame. Contém dados do trabalhador, tipo de exame, resultado (apto/ ...",
+      "link": "https://climec.com.br/blog/como-enviar-exames-ocupacionais-no-esocial-s-2220-em-2026/",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "O que informar no evento S-2220 do eSocial?",
+      "snippet": "O evento S-2220 do eSocial tem como objetivo fornecer informações detalhadas sobre o monitoramento da saúde do trabalhador, ...",
+      "link": "https://sistemaeso.com.br/blog/esocial/o-que-informar-no-evento-s-2220-do-esocial",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "Evento S-2220 [Monitoramento da Saúde do Trabalhador] ...",
+      "snippet": "O evento deve ser enviado até o dia 15 do mês seguinte ao da realização do correspondente exame (ASO). No entanto, essa regra não altera o prazo ...",
+      "link": "https://ajuda.fortestecnologia.com.br/kb/pt-br/article/196602/evento-s-2220-monitoramento-de-saude-do-trabalhador-sst",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "eSocial - SST - S-2220 - Cadastro de Monitoramento de ...",
+      "snippet": "Conceito: O evento detalha as informações relativas ao monitoramento da saúde do trabalhador (avaliações clínicas), durante todo o vínculo ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=13368",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "eSocial - S-2220 - Monitoramento da Saúde do Trabalhador",
+      "snippet": "Guia Rápido SIP #023 - eSocial - S-2220 - Monitoramento da Saúde do Trabalhador. 369 views · 1 year ago ...more ...",
+      "link": "https://www.youtube.com/watch?v=RY1OZh7DNoc",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "SMARss Saúde e Segurança do Trabalho",
+      "snippet": "Neste evento é feito o acompanhamento da saúde do trabalhador durante o seu contrato de trabalho, com as informações relativas aos ASO (Atestado de Saúde.",
+      "link": "https://ws.santabarbara.sp.gov.br/instar/downloads/servidores/manuais/smarsst/Evento2220eSocial.pdf",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 monitoramento saúde trabalhador ASO",
+      "titulo": "O que é o evento S-2220 e como funciona?",
+      "snippet": "O evento “detalha as informações relativas ao monitoramento da saúde do trabalhador (avaliações clínicas), durante todo o vínculo laboral com o ...",
+      "link": "https://onsafety.com.br/o-que-e-o-evento-s-2220-e-como-funciona/",
+      "extraido_em": "2026-01-31T12:31:45.946Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "S-2230 - Afastamento Temporário",
+      "snippet": "\"Evento utilizado para informar os afastamentos temporários dos trabalhadores, por quaisquer dos motivos elencados na 'Tabela 18 – Motivos de Afastamento' do ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2230.htm",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "Importância do registro dos afastamentos no eSocial para ...",
+      "snippet": "O registro do evento \"S-2230 – Afastamento Temporário\" no eSocial agiliza a concessão do benefício de auxílio por incapacidade temporária, ...",
+      "link": "https://www.gov.br/esocial/pt-br/noticias/importancia-do-registro-dos-afastamentos-no-esocial-para-a-concessao-de-beneficios-por-incapacidade",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "O que é o evento S-2230 e quando será gerado no eSocial",
+      "snippet": "O registro S-2230 é o evento utilizado para informar os afastamentos temporários dos empregados/servidores e trabalhadores avulsos, ou seja, toda vez que o ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2230-e-quando-sera-gerado-no-esocial-63581313.html",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "Leiaute S-2230: fique por dentro do evento de afastamento ...",
+      "snippet": "Os afastamentos temporários fazem parte dos eventos não periódicos que serão solicitados em uma segunda fase do eSocial, sendo muito importante que as Unidades ...",
+      "link": "https://cggp.cps.sp.gov.br/leiaute-s-2230-fique-por-dentro-do-evento-de-afastamento-temporario-no-esocial/",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "Como implantar o Evento S-2230 do eSocial - Central de Ajuda",
+      "snippet": "Esse evento tem como finalidade registrar afastamentos temporários dos empregados, tais como: férias, licença-maternidade, afastamentos em geral, entre outros.",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-2230-do-esocial-2144446e",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "eSocial ponto a ponto: S-2230 afastamento temporário",
+      "snippet": "eSocial Ponto a Ponto - Transmissão de evento ao eSocial - arquivamento e regras de validação · Registro de Afastamento Temporário de um ...",
+      "link": "https://www.youtube.com/watch?v=Vu5Ya_yQzOA",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "Quais informações são enviadas no S-2230 e quando devo ...",
+      "snippet": "O evento de afastamento temporário deve ser enviado respeitando os seguintes prazos: **Acidente de trabalho, agravo de saúde ou doença ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/quais-informacoes-sao-enviadas-no-s-2230-e-quando-devo-enviar-o-evento-kjq4uh/",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "O evento S-2230: como enviar Afastamentos do Sólides ...",
+      "snippet": "O evento S-2230 – Afastamento Temporário deve ser enviado sempre que um trabalhador se ausentar do trabalho por determinado período, por ...",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/36754481375501-O-evento-S-2230-como-enviar-Afastamentos-do-S%C3%B3lides-Folha-Digital-para-o-e-Social",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "S-2230 - Afastamento Temporário Acidente de Trabalho",
+      "snippet": "O retorno do afastamento deverá ser lançado e enviado ao eSocial somente no mês da competência do respectivo retorno.",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=2786",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2230 afastamento temporário evento",
+      "titulo": "S-2230 – Afastamento Temporário — eSocial - Portal Gov.br",
+      "snippet": "S-2230 – Afastamento Temporário ... Anexos Tamanho máximo de 05 Mb - Anexar os eventos enviados e recebidos via web service do eSocial em formato ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2230-afastamento-temporario",
+      "extraido_em": "2026-01-31T12:31:47.392Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "S-2240 - Condições Ambientais do Trabalho - Agentes ...",
+      "snippet": "\"Este evento é utilizado para registrar as condições ambientais de trabalho pelo declarante, indicando as condições de prestação de serviços pelo trabalhador, ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2240.htm",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "S-2240 - Condições Ambientais do Trabalho - Fatores de Risco",
+      "snippet": "S-2240 - Condições Ambientais do Trabalho - Fatores de Risco · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável.",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-2240-Condicoes-Ambientais-do-Trabalho-Fatores-de-Risco",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "Evento S-2240: o que é e como fazer o envio correto?",
+      "snippet": "O objetivo é garantir que as informações sobre os agentes nocivos nos ambientes de trabalho sejam atualizadas de forma precisa e transparente.",
+      "link": "https://itamedi.com.br/evento-s-2240/",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "Guia Rápido SIP #015 - eSocial - S-2240",
+      "snippet": "Guia Rápido SIP #015 - eSocial - S-2240 - Condições Ambientais do Trabalho-Agentes Nocivos. 402 views · 1 year ago ...more ...",
+      "link": "https://www.youtube.com/watch?v=nd70N15Yzl8",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "S-2240 - Condições Ambientais do Trabalho - Agentes ...",
+      "snippet": "? Informar o código do agente nocivo ao qual o trabalhador está exposto. Preencher com números e pontos. Caso não haja exposição, informar o código [09.01.001] ...",
+      "link": "https://www.sstonline.com.br/s-2240/",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "S-2240 - Condições Ambientais do Trabalho - Agentes Nocivos",
+      "snippet": "1 - Acesse o menu Processos > Outros > Condições Ambientais do Trabalho - Agentes Nocivos;. 2 - Informe o Colaborador que será cadastrada a Condição Ambiental ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=6157",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "Notícias | eSocial - Evento SST ( S2240 )",
+      "snippet": "S-2240 – Condições Ambientais do Trabalho - Agentes Nocivos ( Início do envio a partir de 13/10/2021 para as empresas do Grupo 1 )",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=10062",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "O Evento S-2240 no eSocial: Contexto Legal e Impactos ...",
+      "snippet": "O S-2240 é o registro detalhado das condições ambientais de trabalho pelo declarante. Nele, são indicadas as condições de prestação de serviços ...",
+      "link": "https://www.rsdata.com.br/o-evento-s-2240-no-esocial-contexto-legal-e-impactos-de-sst/",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "Tudo sobre o Evento S-2240",
+      "snippet": "O evento S-2240 do eSocial trata das Condições Ambientais do Trabalho e requer informações detalhadas sobre a exposição dos trabalhadores a agentes nocivos.",
+      "link": "https://setrab.com.br/a-importancia-do-pgr-e-ltcat-para-o-evento-s-2240-do-esocial/",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 condições ambientais trabalho agentes nocivos",
+      "titulo": "Quais são os cadastros necessário para gerar o S-2240",
+      "snippet": "O evento S-2240 - (Condições Ambientais do Trabalho) é utilizado para registrar as condições ambientais de trabalho pelo declarante, indicando as condições de ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-quais-sao-os-cadastros-necessario-para-gerar-o-s-2240-150409850.html",
+      "extraido_em": "2026-01-31T12:31:48.859Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "O eSocial Web permite a consulta e edição (inclusão, alteração, retificação e exclusão) de eventos enviados para o ambiente nacional do eSocial. Serão exibidos ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "S-2250 - Aviso Prévio",
+      "snippet": "Prazo de envio: este evento deve ser enviado em até 10 (dez) dias de sua comunicação. • Pré-requisitos: Envio do evento “S-2200 – Cadastramento Inicial do ...",
+      "link": "https://grupomodulos.com.br/wp-content/uploads/2023/06/S-2250.pdf",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "ESOCIAL – ENTENDA O EVENTO S-2250 – AVISO PRÉVIO",
+      "snippet": "Este evento registra a comunicação e o possível cancelamento do aviso prévio de iniciativa do empregador ou do empregado. Aviso prévio é o ...",
+      "link": "https://www.mgpconsultoria.com.br/esocial-entenda-o-evento-s-2250-aviso-previo/",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "eSocial ponto a ponto: S-2250 aviso prévio",
+      "snippet": "eSocial ponto a ponto: S-2250 aviso prévio ... eSocial Ponto a Ponto - Grupos de Eventos - iniciais, periódicos ou não, de controle e de retorno.",
+      "link": "https://www.youtube.com/watch?v=W8q2oKaCaT8",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "Aviso-prévio deve ser registrado no evento S-2250 do ...",
+      "snippet": "O aviso-prévio deverá ser de, no mínimo, 30 dias, aos empregados que contem até 1 ano de serviço na mesma empresa. Ao referido período serão acrescidos 3 dias ...",
+      "link": "https://seac-abc.com.br/aviso-previo-deve-ser-registrado-no-evento-s-2250-do-esocial/",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "Como enviar o aviso prévio para o eSocial",
+      "snippet": "A partir de julho de 2021, com a simplificação do eSocial, as informações antes geradas no evento S-2250 serão enviadas no S-2299. Para ter acesso à ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-como-enviar-o-aviso-previo-para-o-esocial-60484196.html",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "eSocial - S2250",
+      "snippet": "Ação Sugerida: ocorre quando o usuário tenta enviar o evento de aviso prévio com data superior a data atual, O aviso prévio deve ser enviado em até 10 (dez) ...",
+      "link": "https://autoatendimento.supersoft.com.br/books/esocial/chapter/esocial-s2250-Mjc/export/pdf",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "S-2250 – Aviso Prévio — eSocial - Portal Gov.br",
+      "snippet": "Determinar a inclusão de um usuário em um experimento e a validade dos experimentos. ... O portal gov.br depende dos serviços oferecidos por ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2250-avisoprevio",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "CENTRAL DE SOLUÇÕES - Portal de Atendimento ao Cliente",
+      "snippet": "Esta mensagem ocorre pois o evento S-2250 (Aviso Prévio) foi excluído da listagem do eSocial e não deve ser enviado. Solução. As informações do Aviso Prévio ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=8297",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2250 aviso prévio evento",
+      "titulo": "Notícias | eSocial ( S-2250 )",
+      "snippet": "Conceito do evento: Este evento tem como objetivo registrar a comunicação e o possível cancelamento do aviso prévio de iniciativa do empregador ou do ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8474",
+      "extraido_em": "2026-01-31T12:31:50.219Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "S-2298 - Reintegração/Outros Provimentos",
+      "snippet": "\"São as informações de reintegração, em sentido amplo, de empregado/servidor previamente desligado do declarante. Estão contidos no conceito de reintegração, ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2298.htm",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "Evento S-2298 – Reintegração de Trabalhadores no ...",
+      "snippet": "O evento S-2298 formaliza o retorno de um colaborador que teve seu desligamento revertido, garantindo a atualização do vínculo no sistema...",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/36768228684685-Evento-S-2298-Reintegra%C3%A7%C3%A3o-de-Trabalhadores-no-eSocial-atrav%C3%A9s-do-S%C3%B3lides-Folha-Digital",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "eSocial - S-2298 - Reintegração de Funcionário",
+      "snippet": "Conceito: São as informações de reintegração, em sentido amplo, de empregado/servidor previamente desligado do declarante. Estão contidos no ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=1304",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "S-2298 – Reintegração — eSocial - Portal Gov.br",
+      "snippet": "Nestes casos, o empregador deverá procurar atendimento diretamente nos órgãos integrantes do eSocial - de acordo com o tema, ou, no caso de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2298-reintegracao",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "eSocial ponto a ponto: S-2298 reintegração",
+      "snippet": "Nesse curso você aprenderá com integrantes da equipe que fez o eSocial, que explicarão ponto a ponto todos os aspectos do eSocial, desde os ...",
+      "link": "https://www.youtube.com/watch?v=3Y5bQccIc7w",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "Como Fazer Reintegração de Empregado S-2298?",
+      "snippet": "A reintegração ao trabalho consiste em restabelecer a posse completa do cargo, ou seja, em devolver ao empregado o vínculo do emprego e todas as garantias ...",
+      "link": "https://docs.questor.com.br/pt-br/Produtos/Gest%C3%A3oCont%C3%A1bil/FolhadePagamento/Rescis%C3%A3o/reintegracao",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "eSocial ( Evento N.Periódico - S2298 )",
+      "snippet": "Conceito do evento: São as informações de reintegração, em sentido amplo, de empregado/servidor previamente desligado do empregador/ Órgão Público.",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=9057",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "Como informar a Reintegração ao eSocial (S-2298)?",
+      "snippet": "O evento S-2298 – Reintegração é usado para informar ao eSocial que um trabalhador que havia sido desligado voltou a ter vínculo com a empresa ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/como-informar-a-reintegracao-ao-esocial-s-2298-1mm16uq/",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "Reintegração - Movimentos",
+      "snippet": "A reintegração ao trabalho consiste em restabelecer a posse completa, ou seja, em devolver ao empregado todas as garantias contratuais havidas antes da demissão ...",
+      "link": "https://ajuda.wk.com.br/73/wk/Folha/Movimentos/Reintegra%C3%A7%C3%A3o/Reintegracao.htm",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2298 reintegração trabalhador",
+      "titulo": "eSocial - Erro no evento S-2298 - 218 - Vínculo Trabalhista ...",
+      "snippet": "Essa mensagem de erro de validação no retorno do evento S-2298 - (Reintegração) ocorre quando o funcionário não possui o S-2299 - (Desligamento) processado, ou ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-erro-no-evento-s-2298-218-vinculo-trabalhista-nao-se-encontra-desligado-60471401.html",
+      "extraido_em": "2026-01-31T12:31:51.789Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "S-2299 – Desligamento — eSocial - Portal Gov.br",
+      "snippet": "Nestes casos, o empregador deverá procurar atendimento diretamente nos órgãos integrantes do eSocial - de acordo com o tema, ou, no caso de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2299-desligamento",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "S-2299 - Desligamento",
+      "snippet": "O prazo é até 10 dias a contar data do desligamento, sendo que na contagem é excluído do dia do desligamento. No caso de desligamento por transferência ou por ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2299.htm",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "O que é o evento S-2299 e quando será gerado no eSocial",
+      "snippet": "O evento S-2299 - (Desligamento) tem como objetivo registrar as informações destinadas a noticiar o desligamento do trabalhador da empresa/órgão público.",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2299-e-quando-sera-gerado-no-esocial-63591475.html",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "Evento S-2299: Desligamento e Rescisão Complementar ...",
+      "snippet": "O evento S-2299 é utilizado para informar o desligamento do trabalhador do vínculo empregatício. Ele também registra os dados da rescisão ...",
+      "link": "https://ajuda.solides.com.br/hc/pt-br/articles/36755458283149-Evento-S-2299-Desligamento-e-Rescis%C3%A3o-Complementar-no-eSocial",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "Como implantar o Evento S-2299 do eSocial - Central de Ajuda",
+      "snippet": "Para realizar a implantação do evento S-2299 – Desligamento, é necessário acessar o módulo de Gestão de Trabalhadores e selecionar a funcionalidade ...",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-2299-do-esocial-3d8181ca",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "eSocial ponto a ponto: S-2299 desligamento",
+      "snippet": "eSocial ponto a ponto: S-2299 desligamento - informações remuneratórias ... Como enviar um Desligamento (S-2299) ao eSocial? Calima ERP Contábil ...",
+      "link": "https://www.youtube.com/watch?v=Is1ZNRqqXhU",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "Notícias | eSocial ( S-2299 Desligamento )",
+      "snippet": "Conceito do evento: São as informações destinadas a registrar o desligamento do trabalhador da empresa/órgão público. Quem está obrigado: Todo empregador/órgão ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8648",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "S-2299 - Desligamento. 3.2 – TRABALHADORES SEM VÍNCULO. 3.2.1 Gestão de Trabalhadores. S-2300 - Trabalhador Sem Vínculo de Emprego/Estatutário – Início. S-2306 ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "Como enviar o Evento S-2299 no Calima?",
+      "snippet": "Deve ser enviado em até 10 dias após o desligamento ou antes do envio do evento de remuneração S-1200. · Ter enviado com sucesso todos os eventos ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/como-enviar-o-evento-s-2299-no-calima-him7rw/",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2299 desligamento evento",
+      "titulo": "eSocial - S2299",
+      "snippet": "Ação Sugerida: Não deve existir qualquer evento para o vínculo indicado no evento de desligamento com data posterior a Data de Desligamento. A exceção a essa ...",
+      "link": "https://autoatendimento.e-contab.com.br/books/esocial/chapter/esocial-s2299/export/pdf",
+      "extraido_em": "2026-01-31T12:31:53.204Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "S-2300 - Trabalhador Sem Vínculo de Emprego/Estatutário – Início. S-2306 - Trabalhador Sem Vínculo de Emprego/Estatutário - Alteração Contratual. S-2399 ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "S-2300 - Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "Deve ser transmitido até o dia 15 (quinze) do mês subsequente ao da sua ocorrência. Informações adicionais do leiaute. O Manual de Orientação do eSocial (MoS) ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2300.htm",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "S-2300 - Trabalhador Sem Vínculo",
+      "snippet": "Nota ECONET: Este evento é utilizado para prestar informações cadastrais relativas a trabalhadores que não possuem vínculo de emprego/estatutário com a empresa/ ...",
+      "link": "https://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_2300.php",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "Trabalhador Sem Vínculo De Emprego (TSVE)",
+      "snippet": "1°) O usuário deve enviar o evento de início do TSVE ao eSocial contendo a data de início constante no processo e informar o número do processo trabalhista. 2°) ...",
+      "link": "https://autoatendimento.supersoft.com.br/books/esocial/page/trabalhador-sem-vinculo-de-emprego-tsve-caso-em-que-o-tsve-nao-possui-cadastro-no-esocial-e-o-vinculo-esta-ativo",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "eSocial ponto a ponto: S-2300 trabalhador sem vínculo",
+      "snippet": "Veja o Curso eSocial Ponto a Ponto completo e os materiais de apoio em: https://enit.trabalho.gov.br/portal/index.php/esocial-ponto-a-ponto ...",
+      "link": "https://www.youtube.com/watch?v=SssDRiH9jbM",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "S-2300 – Trabalhador Sem Vínculo de Emprego/Estatuário",
+      "snippet": "Este arquivo é enquadrado como Eventos não Periódicos, e Eventos Iniciais, logo se destina a registrar a contratação do colaborador sem vínculo ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17835932913307-S-2300-Trabalhador-Sem-V%C3%ADnculo-de-Emprego-Estatu%C3%A1rio-In%C3%ADcio",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "S-2300: o que você precisa saber sobre o evento do eSocial",
+      "snippet": "A admissão do TSVE é enviada por meio do evento S-2300 – Trabalhador Sem Vínculo de Emprego/Estatutário – Início.",
+      "link": "https://makrosystem.com.br/blog/s-2300-quando-sou-obrigado-a-enviar/?srsltid=AfmBOooWMD8pUr-3BKZMTqEbbtCzu_OE_zKx1zIBNSkI82rE5e5vapyn",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "eSocial - Erro no evento S-2300 - 1",
+      "snippet": "Este erro ocorre no retorno do evento S-2300 (Trabalhador Sem Vínculo de Emprego/Estatutário - Início), quando o campo Matrícula está em branco no cadastro ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-erro-no-evento-s-2300-1-campo-de-preenchimento-obrigatorio-matricula-117648411.html",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "Informações necessárias para o cadastramento inicial do ...",
+      "snippet": "O evento S-2300 é o leiautes do eSocial usado para trabalhadores sem vínculo de emprego, como avulsos, diretores não empregados, cooperados, ...",
+      "link": "https://www.mgpconsultoria.com.br/cadastramento-inicial-s-2300/",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2300 trabalhador sem vínculo início TSVE",
+      "titulo": "eSocial ( S-2300 TSVE - Início )",
+      "snippet": "Conceito do evento: Este evento é utilizado para prestar informações cadastrais relativas a trabalhadores que não possuem vínculo de emprego/ ...",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8649",
+      "extraido_em": "2026-01-31T12:31:55.194Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "S-2306 - Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "Geração das informações do trabalhador sem vínculo - alteração contratual. A geração deste leiaute ocorre através do monitoramento das tabelas que possuem ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2306.htm",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "O que é o evento S-2306 e quando será gerado no eSocial",
+      "snippet": "O evento S-2306 - (Trabalhador Sem Vínculo de Emprego/Estatutário - Alteração Contratual) é utilizado para informar a atualização dos dados contratuais ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2306-e-quando-sera-gerado-no-esocial-63591648.html",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "Como implantar o Evento S-2306 do eSocial - Central de Ajuda",
+      "snippet": "Para realizar a implantação do evento S-2306 – Alteração de Dados Contratuais, é necessário acessar o cadastro do Trabalhador sem Vínculo no portal do eSocial. ...",
+      "link": "https://sfhelpdesk.sofolha.com.br/ajuda/sfdpessoal-como-implantar-o-evento-s-2306-do-esocial-b47dd906",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "S-2306 – Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "S-2306 – Trabalhador Sem Vínculo de Emprego/Estatutário - Alteração Contratual. Publicado em 10/01/2018 11h05 Atualizado em 25/06/2020 15h26.",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/s-2300-trabalhador-sem-vinculo-de-emprego-estatutario-alteracao-contratual",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "Eventos S-2306 - Trabalhador Sem Vínculo de Emprego/ ...",
+      "snippet": "OBSERVAÇÃO: Para enviar as alterações contratuais de servidores requisitados, será necessário usar a aba S-2306. Quando existir uma alteração contratual do ...",
+      "link": "https://www.tjrj.jus.br/documents/10136/325596902/Dica-de-Sistema-S-2306-Trabalhador-Sem-Vinculo-de-Emprego_Estatutario-Alteracao-Contratual-e-Social-V1.0.pdf",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "trabalhador sem vínculo S-2306 alteração e S2399 término",
+      "snippet": "(nesse curso, ensinamos como tirar as suas dúvidas com o eSocial.) eSocial ponto a ponto: trabalhador sem vínculo S-2306 alteração e S2399 ...",
+      "link": "https://www.youtube.com/watch?v=JaDhv18Fg6I",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "S-2306 – Trabalhador Sem Vínculo de Emprego /Estatutário",
+      "snippet": "Esse arquivo é um Evento Não Periódico que se destina a registrar as alterações de dados contratuais do trabalhador sem vínculo, tais como:.",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17835995061659-S-2306-Trabalhador-Sem-V%C3%ADnculo-de-Emprego-Estatut%C3%A1rio-Altera%C3%A7%C3%A3o-Contratual",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "S-2306 Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "- Passo 1: Acesse Arquivos>funcionários>Cadastro básico, realize as devidas alterações considerando os critérios do evento, ao gravar automaticamente será ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=9334",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "Artigo - Há diferença entre a retificação do S-2300 e o S-2306?",
+      "snippet": "Já o evento S-2306 – Trabalhador Sem Vínculo de Emprego/Estatutário – Alteração Contratual é utilizado quando há uma mudança contratual. Nesse caso, os ...",
+      "link": "https://atendimento.nasajon.com.br/nasajon/artigos/d2b80017-ff5d-4c2c-904a-7e46d5fcff79",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2306 trabalhador sem vínculo alteração",
+      "titulo": "eSocial versão S-1.3 - Leiautes",
+      "snippet": "S-2300 - Trabalhador Sem Vínculo de Emprego/Estatutário - Início; S-2306 - Trabalhador Sem Vínculo de Emprego/Estatutário - Alteração Contratual ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/leiautes-esocial-versao-s-1-3-cons-ate-nt-04-2025-rev-26-08-2025/index.html/",
+      "extraido_em": "2026-01-31T12:31:56.734Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "A geração do leiaute S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário - Término estará disponível após o Fechamento da Demissão dos Colaboradores ( ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2399.htm",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "S-2306 - Trabalhador Sem Vínculo de Emprego/Estatutário - Alteração Contratual. S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário - Término. 3.3 – SST ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "O que é o evento S-2399 e quando será gerado no eSocial",
+      "snippet": "O evento S-2399 - (Trabalhador Sem Vínculo de Emprego/Estatutário - Término) é utilizado para declarar as informações utilizadas para o encerramento da prestaç ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-o-que-e-o-evento-s-2399-e-quando-sera-gerado-no-esocial-63591620.html",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "S-2399 - Trabalhador Sem Vínculo",
+      "snippet": "O empregador não precisa informar o evento S-2399 a cada vez que o trabalhador deixar de desempenhar suas atividades. Apenas quando o término do trabalho tiver ...",
+      "link": "http://www.econeteditora.com.br/links_pagina_inicial/e-social/conteudo_esocial_2018/S_2399.php",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "RH - Linha Protheus - GPE - eSocial - S-2399",
+      "snippet": "S-2399 referente ao Término de contrato de Trabalhador Sem Vínculo, a categoria para o esocial deve ser 721, no cadastro do Trabalhado do ...",
+      "link": "https://centraldeatendimento.totvs.com/hc/pt-br/articles/360018559431-RH-Linha-Protheus-GPE-eSocial-S-2399-Como-gerar-o-Evento-S-2399-para-Trabalhadores-Sem-V%C3%ADnculo",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "Também será gerado o S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário - Término quando houver indicação de Término de Contrato na Ficha ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17836034609435-S-2399-Trabalhador-Sem-V%C3%ADnculo-de-Emprego-Estatut%C3%A1rio-T%C3%A9rmino",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "Trabalhador sem Vínculo de Emprego/Estatutário - Término",
+      "snippet": "Essa dica de sistema apresenta o procedimento de envio do Evento S-2399: Trabalhador. Sem Vínculo de Emprego/Estatutário - Término, a ser executado através ...",
+      "link": "https://www.tjrj.jus.br/documents/10136/325596902/Dica-de-Sistema-Eventos-S-2399_Trabalhador-Sem-Vinculo-de-Emprego_Estatutario-Termino-e-Social-V1.0.pdf",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "trabalhador sem vínculo S-2306 alteração e S2399 término",
+      "snippet": "eSocial ponto a ponto: trabalhador sem vínculo S-2306 alteração e S2399 término ... Eventos periódicos no eSocial: Diferença entre S-1200 e S-1210 ...",
+      "link": "https://www.youtube.com/watch?v=JaDhv18Fg6I",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "S-2399 - Trabalhador Sem Vínculo de Emprego/Estatutário",
+      "snippet": "Conceito. São as informações utilizadas para o encerramento da prestação de serviço do trabalhador sem vínculo de emprego/estatutário.",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/27165523068183-S-2399-Trabalhador-Sem-V%C3%ADnculo-de-Emprego-Estatut%C3%A1rio-T%C3%A9rmino",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2399 trabalhador sem vínculo término",
+      "titulo": "Como enviar desligamento de sócios S-2399 para o ...",
+      "snippet": "Ao terminar o contrato de Diretores Não - Empregados ou Sócios, é necessário realizar a geração do evento S-2399 - Trabalhador Sem Vínculo ...",
+      "link": "https://autoatendimento.contmatic.com.br/hc/pt-br/articles/36526082185363-Como-enviar-desligamento-de-s%C3%B3cios-S-2399-para-o-eSocial-via-Folha",
+      "extraido_em": "2026-01-31T12:31:58.209Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "S-2400 - Cadastro de Benefícios Previdenciários - RPPS",
+      "snippet": "Recebimento de benefícios do INSS pelo trabalhador doméstico · Tutoriais em vídeo · O que muda com o Novo eSocial Simplificado · Manual Web ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/orgaos-publicos-rpps/S-2400-Cadastro-de-Beneficios-Previdenciarios-RPPS",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "eSocial. Evento: S-2400 - Benefícios Previdenciários",
+      "snippet": "Conceito do evento: São as informações relativas ao cadastro dos benefícios previdenciários pagos pelos entes federativos, diretamente ou por ...",
+      "link": "https://www.contadorperito.com/materia/44990/esocial-evento-s-2400-cadastro-de-beneficios-previdenciarios-rpps",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "S-2400 – Cadastro de Beneficiários – Entes Públicos - Início",
+      "snippet": "O evento S-2400 deverá ser transmitido antes de qualquer evento periódico ou não periódico referente ao beneficiário, conforme os seguintes ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17836112384539-S-2400-Cadastro-de-Benefici%C3%A1rios-Entes-P%C3%BAblicos-In%C3%ADcio",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "eSOCIAL - Portal Gov.br",
+      "snippet": "➢ Instituidor de Pensão – cadastrado no. S-2200 e S-1202 ou S-2400 e S-1207;. ➢ Pensionista – CPF obrigatório e informar nº de quotas;. ➢ Número do Benefício.",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/anexo_faq02.pdf",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "Órgãos Públicos (S-2400, S-2405, S-2410, S-2416, S-2418 ...",
+      "snippet": "A origem da informação de um beneficiário (S-2400) tem início a partir de um cadastro do colaborador (FR034FUN) com a categoria eSocial \"9995 - Beneficiário ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/manual-processos/cadastro-beneficiario-e-beneficios-orgaos-publicos.htm",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "eSocial Órgãos Públicos: Cadastramento de Benefícios ...",
+      "snippet": "No evento S-2400, informe se o Órgão Público possui segregação de massa e o tipo de plano, para que se possa identificar os segurados que ...",
+      "link": "https://www.mgpconsultoria.com.br/esocial-orgaos-publicos-cadastramento-de-beneficios-previdenciarios-rpps-s-2400/",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "S-2400 - Cadastro de Beneficiário-Entes Públicos-Início",
+      "snippet": "S-2400- Cadastro de Beneficiários - Informações obrigatórias ... S-1202 - RPPS e S-1207 - Beneficiários. Fiorilli Play•540 views · 21:31.",
+      "link": "https://www.youtube.com/watch?v=UiSRGclXB8A",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "Notícias | eSocial ( S-2400 )",
+      "snippet": "S-2400 – Cadastro de Benefícios Previdenciários - RPPS - O evento deve ser enviado antes do evento “S-1207 – Benefícios Previdenciários – RPPS”.",
+      "link": "https://www.dape.com.br/lernoticia.aspx?id=8581",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "S-2400 - Cadastro de Beneficiário - Entes Públicos - Início",
+      "snippet": "Conceito. São as informações relativas ao cadastro dos beneficiários, previdenciários ou não, de todo e qualquer benefício pago pelos entes ...",
+      "link": "https://atendimento.tecnospeed.com.br/hc/pt-br/articles/27165514377623-S-2400-Cadastro-de-Benefici%C3%A1rio-Entes-P%C3%BAblicos-In%C3%ADcio",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2400 benefício previdenciário RPPS",
+      "titulo": "S-2400 - Cadastro de Beneficiários – Entes Públicos",
+      "snippet": "\"São as informações relativas ao cadastro dos beneficiários do sistema de previdência dos regimes próprios, incluindo os beneficiários das complementações de ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2400.htm",
+      "extraido_em": "2026-01-31T12:31:59.674Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "S-2210 - Comunicação de Acidente de Trabalho — eSocial",
+      "snippet": "S-2210 - Comunicação de Acidente de Trabalho · Razão Social · CNPJ/CPF do EMPREGADOR com problemas · E-mail · Nome do responsável · Telefone de ...",
+      "link": "https://www.gov.br/esocial/pt-br/canais_atendimento/formularios/empresas/S-2210-Comunicacao-de-Acidente-de-Trabalho",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "S-2210 - Comunicação de Acidente de Trabalho",
+      "snippet": "Através do campo Módulo Responsável S-2210 da tela de Definições do eSocial (FR030DES), é possível definir em qual módulo o sistema irá gerar e enviar o leiaute ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2210.htm",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "Manual-Orientacao-eSocial-CAT-Modulo-SST.pdf",
+      "snippet": "A Comunicação de Acidente de Trabalho (CAT) é um documento que registra formalmente os acidentes ou doenças relacionadas à atividade laboral.",
+      "link": "https://www.sead.am.gov.br/wp-content/uploads/2023/01/Manual-Orientacao-eSocial-CAT-Modulo-SST.pdf",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "Como cadastrar CAT - Comunicação Acidente Trabalho? S ...",
+      "snippet": "No Painel de Pendências do eSocial, acompanhe a validação do evento S-2210 CAT. Após, verifique em [Validados], na guia Saúde e Segurança do Trabalho.",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=266",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "Cadastrar Comunicação de Acidente de Trabalho (CAT)",
+      "snippet": "Serviço para comunicar um acidente de trabalho ou de trajeto, bem como uma doença ocupacional. O documento pode ser usado em outros órgãos além do INSS.",
+      "link": "https://www.gov.br/pt-br/servicos/registrar-comunicacao-de-acidente-de-trabalho-cat",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "SMARss Saúde e Segurança do Trabalho Evento S-2210",
+      "snippet": "São definidos como eventos de Segurança e Saúde no Trabalho – SST: • S-2210 - Comunicação de Acidente de Trabalho. Utilizado para o envio da CAT pelo empregador ...",
+      "link": "https://ws.santabarbara.sp.gov.br/instar/downloads/servidores/manuais/smarsst/Evento2210eSocial.pdf",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "eSocial - S-2210 – Comunicação de Acidente de Trabalho",
+      "snippet": "Evento a ser utilizado para comunicar acidente de trabalho pelo declarante, ainda que não haja afastamento do trabalhador de suas atividades ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=14999",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "eSocial - S2210",
+      "snippet": "edite a CAT (Comunicação de Acidente de Trabalho emitida) e confira na aba Principal o campo. Código da situação geradora do acidente ou da doença profissional.",
+      "link": "https://autoatendimento.supersoft.com.br/books/esocial/chapter/esocial-s2210/export/pdf",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "S-2210 - Comunicação de Acidente de Trabalho (CAT)",
+      "snippet": "Data do acidente. Validação: Deve ser uma data válida, igual ou anterior à data atual e igual ou posterior à data de admissão do trabalhador e à data de início ...",
+      "link": "https://www.sstonline.com.br/s-2210/",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2210 CAT comunicação acidente trabalho campos",
+      "titulo": "Como Preencher Corretamente a CAT e Evitar Erros no ...",
+      "snippet": "Passo a passo para preencher a CAT eSocial S-2210 sem erros e evitar multas. Domine os prazos, Portaria 4.334 e os pré-requisitos para ...",
+      "link": "https://www.rsdata.com.br/como-preencher-cat-esocial-s2210/",
+      "extraido_em": "2026-01-31T12:32:01.232Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "S-2220 - Monitoramento da Saúde do Trabalhador",
+      "snippet": "O evento deve ser enviado até o dia 15 (quinze) do mês subsequente ao da emissão do correspondente ASO, salvo para o relativo à ASO admissional {tpExameOcup} = ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2220.htm",
+      "extraido_em": "2026-01-31T12:32:02.475Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "O que informar no evento S-2220 do eSocial?",
+      "snippet": "Esse evento de SST deve ser enviado até o dia 15 do mês seguinte à emissão do Atestado de Saúde Ocupacional (ASO), com exceção do ASO ...",
+      "link": "https://sistemaeso.com.br/blog/esocial/o-que-informar-no-evento-s-2220-do-esocial",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "S-2220 - Monitoramento da Saúde do Trabalhador",
+      "snippet": "Fontes de preenchimento: Atestado de Saúde Ocupacional – ASO (Exames clínico e complementares). Cadastros iniciais. Dados do empregador:CNPJ(raíz) ou CPF Dados ...",
+      "link": "https://www.sstonline.com.br/s-2220/",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "Como cadastrar Monitoramento da Saúde - ASO? S-2220",
+      "snippet": "1 - Acesse o menu Processos > Outros > Monitoramento da Saúde do Trabalhador; · 2 - Informe o código do Colaborador e clique no botão [Novo]; · 3 - Na guia Geral, ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=8025",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "Saúde do Trabalhador: saiba sobre o S-2220 no eSocial",
+      "snippet": "Atualmente, para o S-2220, são necessários os exames ocupacionais que se encaixam nas Normas Regulamentadoras (NRs) e declarados no Atestado de Saúde ...",
+      "link": "https://www.shbrasilsaudepe.com.br/saiba-sobre-o-s-2220-no-esocial/",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "Evento 2220 eSocial ASO Atualizado",
+      "snippet": "Neste evento devem ser informados todos os exames realizados pelo trabalhador que constam no Atestado de Saúde Ocupacional emitido (ASO). •Somente deve ser ...",
+      "link": "https://suporte.smarapd.com.br/documentacao/evento-2220-esocial-aso-atuali.html",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "SMARss Saúde e Segurança do Trabalho",
+      "snippet": "S-2220 - Monitoramento da Saúde do Trabalhador. Neste evento é feito o acompanhamento da saúde do trabalhador durante o seu contrato de trabalho, com as ...",
+      "link": "https://ws.santabarbara.sp.gov.br/instar/downloads/servidores/manuais/smarsst/Evento2220eSocial.pdf",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "eSocial - SST - S-2220 - Cadastro de Monitoramento de ...",
+      "snippet": "Para este cadastro, basta acessar a rotina “Módulos > Saúde e Segurança do Trabalho - SST > Atestado de Saúde Ocupacional (ASO) > Registro do ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=13368",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "S-2220 - Monitoramento da Saúde do Trabalhador",
+      "snippet": "Este leiaute é um Evento não Periódico, utilizado para detalhar as informações relativas ao monitoramento da saúde do colaborador, ...",
+      "link": "https://centraldeajudanuvem.lg.com.br/hc/pt-br/articles/17834971807387-S-2220-Monitoramento-da-Sa%C3%BAde-do-Trabalhador",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2220 ASO atestado saúde ocupacional",
+      "titulo": "S-2220: o que é e como funciona esse evento do eSocial?",
+      "snippet": "O objetivo principal do evento S-2220 é permitir o registro dos exames e avaliações de saúde realizados pelos colaboradores, de modo a assegurar ...",
+      "link": "https://salu.com.vc/blog/s-2220-esocial/",
+      "extraido_em": "2026-01-31T12:32:02.476Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Disponibilização do Perfil Profissiográfico Previdenciário ...",
+      "snippet": "O PPP Eletrônico que substituirá o PPP em meio físico, poderá ser visualizado a partir de 16/01/2023 no site ou aplicativo Meu INSS.",
+      "link": "https://www.gov.br/esocial/pt-br/noticias/disponibilizacao-do-perfil-profissiografico-previdenciario-ppp-eletronico",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "PPP Digital no eSocial S-2240: Guia Completo para Emissão ...",
+      "snippet": "O Perfil Profissiográfico Previdenciário é o documento obrigatório que contém histórico laboral do trabalhador, registros ambientais e ...",
+      "link": "https://climec.com.br/blog/ppp-digital-no-esocial-s-2240-guia-completo-para-emissao-e-aposentadoria-especial-em-2025/",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Como fica o PPP com o eSocial?",
+      "snippet": "Com a vinda da obrigatoriedade dos eventos de SST do eSocial, o PPP será enviado juntamente com o evento S-2240. A responsabilidade da emissão do PPP é da ...",
+      "link": "https://seconci.rio/como-fica-o-ppp-com-o-esocial/",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "PPP eletrônico, LTCAT e eSocial: um guia para a ...",
+      "snippet": "Entenda o que é o PPP eletrônico, a estrutura do LTCAT e os eventos de SST do eSocial neste guia para a aposentadoria especial.",
+      "link": "https://sistemaeso.com.br/blog/esocial/guia-para-aposentadoria-especial-ppp-eletronico-ltcat-esocial",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Perfil Profissiográfico Previdenciário em Meio Eletrônico",
+      "snippet": "O Perfil Profissiográfico Previdenciário (PPP) é um documento histórico laboral do trabalhador que reúne todos os dados administrativos, ...",
+      "link": "https://agante.com.br/artigos/perfil-profissiografico-previdenciario-em-meio-eletronico",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "eSocial - SST- S-2240 Condições Ambientais do Trabalho",
+      "snippet": "O PPP deve ser emitido com base nas demonstrações ambientais conforme dados abaixo: Programa de Prevenção de Riscos Ambientais - PPRA;. Programa ...",
+      "link": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=15054",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "S-2040 eSocial - FACOP",
+      "snippet": "O evento S-2240 do eSocial é utilizado para registrar as condições ambientais de trabalho e informar se o colaborador está exposto a agentes nocivos à saúde ...",
+      "link": "https://facop.org.br/sesmt-s2240",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Manual WEB GERAL — eSocial",
+      "snippet": "Os eventos de SST (S-2210, S-2220 e S-2240) enviados para o empregado serão exibidos na lista da tela de movimentações trabalhistas. No entanto, não será ...",
+      "link": "https://www.gov.br/esocial/pt-br/empresas/manual-web-geral",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Entenda como fica o PPP no eSocial",
+      "snippet": "O Perfil Profissiográfico Previdenciário (PPP) é um documento emitido pela empresa que determina todo o histórico laboral do trabalhador.",
+      "link": "https://www.soc.com.br/blog-de-sst/ppp-no-esocial/",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial S-2240 PPP perfil profissiográfico previdenciário",
+      "titulo": "Perfil profissiográfico previdenciário: Saiba o que é!",
+      "snippet": "O objetivo é que, com o tempo, o PPP Eletrônico seja substituído pelo envio do evento S-2240 ao eSocial. Esse evento é específico para o ...",
+      "link": "https://blog.convenia.com.br/perfil-profissiografico-previdenciario/",
+      "extraido_em": "2026-01-31T12:32:03.814Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "eSocial versão S-1.1 Beta - Tabelas",
+      "snippet": "Valor correspondente a um dia de trabalho incidente sobre as verbas de natureza variável, tais como: horas extras, adicional noturno, produção, comissão, etc.",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-v-1-1-beta/tabelas.html",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "eSocial Tabelas - Serpro.ESocial.Web.Administracao.Servicos",
+      "snippet": "... Tabela 3 - Tabela de Natureza das Rubricas da Folha de Pagamento - eSocial, Tabela 4 - Código e Alíquotas de FPAS/Terceiros - eSocial, Tabela 5 - Tipos de ...",
+      "link": "https://frontend.esocial.gov.br/adm/",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "TABELA 03 - NATUREZA DAS RUBRICAS DA FOLHA DE ...",
+      "snippet": "1002. Descanso semanal remunerado - DSR. Valor correspondente a um dia de trabalho incidente sobre as verbas de natureza variável, tais como: horas extras,.",
+      "link": "https://www.iobonline.com.br/Repository/ServContent?guid=TABELA03_TABELA_DE_NATUREZA_DAS_RUBRICAS_DA_FOLHA_DE_PAGAMENTO",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Tabela de Rubricas",
+      "snippet": "Valor correspondente a um dia de trabalho incidente sobre as verbas de natureza variável, tais como: horas extras, adicional noturno, produção, comissão, etc.",
+      "link": "https://www.lefisc.com.br/rubricas/",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Tabela de Rubricas do eSocial",
+      "snippet": "Tabela de Rubricas para geração dos registros do eSocial no ERP. eSocial (F669ESO). Código Rúbrica (codRubr), Descrição (dscRubr), Natureza da Rubrica (natRubr) ...",
+      "link": "https://documentacao.senior.com.br/gestaoempresarialerp/5.10.4/menu_controladoria/f669eso-tabela-rubricas.htm",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Entendendo os códigos de incidências das Rubricas do ...",
+      "snippet": "codIncCP (Código de incidência Contribuição Previdenciária) · 91 - Mensal; · 92 - 13° Salário; · 93 - Salário maternidade; · 94 - Salário maternidade 13o salário; ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-entendendo-os-codigos-de-incidencias-das-rubricas-do-esocial-63582443.html",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "eSocial versão S-1.2 - Tabelas",
+      "snippet": "Tabela 03 - Natureza das Rubricas da Folha de Pagamento. Tabela 04 - Códigos ... Tabela 21 - Códigos de Incidência Tributária da Rubrica para o IRRF.",
+      "link": "https://micalex.com.br/wp-content/uploads/2024/05/Leiautes-do-eSocial-v.-S-1.2-Anexo-I-Tabelas-cons.-ate-NT-03.2024.pdf",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Tabelas do sistema: eSocial - SPED",
+      "snippet": "Tabelas do sistema: eSocial. Pacote. Selecione um pacote, Geral. Tabela. Nenhuma tabela encontrada. Versão 1.0. Receita Federal.",
+      "link": "https://www.sped.fazenda.gov.br/spedtabelas/AppConsulta/publico/aspx/ConsultaTabelasExternas.aspx?CodSistema=esocial",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Entenda os códigos de incidências das Rubricas do eSocial",
+      "snippet": "Código de incidência tributária da rubrica para o IRRF: 00 - Rendimento não tributável;. 01 - Rendimento não tributável em função de acordos internacionais de ...",
+      "link": "https://suporte.dominioatendimento.com/central/faces/solucao.html?codigo=5339",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela rubricas eSocial natureza código incidência",
+      "titulo": "Rubricas do eSocial",
+      "snippet": "A Tabela abaixo tem como objetivo orientar e auxiliar os cliente e usuários do sistema SGRH no envio ao eSocial das verbas padrões e operacionais do sistema. A ...",
+      "link": "https://econt.com.br/wp-content/uploads/2024/03/rubricas_esocial_sgrh.xlsx",
+      "extraido_em": "2026-01-31T12:32:05.499Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "eSocial versão S-1.1 Beta - Tabelas",
+      "snippet": "Tabela 01 - Categorias de Trabalhadores; Tabela 02 - Financiamento da Aposentadoria Especial e Redução do Tempo de Contribuição; Tabela 03 - Natureza das ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-v-1-1-beta/tabelas.html",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "eSocial Tabelas - Serpro.ESocial.Web.Administracao.Servicos",
+      "snippet": "Consulta Pública - Tabelas do eSocial. Filtro de pesquisa. Tabela*. Tabela 1 - Categoria de Trabalhadores - eSocial, Tabela 2 - Financiamento da Aposentadoria ...",
+      "link": "https://frontend.esocial.gov.br/adm/",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "Tabelas do eSocial",
+      "snippet": "Como Acessar o eSocial · Consultar Guias Pagas · Documento de Arrecadação do eSocial - DAE · Direitos do Trabalhador Doméstico · Guia FGTS ...",
+      "link": "https://www.gov.br/esocial/pt-br/tabelas-do-esocial",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "Anexo I dos leiautes do eSocial versão 2.4.02 - Tabelas ...",
+      "snippet": "101. Empregado - Geral, inclusive o empregado público da administração direta ou indireta contratado pela CLT. 102. Empregado - Trabalhador Rural por ...",
+      "link": "https://www.contadorperito.com/files/Leiautes-do-eSocial-v2.4.02-Anexo-I-Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "ANEXO I DOS LEIAUTES DO NOVO eSOCIAL TABELAS",
+      "snippet": "Tabela 04 - Códigos e Alíquotas de FPAS/Terceiros ... Demissão (somente para códigos de categoria [301, 302, 303, 306, 307,. 309]).",
+      "link": "https://www.rsdata.com.br/wp-content/uploads/2020/02/Leiautes-do-Novo-eSocial-v1.0-Beta-Anexo-I-Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "Anexo I dos leiautes do eSocial versão 2.2.01 - Tabelas ...",
+      "snippet": "301 Servidor Público Titular de Cargo Efetivo, Magistrado, Ministro de Tribunal de Contas,. Conselheiro de Tribunal de Contas e Membro do Ministério Público.",
+      "link": "http://www.econeteditora.com.br/links_pagina_inicial/e-social/Leiautes_eSocial_v2.2.01_Anexo_I_Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "Anexo I dos leiautes do eSocial versão 2.5 - Tabelas ...",
+      "snippet": "Especial e Redução do Tempo de Contrib. CÓDIGO. DESCRIÇÃO. 1. Não ensejador de aposentadoria especial. 2. Ensejador de Aposentadoria Especial - FAE15_12% ...",
+      "link": "https://micalex.com.br/wp-content/uploads/2018/11/Leiautes-do-eSocial-v2.5-Anexo-I-Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "eSocial",
+      "snippet": "Categoria GFIP: Código da Categoria do Trabalhador de acordo com a. Tabela 01 – Categorias de Trabalhadores do eSocial nas categorias 701,. 711, 712, 741, 751 ...",
+      "link": "https://ws.santabarbara.sp.gov.br/instar/downloads/servidores/manuais/smarcp/PrestacaoContasEsocialAutonomos.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "Você sabe o que é categoria do trabalhador? Entenda tudo ...",
+      "snippet": "A informação baseia-se na Tabela 01 (Categoria de Trabalhadores) do eSocial, como já comentado anteriormente. A tabela é dividida em 6 grupos e 46 códigos ...",
+      "link": "https://www.pontotel.com.br/categoria-do-trabalhador/",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela categoria trabalhador eSocial códigos",
+      "titulo": "E-SOCIAL TABELA PRÁTICA",
+      "snippet": "Para o eSocial, trabalhador é toda pessoa física que reali- za um trabalho, seja com vínculo empre- gatício – e, portanto, regido pelas normas do Direito do ...",
+      "link": "https://www.fecomercio.com.br/CMS-Site/Files/email/pecas/_materiais/esocial_cartilha_tela.pdf",
+      "extraido_em": "2026-01-31T12:32:06.745Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "eSocial versão S-1.0 - Tabelas - Portal Gov.br",
+      "snippet": "Tabela 18 - Motivos de Afastamento. CÓDIGO, DESCRIÇÃO, INÍCIO, TÉRMINO, CÓD. CATEG. 01, Acidente/doença do trabalho, 01/01/2014, -, Todos. 03, Acidente/doença ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-nt-05-2022-html/tabelas.html",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "Tabela 18 eSocial - motivos de afastamento",
+      "snippet": "Tabela 18 eSocial. Acompanhamento - Licença para acompanhamento. Afastamento do empregado para participar de atividade do Conselho Curador do FGTS. Dec. 99.684 ...",
+      "link": "https://www.dpc.com.br/wp-content/uploads/2019/01/Tabela-18-eSocial-afastamentos-1.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "eSocial Tabelas - Serpro.ESocial.Web.Administracao.Servicos",
+      "snippet": "eSocial Tabela 18 - Motivos de Afastamento - eSocial Tabela 19 - Motivos de Desligamento - eSocial Tabela 20 - Tipos de Logradouros - eSocial Tabela",
+      "link": "https://frontend.esocial.gov.br/adm/",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "Qual código do eSocial usar para informar afastamentos pelo ...",
+      "snippet": "Tabela de correspondência – Calima x eSocial (Tabela 18): ; P1 – Afastamento temporário por motivo de doença, por período superior a 15 dias. 03 ...",
+      "link": "https://ajuda.calimaerp.com/pt/article/qual-codigo-do-esocial-usar-para-informar-afastamentos-pelo-calima-sedax5/",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "Anexo I dos leiautes do eSocial versão 2.4.02 - Tabelas ...",
+      "snippet": "Motivos de Afastamento. Tabela 18 - Motivos de Afastamento Código Descrição 01 Acidente/Doença do trabalho 03 Acidente/Doença não relacionada ao trabalho",
+      "link": "https://www.contadorperito.com/files/Leiautes-do-eSocial-v2.4.02-Anexo-I-Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "MANUAL DE ORIENTAÇÃO DO eSOCIAL - Versão S-1.3",
+      "snippet": "Motivos de afastamento (Tabela 18 do eSocial) {codIncCP} {codIncIRRF} {codIncFGTS} 17 Licença Maternidade (em caso de salário maternidade pago pela empresa)",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/mos-s-1-3-consolidada-ate-a-no-s-1-3-04-2025-com-marcacoes.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "S-2230 - Afastamento Temporário",
+      "snippet": "Preencher com o código do motivo de afastamento temporário, conforme Tabela 18. Validação: Deve ser um código válido existente na Tabela 18, bem como ...",
+      "link": "https://documentacao.senior.com.br/gestao-de-pessoas-hcm/esocial/leiautes/nao-periodicos/s-2230.htm",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "eSocial versão S-1.2 - Tabelas",
+      "snippet": "Tabela 18 - Motivos de Afastamento. CÓDIGO. DESCRIÇÃO. INÍCIO. TÉRMINO. CÓD. CATEG. 01. Acidente/doença do trabalho. 01/01/2014. -. Todos. 03. Acidente/doença ...",
+      "link": "https://micalex.com.br/wp-content/uploads/2024/05/Leiautes-do-eSocial-v.-S-1.2-Anexo-I-Tabelas-cons.-ate-NT-03.2024.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "E-SOCIAL TABELA PRÁTICA",
+      "snippet": "código do motivo de afastamento – tabela 18), informações complementares relativas ao ates- tado médico (código CID e dias de afastamento), médico/dentista ...",
+      "link": "https://www.fecomercio.com.br/CMS-Site/Files/email/pecas/_materiais/esocial_cartilha_tela.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo afastamento eSocial códigos",
+      "titulo": "Anexo III do Manual de Orientação do eSocial – Tabelas",
+      "snippet": "Deve ser classificada nesse código também, a remuneração paga ao trabalhador afastado por motivo de doença ou acidente de trabalho, por período de até 15 dias.",
+      "link": "https://www.camaraipatinga.mg.gov.br/uploads/files/contaspublicas/manual_de_orientacao_2.1_-_anexo_iii_-_tabelas_do_esocial.pdf",
+      "extraido_em": "2026-01-31T12:32:08.140Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "eSocial versão S-1.1 Beta - Tabelas",
+      "snippet": "Tabela 17 - Descrição da Natureza da Lesão; Tabela 18 - Motivos de Afastamento; Tabela 19 - Motivos de Desligamento; Tabela 20 - Tipos de Logradouro; Tabela 21 ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-v-1-1-beta/tabelas.html",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Motivos de Desligamento",
+      "snippet": "Motivos de Desligamento. Cód. Descrição. 01, Rescisão com justa causa, por iniciativa do empregador. 02, Rescisão sem justa causa, por iniciativa do empregador.",
+      "link": "https://suporte.quarta.com.br/LayOuts/eSocial/Tabelas/Tabela_19.htm",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "eSocial Tabelas - Serpro.ESocial.Web.Administracao.Servicos",
+      "snippet": "... Tabela 17 - Descrição da Natureza da Lesão - eSocial, Tabela 18 - Motivos de Afastamento - eSocial, Tabela 19 - Motivos de Desligamento - eSocial, Tabela 20 ...",
+      "link": "https://frontend.esocial.gov.br/adm/",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Tabela 19 - Motivos de Desligamento",
+      "snippet": "Regularização eSocial LGPD Segurança da Informação TI Curso Treinamento | MGP Consultoria ... Tabela 19 – Motivos de Desligamento. Você está aqui: Início ...",
+      "link": "https://www.mgpconsultoria.com.br/tabela-17-descricao-da-natureza-da-lesao/tabela-19-motivos-de-desligamento/",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Anexo III do Manual de Orientação do eSocial – Tabelas",
+      "snippet": "Anexo III - Tabelas do eSocial - Manual de Orientação do eSocial – Versão 2.1. 46/142. Tabela 19 – Motivos de Desligamento. Cód. Descrição. 01 Rescisão com ...",
+      "link": "https://www.camaraipatinga.mg.gov.br/uploads/files/contaspublicas/manual_de_orientacao_2.1_-_anexo_iii_-_tabelas_do_esocial.pdf",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Anexo I dos leiautes do eSocial versão 2.4.02 - Tabelas ...",
+      "snippet": "Anexo I dos Leiautes do eSocial versão 2.4.02 - Tabelas. 50/84. Tabela 19 - Motivos de Desligamento. Cód. Descrição. 01 Rescisão com justa causa, por iniciativa ...",
+      "link": "https://www.contadorperito.com/files/Leiautes-do-eSocial-v2.4.02-Anexo-I-Tabelas.pdf",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Novos Códigos de Motivo de Desligamento eSocial versão ...",
+      "snippet": "Este Artigo tem como objetivo orientar sobre os novos códigos de motivo de desligamento eSocial na versão 1.1. Resolução. Tabela de Motivos de Desligamento:.",
+      "link": "https://ajuda.alterdata.com.br/pages/viewpage.action?pageId=150421908",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Tabela 19 - Motivos de Desligamento",
+      "snippet": "Tabela 19 - Motivos de Desligamento. CÓDIGO. DESCRIÇÃO. INÍCIO. TÉRMINO. CÓD. CATEG. 01. Rescisão com justa causa, por iniciativa do empregador.",
+      "link": "https://www.econeteditora.com.br/links_pagina_inicial/e-social/tabelas/Leiautes_do_eSocial_v._S-1.1_-_Anexo_I_-_Tabelas_(cons._ate_NT_02.2023)_tab19.pdf",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "MANUAL DE ORIENTAÇÃO DO eSOCIAL - Versão S-1.3",
+      "snippet": "Motivos de afastamento (Tabela 18 do eSocial) {codIncCP} ... do eSocial, a cessão deixou de ser um motivo de afastamento (código 14) e passou a ser um evento.",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/mos-s-1-3-consolidada-ate-a-no-s-1-3-04-2025-com-marcacoes.pdf",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "tabela motivo desligamento eSocial códigos",
+      "titulo": "Tabela 18 eSocial - motivos de afastamento",
+      "snippet": "Licença Maternidade - Afastamento temporário por motivo de licençamaternidade decorrente de adoção ... Tabela 18 eSocial - motivos de afastamento.",
+      "link": "https://www.dpc.com.br/wp-content/uploads/2019/01/Tabela-18-eSocial-afastamentos-1.pdf",
+      "extraido_em": "2026-01-31T12:32:09.295Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "eSocial versão S-1.1 Beta - Tabelas",
+      "snippet": "Tabela 21 - Códigos de Incidência Tributária da Rubrica para o IRRF; Tabela 22 - Compatibilidade entre FPAS e Classificação Tributária; Tabela 23 ...",
+      "link": "https://www.gov.br/esocial/pt-br/documentacao-tecnica/manuais/leiautes-esocial-v-1-1-beta/tabelas.html",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Tabelas de Incidência INSS/FGTS/IRRF",
+      "snippet": "Tabela de Incidência INSS/FGTS/IRRF. RUBRICAS. INCIDÊNCIAS. INSS. FGTS. IR. Abono. de qualquer natureza, salvo o de férias. Sim. Art. 28, I, Lei nº 8.212/91 e § ...",
+      "link": "https://www.sitecontabil.com.br/tabelas/tabela_incidencia_inss_fgts_irrf.html",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "eSocial Tabelas - Serpro.ESocial.Web.Administracao.Servicos",
+      "snippet": "Consulta Pública - Tabelas do eSocial. Filtro de pesquisa. Tabela*. Tabela 1 - Categoria de Trabalhadores - eSocial, Tabela 2 - Financiamento da ...",
+      "link": "https://frontend.esocial.gov.br/adm/",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Tabela de Incidência do IR Fonte, INSS E FGTS",
+      "snippet": "Tabela de Incidência do IR Fonte, INSS E FGTS. RENDIMENTOS. INSS FGTS IRRF. Abono pecuniário de férias - CLT - Arts. 143 e 144 não não sim. Adicionais ...",
+      "link": "https://www.trt16.jus.br/site/conteudo/geral/arq_editais.php?idn=15356",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "inss/fgts/irrf -tabela de incidências",
+      "snippet": "INSS/FGTS/IRRF -TABELA DE INCIDÊNCIAS. TABELA DE INCIDÊNCIAS ... incidência das contribuições sociais previdenciárias incidentes sobre a folha de salários.",
+      "link": "https://idealsoftwares.com.br/tabelas/tabela.php?id=431",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "TABELA DE INCIDÊNCIA TRIBUTÁRIA - INSS - FGTS - IRRF",
+      "snippet": "TABELA DE INCIDÊNCIA TRIBUTÁRIA. INSS - FGTS - IRRF. ATÉ 31/07/97. DE 01/08//97 A 10/12/97; VIGÊNCIA DA MP 1.523-7/97. DE 11/12/97 A 21/05/98; VIGÊNCIA DA LEI ...",
+      "link": "https://tecnocontas.com.br/TabelaIncidenciaImpostosSalario.asp",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Tabelas do sistema: eSocial - SPED",
+      "snippet": "Tabelas do sistema: eSocial. Pacote. Selecione um pacote, Geral. Tabela. Nenhuma tabela encontrada. Versão 1.0. Receita Federal.",
+      "link": "https://www.sped.fazenda.gov.br/spedtabelas/AppConsulta/publico/aspx/ConsultaTabelasExternas.aspx?CodSistema=esocial",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Entendendo os códigos de incidências das Rubricas do ...",
+      "snippet": "codIncIRRF (Código de incidência da rubrica para IRRF) · 11 - Remuneração mensal; · 12 - 13° Salário; · 13 - Férias; · 14 - PLR; · 15 - Rendimentos Recebidos ...",
+      "link": "https://ajuda.alterdata.com.br/dpbase/esocial-entendendo-os-codigos-de-incidencias-das-rubricas-do-esocial-63582443.html",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Tabela de Incidência de Contribuição — Receita Federal",
+      "snippet": "Tabela de Incidência de Contribuição ; Auxílio-doença ; Até 15 dias. (Afastamento da atividade por doença com ou sem a posterior concessão de ...",
+      "link": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/emissao-e-pagamento-de-darf-das-gps-e-dae/calculo-de-contribuicoes-previdenciarias-e-emissao-de-gps/tabela-de-incidencia-de-contribuicao",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    },
+    {
+      "categoria": "ESOCIAL",
+      "query": "eSocial incidências tributárias FGTS INSS IRRF tabela",
+      "titulo": "Tabela de Rubricas do eSocial",
+      "snippet": "Tabela de Rubricas do eSocial ; SE_ERP_9201, Desconto da contribuição previdenciária - INSS, 9201 ; SE_ERP_9203, Desconto do imposto de renda retido na fonte - ...",
+      "link": "https://documentacao.senior.com.br/gestaoempresarialerp/5.10.4/menu_controladoria/f669eso-tabela-rubricas.htm",
+      "extraido_em": "2026-01-31T12:32:10.743Z"
+    }
+  ]
+}

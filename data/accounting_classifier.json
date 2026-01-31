@@ -1,0 +1,570 @@
+{
+  "versao": "1.0.0",
+  "atualizado_em": "2026-01-31T12:58:29.950Z",
+  "padroes": {
+    "ENTRADAS": {
+      "RECEBIMENTO_CLIENTE": {
+        "patterns": [
+          "/PIX\\s*(?:REC|RECEBIDO|RECEB)/i",
+          "/TED\\s*(?:REC|RECEBIDO|CRED)/i",
+          "/DEP(?:OSITO)?.*(?:PIX|TED|DOC)/i",
+          "/TRANSF.*(?:REC|RECEB|CRED)/i",
+          "/PAGAMENTO\\s*(?:REC|RECEB)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.9.01",
+            "nome": "Transitória Créditos",
+            "id": "28085461-9e5a-4fb4-847d-c9fc047fe0a1"
+          },
+          "credito": {
+            "codigo": "1.1.2.01",
+            "nome": "Clientes a Receber"
+          },
+          "historico_template": "Classificação: Recebimento {cliente} - {descricao}"
+        }
+      },
+      "RENDIMENTO_APLICACAO": {
+        "patterns": [
+          "/RENDIMENT/i",
+          "/JUROS\\s*(?:CRED|S\\/\\s*APLIC)/i",
+          "/CREDITO\\s*(?:POUPAN|CDB|LCI|LCA)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.9.01",
+            "nome": "Transitória Créditos"
+          },
+          "credito": {
+            "codigo": "3.2.1.01",
+            "nome": "Receitas Financeiras"
+          },
+          "historico_template": "Classificação: Rendimento financeiro - {descricao}"
+        }
+      },
+      "RESGATE_APLICACAO": {
+        "patterns": [
+          "/RESGATE/i",
+          "/APLIC.*(?:RESGATE|LIQUID)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.9.01",
+            "nome": "Transitória Créditos"
+          },
+          "credito": {
+            "codigo": "1.1.3.01",
+            "nome": "Aplicações Financeiras"
+          },
+          "historico_template": "Classificação: Resgate de aplicação - {descricao}"
+        }
+      },
+      "ESTORNO": {
+        "patterns": [
+          "/ESTORNO/i",
+          "/DEVOLU[CÇ][AÃ]O/i",
+          "/CANCEL/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.9.01",
+            "nome": "Transitória Créditos"
+          },
+          "credito": {
+            "codigo": "VERIFICAR",
+            "nome": "Conta Original do Débito"
+          },
+          "historico_template": "Classificação: Estorno/Devolução - {descricao}"
+        }
+      },
+      "DEPOSITO_DINHEIRO": {
+        "patterns": [
+          "/DEP(?:OSITO)?.*DINHEIRO/i",
+          "/DEP(?:OSITO)?.*ESPECIE/i",
+          "/DEPOSITO\\s*(?!.*PIX)(?!.*TED)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.9.01",
+            "nome": "Transitória Créditos"
+          },
+          "credito": {
+            "codigo": "1.1.1.01",
+            "nome": "Caixa"
+          },
+          "historico_template": "Classificação: Depósito em dinheiro - {descricao}"
+        }
+      }
+    },
+    "SAIDAS": {
+      "TARIFA_BANCARIA": {
+        "patterns": [
+          "/TARIFA/i",
+          "/TAR\\s*(?:COM|COB|LIQ|TED|PIX|DOC|MANUT)/i",
+          "/TAXA\\s*(?:MANUT|SERV)/i",
+          "/CUST[OÓ]DIA/i",
+          "/ANUIDADE/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.2.1.01",
+            "nome": "Despesas Bancárias"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos",
+            "id": "3e1fd22f-fba2-4cc2-b628-9d729233bca0"
+          },
+          "historico_template": "Classificação: Tarifa bancária - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "IOF": {
+        "patterns": [
+          "/IOF/i",
+          "/IMP.*OPER.*FIN/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.2.1.04",
+            "nome": "IOF"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: IOF - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "ENERGIA_ELETRICA": {
+        "patterns": [
+          "/ENERGIA/i",
+          "/CELG/i",
+          "/ENEL/i",
+          "/CEMIG/i",
+          "/LIGHT/i",
+          "/COPEL/i",
+          "/ELETROPAULO/i",
+          "/CPFL/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.1.02",
+            "nome": "Despesas com Energia Elétrica"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Energia elétrica - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "AGUA_ESGOTO": {
+        "patterns": [
+          "/AGUA/i",
+          "/SANEAGO/i",
+          "/SABESP/i",
+          "/COPASA/i",
+          "/CEDAE/i",
+          "/CORSAN/i",
+          "/SANEPAR/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.1.03",
+            "nome": "Despesas com Água e Esgoto"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Água e esgoto - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "TELEFONE_INTERNET": {
+        "patterns": [
+          "/TELEFONE/i",
+          "/INTERNET/i",
+          "/VIVO/i",
+          "/CLARO/i",
+          "/TIM/i",
+          "/\\bOI\\b/i",
+          "/NET\\s/i",
+          "/TELECOM/i",
+          "/ALGAR/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.1.04",
+            "nome": "Despesas com Comunicação"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Telefone/Internet - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "ALUGUEL": {
+        "patterns": [
+          "/ALUGUEL/i",
+          "/LOCA[CÇ][AÃ]O/i",
+          "/IMOBILI[AÁ]RIA/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.1.01",
+            "nome": "Despesas com Aluguel"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Aluguel - {descricao}"
+        }
+      },
+      "SIMPLES_NACIONAL": {
+        "patterns": [
+          "/DAS\\s*(?:SIMPLES)?/i",
+          "/SIMPLES\\s*NACIONAL/i",
+          "/\\bMEI\\b/i",
+          "/PGDAS/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.3.1.03",
+            "nome": "Simples Nacional"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Simples Nacional/DAS - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "DARF_IMPOSTO": {
+        "patterns": [
+          "/DARF/i",
+          "/RECEITA\\s*FEDERAL/i",
+          "/PGTO\\s*(?:IRPJ|CSLL|PIS|COFINS)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.5.xx",
+            "nome": "Impostos a Recolher"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: DARF - {descricao}"
+        }
+      },
+      "GPS_INSS": {
+        "patterns": [
+          "/GPS/i",
+          "/INSS/i",
+          "/PREVID[EÊ]NCIA/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.4.01",
+            "nome": "INSS a Recolher"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: GPS/INSS - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "FGTS": {
+        "patterns": [
+          "/FGTS/i",
+          "/GRF/i",
+          "/FUNDO\\s*GARANT/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.4.02",
+            "nome": "FGTS a Recolher"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: FGTS - {descricao}"
+        },
+        "auto_classificar": true
+      },
+      "ISS": {
+        "patterns": [
+          "/\\bISS\\b/i",
+          "/ISSQN/i",
+          "/\\bDAM\\b/i",
+          "/IMPOSTO\\s*(?:SOBRE\\s*)?SERVI[CÇ]O/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.5.04",
+            "nome": "ISS a Recolher"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: ISS - {descricao}"
+        }
+      },
+      "SALARIO": {
+        "patterns": [
+          "/SAL[AÁ]RIO/i",
+          "/FOLHA/i",
+          "/PGTO.*FUNC/i",
+          "/REMUNERA[CÇ][AÃ]O/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.3.01",
+            "nome": "Salários a Pagar"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Salário - {descricao}"
+        }
+      },
+      "PRO_LABORE": {
+        "patterns": [
+          "/PR[OÓ].?LABORE/i",
+          "/PROLABORE/i",
+          "/RETIRADA.*S[OÓ]CIO/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.3.04",
+            "nome": "Pró-labore a Pagar"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Pró-labore - {descricao}"
+        }
+      },
+      "FERIAS": {
+        "patterns": [
+          "/F[EÉ]RIAS/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.3.02",
+            "nome": "Férias a Pagar"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Férias - {descricao}"
+        }
+      },
+      "DECIMO_TERCEIRO": {
+        "patterns": [
+          "/13.?\\s*SAL/i",
+          "/D[EÉ]CIMO\\s*TERCEIRO/i",
+          "/GRATIFICA[CÇ][AÃ]O\\s*NATALIN/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.3.03",
+            "nome": "13º Salário a Pagar"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: 13º Salário - {descricao}"
+        }
+      },
+      "COMBUSTIVEL": {
+        "patterns": [
+          "/COMBUST[IÍ]VEL/i",
+          "/GASOLINA/i",
+          "/[AÁ]LCOOL/i",
+          "/DIESEL/i",
+          "/POSTO/i",
+          "/SHELL/i",
+          "/IPIRANGA/i",
+          "/PETROBRAS/i",
+          "/\\bBR\\s/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.1.06",
+            "nome": "Despesas com Combustível"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Combustível - {descricao}"
+        }
+      },
+      "HONORARIOS_CONTABEIS": {
+        "patterns": [
+          "/CONTABILIDADE/i",
+          "/HONOR[AÁ]RIO.*CONT/i",
+          "/ESCRIT[OÓ]RIO\\s*CONT/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.2.03",
+            "nome": "Honorários Contábeis"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Honorários contábeis - {descricao}"
+        }
+      },
+      "HONORARIOS_ADVOCATICIOS": {
+        "patterns": [
+          "/ADVOC[AÁ]CIA/i",
+          "/HONOR[AÁ]RIO.*ADV/i",
+          "/JUR[IÍ]DICO/i",
+          "/ADVOGADO/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.2.04",
+            "nome": "Honorários Advocatícios"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Honorários advocatícios - {descricao}"
+        }
+      },
+      "SEGURO": {
+        "patterns": [
+          "/SEGURO/i",
+          "/AP[OÓ]LICE/i",
+          "/SEGURADORA/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "4.1.2.02",
+            "nome": "Despesas com Seguros"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Seguro - {descricao}"
+        }
+      },
+      "APLICACAO_FINANCEIRA": {
+        "patterns": [
+          "/APLICA[CÇ][AÃ]O/i",
+          "/INVESTIMENT/i",
+          "/CDB/i",
+          "/LCI/i",
+          "/LCA/i",
+          "/POUPAN[CÇ]A/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "1.1.3.01",
+            "nome": "Aplicações Financeiras"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Aplicação financeira - {descricao}"
+        }
+      },
+      "TRANSFERENCIA_PROPRIA": {
+        "patterns": [
+          "/TRANSF.*(?:MESMA|PR[OÓ]PRI)/i",
+          "/ENTRE\\s*CONTAS/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "1.1.1.xx",
+            "nome": "Outro Banco/Conta"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Transferência entre contas próprias - {descricao}"
+        }
+      },
+      "PAGAMENTO_FORNECEDOR": {
+        "patterns": [
+          "/PIX\\s*(?:ENV|TRANS|PGTO)/i",
+          "/TED\\s*(?:ENV|PGTO|SAI)/i",
+          "/PAG(?:AMENTO)?/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "2.1.1.xx",
+            "nome": "Fornecedores"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Pagamento - {descricao}"
+        },
+        "prioridade": 99
+      },
+      "SAQUE": {
+        "patterns": [
+          "/SAQUE/i",
+          "/RETIRADA.*(?:DINHEIRO|ESP[EÉ]CIE)/i"
+        ],
+        "classificacao": {
+          "debito": {
+            "codigo": "1.1.1.01",
+            "nome": "Caixa"
+          },
+          "credito": {
+            "codigo": "1.1.9.01",
+            "nome": "Transitória Débitos"
+          },
+          "historico_template": "Classificação: Saque - {descricao}"
+        }
+      }
+    }
+  },
+  "contas_transitorias": {
+    "DEBITOS": {
+      "codigo": "1.1.9.01",
+      "nome": "Transitória Débitos (ATIVO)",
+      "id": "3e1fd22f-fba2-4cc2-b628-9d729233bca0",
+      "uso": "Saídas de dinheiro aguardando classificação"
+    },
+    "CREDITOS": {
+      "codigo": "2.1.9.01",
+      "nome": "Transitória Créditos (PASSIVO)",
+      "id": "28085461-9e5a-4fb4-847d-c9fc047fe0a1",
+      "uso": "Entradas de dinheiro aguardando classificação"
+    }
+  },
+  "banco_principal": {
+    "codigo": "1.1.1.05",
+    "nome": "Banco Sicredi",
+    "id": "10d5892d-a843-4034-8d62-9fec95b8fd56"
+  }
+}

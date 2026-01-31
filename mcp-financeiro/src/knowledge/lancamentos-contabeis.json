@@ -1,0 +1,1318 @@
+{
+  "versao": "1.0.0",
+  "gerado_em": "2026-01-31T15:39:41.985Z",
+  "autor": "Dr. Cícero - Treinamento Automatizado",
+  "siglas_extrato": {
+    "TED": {
+      "significado": "Transferência Eletrônica Disponível",
+      "tipo": "transferencia",
+      "classificacao": "verificar_destino"
+    },
+    "DOC": {
+      "significado": "Documento de Ordem de Crédito",
+      "tipo": "transferencia",
+      "classificacao": "verificar_destino"
+    },
+    "PIX": {
+      "significado": "Pagamento Instantâneo",
+      "tipo": "transferencia",
+      "classificacao": "verificar_destino"
+    },
+    "TRF": {
+      "significado": "Transferência",
+      "tipo": "transferencia",
+      "classificacao": "verificar_destino"
+    },
+    "TRANSF": {
+      "significado": "Transferência",
+      "tipo": "transferencia",
+      "classificacao": "verificar_destino"
+    },
+    "PAG": {
+      "significado": "Pagamento",
+      "tipo": "pagamento",
+      "classificacao": "fornecedores"
+    },
+    "PGTO": {
+      "significado": "Pagamento",
+      "tipo": "pagamento",
+      "classificacao": "fornecedores"
+    },
+    "PAGTO": {
+      "significado": "Pagamento",
+      "tipo": "pagamento",
+      "classificacao": "fornecedores"
+    },
+    "SISPAG": {
+      "significado": "Sistema de Pagamentos",
+      "tipo": "pagamento",
+      "classificacao": "fornecedores"
+    },
+    "GPAG": {
+      "significado": "Guia de Pagamento",
+      "tipo": "pagamento",
+      "classificacao": "impostos"
+    },
+    "REC": {
+      "significado": "Recebimento",
+      "tipo": "recebimento",
+      "classificacao": "clientes"
+    },
+    "CRED": {
+      "significado": "Crédito",
+      "tipo": "recebimento",
+      "classificacao": "verificar_origem"
+    },
+    "DEP": {
+      "significado": "Depósito",
+      "tipo": "recebimento",
+      "classificacao": "verificar_origem"
+    },
+    "DEPOSITO": {
+      "significado": "Depósito",
+      "tipo": "recebimento",
+      "classificacao": "verificar_origem"
+    },
+    "TAR": {
+      "significado": "Tarifa",
+      "tipo": "tarifa",
+      "classificacao": "despesas_bancarias",
+      "conta": "4.1.3.01"
+    },
+    "TXB": {
+      "significado": "Taxa Bancária",
+      "tipo": "tarifa",
+      "classificacao": "despesas_bancarias",
+      "conta": "4.1.3.01"
+    },
+    "IOF": {
+      "significado": "Imposto sobre Operações Financeiras",
+      "tipo": "imposto",
+      "classificacao": "despesas_bancarias",
+      "conta": "4.1.3.01"
+    },
+    "ANUIDADE": {
+      "significado": "Anuidade de Cartão/Conta",
+      "tipo": "tarifa",
+      "classificacao": "despesas_bancarias",
+      "conta": "4.1.3.01"
+    },
+    "MANUT": {
+      "significado": "Manutenção de Conta",
+      "tipo": "tarifa",
+      "classificacao": "despesas_bancarias",
+      "conta": "4.1.3.01"
+    },
+    "COB": {
+      "significado": "Cobrança",
+      "tipo": "cobranca",
+      "classificacao": "verificar"
+    },
+    "BOLETO": {
+      "significado": "Pagamento de Boleto",
+      "tipo": "pagamento",
+      "classificacao": "verificar_favorecido"
+    },
+    "LIQUIDACAO": {
+      "significado": "Liquidação de Título",
+      "tipo": "cobranca",
+      "classificacao": "clientes"
+    },
+    "BAIXA": {
+      "significado": "Baixa de Título",
+      "tipo": "cobranca",
+      "classificacao": "clientes"
+    },
+    "DEB AUT": {
+      "significado": "Débito Automático",
+      "tipo": "debito_automatico",
+      "classificacao": "verificar_convenio"
+    },
+    "DB AUTO": {
+      "significado": "Débito Automático",
+      "tipo": "debito_automatico",
+      "classificacao": "verificar_convenio"
+    },
+    "APL": {
+      "significado": "Aplicação Financeira",
+      "tipo": "aplicacao",
+      "classificacao": "aplicacoes_financeiras",
+      "conta": "1.1.1.10"
+    },
+    "APLIC": {
+      "significado": "Aplicação",
+      "tipo": "aplicacao",
+      "classificacao": "aplicacoes_financeiras",
+      "conta": "1.1.1.10"
+    },
+    "RESG": {
+      "significado": "Resgate",
+      "tipo": "resgate",
+      "classificacao": "aplicacoes_financeiras"
+    },
+    "RESGATE": {
+      "significado": "Resgate de Aplicação",
+      "tipo": "resgate",
+      "classificacao": "aplicacoes_financeiras"
+    },
+    "REND": {
+      "significado": "Rendimento",
+      "tipo": "rendimento",
+      "classificacao": "receitas_financeiras",
+      "conta": "3.2.1.01"
+    },
+    "JUROS": {
+      "significado": "Juros Recebidos",
+      "tipo": "rendimento",
+      "classificacao": "receitas_financeiras",
+      "conta": "3.2.1.01"
+    },
+    "CDB": {
+      "significado": "Certificado de Depósito Bancário",
+      "tipo": "aplicacao",
+      "classificacao": "aplicacoes_financeiras"
+    },
+    "POUP": {
+      "significado": "Poupança",
+      "tipo": "aplicacao",
+      "classificacao": "aplicacoes_financeiras"
+    },
+    "COMPE": {
+      "significado": "Compensação de Cheque",
+      "tipo": "compensacao",
+      "classificacao": "verificar"
+    },
+    "CHQ": {
+      "significado": "Cheque",
+      "tipo": "cheque",
+      "classificacao": "verificar"
+    },
+    "CHEQUE": {
+      "significado": "Cheque",
+      "tipo": "cheque",
+      "classificacao": "verificar"
+    },
+    "EST": {
+      "significado": "Estorno",
+      "tipo": "estorno",
+      "classificacao": "estorno"
+    },
+    "ESTORNO": {
+      "significado": "Estorno",
+      "tipo": "estorno",
+      "classificacao": "estorno"
+    },
+    "CANC": {
+      "significado": "Cancelamento",
+      "tipo": "cancelamento",
+      "classificacao": "estorno"
+    },
+    "DEV": {
+      "significado": "Devolução",
+      "tipo": "devolucao",
+      "classificacao": "verificar"
+    },
+    "SALARIO": {
+      "significado": "Pagamento de Salário",
+      "tipo": "folha",
+      "classificacao": "despesas_pessoal",
+      "conta": "4.1.2.01"
+    },
+    "FOLHA": {
+      "significado": "Folha de Pagamento",
+      "tipo": "folha",
+      "classificacao": "despesas_pessoal",
+      "conta": "4.1.2.01"
+    },
+    "FGTS": {
+      "significado": "Fundo de Garantia",
+      "tipo": "imposto",
+      "classificacao": "encargos_sociais",
+      "conta": "4.1.2.02"
+    },
+    "GPS": {
+      "significado": "Guia Previdência Social",
+      "tipo": "imposto",
+      "classificacao": "encargos_sociais",
+      "conta": "4.1.2.03"
+    },
+    "INSS": {
+      "significado": "Previdência Social",
+      "tipo": "imposto",
+      "classificacao": "encargos_sociais",
+      "conta": "4.1.2.03"
+    },
+    "DARF": {
+      "significado": "Documento Arrecadação Receitas Federais",
+      "tipo": "imposto",
+      "classificacao": "impostos_federais"
+    },
+    "ENEL": {
+      "significado": "Energia Elétrica (Enel)",
+      "tipo": "utilidade",
+      "classificacao": "energia",
+      "conta": "4.1.1.02"
+    },
+    "CELG": {
+      "significado": "Energia Elétrica (Celg)",
+      "tipo": "utilidade",
+      "classificacao": "energia",
+      "conta": "4.1.1.02"
+    },
+    "ENERGIA": {
+      "significado": "Energia Elétrica",
+      "tipo": "utilidade",
+      "classificacao": "energia",
+      "conta": "4.1.1.02"
+    },
+    "SANEAGO": {
+      "significado": "Água e Esgoto (Saneago)",
+      "tipo": "utilidade",
+      "classificacao": "agua",
+      "conta": "4.1.1.03"
+    },
+    "SABESP": {
+      "significado": "Água e Esgoto (Sabesp)",
+      "tipo": "utilidade",
+      "classificacao": "agua",
+      "conta": "4.1.1.03"
+    },
+    "VIVO": {
+      "significado": "Telefonia (Vivo)",
+      "tipo": "utilidade",
+      "classificacao": "telefone",
+      "conta": "4.1.1.04"
+    },
+    "CLARO": {
+      "significado": "Telefonia (Claro)",
+      "tipo": "utilidade",
+      "classificacao": "telefone",
+      "conta": "4.1.1.04"
+    },
+    "TIM": {
+      "significado": "Telefonia (Tim)",
+      "tipo": "utilidade",
+      "classificacao": "telefone",
+      "conta": "4.1.1.04"
+    },
+    "OI": {
+      "significado": "Telefonia (Oi)",
+      "tipo": "utilidade",
+      "classificacao": "telefone",
+      "conta": "4.1.1.04"
+    },
+    "ISS": {
+      "significado": "Imposto Sobre Serviços",
+      "tipo": "imposto",
+      "classificacao": "impostos_municipais",
+      "conta": "4.1.3.02"
+    },
+    "ISSQN": {
+      "significado": "ISS Quota Nacional",
+      "tipo": "imposto",
+      "classificacao": "impostos_municipais",
+      "conta": "4.1.3.02"
+    },
+    "IPTU": {
+      "significado": "Imposto Predial Territorial Urbano",
+      "tipo": "imposto",
+      "classificacao": "impostos_municipais",
+      "conta": "4.1.3.03"
+    },
+    "PRO LABORE": {
+      "significado": "Retirada Pró-labore",
+      "tipo": "pro_labore",
+      "classificacao": "pro_labore",
+      "conta": "4.1.2.04"
+    },
+    "PROLABORE": {
+      "significado": "Retirada Pró-labore",
+      "tipo": "pro_labore",
+      "classificacao": "pro_labore",
+      "conta": "4.1.2.04"
+    },
+    "DAS": {
+      "significado": "Doc. Arrecadação Simples Nacional",
+      "tipo": "imposto",
+      "classificacao": "simples_nacional"
+    },
+    "SIMPLES": {
+      "significado": "Simples Nacional",
+      "tipo": "imposto",
+      "classificacao": "simples_nacional"
+    }
+  },
+  "lancamentos_padrao": [
+    {
+      "tipo": "TRANSFERENCIA_CONTAS",
+      "descricao": "Transferência entre Contas",
+      "debito": {
+        "conta": "1.1.1.03",
+        "nome": "Banco Destino"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Banco Origem"
+      },
+      "observacao": "Movimentação financeira - mesmo titular",
+      "fontes": [
+        "https://www.idinheiro.com.br/bancos/abreviacoes-sigla-extrato/"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "significado",
+        "siglas",
+        "extrato",
+        "bancário",
+        "TED",
+        "DOC",
+        "PIX",
+        "TBI"
+      ]
+    },
+    {
+      "tipo": "ISS_RETIDO",
+      "descricao": "ISS Retido na Fonte",
+      "debito": {
+        "conta": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "credito": {
+        "conta": "2.1.2.01",
+        "nome": "ISS a Recolher"
+      },
+      "observacao": "Retenção conforme Lei Complementar 116/2003",
+      "fontes": [
+        "https://www.serasaexperian.com.br/conteudos/doc-e-ted/"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "significado",
+        "siglas",
+        "extrato",
+        "bancário",
+        "TED",
+        "DOC",
+        "PIX",
+        "TBI"
+      ]
+    },
+    {
+      "tipo": "FOLHA_PAGAMENTO",
+      "descricao": "Apropriação de Folha de Pagamento",
+      "debito": {
+        "conta": "4.1.2.01",
+        "nome": "Despesas com Pessoal - Salários"
+      },
+      "credito": {
+        "conta": "2.1.1.01",
+        "nome": "Salários a Pagar"
+      },
+      "observacao": "Regime de competência - apropriação no mês de trabalho",
+      "fontes": [
+        "https://www.itau.com.br/empresas/pagamentos-recebimentos/sispag"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "o",
+        "que",
+        "significa",
+        "SISPAG",
+        "extrato",
+        "bancário"
+      ]
+    },
+    {
+      "tipo": "PAGAMENTO_SALARIO",
+      "descricao": "Pagamento de Salários",
+      "debito": {
+        "conta": "2.1.1.01",
+        "nome": "Salários a Pagar"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "Baixa da obrigação no momento do pagamento",
+      "fontes": [
+        "https://www.itau.com.br/empresas/pagamentos-recebimentos/sispag"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "o",
+        "que",
+        "significa",
+        "SISPAG",
+        "extrato",
+        "bancário"
+      ]
+    },
+    {
+      "tipo": "COMPRA_PRAZO",
+      "descricao": "Compra a Prazo de Fornecedor",
+      "debito": {
+        "conta": "1.1.4.01",
+        "nome": "Estoque de Mercadorias"
+      },
+      "credito": {
+        "conta": "2.1.3.01",
+        "nome": "Fornecedores a Pagar"
+      },
+      "observacao": "Aquisição de mercadorias para revenda",
+      "fontes": [
+        "https://www.itau.com.br/empresas/pagamentos-recebimentos/sispag"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "o",
+        "que",
+        "significa",
+        "SISPAG",
+        "extrato",
+        "bancário"
+      ]
+    },
+    {
+      "tipo": "PAGAMENTO_FORNECEDOR",
+      "descricao": "Pagamento a Fornecedor",
+      "debito": {
+        "conta": "2.1.3.01",
+        "nome": "Fornecedores a Pagar"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "Baixa da obrigação por pagamento",
+      "fontes": [
+        "https://www.itau.com.br/empresas/pagamentos-recebimentos/sispag"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "o",
+        "que",
+        "significa",
+        "SISPAG",
+        "extrato",
+        "bancário"
+      ]
+    },
+    {
+      "tipo": "DESPESA_BANCARIA",
+      "descricao": "Despesas Bancárias (Tarifas)",
+      "debito": {
+        "conta": "4.1.3.01",
+        "nome": "Despesas Bancárias"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "Tarifas de manutenção, TED, DOC, etc.",
+      "fontes": [
+        "https://www.infomoney.com.br/guias/iof/"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "tarifa",
+        "bancária",
+        "tipos",
+        "TAR",
+        "TXB",
+        "IOF",
+        "extrato"
+      ]
+    },
+    {
+      "tipo": "APLICACAO_FINANCEIRA",
+      "descricao": "Aplicação Financeira",
+      "debito": {
+        "conta": "1.1.1.10",
+        "nome": "Aplicações Financeiras"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "Disponibilidades de curto prazo",
+      "fontes": [
+        "https://www.onze.com.br/blog/cetip/"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "CET",
+        "CETIP",
+        "extrato",
+        "bancário",
+        "significado"
+      ]
+    },
+    {
+      "tipo": "ESTORNO",
+      "descricao": "Estorno de Lançamento",
+      "debito": {
+        "conta": "X.X.X.XX",
+        "nome": "[Conta Original a Crédito]"
+      },
+      "credito": {
+        "conta": "X.X.X.XX",
+        "nome": "[Conta Original a Débito]"
+      },
+      "observacao": "Inversão do lançamento original - manter histórico",
+      "fontes": [
+        "https://assets.bradesco/content/dam/portal-bradesco/assets/pessoajuridica/pdf/solucoes-integradas/outros/layout-de-arquivo/conciliacao_bancaria_codigos_lancamentos.pdf"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "REC",
+        "TRF",
+        "extrato",
+        "significado",
+        "recebimento",
+        "transferência"
+      ]
+    },
+    {
+      "tipo": "RENDIMENTO_APLICACAO",
+      "descricao": "Rendimento de Aplicação Financeira",
+      "debito": {
+        "conta": "1.1.1.10",
+        "nome": "Aplicações Financeiras"
+      },
+      "credito": {
+        "conta": "3.2.1.01",
+        "nome": "Receitas Financeiras"
+      },
+      "observacao": "Atualização pelo rendimento bruto",
+      "fontes": [
+        "https://comperve.ufrn.br/conteudo/concursos/prefeitura_ceara_mirim_201601/inscricao/documentos_jurados/5d78b32a1658c0a02ebede93a702765a.pdf"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "manual",
+        "completo",
+        "lançamentos",
+        "contábeis",
+        "PDF"
+      ]
+    },
+    {
+      "tipo": "RECEBIMENTO_CLIENTE",
+      "descricao": "Recebimento de Cliente",
+      "debito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "credito": {
+        "conta": "1.1.2.01",
+        "nome": "Clientes a Receber"
+      },
+      "observacao": "Baixa do direito a receber",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/69544/contabilizar-recebimento-de-clientes/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "recebimento",
+        "cliente",
+        "exemplo"
+      ]
+    },
+    {
+      "tipo": "FGTS_PROVISAO",
+      "descricao": "Provisão de FGTS (8%)",
+      "debito": {
+        "conta": "4.1.2.02",
+        "nome": "Despesas com FGTS"
+      },
+      "credito": {
+        "conta": "2.1.1.02",
+        "nome": "FGTS a Recolher"
+      },
+      "observacao": "Base: 8% sobre remuneração bruta",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/56169/lancamento-de-inss-e-fgts/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "folha",
+        "de",
+        "pagamento",
+        "FGTS",
+        "INSS"
+      ]
+    },
+    {
+      "tipo": "INSS_PROVISAO",
+      "descricao": "Provisão de INSS (Parte Empresa)",
+      "debito": {
+        "conta": "4.1.2.03",
+        "nome": "Despesas com INSS"
+      },
+      "credito": {
+        "conta": "2.1.1.03",
+        "nome": "INSS a Recolher"
+      },
+      "observacao": "Base: 20% patronal + RAT + Terceiros",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/56169/lancamento-de-inss-e-fgts/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "folha",
+        "de",
+        "pagamento",
+        "FGTS",
+        "INSS"
+      ]
+    },
+    {
+      "tipo": "DEPRECIACAO",
+      "descricao": "Depreciação de Ativo Imobilizado",
+      "debito": {
+        "conta": "4.1.4.01",
+        "nome": "Despesas com Depreciação"
+      },
+      "credito": {
+        "conta": "1.2.3.99",
+        "nome": "(-) Depreciação Acumulada"
+      },
+      "observacao": "Conforme NBC TG 27 - vida útil econômica",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/13422/lancamentos-de-depreciacao/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "depreciação",
+        "ativo",
+        "imobilizado"
+      ]
+    },
+    {
+      "tipo": "FGTS_PAGAMENTO",
+      "descricao": "Recolhimento de FGTS",
+      "debito": {
+        "conta": "2.1.1.02",
+        "nome": "FGTS a Recolher"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "Vencimento: dia 7 do mês seguinte",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/289202/provisao-de-ferias-e-13o-salario-contabilizacao/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "provisão",
+        "férias",
+        "13º",
+        "salário"
+      ]
+    },
+    {
+      "tipo": "PRO_LABORE",
+      "descricao": "Apropriação de Pró-labore",
+      "debito": {
+        "conta": "4.1.2.04",
+        "nome": "Despesas com Pró-labore"
+      },
+      "credito": {
+        "conta": "2.1.1.04",
+        "nome": "Pró-labore a Pagar"
+      },
+      "observacao": "Remuneração dos sócios administradores",
+      "fontes": [
+        "https://www.contabeis.com.br/forum/contabilidade/162147/adiantamento-pro-labore/"
+      ],
+      "confianca": 0.9,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "adiantamento",
+        "sócios",
+        "pró-labore"
+      ]
+    },
+    {
+      "tipo": "ADIANTAMENTO_SOCIO",
+      "descricao": "Adiantamento a Sócio",
+      "debito": {
+        "conta": "1.1.3.01",
+        "nome": "Adiantamentos a Sócios"
+      },
+      "credito": {
+        "conta": "1.1.1.02",
+        "nome": "Bancos Conta Movimento"
+      },
+      "observacao": "ATENÇÃO: Não é despesa! Verificar regularização",
+      "fontes": [
+        "https://www.empreendeaqui.com.br/blog/adiantamento-distribuicao-de-lucros"
+      ],
+      "confianca": 0.7,
+      "keywords": [
+        "lançamento",
+        "contábil",
+        "adiantamento",
+        "sócios",
+        "pró-labore"
+      ]
+    }
+  ],
+  "regras_classificacao": [
+    {
+      "regra": "TARIFA_BANCARIA",
+      "keywords": [
+        "tarifa",
+        "tar ",
+        "iof",
+        "ted",
+        "doc",
+        "manutenção",
+        "anuidade"
+      ],
+      "conta_debito": "4.1.3.01",
+      "conta_debito_nome": "Despesas Bancárias",
+      "confianca": 0.95
+    },
+    {
+      "regra": "FAMILIA_LEAO",
+      "keywords": [
+        "sergio",
+        "carla",
+        "victor hugo",
+        "nayara",
+        "sergio augusto",
+        "leão",
+        "leao"
+      ],
+      "conta_debito": "1.1.3.01",
+      "conta_debito_nome": "Adiantamento a Sócios",
+      "observacao": "Gastos pessoais da família Leão = Adiantamento (NUNCA despesa)",
+      "confianca": 0.9
+    },
+    {
+      "regra": "FOLHA_PAGAMENTO",
+      "keywords": [
+        "salario",
+        "folha",
+        "13",
+        "ferias",
+        "rescisao",
+        "aviso previo"
+      ],
+      "conta_debito": "4.1.2.01",
+      "conta_debito_nome": "Despesas com Pessoal",
+      "confianca": 0.85
+    },
+    {
+      "regra": "IMPOSTOS_TRABALHISTAS",
+      "keywords": [
+        "fgts",
+        "inss",
+        "gps",
+        "darf",
+        "previdencia"
+      ],
+      "conta_debito": "4.1.2.02",
+      "conta_debito_nome": "Encargos Sociais",
+      "confianca": 0.95
+    },
+    {
+      "regra": "IMPOSTOS_MUNICIPAIS",
+      "keywords": [
+        "iss",
+        "issqn",
+        "iptu"
+      ],
+      "conta_debito": "4.1.3.02",
+      "conta_debito_nome": "Impostos Municipais",
+      "confianca": 0.9
+    },
+    {
+      "regra": "ENERGIA",
+      "keywords": [
+        "enel",
+        "celg",
+        "energia",
+        "eletric",
+        "luz"
+      ],
+      "conta_debito": "4.1.1.02",
+      "conta_debito_nome": "Energia Elétrica",
+      "confianca": 0.9
+    },
+    {
+      "regra": "AGUA",
+      "keywords": [
+        "saneago",
+        "agua",
+        "sabesp",
+        "esgoto"
+      ],
+      "conta_debito": "4.1.1.03",
+      "conta_debito_nome": "Água e Esgoto",
+      "confianca": 0.9
+    },
+    {
+      "regra": "TELECOMUNICACOES",
+      "keywords": [
+        "vivo",
+        "claro",
+        "tim",
+        "oi ",
+        "internet",
+        "telefon",
+        "celular"
+      ],
+      "conta_debito": "4.1.1.04",
+      "conta_debito_nome": "Telefone e Internet",
+      "confianca": 0.85
+    },
+    {
+      "regra": "ALUGUEL",
+      "keywords": [
+        "aluguel",
+        "locacao",
+        "arrendamento",
+        "condominio"
+      ],
+      "conta_debito": "4.1.1.01",
+      "conta_debito_nome": "Aluguel e Condomínio",
+      "confianca": 0.9
+    },
+    {
+      "regra": "CLIENTE_RECEBIMENTO",
+      "keywords": [
+        "honorario",
+        "mensalidade",
+        "fatura",
+        "nf ",
+        "nota fiscal"
+      ],
+      "tipo": "ENTRADA",
+      "conta_credito": "1.1.2.01",
+      "conta_credito_nome": "Clientes a Receber",
+      "confianca": 0.8
+    }
+  ],
+  "referencias_web": [
+    {
+      "query": "o que significa SISPAG extrato bancário",
+      "title": "RELATÓRIOS PAGAMENTO BANCO ITAU SISPAG",
+      "snippet": "Boa tarde, preciso de alguma luz, eu trabalho num escritório de contabilidade e preciso pedir para o cliente um relatório de todos ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/392892/relatorios-pagamento-banco-itau-sispag/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:51.441Z"
+    },
+    {
+      "query": "COMPE significado extrato bancário compensação",
+      "title": "Compe",
+      "snippet": "O Serviço de Compensação de Cheques e Outros Papéis, que a partir daqui será denominado “Compe”, atualmente tem papel preponderante no sistema ...",
+      "source": "https://www.bcb.gov.br/ftp/deban/compe.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:52.584Z"
+    },
+    {
+      "query": "tarifa bancária tipos TAR TXB IOF extrato",
+      "title": "Tarifas bancárias",
+      "snippet": "Consulte os valores das tarifas cobradas pelas instituições financeiras para cada tipo de serviço. Com essas informações, é possível comparar o preço das ...",
+      "source": "https://www.bcb.gov.br/estabilidadefinanceira/tarifas_bancarias",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:54.521Z"
+    },
+    {
+      "query": "PAG PIX extrato bancário identificação",
+      "title": "Emitir Relatórios de Chaves Pix - Portal Gov.br",
+      "snippet": "Os relatórios de chaves Pix mostram as chaves Pix que você cadastrou e a situação de cada uma delas. Os relatórios servem para você:.",
+      "source": "https://www.gov.br/pt-br/servicos/emitir-relatorio-de-chaves-pix",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:57.163Z"
+    },
+    {
+      "query": "PAG PIX extrato bancário identificação",
+      "title": "PERGUNTAS FREQUENTES Pix",
+      "snippet": "No extrato da conta transacional, as transações do PIX (Pagamentos, recebimentos e devoluções) deverão ser apresentadas. Essas transações ...",
+      "source": "https://bis.sebrae.com.br/bis/download.zhtml?t=D&uid=b84e6b61f73e3d6c4d3f15112eff9138",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:57.163Z"
+    },
+    {
+      "query": "REC TRF extrato significado recebimento transferência",
+      "title": "glossario.pdf",
+      "snippet": "As movimentações de compras com Cartão de Débito podem ser acompanhadas no campo “EXTRATO DE COMPRAS COM. CARTÃO DE DÉBITO” onde são identificadas a data, ...",
+      "source": "https://www.caixa.gov.br/Downloads/contas-pessoa-fisica/glossario.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:38:58.420Z"
+    },
+    {
+      "query": "DEB AUT débito automático extrato bancário",
+      "title": "Débito Automático",
+      "snippet": "Você pode utilizar o Débito Automático para que os pagamentos de seus compromissos sejam feitos no dia certo e de forma segura. Contas de energia, gás, ...",
+      "source": "http://www.caixa.gov.br/voce/contas/debito_automatico_pf/Paginas/default.aspx?pk_campaign=adesaopf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:00.183Z"
+    },
+    {
+      "query": "DEB AUT débito automático extrato bancário",
+      "title": "Débito automático em conta bancária",
+      "snippet": "Os bancos somente podem debitar conta se houver autorização prévia do cliente por escrito ou por meio eletrônico. A autorização pode ocorrer no momento da ...",
+      "source": "https://www.bcb.gov.br/meubc/faqs/p/a-instituicao-financeira-pode-fazer-debitos-em-minha-conta-sem-minha-autorizacao",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:00.183Z"
+    },
+    {
+      "query": "PAGTO PGTO significado extrato banco",
+      "title": "Comprovante de pgto débito extrato bancário - Contabilidade",
+      "snippet": "Sim você deve considerar o extrato como comprovante de pagamento, e uma operação bancaria como outra qualquer, junte as operações feitas pelo ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/43299/comprovante-de-pgto-debito-extrato-bancario/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:01.621Z"
+    },
+    {
+      "query": "COB cobrança bancária extrato significado",
+      "title": "glossario.pdf",
+      "snippet": "Como exemplo, o NR.DOC 091636 de um saque, significa que a operação foi realizada no dia 09 do mês do extrato consultado, às 16 horas e 36 minutos.",
+      "source": "https://www.caixa.gov.br/Downloads/contas-pessoa-fisica/glossario.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:03.083Z"
+    },
+    {
+      "query": "COB cobrança bancária extrato significado",
+      "title": "mov tit cobranca - Contabilidade",
+      "snippet": "Bom dia Mateus, esse histórico é geralmente de quando o cliente recebe cobranças (boletos) através do banco~; O que você deve fazer é solicitar ao cliente a ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/312135/mov-tit-cobranca/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:03.083Z"
+    },
+    {
+      "query": "COB cobrança bancária extrato significado",
+      "title": "Manual de Padrões para Iniciação do Pix",
+      "snippet": "QR Code com location da cobrança imediata (Cob) + location da recorrência. Jornada 4. QR Code com: • location da cobrança com vencimento (CobV).",
+      "source": "https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Regulamento_Pix/II_ManualdePadroesparaIniciacaodoPix.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:03.083Z"
+    },
+    {
+      "query": "COB cobrança bancária extrato significado",
+      "title": "manual de navegação e-cobrança internet banking ...",
+      "snippet": "Extrato Cobrança: apresenta a movimentação financeira de títulos com dados e valores de documentos liquidados. Resumo Extrato Cobrança: apresenta resumo de ...",
+      "source": "https://www.caixa.gov.br/Downloads/cobranca-caixa/Cartilha_Cobranca_Bancaria_Internet_Banking.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:03.083Z"
+    },
+    {
+      "query": "manual completo lançamentos contábeis PDF",
+      "title": "Manual de procedimentos contábeis para Micro e ...",
+      "snippet": "5o Nível (x.x.x.x.x) - Representa as contas ANALÍTICAS que identificam os bens, direitos, obrigações, receitas e despesas e o nível que receberá os lançamentos.",
+      "source": "https://cfc.org.br/wp-content/uploads/2018/03/ManuMicro.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:04.223Z"
+    },
+    {
+      "query": "manual completo lançamentos contábeis PDF",
+      "title": "Contabilidade Básica",
+      "snippet": "de C Bächtold · Citado por 49 — Faça os lançamentos em razonetes, apuração do custo da mercadoria vendi- da, apuração do resultado do exercício e o balanço patrimonial. Contas Patrimoniais.",
+      "source": "https://redeetec.mec.gov.br/images/stories/pdf/proeja/contabil_basica.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:04.223Z"
+    },
+    {
+      "query": "apostila lançamentos contábeis partidas dobradas exemplos",
+      "title": "Contabilidade Básica",
+      "snippet": "de C Bächtold · Citado por 49 — 12.2.2 Lançamento pelo Método de Partidas. Dobradas. É também conhecido como método da causa e efeito ou método da origem e aplicação. É o método utilizado na ...",
+      "source": "https://redeetec.mec.gov.br/images/stories/pdf/proeja/contabil_basica.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:05.330Z"
+    },
+    {
+      "query": "apostila lançamentos contábeis partidas dobradas exemplos",
+      "title": "Manual de procedimentos contábeis para Micro e ...",
+      "snippet": "As operações que afetam o patrimônio das empresas devem ser registradas em forma mercantil, adotando-se, por ser praxe universal, o Método das Partidas.",
+      "source": "https://cfc.org.br/wp-content/uploads/2018/03/ManuMicro.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:05.330Z"
+    },
+    {
+      "query": "guia prático classificação contábil despesas receitas",
+      "title": "Classificação contábil: o que é e como deve ser feita",
+      "snippet": "Existe uma estrutura básica para todo plano de contas, que está organizado em 6 grandes grupos: ativos, passivos, receitas, custos, despesas e ...",
+      "source": "https://www.totvs.com/blog/gestao-financeira/classificacao-contabil/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:06.578Z"
+    },
+    {
+      "query": "guia prático classificação contábil despesas receitas",
+      "title": "Manual de procedimentos contábeis para Micro e ...",
+      "snippet": "1o Nível (x) - Identifica os Grandes Grupos Ativo, Passivo, Receitas, Despesas e Contas de Apuração. 2o Nível (x.x) - Identifica os Grupos específicos em que se ...",
+      "source": "https://cfc.org.br/wp-content/uploads/2018/03/ManuMicro.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:06.578Z"
+    },
+    {
+      "query": "guia prático classificação contábil despesas receitas",
+      "title": "Receitas e Despesas - Portal Gov.br",
+      "snippet": "1. Acessar o Portal da Transparência: http://transparencia.gov.br; · 2. No menu superior, localizar Consultas Detalhadas ➔ Receitas Públicas; · 3.",
+      "source": "https://www.gov.br/inpi/pt-br/acesso-a-informacao/receitas-e-despesas",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:06.578Z"
+    },
+    {
+      "query": "plano de contas comentado lançamentos exemplos",
+      "title": "MODELO DE PLANO DE CONTAS PARA EMPRESAS DE ...",
+      "snippet": "MODELO DE PLANO DE CONTAS PARA EMPRESAS DE GRANDE PORTE. Balancete Analítico Trimestral. Trimestre. Nome da. Empresa: Logradouro: Número: Município: Telefone: E ...",
+      "source": "https://agergs.rs.gov.br/upload/arquivos/201910/22130140-20150928122845anexo-iii-modelo-de-plano-de-contas-para-empresas-de-grande-porte.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:07.818Z"
+    },
+    {
+      "query": "lançamento contábil pagamento fornecedor partidas dobradas",
+      "title": "saldos dobrados de fornecedores - Contabilidade",
+      "snippet": "Se o valor está dobrado, a primeira coisa que você precisa fazer é verificar se foi realizada a contabilização duplicada da operação que deu ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/392959/saldos-dobrados-de-fornecedores/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:10.279Z"
+    },
+    {
+      "query": "lançamento contábil recebimento cliente exemplo",
+      "title": "Contabilizar recebimento de clientes - Contabilidade",
+      "snippet": "Penso que o lançamento correto seja. D clientes (contas a receber) C vendas (receitas) Para provisão das vendas. O recebimento penso ser assim:",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/69544/contabilizar-recebimento-de-clientes/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:11.742Z"
+    },
+    {
+      "query": "lançamento contábil folha de pagamento FGTS INSS",
+      "title": "Lançamento de INSS e FGTS - Contabilidade",
+      "snippet": "Lançamento de INSS e FGTS · 1. Lançando a Folha de Pagamento 1º passo: Lançamento dos proventos. Tipo: 3ª Fórmula (vários débitos e um só crédito)",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/56169/lancamento-de-inss-e-fgts/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:12.918Z"
+    },
+    {
+      "query": "lançamento contábil folha de pagamento FGTS INSS",
+      "title": "MANUAL DE ORIENTAÇÕES CONTÁBEIS DA FOLHA DE ...",
+      "snippet": "REGISTRO CONTÁBIL DA FOLHA DE PAGAMENTO DO MÊS DE DEZEMBRO ... utilizado para efetuar o registro contábil da apuração do INSS do exercício.",
+      "source": "https://sefaz.es.gov.br/Media/Sefaz/Downloads/1%20-%20Manual%20de%20Contabilidade%20-%20%20MCONT%20-%20Folha%20de%20Pagamento%20do%20Estado%20do%20ES.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:12.918Z"
+    },
+    {
+      "query": "lançamento contábil depreciação ativo imobilizado",
+      "title": "Lançamentos de Depreciação - Contabilidade",
+      "snippet": "Vendemos um veiculo do nosso ativo que estava registrado na contabilidade no valor de R$ 14.500,00, cuja depreciação acumulada é de R$ 724,86.",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/13422/lancamentos-de-depreciacao/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:14.267Z"
+    },
+    {
+      "query": "lançamento contábil depreciação ativo imobilizado",
+      "title": "NBC TSP 17 – Ativo Imobilizado",
+      "snippet": "Os principais pontos a serem considerados na contabilização do ativo imobilizado são o reconhecimento dos ativos, a determinação dos seus valores contábeis e ...",
+      "source": "https://cfc.org.br/wp-content/uploads/2016/02/NBC_TSP_17.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:14.267Z"
+    },
+    {
+      "query": "lançamento contábil depreciação ativo imobilizado",
+      "title": "CPC 27 Ativo Imobilizado Correlação às Normas ... - CVM",
+      "snippet": "O objetivo deste Pronunciamento é estabelecer o tratamento contábil para ativos imobilizados, de forma que os usuários das demonstrações contábeis possam ...",
+      "source": "https://conteudo.cvm.gov.br/export/sites/cvm/menu/regulados/normascontabeis/cpc/CPC_27_rev_12.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:14.267Z"
+    },
+    {
+      "query": "lançamento contábil provisão férias 13º salário",
+      "title": "provisão de férias e 13º salário - contabilização",
+      "snippet": "Na folha de pagamento qual conta que devo classificar os proventos referentes a Férias, 1/3 de férias, 13º salário, os encargos (FGTS e INSS)quando também ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/289202/provisao-de-ferias-e-13o-salario-contabilizacao/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:15.487Z"
+    },
+    {
+      "query": "lançamento contábil provisão férias 13º salário",
+      "title": "RTC 002/2022 – Contabilização do 13° Salário e Férias ...",
+      "snippet": "O presente RTC 002/2022 visa elucidar o reconhecimento dos passivos relacionados ao. 13º salário e férias, bem como os procedimentos contábeis a serem ...",
+      "source": "https://contabilidade.ro.gov.br/wp-content/uploads/2022/04/RC_002_2022_Contabilizacao_13_e_Ferias.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:15.487Z"
+    },
+    {
+      "query": "lançamento contábil provisão férias 13º salário",
+      "title": "Integração Contábil - Provisão de Férias e Décimo Terceiro",
+      "snippet": "Informe o Mês/Ano, marque o Processamento 02 e a opção Provisão de férias/13º salário conforme imagem abaixo. ... O efetivo pagamento deve ser ...",
+      "source": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=11372",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:15.487Z"
+    },
+    {
+      "query": "lançamento contábil ISS retido na fonte",
+      "title": "ISS retido na fonte - Contabilização do prestador de serviço",
+      "snippet": "O extrato bancário com os valores recebidos também é um documento auxiliar que comprova a retenção, pois o município da sede pode reclamar e exigir este imposto ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/142552/iss-retido-na-fonte-contabilizacao-do-prestador-de-servico/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:16.820Z"
+    },
+    {
+      "query": "lançamento contábil PIS COFINS lucro presumido",
+      "title": "Contabilização do Pis e Cofins sobre Lucro Presumido",
+      "snippet": "Por favor, gostaria de confirmar as contas de contabilização do Pis e Cofins sobre Lucro Presumido.Obrigada ... Veja as 3 respostas.",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/122740/contabilizacao-do-pis-e-cofins-sobre-lucro-presumido/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:18.016Z"
+    },
+    {
+      "query": "lançamento contábil IRPJ CSLL trimestral",
+      "title": "IRPJ e CSLL lucro real trimestral - Contabilidade",
+      "snippet": "Gostaria que me ajudassem, eu estou iniciando a contabilização de uma empresa optante pelo lucro real trimestral, até onde sei, o IRPJ e a CSLL é calculada em ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/25118/irpj-e-csll-lucro-real-trimestral/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:19.209Z"
+    },
+    {
+      "query": "lançamento contábil IRPJ CSLL trimestral",
+      "title": "Contribuição Social sobre o Lucro Líquido CSLL - Portal Gov.br",
+      "snippet": "A alíquota da CSLL é de 9% (nove por cento) para as pessoas jurídicas em geral, e de 15% (quinze por cento), no caso das pessoas jurídicas ...",
+      "source": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/tributos/CSLL",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:19.209Z"
+    },
+    {
+      "query": "lançamento contábil simples nacional DAS",
+      "title": "Contabilização do Simples Nacional - Contabilidade",
+      "snippet": "Você deve verificar primeiro o tipo de mercadoria que está sendo tributado, para poder tributar com a substituição tributária ou antecipação parcial.",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/19723/contabilizacao-do-simples-nacional/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:20.585Z"
+    },
+    {
+      "query": "lançamento contábil simples nacional DAS",
+      "title": "Manual do PGDAS-D e Defis - Simples Nacional",
+      "snippet": "As informações do PGDAS-D têm caráter declaratório, constituindo confissão de dívida e instrumento hábil e suficiente.",
+      "source": "https://www8.receita.fazenda.gov.br/simplesnacional/arquivos/manual/manual_pgdas-d_2018_v4.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:20.585Z"
+    },
+    {
+      "query": "lançamento contábil simples nacional DAS",
+      "title": "Escrituração contábil simplificada para micro e pequena ...",
+      "snippet": "Efetivamente, desde 1996, quando foi implantada a Lei nº 9.317, que institui o primeiro Simples Federal, em vigor até junho de 2007, havia certo desconforto e ...",
+      "source": "https://cfc.org.br/wp-content/uploads/2018/04/0_Livro_Escrituracao_contabil.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:20.585Z"
+    },
+    {
+      "query": "lançamento contábil simples nacional DAS",
+      "title": "Declarar apurações mensais do Simples Nacional",
+      "snippet": "O que é? Preencha e envie as informações relativas à atividade mensal da empresa optante pelo Simples Nacional pelo Programa Gerador do Documento de Arrecadação ...",
+      "source": "https://www.gov.br/pt-br/servicos/declarar-apuracoes-mensais-do-simples-nacional",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:20.585Z"
+    },
+    {
+      "query": "lançamento contábil adiantamento sócios pró-labore",
+      "title": "Adiantamento Pro Labore - Contabilidade",
+      "snippet": "bom dia! estou com uma duvida em uma empresa que estou contabilizando, o sócio retira seu pro labore mensal corretamente, no mês de dezembro ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/162147/adiantamento-pro-labore/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:21.845Z"
+    },
+    {
+      "query": "lançamento contábil adiantamento sócios pró-labore",
+      "title": "Integração Folha x Contábil - Parametrização",
+      "snippet": "Evento 68 – Pró-labore: Despesa com pró-labore (Resultado) Evento 69 – Adiantamento de Pró-labore: Adiantamento a sócios (Ativo). As ...",
+      "source": "https://aprendo.iob.com.br/ajudaonline/artigo.aspx?artigo=4685",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:21.845Z"
+    },
+    {
+      "query": "lançamento contábil despesas bancárias tarifas",
+      "title": "lançamento de tarifas bancarias - Contabilidade",
+      "snippet": "estou com uma pequena dúvida, preciso fazer a contabilização das tarifas bancarias mas tenho dúvidas de como fazer esse lançamento, eu penso que ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/274057/lancamento-de-tarifas-bancarias/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:22.975Z"
+    },
+    {
+      "query": "lançamento contábil despesas bancárias tarifas",
+      "title": "Tarifas bancárias",
+      "snippet": "Consulte os valores das tarifas cobradas pelas instituições financeiras para cada tipo de serviço. Com essas informações, é possível comparar o preço das ...",
+      "source": "https://www.bcb.gov.br/estabilidadefinanceira/tarifas_bancarias",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:22.975Z"
+    },
+    {
+      "query": "lançamento contábil despesas bancárias tarifas",
+      "title": "PRINCIPAIS LANÇAMENTOS CONTÁBEIS ...",
+      "snippet": "No débito relativo à tarifas de cobrança, pelo banco: D – Tarifas Bancárias (Resultado). C - Bancos Cta. Movimento (Ativo Circulante). Para visualizar a ...",
+      "source": "https://www.portaldecontabilidade.com.br/guia/transbancarias.htm",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:22.975Z"
+    },
+    {
+      "query": "lançamento contábil transferência entre contas bancárias",
+      "title": "Lançamento de transferências bancarias entre contas da ...",
+      "snippet": "Aos contadores experientes, poderiam me ajudar com uma duvida?Tem uma empresa que ela possui duas contas bancárias, Banco Itaú e Caixa Econômica, ...",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/353366/lancamento-de-transferencias-bancarias-entre-contas-da-mesma-empresa/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:24.177Z"
+    },
+    {
+      "query": "lançamento contábil aplicação financeira rendimentos",
+      "title": "Contabilização Rendimentos Aplicação Financeira",
+      "snippet": "Gostaria de um auxílio na contabilização dos valores de rendimentos sobre aplicação financeira.Pelo lançamento da aplicação financeira:D- Aplicação .",
+      "source": "https://www.contabeis.com.br/forum/contabilidade/392500/contabilizacao-rendimentos-aplicacao-financeira/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:25.412Z"
+    },
+    {
+      "query": "lançamento contábil aplicação financeira rendimentos",
+      "title": "Conselho Federal de Contabilidade explica tributação ...",
+      "snippet": "“Pelo regime de competências, os rendimentos são lançados mês a mês. Somente no momento do resgate da aplicação haverá incidência do Imposto de ...",
+      "source": "https://cfc.org.br/noticias/conselho-federal-de-contabilidade-explica-tributacao-sobre-rendimentos-nos-mercados-financeiro-e-de-capitais/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:25.412Z"
+    },
+    {
+      "query": "NBC TG lançamentos contábeis obrigatórios",
+      "title": "NBC TG – GERAL – NORMAS COMPLETAS",
+      "snippet": "A elaboração e a revisão das Normas Brasileiras de Contabilidade (NBCs) Técnicas e Profissionais, assim como dos Princípios de Contabilidade (Resolução CFC nº ...",
+      "source": "https://cfc.org.br/wp-content/uploads/2018/04/Publicacao_NBC_TG_COMPLETAS.pdf",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:26.734Z"
+    },
+    {
+      "query": "NBC TG lançamentos contábeis obrigatórios",
+      "title": "Normas Completas",
+      "snippet": "NBC TG ESTRUTURA CONCEITUAL, DOU 13/12/2019, Estrutura Conceitual para Relatório Financeiro ; NBC TG 01 (R4), DOU 22/12/2017, Redução ao Valor Recuperável de ...",
+      "source": "https://cfc.org.br/tecnica/normas-brasileiras-de-contabilidade/normas-completas/",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:26.734Z"
+    },
+    {
+      "query": "NBC TG lançamentos contábeis obrigatórios",
+      "title": "Participa + Brasil - NBC TG 1001 – CONTABILIDADE PARA ...",
+      "snippet": "2.4 A informação fornecida em demonstrações contábeis deve ser relevante (material) para a tomada de decisão dos usuários. Informação relevante ou material é ...",
+      "source": "https://www.gov.br/participamaisbrasil/nbc-tg-1001-contabilidade-para-pequenas-empresas",
+      "trusted": true,
+      "extracted_at": "2026-01-31T15:39:26.734Z"
+    }
+  ],
+  "estatisticas": {
+    "total_buscas": 41,
+    "total_resultados": 410,
+    "fontes_confiaveis": 78,
+    "lancamentos_extraidos": 17
+  }
+}

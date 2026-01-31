@@ -1,0 +1,4857 @@
+{
+  "categorias": [
+    "RECEITAS",
+    "DESPESAS",
+    "FOLHA_PAGAMENTO",
+    "IMPOSTOS",
+    "BANCARIO",
+    "ATIVO_IMOBILIZADO",
+    "ESTOQUE",
+    "TRANSITÓRIAS"
+  ],
+  "total_lancamentos": 93,
+  "keywords_index": {
+    "13": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de 13º Salário",
+        "debito": {
+          "codigo": "4.1.3.05",
+          "nome": "Despesas com 13º Salário"
+        },
+        "credito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de 13º Salário",
+        "debito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "venda": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Ganho na Venda de Imobilizado",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.3.1.01",
+          "nome": "Ganho na Alienação de Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Perda na Venda de Imobilizado",
+        "debito": {
+          "codigo": "4.3.2.01",
+          "nome": "Perda na Alienação de Imobilizado"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Custo das Mercadorias Vendidas (CMV)",
+        "debito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV - Custo das Mercadorias Vendidas"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Venda",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) Devoluções de Vendas"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "mercadoria": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Vendas",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) ICMS sobre Vendas"
+        },
+        "credito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "nf": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      }
+    ],
+    "nota fiscal": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      }
+    ],
+    "receita": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      }
+    ],
+    "prazo": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado a Prazo",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores de Imobilizado"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      }
+    ],
+    "duplicata": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Pagamento a Fornecedor",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "cliente": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Venda",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) Devoluções de Vendas"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "receber": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Venda de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.1.01",
+          "nome": "Receita de Vendas de Mercadorias"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      }
+    ],
+    "recebimento": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação ENTRADA - Baixa Transitória",
+        "debito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS"
+        },
+        "credito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Origem - Cliente/Receita/etc}"
+        }
+      }
+    ],
+    "baixa": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa Depreciação Acumulada (Venda)",
+        "debito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação ENTRADA - Baixa Transitória",
+        "debito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS"
+        },
+        "credito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Origem - Cliente/Receita/etc}"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação SAÍDA - Baixa Transitória",
+        "debito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Destino - Despesa/Fornecedor/etc}"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS"
+        }
+      }
+    ],
+    "pix": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "ted": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "transferência": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Recebimento de Duplicata",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes/Duplicatas a Receber"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Transferência para Produto Acabado",
+        "debito": {
+          "codigo": "1.1.4.04",
+          "nome": "Estoque de Produtos Acabados"
+        },
+        "credito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        }
+      }
+    ],
+    "serviço": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Manutenção",
+        "debito": {
+          "codigo": "4.1.1.07",
+          "nome": "Despesas com Manutenção"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ISS sobre Serviços",
+        "debito": {
+          "codigo": "3.1.2.01.D",
+          "nome": "(-) ISS sobre Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Tomador)",
+        "debito": {
+          "codigo": "4.1.2.xx",
+          "nome": "Despesa com Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.4.04",
+          "nome": "IR Retido a Recolher"
+        }
+      }
+    ],
+    "honorário": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços a Prazo",
+        "debito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Contábeis",
+        "debito": {
+          "codigo": "4.1.2.03",
+          "nome": "Honorários Contábeis"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Advocatícios",
+        "debito": {
+          "codigo": "4.1.2.04",
+          "nome": "Honorários Advocatícios"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "consultoria": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      }
+    ],
+    "nfse": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      }
+    ],
+    "prestação": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Prestação de Serviços à Vista",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.1.2.01",
+          "nome": "Receita de Prestação de Serviços"
+        }
+      }
+    ],
+    "juros": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Juros Ativos",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras - Juros Ativos"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas com Juros Passivos",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Juros sobre Empréstimo",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "recebidos": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Juros Ativos",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras - Juros Ativos"
+        }
+      }
+    ],
+    "rendimento": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Juros Ativos",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras - Juros Ativos"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        }
+      }
+    ],
+    "aplicação": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Juros Ativos",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras - Juros Ativos"
+        }
+      },
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Resgate de Aplicação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        }
+      }
+    ],
+    "desconto": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Desconto Obtido",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "3.2.1.02",
+          "nome": "Descontos Obtidos"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Desconto Concedido",
+        "debito": {
+          "codigo": "4.2.1.03",
+          "nome": "Descontos Concedidos"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de INSS Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      }
+    ],
+    "obtido": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Desconto Obtido",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "3.2.1.02",
+          "nome": "Descontos Obtidos"
+        }
+      }
+    ],
+    "abatimento": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Receita de Desconto Obtido",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "3.2.1.02",
+          "nome": "Descontos Obtidos"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Desconto Concedido",
+        "debito": {
+          "codigo": "4.2.1.03",
+          "nome": "Descontos Concedidos"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "investimento": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Resgate de Aplicação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        }
+      }
+    ],
+    "poupança": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "cdb": [
+      {
+        "categoria": "RECEITAS",
+        "operacao": "Rendimento de Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "3.2.1.01",
+          "nome": "Receitas Financeiras"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "aluguel": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Provisão de Aluguel a Pagar",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "2.1.2.01",
+          "nome": "Aluguéis a Pagar"
+        }
+      }
+    ],
+    "locação": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "imóvel": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "sala": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "escritório": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Aluguel",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Material de Escritório",
+        "debito": {
+          "codigo": "4.1.1.05",
+          "nome": "Material de Escritório"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "provisão": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Provisão de Aluguel a Pagar",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "2.1.2.01",
+          "nome": "Aluguéis a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Férias",
+        "debito": {
+          "codigo": "4.1.3.04",
+          "nome": "Despesas com Férias"
+        },
+        "credito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        }
+      }
+    ],
+    "pagar": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Provisão de Aluguel a Pagar",
+        "debito": {
+          "codigo": "4.1.1.01",
+          "nome": "Despesas com Aluguel"
+        },
+        "credito": {
+          "codigo": "2.1.2.01",
+          "nome": "Aluguéis a Pagar"
+        }
+      }
+    ],
+    "energia": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "elétrica": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "luz": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "enel": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "celg": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "cemig": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "copel": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Energia Elétrica",
+        "debito": {
+          "codigo": "4.1.1.02",
+          "nome": "Despesas com Energia Elétrica"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "água": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "esgoto": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "saneago": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "sabesp": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "copasa": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Água",
+        "debito": {
+          "codigo": "4.1.1.03",
+          "nome": "Despesas com Água e Esgoto"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "telefone": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "internet": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "comunicação": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "vivo": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "claro": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "tim": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "oi": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Pagamento de Telefone/Internet",
+        "debito": {
+          "codigo": "4.1.1.04",
+          "nome": "Despesas com Comunicação"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "material": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Material de Escritório",
+        "debito": {
+          "codigo": "4.1.1.05",
+          "nome": "Material de Escritório"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "papelaria": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Material de Escritório",
+        "debito": {
+          "codigo": "4.1.1.05",
+          "nome": "Material de Escritório"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "suprimento": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Material de Escritório",
+        "debito": {
+          "codigo": "4.1.1.05",
+          "nome": "Material de Escritório"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "combustível": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "gasolina": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "álcool": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "diesel": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "abastecimento": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "posto": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Combustível",
+        "debito": {
+          "codigo": "4.1.1.06",
+          "nome": "Despesas com Combustível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "manutenção": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Manutenção",
+        "debito": {
+          "codigo": "4.1.1.07",
+          "nome": "Despesas com Manutenção"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "reparo": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Manutenção",
+        "debito": {
+          "codigo": "4.1.1.07",
+          "nome": "Despesas com Manutenção"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "conserto": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Manutenção",
+        "debito": {
+          "codigo": "4.1.1.07",
+          "nome": "Despesas com Manutenção"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "tarifa": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cobrança Bancária - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "taxa": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "bancária": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "manutenção conta": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "doc": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas Bancárias - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "mora": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas com Juros Passivos",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "atraso": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas com Juros Passivos",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "multa": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesas com Juros Passivos",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "concedido": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Desconto Concedido",
+        "debito": {
+          "codigo": "4.2.1.03",
+          "nome": "Descontos Concedidos"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "publicidade": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "propaganda": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "marketing": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "anúncio": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "mídia": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Publicidade",
+        "debito": {
+          "codigo": "4.1.2.01",
+          "nome": "Despesas com Publicidade"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "seguro": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Seguros",
+        "debito": {
+          "codigo": "4.1.2.02",
+          "nome": "Despesas com Seguros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "apólice": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Seguros",
+        "debito": {
+          "codigo": "4.1.2.02",
+          "nome": "Despesas com Seguros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "prêmio": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Seguros",
+        "debito": {
+          "codigo": "4.1.2.02",
+          "nome": "Despesas com Seguros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "sinistro": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Seguros",
+        "debito": {
+          "codigo": "4.1.2.02",
+          "nome": "Despesas com Seguros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Perda de Estoque",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "contabilidade": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Contábeis",
+        "debito": {
+          "codigo": "4.1.2.03",
+          "nome": "Honorários Contábeis"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "contador": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Contábeis",
+        "debito": {
+          "codigo": "4.1.2.03",
+          "nome": "Honorários Contábeis"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "escritório contábil": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Contábeis",
+        "debito": {
+          "codigo": "4.1.2.03",
+          "nome": "Honorários Contábeis"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "advogado": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Advocatícios",
+        "debito": {
+          "codigo": "4.1.2.04",
+          "nome": "Honorários Advocatícios"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "advocatício": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Advocatícios",
+        "debito": {
+          "codigo": "4.1.2.04",
+          "nome": "Honorários Advocatícios"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "jurídico": [
+      {
+        "categoria": "DESPESAS",
+        "operacao": "Despesa com Honorários Advocatícios",
+        "debito": {
+          "codigo": "4.1.2.04",
+          "nome": "Honorários Advocatícios"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "salário": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de Salários",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "folha": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de Salários",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "pagamento": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de Salários",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de Férias",
+        "debito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Pagamento",
+        "debito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ICMS",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ISS",
+        "debito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Pagamento a Fornecedor",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação SAÍDA - Baixa Transitória",
+        "debito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Destino - Despesa/Fornecedor/etc}"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS"
+        }
+      }
+    ],
+    "funcionário": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Salários",
+        "debito": {
+          "codigo": "4.1.3.01",
+          "nome": "Despesas com Salários"
+        },
+        "credito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de INSS Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      }
+    ],
+    "inss": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de INSS Patronal",
+        "debito": {
+          "codigo": "4.1.3.02",
+          "nome": "INSS Patronal"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de INSS Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de INSS",
+        "debito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "patronal": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de INSS Patronal",
+        "debito": {
+          "codigo": "4.1.3.02",
+          "nome": "INSS Patronal"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      }
+    ],
+    "previdência": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de INSS Patronal",
+        "debito": {
+          "codigo": "4.1.3.02",
+          "nome": "INSS Patronal"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      }
+    ],
+    "contribuição": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de INSS Patronal",
+        "debito": {
+          "codigo": "4.1.3.02",
+          "nome": "INSS Patronal"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "PIS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) PIS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.02",
+          "nome": "PIS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "COFINS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) COFINS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.03",
+          "nome": "COFINS a Recolher"
+        }
+      }
+    ],
+    "retenção": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de INSS Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de IRRF Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Tomador)",
+        "debito": {
+          "codigo": "4.1.2.xx",
+          "nome": "Despesa com Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.4.04",
+          "nome": "IR Retido a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Prestador)",
+        "debito": {
+          "codigo": "1.1.8.02",
+          "nome": "IR a Compensar"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "gps": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de INSS",
+        "debito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "guia previdência": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de INSS",
+        "debito": {
+          "codigo": "2.1.4.01",
+          "nome": "INSS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "fgts": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de FGTS",
+        "debito": {
+          "codigo": "4.1.3.03",
+          "nome": "FGTS"
+        },
+        "credito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de FGTS",
+        "debito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "fundo garantia": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de FGTS",
+        "debito": {
+          "codigo": "4.1.3.03",
+          "nome": "FGTS"
+        },
+        "credito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        }
+      }
+    ],
+    "grf": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de FGTS",
+        "debito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "guia fgts": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de FGTS",
+        "debito": {
+          "codigo": "2.1.4.02",
+          "nome": "FGTS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "irrf": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de IRRF Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de IRRF",
+        "debito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Tomador)",
+        "debito": {
+          "codigo": "4.1.2.xx",
+          "nome": "Despesa com Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.4.04",
+          "nome": "IR Retido a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Prestador)",
+        "debito": {
+          "codigo": "1.1.8.02",
+          "nome": "IR a Compensar"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "imposto renda": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Retenção de IRRF Funcionário",
+        "debito": {
+          "codigo": "2.1.3.01",
+          "nome": "Salários a Pagar"
+        },
+        "credito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de IRRF",
+        "debito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "IRPJ Estimativa",
+        "debito": {
+          "codigo": "4.3.1.01",
+          "nome": "Despesa com IRPJ"
+        },
+        "credito": {
+          "codigo": "2.1.5.05",
+          "nome": "IRPJ a Recolher"
+        }
+      }
+    ],
+    "darf": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de IRRF",
+        "debito": {
+          "codigo": "2.1.4.03",
+          "nome": "IRRF a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de PIS/COFINS",
+        "debito": {
+          "codigo": "2.1.5.02/03",
+          "nome": "PIS/COFINS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "férias": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de Férias",
+        "debito": {
+          "codigo": "4.1.3.04",
+          "nome": "Despesas com Férias"
+        },
+        "credito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de Férias",
+        "debito": {
+          "codigo": "2.1.3.02",
+          "nome": "Férias a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "décimo terceiro": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de 13º Salário",
+        "debito": {
+          "codigo": "4.1.3.05",
+          "nome": "Despesas com 13º Salário"
+        },
+        "credito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pagamento de 13º Salário",
+        "debito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "gratificação": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de 13º Salário",
+        "debito": {
+          "codigo": "4.1.3.05",
+          "nome": "Despesas com 13º Salário"
+        },
+        "credito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        }
+      }
+    ],
+    "natalina": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Provisão de 13º Salário",
+        "debito": {
+          "codigo": "4.1.3.05",
+          "nome": "Despesas com 13º Salário"
+        },
+        "credito": {
+          "codigo": "2.1.3.03",
+          "nome": "13º Salário a Pagar"
+        }
+      }
+    ],
+    "pró-labore": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Pagamento",
+        "debito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "prolabore": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Pagamento",
+        "debito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "sócio": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        }
+      }
+    ],
+    "administrador": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        }
+      }
+    ],
+    "retirada": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Pró-labore - Provisão",
+        "debito": {
+          "codigo": "4.1.3.06",
+          "nome": "Pró-labore"
+        },
+        "credito": {
+          "codigo": "2.1.3.04",
+          "nome": "Pró-labore a Pagar"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Saque/Retirada em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "vale transporte": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Transporte - Compra",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Transporte - Apropriação",
+        "debito": {
+          "codigo": "4.1.3.07",
+          "nome": "Despesas com Vale Transporte"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        }
+      }
+    ],
+    "vt": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Transporte - Compra",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "passagem": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Transporte - Compra",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "apropriação": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Transporte - Apropriação",
+        "debito": {
+          "codigo": "4.1.3.07",
+          "nome": "Despesas com Vale Transporte"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Vale Transporte Antecipado"
+        }
+      }
+    ],
+    "vale refeição": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "vale alimentação": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "vr": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "va": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "ticket": [
+      {
+        "categoria": "FOLHA_PAGAMENTO",
+        "operacao": "Vale Refeição/Alimentação - Compra",
+        "debito": {
+          "codigo": "1.1.9.02",
+          "nome": "Vale Refeição Antecipado"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "icms": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Vendas",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) ICMS sobre Vendas"
+        },
+        "credito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Compras (Crédito)",
+        "debito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Apuração de ICMS (transferência)",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ICMS",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "imposto": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Vendas",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) ICMS sobre Vendas"
+        },
+        "credito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "IOF sobre Aplicação",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "circulação": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Vendas",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) ICMS sobre Vendas"
+        },
+        "credito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        }
+      }
+    ],
+    "crédito": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Compras (Crédito)",
+        "debito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Liberação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar CP"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      }
+    ],
+    "recuperar": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Compras (Crédito)",
+        "debito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      }
+    ],
+    "compra": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ICMS sobre Compras (Crédito)",
+        "debito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Compra",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "apuração": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Apuração de ICMS (transferência)",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        }
+      }
+    ],
+    "compensação": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Apuração de ICMS (transferência)",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.8.01",
+          "nome": "ICMS a Recuperar"
+        }
+      }
+    ],
+    "guia": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ICMS",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ISS",
+        "debito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "dare": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ICMS",
+        "debito": {
+          "codigo": "2.1.5.01",
+          "nome": "ICMS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "pis": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "PIS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) PIS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.02",
+          "nome": "PIS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de PIS/COFINS",
+        "debito": {
+          "codigo": "2.1.5.02/03",
+          "nome": "PIS/COFINS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "faturamento": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "PIS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) PIS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.02",
+          "nome": "PIS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "COFINS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) COFINS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.03",
+          "nome": "COFINS a Recolher"
+        }
+      }
+    ],
+    "cofins": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "COFINS sobre Faturamento",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) COFINS sobre Faturamento"
+        },
+        "credito": {
+          "codigo": "2.1.5.03",
+          "nome": "COFINS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de PIS/COFINS",
+        "debito": {
+          "codigo": "2.1.5.02/03",
+          "nome": "PIS/COFINS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "iss": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ISS sobre Serviços",
+        "debito": {
+          "codigo": "3.1.2.01.D",
+          "nome": "(-) ISS sobre Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        }
+      },
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ISS",
+        "debito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "issqn": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ISS sobre Serviços",
+        "debito": {
+          "codigo": "3.1.2.01.D",
+          "nome": "(-) ISS sobre Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        }
+      }
+    ],
+    "municipal": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "ISS sobre Serviços",
+        "debito": {
+          "codigo": "3.1.2.01.D",
+          "nome": "(-) ISS sobre Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        }
+      }
+    ],
+    "dam": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento de ISS",
+        "debito": {
+          "codigo": "2.1.5.04",
+          "nome": "ISS a Recolher"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "irpj": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "IRPJ Estimativa",
+        "debito": {
+          "codigo": "4.3.1.01",
+          "nome": "Despesa com IRPJ"
+        },
+        "credito": {
+          "codigo": "2.1.5.05",
+          "nome": "IRPJ a Recolher"
+        }
+      }
+    ],
+    "pessoa jurídica": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "IRPJ Estimativa",
+        "debito": {
+          "codigo": "4.3.1.01",
+          "nome": "Despesa com IRPJ"
+        },
+        "credito": {
+          "codigo": "2.1.5.05",
+          "nome": "IRPJ a Recolher"
+        }
+      }
+    ],
+    "csll": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "CSLL Estimativa",
+        "debito": {
+          "codigo": "4.3.1.02",
+          "nome": "Despesa com CSLL"
+        },
+        "credito": {
+          "codigo": "2.1.5.06",
+          "nome": "CSLL a Recolher"
+        }
+      }
+    ],
+    "contribuição social": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "CSLL Estimativa",
+        "debito": {
+          "codigo": "4.3.1.02",
+          "nome": "Despesa com CSLL"
+        },
+        "credito": {
+          "codigo": "2.1.5.06",
+          "nome": "CSLL a Recolher"
+        }
+      }
+    ],
+    "das": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "simples": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "nacional": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "mei": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "microempresa": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Pagamento DAS (Simples Nacional)",
+        "debito": {
+          "codigo": "4.3.1.03",
+          "nome": "Simples Nacional"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "tomador": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Tomador)",
+        "debito": {
+          "codigo": "4.1.2.xx",
+          "nome": "Despesa com Serviços"
+        },
+        "credito": {
+          "codigo": "2.1.4.04",
+          "nome": "IR Retido a Recolher"
+        }
+      }
+    ],
+    "compensar": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Prestador)",
+        "debito": {
+          "codigo": "1.1.8.02",
+          "nome": "IR a Compensar"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "prestador": [
+      {
+        "categoria": "IMPOSTOS",
+        "operacao": "Retenção de IR sobre Serviços (Prestador)",
+        "debito": {
+          "codigo": "1.1.8.02",
+          "nome": "IR a Compensar"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      }
+    ],
+    "depósito": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Depósito em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        }
+      }
+    ],
+    "banco": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Depósito em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        }
+      }
+    ],
+    "conta": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Depósito em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        }
+      }
+    ],
+    "saque": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Saque/Retirada em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "caixa": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Saque/Retirada em Conta Corrente",
+        "debito": {
+          "codigo": "1.1.1.01",
+          "nome": "Caixa"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "mesma titularidade": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        }
+      }
+    ],
+    "entre contas": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Transferência Entre Contas (mesma titularidade)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Destino"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Origem"
+        }
+      }
+    ],
+    "fundo": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Aplicação Financeira",
+        "debito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        }
+      }
+    ],
+    "resgate": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Resgate de Aplicação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "1.1.3.xx",
+          "nome": "Aplicações Financeiras"
+        }
+      }
+    ],
+    "iof": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "IOF sobre Aplicação",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "CPMF/IOF Débito Automático",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF/Tributos Financeiros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "operação financeira": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "IOF sobre Aplicação",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "empréstimo": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Liberação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar CP"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Pagamento Parcela",
+        "debito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      },
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Juros sobre Empréstimo",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "liberação": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Liberação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar CP"
+        }
+      }
+    ],
+    "financiamento": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Liberação",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco Conta Movimento"
+        },
+        "credito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar CP"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado a Prazo",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores de Imobilizado"
+        }
+      }
+    ],
+    "parcela": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Pagamento Parcela",
+        "debito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "amortização": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Empréstimo Bancário - Pagamento Parcela",
+        "debito": {
+          "codigo": "2.1.6.01",
+          "nome": "Empréstimos a Pagar"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Amortização de Intangível",
+        "debito": {
+          "codigo": "4.1.4.02",
+          "nome": "Despesa com Amortização"
+        },
+        "credito": {
+          "codigo": "1.2.4.01.D",
+          "nome": "(-) Amortização Acumulada"
+        }
+      }
+    ],
+    "encargo": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Juros sobre Empréstimo",
+        "debito": {
+          "codigo": "4.2.1.02",
+          "nome": "Juros Passivos"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "cheque": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cheque Devolvido",
+        "debito": {
+          "codigo": "1.1.2.02",
+          "nome": "Cheques a Receber"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "devolvido": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cheque Devolvido",
+        "debito": {
+          "codigo": "1.1.2.02",
+          "nome": "Cheques a Receber"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "sustado": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cheque Devolvido",
+        "debito": {
+          "codigo": "1.1.2.02",
+          "nome": "Cheques a Receber"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "sem fundo": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cheque Devolvido",
+        "debito": {
+          "codigo": "1.1.2.02",
+          "nome": "Cheques a Receber"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "cobrança": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cobrança Bancária - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "boleto": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cobrança Bancária - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "liquidação": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "Cobrança Bancária - Tarifas",
+        "debito": {
+          "codigo": "4.2.1.01",
+          "nome": "Despesas Bancárias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "débito": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "CPMF/IOF Débito Automático",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF/Tributos Financeiros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "automático": [
+      {
+        "categoria": "BANCARIO",
+        "operacao": "CPMF/IOF Débito Automático",
+        "debito": {
+          "codigo": "4.2.1.04",
+          "nome": "IOF/Tributos Financeiros"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco"
+        }
+      }
+    ],
+    "imobilizado": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado a Prazo",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores de Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      }
+    ],
+    "aquisição": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "ativo fixo": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "máquina": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "equipamento": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "veículo": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "móvel": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Imobilizado à Vista",
+        "debito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado - {tipo}"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "depreciação": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Depreciação Mensal",
+        "debito": {
+          "codigo": "4.1.4.01",
+          "nome": "Despesa com Depreciação"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa Depreciação Acumulada (Venda)",
+        "debito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      }
+    ],
+    "desgaste": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Depreciação Mensal",
+        "debito": {
+          "codigo": "4.1.4.01",
+          "nome": "Despesa com Depreciação"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        }
+      }
+    ],
+    "vida útil": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Depreciação Mensal",
+        "debito": {
+          "codigo": "4.1.4.01",
+          "nome": "Despesa com Depreciação"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        }
+      }
+    ],
+    "alienação": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa de Imobilizado por Venda",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Ganho na Venda de Imobilizado",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.3.1.01",
+          "nome": "Ganho na Alienação de Imobilizado"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Perda na Venda de Imobilizado",
+        "debito": {
+          "codigo": "4.3.2.01",
+          "nome": "Perda na Alienação de Imobilizado"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      }
+    ],
+    "ganho": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Ganho na Venda de Imobilizado",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.3.1.01",
+          "nome": "Ganho na Alienação de Imobilizado"
+        }
+      }
+    ],
+    "lucro": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Ganho na Venda de Imobilizado",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        },
+        "credito": {
+          "codigo": "3.3.1.01",
+          "nome": "Ganho na Alienação de Imobilizado"
+        }
+      }
+    ],
+    "perda": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Perda na Venda de Imobilizado",
+        "debito": {
+          "codigo": "4.3.2.01",
+          "nome": "Perda na Alienação de Imobilizado"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Perda de Estoque",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "prejuízo": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Perda na Venda de Imobilizado",
+        "debito": {
+          "codigo": "4.3.2.01",
+          "nome": "Perda na Alienação de Imobilizado"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      }
+    ],
+    "acumulada": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Baixa Depreciação Acumulada (Venda)",
+        "debito": {
+          "codigo": "1.2.3.xx.D",
+          "nome": "(-) Depreciação Acumulada"
+        },
+        "credito": {
+          "codigo": "1.2.3.xx",
+          "nome": "Imobilizado"
+        }
+      }
+    ],
+    "software": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Software/Intangível",
+        "debito": {
+          "codigo": "1.2.4.01",
+          "nome": "Software/Intangível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Amortização de Intangível",
+        "debito": {
+          "codigo": "4.1.4.02",
+          "nome": "Despesa com Amortização"
+        },
+        "credito": {
+          "codigo": "1.2.4.01.D",
+          "nome": "(-) Amortização Acumulada"
+        }
+      }
+    ],
+    "intangível": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Software/Intangível",
+        "debito": {
+          "codigo": "1.2.4.01",
+          "nome": "Software/Intangível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Amortização de Intangível",
+        "debito": {
+          "codigo": "4.1.4.02",
+          "nome": "Despesa com Amortização"
+        },
+        "credito": {
+          "codigo": "1.2.4.01.D",
+          "nome": "(-) Amortização Acumulada"
+        }
+      }
+    ],
+    "licença": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Software/Intangível",
+        "debito": {
+          "codigo": "1.2.4.01",
+          "nome": "Software/Intangível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "sistema": [
+      {
+        "categoria": "ATIVO_IMOBILIZADO",
+        "operacao": "Aquisição de Software/Intangível",
+        "debito": {
+          "codigo": "1.2.4.01",
+          "nome": "Software/Intangível"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "estoque": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Entrada de Estoque por Devolução de Venda",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV"
+        }
+      }
+    ],
+    "fornecedor": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias à Vista",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Mercadorias a Prazo",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Pagamento a Fornecedor",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "quitação": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Pagamento a Fornecedor",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Caixa/Banco"
+        }
+      }
+    ],
+    "cmv": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Custo das Mercadorias Vendidas (CMV)",
+        "debito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV - Custo das Mercadorias Vendidas"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "custo": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Custo das Mercadorias Vendidas (CMV)",
+        "debito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV - Custo das Mercadorias Vendidas"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "baixa estoque": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Custo das Mercadorias Vendidas (CMV)",
+        "debito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV - Custo das Mercadorias Vendidas"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "devolução": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Compra",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Venda",
+        "debito": {
+          "codigo": "3.1.1.01.D",
+          "nome": "(-) Devoluções de Vendas"
+        },
+        "credito": {
+          "codigo": "1.1.2.01",
+          "nome": "Clientes a Receber"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Entrada de Estoque por Devolução de Venda",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV"
+        }
+      }
+    ],
+    "retorno": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Devolução de Compra",
+        "debito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "entrada": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Entrada de Estoque por Devolução de Venda",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.1.1.01.C",
+          "nome": "CMV"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação ENTRADA - Baixa Transitória",
+        "debito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS"
+        },
+        "credito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Origem - Cliente/Receita/etc}"
+        }
+      }
+    ],
+    "quebra": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Perda de Estoque",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "avaria": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Perda de Estoque",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "ajuste": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Sobra)",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.3.1.02",
+          "nome": "Outras Receitas"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Falta)",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "inventário": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Sobra)",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.3.1.02",
+          "nome": "Outras Receitas"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Falta)",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "sobra": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Sobra)",
+        "debito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        },
+        "credito": {
+          "codigo": "3.3.1.02",
+          "nome": "Outras Receitas"
+        }
+      }
+    ],
+    "falta": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Ajuste de Inventário (Falta)",
+        "debito": {
+          "codigo": "4.3.2.02",
+          "nome": "Perdas de Estoque"
+        },
+        "credito": {
+          "codigo": "1.1.4.01",
+          "nome": "Estoque de Mercadorias"
+        }
+      }
+    ],
+    "matéria-prima": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      }
+    ],
+    "insumo": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      }
+    ],
+    "fabricação": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Compra de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        },
+        "credito": {
+          "codigo": "2.1.1.xx",
+          "nome": "Fornecedores"
+        }
+      }
+    ],
+    "requisição": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Requisição de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        },
+        "credito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        }
+      }
+    ],
+    "produção": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Requisição de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        },
+        "credito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        }
+      },
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Transferência para Produto Acabado",
+        "debito": {
+          "codigo": "1.1.4.04",
+          "nome": "Estoque de Produtos Acabados"
+        },
+        "credito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        }
+      }
+    ],
+    "ordem": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Requisição de Matéria-Prima",
+        "debito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        },
+        "credito": {
+          "codigo": "1.1.4.02",
+          "nome": "Estoque de Matéria-Prima"
+        }
+      }
+    ],
+    "produto acabado": [
+      {
+        "categoria": "ESTOQUE",
+        "operacao": "Transferência para Produto Acabado",
+        "debito": {
+          "codigo": "1.1.4.04",
+          "nome": "Estoque de Produtos Acabados"
+        },
+        "credito": {
+          "codigo": "1.1.4.03",
+          "nome": "Produtos em Elaboração"
+        }
+      }
+    ],
+    "ofx": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "importação": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "transferência recebida": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - ENTRADA de Dinheiro (Crédito no Extrato)",
+        "debito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        },
+        "credito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS (Passivo)"
+        }
+      }
+    ],
+    "saída": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação SAÍDA - Baixa Transitória",
+        "debito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Destino - Despesa/Fornecedor/etc}"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS"
+        }
+      }
+    ],
+    "transferência enviada": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Importação OFX - SAÍDA de Dinheiro (Débito no Extrato)",
+        "debito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS (Ativo)"
+        },
+        "credito": {
+          "codigo": "1.1.1.xx",
+          "nome": "Banco (Sicredi/Bradesco/etc)"
+        }
+      }
+    ],
+    "classificação": [
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação ENTRADA - Baixa Transitória",
+        "debito": {
+          "codigo": "2.1.9.01",
+          "nome": "Transitória CRÉDITOS"
+        },
+        "credito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Origem - Cliente/Receita/etc}"
+        }
+      },
+      {
+        "categoria": "TRANSITÓRIAS",
+        "operacao": "Classificação SAÍDA - Baixa Transitória",
+        "debito": {
+          "codigo": "xxx",
+          "nome": "{Conta de Destino - Despesa/Fornecedor/etc}"
+        },
+        "credito": {
+          "codigo": "1.1.9.01",
+          "nome": "Transitória DÉBITOS"
+        }
+      }
+    ]
+  }
+}
