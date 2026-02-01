@@ -43,6 +43,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -156,6 +163,9 @@ export function ClassificationDialog({
   const [newAccountCode, setNewAccountCode] = useState('');
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountType, setNewAccountType] = useState('EXPENSE');
+  const [selectedParentCode, setSelectedParentCode] = useState('');
+  const [parentAccounts, setParentAccounts] = useState<{code: string; name: string}[]>([]);
+  const [loadingNextCode, setLoadingNextCode] = useState(false);
   
   // Aprendizado
   const [saveAsRule, setSaveAsRule] = useState(false);
@@ -180,12 +190,19 @@ export function ClassificationDialog({
     if (!tenant?.id) return;
     const { data } = await supabase
       .from('chart_of_accounts')
-      .select('id, code, name, type')
+      .select('id, code, name, account_type')
       .eq('tenant_id', tenant.id)
       .eq('is_active', true)
       .eq('is_analytical', true)
       .order('code');
-    if (data) setAccounts(data);
+    if (data) {
+      // Mapear account_type para type para manter compatibilidade
+      const mappedData = data.map(acc => ({
+        ...acc,
+        type: acc.account_type
+      }));
+      setAccounts(mappedData);
+    }
   };
 
   const loadMatchingRules = async () => {
@@ -198,6 +215,92 @@ export function ClassificationDialog({
     });
     if (data) setMatchingRules(data);
   };
+
+  // ============================================================================
+  // CARREGAR CONTAS PAI PARA CRIAR NOVAS CONTAS
+  // ============================================================================
+
+  const loadParentAccounts = async (accountType: string) => {
+    if (!tenant?.id) return;
+    
+    // Prefixos baseados no tipo de conta
+    const prefixMap: Record<string, string[]> = {
+      'EXPENSE': ['4.1', '4.2', '4.3', '4.4', '4.5'],      // Despesas
+      'REVENUE': ['3.1', '3.2'],                           // Receitas
+      'ASSET': ['1.1', '1.2', '1.3'],                      // Ativos
+      'LIABILITY': ['2.1', '2.2', '2.3']                   // Passivos
+    };
+    
+    const prefixes = prefixMap[accountType] || ['4.1'];
+    
+    // Buscar contas sintéticas (nível 3) como opções de pai
+    const { data } = await supabase
+      .from('chart_of_accounts')
+      .select('code, name')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .eq('is_analytical', false)
+      .order('code');
+    
+    if (data) {
+      // Filtrar apenas contas que sejam nível 3 (X.X.X) dos prefixos válidos
+      const filtered = data.filter(acc => {
+        const parts = acc.code.split('.');
+        return parts.length === 3 && prefixes.some(p => acc.code.startsWith(p));
+      });
+      setParentAccounts(filtered);
+      
+      // Selecionar primeira opção automaticamente
+      if (filtered.length > 0) {
+        const firstCode = filtered[0].code;
+        setSelectedParentCode(firstCode);
+        calculateNextCode(firstCode);
+      }
+    }
+  };
+
+  // Calcular próximo código disponível
+  const calculateNextCode = async (parentCode: string) => {
+    if (!tenant?.id || !parentCode) return;
+    
+    setLoadingNextCode(true);
+    try {
+      // Buscar todas as contas filhas do pai selecionado
+      const { data } = await supabase
+        .from('chart_of_accounts')
+        .select('code')
+        .eq('tenant_id', tenant.id)
+        .like('code', `${parentCode}.%`)
+        .order('code', { ascending: false })
+        .limit(1);
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        // Extrair o último número e incrementar
+        const lastCode = data[0].code;
+        const parts = lastCode.split('.');
+        const lastNumber = parseInt(parts[parts.length - 1]) || 0;
+        nextNumber = lastNumber + 1;
+      }
+      
+      // Formatar com dois dígitos
+      const nextCode = `${parentCode}.${nextNumber.toString().padStart(2, '0')}`;
+      setNewAccountCode(nextCode);
+    } catch (err) {
+      console.error('Erro ao calcular próximo código:', err);
+    } finally {
+      setLoadingNextCode(false);
+    }
+  };
+
+  // Carregar contas pai quando action muda para create_account
+  useEffect(() => {
+    if (action === 'create_account' && newAccountType) {
+      setSelectedParentCode('');
+      setNewAccountCode('');
+      loadParentAccounts(newAccountType);
+    }
+  }, [action, newAccountType, tenant?.id]);
 
   if (!transaction) return null;
 
@@ -258,17 +361,21 @@ export function ClassificationDialog({
 
     setLoading(true);
     try {
-      const balanceType = (newAccountType === 'EXPENSE' || newAccountType === 'ASSET') ? 'DEBIT' : 'CREDIT';
+      // Determinar natureza: DEVEDORA para Ativo/Despesa, CREDORA para Passivo/Receita
+      const nature = (newAccountType === 'EXPENSE' || newAccountType === 'ASSET' || newAccountType === 'DESPESA' || newAccountType === 'ATIVO') ? 'DEVEDORA' : 'CREDORA';
+      const level = newAccountCode.split('.').length;
+      
       const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
           tenant_id: tenant?.id,
           code: newAccountCode,
           name: newAccountName,
-          type: newAccountType,
+          account_type: newAccountType,
+          nature: nature,
+          level: level,
           is_analytical: true,
-          is_active: true,
-          balance_type: balanceType
+          is_active: true
         })
         .select()
         .single();
@@ -725,29 +832,28 @@ export function ClassificationDialog({
           {/* CRIAR CONTA */}
           {action === 'create_account' && (
             <div className="border border-amber-200 rounded-lg p-3 bg-amber-50/50 space-y-3">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Código</Label>
-                  <Input
-                    value={newAccountCode}
-                    onChange={(e) => setNewAccountCode(e.target.value)}
-                    placeholder="4.1.1.XX"
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-xs">Nome</Label>
-                  <Input
-                    value={newAccountName}
-                    onChange={(e) => setNewAccountName(e.target.value)}
-                    placeholder="Nome da conta"
-                    className="h-8 text-xs"
-                  />
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                  Dr. Cícero
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Sempre criar contas específicas
+                </span>
               </div>
+
+              {/* 1. Tipo da Conta */}
               <div>
-                <Label className="text-xs">Tipo</Label>
-                <RadioGroup value={newAccountType} onValueChange={setNewAccountType} className="flex gap-4 mt-1">
+                <Label className="text-xs font-medium">1. Tipo de Conta</Label>
+                <RadioGroup 
+                  value={newAccountType} 
+                  onValueChange={(val) => {
+                    setNewAccountType(val);
+                    setSelectedParentCode('');
+                    setNewAccountCode('');
+                    loadParentAccounts(val);
+                  }} 
+                  className="flex gap-4 mt-1"
+                >
                   {[{ v: 'EXPENSE', l: 'Despesa' }, { v: 'REVENUE', l: 'Receita' }, { v: 'ASSET', l: 'Ativo' }, { v: 'LIABILITY', l: 'Passivo' }].map(t => (
                     <div key={t.v} className="flex items-center space-x-1">
                       <RadioGroupItem value={t.v} id={`type_${t.v}`} />
@@ -756,7 +862,94 @@ export function ClassificationDialog({
                   ))}
                 </RadioGroup>
               </div>
-              <Button onClick={handleCreateAccount} disabled={loading || !newAccountCode || !newAccountName} className="w-full" size="sm">
+
+              {/* 2. Categoria Pai - Com filtro de busca */}
+              {parentAccounts.length > 0 && (
+                <div>
+                  <Label className="text-xs font-medium">2. Categoria (Conta Pai) - Digite para filtrar</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full h-8 justify-between text-xs font-normal"
+                      >
+                        {selectedParentCode ? (
+                          <span>
+                            <span className="font-mono">{selectedParentCode}</span> - {parentAccounts.find(a => a.code === selectedParentCode)?.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Selecione ou digite...</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar categoria..." className="h-8 text-xs" />
+                        <CommandList>
+                          <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                          <CommandGroup>
+                            {parentAccounts.map((acc) => (
+                              <CommandItem
+                                key={acc.code}
+                                value={`${acc.code} ${acc.name}`}
+                                onSelect={() => {
+                                  setSelectedParentCode(acc.code);
+                                  calculateNextCode(acc.code);
+                                }}
+                                className="text-xs"
+                              >
+                                <span className="font-mono font-medium">{acc.code}</span>
+                                <span className="ml-2 text-muted-foreground">{acc.name}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {/* 3. Código Automático + Nome */}
+              {selectedParentCode && (
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label className="text-xs font-medium">3. Código</Label>
+                    {loadingNextCode ? (
+                      <div className="h-8 flex items-center justify-center bg-muted rounded">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="h-8 flex items-center px-2 bg-green-50 border border-green-200 rounded text-xs font-mono font-bold text-green-700">
+                        {newAccountCode || '...'}
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Auto-gerado</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs font-medium">4. Nome da Conta</Label>
+                    <Input
+                      value={newAccountName}
+                      onChange={(e) => setNewAccountName(e.target.value)}
+                      placeholder="Ex: Publicações e Assinaturas"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Preview */}
+              {newAccountCode && newAccountName && (
+                <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs">
+                  <div className="font-medium text-blue-800 mb-1">Preview:</div>
+                  <div className="font-mono text-blue-700">
+                    {newAccountCode} - {newAccountName}
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={handleCreateAccount} disabled={loading || !newAccountCode || !newAccountName || loadingNextCode} className="w-full" size="sm">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
                 Criar Conta
               </Button>

@@ -567,17 +567,30 @@ export class BoletoReconciliationService {
 
       result.entriesCreated = lines.length;
 
-      // 8. Marcar transação bancária como conciliada
-      const { error: updateTxError } = await supabase
-        .from('bank_transactions')
-        .update({
-          matched: true,
-          journal_entry_id: entryId
-        })
-        .eq('id', match.bankTransactionId);
+      // 8. RECONCILIAR VIA RPC OFICIAL
+      // Dr. Cícero: Toda reconciliação DEVE passar pelo RPC
+      const { data: reconcileResult, error: rpcError } = await supabase.rpc('reconcile_transaction', {
+        p_transaction_id: match.bankTransactionId,
+        p_journal_entry_id: entryId,
+        p_actor: 'boleto-service'
+      });
 
-      if (updateTxError) {
-        result.errors.push('Aviso: Lançamento criado mas transação não marcada como conciliada');
+      if (rpcError || !reconcileResult?.success) {
+        // Fallback: trigger garante consistência
+        const { error: updateTxError } = await supabase
+          .from('bank_transactions')
+          .update({
+            matched: true,
+            journal_entry_id: entryId,
+            is_reconciled: true,
+            status: 'reconciled',
+            reconciled_at: new Date().toISOString()
+          })
+          .eq('id', match.bankTransactionId);
+
+        if (updateTxError) {
+          result.errors.push('Aviso: Lançamento criado mas transação não marcada como conciliada');
+        }
       }
 
       result.success = true;

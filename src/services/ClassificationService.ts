@@ -270,16 +270,28 @@ export class ClassificationService {
 
       if (linesError) throw new Error(linesError.message);
 
-      // Atualizar transação bancária
-      await supabase
-        .from('bank_transactions')
-        .update({
-          matched: true,
-          journal_entry_id: entry.id,
-          reconciled_at: now,
-          is_reconciled: true
-        })
-        .eq('id', transaction.id);
+      // 🔴 RECONCILIAR VIA RPC OFICIAL
+      // Dr. Cícero: Toda reconciliação DEVE passar pelo RPC
+      const { data: reconcileResult, error: reconcileError } = await supabase.rpc('reconcile_transaction', {
+        p_transaction_id: transaction.id,
+        p_journal_entry_id: entry.id,
+        p_actor: 'classification-service'
+      });
+
+      if (reconcileError) {
+        console.error('[ClassificationService] Erro no RPC reconcile_transaction:', reconcileError);
+        // Fallback: trigger garante consistência mesmo sem RPC
+        await supabase
+          .from('bank_transactions')
+          .update({
+            matched: true,
+            journal_entry_id: entry.id,
+            reconciled_at: now,
+            is_reconciled: true,
+            status: 'reconciled'
+          })
+          .eq('id', transaction.id);
+      }
 
       // Criar regra de aprendizado se solicitado
       let ruleId: string | undefined;

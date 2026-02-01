@@ -48,6 +48,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -190,6 +197,9 @@ export function ClassificationPanel({
   const [newAccountCode, setNewAccountCode] = useState('');
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountType, setNewAccountType] = useState<string>('EXPENSE');
+  const [selectedParentCode, setSelectedParentCode] = useState('');
+  const [parentAccounts, setParentAccounts] = useState<{code: string, name: string}[]>([]);
+  const [loadingNextCode, setLoadingNextCode] = useState(false);
   
   // Estados para aprendizado IA
   const [saveAsRule, setSaveAsRule] = useState(false);
@@ -214,13 +224,20 @@ export function ClassificationPanel({
     
     const { data } = await supabase
       .from('chart_of_accounts')
-      .select('id, code, name, type, is_analytical')
+      .select('id, code, name, account_type, is_analytical')
       .eq('tenant_id', tenant.id)
       .eq('is_active', true)
       .eq('is_analytical', true)
       .order('code');
     
-    if (data) setAccounts(data);
+    if (data) {
+      // Mapear account_type para type para manter compatibilidade
+      const mappedData = data.map(acc => ({
+        ...acc,
+        type: acc.account_type
+      }));
+      setAccounts(mappedData);
+    }
   };
 
   const loadMatchingRules = async () => {
@@ -234,6 +251,117 @@ export function ClassificationPanel({
     });
     
     if (data) setMatchingRules(data);
+  };
+
+  // ============================================================================
+  // CARREGAR CONTAS PAI PARA CRIAR NOVAS CONTAS
+  // ============================================================================
+
+  const loadParentAccounts = async (accountType: string) => {
+    if (!tenant?.id) return;
+    
+    console.log('[ClassificationPanel] Carregando contas pai para tipo:', accountType);
+    
+    // Prefixos baseados no tipo de conta
+    const prefixMap: Record<string, string[]> = {
+      'EXPENSE': ['4.1', '4.2', '4.3', '4.4', '4.5'],      // Despesas
+      'REVENUE': ['3.1', '3.2'],                           // Receitas
+      'ASSET': ['1.1', '1.2', '1.3'],                      // Ativos
+      'LIABILITY': ['2.1', '2.2', '2.3']                   // Passivos
+    };
+    
+    const prefixes = prefixMap[accountType] || ['4.1'];
+    
+    // Buscar contas sintéticas (nível 3) como opções de pai
+    const { data, error } = await supabase
+      .from('chart_of_accounts')
+      .select('code, name')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .eq('is_analytical', false)
+      .order('code');
+    
+    if (error) {
+      console.error('[ClassificationPanel] Erro ao carregar contas pai:', error);
+      return;
+    }
+    
+    if (data) {
+      // Filtrar apenas contas que sejam nível 3 (X.X.X) dos prefixos válidos
+      const filtered = data.filter(acc => {
+        const parts = acc.code.split('.');
+        return parts.length === 3 && prefixes.some(p => acc.code.startsWith(p));
+      });
+      
+      console.log('[ClassificationPanel] Contas pai encontradas:', filtered.length, filtered);
+      setParentAccounts(filtered);
+      
+      // Selecionar primeira opção automaticamente e calcular código
+      if (filtered.length > 0) {
+        const firstCode = filtered[0].code;
+        setSelectedParentCode(firstCode);
+        // Calcular próximo código imediatamente
+        calculateNextCode(firstCode);
+      }
+    }
+  };
+
+  // Carregar contas pai quando tipo muda OU quando action muda para create_account
+  useEffect(() => {
+    if (action === 'create_account' && newAccountType) {
+      // Reset estados
+      setSelectedParentCode('');
+      setNewAccountCode('');
+      // Carregar contas pai
+      loadParentAccounts(newAccountType);
+    }
+  }, [newAccountType, action, tenant?.id]);
+
+  // Calcular próximo código disponível
+  const calculateNextCode = async (parentCode: string) => {
+    if (!tenant?.id || !parentCode) {
+      console.log('[ClassificationPanel] calculateNextCode: tenant ou parentCode vazio', { tenantId: tenant?.id, parentCode });
+      return;
+    }
+    
+    console.log('[ClassificationPanel] Calculando próximo código para:', parentCode);
+    setLoadingNextCode(true);
+    try {
+      // Buscar todas as contas filhas do pai selecionado
+      const { data, error } = await supabase
+        .from('chart_of_accounts')
+        .select('code')
+        .eq('tenant_id', tenant.id)
+        .like('code', `${parentCode}.%`)
+        .order('code', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('[ClassificationPanel] Erro ao buscar códigos:', error);
+        return;
+      }
+      
+      console.log('[ClassificationPanel] Último código encontrado:', data);
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        // Extrair o último número e incrementar
+        const lastCode = data[0].code;
+        const parts = lastCode.split('.');
+        const lastNumber = parseInt(parts[parts.length - 1]) || 0;
+        nextNumber = lastNumber + 1;
+      }
+      
+      // Formatar com dois dígitos
+      const nextCode = `${parentCode}.${nextNumber.toString().padStart(2, '0')}`;
+      console.log('[ClassificationPanel] Próximo código:', nextCode);
+      setNewAccountCode(nextCode);
+      setSelectedParentCode(parentCode);
+    } catch (err) {
+      console.error('Erro ao calcular próximo código:', err);
+    } finally {
+      setLoadingNextCode(false);
+    }
   };
 
   // ============================================================================
@@ -354,16 +482,21 @@ export function ClassificationPanel({
 
     setLoading(true);
     try {
+      // Determinar natureza: DEVEDORA para Ativo/Despesa, CREDORA para Passivo/Receita
+      const nature = (newAccountType === 'EXPENSE' || newAccountType === 'ASSET' || newAccountType === 'DESPESA' || newAccountType === 'ATIVO') ? 'DEVEDORA' : 'CREDORA';
+      const level = newAccountCode.split('.').length;
+      
       const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
           tenant_id: tenant?.id,
           code: newAccountCode,
           name: newAccountName,
-          type: newAccountType,
+          account_type: newAccountType,
+          nature: nature,
+          level: level,
           is_analytical: true,
-          is_active: true,
-          balance_type: newAccountType === 'EXPENSE' || newAccountType === 'ASSET' ? 'DEBIT' : 'CREDIT'
+          is_active: true
         })
         .select()
         .single();
@@ -820,35 +953,27 @@ export function ClassificationPanel({
           <CardHeader className="py-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Criar Nova Conta
+              Criar Nova Conta Específica
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                Dr. Cícero
+              </Badge>
             </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Regra: Sempre criar contas específicas para não acumular em genéricas
+            </p>
           </CardHeader>
           <CardContent className="py-2 space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <Label className="text-xs">Código</Label>
-                <Input
-                  value={newAccountCode}
-                  onChange={(e) => setNewAccountCode(e.target.value)}
-                  placeholder="4.1.1.XX"
-                  className="h-8 text-xs font-mono"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs">Nome</Label>
-                <Input
-                  value={newAccountName}
-                  onChange={(e) => setNewAccountName(e.target.value)}
-                  placeholder="Nome da conta"
-                  className="h-8 text-xs"
-                />
-              </div>
-            </div>
+            {/* Tipo da Conta - Primeiro para filtrar categorias */}
             <div>
-              <Label className="text-xs">Tipo</Label>
+              <Label className="text-xs font-medium">1. Tipo de Conta</Label>
               <RadioGroup 
                 value={newAccountType} 
-                onValueChange={setNewAccountType}
+                onValueChange={(val) => {
+                  setNewAccountType(val);
+                  setSelectedParentCode('');
+                  setNewAccountCode('');
+                  loadParentAccounts(val);
+                }}
                 className="flex gap-4 mt-1"
               >
                 <div className="flex items-center space-x-1">
@@ -869,9 +994,73 @@ export function ClassificationPanel({
                 </div>
               </RadioGroup>
             </div>
+
+            {/* Categoria Pai */}
+            {parentAccounts.length > 0 && (
+              <div>
+                <Label className="text-xs font-medium">2. Categoria (Conta Pai)</Label>
+                <Select
+                  value={selectedParentCode}
+                  onValueChange={(val) => {
+                    setSelectedParentCode(val);
+                    calculateNextCode(val);
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Selecione a categoria..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parentAccounts.map((acc) => (
+                      <SelectItem key={acc.code} value={acc.code} className="text-xs">
+                        <span className="font-mono">{acc.code}</span> - {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Código Automático + Nome */}
+            {selectedParentCode && (
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs font-medium">3. Código</Label>
+                  {loadingNextCode ? (
+                    <div className="h-8 flex items-center justify-center bg-muted rounded">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="h-8 flex items-center px-2 bg-green-50 border border-green-200 rounded text-xs font-mono font-bold text-green-700">
+                      {newAccountCode || '...'}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Auto-gerado</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs font-medium">4. Nome da Conta</Label>
+                  <Input
+                    value={newAccountName}
+                    onChange={(e) => setNewAccountName(e.target.value)}
+                    placeholder="Ex: Publicações e Assinaturas"
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Preview do Lançamento */}
+            {newAccountCode && newAccountName && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs">
+                <div className="font-medium text-blue-800 mb-1">Preview:</div>
+                <div className="font-mono text-blue-700">
+                  {newAccountCode} - {newAccountName}
+                </div>
+              </div>
+            )}
+
             <Button 
               onClick={handleCreateAccount} 
-              disabled={loading || !newAccountCode || !newAccountName}
+              disabled={loading || !newAccountCode || !newAccountName || loadingNextCode}
               className="w-full"
               size="sm"
             >

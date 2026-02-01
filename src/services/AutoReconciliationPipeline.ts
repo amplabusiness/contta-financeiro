@@ -293,18 +293,23 @@ class AutoReconciliationPipelineService {
       const step6 = this.createStep('update_records');
       result.steps.push(step6);
 
-      // Atualizar transação
+      // RECONCILIAR VIA RPC OFICIAL
+      // Dr. Cícero: Toda reconciliação DEVE passar pelo RPC
+      const { data: reconcileResult, error: rpcError } = await supabase.rpc('reconcile_transaction', {
+        p_transaction_id: transactionId,
+        p_journal_entry_id: result.accountingEntryId,
+        p_actor: 'auto-pipeline'
+      });
+
+      // Atualizar campos adicionais (não cobertos pelo RPC)
       await supabase
         .from('bank_transactions')
         .update({
-          matched: true,
           auto_matched: true,
           needs_review: false,
           suggested_client_id: clientId,
           identification_confidence: confidence,
           identification_method: method,
-          journal_entry_id: result.accountingEntryId,
-          reconciled_at: new Date().toISOString(),
           reconciliation_method: 'auto_pipeline'
         })
         .eq('id', transactionId);
@@ -322,7 +327,7 @@ class AutoReconciliationPipelineService {
       }
 
       step6.status = 'completed';
-      step6.result = { transactionUpdated: true, invoiceUpdated: !!invoice };
+      step6.result = { transactionUpdated: true, invoiceUpdated: !!invoice, rpcUsed: !rpcError };
 
       // STEP 7: Registrar feedback para aprendizado (se configurado)
       if (this.config.registerFeedback) {

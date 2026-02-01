@@ -648,15 +648,16 @@ export default function SuperConciliation() {
             .order('transaction_date', { ascending: true });
 
         // Filtros por aba:
-        // - Pendentes: transações NÃO conciliadas (aguardando classificação)
-        // - Revisão/Auditoria: transações JÁ CONCILIADAS (para revisar e reclassificar se necessário)
+        // GOVERNANÇA DR. CÍCERO: journal_entry_id é a FONTE DE VERDADE
+        // - Pendentes: transações SEM lançamento contábil (aguardando classificação)
+        // - Revisão/Auditoria: transações COM lançamento contábil (para revisar)
         if (viewMode === 'pending') {
+             // Transações que NÃO TÊM lançamento contábil vinculado
              query = query
-                .eq('matched', false);
+                .is('journal_entry_id', null);
         } else if (viewMode === 'review') {
-             // Mostrar transações JÁ CONCILIADAS para auditoria/reclassificação
+             // Transações que JÁ TÊM lançamento contábil para auditoria/reclassificação
              query = query
-                .eq('matched', true)
                 .not('journal_entry_id', 'is', null);
         }
 
@@ -742,11 +743,14 @@ export default function SuperConciliation() {
     };
 
   useEffect(() => {
+    if (!tenant?.id) return;
+    
     const fetchAccounts = async () => {
         // Primeiro verificar se existe alguma conta
         const { data: anyAccount, error: checkError } = await supabase
             .from('chart_of_accounts')
             .select('id')
+            .eq('tenant_id', tenant.id)
             .limit(1);
 
         // Se não existir nenhuma conta, auto-inicializar o plano de contas
@@ -785,6 +789,7 @@ export default function SuperConciliation() {
         const { data } = await supabase
             .from('chart_of_accounts')
             .select('code, name')
+            .eq('tenant_id', tenant.id)
             .eq('is_analytical', true)
             .eq('is_active', true)
             .or('code.ilike.3.%,code.ilike.4.%,code.ilike.2.1.%,code.ilike.1.1.2.%,code.ilike.1.1.1.%,code.ilike.1.1.3.%')
@@ -792,7 +797,7 @@ export default function SuperConciliation() {
         if (data) setAvailableAccounts(data);
     };
     fetchAccounts();
-  }, []);
+  }, [tenant?.id]);
 
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const pagedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -1537,15 +1542,16 @@ export default function SuperConciliation() {
       {/* ACTION BUTTONS */}
       <div className="flex justify-end mb-2 px-1 shrink-0 w-full lg:w-auto">
         <div className="flex flex-col gap-2 w-full sm:w-[300px]">
-            {suggestion && !selectedTx?.matched && (
+            {/* GOVERNANÇA: Sugestão IA só aparece se NÃO tem lançamento contábil */}
+            {suggestion && !selectedTx?.journal_entry_id && (
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-center text-slate-500 italic bg-blue-50/50 py-1 rounded">
                     <CheckCircle2 className="h-3 w-3 text-blue-400" />
                     Aprendizado Automático (Dr. Cícero) Ativo
                 </div>
             )}
             
-            {/* Botão de Classificação Obrigatória - Dr. Cícero */}
-            {selectedTx && !selectedTx.matched && (
+            {/* Botão de Classificação - SÓ aparece se NÃO tem journal_entry_id */}
+            {selectedTx && !selectedTx.journal_entry_id && (
                 <Button 
                     className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all hover:scale-[1.02]" 
                     onClick={() => setClassificationDialogOpen(true)}
@@ -1555,8 +1561,8 @@ export default function SuperConciliation() {
                 </Button>
             )}
             
-            {/* Botão de Reclassificação - para transações já conciliadas */}
-            {selectedTx?.matched && (
+            {/* Botão de Reclassificação - SÓ aparece se JÁ tem journal_entry_id */}
+            {selectedTx?.journal_entry_id && (
                 <Button 
                     className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-md transition-all hover:scale-[1.02]" 
                     onClick={() => setClassificationDialogOpen(true)}
@@ -1566,7 +1572,8 @@ export default function SuperConciliation() {
                 </Button>
             )}
             
-            {selectedTx?.matched ? (
+            {/* Botão Desfazer - SÓ aparece se tem journal_entry_id */}
+            {selectedTx?.journal_entry_id ? (
                  <Button 
                     className="w-full gap-2" 
                     variant="outline"
@@ -1594,7 +1601,7 @@ export default function SuperConciliation() {
             )}
             
             {/* Botões Premium - Impacto e Educador */}
-            {selectedTx && !selectedTx.matched && suggestion && suggestion.entries?.length > 0 && (
+            {selectedTx && !selectedTx.journal_entry_id && suggestion && suggestion.entries?.length > 0 && (
               <div className="flex gap-2 w-full">
                 <Button 
                     variant="outline" 
@@ -1708,9 +1715,10 @@ export default function SuperConciliation() {
                 </div>
                 
                 {/* 🤖 AI FIRST - Resumo de Classificação em Lote */}
-                {viewMode === 'pending' && transactions.filter(t => !t.matched).length > 0 && (
+                {/* GOVERNANÇA: usa journal_entry_id como fonte de verdade */}
+                {viewMode === 'pending' && transactions.filter(t => !t.journal_entry_id).length > 0 && (
                     <AIBatchSummary
-                        transactions={transactions.filter(t => !t.matched).map(t => ({
+                        transactions={transactions.filter(t => !t.journal_entry_id).map(t => ({
                             id: t.id,
                             description: t.description,
                             amount: t.amount,
@@ -1745,9 +1753,17 @@ export default function SuperConciliation() {
                 <div className="w-[60px] shrink-0 text-[10px] text-slate-500">{new Date(tx.date).toLocaleDateString().slice(0,5)}</div>
 
                 <div className="flex-1 font-medium text-[10px] truncate leading-tight" title={tx.description}>
-                    {tx.matched && <CheckCircle2 className="h-2 w-2 inline text-green-600 mr-1" />}
-                    {tx.auto_matched && !tx.matched && <Sparkles className="h-2 w-2 inline text-amber-500 mr-1" title="Auto-identificado" />}
+                    {/* GOVERNANÇA: journal_entry_id é fonte de verdade, matched pode estar inconsistente */}
+                    {tx.journal_entry_id && <CheckCircle2 className="h-2 w-2 inline text-green-600 mr-1" title="Classificada (lançamento contábil existe)" />}
+                    {tx.auto_matched && !tx.journal_entry_id && <Sparkles className="h-2 w-2 inline text-amber-500 mr-1" title="Auto-identificado (aguardando classificação)" />}
                     {tx.description}
+                    {/* Badge de STATUS INCONSISTENTE - alerta visual quando há descompasso */}
+                    {tx.journal_entry_id && !tx.matched && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 bg-orange-100 text-orange-700 px-1 rounded text-[8px] font-normal" title="Status inconsistente: lançamento existe mas status era pendente (trigger corrigiu)">
+                        <AlertTriangle className="h-2 w-2" />
+                        Sync
+                      </span>
+                    )}
                     {/* Badges de automação */}
                     {tx.suggested_client_name && (
                       <span className="ml-1 inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1 rounded text-[8px] font-normal" title={`Cliente: ${tx.suggested_client_name} (${tx.identification_confidence}%)`}>
