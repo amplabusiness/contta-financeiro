@@ -1,0 +1,179 @@
+{
+  "competencia": "2025-02",
+  "funcionarios": [
+    {
+      "nome": "AMANDA AMBROSIO",
+      "cargo": "ANALISTA ADM/FINANCEIRO",
+      "salario_base": 3800,
+      "adiantamento": 1520,
+      "inss": 354.82,
+      "irrf": 135.34,
+      "total_descontos": 2010.1599999999999,
+      "liquido": 1789.8400000000001,
+      "fgts": 304
+    },
+    {
+      "nome": "CLAUDIA",
+      "cargo": "BABA",
+      "salario_base": 2500,
+      "adiantamento": 1000,
+      "inss": 203.82,
+      "irrf": 2.77,
+      "total_descontos": 1206.59,
+      "liquido": 1293.41,
+      "fgts": 200
+    },
+    {
+      "nome": "DEUZA RESENDE DE JESUS",
+      "cargo": "ANALISTA DP",
+      "salario_base": 3000,
+      "adiantamento": 1200,
+      "inss": 258.82,
+      "irrf": 36.15,
+      "total_descontos": 1494.97,
+      "liquido": 1505.03,
+      "fgts": 240
+    },
+    {
+      "nome": "ERICK FABRICIO",
+      "cargo": "ANALISTA DP",
+      "salario_base": 4000,
+      "adiantamento": 1600,
+      "inss": 378.82,
+      "irrf": 161.74,
+      "total_descontos": 2140.56,
+      "liquido": 1859.44,
+      "fgts": 320
+    },
+    {
+      "nome": "FABIANA MARIA DA SILVA MENDONCA",
+      "cargo": "BABA",
+      "salario_base": 2300,
+      "adiantamento": 920,
+      "inss": 185.82,
+      "irrf": 0,
+      "total_descontos": 1105.82,
+      "liquido": 1194.18,
+      "fgts": 184
+    },
+    {
+      "nome": "JESSYCA DE FREITAS",
+      "cargo": "ANALISTA DP",
+      "salario_base": 3700,
+      "adiantamento": 1480,
+      "inss": 342.82,
+      "irrf": 122.14,
+      "total_descontos": 1944.96,
+      "liquido": 1755.04,
+      "fgts": 296
+    },
+    {
+      "nome": "JORDANA TEIXEIRA",
+      "cargo": "ANALISTA ADM/FINANCEIRO",
+      "salario_base": 3500,
+      "adiantamento": 1400,
+      "inss": 318.82,
+      "irrf": 95.74,
+      "total_descontos": 1814.56,
+      "liquido": 1685.44,
+      "fgts": 280
+    },
+    {
+      "nome": "JOSIMAR DOS SANTOS MOTA",
+      "cargo": "COORDENADOR CONTABIL",
+      "salario_base": 3762,
+      "adiantamento": 1504.8000000000002,
+      "inss": 350.26,
+      "irrf": 130.32,
+      "total_descontos": 1985.38,
+      "liquido": 1776.62,
+      "fgts": 300.96
+    },
+    {
+      "nome": "LILIAN",
+      "cargo": "SERVICOS GERAIS",
+      "salario_base": 2612.5,
+      "adiantamento": 1045,
+      "inss": 213.95,
+      "irrf": 10.45,
+      "total_descontos": 1269.4,
+      "liquido": 1343.1,
+      "fgts": 209
+    },
+    {
+      "nome": "LUCIANA",
+      "cargo": "ANALISTA DP",
+      "salario_base": 3500,
+      "adiantamento": 1400,
+      "inss": 318.82,
+      "irrf": 95.74,
+      "total_descontos": 1814.56,
+      "liquido": 1685.44,
+      "fgts": 280
+    },
+    {
+      "nome": "LUCIANE ROSA",
+      "cargo": "ANALISTA DP",
+      "salario_base": 3300,
+      "adiantamento": 1320,
+      "inss": 294.82,
+      "irrf": 69.34,
+      "total_descontos": 1684.1599999999999,
+      "liquido": 1615.8400000000001,
+      "fgts": 264
+    },
+    {
+      "nome": "RAIMUNDO PEREIRA MOREIRA",
+      "cargo": "CASEIRO",
+      "salario_base": 2687.5,
+      "adiantamento": 1075,
+      "inss": 221.32,
+      "irrf": 15.52,
+      "total_descontos": 1311.84,
+      "liquido": 1375.66,
+      "fgts": 215
+    },
+    {
+      "nome": "SERGIO AUGUSTO DE OLIVEIRA LEAO",
+      "cargo": "AUXILIAR ADMINISTRATIVO",
+      "salario_base": 2950,
+      "adiantamento": 1180,
+      "inss": 252.82,
+      "irrf": 32.85,
+      "total_descontos": 1465.67,
+      "liquido": 1484.33,
+      "fgts": 236
+    },
+    {
+      "nome": "THANINY",
+      "cargo": "ANALISTA DP",
+      "salario_base": 4000,
+      "adiantamento": 1600,
+      "inss": 378.82,
+      "irrf": 161.74,
+      "total_descontos": 2140.56,
+      "liquido": 1859.44,
+      "fgts": 320
+    },
+    {
+      "nome": "THAYNARA CONCEICAO DE MELO",
+      "cargo": "ANALISTA CONTABIL",
+      "salario_base": 3727.75,
+      "adiantamento": 1491.1000000000001,
+      "inss": 346.15,
+      "irrf": 125.8,
+      "total_descontos": 1963.0500000000002,
+      "liquido": 1764.6999999999998,
+      "fgts": 298.22
+    }
+  ],
+  "totais": {
+    "total_proventos": 49339.75,
+    "total_descontos": 25352.24,
+    "total_liquido": 23987.51,
+    "total_inss": 4420.7,
+    "total_irrf": 1195.64,
+    "total_fgts": 3947.18,
+    "total_adiantamento": 19735.9
+  }
+}
