@@ -26,6 +26,12 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -34,9 +40,15 @@ import {
   FileText,
   Search,
   Filter,
+  Info,
+  Scale,
+  BookOpen,
+  ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getDashboardBalances } from "@/lib/accountMapping";
+import { ReconciliationSheet } from "@/components/reconciliation/ReconciliationSheet";
 
 interface Client {
   id: string;
@@ -118,6 +130,15 @@ const FeesAnalysis = () => {
     openingBalanceCount: 0,
     openingBalanceAmount: 0,
   });
+  
+  // Estado para saldo contábil (fonte oficial)
+  const [accountingBalance, setAccountingBalance] = useState<{
+    saldoFinal: number;
+    saldoInicial: number;
+    debitos: number;
+    creditos: number;
+  } | null>(null);
+  
   const [overdueSegmentation, setOverdueSegmentation] = useState<OverdueSegmentation>({
     oneMonth: { count: 0, amount: 0, clients: [] },
     twoMonths: { count: 0, amount: 0, clients: [] },
@@ -127,6 +148,9 @@ const FeesAnalysis = () => {
   const [proBonoClients, setProBonoClients] = useState<Client[]>([]);
   const [groupMemberIds, setGroupMemberIds] = useState<Set<string>>(new Set());
   const [mainPayerIds, setMainPayerIds] = useState<Set<string>>(new Set());
+  
+  // Estado para Painel de Reconciliação
+  const [reconciliationOpen, setReconciliationOpen] = useState(false);
 
   // =====================================================
   // FUNÇÕES DE CARREGAMENTO DE DADOS
@@ -432,6 +456,16 @@ const FeesAnalysis = () => {
         console.warn("Error fetching opening balance:", openingBalanceError);
       }
 
+      // Fetch accounting balance (fonte oficial: conta 1.1.2.01)
+      try {
+        const [year, month] = selectedMonth.split("-");
+        const balances = await getDashboardBalances(parseInt(year), parseInt(month));
+        setAccountingBalance(balances.receber);
+      } catch (accountingError) {
+        console.warn("Error fetching accounting balance:", accountingError);
+        setAccountingBalance(null);
+      }
+
       // Calculate statistics with opening balance
       calculateStatistics(invoicesData || [], clientsData || [], openingBalanceData || []);
 
@@ -597,8 +631,20 @@ const FeesAnalysis = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                     Total Faturado
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="w-3 h-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">
+                            <strong>Visão Operacional:</strong> Soma de todas as faturas emitidas no período.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -616,8 +662,21 @@ const FeesAnalysis = () => {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                     Total Recebido
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="w-3 h-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">
+                            <strong>Visão Operacional:</strong> Faturas com status "pago" no período.
+                            A contabilidade registra recebimentos na conta Banco.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -637,8 +696,21 @@ const FeesAnalysis = () => {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    A Receber
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                    A Receber (Faturas)
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="w-3 h-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">
+                            <strong>Visão Operacional:</strong> Faturas com status "pendente" no período selecionado.
+                            Não inclui valores atrasados ou saldo de abertura.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -658,8 +730,21 @@ const FeesAnalysis = () => {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                     Inadimplência
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="w-3 h-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">
+                            <strong>Visão Operacional:</strong> Soma de faturas atrasadas + saldo de abertura pendente.
+                            Para a visão contábil oficial, consulte a conta 1.1.2.01.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -677,6 +762,95 @@ const FeesAnalysis = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Alerta de Divergência: Operacional vs Contábil */}
+            {accountingBalance && (() => {
+              const operationalTotal = monthlyStats.totalPending + monthlyStats.overdueAmount + monthlyStats.openingBalanceAmount;
+              const accountingTotal = accountingBalance.saldoFinal;
+              const divergence = Math.abs(operationalTotal - accountingTotal);
+              const hasDivergence = divergence > 0.01;
+
+              if (!hasDivergence) return null;
+
+              return (
+                <Alert className="mb-6 border-amber-300 bg-amber-50">
+                  <Scale className="h-4 w-4 text-amber-600" />
+                  <AlertTitle className="text-amber-800 font-semibold flex items-center gap-2">
+                    Divergência entre Visão Operacional e Contábil
+                    <Badge variant="outline" className="text-amber-700 border-amber-400">
+                      Governança
+                    </Badge>
+                  </AlertTitle>
+                  <AlertDescription className="mt-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="p-3 bg-white rounded-lg border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-medium text-gray-700">Visão Operacional (Faturas)</span>
+                        </div>
+                        <p className="text-lg font-bold text-blue-700">{formatCurrency(operationalTotal)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Pendentes + Atrasadas + Saldo Abertura
+                        </p>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg border border-amber-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <BookOpen className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium text-gray-700">Visão Contábil (1.1.2.01)</span>
+                          <Badge className="bg-green-100 text-green-700 text-[10px]">OFICIAL</Badge>
+                        </div>
+                        <p className="text-lg font-bold text-green-700">{formatCurrency(accountingTotal)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Clientes a Receber - Plano de Contas
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-amber-100/50 rounded-lg border border-amber-200 mb-3">
+                      <p className="text-sm text-amber-800">
+                        <strong>Diferença:</strong> {formatCurrency(divergence)}
+                      </p>
+                      <p className="text-xs text-amber-700 mt-2">
+                        <strong>Possíveis causas:</strong>
+                      </p>
+                      <ul className="text-xs text-amber-700 mt-1 list-disc list-inside space-y-0.5">
+                        <li>Faturas sem lançamento contábil correspondente</li>
+                        <li>Lançamentos contábeis manuais sem fatura</li>
+                        <li>Diferenças no saldo de abertura</li>
+                        <li>Ajustes contábeis pendentes de registro operacional</li>
+                      </ul>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                      <div className="text-xs text-blue-800">
+                        <p className="font-medium mb-1">📘 Regra de Governança Contta</p>
+                        <p>A <strong>contabilidade (1.1.2.01)</strong> é a fonte da verdade oficial para fins fiscais, 
+                        auditoria e fechamento. O módulo de faturas é uma visão operacional para gestão de cobrança.</p>
+                      </div>
+                    </div>
+                    {/* Botão Analisar Divergência */}
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        onClick={() => setReconciliationOpen(true)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        <Scale className="w-4 h-4 mr-2" />
+                        Analisar Divergência
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
+
+            {/* Painel de Reconciliação */}
+            <ReconciliationSheet
+              open={reconciliationOpen}
+              onOpenChange={setReconciliationOpen}
+              operationalTotal={monthlyStats.totalPending + monthlyStats.overdueAmount + monthlyStats.openingBalanceAmount}
+              accountingTotal={accountingBalance?.saldoFinal || 0}
+              selectedMonth={selectedMonth}
+            />
 
             {/* Overdue Segmentation */}
             {(monthlyStats.overdueCount > 0 || monthlyStats.openingBalanceCount > 0) && (

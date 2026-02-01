@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/data/expensesData";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -131,62 +131,60 @@ export function DefaultEvolutionChart() {
             Nenhum dado de inadimplência encontrado
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
-                <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  className="text-xs"
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  className="text-xs"
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name) => (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{formatCurrency(Number(value))}</span>
+          <ChartContainer config={chartConfig} className="h-[300px] w-full !aspect-auto">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                className="text-xs"
+                tickFormatter={(value) => formatCurrency(value)}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name) => (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{formatCurrency(Number(value))}</span>
+                      </div>
+                    )}
+                    labelFormatter={(label, payload) => {
+                      const item = payload?.[0]?.payload;
+                      return (
+                        <div className="space-y-1">
+                          <div className="font-medium">{label}</div>
+                          {item && (
+                            <div className="text-xs text-muted-foreground">
+                              {item.count} fatura{item.count !== 1 ? "s" : ""} em atraso
+                            </div>
+                          )}
                         </div>
-                      )}
-                      labelFormatter={(label, payload) => {
-                        const item = payload?.[0]?.payload;
-                        return (
-                          <div className="space-y-1">
-                            <div className="font-medium">{label}</div>
-                            {item && (
-                              <div className="text-xs text-muted-foreground">
-                                {item.count} fatura{item.count !== 1 ? "s" : ""} em atraso
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }}
-                    />
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="hsl(var(--destructive))"
-                  fillOpacity={1}
-                  fill="url(#colorAmount)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                      );
+                    }}
+                  />
+                }
+              />
+              <Area
+                type="monotone"
+                dataKey="amount"
+                stroke="hsl(var(--destructive))"
+                fillOpacity={1}
+                fill="url(#colorAmount)"
+                strokeWidth={2}
+              />
+            </AreaChart>
           </ChartContainer>
         )}
       </CardContent>

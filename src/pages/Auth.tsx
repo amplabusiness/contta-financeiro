@@ -24,24 +24,28 @@ import {
   BarChart3,
   Wallet,
   PieChart,
+  Brain,
+  Lock,
+  FileCheck,
 } from "lucide-react";
 
-// Informações genéricas do sistema SaaS
+// Informações institucionais do sistema CONTTA (versão premium)
 const CONTTA_INFO = {
-  nome: "Contta",
-  slogan: "Sistema de Gestão Financeira para Escritórios Contábeis",
-  descricao: "Simplifique a gestão financeira do seu escritório com automação inteligente e relatórios em tempo real.",
+  nome: "CONTTA",
+  slogan: "Plataforma Financeira e Contábil com Governança por IA",
+  descricao: "Controle financeiro, contabilidade integrada e auditoria contínua em um único sistema. Projetado para escritórios contábeis, gestores financeiros e decisores.",
   recursos: [
-    { icon: Calculator, texto: "Contabilidade automatizada" },
-    { icon: BarChart3, texto: "Relatórios em tempo real" },
-    { icon: Wallet, texto: "Gestão de honorários" },
-    { icon: PieChart, texto: "Análise de rentabilidade" },
+    { icon: CheckCircle, texto: "Conciliação bancária inteligente" },
+    { icon: Brain, texto: "Classificação contábil supervisionada por IA" },
+    { icon: BarChart3, texto: "DRE, Balancete e Balanço em tempo real" },
+    { icon: Wallet, texto: "Gestão de honorários por competência" },
+    { icon: FileCheck, texto: "Auditoria automática com trilha técnica" },
   ],
   beneficios: [
-    { icon: Clock, nome: "Economia de Tempo", desc: "Automatize tarefas repetitivas" },
-    { icon: Shield, nome: "Segurança", desc: "Dados protegidos e criptografados" },
-    { icon: TrendingUp, nome: "Crescimento", desc: "Insights para tomada de decisão" },
-    { icon: Users, nome: "Multi-tenant", desc: "Cada escritório isolado" },
+    { icon: Clock, nome: "Menos operação, mais decisão", desc: "Automatizamos tarefas repetitivas sem abrir mão da técnica contábil" },
+    { icon: Lock, nome: "Segurança e rastreabilidade", desc: "Dados criptografados, controle por tenant e histórico imutável" },
+    { icon: TrendingUp, nome: "Visão real do negócio", desc: "Indicadores financeiros que refletem a realidade, não apenas o caixa" },
+    { icon: Brain, nome: "IA com responsabilidade", desc: "Classificações explicadas, bloqueios técnicos e aprendizado supervisionado" },
   ],
 };
 
@@ -184,19 +188,22 @@ const Auth = () => {
             </p>
           </div>
 
-          {/* Recursos - Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-8 xl:mb-10">
-            {CONTTA_INFO.recursos.map((recurso, idx) => (
-              <div key={idx} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-                <recurso.icon className="w-4 h-4 xl:w-5 xl:h-5 text-primary-foreground/80 flex-shrink-0" />
-                <span className="text-sm text-primary-foreground/90">{recurso.texto}</span>
-              </div>
-            ))}
+          {/* O que você acessa ao entrar */}
+          <div className="mb-8 xl:mb-10">
+            <h3 className="text-xs uppercase tracking-widest text-primary-foreground/60 mb-4 font-semibold">O que você acessa ao entrar</h3>
+            <div className="space-y-2">
+              {CONTTA_INFO.recursos.map((recurso, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                  <recurso.icon className="w-4 h-4 xl:w-5 xl:h-5 text-primary-foreground/80 flex-shrink-0" />
+                  <span className="text-sm text-primary-foreground/90">{recurso.texto}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Benefícios - Layout melhorado */}
+          {/* Por que o Contta é diferente */}
           <div className="flex-1">
-            <h3 className="text-xs uppercase tracking-widest text-primary-foreground/60 mb-4 font-semibold">Por que escolher o Contta?</h3>
+            <h3 className="text-xs uppercase tracking-widest text-primary-foreground/60 mb-4 font-semibold">Por que o Contta é diferente</h3>
             <div className="grid grid-cols-2 gap-4">
               {CONTTA_INFO.beneficios.map((beneficio, idx) => (
                 <div key={idx} className="flex items-center gap-3 group">
@@ -213,11 +220,11 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - Segurança */}
         <div className="relative z-10 pt-6 border-t border-white/10">
           <div className="flex items-center justify-center gap-2 text-sm text-primary-foreground/60">
-            <Shield className="w-4 h-4" />
-            <span>Seus dados protegidos com criptografia de ponta a ponta</span>
+            <Lock className="w-4 h-4" />
+            <span>Dados protegidos com criptografia de ponta a ponta e isolamento total por escritório</span>
           </div>
         </div>
       </div>
@@ -234,8 +241,8 @@ const Auth = () => {
 
           <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
             <CardHeader className="text-center pb-2 pt-6">
-              <CardTitle className="text-2xl font-bold text-gray-900">Bem-vindo</CardTitle>
-              <CardDescription className="text-gray-500">Sistema de Gestão Financeira</CardDescription>
+              <CardTitle className="text-2xl font-bold text-gray-900">Bem-vindo ao Contta</CardTitle>
+              <CardDescription className="text-gray-500">Acesse sua conta</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue={defaultTab} className="w-full">
@@ -251,7 +258,7 @@ const Auth = () => {
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder="seu@email.com"
+                        placeholder="financeiro@seuescritorio.com.br"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -275,7 +282,7 @@ const Auth = () => {
                       className="w-full h-11 bg-blue-600 hover:bg-blue-700"
                       disabled={loading}
                     >
-                      {loading ? "Entrando..." : "Entrar"}
+                      {loading ? "Entrando..." : "Entrar no sistema"}
                     </Button>
 
                     <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
@@ -331,7 +338,7 @@ const Auth = () => {
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder="seu@email.com"
+                        placeholder="financeiro@seuescritorio.com.br"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -352,12 +359,12 @@ const Auth = () => {
                       />
                       <div className="text-xs text-gray-500 space-y-1">
                         <div className="flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" />
-                          <span>12+ caracteres</span>
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span>Mínimo 12 caracteres</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" />
-                          <span>Maiuscula, minuscula, numero e especial</span>
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span>Maiúscula, minúscula, número e especial</span>
                         </div>
                       </div>
                     </div>
@@ -372,17 +379,21 @@ const Auth = () => {
                 </TabsContent>
               </Tabs>
 
-              {/* Trust Badges */}
+              {/* Segurança ativa */}
               <div className="mt-6 pt-5 border-t border-gray-100">
-                <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
-                  <div className="flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-green-500" />
-                    <span>Dados Seguros</span>
+                <p className="text-xs text-gray-500 text-center mb-3 font-medium">Segurança ativa</p>
+                <div className="flex flex-col gap-2 text-xs text-gray-400">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-green-500" />
+                    <span>Ambiente seguro e criptografado</span>
                   </div>
-                  <div className="w-px h-4 bg-gray-200" />
-                  <div className="flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-blue-500" />
-                    <span>Multi-tenant</span>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Estrutura multi-tenant (dados isolados)</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <FileCheck className="w-3.5 h-3.5 text-purple-500" />
+                    <span>Conformidade com LGPD</span>
                   </div>
                 </div>
               </div>

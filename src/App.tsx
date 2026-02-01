@@ -6,10 +6,17 @@ import { ClientProvider } from "@/contexts/ClientContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import { ExpenseUpdateProvider } from "@/contexts/ExpenseUpdateContext";
 import { OfficeProvider } from "@/contexts/OfficeContext";
-import Auth from "./pages/Auth";
+// Maestro UX Providers
+import { CommandPaletteProvider } from "@/design-system/components/CommandPalette";
+import { HintsProvider } from "@/ux/hints";
+import { OnboardingProvider } from "@/ux/onboarding";
+import Auth from "./pages/AuthNew";
 import Dashboard from "./pages/Dashboard";
+import DashboardNew from "./pages/DashboardNew";
+import DashboardExecutivo from "./pages/DashboardExecutivo";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import Clients from "./pages/Clients";
+import ClientsNew from "./pages/ClientsNew";
 import Expenses from "./pages/Expenses";
 import ExpenseCategories from "./pages/ExpenseCategories";
 import Import from "./pages/Import";
@@ -103,6 +110,9 @@ import HonorariosFlow from "./pages/HonorariosFlow";
 import SuperConciliation from "./pages/SuperConciliation";
 import ReconcileHonorarios from "./pages/ReconcileHonorarios";
 import Invoices from "./pages/Invoices";
+import InvoicesNew from "./pages/InvoicesNew";
+import ExpensesNew from "./pages/ExpensesNew";
+import ChartOfAccountsNew from "./pages/ChartOfAccountsNew";
 import RecurringExpenses from "./pages/RecurringExpenses";
 import ImportBoletosLiquidados from "./pages/ImportBoletosLiquidados";
 import BoletosComposicao from "./pages/BoletosComposicao";
@@ -127,7 +137,7 @@ import BalancoPatrimonial from "./pages/BalancoPatrimonial";
 import ChatContabil from "./components/ChatContabil";
 import Onboarding from "./pages/Onboarding";
 import { OnboardingGuard } from "./components/OnboardingGuard";
-import Landing from "./pages/Landing";
+import Landing from "./pages/LandingNew";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Terms from "./pages/Terms";
@@ -236,22 +246,29 @@ const appRoutes = [
 ];
 
 const App = () => (
-  <TooltipProvider>
-    <OfficeProvider>
-      <ClientProvider>
-        <PeriodProvider>
-          <ExpenseUpdateProvider>
-            <Toaster />
-            <Sonner />
+  <CommandPaletteProvider>
+    <HintsProvider>
+      <OnboardingProvider>
+        <TooltipProvider>
+          <OfficeProvider>
+            <ClientProvider>
+              <PeriodProvider>
+                <ExpenseUpdateProvider>
+                  <Toaster />
+                  <Sonner />
             <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<OnboardingGuard><Dashboard /></OnboardingGuard>} />
+            <Route path="/dashboard-new" element={<DashboardNew />} />
+            <Route path="/dashboard-executivo" element={<DashboardExecutivo />} />
             <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/clients-new" element={<ClientsNew />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/expenses-new" element={<ExpensesNew />} />
             <Route path="/expense-categories" element={<ExpenseCategories />} />
             <Route path="/import" element={<Import />} />
             <Route path="/import-boletos" element={<ImportBoletos />} />
@@ -265,6 +282,7 @@ const App = () => (
             <Route path="/audit-logs" element={<AuditLogs />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
+            <Route path="/chart-of-accounts-new" element={<ChartOfAccountsNew />} />
             <Route path="/dre" element={<DRE />} />
             <Route path="/dre-analytics" element={<DREAnalytics />} />
             <Route path="/revenue-types" element={<RevenueTypes />} />
@@ -350,6 +368,7 @@ const App = () => (
             <Route path="/pending-entities" element={<PendingEntities />} />
             <Route path="/incentives" element={<Incentives />} />
             <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoices-new" element={<InvoicesNew />} />
             <Route path="/import-boletos-liquidados" element={<ImportBoletosLiquidados />} />
             <Route path="/boletos-composicao" element={<BoletosComposicao />} />
             <Route path="/ai-automation" element={<AIAutomation />} />
@@ -374,11 +393,14 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </ExpenseUpdateProvider>
-        </PeriodProvider>
-      </ClientProvider>
-    </OfficeProvider>
-  </TooltipProvider>
+                </ExpenseUpdateProvider>
+              </PeriodProvider>
+            </ClientProvider>
+          </OfficeProvider>
+        </TooltipProvider>
+      </OnboardingProvider>
+    </HintsProvider>
+  </CommandPaletteProvider>
 );
 
 export default App;

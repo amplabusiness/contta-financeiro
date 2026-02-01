@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Layout } from "@/components/Layout";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { MetricCard } from "@/components/MetricCard";
@@ -17,7 +17,15 @@ import { MetricDetailDialog } from "@/components/MetricDetailDialog";
 import { useOfflineMode } from "@/hooks/useOfflineMode";
 import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
-import { CashFlowWidget } from "@/components/dashboard/CashFlowWidget";
+// Novos componentes do Dashboard Executivo
+import { 
+  ExecutiveHealthCards, 
+  DrCiceroInsightPanel, 
+  ActionRequiredPanel, 
+  PriorityClientsList,
+  CashVsAccountingPanel,
+  CashFlowWidget 
+} from "@/components/dashboard";
 
 // Interface para títulos problemáticos (cobrança)
 interface TituloProblematico {
@@ -776,544 +784,136 @@ const Dashboard = () => {
     );
   }
 
+  // ========== DADOS PARA COMPONENTES EXECUTIVOS ==========
+  const periodoFormatado = new Date(selectedYear, selectedMonth - 1).toLocaleDateString('pt-BR', { 
+    month: 'long', 
+    year: 'numeric' 
+  });
+  
+  // Calcular dias de operação (média de despesas mensal / caixa)
+  const mediaDespesaDia = stats.totalExpenses / 30;
+  const diasOperacao = mediaDespesaDia > 0 
+    ? Math.floor((accountingBalances?.bank_balance || 0) / mediaDespesaDia) 
+    : 0;
+
+  // Calcular faturas próximas do vencimento
+  const hoje = new Date();
+  const em5Dias = new Date(hoje);
+  em5Dias.setDate(em5Dias.getDate() + 5);
+
+  // Preparar insights para Dr. Cícero
+  const insightData = {
+    caixaDisponivel: accountingBalances?.bank_balance || 0,
+    diasOperacao,
+    recebimentosConcentrados: true, // TODO: calcular baseado em dados reais
+    diaConcentracao: 10,
+    inadimplencia: stats.totalOverdue,
+    faturasVencerProximos5Dias: 0, // TODO: calcular
+    valorFaturasProximas: 0,
+    clientesConcentrados: 3, // TODO: calcular top 3 clientes
+    percentualConcentracao: 42, // TODO: calcular
+    inconsistenciasContabeis: 0,
+    transitóriasPendentes: 0 // TODO: buscar da contabilidade
+  };
+
+  // Preparar clientes prioritários
+  const clientesPrioritarios = clients
+    .map(client => {
+      const health = clientsHealth[client.id] || {};
+      let reason: 'valor' | 'risco' | 'atraso' | 'inativo' = 'valor';
+      
+      if (health.overdueCount > 0) reason = 'atraso';
+      else if (health.healthStatus === 'critical') reason = 'risco';
+      else if (!health.lastActivity) reason = 'inativo';
+      
+      return {
+        id: client.id,
+        name: client.name,
+        reason,
+        value: health.overdueAmount || health.pendingAmount || Number(client.monthly_fee) || 0,
+        secondaryInfo: health.overdueCount > 0 ? `${health.overdueCount} vencida(s)` : undefined,
+        healthStatus: health.healthStatus || 'healthy'
+      };
+    })
+    .sort((a, b) => {
+      // Ordenar por risco primeiro, depois por valor
+      const prioridadeOrder = { atraso: 0, risco: 1, valor: 2, inativo: 3 };
+      if (prioridadeOrder[a.reason] !== prioridadeOrder[b.reason]) {
+        return prioridadeOrder[a.reason] - prioridadeOrder[b.reason];
+      }
+      return b.value - a.value;
+    })
+    .slice(0, 10);
+
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {selectedClientId ? `Dashboard - ${selectedClientName}` : "Dashboard Geral"}
-          </h1>
-          <p className="text-muted-foreground">
-            {selectedClientId
-              ? "Visão financeira do cliente selecionado"
-              : "Visão geral do sistema financeiro - selecione um cliente para filtrar"
-            }
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {selectedClientId ? `Dashboard - ${selectedClientName}` : "Dashboard Executivo"}
+            </h1>
+            <p className="text-sm text-slate-500">
+              {selectedClientId
+                ? "Visão financeira do cliente selecionado"
+                : "Visão executiva para tomada de decisão"
+              }
+            </p>
+          </div>
+          <PeriodFilter />
         </div>
 
-        <PeriodFilter />
+        {/* ========== BLOCO 1: SAÚDE FINANCEIRA (TOPO) ========== */}
+        <ExecutiveHealthCards
+          caixaDisponivel={accountingBalances?.bank_balance || 0}
+          aReceber={accountingBalances?.accounts_receivable || stats.totalPending}
+          qtdFaturas={stats.pendingInvoices}
+          inadimplencia={stats.totalOverdue}
+          receitaEsperada={clients.reduce((sum, c) => sum + Number(c.monthly_fee || 0), 0)}
+          diasOperacao={diasOperacao}
+          periodo={periodoFormatado}
+        />
 
-        {/* ========== DASHBOARD DOS AGENTES IA ========== */}
-        <Card className="bg-gradient-to-r from-violet-50 to-blue-50 border-violet-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Bot className="h-6 w-6 text-violet-600" />
-                  <Zap className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Agentes IA</CardTitle>
-                  <CardDescription>
-                    Automação 100% - Ciclo #{cycleCount} | Atualizado: {lastAgentUpdate.toLocaleTimeString('pt-BR')}
-                  </CardDescription>
-                </div>
-              </div>
-              <Badge
-                variant={isAutomationActive ? "default" : "secondary"}
-                className={cn(
-                  "px-3 py-1",
-                  isAutomationActive && "bg-green-600 animate-pulse"
-                )}
-              >
-                {isAutomationActive ? (
-                  <>
-                    <CircleDot className="h-3 w-3 mr-1 animate-pulse" />
-                    ATIVO
-                  </>
-                ) : "PAUSADO"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {agents.map((agent, idx) => (
-                <div key={idx} className="bg-white rounded-lg p-3 border shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={cn("p-2 rounded-lg", agent.bgColor)}>
-                        <agent.icon className={cn("h-4 w-4", agent.color)} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm flex items-center gap-2">
-                          {agent.name}
-                          <span className={cn("w-2 h-2 rounded-full", getAgentStatusColor(agent.status))} />
-                        </div>
-                        <div className="text-xs text-muted-foreground">{agent.lastAction}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold">{agent.tasksToday}</div>
-                      <div className="text-[10px] text-muted-foreground">hoje</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Tarefas em execução */}
-            {agentTasks.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {agentTasks.map((task) => (
-                  <div key={task.id} className="bg-white rounded-lg p-2 border">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium">{task.name}</span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0">{task.agent}</Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={task.progress} className="h-1.5 flex-1" />
-                      <span className="text-[10px] text-muted-foreground w-20 text-right">{task.message}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        {/* ========== FIM DASHBOARD DOS AGENTES ========== */}
-
-        {/* Saldos Contábeis - Formato Razão (SI + D - C = SF) */}
-        {accountingBalances && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {/* Saldo Banco */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Saldo Banco (Razão)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {accountingBalances.banco ? (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Saldo Inicial:</span>
-                      <span>{formatCurrency(accountingBalances.banco.saldoInicial)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-green-600">
-                      <span>+ Débitos:</span>
-                      <span>{formatCurrency(accountingBalances.banco.debitos)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-red-600">
-                      <span>- Créditos:</span>
-                      <span>{formatCurrency(accountingBalances.banco.creditos)}</span>
-                    </div>
-                    <div className="border-t pt-1 flex justify-between font-bold">
-                      <span className="text-xs">= Saldo Final:</span>
-                      <span className={cn("text-lg", accountingBalances.banco.saldoFinal < 0 && "text-destructive")}>
-                        {formatCurrency(accountingBalances.banco.saldoFinal)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
-                  </div>
-                ) : (
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(accountingBalances.bank_balance)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Contas a Receber */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  A Receber (Razão)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {accountingBalances.receber ? (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Saldo Inicial:</span>
-                      <span>{formatCurrency(accountingBalances.receber.saldoInicial)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-green-600">
-                      <span>+ Débitos:</span>
-                      <span>{formatCurrency(accountingBalances.receber.debitos)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-red-600">
-                      <span>- Créditos:</span>
-                      <span>{formatCurrency(accountingBalances.receber.creditos)}</span>
-                    </div>
-                    <div className="border-t pt-1 flex justify-between font-bold">
-                      <span className="text-xs">= Saldo Final:</span>
-                      <span className="text-lg text-green-500">
-                        {formatCurrency(accountingBalances.receber.saldoFinal)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
-                  </div>
-                ) : (
-                  <div className="text-2xl font-bold text-green-500">
-                    {formatCurrency(accountingBalances.accounts_receivable)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Adiantamentos a Sócios */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Users className="h-4 w-4 text-blue-500" />
-                  Adiant. Sócios
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-500">
-                  {formatCurrency(accountingBalances.partner_advances)}
-                </div>
-                <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
-              </CardContent>
-            </Card>
-
-            {/* Resultado do Período */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Activity className="h-4 w-4" />
-                  Resultado do Período
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-green-600">
-                    <span>Receitas:</span>
-                    <span>{formatCurrency(accountingBalances.total_revenue)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-red-600">
-                    <span>Despesas:</span>
-                    <span>{formatCurrency(accountingBalances.total_expenses)}</span>
-                  </div>
-                  <div className="border-t pt-1 flex justify-between font-bold">
-                    <span className="text-xs">= Resultado:</span>
-                    <span className={cn(
-                      "text-lg",
-                      (accountingBalances.total_revenue - accountingBalances.total_expenses) >= 0
-                        ? "text-green-500"
-                        : "text-destructive"
-                    )}>
-                      {formatCurrency(accountingBalances.total_revenue - accountingBalances.total_expenses)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-600 mt-1">Fonte: Contabilidade</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2">
-            <div onClick={() => showDetail("clients")} className="cursor-pointer">
-              <MetricCard
-                title="Clientes Ativos"
-                value={stats.totalClients.toString()}
-                icon={Users}
-                variant="default"
-              />
-            </div>
-            <div onClick={() => showDetail("pending")} className="cursor-pointer">
-              <MetricCard
-                title="Honorários Pendentes"
-                // FASE 4.2: Fonte de Verdade é o Saldo Contábil (1.1.2.01)
-                value={accountingBalances ? formatCurrency(accountingBalances.accounts_receivable) : formatCurrency(stats.totalPending)}
-                icon={TrendingUp}
-                variant="warning"
-                trend={{
-                  value: `${stats.pendingInvoices} faturas`,
-                  isPositive: false,
-                }}
-              />
-            </div>
-            <div onClick={() => showDetail("overdue")} className="cursor-pointer">
-              <MetricCard
-                title="Inadimplência"
-                value={formatCurrency(stats.totalOverdue)}
-                icon={AlertCircle}
-                variant="destructive"
-                trend={{
-                  value: `${stats.overdueInvoices} vencidas`,
-                  isPositive: false,
-                }}
-              />
-            </div>
-            <div onClick={() => showDetail("expenses")} className="cursor-pointer">
-              <MetricCard
-                title="Despesas do Período"
-                value={formatCurrency(stats.totalExpenses)}
-                icon={TrendingDown}
-                variant="default"
-                trend={{
-                  value: `${stats.pendingExpenses} lançamentos`,
-                  isPositive: false,
-                }}
-              />
-            </div>
-          </div>
-          <div className="col-span-1">
-            <CashFlowWidget />
-          </div>
+        {/* ========== BLOCO 2: DR. CÍCERO + AÇÕES ========== */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <DrCiceroInsightPanel 
+            data={insightData}
+            onRefresh={loadDashboardData}
+            isLoading={loading}
+          />
+          
+          <ActionRequiredPanel
+            faturasVencer5Dias={insightData.faturasVencerProximos5Dias}
+            valorFaturasVencer={insightData.valorFaturasProximas}
+            clientesConcentrados={insightData.clientesConcentrados}
+            percentualConcentracao={insightData.percentualConcentracao}
+            inconsistenciasContabeis={insightData.inconsistenciasContabeis}
+            transitóriasPendentes={insightData.transitóriasPendentes}
+            valorTransitórias={0}
+          />
         </div>
 
-        {stats.overdueInvoices > 0 && (
-          <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-destructive">⚠️ Atenção: Inadimplência Detectada</CardTitle>
-                  <CardDescription>
-                    Existem {stats.overdueInvoices} honorários vencidos totalizando {formatCurrency(stats.totalOverdue)}
-                  </CardDescription>
-                </div>
-                <Button onClick={() => navigate("/reports")} variant="destructive">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Ver Relatório Completo
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
-        )}
+        {/* ========== BLOCO 3: CAIXA vs CONTÁBIL ========== */}
+        <CashVsAccountingPanel
+          saldoBancario={accountingBalances?.bank_balance || 0}
+          projecao7dias={accountingBalances?.bank_balance || 0}
+          projecao15dias={accountingBalances?.bank_balance || 0}
+          projecao30dias={accountingBalances?.bank_balance || 0}
+          pagamentosAgendados={0}
+          receitaMes={accountingBalances?.total_revenue || 0}
+          despesaMes={accountingBalances?.total_expenses || 0}
+          resultadoProjetado={(accountingBalances?.total_revenue || 0) - (accountingBalances?.total_expenses || 0)}
+        />
 
-        {/* 🚨 ALERTA: BOLETOS VENCIDOS NO SICREDI - COBRANÇA */}
-        {titulosProblematicos.length > 0 && (
-          <Card className="border-amber-500 bg-amber-50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-amber-800 flex items-center gap-2">
-                    <BanknoteIcon className="h-5 w-5" />
-                    ⚠️ COBRANÇA: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.totalAberto, 0))} em Boletos Vencidos
-                  </CardTitle>
-                  <CardDescription className="text-amber-700">
-                    {titulosProblematicos.length} clientes com {titulosProblematicos.reduce((s, t) => s + t.qtdBoletos, 0)} boletos vencidos no Sicredi. 
-                    Custo de manutenção: {formatCurrency(titulosProblematicos.reduce((s, t) => s + t.custoManutencao, 0))}/mês
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="destructive" className="text-sm">
-                    {titulosProblematicos.filter(t => t.prioridade === 'CRITICO').length} CRÍTICOS
-                  </Badge>
-                  <Badge className="bg-orange-500 text-sm">
-                    {titulosProblematicos.filter(t => t.prioridade === 'ALTO').length} ALTO RISCO
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-amber-700 mb-4">
-                ⚡ <strong>AÇÃO:</strong> Baixar boletos no Sicredi (evitar taxa R$ 2/mês) e cobrar via PIX/transferência ou acordar com cliente.
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Prioridade</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Valor em Aberto</TableHead>
-                    <TableHead className="text-center">Qtd Boletos</TableHead>
-                    <TableHead className="text-center">Dias Atraso</TableHead>
-                    <TableHead className="text-right">Custo Manut.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {titulosProblematicos.slice(0, 15).map((titulo, idx) => (
-                    <TableRow key={idx} className={
-                      titulo.prioridade === 'CRITICO' ? 'bg-red-50' :
-                      titulo.prioridade === 'ALTO' ? 'bg-orange-50' : ''
-                    }>
-                      <TableCell>
-                        {titulo.prioridade === 'CRITICO' && <Badge variant="destructive">CRÍTICO</Badge>}
-                        {titulo.prioridade === 'ALTO' && <Badge className="bg-orange-500">ALTO</Badge>}
-                        {titulo.prioridade === 'MEDIO' && <Badge className="bg-yellow-500 text-black">MÉDIO</Badge>}
-                        {titulo.prioridade === 'BAIXO' && <Badge variant="outline">BAIXO</Badge>}
-                      </TableCell>
-                      <TableCell className="font-medium">{titulo.cliente.slice(0, 40)}</TableCell>
-                      <TableCell className="text-right font-bold text-red-600">
-                        {formatCurrency(titulo.totalAberto)}
-                      </TableCell>
-                      <TableCell className="text-center">{titulo.qtdBoletos}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={titulo.diasAtraso > 180 ? 'text-red-600 font-bold' : ''}>
-                          {titulo.diasAtraso}d ({titulo.meses}m)
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-amber-600">
-                        {formatCurrency(titulo.custoManutencao)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {titulosProblematicos.length > 15 && (
-                <p className="text-center text-sm text-amber-600 mt-4">
-                  + {titulosProblematicos.length - 15} clientes adicionais com boletos em aberto
-                </p>
-              )}
-              <div className="mt-4 p-3 bg-amber-100 rounded-lg">
-                <p className="text-sm text-amber-800">
-                  💡 <strong>Dica:</strong> Cancele os boletos no Sicredi (baixa sem pagamento) e mantenha a cobrança apenas no sistema.
-                  Cobre via PIX ou transferência para evitar as taxas de manutenção.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* ========== BLOCO 4: CLIENTES PRIORITÁRIOS ========== */}
+        <PriorityClientsList 
+          clients={clientesPrioritarios}
+          onViewClient={handleViewClient}
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Clientes Ativos</CardTitle>
-            <CardDescription>Acesso rápido aos dashboards individuais dos clientes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {clients.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhum cliente ativo cadastrado
-              </p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {clients.map((client) => {
-                  const health = clientsHealth[client.id] || {};
-                  const healthStatus = health.healthStatus || "healthy";
-                  
-                  return (
-                    <Card key={client.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">{client.name}</CardTitle>
-                            <CardDescription>
-                              {client.email || "Sem email"}
-                            </CardDescription>
-                          </div>
-                          {healthStatus === "healthy" && (
-                            <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
-                          )}
-                          {healthStatus === "warning" && (
-                            <AlertCircle className="h-5 w-5 text-warning flex-shrink-0" />
-                          )}
-                          {healthStatus === "critical" && (
-                            <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">CNPJ:</span>
-                              <span className="font-medium">{client.cnpj || "-"}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Mensalidade:</span>
-                              <span className="font-medium">{formatCurrency(Number(client.monthly_fee))}</span>
-                            </div>
-                            {client.payment_day && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Vencimento:</span>
-                                <span className="font-medium">Dia {client.payment_day}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Indicadores de Saúde Financeira */}
-                          <div className="space-y-2 pt-2 border-t">
-                            {health.overdueCount > 0 && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1 text-destructive">
-                                  <XCircle className="h-3 w-3" />
-                                  Faturas Vencidas
-                                </span>
-                                <Badge variant="destructive" className="text-xs">
-                                  {health.overdueCount} ({formatCurrency(health.overdueAmount)})
-                                </Badge>
-                              </div>
-                            )}
-                            
-                            {health.pendingCount > 0 && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1 text-muted-foreground">
-                                  <Clock className="h-3 w-3" />
-                                  Faturas Pendentes
-                                </span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {health.pendingCount} ({formatCurrency(health.pendingAmount)})
-                                </Badge>
-                              </div>
-                            )}
-                            
-                            {health.lastActivity && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">Última movimentação:</span>
-                                <span className="font-medium">
-                                  {health.lastActivity.toLocaleDateString("pt-BR")}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {health.overdueCount === 0 && health.pendingCount === 0 && health.paidCount > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-success">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Todos os pagamentos em dia
-                              </div>
-                            )}
-                          </div>
-
-                          <Button
-                            onClick={() => handleViewClient(client.id, client.name)}
-                            className="w-full mt-2"
-                            variant="outline"
-                          >
-                            <Users className="w-4 h-4 mr-2" />
-                            Ver Empresa
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Honorários Recentes</CardTitle>
-            <CardDescription>Últimas faturas registradas no sistema</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentInvoices.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhum honorário cadastrado ainda
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Competência</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.clients?.name || "-"}</TableCell>
-                      <TableCell>{invoice.competence || "-"}</TableCell>
-                      <TableCell>{new Date(invoice.due_date).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>{formatCurrency(Number(invoice.amount))}</TableCell>
-                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        {/* ========== FLUXO DE CAIXA ========== */}
+        <CashFlowWidget />
       </div>
 
       <MetricDetailDialog

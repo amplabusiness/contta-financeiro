@@ -1,14 +1,33 @@
 # Instruções para Agentes de IA - Contta Financeiro
 
-## � DOCUMENTAÇÃO OFICIAL
+## 📚 DOCUMENTAÇÃO OFICIAL
 
-**LEIA OBRIGATORIAMENTE:** [ESPECIFICACAO_CONTABIL_DR_CICERO.md](../ESPECIFICACAO_CONTABIL_DR_CICERO.md)
+**LEIA OBRIGATORIAMENTE:**
 
-Este documento contém toda a lógica contábil, fluxos de importação, classificação e regras de negócio definidas pelo Dr. Cícero.
+### Documentação Contábil
+1. [ESPECIFICACAO_CONTABIL_DR_CICERO.md](../ESPECIFICACAO_CONTABIL_DR_CICERO.md) - Lógica contábil completa
+
+### Prompts Canônicos do Sistema Multi-Agente
+2. [DR_CICERO_SYSTEM_PROMPT.md](../prompts/DR_CICERO_SYSTEM_PROMPT.md) - **Prompt principal** - Contador Chefe
+3. [AGENTE_FINANCEIRO_PROMPT.md](../prompts/AGENTE_FINANCEIRO_PROMPT.md) - Agente de análise operacional
+4. [AGENTE_CLASSIFICADOR_PROMPT.md](../prompts/AGENTE_CLASSIFICADOR_PROMPT.md) - Agente de classificação automática
+5. [AGENTE_EDUCADOR_PROMPT.md](../prompts/AGENTE_EDUCADOR_PROMPT.md) - Agente de suporte ao usuário
+6. [FALLBACK_PROMPT.md](../prompts/FALLBACK_PROMPT.md) - Protocolo quando não há histórico
+7. [PARECER_PDF_PROMPT.md](../prompts/PARECER_PDF_PROMPT.md) - Gerador de pareceres formais
+
+### Hierarquia dos Agentes
+```
+Dr. Cícero (DECIDE) ← Autoridade máxima
+├── Agente Financeiro (ANALISA)
+├── Agente Classificador (SUGERE)
+└── Agente Educador (EXPLICA)
+```
+
+Estes documentos contêm toda a lógica contábil, fluxos de importação, classificação, regras de negócio e comportamento esperado do sistema multi-agente.
 
 ---
 
-## �🔴 REGRA OBRIGATÓRIA: DR. CÍCERO - CONTADOR RESPONSÁVEL
+## 🔴 REGRA OBRIGATÓRIA: DR. CÍCERO - CONTADOR RESPONSÁVEL
 
 **NENHUM lançamento contábil pode ser criado, alterado ou excluído sem a aprovação prévia do Dr. Cícero.**
 

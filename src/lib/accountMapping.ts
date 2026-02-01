@@ -12,6 +12,60 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // =====================================================
+// CACHE PARA EVITAR REQUISIÇÕES EXCESSIVAS
+// =====================================================
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+}
+
+const queryCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 60000; // 60 segundos
+
+function getCacheKey(prefix: string, year?: number, month?: number): string {
+  return `${prefix}_${year || 'all'}_${month || 'all'}`;
+}
+
+function getFromCache<T>(key: string): T | null {
+  const entry = queryCache.get(key);
+  if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
+    return entry.data as T;
+  }
+  queryCache.delete(key);
+  return null;
+}
+
+function setCache(key: string, data: any): void {
+  queryCache.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearAccountCache(): void {
+  queryCache.clear();
+}
+
+// Semáforo para limitar requisições paralelas
+let pendingRequests = 0;
+const MAX_PARALLEL_REQUESTS = 6;
+const requestQueue: Array<() => void> = [];
+
+async function throttledRequest<T>(fn: () => Promise<T>): Promise<T> {
+  if (pendingRequests >= MAX_PARALLEL_REQUESTS) {
+    await new Promise<void>(resolve => {
+      requestQueue.push(resolve);
+    });
+  }
+  
+  pendingRequests++;
+  try {
+    return await fn();
+  } finally {
+    pendingRequests--;
+    const next = requestQueue.shift();
+    if (next) next();
+  }
+}
+
+// =====================================================
 // MAPEAMENTO TELA → CONTA CONTÁBIL
 // =====================================================
 export const ACCOUNT_MAPPING = {
@@ -104,12 +158,30 @@ export async function getAccountBalance(
   balance: number;         // Saldo Final
   nature: string;
 }> {
-  // Buscar a conta principal
-  const { data: account, error: accountError } = await supabase
-    .from("chart_of_accounts")
-    .select("id, code, name, nature, account_type, is_analytical")
-    .eq("code", accountCode)
-    .single();
+  // Verificar cache primeiro
+  const cacheKey = getCacheKey(`account_${accountCode}`, year, month);
+  const cached = getFromCache<{
+    code: string;
+    name: string;
+    openingBalance: number;
+    debit: number;
+    credit: number;
+    balance: number;
+    nature: string;
+  }>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+
+  // Buscar a conta principal (throttled)
+  const { data: account, error: accountError } = await throttledRequest(() =>
+    supabase
+      .from("chart_of_accounts")
+      .select("id, code, name, nature, account_type, is_analytical")
+      .eq("code", accountCode)
+      .single()
+  );
 
   if (accountError || !account) {
     console.warn(`Conta ${accountCode} não encontrada:`, accountError);
@@ -133,11 +205,13 @@ export async function getAccountBalance(
 
   // Se a conta não é analítica (é sintética), buscar subcontas
   if (!account.is_analytical) {
-    const { data: subAccounts } = await supabase
-      .from("chart_of_accounts")
-      .select("id, name")
-      .like("code", `${accountCode}.%`)
-      .not("name", "ilike", "%[CONSOLIDADO]%"); // Ignorar contas duplicadas de migração
+    const { data: subAccounts } = await throttledRequest(() =>
+      supabase
+        .from("chart_of_accounts")
+        .select("id, name")
+        .like("code", `${accountCode}.%`)
+        .not("name", "ilike", "%[CONSOLIDADO]%")
+    );
 
     if (subAccounts?.length) {
       subAccounts.forEach(sub => accountIds.push(sub.id));
@@ -173,12 +247,14 @@ export async function getAccountBalance(
   // 1. SALDO INICIAL: Lançamentos ANTES do período
   // =====================================================
   if (startDate) {
-    const { data: priorItems } = await supabase
-      .from("accounting_entry_items")
-      .select("debit, credit, accounting_entries!inner(entry_date)")
-      .in("account_id", accountIds)
-      .lt("accounting_entries.entry_date", startDate)
-      .range(0, 49999);
+    const { data: priorItems } = await throttledRequest(() =>
+      supabase
+        .from("accounting_entry_items")
+        .select("debit, credit, accounting_entries!inner(entry_date)")
+        .in("account_id", accountIds)
+        .lt("accounting_entries.entry_date", startDate)
+        .range(0, 49999)
+    );
 
     const priorDebit = priorItems?.reduce((sum, e) => sum + Number(e.debit || 0), 0) || 0;
     const priorCredit = priorItems?.reduce((sum, e) => sum + Number(e.credit || 0), 0) || 0;
@@ -191,19 +267,22 @@ export async function getAccountBalance(
   // =====================================================
   // 2. MOVIMENTOS DO PERÍODO: Débitos e Créditos
   // =====================================================
-  let itemsQuery = supabase
-    .from("accounting_entry_items")
-    .select("debit, credit, accounting_entries!inner(entry_date)")
-    .in("account_id", accountIds)
-    .range(0, 49999);
+  const buildItemsQuery = () => {
+    let query = supabase
+      .from("accounting_entry_items")
+      .select("debit, credit, accounting_entries!inner(entry_date)")
+      .in("account_id", accountIds)
+      .range(0, 49999);
 
-  if (startDate && endDate) {
-    itemsQuery = itemsQuery
-      .gte("accounting_entries.entry_date", startDate)
-      .lte("accounting_entries.entry_date", endDate);
-  }
+    if (startDate && endDate) {
+      query = query
+        .gte("accounting_entries.entry_date", startDate)
+        .lte("accounting_entries.entry_date", endDate);
+    }
+    return query;
+  };
 
-  const { data: periodItems } = await itemsQuery;
+  const { data: periodItems } = await throttledRequest(buildItemsQuery);
 
   totalDebit = periodItems?.reduce((sum, e) => sum + Number(e.debit || 0), 0) || 0;
   totalCredit = periodItems?.reduce((sum, e) => sum + Number(e.credit || 0), 0) || 0;
@@ -217,7 +296,7 @@ export async function getAccountBalance(
     ? openingBalance + totalDebit - totalCredit
     : openingBalance + totalCredit - totalDebit;
 
-  return {
+  const result = {
     code: account.code,
     name: account.name,
     openingBalance,
@@ -226,6 +305,11 @@ export async function getAccountBalance(
     balance,
     nature: account.nature,
   };
+
+  // Salvar no cache
+  setCache(cacheKey, result);
+
+  return result;
 }
 
 /**
@@ -253,6 +337,7 @@ export async function getMultipleAccountBalances(
 
 /**
  * Busca saldo de um grupo de contas (ex: todas as receitas "3%")
+ * OTIMIZADO: Usa cache e batching para evitar sobrecarga de requisições
  *
  * Para grupos de contas:
  * - Grupo 1 (Ativo), 2 (Passivo), 5 (PL): saldo ACUMULADO
@@ -269,22 +354,40 @@ export async function getAccountGroupBalance(
   balance: number;
   accounts: Array<{ code: string; name: string; balance: number }>;
 }> {
-  // Buscar todas as contas analíticas do grupo
-  const { data: accounts, error: accountsError } = await supabase
-    .from("chart_of_accounts")
-    .select("id, code, name, nature, account_type")
-    .like("code", `${groupPrefix}%`)
-    .eq("is_analytical", true)
-    .eq("is_active", true);
+  // Verificar cache primeiro
+  const cacheKey = getCacheKey(`group_${groupPrefix}`, year, month);
+  const cached = getFromCache<{
+    prefix: string;
+    totalDebit: number;
+    totalCredit: number;
+    balance: number;
+    accounts: Array<{ code: string; name: string; balance: number }>;
+  }>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+
+  // Buscar todas as contas analíticas do grupo (throttled)
+  const { data: accounts, error: accountsError } = await throttledRequest(() =>
+    supabase
+      .from("chart_of_accounts")
+      .select("id, code, name, nature, account_type")
+      .like("code", `${groupPrefix}%`)
+      .eq("is_analytical", true)
+      .eq("is_active", true)
+  );
 
   if (accountsError || !accounts?.length) {
-    return {
+    const emptyResult = {
       prefix: groupPrefix,
       totalDebit: 0,
       totalCredit: 0,
       balance: 0,
       accounts: [],
     };
+    setCache(cacheKey, emptyResult);
+    return emptyResult;
   }
 
   const accountIds = accounts.map((a) => a.id);
@@ -293,53 +396,63 @@ export async function getAccountGroupBalance(
   const firstDigit = groupPrefix.charAt(0);
   const isPatrimonial = ["1", "2", "5"].includes(firstDigit);
 
-  // Construir query
-  let query = supabase
-    .from("accounting_entry_items")
-    .select("account_id, debit, credit, accounting_entries!inner(entry_date)")
-    .in("account_id", accountIds)
-    .range(0, 49999); // Garantir que todos os registros sejam retornados
-
-  // Filtrar por período
-  if (isPatrimonial) {
-    // Grupos patrimoniais: saldo ACUMULADO até o final do período
-    if (year && month) {
-      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
-      query = query.lte("accounting_entries.entry_date", endDate);
-    } else if (year) {
-      query = query.lte("accounting_entries.entry_date", `${year}-12-31`);
-    }
-  } else {
-    // Grupos de resultado: saldo do PERÍODO específico
-    if (year && month) {
-      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-      const endDate = new Date(year, month, 0).toISOString().split("T")[0];
-      query = query
-        .gte("accounting_entries.entry_date", startDate)
-        .lte("accounting_entries.entry_date", endDate);
-    } else if (year) {
-      query = query
-        .gte("accounting_entries.entry_date", `${year}-01-01`)
-        .lte("accounting_entries.entry_date", `${year}-12-31`);
-    }
+  // OTIMIZAÇÃO: Fazer batching de contas para evitar URLs enormes
+  // Cada batch máximo de 50 contas
+  const BATCH_SIZE = 50;
+  const batches: string[][] = [];
+  for (let i = 0; i < accountIds.length; i += BATCH_SIZE) {
+    batches.push(accountIds.slice(i, i + BATCH_SIZE));
   }
 
-  const { data: entries, error: entriesError } = await query;
+  // Executar batches em paralelo (máximo 3 por vez)
+  const allEntries: any[] = [];
+  
+  for (let i = 0; i < batches.length; i += 3) {
+    const batchGroup = batches.slice(i, i + 3);
+    const batchPromises = batchGroup.map(async (batchIds) => {
+      // Construir query
+      let query = supabase
+        .from("accounting_entry_items")
+        .select("account_id, debit, credit, accounting_entries!inner(entry_date)")
+        .in("account_id", batchIds)
+        .range(0, 49999);
 
-  if (entriesError) {
-    console.error(`Erro ao buscar lançamentos do grupo ${groupPrefix}:`, entriesError);
-    return {
-      prefix: groupPrefix,
-      totalDebit: 0,
-      totalCredit: 0,
-      balance: 0,
-      accounts: [],
-    };
+      // Filtrar por período
+      if (isPatrimonial) {
+        if (year && month) {
+          const endDate = new Date(year, month, 0).toISOString().split("T")[0];
+          query = query.lte("accounting_entries.entry_date", endDate);
+        } else if (year) {
+          query = query.lte("accounting_entries.entry_date", `${year}-12-31`);
+        }
+      } else {
+        if (year && month) {
+          const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+          const endDate = new Date(year, month, 0).toISOString().split("T")[0];
+          query = query
+            .gte("accounting_entries.entry_date", startDate)
+            .lte("accounting_entries.entry_date", endDate);
+        } else if (year) {
+          query = query
+            .gte("accounting_entries.entry_date", `${year}-01-01`)
+            .lte("accounting_entries.entry_date", `${year}-12-31`);
+        }
+      }
+
+      return throttledRequest(() => query);
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    batchResults.forEach(result => {
+      if (result.data) {
+        allEntries.push(...result.data);
+      }
+    });
   }
 
   // Agrupar por conta
   const accountMap = new Map<string, { debit: number; credit: number }>();
-  entries?.forEach((e) => {
+  allEntries.forEach((e) => {
     const current = accountMap.get(e.account_id) || { debit: 0, credit: 0 };
     accountMap.set(e.account_id, {
       debit: current.debit + Number(e.debit || 0),
@@ -377,13 +490,18 @@ export async function getAccountGroupBalance(
     ? totalDebit - totalCredit
     : totalCredit - totalDebit;
 
-  return {
+  const result = {
     prefix: groupPrefix,
     totalDebit,
     totalCredit,
     balance,
     accounts: accountBalances.filter((a) => a.balance !== 0),
   };
+
+  // Salvar no cache
+  setCache(cacheKey, result);
+
+  return result;
 }
 
 // =====================================================
