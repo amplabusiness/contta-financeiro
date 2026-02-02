@@ -1,0 +1,137 @@
+[
+  {
+    "name": "CLAUDIA BARBOSA",
+    "cpf": "435.104.691-00",
+    "role": "BABA",
+    "cbo": "516205",
+    "hire_date": "2025-11-25",
+    "official_salary": 2500.0,
+    "status": "ativo"
+  },
+  {
+    "name": "JORDANA TEIXEIRA POSTIGO",
+    "cpf": "049.131.821-96",
+    "role": "ANALISTA ADMINISTRATIVO / FINANCEIRO (a)",
+    "cbo": "252105",
+    "hire_date": "2025-11-12",
+    "official_salary": 3500.0,
+    "status": "ativo"
+  },
+  {
+    "name": "JOSIMAR DOS SANTOS MOTA THEO FRANCO MOTA",
+    "cpf": "020.731.111-06",
+    "role": "COORDENADOR CONTABIL",
+    "cbo": "252210",
+    "hire_date": "2023-07-27",
+    "official_salary": 4006.53,
+    "status": "ativo"
+  },
+  {
+    "name": "LUCIANA DARC LOPES GOMES IGOR EMANUEL LOPES GOMES",
+    "cpf": "947.156.101-91",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "cbo": "413105",
+    "hire_date": "2025-11-10",
+    "official_salary": 3500.0,
+    "status": "ativo"
+  },
+  {
+    "name": "THAYNARA CONCEICAO DE MELO",
+    "cpf": "039.244.441-02",
+    "role": "ANALISTA CONTABIL",
+    "cbo": "252210",
+    "hire_date": "2024-05-02",
+    "official_salary": 3970.05,
+    "status": "ativo"
+  },
+  {
+    "name": "AMANDA AMBROSIO CARVALHO",
+    "cpf": "038.882.051-90",
+    "role": "ANALISTA ADMINISTRATIVO / FINANCEIRO (a)",
+    "cbo": "252105",
+    "hire_date": "2025-09-08",
+    "official_salary": 3800.0,
+    "termination_date": "2025-10-09",
+    "status": "demitido"
+  },
+  {
+    "name": "DEUZA RESENDE DE JESUS",
+    "cpf": "828.173.751-49",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "cbo": "413105",
+    "hire_date": "2024-12-03",
+    "official_salary": 3000.0,
+    "termination_date": "2025-01-24",
+    "status": "demitido"
+  },
+  {
+    "name": "ERICK FABRICIO DE PINA CAVALCANTE",
+    "cpf": "030.554.052-18",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "cbo": "413105",
+    "hire_date": "2025-07-02",
+    "official_salary": 4000.0,
+    "termination_date": "2025-07-15",
+    "status": "demitido"
+  },
+  {
+    "name": "FABIANA MARIA DA SILVA MENDONCA ENZO GABRIEL SANTOS SILVA",
+    "cpf": "001.411.981-17",
+    "role": "BABA",
+    "cbo": "516205",
+    "hire_date": "2024-08-20",
+    "official_salary": 2300.0,
+    "termination_date": "2025-05-09",
+    "status": "demitido"
+  },
+  {
+    "name": "JESSYCA DE FREITAS EUSTAQUIO NOGUEIRA JOAO PAULO ARAUJO NOGUEIRA",
+    "cpf": "070.035.591-02",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "cbo": "413105",
+    "hire_date": "2025-08-04",
+    "official_salary": 3700.0,
+    "termination_date": "2025-09-29",
+    "status": "demitido"
+  },
+  {
+    "name": "KENIO MARTINS MARQUES",
+    "cpf": "507.617.301-68",
+    "role": "CASEIRO",
+    "cbo": "514325",
+    "hire_date": "2025-09-13",
+    "official_salary": 2500.0,
+    "termination_date": "2025-11-24",
+    "status": "demitido"
+  },
+  {
+    "name": "RAIMUNDO PEREIRA MOREIRA",
+    "cpf": "356.592.462-49",
+    "role": "CASEIRO",
+    "cbo": "514325",
+    "hire_date": "2024-02-22",
+    "official_salary": 2687.5,
+    "termination_date": "2025-09-08",
+    "status": "demitido"
+  },
+  {
+    "name": "SERGIO AUGUSTO DE OLIVEIRA LEAO",
+    "cpf": "752.126.501-78",
+    "role": "AUXILIAR ADMINISTRATIVO",
+    "cbo": "411010",
+    "hire_date": "2022-10-03",
+    "official_salary": 2950.0,
+    "termination_date": "2025-07-20",
+    "status": "demitido"
+  },
+  {
+    "name": "THANINY GONCALVES DA SILVA ANA JULIA GONCALVES PEIXOTO",
+    "cpf": "025.150.031-41",
+    "role": "ANALISTA DE DEPARTAMENTO PESSOAL",
+    "cbo": "413105",
+    "hire_date": "2025-07-21",
+    "official_salary": 4000.0,
+    "termination_date": "2025-07-22",
+    "status": "demitido"
+  }
+]
