@@ -79,7 +79,7 @@ const projectStructure: FileItem[] = [
     path: '/queries',
     icon: <FileCode className="h-4 w-4 text-yellow-500" />,
     children: [
-      { id: 'saldo', name: 'saldo_banco.sql', type: 'file', path: '/queries/saldo_banco.sql', content: `-- Saldo do Banco Sicredi\nSELECT SUM(COALESCE(debit, 0)) - SUM(COALESCE(credit, 0)) as saldo\nFROM accounting_entry_lines ael\nJOIN chart_of_accounts coa ON ael.account_id = coa.id\nWHERE coa.code = '1.1.1.05';` },
+      { id: 'saldo', name: 'saldo_banco.sql', type: 'file', path: '/queries/saldo_banco.sql', content: `-- Saldo do Banco Sicredi\nSELECT SUM(COALESCE(debit, 0)) - SUM(COALESCE(credit, 0)) as saldo\nFROM accounting_entry_items ael\nJOIN chart_of_accounts coa ON ael.account_id = coa.id\nWHERE coa.code = '1.1.1.05';` },
       { id: 'inadimplentes', name: 'inadimplentes.sql', type: 'file', path: '/queries/inadimplentes.sql', content: `-- Clientes Inadimplentes\nSELECT c.name, c.nome_fantasia, i.amount, i.due_date\nFROM invoices i\nJOIN clients c ON i.client_id = c.id\nWHERE i.status = 'overdue'\nORDER BY i.due_date;` },
     ]
   },
@@ -223,7 +223,7 @@ const CodeEditor = () => {
     } else if (lastLine.toLowerCase().includes('clientes')) {
       setCopilotSuggestion('\nSELECT * FROM clients WHERE status = \'active\';');
     } else if (lastLine.toLowerCase().includes('saldo')) {
-      setCopilotSuggestion('\n-- Saldo do banco\nSELECT SUM(debit) - SUM(credit) FROM accounting_entry_lines;');
+      setCopilotSuggestion('\n-- Saldo do banco\nSELECT SUM(debit) - SUM(credit) FROM accounting_entry_items;');
     } else {
       setCopilotSuggestion(null);
     }
@@ -312,7 +312,7 @@ const CodeEditor = () => {
 
         if (conta) {
           const { data: lines } = await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .select('debit, credit')
             .eq('account_id', conta.id);
 

@@ -104,7 +104,7 @@ const InitialLoad = () => {
       const chartRes = await supabase.from('chart_of_accounts').select('*', { count: 'exact', head: true });
       const entriesRes = await supabase.from('accounting_entries').select('*', { count: 'exact', head: true });
       const invoicesRes = await supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('competence', '01/2025');
-      const linesRes = await supabase.from('accounting_entry_lines').select('*', { count: 'exact', head: true });
+      const linesRes = await supabase.from('accounting_entry_items').select('*', { count: 'exact', head: true });
       const clientsRes = await supabase.from('clients').select('*', { count: 'exact', head: true });
 
       setStats({

@@ -35,7 +35,7 @@ const Journal = () => {
         .from("accounting_entries")
         .select(`
           *,
-          accounting_entry_lines(
+          accounting_entry_items(
             *,
             chart_of_accounts(code, name)
           )
@@ -50,7 +50,7 @@ const Journal = () => {
         date: entry.entry_date,
         description: entry.description,
         documentNumber: entry.document_number,
-        lines: (entry.accounting_entry_lines as any[])?.map(line => ({
+        lines: (entry.accounting_entry_items as any[])?.map(line => ({
           accountCode: line.chart_of_accounts?.code || "",
           accountName: line.chart_of_accounts?.name || "",
           debit: Number(line.debit || 0),

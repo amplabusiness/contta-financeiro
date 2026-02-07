@@ -51,7 +51,7 @@ const GeneralLedger = () => {
       if (!account) return;
 
       const { data: entries, error } = await supabase
-        .from("accounting_entry_lines")
+        .from("accounting_entry_items")
         .select(`
           *,
           accounting_entries(entry_date, description)

@@ -213,10 +213,11 @@ export function usePayrollAccounting() {
           });
         }
 
-        // Inserir linhas contábeis
+        // Inserir linhas contábeis (accounting_entry_items não tem coluna description)
+        const linhasSemDesc = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
-          .from('accounting_entry_lines')
-          .insert(linhas);
+          .from('accounting_entry_items')
+          .insert(linhasSemDesc);
 
         if (linhasError) {
           // Reverter entrada se linhas falharem
@@ -303,9 +304,10 @@ export function usePayrollAccounting() {
           }
         ];
 
+        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
-          .from('accounting_entry_lines')
-          .insert(linhas);
+          .from('accounting_entry_items')
+          .insert(linhasSemDescFolha);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);
@@ -377,9 +379,10 @@ export function usePayrollAccounting() {
           }
         ];
 
+        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
-          .from('accounting_entry_lines')
-          .insert(linhas);
+          .from('accounting_entry_items')
+          .insert(linhasSemDescFolha);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);
@@ -451,9 +454,10 @@ export function usePayrollAccounting() {
           }
         ];
 
+        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
-          .from('accounting_entry_lines')
-          .insert(linhas);
+          .from('accounting_entry_items')
+          .insert(linhasSemDescFolha);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);

@@ -45,7 +45,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   ChevronRight,
-  Bot
+  Bot,
+  Loader2
 } from 'lucide-react';
 
 // ============================================================================
@@ -394,8 +395,8 @@ export function AIAgentSuggestions({
 
 interface AIBatchSummaryProps {
   transactions: BankTransaction[];
-  onApplyAll: () => void;
-  onReviewManually: () => void;
+  onApplyAll: () => Promise<void>;
+  onReviewManually: () => Promise<void> | void;
 }
 
 export function AIBatchSummary({ transactions, onApplyAll, onReviewManually }: AIBatchSummaryProps) {
@@ -406,6 +407,7 @@ export function AIBatchSummary({ transactions, onApplyAll, onReviewManually }: A
     totalValorAuto: 0,
     totalValorRevisao: 0
   });
+  const [isProcessing, setIsProcessing] = useState(false);
   
   useEffect(() => {
     let autoClassificaveis = 0;
@@ -504,23 +506,57 @@ export function AIBatchSummary({ transactions, onApplyAll, onReviewManually }: A
         
         {/* Ações */}
         {summary.autoClassificaveis > 0 && (
-          <Button 
+          <Button
             className="w-full bg-emerald-600 hover:bg-emerald-700"
-            onClick={onApplyAll}
+            onClick={async () => {
+              setIsProcessing(true);
+              try {
+                await onApplyAll();
+              } finally {
+                setIsProcessing(false);
+              }
+            }}
+            disabled={isProcessing}
           >
-            <Zap className="h-4 w-4 mr-2" />
-            Aplicar {summary.autoClassificaveis} Classificações Automáticas
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Aplicar {summary.autoClassificaveis} Classificações Automáticas
+              </>
+            )}
           </Button>
         )}
         
         {summary.requeremRevisao > 0 && (
-          <Button 
+          <Button
             variant="outline"
             className="w-full"
-            onClick={onReviewManually}
+            onClick={async () => {
+              setIsProcessing(true);
+              try {
+                await onReviewManually();
+              } finally {
+                setIsProcessing(false);
+              }
+            }}
+            disabled={isProcessing}
           >
-            <HelpCircle className="h-4 w-4 mr-2" />
-            Revisar {summary.requeremRevisao} com Dr. Cícero
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Dr. Cícero revisando...
+              </>
+            ) : (
+              <>
+                <Brain className="h-4 w-4 mr-2" />
+                Revisar {summary.requeremRevisao} com Dr. Cícero
+              </>
+            )}
           </Button>
         )}
       </CardContent>

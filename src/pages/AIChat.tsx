@@ -350,23 +350,21 @@ const AIChat = () => {
                       .single();
 
                     if (!entryError && entry) {
-                      // Criar linhas
+                      // Criar linhas (accounting_entry_items não tem coluna description)
                       await supabase
-                        .from('accounting_entry_lines')
+                        .from('accounting_entry_items')
                         .insert([
                           {
                             entry_id: entry.id,
                             account_id: contaBanco.id,
                             debit: action.details.valor,
-                            credit: 0,
-                            description: 'Entrada em banco'
+                            credit: 0
                           },
                           {
                             entry_id: entry.id,
                             account_id: contaClientes.id,
                             debit: 0,
-                            credit: action.details.valor,
-                            description: 'Baixa de cliente a receber'
+                            credit: action.details.valor
                           }
                         ]);
 

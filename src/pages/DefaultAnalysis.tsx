@@ -93,7 +93,7 @@ export default function DefaultAnalysis() {
       setLoading(true);
 
       // =================================================================
-      // FONTE DA VERDADE: accounting_entries + accounting_entry_lines
+      // FONTE DA VERDADE: accounting_entries + accounting_entry_items
       // =================================================================
 
       // 1. Buscar saldo geral da conta 1.1.2.01 (Clientes a Receber)

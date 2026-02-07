@@ -342,21 +342,19 @@ const AIWorkspace = () => {
       status: 'posted'
     });
 
-    // Criar linhas
-    await executeQuery('accounting_entry_lines', 'insert', [
+    // Criar linhas (accounting_entry_items não tem coluna description)
+    await executeQuery('accounting_entry_items', 'insert', [
       {
         entry_id: entry.id,
         account_id: debitAccount.id,
         debit: amount,
-        credit: 0,
-        description: `D: ${debitAccount.code} - ${debitAccount.name}`
+        credit: 0
       },
       {
         entry_id: entry.id,
         account_id: creditAccount.id,
         debit: 0,
-        credit: amount,
-        description: `C: ${creditAccount.code} - ${creditAccount.name}`
+        credit: amount
       }
     ]);
 
@@ -540,7 +538,7 @@ const AIWorkspace = () => {
           const [contaBanco] = await executeQuery('chart_of_accounts', 'select', 'id', { code: '1.1.1.05' });
 
           if (contaBanco) {
-            const linhas = await executeQuery('accounting_entry_lines', 'select', 'debit, credit', { account_id: contaBanco.id });
+            const linhas = await executeQuery('accounting_entry_items', 'select', 'debit, credit', { account_id: contaBanco.id });
             let saldo = 0;
             linhas?.forEach((l: any) => saldo += (l.debit || 0) - (l.credit || 0));
 
@@ -552,7 +550,7 @@ const AIWorkspace = () => {
               description: 'Consulta saldo Banco Sicredi',
               status: 'success',
               result: { saldo },
-              table: 'accounting_entry_lines'
+              table: 'accounting_entry_items'
             });
           }
           break;

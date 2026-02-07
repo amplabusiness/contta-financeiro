@@ -153,7 +153,7 @@ const CostCenterAnalysis = () => {
           const entriesWithLines = await Promise.all(
             matchingEntries.map(async (entry: any) => {
               const { data: lines } = await supabase
-                .from("accounting_entry_lines")
+                .from("accounting_entry_items")
                 .select("debit, credit")
                 .eq("entry_id", entry.id);
 
@@ -317,7 +317,7 @@ const CostCenterAnalysis = () => {
           id,
           description,
           entry_date,
-          accounting_entry_lines(debit, credit)
+          accounting_entry_items(debit, credit)
         `)
         .eq("entry_type", "saldo_abertura")
         .lte("entry_date", `${selectedYear}-12-31`);
@@ -328,7 +328,7 @@ const CostCenterAnalysis = () => {
           id,
           description,
           entry_date,
-          accounting_entry_lines(debit, credit)
+          accounting_entry_items(debit, credit)
         `)
         .eq("entry_type", "opening_balance")
         .lte("entry_date", `${selectedYear}-12-31`);
@@ -377,7 +377,7 @@ const CostCenterAnalysis = () => {
               const centerCode = center.code || "";
               const key = `${centerCode} - ${center.name}`;
               // Extrair o valor do débito
-              const lines = entry.accounting_entry_lines || [];
+              const lines = entry.accounting_entry_items || [];
               const debitValue = lines.reduce((sum: number, line: any) => sum + Number(line.debit || 0), 0);
 
               console.log(`Saldo encontrado: ${centerCode} = R$ ${debitValue}`);

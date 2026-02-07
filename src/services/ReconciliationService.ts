@@ -15,7 +15,7 @@
  * ============================================================================
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ReconciliationResult {
   success: boolean;

@@ -154,8 +154,8 @@ const BusinessManager = () => {
           .from('accounting_entries')
           .select(`
             id, entry_date, description,
-            accounting_entry_lines (
-              debit_amount, credit_amount,
+            accounting_entry_items (
+              debit, credit,
               chart_of_accounts (code, name, type)
             )
           `)
@@ -173,15 +173,15 @@ const BusinessManager = () => {
       const despesasPorCategoria: Record<string, number> = {};
 
       entries?.forEach(e => {
-        e.accounting_entry_lines?.forEach((l: any) => {
+        e.accounting_entry_items?.forEach((l: any) => {
           const code = l.chart_of_accounts?.code || '';
           const name = l.chart_of_accounts?.name || 'Outros';
 
           if (code.startsWith('3.')) {
-            totalReceitas += Number(l.credit_amount) || 0;
+            totalReceitas += Number(l.credit) || 0;
           }
           if (code.startsWith('4.')) {
-            const amt = Number(l.debit_amount) || 0;
+            const amt = Number(l.debit) || 0;
             totalDespesas += amt;
             despesasPorCategoria[name] = (despesasPorCategoria[name] || 0) + amt;
           }

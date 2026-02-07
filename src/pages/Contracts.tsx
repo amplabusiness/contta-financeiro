@@ -1321,7 +1321,7 @@ ${officeData.cidade || "Goiânia"}/${officeData.estado || "GO"}, ${formattedDate
 
       // Buscar lançamentos de débito (valores a receber) na conta do cliente
       const { data: entries, error } = await supabase
-        .from("accounting_entry_lines")
+        .from("accounting_entry_items")
         .select(`
           id,
           debit,

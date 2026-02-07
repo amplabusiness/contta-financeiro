@@ -55,7 +55,7 @@ const BalanceSheet = () => {
 
       // Buscar TODOS os lançamentos contábeis (sem filtro de data na query)
       const { data: entries, error: entriesError } = await supabase
-        .from("accounting_entry_lines")
+        .from("accounting_entry_items")
         .select(`
           account_id,
           debit,
@@ -169,12 +169,20 @@ const BalanceSheet = () => {
         } else if (primeiroDigito === '3') {
           // Receitas (natureza credora): crédito - débito
           if (!account.is_synthetic) {
-            sumReceita += balance.credit - balance.debit;
+            const receitaVal = balance.credit - balance.debit;
+            if (receitaVal !== 0) {
+              console.log('Receita encontrada:', account.code, account.name, 'Valor:', receitaVal);
+            }
+            sumReceita += receitaVal;
           }
         } else if (primeiroDigito === '4') {
           // Despesas (natureza devedora): débito - crédito
           if (!account.is_synthetic) {
-            sumDespesa += balance.debit - balance.credit;
+            const despesaVal = balance.debit - balance.credit;
+            if (despesaVal !== 0) {
+              console.log('Despesa encontrada:', account.code, account.name, 'Valor:', despesaVal);
+            }
+            sumDespesa += despesaVal;
           }
         }
       });
@@ -182,15 +190,23 @@ const BalanceSheet = () => {
       // Calcular Resultado do Exercício (Receitas - Despesas)
       const resultadoExercicio = sumReceita - sumDespesa;
 
-      // Adicionar Resultado do Exercício à lista de PL
-      if (resultadoExercicio !== 0) {
+      // DEBUG: Log valores calculados
+      console.log('=== DEBUG BALANÇO ===');
+      console.log('sumReceita (3.x):', sumReceita);
+      console.log('sumDespesa (4.x):', sumDespesa);
+      console.log('resultadoExercicio:', resultadoExercicio);
+      console.log('sumPL (5.x):', sumPL);
+
+      // Adicionar Resultado do Exercício à lista de PL SOMENTE se for significativo
+      // Usar tolerância de 0.01 para evitar problemas de floating point
+      if (Math.abs(resultadoExercicio) > 0.01) {
         plList.push({
           code: '5.1.1',
           name: 'Resultado do Exercício',
           type: 'PATRIMONIO_LIQUIDO',
           is_synthetic: false,
-          debit: 0,
-          credit: resultadoExercicio,
+          debit: resultadoExercicio < 0 ? Math.abs(resultadoExercicio) : 0,
+          credit: resultadoExercicio > 0 ? resultadoExercicio : 0,
           balance: resultadoExercicio,
           level: 3,
         });

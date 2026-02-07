@@ -8,7 +8,7 @@ import { BoletoReconciliationService, BoletoMatch } from "@/services/BoletoRecon
 import { formatCurrency } from "@/data/expensesData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain, RefreshCw, Trash2, MessageSquare, GraduationCap, Eye } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ArrowRight, Wallet, Receipt, SplitSquareHorizontal, Upload, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Maximize2, Minimize2, ExternalLink, FileText, Zap, Sparkles, User, Building2, ShieldCheck, Brain, RefreshCw, Trash2, MessageSquare, GraduationCap, Eye, Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -31,13 +31,15 @@ import { DrCiceroChat } from "@/components/DrCiceroChat";
 import { AIAgentSuggestions, AIBatchSummary } from "@/components/AIAgentSuggestions";
 import { ImpactPreviewPanel } from "@/components/ImpactPreviewPanel";
 import { EducatorPanel } from "@/components/EducatorPanel";
+import { MonthClosingStatus } from "@/components/MonthClosingStatus";
+import { BankReconciliationPanel } from "@/components/BankReconciliationPanel";
 import { useImpactCalculation } from "@/hooks/useImpactCalculation";
 import { useEducatorExplanation } from "@/hooks/useEducatorExplanation";
 import { buscarModeloLancamento, identificarSiglas, MODELOS_LANCAMENTOS } from "@/lib/drCiceroKnowledge";
 import { classificarTransacaoOFX, ClassificacaoAutomatica } from "@/lib/classificadorAutomatico";
 import { parseExtratoBancarioCSV } from "@/lib/csvParser";
 import { parseOFX } from "@/lib/ofxParser";
-import { getAccountBalance, ACCOUNT_MAPPING } from "@/lib/accountMapping";
+import { getAccountBalance, ACCOUNT_MAPPING, clearAccountCache } from "@/lib/accountMapping";
 
 interface BankTransaction {
   id: string;
@@ -158,7 +160,7 @@ export default function SuperConciliation() {
     }
   }, [selectedDate]);
 
-  const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos'>('pending');
+  const [viewMode, setViewMode] = useState<'pending' | 'review' | 'ai_report' | 'boletos' | 'bank_recon'>('pending');
   const [bankAccountCode, setBankAccountCode] = useState("1.1.1.05");
   const [identifyingPayers, setIdentifyingPayers] = useState(false);
   const [classificationDialogOpen, setClassificationDialogOpen] = useState(false);
@@ -389,11 +391,12 @@ export default function SuperConciliation() {
   
   useEffect(() => {
      const fetchBankCode = async () => {
-         const { data } = await supabase.from('chart_of_accounts').select('code').ilike('name', '%Sicredi%').limit(1).single();
+         if (!tenant?.id) return;
+         const { data } = await supabase.from('chart_of_accounts').select('code').eq('tenant_id', tenant.id).ilike('name', '%Sicredi%').limit(1).single();
          if (data) setBankAccountCode(data.code);
      };
      fetchBankCode();
-  }, []);
+  }, [tenant?.id]);
 
     const handleExtratoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -838,9 +841,9 @@ export default function SuperConciliation() {
                 
                 // Buscar linhas do lançamento
                 const { data: lines, error: linesError } = await supabase
-                    .from('accounting_entry_lines')
+                    .from('accounting_entry_items')
                     .select(`
-                        id, debit, credit, description,
+                        id, debit, credit,
                         chart_of_accounts ( id, code, name, account_type )
                     `)
                     .eq('entry_id', selectedTx.journal_entry_id);
@@ -931,17 +934,25 @@ export default function SuperConciliation() {
 
         const enforcedEntries = result.entries.map(e => {
             if (isReceipt) {
-                return {
-                    ...e,
-                    debit: { account: bankAccountCode, name: bankName },
-                    credit: e.credit
-                };
+                // Para ENTRADA: garantir que o BANCO está no DÉBITO (apenas do primeiro entry)
+                if (e.debit.account === bankAccountCode || e.debit.account === '---') {
+                    return {
+                        ...e,
+                        debit: { account: bankAccountCode, name: bankName },
+                        credit: e.credit
+                    };
+                }
+                return e; // Manter entry de classificação como está
             } else {
-                return {
-                    ...e,
-                    debit: e.debit,
-                    credit: { account: bankAccountCode, name: bankName }
-                };
+                // Para SAÍDA: garantir que o BANCO está no CRÉDITO (apenas do primeiro entry)
+                if (e.credit.account === bankAccountCode || e.credit.account === '---') {
+                    return {
+                        ...e,
+                        debit: e.debit,
+                        credit: { account: bankAccountCode, name: bankName }
+                    };
+                }
+                return e; // Manter entry de classificação como está
             }
         });
 
@@ -1175,6 +1186,159 @@ export default function SuperConciliation() {
     toast.info("Importação via arquivo simulada.");
   };
 
+  /**
+   * Resolve códigos de conta para IDs analíticos.
+   * 1. Busca direta por contas analíticas
+   * 2. Se sintética, busca primeira filha analítica
+   * 3. Se não existe, Dr. Cícero cria automaticamente
+   */
+  const resolveAnalyticalAccounts = async (
+    codes: string[],
+    tenantId: string,
+    nameMap?: Map<string, string>
+  ): Promise<Map<string, string>> => {
+    const accountMap = new Map<string, string>();
+
+    // Busca direta: só contas analíticas
+    const { data: directMatch } = await supabase
+      .from('chart_of_accounts')
+      .select('id, code')
+      .eq('tenant_id', tenantId)
+      .eq('is_analytical', true)
+      .in('code', codes);
+
+    directMatch?.forEach(acc => accountMap.set(acc.code, acc.id));
+
+    // Para códigos não encontrados, buscar conta filha analítica
+    const missingCodes = codes.filter(c => !accountMap.has(c));
+    for (const code of missingCodes) {
+      const { data: childMatch } = await supabase
+        .from('chart_of_accounts')
+        .select('id, code')
+        .eq('tenant_id', tenantId)
+        .eq('is_analytical', true)
+        .eq('is_active', true)
+        .ilike('code', `${code}.%`)
+        .order('code')
+        .limit(1);
+
+      if (childMatch && childMatch.length > 0) {
+        console.warn(`[Conta Sintética] ${code} → substituída por filha analítica ${childMatch[0].code}`);
+        accountMap.set(code, childMatch[0].id);
+        continue;
+      }
+
+      // Conta não existe - Consultar Dr. Cícero antes de criar
+      const accountName = nameMap?.get(code) || `Conta ${code}`;
+      const { consultarDrCiceroCriacaoConta } = await import('@/lib/validarComDrCicero');
+      const parecer = await consultarDrCiceroCriacaoConta(tenantId, code, accountName);
+
+      if (!parecer.aprovado) {
+        console.error(`[Dr. Cícero] RECUSOU criar conta ${code}: ${parecer.motivo}`);
+        continue;
+      }
+
+      console.log(`[Dr. Cícero] Parecer: ${parecer.motivo}`);
+
+      // Se Dr. Cícero retornou uma analítica existente, usar diretamente
+      if (parecer.codigoAnalitica && !parecer.codigoSintetica) {
+        const { data: existingAcc } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .eq('code', parecer.codigoAnalitica)
+          .eq('is_analytical', true)
+          .limit(1);
+        if (existingAcc && existingAcc.length > 0) {
+          accountMap.set(code, existingAcc[0].id);
+          continue;
+        }
+      }
+
+      // Se Dr. Cícero retornou analítica existente (filha de sintética já existente)
+      if (parecer.codigoAnalitica && parecer.codigoSintetica) {
+        const { data: existingChild } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .eq('code', parecer.codigoAnalitica)
+          .eq('is_analytical', true)
+          .limit(1);
+        if (existingChild && existingChild.length > 0) {
+          accountMap.set(code, existingChild[0].id);
+          continue;
+        }
+      }
+
+      // Criar hierarquia: sintética (pai) + analítica (filha .01)
+      const syntheticCode = parecer.codigoSintetica || code;
+      const analyticalCode = parecer.codigoAnalitica || `${code}.01`;
+      const syntheticLevel = syntheticCode.split('.').length;
+      const analyticalLevel = analyticalCode.split('.').length;
+
+      // 1. Criar sintética (se não existir)
+      const { data: synExists } = await supabase
+        .from('chart_of_accounts')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .eq('code', syntheticCode)
+        .limit(1);
+
+      if (!synExists || synExists.length === 0) {
+        const { error: synError } = await supabase
+          .from('chart_of_accounts')
+          .insert({
+            tenant_id: tenantId,
+            code: syntheticCode,
+            name: accountName,
+            account_type: parecer.accountType,
+            nature: parecer.nature,
+            level: syntheticLevel,
+            is_analytical: false,
+            is_active: true
+          });
+        if (synError) {
+          console.error(`[Dr. Cícero] Falha ao criar sintética ${syntheticCode}:`, synError.message);
+          continue;
+        }
+        console.log(`[Dr. Cícero] Conta SINTÉTICA criada: ${syntheticCode} - ${accountName}`);
+      } else {
+        // Garantir que existente é sintética
+        await supabase
+          .from('chart_of_accounts')
+          .update({ is_analytical: false })
+          .eq('tenant_id', tenantId)
+          .eq('code', syntheticCode);
+      }
+
+      // 2. Criar filha analítica (.01)
+      const { data: analyticalCreated, error: anaError } = await supabase
+        .from('chart_of_accounts')
+        .insert({
+          tenant_id: tenantId,
+          code: analyticalCode,
+          name: accountName,
+          account_type: parecer.accountType,
+          nature: parecer.nature,
+          level: analyticalLevel,
+          is_analytical: true,
+          is_active: true
+        })
+        .select('id')
+        .single();
+
+      if (analyticalCreated && !anaError) {
+        console.log(`[Dr. Cícero] Conta ANALÍTICA criada: ${analyticalCode} - ${accountName} (filha de ${syntheticCode})`);
+        accountMap.set(code, analyticalCreated.id);
+        toast.success(`Dr. Cícero criou: ${syntheticCode} (sint.) → ${analyticalCode} (anal.)`);
+      } else {
+        console.error(`[Dr. Cícero] Falha ao criar analítica ${analyticalCode}:`, anaError?.message);
+      }
+    }
+
+    return accountMap;
+  };
+
   const handleConfirm = async () => {
     if (!selectedTx || !suggestion) return;
 
@@ -1182,16 +1346,20 @@ export default function SuperConciliation() {
     try {
         const codes = suggestion.entries.flatMap(e => [e.debit.account, e.credit.account]);
         const uniqueCodes = [...new Set(codes)];
-        
-        const { data: accountsData, error: accountsError } = await supabase
-            .from('chart_of_accounts')
-            .select('id, code')
-            .in('code', uniqueCodes);
 
-        if (accountsError) throw new Error("Erro ao buscar contas no plano: " + accountsError.message);
-        
-        const accountMap = new Map<string, string>();
-        accountsData?.forEach(acc => accountMap.set(acc.code, acc.id));
+        const tenantId = tenant?.id;
+        if (!tenantId) {
+            toast.error("Erro: tenant não identificado");
+            setLoading(false);
+            return;
+        }
+
+        const nameMap = new Map<string, string>();
+        suggestion.entries.forEach(e => {
+            nameMap.set(e.debit.account, e.debit.name);
+            nameMap.set(e.credit.account, e.credit.name);
+        });
+        const accountMap = await resolveAnalyticalAccounts(uniqueCodes, tenantId, nameMap);
 
         // Verificar lançamento existente por transaction_id, reference_id OU source_id
         // (lançamentos automáticos usam source_id, manuais usam reference_id)
@@ -1235,9 +1403,10 @@ export default function SuperConciliation() {
                 .single();
              entryData = updated;
              entryError = updError;
-             
+
              if (!updError) {
-                 await supabase.from('accounting_entry_lines').delete().eq('entry_id', existingEntry.id);
+                 // Usar accounting_entry_items ao invés de accounting_entry_lines
+                 await supabase.from('accounting_entry_items').delete().eq('entry_id', existingEntry.id);
              }
         } else {
             const { data: inserted, error: insError } = await supabase
@@ -1255,10 +1424,13 @@ export default function SuperConciliation() {
             throw new Error("Erro ao criar lançamento: nenhum ID retornado do banco de dados");
         }
 
-        const rawLines = suggestion.entries.flatMap(entry => [
-            { code: entry.debit.account, name: entry.debit.name, debit: entry.value, credit: 0 },
-            { code: entry.credit.account, name: entry.credit.name, debit: 0, credit: entry.value }
-        ]);
+        const rawLines = suggestion.entries.flatMap(entry => {
+            const val = Math.abs(Number(entry.value) || 0);
+            return [
+                { code: entry.debit.account, name: entry.debit.name, debit: val, credit: 0 },
+                { code: entry.credit.account, name: entry.credit.name, debit: 0, credit: val }
+            ];
+        });
 
         const aggregatedLines = rawLines.reduce((acc, line) => {
             const existing = acc.find(l => l.code === line.code);
@@ -1277,22 +1449,23 @@ export default function SuperConciliation() {
                 console.error("Conta faltante:", { line, codes: uniqueCodes });
                 throw new Error(`Conta não encontrada no plano: ${line.code}`);
             }
-            
+
             return {
                 entry_id: entryData.id,
                 account_id: accId,
-                debit: line.debit,
-                credit: line.credit,
-                description: line.debit > 0 ? `Débito: ${line.name}` : `Crédito: ${line.name}`
+                debit: Number(line.debit) || 0,
+                credit: Number(line.credit) || 0
             };
         });
 
+        // USAR accounting_entry_items ao invés de accounting_entry_lines
+        // Para que getAccountBalance() funcione corretamente
         const { error: linesError } = await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .insert(linesToInsert);
 
         if (linesError) throw new Error("Erro ao criar itens: " + linesError.message);
-        
+
         if (suggestion.entries.length > 0) {
             const entry = suggestion.entries[0];
             const isReceipt = selectedTx.amount > 0;
@@ -1323,16 +1496,25 @@ export default function SuperConciliation() {
         }
 
         toast.success("Lançamento confirmado!");
-        
-        setTransactions(prev => prev.map(t => t.id === selectedTx.id ? { ...t, matched: true } : t));
-        
+
+        // VINCULAR lançamento à transação bancária (marca como conciliada no banco)
+        await supabase
+            .from('bank_transactions')
+            .update({ journal_entry_id: entryData.id, matched: true })
+            .eq('id', selectedTx.id);
+
+        // Limpar cache para forçar recalcular saldos
+        clearAccountCache();
+
+        setTransactions(prev => prev.map(t => t.id === selectedTx.id ? { ...t, matched: true, journal_entry_id: entryData.id } : t));
+
         if (viewMode === 'pending') {
              setTransactions(prev => prev.filter(t => t.id !== selectedTx.id));
              setSelectedTx(null);
         } else {
              setSelectedTx(prev => prev ? { ...prev, matched: true } : null);
         }
-        
+
         setSuggestion(null);
         setIsManualMode(false);
 
@@ -1345,10 +1527,294 @@ export default function SuperConciliation() {
     }
   };
 
+  /**
+   * Aplica classificações em lote.
+   * mode='auto': só transações com autoClassificar=true e confiança >= 95%
+   * mode='review': transações com classificação (confiança > 0) que NÃO são auto-classificáveis
+   */
+  const handleBatchApply = async (mode: 'auto' | 'review' = 'auto') => {
+    setLoading(true);
+    const startTime = Date.now();
+
+    try {
+        // Obter tenantId do contexto
+        const tenantId = tenant?.id;
+        if (!tenantId) {
+            toast.error("Erro: tenant não identificado");
+            setLoading(false);
+            return;
+        }
+
+        // Importar a função de classificação
+        const { classificarTransacaoOFX } = await import('@/lib/classificadorAutomatico');
+
+        // Filtrar transações pendentes e classificar cada uma
+        const pendingTransactions = transactions.filter(t => !t.journal_entry_id);
+        const autoClassifiable: Array<{ tx: BankTransaction, classificacao: any }> = [];
+
+        for (const tx of pendingTransactions) {
+            const classificacao = classificarTransacaoOFX(tx.description, tx.amount);
+            if (!classificacao || classificacao.confianca === 0) continue;
+
+            if (mode === 'auto') {
+                // Só transações com alta confiança e auto-classificáveis
+                if (classificacao.autoClassificar && classificacao.confianca >= 0.95) {
+                    autoClassifiable.push({ tx, classificacao });
+                }
+            } else {
+                // Transações que têm classificação mas NÃO são auto-classificáveis
+                if (!(classificacao.autoClassificar && classificacao.confianca >= 0.95)) {
+                    autoClassifiable.push({ tx, classificacao });
+                }
+            }
+        }
+
+        if (autoClassifiable.length === 0) {
+            toast.info(mode === 'auto'
+                ? "Nenhuma transação com confiança suficiente para aplicação automática."
+                : "Nenhuma transação pendente de revisão.");
+            setLoading(false);
+            return;
+        }
+
+        toast.info(mode === 'auto'
+            ? `Processando ${autoClassifiable.length} classificações automáticas...`
+            : `Dr. Cícero revisando ${autoClassifiable.length} transações...`);
+
+        // Obter usuário autenticado para audit log
+        const user = (await supabase.auth.getUser()).data.user;
+
+        let successCount = 0;
+        let errorCount = 0;
+        const errors: string[] = [];
+
+        // PRÉ-RESOLVER todas as contas de uma vez (evita N queries repetidas)
+        const allCodes = new Set<string>();
+        const allNameMap = new Map<string, string>();
+        for (const { classificacao } of autoClassifiable) {
+            allCodes.add(classificacao.debito.codigo);
+            allCodes.add(classificacao.credito.codigo);
+            allNameMap.set(classificacao.debito.codigo, classificacao.debito.nome);
+            allNameMap.set(classificacao.credito.codigo, classificacao.credito.nome);
+        }
+        console.log(`[Cache] Pré-resolvendo ${allCodes.size} contas únicas para ${autoClassifiable.length} transações...`);
+        const preResolvedAccounts = await resolveAnalyticalAccounts([...allCodes], tenantId, allNameMap);
+        console.log(`[Cache] ${preResolvedAccounts.size} contas resolvidas com sucesso`);
+
+        // Pré-importar módulos (evita import dinâmico a cada iteração)
+        const drCiceroModule = await import('@/lib/validarComDrCicero');
+
+        // Processar cada transação
+        for (let i = 0; i < autoClassifiable.length; i++) {
+            const { tx, classificacao } = autoClassifiable[i];
+
+            try {
+                // VALIDAÇÃO DR. CÍCERO - Verificar histórico antes de aplicar
+                const validacao = await drCiceroModule.validarClassificacaoComDrCicero(
+                    tenant?.id,
+                    tx.description,
+                    classificacao.debito.codigo,
+                    classificacao.credito.codigo,
+                    Math.abs(tx.amount)
+                );
+
+                // Se Dr. Cícero não aprovou, pular esta transação
+                if (!validacao.aprovado) {
+                    console.warn(`⚠️ Dr. Cícero não aprovou: ${tx.description.substring(0, 40)} - ${validacao.motivo}`);
+                    errorCount++;
+                    errors.push(`${tx.description.substring(0, 30)}: ${validacao.motivo}`);
+                    continue;
+                }
+
+                console.log(`✅ Dr. Cícero aprovou (${Math.round(validacao.confianca * 100)}%): ${tx.description.substring(0, 40)}`);
+
+                // Converter classificação automática para formato de sugestão
+                const suggestionForTx: ClassificationSuggestion = {
+                    description: classificacao.historico,
+                    type: 'ai_suggestion',
+                    reasoning: `Dr. Cícero aprovou (${Math.round(validacao.confianca * 100)}% confiança) - ${validacao.motivo}`,
+                    entries: [{
+                        debit: {
+                            account: classificacao.debito.codigo,
+                            name: classificacao.debito.nome
+                        },
+                        credit: {
+                            account: classificacao.credito.codigo,
+                            name: classificacao.credito.nome
+                        },
+                        value: Math.abs(tx.amount)
+                    }]
+                };
+
+                // Usar contas pré-resolvidas do cache (sem query adicional)
+                const debitoId = preResolvedAccounts.get(classificacao.debito.codigo);
+                const creditoId = preResolvedAccounts.get(classificacao.credito.codigo);
+
+                if (!debitoId || !creditoId) {
+                    throw new Error(
+                        `Contas não encontradas no plano: ` +
+                        `Débito ${classificacao.debito.codigo}${!debitoId ? ' (FALTANDO)' : ''}, ` +
+                        `Crédito ${classificacao.credito.codigo}${!creditoId ? ' (FALTANDO)' : ''}`
+                    );
+                }
+
+                if (debitoId === creditoId) {
+                    throw new Error(
+                        `ERRO: Débito e Crédito são a mesma conta! ` +
+                        `${classificacao.debito.codigo} = ${classificacao.credito.codigo}`
+                    );
+                }
+
+                // PROTEÇÃO ANTI-DUPLICATA: verificar se transação já tem lançamento
+                const { data: freshTx } = await supabase
+                    .from('bank_transactions')
+                    .select('journal_entry_id')
+                    .eq('id', tx.id)
+                    .single();
+
+                if (freshTx?.journal_entry_id) {
+                    console.warn(`⏭️ Transação ${tx.id} já tem lançamento ${freshTx.journal_entry_id} - pulando`);
+                    continue;
+                }
+
+                // Verificar lançamento existente por referência (fallback)
+                const { data: existingEntry } = await supabase
+                    .from('accounting_entries')
+                    .select('id')
+                    .or(`transaction_id.eq.${tx.id},reference_id.eq.${tx.id},source_id.eq.${tx.id}`)
+                    .maybeSingle();
+
+                // Gerar internal_code único
+                const dateStr = tx.date.replace(/-/g, '');
+                const uniquePart = crypto.randomUUID().substring(0, 8);
+                const internalCode = `bank_transaction:${dateStr}:${uniquePart}`;
+
+                // Se já existe entry, deletar primeiro (reclassificação)
+                if (existingEntry) {
+                    await supabase.from('accounting_entry_items').delete().eq('entry_id', existingEntry.id);
+                    await supabase.from('accounting_entries').delete().eq('id', existingEntry.id);
+                }
+
+                // Preparar items para RPC (sem description - coluna não existe)
+                const itemsForRpc = [
+                    {
+                        account_id: debitoId,
+                        debit: Math.abs(tx.amount),
+                        credit: 0
+                    },
+                    {
+                        account_id: creditoId,
+                        debit: 0,
+                        credit: Math.abs(tx.amount)
+                    }
+                ];
+
+                // Usar RPC para contornar problemas de RLS/GRANTS
+                const { data: entryId, error: rpcError } = await supabase.rpc('create_accounting_entry_batch', {
+                    p_entry_type: 'automatic',
+                    p_description: suggestionForTx.description,
+                    p_entry_date: tx.date,
+                    p_competence_date: tx.date,
+                    p_reference_type: 'bank_transaction',
+                    p_reference_id: tx.id,
+                    p_source_type: 'bank_transaction',
+                    p_source_id: tx.id,
+                    p_internal_code: internalCode,
+                    p_document_number: tx.description?.substring(0, 50),
+                    p_total_debit: Math.abs(tx.amount),
+                    p_total_credit: Math.abs(tx.amount),
+                    p_balanced: true,
+                    p_items: itemsForRpc
+                });
+
+                if (rpcError) throw new Error(`Erro RPC: ${rpcError.message}`);
+                if (!entryId) throw new Error("Nenhum ID retornado da RPC");
+
+                // VINCULAR lançamento à transação bancária (marca como conciliada)
+                const { error: linkError } = await supabase
+                    .from('bank_transactions')
+                    .update({ journal_entry_id: entryId, matched: true })
+                    .eq('id', tx.id);
+
+                if (linkError) {
+                    console.warn(`⚠️ Lançamento criado mas falha ao vincular: ${linkError.message}`);
+                }
+
+                // Registrar no audit log do Dr. Cícero
+                await drCiceroModule.registrarAplicacaoRegra(
+                    tenant?.id,
+                    user?.id || '',
+                    tx.id,
+                    classificacao,
+                    'sucesso',
+                    `Lançamento ${entryId} criado com aprovação do Dr. Cícero`
+                );
+
+                // Atualizar contadores
+                successCount++;
+
+                // Feedback de progresso a cada 5 transações
+                if ((i + 1) % 5 === 0) {
+                    toast.info(`Processadas ${i + 1}/${autoClassifiable.length} transações...`);
+                }
+
+            } catch (err) {
+                errorCount++;
+                const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+                errors.push(`${tx.description.substring(0, 30)}: ${errorMsg}`);
+                console.error(`Erro ao processar transação ${tx.id}:`, err);
+
+                // Registrar erro no audit log
+                try {
+                    await drCiceroModule.registrarAplicacaoRegra(
+                        tenant?.id,
+                        user?.id || '',
+                        tx.id,
+                        classificacao,
+                        'erro',
+                        errorMsg
+                    );
+                } catch (auditError) {
+                    console.error('Erro ao registrar no audit log:', auditError);
+                }
+            }
+        }
+
+        // Limpar cache e recarregar transações
+        clearAccountCache();
+        await fetchTransactions();
+
+        // Feedback final
+        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+
+        if (successCount > 0) {
+            toast.success(
+                `${successCount} classificação(ões) aplicada(s) com sucesso em ${elapsedTime}s!` +
+                (errorCount > 0 ? ` (${errorCount} erro(s))` : '')
+            );
+        }
+
+        if (errorCount > 0 && errors.length > 0) {
+            console.error("Erros durante classificação em lote:", errors);
+            toast.error(`${errorCount} transação(ões) com erro. Verifique o console.`);
+        }
+
+        // Resetar seleção
+        setSelectedTx(null);
+        setSuggestion(null);
+
+    } catch (err) {
+        console.error("Erro no processamento em lote:", err);
+        toast.error("Erro ao processar classificações automáticas");
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
     <Tabs 
       value={viewMode}
-      onValueChange={(v) => setViewMode(v as 'pending' | 'review' | 'ai_report' | 'boletos')}
+      onValueChange={(v) => setViewMode(v as 'pending' | 'review' | 'ai_report' | 'boletos' | 'bank_recon')}
       className="h-auto lg:h-[calc(100vh-4rem)] flex flex-col p-2 md:p-4 bg-slate-50 min-h-screen w-full max-w-[100vw] overflow-x-hidden"
     >
       
@@ -1381,6 +1847,10 @@ export default function SuperConciliation() {
                 <TabsTrigger value="boletos" className="flex-1 sm:flex-none px-4">
                     <FileText className="mr-2 h-4 w-4" />
                     Boletos
+                </TabsTrigger>
+                <TabsTrigger value="bank_recon" className="flex-1 sm:flex-none px-4">
+                    <Landmark className="mr-2 h-4 w-4" />
+                    Conciliação OFX
                 </TabsTrigger>
             </TabsList>
         </div>
@@ -1527,6 +1997,19 @@ export default function SuperConciliation() {
                 )}
                 Identificar Pagadores
             </Button>
+            
+            {/* 📅 FECHAMENTO DE MÊS - Integrado ao fluxo de trabalho */}
+            <MonthClosingStatus
+                selectedDate={selectedDate}
+                tenantId={tenant?.id}
+                pendingCount={transactions.filter(t => !t.journal_entry_id).length}
+                onClose={() => {
+                    // Recarregar transações após fechamento
+                    fetchTransactions();
+                    toast.success("Mês fechado com sucesso!");
+                }}
+            />
+            
             <input
                 type="file"
                 ref={fileInputRef}
@@ -1584,17 +2067,17 @@ export default function SuperConciliation() {
                     Desfazer Conciliação
                 </Button>
             ) : (
-                <Button 
-                    className="w-full gap-2 bg-blue-700 hover:bg-blue-800 text-white shadow-md transition-all hover:scale-[1.02]" 
+                <Button
+                    className="w-full gap-2 bg-blue-700 hover:bg-blue-800 text-white shadow-md transition-all hover:scale-[1.02]"
                     disabled={!suggestion || suggestion.entries.length === 0 || loading}
                     onClick={handleConfirm}
                 >
                     {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" /> 
+                        <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                         <>
                             <CheckCircle2 className="h-4 w-4" />
-                            CONFIRMAR (Salvar)
+                            Aplicar Classificação
                         </>
                     )}
                 </Button>
@@ -1677,6 +2160,11 @@ export default function SuperConciliation() {
             endDate={format(endOfMonth(selectedDate), 'yyyy-MM-dd')}
           />
         </div>
+      ) : viewMode === 'bank_recon' ? (
+        /* ABA DE CONCILIAÇÃO OFX - Upload e conciliação de arquivos OFX + CSV */
+        <div className="flex-1 overflow-y-auto p-4">
+          <BankReconciliationPanel />
+        </div>
       ) : (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
 
@@ -1724,13 +2212,8 @@ export default function SuperConciliation() {
                             amount: t.amount,
                             date: t.date
                         }))}
-                        onApplyAll={async (classificacoes) => {
-                            toast.info(`Aplicando ${classificacoes.length} classificações automáticas...`);
-                            // TODO: Implementar aplicação em lote
-                        }}
-                        onReviewManually={() => {
-                            toast.info('Selecione cada transação para revisar manualmente');
-                        }}
+                        onApplyAll={() => handleBatchApply('auto')}
+                        onReviewManually={() => handleBatchApply('review')}
                     />
                 )}
                 
@@ -2296,7 +2779,7 @@ export default function SuperConciliation() {
                 <div className="bg-white border rounded-lg shadow-sm">
                     <div className="bg-slate-50 border-b p-2 flex justify-between items-center">
                         <span className="font-bold text-xs text-slate-700">Lançamento Único (Dr. Cicero)</span>
-                        <Badge variant="outline" className="text-[10px] h-5">{formatCurrency(suggestion.entries.reduce((a, b) => a + b.value, 0))}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-5">{formatCurrency(Math.abs(selectedTx?.amount || 0))}</Badge>
                     </div>
 
                     <div className="p-0">
@@ -2304,35 +2787,67 @@ export default function SuperConciliation() {
                         <div className="p-2 border-b border-slate-100">
                              <div className="text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-wider">Débitos (Destino)</div>
                              <div className="space-y-1">
-                                {suggestion.entries.map((entry, idx) => (
-                                    <div key={`d-${idx}`} className="flex items-center gap-1 group">
-                                        <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
-                                            {formatCurrency(entry.value)}
-                                        </div>
-                                        <div className="flex-1">
-                                            {entry.debit.account === bankAccountCode ? (
-                                                <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
-                                                    <Wallet className="h-3 w-3 text-slate-400" />
-                                                    {entry.debit.name || 'Conta Banco'}
-                                                    <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
-                                                </div>
-                                            ) : (
-                                                <AccountSelector 
-                                                    value={entry.debit.account}
-                                                    accounts={availableAccounts}
-                                                    onChange={(newCode) => {
-                                                        const newEntries = [...suggestion.entries];
-                                                        const acc = availableAccounts.find(a => a.code === newCode);
-                                                        if (acc) {
-                                                            newEntries[idx].debit = { account: acc.code, name: acc.name };
+                                {(() => {
+                                    // Agrupar débitos únicos (para evitar duplicação em cobranças com múltiplos clientes)
+                                    const debitsMap = new Map<string, { account: string; name: string; total: number }>();
+
+                                    suggestion.entries.forEach((entry) => {
+                                        // FILTRO: ignorar entries com conta inválida
+                                        if (!entry.debit.account || entry.debit.account === '---' || entry.debit.account === '') {
+                                            return;
+                                        }
+
+                                        const key = entry.debit.account;
+                                        if (debitsMap.has(key)) {
+                                            debitsMap.get(key)!.total += entry.value;
+                                        } else {
+                                            debitsMap.set(key, {
+                                                account: entry.debit.account,
+                                                name: entry.debit.name,
+                                                total: entry.value
+                                            });
+                                        }
+                                    });
+
+                                    return Array.from(debitsMap.entries()).map(([key, debit], idx) => {
+                                        // Buscar nome correto da conta no availableAccounts
+                                        const accountInfo = availableAccounts.find(a => a.code === debit.account);
+                                        const displayName = accountInfo?.name || debit.name;
+
+                                        return (
+                                        <div key={`d-${idx}`} className="flex items-center gap-1 group">
+                                            <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
+                                                {formatCurrency(debit.total)}
+                                            </div>
+                                            <div className="flex-1">
+                                                {debit.account === bankAccountCode ? (
+                                                    <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
+                                                        <Wallet className="h-3 w-3 text-slate-400" />
+                                                        {displayName || 'Conta Banco'}
+                                                        <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
+                                                    </div>
+                                                ) : (
+                                                    <AccountSelector
+                                                        value={debit.account}
+                                                        accounts={availableAccounts}
+                                                        onChange={(newCode) => {
+                                                            // Para contas agrupadas, atualizar todos os entries com essa conta
+                                                            const newEntries = suggestion.entries.map(e => {
+                                                                if (e.debit.account === debit.account) {
+                                                                    const acc = availableAccounts.find(a => a.code === newCode);
+                                                                    return acc ? { ...e, debit: { account: acc.code, name: acc.name } } : e;
+                                                                }
+                                                                return e;
+                                                            });
                                                             setSuggestion({ ...suggestion, entries: newEntries });
-                                                        }
-                                                    }}
-                                                />
-                                            )}
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                    });
+                                })()}
                              </div>
                         </div>
 
@@ -2340,46 +2855,76 @@ export default function SuperConciliation() {
                         <div className="p-2">
                              <div className="text-[10px] font-bold text-blue-600 mb-1 uppercase tracking-wider">Créditos (Origem)</div>
                                                  <div className="space-y-1">
-                                                        {suggestion.entries.map((entry, idx) => {
+                                                        {(() => {
                                                             const isCobranca = selectedTx && (
-                                                                selectedTx.description.includes('COB') || 
+                                                                selectedTx.description.includes('COB') ||
                                                                 selectedTx.description.includes('COBRANCA') ||
                                                                 selectedTx.description.includes('Cobrança')
                                                             );
-                                                            
+
+                                                            // Se for cobrança, não mostrar aqui (será mostrado no CollectionClientBreakdown)
                                                             if (isCobranca) return null;
-                                                            return (
+
+                                                            // Agrupar créditos únicos
+                                                            const creditsMap = new Map<string, { account: string; name: string; total: number }>();
+
+                                                            suggestion.entries.forEach(entry => {
+                                                                // FILTRO: ignorar entries com conta inválida
+                                                                if (!entry.credit.account || entry.credit.account === '---' || entry.credit.account === '') {
+                                                                    return;
+                                                                }
+
+                                                                const key = entry.credit.account;
+                                                                if (creditsMap.has(key)) {
+                                                                    creditsMap.get(key)!.total += entry.value;
+                                                                } else {
+                                                                    creditsMap.set(key, {
+                                                                        account: entry.credit.account,
+                                                                        name: entry.credit.name,
+                                                                        total: entry.value
+                                                                    });
+                                                                }
+                                                            });
+
+                                                            return Array.from(creditsMap.entries()).map(([key, credit], idx) => {
+                                                                // Buscar nome correto da conta no availableAccounts
+                                                                const accountInfo = availableAccounts.find(a => a.code === credit.account);
+                                                                const displayName = accountInfo?.name || credit.name;
+
+                                                                return (
                                                                 <div key={`c-${idx}`} className="flex items-center gap-1 group">
-                                                                        <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
-                                                                            {formatCurrency(entry.value)}
-                                                                        </div>
-                                                                        <div className="flex-1">
-                                                                            {entry.credit.account === bankAccountCode ? (
-                                                                                <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
-                                                                                    <Wallet className="h-3 w-3 text-slate-400" />
-                                                                                    {entry.credit.name || 'Conta Banco'}
-                                                                                    <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <AccountSelector 
-                                                                                        value={entry.credit.account}
-                                                                                        accounts={availableAccounts}
-                                                                                        onChange={(newCode) => {
-                                                                                            const newEntries = [...suggestion.entries];
+                                                                    <div className="w-16 font-mono text-[10px] text-right text-slate-400 mr-2">
+                                                                        {formatCurrency(credit.total)}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        {credit.account === bankAccountCode ? (
+                                                                            <div className="flex items-center gap-2 h-6 px-1.5 bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 font-medium">
+                                                                                <Wallet className="h-3 w-3 text-slate-400" />
+                                                                                {displayName || 'Conta Banco'}
+                                                                                <span className="ml-auto text-[10px] bg-slate-200 px-1 rounded text-slate-500">Fixo</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <AccountSelector
+                                                                                value={credit.account}
+                                                                                accounts={availableAccounts}
+                                                                                onChange={(newCode) => {
+                                                                                    // Para contas agrupadas, atualizar todos os entries com essa conta
+                                                                                    const newEntries = suggestion.entries.map(e => {
+                                                                                        if (e.credit.account === credit.account) {
                                                                                             const acc = availableAccounts.find(a => a.code === newCode);
-                                                                                            if (acc) {
-                                                                                                newEntries[idx].credit = { account: acc.code, name: acc.name };
-                                                                                                setSuggestion({ ...suggestion, entries: newEntries });
-                                                                                            }
-                                                                                        }}
-                                                                                    />
-                                                                                </>
-                                                                            )}
-                                                                        </div>
+                                                                                            return acc ? { ...e, credit: { account: acc.code, name: acc.name } } : e;
+                                                                                        }
+                                                                                        return e;
+                                                                                    });
+                                                                                    setSuggestion({ ...suggestion, entries: newEntries });
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             );
-                                                        })}
+                                                            });
+                                                        })()}
                                 
                                                         {selectedTx && (/(^|\s)[C]?OB\d+/.test(selectedTx.description) || selectedTx.description.includes('COBRANCA') || selectedTx.description.includes('Cobrança')) && (
                                   <div className="mt-2">

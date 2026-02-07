@@ -32,21 +32,9 @@ AS $$
 BEGIN
   RETURN QUERY
   WITH
-  -- Combinar dados de AMBAS as tabelas (accounting_entry_lines E accounting_entry_items)
+  -- FONTE ÚNICA: somente accounting_entry_items (NÃO accounting_entry_lines)
+  -- accounting_entry_lines é tabela legada que causa double-counting via UNION ALL
   all_entries AS (
-    -- De accounting_entry_lines
-    SELECT
-      ael.account_id,
-      COALESCE(ae.competence_date, ae.entry_date) as effective_date,
-      ae.entry_type,
-      ael.debit,
-      ael.credit
-    FROM accounting_entry_lines ael
-    JOIN accounting_entries ae ON ae.id = ael.entry_id
-
-    UNION ALL
-
-    -- De accounting_entry_items
     SELECT
       aei.account_id,
       COALESCE(ae.competence_date, ae.entry_date) as effective_date,
@@ -156,14 +144,14 @@ BEGIN
     at.is_analytical,
     -- Saldo de abertura considera natureza da conta
     CASE
-      WHEN at.nature = 'DEVEDORA' THEN at.opening_debits - at.opening_credits
+      WHEN UPPER(at.nature) IN ('DEVEDORA', 'DEBIT') THEN at.opening_debits - at.opening_credits
       ELSE at.opening_credits - at.opening_debits
     END as opening_balance,
     at.movement_debits as total_debits,
     at.movement_credits as total_credits,
     -- Saldo final
     CASE
-      WHEN at.nature = 'DEVEDORA' THEN
+      WHEN UPPER(at.nature) IN ('DEVEDORA', 'DEBIT') THEN
         (at.opening_debits - at.opening_credits) + at.movement_debits - at.movement_credits
       ELSE
         (at.opening_credits - at.opening_debits) + at.movement_credits - at.movement_debits

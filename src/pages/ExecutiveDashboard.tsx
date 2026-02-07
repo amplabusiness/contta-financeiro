@@ -60,7 +60,7 @@ const ExecutiveDashboard = () => {
 
       // Buscar TODOS os lançamentos contábeis
       const { data: allLines, error: linesError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit,
           credit,

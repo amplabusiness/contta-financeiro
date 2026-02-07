@@ -375,7 +375,7 @@ export function ReconciliationSheet({
           entry_date,
           description,
           internal_code,
-          accounting_entry_lines (
+          accounting_entry_items (
             debit,
             credit,
             account_id,
@@ -396,11 +396,11 @@ export function ReconciliationSheet({
         entry_date: string; 
         description: string; 
         internal_code: string;
-        accounting_entry_lines?: EntryLine[];
+        accounting_entry_items?: EntryLine[];
       };
 
       const receivableEntries = (entriesData || []).filter((entry: EntryData) => 
-        entry.accounting_entry_lines?.some((line: EntryLine) => 
+        entry.accounting_entry_items?.some((line: EntryLine) => 
           line.chart_of_accounts?.code?.startsWith("1.1.2")
         )
       ).map((entry: EntryData) => ({
@@ -408,9 +408,9 @@ export function ReconciliationSheet({
         entry_date: entry.entry_date,
         description: entry.description,
         internal_code: entry.internal_code,
-        total_debit: entry.accounting_entry_lines?.reduce((sum: number, l: EntryLine) => 
+        total_debit: entry.accounting_entry_items?.reduce((sum: number, l: EntryLine) => 
           l.chart_of_accounts?.code?.startsWith("1.1.2") ? sum + (l.debit || 0) : sum, 0) || 0,
-        total_credit: entry.accounting_entry_lines?.reduce((sum: number, l: EntryLine) => 
+        total_credit: entry.accounting_entry_items?.reduce((sum: number, l: EntryLine) => 
           l.chart_of_accounts?.code?.startsWith("1.1.2") ? sum + (l.credit || 0) : sum, 0) || 0,
       }));
 

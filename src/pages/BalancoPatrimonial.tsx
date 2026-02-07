@@ -184,10 +184,11 @@ const BalancoPatrimonial = () => {
           if (b.account_code.startsWith("3")) {
             // Receitas: créditos - débitos
             resultadoExercicio += (Number(b.total_credits) - Number(b.total_debits));
-          } else if (b.account_code.startsWith("4") || b.account_code.startsWith("5")) {
-            // Despesas/Custos: débitos - créditos
+          } else if (b.account_code.startsWith("4")) {
+            // Despesas: débitos - créditos (removido 5.x que é PL, não despesa!)
             resultadoExercicio -= (Number(b.total_debits) - Number(b.total_credits));
           }
+          // Contas 5.x (Patrimônio Líquido) NÃO entram no cálculo do Resultado do Exercício
         });
       }
 

@@ -9,7 +9,7 @@
  * @date 30/01/2026
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -193,7 +193,7 @@ export class DrCiceroAuditService {
 
     // Buscar receita contabilizada
     const { data: linhasReceita } = await supabase
-      .from('accounting_entry_lines')
+      .from('accounting_entry_items')
       .select(`
         debit,
         credit,
@@ -256,7 +256,7 @@ export class DrCiceroAuditService {
 
     for (const conta of contasTransitorias) {
       const { data: linhas } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit,
           credit,
@@ -318,7 +318,7 @@ export class DrCiceroAuditService {
 
     // Verificação global
     const { data: totaisGlobais } = await supabase
-      .from('accounting_entry_lines')
+      .from('accounting_entry_items')
       .select(`
         debit,
         credit,
@@ -345,7 +345,7 @@ export class DrCiceroAuditService {
 
     for (const entry of entries || []) {
       const { data: linhas } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select('debit, credit')
         .eq('entry_id', entry.id);
 

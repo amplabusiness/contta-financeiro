@@ -265,7 +265,7 @@ export class ClassificationService {
       ];
 
       const { error: linesError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .insert(lines);
 
       if (linesError) throw new Error(linesError.message);
@@ -349,7 +349,7 @@ export class ClassificationService {
       
       // Buscar valor original
       const { data: parentEntry } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select('debit, credit')
         .eq('entry_id', parentEntryId)
         .limit(1)

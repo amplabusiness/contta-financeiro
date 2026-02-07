@@ -104,7 +104,7 @@ const CashFlowStatement = () => {
 
       while (true) {
         const { data: pageData } = await supabase
-          .from('accounting_entry_lines')
+          .from('accounting_entry_items')
           .select(`
             debit, credit, account_id,
             entry_id(entry_date)
@@ -147,7 +147,7 @@ const CashFlowStatement = () => {
 
       while (true) {
         const { data: pageData } = await supabase
-          .from('accounting_entry_lines')
+          .from('accounting_entry_items')
           .select(`
             debit, credit, account_id,
             entry_id(entry_date, description, entry_type)

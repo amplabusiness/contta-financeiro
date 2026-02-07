@@ -124,7 +124,7 @@ const LivroDiario = () => {
         .from("accounting_entries")
         .select(`
           *,
-          accounting_entry_lines(
+          accounting_entry_items(
             id,
             account_id,
             debit,
@@ -160,7 +160,7 @@ const LivroDiario = () => {
         reference_type: entry.reference_type,
         reference_id: entry.reference_id,
         created_at: entry.created_at,
-        lines: (entry.accounting_entry_lines as any[] || []).map(line => ({
+        lines: (entry.accounting_entry_items as any[] || []).map(line => ({
           id: line.id,
           account_id: line.account_id,
           account_code: line.chart_of_accounts?.code || '',
@@ -300,7 +300,7 @@ const LivroDiario = () => {
       }
 
       const { error: updateError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .update(updates)
         .eq('id', editingLine.line_id);
 

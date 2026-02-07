@@ -208,7 +208,7 @@ async function processarMensagem(mensagem: string): Promise<{
         .or("code.like.3%,code.like.4%");
 
       const { data: lancamentos } = await supabase
-        .from("accounting_entry_lines")
+        .from("accounting_entry_items")
         .select(`
           amount,
           type,
@@ -368,7 +368,7 @@ async function processarMensagem(mensagem: string): Promise<{
         resposta += `| D+60 | Medidas legais | Jurídico |\n`;
       } else if (mensagemLower.includes("contab")) {
         resposta += `### Regras Contábeis\n\n`;
-        resposta += `- **Fonte única da verdade:** \`accounting_entry_lines\`\n`;
+        resposta += `- **Fonte única da verdade:** \`accounting_entry_items\`\n`;
         resposta += `- **Partida dobrada:** débito = crédito (sempre!)\n`;
         resposta += `- **Saldo de abertura:** credita PL (5.2.1.02), não receita\n`;
         resposta += `- **Adiantamentos pessoais:** conta 1.1.3.04.xx, nunca despesa\n`;

@@ -434,8 +434,8 @@ export function ClassificationDialog({
       if (transaction?.is_reclassification && transaction.journal_entry_id && selectedAccount) {
         // Buscar as linhas do lançamento existente
         const { data: existingLines, error: linesError } = await supabase
-          .from('accounting_entry_lines')
-          .select('id, account_id, debit, credit, description')
+          .from('accounting_entry_items')
+          .select('id, account_id, debit, credit')
           .eq('entry_id', transaction.journal_entry_id);
 
         if (linesError) throw linesError;
@@ -455,10 +455,9 @@ export function ClassificationDialog({
         if (lineToUpdate) {
           // Atualizar a conta da linha
           const { error: updateError } = await supabase
-            .from('accounting_entry_lines')
-            .update({ 
-              account_id: selectedAccount.id,
-              description: `Reclassificado: ${selectedAccount.name}${justification ? ' - ' + justification : ''}`
+            .from('accounting_entry_items')
+            .update({
+              account_id: selectedAccount.id
             })
             .eq('id', lineToUpdate.id);
 

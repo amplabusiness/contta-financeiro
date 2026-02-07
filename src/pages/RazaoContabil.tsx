@@ -158,11 +158,11 @@ const RazaoContabil = () => {
       
       // Buscar lançamentos
       const { data: entries, error } = await supabase
-        .from("accounting_entry_lines")
+        .from("accounting_entry_items")
         .select(`
           id,
-          debit_amount,
-          credit_amount,
+          debit,
+          credit,
           accounting_entries (
             id,
             entry_date,
@@ -201,8 +201,8 @@ const RazaoContabil = () => {
 
       entries?.forEach((entry: {
         id: string;
-        debit_amount: number | null;
-        credit_amount: number | null;
+        debit: number | null;
+        credit: number | null;
         accounting_entries: {
           id: string;
           entry_date: string;
@@ -214,8 +214,8 @@ const RazaoContabil = () => {
       } | null) => {
         if (!entry?.accounting_entries) return;
 
-        const debit = Number(entry.debit_amount) || 0;
-        const credit = Number(entry.credit_amount) || 0;
+        const debit = Number(entry.debit) || 0;
+        const credit = Number(entry.credit) || 0;
 
         // Calcular saldo baseado na natureza da conta
         if (account.nature === "DEVEDORA") {

@@ -68,7 +68,7 @@ export class AccountingAuditService {
       const { error } = await supabase.from('audit_logs').insert({
         user_id: userId,
         action: 'update',
-        table_name: 'accounting_entry_lines',
+        table_name: 'accounting_entry_items',
         record_id: lineId,
         old_values: {
           account_code: changes.old_account_code,
@@ -148,7 +148,7 @@ export class AccountingAuditService {
         .from('audit_logs')
         .select('*')
         .eq('record_id', lineId)
-        .eq('table_name', 'accounting_entry_lines')
+        .eq('table_name', 'accounting_entry_items')
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -171,7 +171,7 @@ export class AccountingAuditService {
   ): Promise<void> {
     try {
       const { error: updateError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .update(updates)
         .eq('id', lineId)
 

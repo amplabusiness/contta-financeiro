@@ -480,21 +480,19 @@ export default function SpecialFees() {
 
         if (!entryError && entry) {
           await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .insert([
               {
                 entry_id: entry.id,
                 account_id: clientAccountId,
                 debit: amount,
-                credit: 0,
-                description: `Honorário Variável - ${clientName}`
+                credit: 0
               },
               {
                 entry_id: entry.id,
                 account_id: revenueAccount.id,
                 debit: 0,
-                credit: amount,
-                description: `Receita Honorário Variável - ${clientName}`
+                credit: amount
               }
             ]);
         }
@@ -517,21 +515,19 @@ export default function SpecialFees() {
 
         if (!commError && commEntry) {
           await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .insert([
               {
                 entry_id: commEntry.id,
                 account_id: commissionCostAccount.id,
                 debit: commissionAmount,
-                credit: 0,
-                description: `Custo Comissão ${employeeName} - ${clientName}`
+                credit: 0
               },
               {
                 entry_id: commEntry.id,
                 account_id: commissionPayableAccount.id,
                 debit: 0,
-                credit: commissionAmount,
-                description: `Comissão a pagar - ${employeeName}`
+                credit: commissionAmount
               }
             ]);
         }

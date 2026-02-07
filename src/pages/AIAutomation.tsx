@@ -265,7 +265,7 @@ const AIAutomation = () => {
 
       // Buscar TODOS os lançamentos contábeis (mesma lógica da DRE)
       const { data: allLines } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit,
           credit,

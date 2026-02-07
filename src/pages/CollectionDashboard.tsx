@@ -97,7 +97,7 @@ const CollectionDashboard = () => {
     try {
       // =====================================================
       // FONTE DA VERDADE: Buscar saldos de Clientes a Receber
-      // da tabela accounting_entries + accounting_entry_lines
+      // da tabela accounting_entries + accounting_entry_items
       // =====================================================
       const receivables = await getReceivablesByClient(selectedYear, selectedMonth);
 

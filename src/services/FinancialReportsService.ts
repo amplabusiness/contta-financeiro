@@ -1,5 +1,5 @@
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface DRELine {
   code: string;
@@ -26,7 +26,7 @@ export const FinancialReportsService = {
     // Recursive Fetching for Pagination
     while (true) {
         const { data: rawData, error: fetchError } = await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .select(`
                 debit, 
                 credit,

@@ -493,7 +493,7 @@ export class BoletoReconciliationService {
 
         // Limpar linhas antigas para recriar
         await supabase
-          .from('accounting_entry_lines')
+          .from('accounting_entry_items')
           .delete()
           .eq('entry_id', existing.id);
 
@@ -522,7 +522,6 @@ export class BoletoReconciliationService {
         account_id: string;
         debit: number;
         credit: number;
-        description: string;
       }[] = [];
 
       // DÉBITO: Banco Sicredi (aumenta disponibilidade)
@@ -530,8 +529,7 @@ export class BoletoReconciliationService {
         entry_id: entryId,
         account_id: bankAccount.id,
         debit: totalValidAmount,
-        credit: 0,
-        description: `Recebimento boletos ${match.cobCode}`
+        credit: 0
       });
       result.totalDebited = totalValidAmount;
 
@@ -541,8 +539,7 @@ export class BoletoReconciliationService {
           entry_id: entryId,
           account_id: client.accountId,
           debit: 0,
-          credit: client.amount,
-          description: `Baixa ${client.clientName}`
+          credit: client.amount
         });
         result.totalCredited += client.amount;
       }
@@ -557,7 +554,7 @@ export class BoletoReconciliationService {
 
       // 7. Inserir linhas
       const { error: linesError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .insert(lines);
 
       if (linesError) {

@@ -134,7 +134,7 @@ export function useImpactCalculation() {
 
     // Buscar saldos (soma de débitos - créditos por conta)
     const { data: balances, error: balError } = await supabase
-      .from('accounting_entry_lines')
+      .from('accounting_entry_items')
       .select(`
         account_id,
         debit,
@@ -187,7 +187,7 @@ export function useImpactCalculation() {
     if (!tenantId) throw new Error('Tenant não definido');
 
     const { data: entries, error } = await supabase
-      .from('accounting_entry_lines')
+      .from('accounting_entry_items')
       .select(`
         account_id,
         debit,

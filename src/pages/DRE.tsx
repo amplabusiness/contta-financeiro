@@ -180,7 +180,7 @@ const DRE = () => {
 
       while (true) {
         const { data: pageData, error: linesError } = await supabase
-          .from('accounting_entry_lines')
+          .from('accounting_entry_items')
           .select(`
             debit,
             credit,
@@ -342,12 +342,11 @@ const DRE = () => {
 
       while (true) {
         const { data: pageData, error } = await supabase
-          .from('accounting_entry_lines')
+          .from('accounting_entry_items')
           .select(`
             id,
             debit,
             credit,
-            description,
             entry_id (
               id,
               entry_date,
@@ -439,7 +438,7 @@ const DRE = () => {
 
     try {
       const { error } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .update({ account_id: newAccountId })
         .eq('id', entryLineId);
 

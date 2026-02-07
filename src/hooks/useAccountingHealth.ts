@@ -112,7 +112,7 @@ async function cleanupOrphans() {
     // Contar entries e lines
     const [entriesResult, linesResult] = await Promise.all([
       supabase.from('accounting_entries').select('id', { count: 'exact', head: true }),
-      supabase.from('accounting_entry_lines').select('entry_id', { count: 'exact', head: true })
+      supabase.from('accounting_entry_items').select('entry_id', { count: 'exact', head: true })
     ]);
 
     const entriesCount = entriesResult.count || 0;
@@ -138,7 +138,7 @@ async function cleanupOrphans() {
     } else if (entriesCount > 0 && linesCount > 0) {
       // Verificar se há órfãos específicos
       const { data: entriesWithLines } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select('entry_id');
 
       const validIds = new Set((entriesWithLines || []).map(e => e.entry_id));

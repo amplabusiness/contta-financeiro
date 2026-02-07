@@ -664,9 +664,9 @@ class AccountingService {
 
       const entryIds = entries.map(e => e.id);
 
-      // Primeiro deletar as linhas (accounting_entry_lines)
+      // Primeiro deletar as linhas (accounting_entry_items)
       const { error: linesError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .delete()
         .in('entry_id', entryIds);
 

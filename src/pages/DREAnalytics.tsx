@@ -264,11 +264,14 @@ const DREAnalytics = () => {
 
       // Calcular percentuais (análise vertical)
       periodSummaries.forEach((summary) => {
-        const base = summary.totalRevenue || 1; // Evitar divisão por zero
-        
         accountMap.forEach((account) => {
           const value = account.values[summary.period] || 0;
-          account.percentages[summary.period] = (value / base) * 100;
+          if (summary.totalRevenue > 0) {
+            account.percentages[summary.period] = (value / summary.totalRevenue) * 100;
+          } else {
+            // Sem receita no período → AV% não se aplica
+            account.percentages[summary.period] = NaN;
+          }
         });
       });
 
@@ -380,14 +383,14 @@ const DREAnalytics = () => {
         item.account_code,
         item.account_name,
         ...dreStructure.periods.map((p) => (item.values[p.period] || 0).toFixed(2)),
-        ...dreStructure.periods.map((p) => formatPercent(item.percentages[p.period] || 0)),
+        ...dreStructure.periods.map((p) => formatPercent(item.percentages[p.period] ?? 0)),
       ]);
       item.children?.forEach((child) => {
         rows.push([
           child.account_code,
           `  ${child.account_name}`,
           ...dreStructure.periods.map((p) => (child.values[p.period] || 0).toFixed(2)),
-          ...dreStructure.periods.map((p) => formatPercent(child.percentages[p.period] || 0)),
+          ...dreStructure.periods.map((p) => formatPercent(child.percentages[p.period] ?? 0)),
         ]);
       });
     });
@@ -395,7 +398,7 @@ const DREAnalytics = () => {
       "",
       "TOTAL RECEITAS",
       ...dreStructure.periods.map((p) => p.totalRevenue.toFixed(2)),
-      ...dreStructure.periods.map(() => "100.0%"),
+      ...dreStructure.periods.map((p) => p.totalRevenue > 0 ? "100.0%" : "-"),
     ]);
 
     // Despesas
@@ -406,14 +409,14 @@ const DREAnalytics = () => {
         item.account_code,
         item.account_name,
         ...dreStructure.periods.map((p) => (item.values[p.period] || 0).toFixed(2)),
-        ...dreStructure.periods.map((p) => formatPercent(item.percentages[p.period] || 0)),
+        ...dreStructure.periods.map((p) => formatPercent(item.percentages[p.period] ?? 0)),
       ]);
       item.children?.forEach((child) => {
         rows.push([
           child.account_code,
           `  ${child.account_name}`,
           ...dreStructure.periods.map((p) => (child.values[p.period] || 0).toFixed(2)),
-          ...dreStructure.periods.map((p) => formatPercent(child.percentages[p.period] || 0)),
+          ...dreStructure.periods.map((p) => formatPercent(child.percentages[p.period] ?? 0)),
         ]);
       });
     });
@@ -421,7 +424,7 @@ const DREAnalytics = () => {
       "",
       "TOTAL DESPESAS",
       ...dreStructure.periods.map((p) => p.totalExpenses.toFixed(2)),
-      ...dreStructure.periods.map((p) => formatPercent((p.totalExpenses / p.totalRevenue) * 100)),
+      ...dreStructure.periods.map((p) => p.totalRevenue > 0 ? formatPercent((p.totalExpenses / p.totalRevenue) * 100) : "-"),
     ]);
 
     // Resultado
@@ -430,7 +433,7 @@ const DREAnalytics = () => {
       "",
       "RESULTADO LÍQUIDO",
       ...dreStructure.periods.map((p) => p.netResult.toFixed(2)),
-      ...dreStructure.periods.map((p) => formatPercent((p.netResult / p.totalRevenue) * 100)),
+      ...dreStructure.periods.map((p) => p.totalRevenue > 0 ? formatPercent((p.netResult / p.totalRevenue) * 100) : "-"),
     ]);
 
     const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
@@ -491,7 +494,7 @@ const DREAnalytics = () => {
             key={`${item.account_code}-${period.period}-pct`}
             className="text-right text-muted-foreground text-sm"
           >
-            {formatPercent(item.percentages[period.period] || 0)}
+            {formatPercent(item.percentages[period.period] ?? 0)}
           </TableCell>
         ))}
       </TableRow>
@@ -640,7 +643,7 @@ const DREAnalytics = () => {
                     </div>
                     <div className="flex justify-end">
                       <Badge variant={period.netResult >= 0 ? "default" : "destructive"} className="text-xs">
-                        {formatPercent((period.netResult / period.totalRevenue) * 100)} margem
+                        {period.totalRevenue > 0 ? formatPercent((period.netResult / period.totalRevenue) * 100) : "-"} margem
                       </Badge>
                     </div>
                   </CardContent>
@@ -700,7 +703,7 @@ const DREAnalytics = () => {
                         ))}
                         {dreStructure.periods.map((p) => (
                           <TableCell key={`pct-rev-${p.period}`} className="text-right text-green-700">
-                            100.0%
+                            {p.totalRevenue > 0 ? "100.0%" : "-"}
                           </TableCell>
                         ))}
                       </TableRow>
@@ -728,7 +731,7 @@ const DREAnalytics = () => {
                         ))}
                         {dreStructure.periods.map((p) => (
                           <TableCell key={`pct-exp-${p.period}`} className="text-right text-red-700">
-                            {formatPercent((p.totalExpenses / p.totalRevenue) * 100)}
+                            {p.totalRevenue > 0 ? formatPercent((p.totalExpenses / p.totalRevenue) * 100) : "-"}
                           </TableCell>
                         ))}
                       </TableRow>
@@ -767,7 +770,7 @@ const DREAnalytics = () => {
                             key={`pct-result-${p.period}`}
                             className={`text-right ${p.netResult >= 0 ? "text-green-700" : "text-red-700"}`}
                           >
-                            {formatPercent((p.netResult / p.totalRevenue) * 100)}
+                            {p.totalRevenue > 0 ? formatPercent((p.netResult / p.totalRevenue) * 100) : "-"}
                           </TableCell>
                         ))}
                       </TableRow>

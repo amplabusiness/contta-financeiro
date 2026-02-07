@@ -163,7 +163,7 @@ const ProfitabilityAnalysis = () => {
       const endDate = `${selectedYear}-12-31`;
 
       const { data: allLines, error: linesError } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit,
           credit,

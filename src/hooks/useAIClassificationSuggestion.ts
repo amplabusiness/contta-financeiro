@@ -229,7 +229,7 @@ export function useAIClassificationSuggestion(transaction?: BankTransaction) {
           description,
           journal_entry_id,
           accounting_entries!journal_entry_id (
-            accounting_entry_lines (
+            accounting_entry_items (
               account_id,
               chart_of_accounts (id, code, name, type, is_analytical, is_active)
             )
@@ -246,8 +246,8 @@ export function useAIClassificationSuggestion(transaction?: BankTransaction) {
         
         for (const st of similarTx) {
           const entry = st.accounting_entries as any;
-          if (entry?.accounting_entry_lines) {
-            for (const line of entry.accounting_entry_lines) {
+          if (entry?.accounting_entry_items) {
+            for (const line of entry.accounting_entry_items) {
               const acc = line.chart_of_accounts;
               if (acc && acc.is_active && acc.is_analytical) {
                 const current = accountCounts.get(acc.id) || { count: 0, account: acc };

@@ -121,7 +121,7 @@ export const FinancialIntelligenceService = {
         // e creditam a conta de Saldo de Abertura (2.3.03.02 ou antigas 5.x)
         
         const { data, error } = await supabase
-            .from('accounting_entry_lines')
+            .from('accounting_entry_items')
             .select(`
                 id, account_id, debit, credit, description,
                 chart_of_accounts!inner(code, name),
@@ -194,16 +194,21 @@ export const FinancialIntelligenceService = {
         const TRANSITORIA_DEBITOS = { code: '1.1.9.01', name: 'Transitória Débitos (Saídas)' };
         
         // =====================================================================
+        // DETECÇÃO DE COBRANÇA (múltiplos clientes) - Preview simplificado
+        // =====================================================================
+        const isCobranca = description.includes('COB') || description.includes('COBRANCA') || description.includes('Cobrança');
+
+        // =====================================================================
         // PASSO 1: Verificar regras de aprendizado assistido
         // =====================================================================
         const learnedRule = await this.findRule(description);
-        
+
         if (learnedRule) {
             // Verificar se a regra aprendida é para conta de RECEITA
             // Se for, BLOQUEAR - PIX não pode gerar receita diretamente!
             if (learnedRule.code.startsWith('3.')) {
                 console.warn('[FinancialIntelligence] BLOQUEADO: Regra tentou classificar PIX como receita diretamente');
-                
+
                 // Retornar para classificação manual com sugestão de cliente
                 return {
                     description: "⚠️ ATENÇÃO: Possível recebimento de cliente",
@@ -226,8 +231,42 @@ export const FinancialIntelligenceService = {
                     ]
                 };
             }
-            
-            // Regra aprendida para conta patrimonial - OK usar
+
+            // Para COBRANÇAS: retornar apenas 1 entry simplificado (o CollectionClientBreakdown mostra os detalhes)
+            if (isCobranca && isReceipt) {
+                return {
+                    description: `Sugestão IA: ${learnedRule.name}`,
+                    type: "ai_suggestion",
+                    confidence: 72,
+                    requires_review: true,
+                    entries: [{
+                        // Para preview: apenas o lançamento final simplificado
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: learnedRule.code, name: learnedRule.name },
+                        value: absAmount
+                    }],
+                    reasoning: `Regra aprendida aplicada. Aguardando validação.`
+                };
+            }
+
+            // Para CLIENTES CONHECIDOS (1.1.2.01.*): retornar lançamento direto simplificado
+            if (isReceipt && learnedRule.code.startsWith('1.1.2.01')) {
+                return {
+                    description: `Sugestão IA: ${learnedRule.name}`,
+                    type: "ai_suggestion",
+                    confidence: 85,
+                    requires_review: true,
+                    entries: [{
+                        // Lançamento direto: D: Banco / C: Cliente
+                        debit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                        credit: { account: learnedRule.code, name: learnedRule.name },
+                        value: absAmount
+                    }],
+                    reasoning: `Cliente conhecido. Regra aprendida aplicada.`
+                };
+            }
+
+            // Regra aprendida para conta patrimonial - OK usar (não-cobrança, não-cliente)
             if (isReceipt) {
                 return {
                     description: `Sugestão IA: ${learnedRule.name}`,
@@ -247,6 +286,30 @@ export const FinancialIntelligenceService = {
                     reasoning: `Regra aprendida aplicada. Aguardando validação.`
                 };
             } else {
+                // Para FORNECEDORES/DESPESAS CONHECIDAS: retornar lançamento direto simplificado
+                // Contas comuns: 2.1.* (fornecedores), 4.1.* (despesas), 1.1.3.01.* (adiant. sócios)
+                const isKnownExpenseOrPayable =
+                    learnedRule.code.startsWith('2.1.') ||
+                    learnedRule.code.startsWith('4.1.') ||
+                    learnedRule.code.startsWith('1.1.3.01');
+
+                if (isKnownExpenseOrPayable) {
+                    return {
+                        description: `Sugestão IA: ${learnedRule.name}`,
+                        type: "ai_suggestion",
+                        confidence: 85,
+                        requires_review: true,
+                        entries: [{
+                            // Lançamento direto: D: Despesa/Fornecedor / C: Banco
+                            debit: { account: learnedRule.code, name: learnedRule.name },
+                            credit: { account: bankAccountCode, name: 'Banco Sicredi' },
+                            value: absAmount
+                        }],
+                        reasoning: `${learnedRule.code.startsWith('1.1.3.01') ? 'Adiantamento conhecido' : learnedRule.code.startsWith('2.1.') ? 'Fornecedor conhecido' : 'Despesa conhecida'}. Regra aprendida aplicada.`
+                    };
+                }
+
+                // Para outras contas: usar transitória
                 return {
                     description: `Sugestão IA: ${learnedRule.name}`,
                     type: "ai_suggestion",

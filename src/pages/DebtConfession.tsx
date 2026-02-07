@@ -268,7 +268,7 @@ const DebtConfession = () => {
 
           // 4. Buscar lançamentos de débito na conta do cliente
           const { data: entries, error: entriesError } = await supabase
-            .from("accounting_entry_lines")
+            .from("accounting_entry_items")
             .select(`
               id,
               debit,

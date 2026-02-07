@@ -51,7 +51,7 @@ const GeneralLedgerAll = () => {
 
       // Buscar todos os lançamentos de uma vez
       let linesQuery = supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit, 
           credit, 

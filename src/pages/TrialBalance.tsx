@@ -40,7 +40,7 @@ const TrialBalance = () => {
 
       // Buscar todos os lançamentos
       const { data: entries, error: entriesError } = await supabase
-        .from("accounting_entry_lines" as any)
+        .from("accounting_entry_items" as any)
         .select("account_id, debit, credit");
 
       if (entriesError) throw entriesError;

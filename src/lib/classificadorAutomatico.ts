@@ -74,6 +74,7 @@ export const CONTAS_AMPLA = {
   CAIXA: { codigo: '1.1.1.01', nome: 'Caixa' },
   BANCO_SICREDI: { codigo: '1.1.1.05', nome: 'Banco Sicredi' },
   CLIENTES: { codigo: '1.1.2.01', nome: 'Clientes a Receber' },
+  CLIENTES_DIVERSOS: { codigo: '1.1.2.01.9999', nome: 'Clientes Diversos (Conciliação)' },
   ADIANTAMENTO_SOCIOS: { codigo: '1.1.3.01', nome: 'Adiantamento a Sócios' },
   TRANSITORIA_DEBITOS: { codigo: '1.1.9.01', nome: 'Transitória Débitos Pendentes' },
   IMOBILIZADO: { codigo: '1.2.3.01', nome: 'Imobilizado' },
@@ -109,7 +110,7 @@ export const CONTAS_AMPLA = {
   TELEFONE: { codigo: '4.1.1.04', nome: 'Telefone e Internet' },
   MATERIAL_EXPEDIENTE: { codigo: '4.1.1.05', nome: 'Material de Expediente' },
   SOFTWARE: { codigo: '4.1.1.06', nome: 'Software e Sistemas' },
-  DESPESAS_BANCARIAS: { codigo: '4.1.3.01', nome: 'Despesas Bancárias' },
+  DESPESAS_BANCARIAS: { codigo: '4.1.10', nome: 'Despesas Bancárias' },
   IOF: { codigo: '4.1.3.02', nome: 'IOF' },
   JUROS_PAGOS: { codigo: '4.1.3.03', nome: 'Juros Pagos' },
   DEPRECIACAO_DESP: { codigo: '4.1.4.01', nome: 'Depreciação' },
@@ -122,11 +123,11 @@ export const CONTAS_AMPLA = {
 export const PADROES_OFX: PadraoOFX[] = [
   // ========== TARIFAS BANCÁRIAS (Auto-classificar) ==========
   {
-    regex: /TARIFA|TAR\s|TXB|ANUIDADE|MANUT\s*CONTA|TAR\s*COM|TAR\s*PAC/i,
-    keywords: ['tarifa', 'tar', 'txb', 'anuidade', 'manutencao', 'pacote', 'cobranca'],
+    regex: /TARIFA|TAR\s|TXB|ANUIDADE|MANUT\s*CONTA|TAR\s*COM|TAR\s*PAC|MANUTENCAO\s*DE\s*TITULOS|CESTA\s*DE\s*RELACIONAMENTO/i,
+    keywords: ['tarifa', 'tar', 'txb', 'anuidade', 'manutencao', 'pacote', 'cobranca', 'cesta de relacionamento', 'manutencao de titulos'],
     tipo: 'SAIDA',
     categoria: 'BANCARIO',
-    debito: '4.1.3.01',
+    debito: '4.1.10',
     credito: '1.1.1.05',
     debitoNome: 'Despesas Bancárias',
     creditoNome: 'Banco Sicredi',
@@ -292,7 +293,7 @@ export const PADROES_OFX: PadraoOFX[] = [
     credito: '1.1.1.05',
     debitoNome: 'Telefone e Internet',
     creditoNome: 'Banco Sicredi',
-    confianca: 0.92,
+    confianca: 0.95,
     autoClassificar: true,
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
@@ -340,10 +341,58 @@ export const PADROES_OFX: PadraoOFX[] = [
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
   
-  // ========== RECEBIMENTOS DE CLIENTES ==========
+  // ========== RECEBIMENTOS SICOOB - BOLETOS (Auto-classificar) ==========
+  // Padrão SICOOB: "LIQ.COBRANCA SIMPLES-COBxxxxxx" = recebimento de boleto de cliente
+  // Usa 1.1.2.01.9999 (Clientes Diversos) porque 1.1.2.01 é conta sintética
+  // Futuro: cruzar CPF/CNPJ do PIX/COB com cadastro para conta específica
   {
-    regex: /REC\s*PIX|PIX\s*REC|CRED\s*PIX|PIX\s*CRED/i,
-    keywords: ['pix', 'recebimento', 'credito'],
+    regex: /LIQ\.?\s*COBRANCA\s*SIMPLES|LIQ\.?\s*COB\s*SIMPLES/i,
+    keywords: ['liq.cobranca simples', 'liq cobranca simples'],
+    tipo: 'ENTRADA',
+    categoria: 'RECEITAS',
+    debito: '1.1.1.05',
+    credito: '1.1.2.01.9999',
+    debitoNome: 'Banco Sicredi',
+    creditoNome: 'Clientes Diversos (Conciliação)',
+    confianca: 0.96,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Padrão SICOOB: "LIQUIDACAO BOLETO" genérico
+  {
+    regex: /LIQUIDACAO\s*BOLETO|BAIXA\s*BOLETO|BOLETO\s*LIQUIDADO/i,
+    keywords: ['liquidacao boleto', 'baixa boleto'],
+    tipo: 'ENTRADA',
+    categoria: 'RECEITAS',
+    debito: '1.1.1.05',
+    credito: '1.1.2.01.9999',
+    debitoNome: 'Banco Sicredi',
+    creditoNome: 'Clientes Diversos (Conciliação)',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== RECEBIMENTOS PIX (Auto-classificar) ==========
+  // Padrão SICOOB: "RECEBIMENTO PIX-PIX_CRED" = PIX recebido de cliente
+  {
+    regex: /RECEBIMENTO\s*PIX|PIX[_\s]*CRED|CRED[_\s]*PIX/i,
+    keywords: ['recebimento pix', 'pix_cred', 'pix cred'],
+    tipo: 'ENTRADA',
+    categoria: 'RECEITAS',
+    debito: '1.1.1.05',
+    credito: '1.1.2.01.9999',
+    debitoNome: 'Banco Sicredi',
+    creditoNome: 'Clientes Diversos (Conciliação)',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== OUTROS RECEBIMENTOS (Requer revisão) ==========
+  {
+    regex: /REC\s*PIX|PIX\s*REC/i,
+    keywords: ['pix', 'recebimento'],
     tipo: 'ENTRADA',
     categoria: 'RECEITAS',
     debito: '1.1.1.05',
@@ -381,7 +430,24 @@ export const PADROES_OFX: PadraoOFX[] = [
     agenteResponsavel: 'DR_CICERO'
   },
   
-  // ========== FAMÍLIA LEÃO (Adiantamentos) ==========
+  // ========== AMPLA CONTABILIDADE (Transferência Inter-Empresa) ==========
+  // DEVE VIR ANTES dos padrões genéricos de PIX/CNPJ
+  {
+    regex: /AMPLA\s*CONTABILIDADE/i,
+    keywords: ['ampla contabilidade'],
+    tipo: 'SAIDA',
+    categoria: 'TRANSFERENCIAS',
+    debito: '1.1.3.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Adiantamento a Sócios',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== FAMÍLIA LEÃO (Adiantamentos a Sócios) ==========
+  // DEVE VIR ANTES do PIX genérico para CPF
   {
     regex: /SERGIO\s*(AUGUSTO|CARNEIRO|LEAO)|CARLA.*LEAO|VICTOR\s*HUGO|NAYARA/i,
     keywords: ['sergio', 'carla', 'victor', 'nayara', 'leao'],
@@ -391,9 +457,83 @@ export const PADROES_OFX: PadraoOFX[] = [
     credito: '1.1.1.05',
     debitoNome: 'Adiantamento a Sócios',
     creditoNome: 'Banco Sicredi',
-    confianca: 0.92,
+    confianca: 0.96,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== PAGAMENTO PIX (SAÍDA) - Fornecedores CNPJ ==========
+  // Padrão SICOOB: "PAGAMENTO PIX-PIX_DEB 00000000000000 RAZAO_SOCIALCNPJ"
+  {
+    regex: /PAGAMENTO\s*PIX.*CNPJ$/i,
+    keywords: [],
+    tipo: 'SAIDA',
+    categoria: 'FORNECEDORES',
+    debito: '2.1.1.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Fornecedores',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // PIX para CPF genérico (não-sócio) → Transitória para revisão
+  {
+    regex: /PAGAMENTO\s*PIX.*CPF$/i,
+    keywords: [],
+    tipo: 'SAIDA',
+    categoria: 'DIVERSOS',
+    debito: '1.1.9.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Transitória Débitos Pendentes',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.70,
     autoClassificar: false,
     agenteResponsavel: 'DR_CICERO'
+  },
+  // PIX via Sicredi (rede Sicredi)
+  {
+    regex: /PAGAMENTO\s*PIX\s*SICREDI/i,
+    keywords: ['pagamento pix sicredi'],
+    tipo: 'SAIDA',
+    categoria: 'FORNECEDORES',
+    debito: '2.1.1.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Fornecedores',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== LIQUIDAÇÃO BOLETO (SAÍDA) - Pagamento de Boletos ==========
+  {
+    regex: /LIQUIDACAO\s*BOLETO|PAGAMENTO\s*BOLETO|BOLETO\s*PAGO/i,
+    keywords: ['liquidacao boleto', 'pagamento boleto'],
+    tipo: 'SAIDA',
+    categoria: 'FORNECEDORES',
+    debito: '2.1.1.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Fornecedores',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== DÉBITO CONVÊNIOS (Seguros, taxas governamentais) ==========
+  {
+    regex: /DEBITO\s*CONVENIOS|DEB\s*CONV/i,
+    keywords: ['debito convenios', 'deb conv'],
+    tipo: 'SAIDA',
+    categoria: 'FORNECEDORES',
+    debito: '2.1.1.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Fornecedores',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.95,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
   },
   
   // ========== TRANSFERÊNCIAS INTERNAS ==========
@@ -421,7 +561,7 @@ export const PADROES_OFX: PadraoOFX[] = [
     credito: '3.2.1.01',
     debitoNome: 'Banco Sicredi',
     creditoNome: 'Juros e Rendimentos',
-    confianca: 0.88,
+    confianca: 0.95,
     autoClassificar: true,
     agenteResponsavel: 'AGENTE_FINANCEIRO'
   },

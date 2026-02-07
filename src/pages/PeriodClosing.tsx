@@ -135,7 +135,7 @@ const PeriodClosing = () => {
 
       // Buscar lançamentos do período
       const { data: lancamentos } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit, credit, account_id,
           entry_id(entry_date, entry_type)
@@ -184,7 +184,7 @@ const PeriodClosing = () => {
       // Verificar inconsistências
       // 1. Verificar partidas dobradas
       const { data: linhas } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select('debit, credit');
 
       let totalDebitos = 0;
@@ -309,7 +309,7 @@ const PeriodClosing = () => {
       const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
 
       const { data: lancamentos } = await supabase
-        .from('accounting_entry_lines')
+        .from('accounting_entry_items')
         .select(`
           debit, credit, account_id,
           entry_id(entry_date)
@@ -400,11 +400,12 @@ const PeriodClosing = () => {
         }
       }
 
-      // 7. Inserir linhas de encerramento
+      // 7. Inserir linhas de encerramento (strip description para accounting_entry_items)
       if (linhasEncerramento.length > 0) {
+        const itemsSemDesc = linhasEncerramento.map(({ description, ...rest }: any) => rest);
         const { error: linesError } = await supabase
-          .from('accounting_entry_lines')
-          .insert(linhasEncerramento);
+          .from('accounting_entry_items')
+          .insert(itemsSemDesc);
 
         if (linesError) throw linesError;
       }
