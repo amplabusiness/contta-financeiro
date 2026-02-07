@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-    needs: [quality, supabase]
+    needs: [quality]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout código
