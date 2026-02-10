@@ -15,12 +15,6 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import {
-  gerarCodigoRastreamento,
-  validarDuplicata,
-  registrarRastreamento,
-} from '@/services/RastreamentoService';
 
 export interface FolhaDetalhe {
   employeeId: string;
@@ -37,34 +31,6 @@ export interface FolhaPagamento {
   ano: number;
   dataFolha: string; // YYYY-MM-DD
   funcionarios: FolhaDetalhe[];
-}
-
-interface LancamentoFolha {
-  descricao: string;
-  referenceType: 'payroll';
-  referenceId: string;
-  linhas: {
-    contaCode: string;
-    contaNome: string;
-    debito: number;
-    credito: number;
-  }[];
-}
-
-// Funcionários pessoais do proprietário - débito vai para ADIANTAMENTO, não despesa
-const FAMILIA_PROPRIETARIO_FOLHA = [
-  { regex: /SERGIO\s*AUGUSTO/i, contaCodigo: '1.1.3.04.05', contaId: '143a5ffc-0b6b-4ee6-b09d-8f077bccd658' },
-  { regex: /RAIMUNDO\s*PEREIRA/i, contaCodigo: '1.1.3.04.01', contaId: 'b2845989-75af-4ee6-b3fb-473fb58e90a2' },
-  { regex: /KENIO\s*MARTINS/i, contaCodigo: '1.1.3.04.01', contaId: 'b2845989-75af-4ee6-b3fb-473fb58e90a2' },
-  { regex: /FABIANA\s*MARIA/i, contaCodigo: '1.1.3.04.04', contaId: 'e796f6f4-c491-4e38-807f-0a5a5d837b84' },
-  { regex: /CLAUDIA\s*BARBOSA/i, contaCodigo: '1.1.3.04.04', contaId: 'e796f6f4-c491-4e38-807f-0a5a5d837b84' },
-];
-
-function isFamiliaProprietario(nome: string): { contaCodigo: string; contaId: string } | null {
-  for (const f of FAMILIA_PROPRIETARIO_FOLHA) {
-    if (f.regex.test(nome)) return { contaCodigo: f.contaCodigo, contaId: f.contaId };
-  }
-  return null;
 }
 
 export function usePayrollAccounting() {
@@ -103,192 +69,175 @@ export function usePayrollAccounting() {
         const totalINSS = folha.funcionarios.reduce((sum, f) => sum + f.inssRetido, 0);
         const totalIRRF = folha.funcionarios.reduce((sum, f) => sum + f.irrfRetido, 0);
         const totalLiquido = folha.funcionarios.reduce((sum, f) => sum + f.salarioLiquido, 0);
+        const mes = String(folha.mes).padStart(2, '0');
+        const competenciaCode = `${folha.ano}${mes}`;
+        const entryDate = new Date(folha.ano, folha.mes, 0).toISOString().slice(0, 10);
+        const internalCode = `FOLHA_${competenciaCode}_APROPRIACAO`;
 
-        // Separar funcionários pessoais (família proprietário) dos CLT empresa
-        const familiaItems: { nome: string; bruto: number; contaId: string }[] = [];
-        const empresaFuncionarios: FolhaDetalhe[] = [];
+        const salariosDespesaId = await resolveAccountId('4.2.1.01');
+        const salariosPagarId = await resolveAccountId('2.1.2.01');
+        const inssRecolherId = await resolveAccountId('2.1.2.02');
+        const irrfRecolherId = await resolveAccountId('2.1.2.03');
 
-        folha.funcionarios.forEach(f => {
-          const familia = isFamiliaProprietario(f.employeeName);
-          if (familia) {
-            familiaItems.push({ nome: f.employeeName, bruto: f.salarioBruto, contaId: familia.contaId });
-          } else {
-            empresaFuncionarios.push(f);
-          }
-        });
-
-        // Agrupar CLT empresa por departamento para débito
-        const porDepartamento: Record<string, { bruto: number; funcionarios: string[] }> = {};
-        empresaFuncionarios.forEach(f => {
-          const dept = f.department || 'Geral';
-          if (!porDepartamento[dept]) {
-            porDepartamento[dept] = { bruto: 0, funcionarios: [] };
-          }
-          porDepartamento[dept].bruto += f.salarioBruto;
-          porDepartamento[dept].funcionarios.push(f.employeeName);
-        });
-
-        // ✅ Gerar código único de rastreamento
-        const rastreamento = await gerarCodigoRastreamento(
-          supabase,
-          'FOLD',
-          {
-            totalBruto,
-            totalINSS,
-            totalIRRF,
-            totalLiquido,
-            funcionarios: folha.funcionarios.length,
-            departamentos: Object.keys(porDepartamento)
-          },
-          folha.ano,
-          folha.mes
-        );
-
-        // ✅ Validar se já existe (evita duplicatas)
-        const { isDuplicata, message: duplicataMsg } = await validarDuplicata(
-          supabase,
-          rastreamento.codigoRastreamento,
-          rastreamento.referenceId
-        );
-
-        if (isDuplicata) {
-          return {
-            success: false,
-            error: `Lançamento duplicado detectado! ${duplicataMsg}`
-          };
+        if (!salariosDespesaId || !salariosPagarId || !inssRecolherId || !irrfRecolherId) {
+          return { success: false, error: 'Contas contábeis da folha não configuradas.' };
         }
 
-        // Buscar contas de despesa existentes
-        const { data: contasDespesa } = await supabase
-          .from('chart_of_accounts')
-          .select('id, code, name')
-          .eq('account_type', 'DESPESA')
-          .eq('is_active', true);
-
-        // Criar entrada contábil principal
-        // NOTA: reference_id é UUID - NÃO usar para código de rastreamento (que é text)
-        // O código de rastreamento já está no campo description entre colchetes
-        const { data: entry, error: entryError } = await supabase
+        const { data: existingEntries, error: findErr } = await supabase
           .from('accounting_entries')
-          .insert([
-            {
-              entry_date: folha.dataFolha,
-              description: `Provisão Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
-              entry_type: 'payroll',
+          .select('id,created_at')
+          .eq('internal_code', internalCode)
+          .order('created_at', { ascending: true });
+
+        if (findErr) {
+          return { success: false, error: `Erro ao buscar lançamento existente: ${findErr.message}` };
+        }
+
+        let entryId: string | null = null;
+        const existing = existingEntries || [];
+
+        if (existing.length > 0) {
+          entryId = existing[0].id;
+          const { error: updError } = await supabase
+            .from('accounting_entries')
+            .update({
+              entry_date: entryDate,
+              competence_date: entryDate,
+              description: `Provisão Folha CLT ${mes}/${folha.ano}`,
+              entry_type: 'MOVIMENTO',
               reference_type: 'payroll',
-              source_type: 'payroll',
+              source_type: 'payroll_system',
+              total_debit: totalBruto,
+              total_credit: totalBruto,
+              balanced: true,
+            })
+            .eq('id', entryId);
+          if (updError) {
+            return { success: false, error: `Erro ao atualizar lançamento: ${updError.message}` };
+          }
+
+          if (existing.length > 1) {
+            const duplicateIds = existing.slice(1).map((e) => e.id);
+            if (duplicateIds.length > 0) {
+              await supabase.from('accounting_entry_items').delete().in('entry_id', duplicateIds);
+              await supabase.from('accounting_entry_lines').delete().in('entry_id', duplicateIds);
+              await supabase.from('accounting_entries').delete().in('id', duplicateIds);
             }
-          ])
-          .select()
-          .single();
+          }
+        } else {
+          const { data: entry, error: entryError } = await supabase
+            .from('accounting_entries')
+            .insert([
+              {
+                entry_date: entryDate,
+                competence_date: entryDate,
+                description: `Provisão Folha CLT ${mes}/${folha.ano}`,
+                entry_type: 'MOVIMENTO',
+                reference_type: 'payroll',
+                source_type: 'payroll_system',
+                internal_code: internalCode,
+                total_debit: totalBruto,
+                total_credit: totalBruto,
+                balanced: true,
+              },
+            ])
+            .select('id')
+            .single();
 
-        if (entryError || !entry) {
-          return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
-        }
-
-        // Preparar linhas contábeis
-        const linhas: any[] = [];
-
-        // DÉBITOS - Uma linha por departamento (despesa)
-        for (const [dept, dados] of Object.entries(porDepartamento)) {
-          // Buscar conta de despesa específica do departamento ou usar conta genérica
-          let contaDept = contasDespesa?.find(c =>
-            c.name.toLowerCase().includes(dept.toLowerCase()) &&
-            (c.name.toLowerCase().includes('salário') || c.name.toLowerCase().includes('salario') || c.name.toLowerCase().includes('pessoal'))
-          );
-
-          // Se não encontrou conta específica, buscar conta genérica de salários
-          if (!contaDept) {
-            contaDept = contasDespesa?.find(c =>
-              c.name.toLowerCase().includes('salário') ||
-              c.name.toLowerCase().includes('salario') ||
-              c.name.toLowerCase().includes('pessoal') ||
-              c.name.toLowerCase().includes('folha')
-            );
+          if (entryError || !entry) {
+            return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
           }
 
-          // Resolve account_id: use found account or fallback to 4.1.1.01
-          const deptAccountId = contaDept?.id || await resolveAccountId('4.1.1.01');
+          entryId = entry.id;
+        }
 
-          linhas.push({
-            entry_id: entry.id,
-            account_id: deptAccountId,
-            debit: dados.bruto,
+        if (!entryId) {
+          return { success: false, error: 'Falha ao determinar ID do lançamento.' };
+        }
+
+        const { error: clearItemsError } = await supabase
+          .from('accounting_entry_items')
+          .delete()
+          .eq('entry_id', entryId);
+
+        if (clearItemsError) {
+          return { success: false, error: `Erro ao limpar itens antigos: ${clearItemsError.message}` };
+        }
+
+        const { error: clearLinesError } = await supabase
+          .from('accounting_entry_lines')
+          .delete()
+          .eq('entry_id', entryId);
+
+        if (clearLinesError) {
+          return { success: false, error: `Erro ao limpar linhas antigas: ${clearLinesError.message}` };
+        }
+
+        const linhas: any[] = [
+          {
+            entry_id: entryId,
+            account_id: salariosDespesaId,
+            debit: totalBruto,
             credit: 0,
-          });
-        }
-
-        // DÉBITOS - Funcionários pessoais (família) → Adiantamento a Sócios (NÃO despesa)
-        for (const fam of familiaItems) {
-          if (fam.bruto > 0) {
-            linhas.push({
-              entry_id: entry.id,
-              account_id: fam.contaId,
-              debit: fam.bruto,
-              credit: 0,
-            });
-          }
-        }
-
-        // CRÉDITOS - Passivo (Salários a Pagar)
-        if (totalLiquido > 0) {
-          const salariosPagarId = await resolveAccountId('2.1.2.01');
-          linhas.push({
-            entry_id: entry.id,
+            description: `Salários CLT ${mes}/${folha.ano}`,
+          },
+          {
+            entry_id: entryId,
             account_id: salariosPagarId,
             debit: 0,
             credit: totalLiquido,
-          });
-        }
+            description: `Salários a pagar ${mes}/${folha.ano}`,
+          },
+        ];
 
-        // CRÉDITOS - INSS a Recolher
         if (totalINSS > 0) {
-          const inssRecolherId = await resolveAccountId('2.1.2.02');
           linhas.push({
-            entry_id: entry.id,
+            entry_id: entryId,
             account_id: inssRecolherId,
             debit: 0,
             credit: totalINSS,
+            description: `INSS retido ${mes}/${folha.ano}`,
           });
         }
 
-        // CRÉDITOS - IRRF a Recolher
         if (totalIRRF > 0) {
-          const irrfRecolherId = await resolveAccountId('2.1.2.03');
           linhas.push({
-            entry_id: entry.id,
+            entry_id: entryId,
             account_id: irrfRecolherId,
             debit: 0,
             credit: totalIRRF,
+            description: `IRRF retido ${mes}/${folha.ano}`,
           });
         }
 
-        // Inserir linhas contábeis
         const { error: linhasError } = await supabase
           .from('accounting_entry_items')
           .insert(linhas);
 
         if (linhasError) {
-          // Reverter entrada se linhas falharem
-          await supabase.from('accounting_entries').delete().eq('id', entry.id);
           return { success: false, error: `Erro ao criar linhas: ${linhasError.message}` };
         }
 
-        // ✅ Registrar rastreamento (auditoria)
-        await registrarRastreamento(supabase, rastreamento, entry.id, {
-          totalBruto,
-          totalINSS,
-          totalIRRF,
-          totalLiquido,
-          funcionarios: folha.funcionarios.length,
-          departamentos: porDepartamento,
-          dataFolha: folha.dataFolha
-        });
+        const linhasRazao = linhas.map((l) => ({
+          entry_id: l.entry_id,
+          account_id: l.account_id,
+          debit: l.debit,
+          credit: l.credit,
+          description: l.description,
+        }));
+
+        const { error: linesErr } = await supabase
+          .from('accounting_entry_lines')
+          .insert(linhasRazao);
+
+        if (linesErr) {
+          return { success: false, error: `Erro ao criar linhas do razão: ${linesErr.message}` };
+        }
 
         return {
           success: true,
-          entryId: entry.id,
-          codigoRastreamento: rastreamento.codigoRastreamento
+          entryId,
+          codigoRastreamento: internalCode,
         };
 
       } catch (error: any) {
