@@ -95,25 +95,30 @@ export const CONTAS_AMPLA = {
   RECEITAS_DIVERSAS: { codigo: '3.1.9.01', nome: 'Outras Receitas' },
   JUROS_RECEBIDOS: { codigo: '3.2.1.01', nome: 'Juros e Rendimentos' },
   
-  // DESPESAS
-  SALARIOS: { codigo: '4.1.2.01', nome: 'Salários e Ordenados' },
-  PRO_LABORE: { codigo: '4.1.2.02', nome: 'Pró-labore' },
-  FGTS: { codigo: '4.1.2.03', nome: 'FGTS' },
-  INSS_PATRONAL: { codigo: '4.1.2.04', nome: 'INSS Patronal' },
-  VALE_TRANSPORTE: { codigo: '4.1.2.05', nome: 'Vale Transporte' },
-  VALE_ALIMENTACAO: { codigo: '4.1.2.06', nome: 'Vale Alimentação' },
-  DECIMO_TERCEIRO: { codigo: '4.1.2.07', nome: '13º Salário' },
-  FERIAS: { codigo: '4.1.2.08', nome: 'Férias' },
-  ALUGUEL: { codigo: '4.1.1.01', nome: 'Aluguel' },
-  ENERGIA: { codigo: '4.1.1.02', nome: 'Energia Elétrica' },
-  AGUA: { codigo: '4.1.1.03', nome: 'Água' },
-  TELEFONE: { codigo: '4.1.1.04', nome: 'Telefone e Internet' },
-  MATERIAL_EXPEDIENTE: { codigo: '4.1.1.05', nome: 'Material de Expediente' },
-  SOFTWARE: { codigo: '4.1.1.06', nome: 'Software e Sistemas' },
+  // DESPESAS - Pessoal (4.2.1.xx)
+  SALARIOS: { codigo: '4.2.1.01', nome: 'Salários' },
+  PRO_LABORE: { codigo: '4.2.1.06', nome: 'Pró-labore' },
+  FGTS: { codigo: '4.2.1.03', nome: 'FGTS' },
+  INSS_PATRONAL: { codigo: '4.2.1.02', nome: 'INSS Patronal' },
+  VALE_TRANSPORTE: { codigo: '4.2.1.04', nome: 'Vale Transporte' },
+  VALE_ALIMENTACAO: { codigo: '4.2.1.05', nome: 'Vale Alimentação' },
+  DECIMO_TERCEIRO: { codigo: '4.2.1.08', nome: '13º Salário' },
+  FERIAS: { codigo: '4.2.1.07', nome: 'Férias' },
+  // DESPESAS - Administrativas (4.1.2.xx) - CORRIGIDO: antes usava 4.1.1.xx errado
+  ALUGUEL: { codigo: '4.1.2.01', nome: 'Aluguel' },
+  ENERGIA: { codigo: '4.1.2.02', nome: 'Energia Elétrica' },
+  AGUA: { codigo: '4.1.2.06', nome: 'Gás' },
+  TELEFONE: { codigo: '4.1.2.03', nome: 'Telefone e Internet' },
+  MATERIAL_EXPEDIENTE: { codigo: '4.1.2.14', nome: 'Material de Papelaria' },
+  SOFTWARE: { codigo: '4.1.2.12.99', nome: 'Outros Software e Sistemas' },
   DESPESAS_BANCARIAS: { codigo: '4.1.10', nome: 'Despesas Bancárias' },
-  IOF: { codigo: '4.1.3.02', nome: 'IOF' },
-  JUROS_PAGOS: { codigo: '4.1.3.03', nome: 'Juros Pagos' },
-  DEPRECIACAO_DESP: { codigo: '4.1.4.01', nome: 'Depreciação' },
+  IOF: { codigo: '4.3.1.03', nome: 'IOF' },
+  JUROS_PAGOS: { codigo: '4.3.2.01', nome: 'Juros de Mora' },
+  DEPRECIACAO_DESP: { codigo: '4.8.1.01', nome: 'Depreciação de Móveis' },
+  // DESPESAS - Taxas e Licenças
+  TAXAS_CRC: { codigo: '4.1.4.04', nome: 'Taxas e Licenças (CRC, etc)' },
+  // ADIANTAMENTOS SÓCIOS
+  ADIANT_SERGIO_CARNEIRO: { codigo: '1.1.3.04.01', nome: 'Adiantamento Sérgio Carneiro' },
 };
 
 // =============================================================================
@@ -248,7 +253,7 @@ export const PADROES_OFX: PadraoOFX[] = [
     keywords: ['iptu'],
     tipo: 'SAIDA',
     categoria: 'IMPOSTOS',
-    debito: '4.1.3.04',
+    debito: '4.1.4.03',
     credito: '1.1.1.05',
     debitoNome: 'IPTU',
     creditoNome: 'Banco Sicredi',
@@ -257,13 +262,643 @@ export const PADROES_OFX: PadraoOFX[] = [
     agenteResponsavel: 'AGENTE_FISCAL'
   },
   
+  // ========== FORNECEDORES ESPECÍFICOS (ANTES dos genéricos) ==========
+  // Condomínio Galeria Nacional → Adiantamento Sérgio Carneiro (sócio)
+  {
+    regex: /CONDOMINIO.*GAL|GALERIA\s*NACIONAL/i,
+    keywords: ['condominio da galeria', 'galeria nacional'],
+    tipo: 'SAIDA',
+    categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.98,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Andrea Leone Bastos → Adiantamento sócio (aluguel casa praia)
+  {
+    regex: /ANDREA\s*LEONE/i,
+    keywords: ['andrea leone'],
+    tipo: 'SAIDA',
+    categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01',
+    credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.98,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Conselho Regional de Contabilidade → Taxas e Licenças CRC
+  {
+    regex: /CONS\s*REG\s*CONTABIL|01015676000111/i,
+    keywords: ['cons reg contabil', 'crc'],
+    tipo: 'SAIDA',
+    categoria: 'IMPOSTOS',
+    debito: '4.1.4.04',
+    credito: '1.1.1.05',
+    debitoNome: 'Taxas e Licenças (CRC, etc)',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.98,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // CR Sistema e Análise → Sistema SAAM
+  {
+    regex: /CR\s*SIST/i,
+    keywords: ['cr sistema', 'cr sist'],
+    tipo: 'SAIDA',
+    categoria: 'DESPESAS',
+    debito: '4.1.2.12.03',
+    credito: '1.1.1.05',
+    debitoNome: 'Sistema SAAM - CR Sistema',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.98,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Danielle Rodrigues → Sueli MEI (recebe via filha)
+  {
+    regex: /DANIELLE\s*RODRIGUES|04947719176/i,
+    keywords: ['danielle rodrigues'],
+    tipo: 'SAIDA',
+    categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.07',
+    credito: '1.1.1.05',
+    debitoNome: 'Sueli (MEI)',
+    creditoNome: 'Banco Sicredi',
+    confianca: 0.98,
+    autoClassificar: true,
+    agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+
+  // ========== ADIANTAMENTOS SÓCIOS - CPFs ESPECÍFICOS (ANTES dos genéricos) ==========
+  // Sérgio Carneiro Leão (sócio principal)
+  {
+    regex: /48656488104|SERGIO\s*CARNEIRO\s*LEAO/i,
+    keywords: ['sergio carneiro'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Fabrício Bomfim → adiant. Sérgio Carneiro
+  {
+    regex: /75619318168|FABRICIO.*BOMFIM/i,
+    keywords: ['fabricio bomfim'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Antonio Leandro → personal trainer Sérgio
+  {
+    regex: /76625974153|ANTONIO\s*LEANDRO/i,
+    keywords: ['antonio leandro'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Vonoria Amélia → passadeira roupa Sérgio
+  {
+    regex: /97163988168|VONORIA/i,
+    keywords: ['vonoria'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Miguel Carvalho → conserto casa Sérgio
+  {
+    regex: /48541079104|MIGUEL\s*CARVALHO/i,
+    keywords: ['miguel carvalho'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Maria Aparecida Gomes → diarista lago Sérgio
+  {
+    regex: /99940892691|MARIA\s*APARECIDA\s*GOMES/i,
+    keywords: ['maria aparecida'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Tharson Diego → pedreiro lago das brisas
+  {
+    regex: /05746859109|THARSON\s*DIEGO/i,
+    keywords: ['tharson diego'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Fabiana Maria → babá da Nayara → adiant. Nayara
+  {
+    regex: /00141198117|FABIANA\s*MARIA.*MENDONCA/i,
+    keywords: ['fabiana maria'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.04', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Nayara', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Raimundo Pereira → caseiro chácara Sérgio → adiant. Sérgio
+  {
+    regex: /35659246249|RAIMUNDO\s*PEREIRA/i,
+    keywords: ['raimundo pereira'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro (caseiro chácara)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Kenio Martins → caseiro chácara Sérgio (substituto Raimundo) → adiant. Sérgio
+  {
+    regex: /50761730168|KENIO\s*MARTINS/i,
+    keywords: ['kenio martins'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro (caseiro chácara)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Claudia Barbosa → babá (substituta Fabiana) → adiant. Nayara
+  {
+    regex: /43510469100|CLAUDIA\s*BARBOSA/i,
+    keywords: ['claudia barbosa'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.04', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Nayara (babá)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== CLT ESPECÍFICOS ==========
+  // Josimar dos Santos → CLT + MEI folha
+  {
+    regex: /02073111106|JOSIMAR.*SANTOS/i,
+    keywords: ['josimar santos'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '2.1.2.01', credito: '1.1.1.05',
+    debitoNome: 'Salários a Pagar', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Thaynara Conceição → CLT contábil
+  {
+    regex: /03924444102|THAYNARA.*CONCEICAO/i,
+    keywords: ['thaynara conceicao'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '2.1.2.01', credito: '1.1.1.05',
+    debitoNome: 'Salários a Pagar', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+
+  // ========== RESCISÃO ==========
+  // Deuza Resende → ex-funcionária rescisão
+  {
+    regex: /82817375149|DEUZA\s*RESENDE/i,
+    keywords: ['deuza resende'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '2.1.2.10.01', credito: '1.1.1.05',
+    debitoNome: 'Saldo Salário Rescisão', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+
+  // ========== MEI ESPECÍFICOS ==========
+  // Daniel Rodrigues Ribeiro → MEI contratado Ampla (R$ 10.500/mês + comissões)
+  {
+    regex: /41787134000181|DANIEL\s*RODRIGUES\s*RIBEIRO/i,
+    keywords: ['daniel rodrigues ribeiro'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.03', credito: '1.1.1.05',
+    debitoNome: 'Daniel Rodrigues Ribeiro (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Maria José da Silva Moura Moreira → MEI terceirizada
+  {
+    regex: /62544160268|MARIA\s*JOSE\s*DA\s*SILVA\s*MOURA/i,
+    keywords: ['maria jose moura'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.20', credito: '1.1.1.05',
+    debitoNome: 'Maria José da Silva Moura Moreira (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Beatriz Tibúrcio da Silva → MEI terceirizada
+  {
+    regex: /70803165102|BEATRIZ\s*TIBURCIO/i,
+    keywords: ['beatriz tiburcio'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.21', credito: '1.1.1.05',
+    debitoNome: 'Beatriz Tibúrcio da Silva (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Hosivaldo Gomes Costa → MEI terceirizado
+  {
+    regex: /92664679104|HOSIVALDO\s*GOMES/i,
+    keywords: ['hosivaldo gomes'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.22', credito: '1.1.1.05',
+    debitoNome: 'Hosivaldo Gomes Costa (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Coraci Aline → MEI terceira folha
+  {
+    regex: /02926538162|CORACI\s*ALINE/i,
+    keywords: ['coraci aline'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.10', credito: '1.1.1.05',
+    debitoNome: 'Coraci Aline dos Santos (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Andrea Fagundes → MEI terceirizada (R$ 1.500/mês)
+  {
+    regex: /79512801191|ANDREA\s*FAGUNDES/i,
+    keywords: ['andrea fagundes'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.04', credito: '1.1.1.05',
+    debitoNome: 'Andrea Fagundes (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Rosemeire Rodrigues → MEI terceirizada
+  {
+    regex: /81875835172|ROSEMEIRE\s*RODRIGUES/i,
+    keywords: ['rosemeire rodrigues'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.06', credito: '1.1.1.05',
+    debitoNome: 'Rosemeire Rodrigues (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Lilian Moreira da Costa → MEI terceirizada (CPF 71251537120)
+  {
+    regex: /71251537120|LILIAN\s*MOREIRA/i,
+    keywords: ['lilian moreira'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.05', credito: '1.1.1.05',
+    debitoNome: 'Lilian Moreira (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Taylane Belle Ferreira Saraiva → MEI terceirizada (CPF 05799682190)
+  {
+    regex: /05799682190|TAYLANE/i,
+    keywords: ['taylane'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.09', credito: '1.1.1.05',
+    debitoNome: 'Taylane (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Liliane Batista Rodrigues Gomes → MEI terceirizada (CPF 01160288151)
+  {
+    regex: /01160288151|LILIANE\s*BATISTA/i,
+    keywords: ['liliane batista'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.12', credito: '1.1.1.05',
+    debitoNome: 'Liliane Batista Rodrigues Gomes (MEI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // OkEmpresa Compliance (CNPJ 36266121000127) = Bruno Victor de Freitas (terceiro TI)
+  {
+    regex: /36266121000127|OKEMPRESA|OK\s*EMPRESA/i,
+    keywords: ['okempresa', 'ok empresa', 'bruno victor'], tipo: 'SAIDA', categoria: 'FOLHA_PAGAMENTO',
+    debito: '4.2.11.23', credito: '1.1.1.05',
+    debitoNome: 'Bruno Victor de Freitas (TI)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Maria José de Jesus (CPF 19047991168) → Adiantamento Sérgio Carneiro
+  {
+    regex: /19047991168|MARIA\s*JOSE\s*DE\s*JESUS/i,
+    keywords: ['maria jose de jesus'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro (Maria José de Jesus)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Andreia (CPF 00834584506) → comissão aluguel Guarajuba = adiantamento Sérgio
+  {
+    regex: /00834584506/i,
+    keywords: ['andreia'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio Carneiro (Andreia comissão aluguel)', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== BENEFÍCIOS ESPECÍFICOS ==========
+  // VR Benefícios → Vale Alimentação
+  {
+    regex: /02535864000133|VR\s*BENEF/i,
+    keywords: ['vr beneficios'], tipo: 'SAIDA', categoria: 'ENCARGOS',
+    debito: '4.2.1.05', credito: '1.1.1.05',
+    debitoNome: 'Vale Alimentação', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Ampla Saúde Ocupacional → Exames
+  {
+    regex: /50464753000126|AMPLA\s*SAUDE/i,
+    keywords: ['ampla saude'], tipo: 'SAIDA', categoria: 'ENCARGOS',
+    debito: '4.2.7.01', credito: '1.1.1.05',
+    debitoNome: 'Exames Admissionais', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+  // Caixa Econômica Federal → FGTS
+  {
+    regex: /00360305000104|CAIXA\s*ECONOMICA/i,
+    keywords: ['caixa economica'], tipo: 'SAIDA', categoria: 'ENCARGOS',
+    debito: '2.1.2.02', credito: '1.1.1.05',
+    debitoNome: 'FGTS a Recolher', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+
+  // ========== DESPESAS ADMINISTRATIVAS ESPECÍFICAS ==========
+  // Copa e Cozinha - Josimar reembolso pão de queijo (valor < R$ 100)
+  {
+    regex: /02073111106.*JOSIMAR|JOSIMAR.*SANTOS.*MOTA/i,
+    keywords: ['josimar', 'pao de queijo', 'copa'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.09', credito: '1.1.1.05',
+    debitoNome: 'Copa e Cozinha - Reembolso Josimar', creditoNome: 'Banco Sicredi',
+    confianca: 0.90, autoClassificar: false, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Água mineral (Luiz Taveira ou Água Pura)
+  {
+    regex: /43572456134|05384518000190|AGUA\s*PURA|LUIZ\s*ALVES\s*TAVEIRA/i,
+    keywords: ['agua mineral', 'agua pura', 'luiz taveira'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.07', credito: '1.1.1.05',
+    debitoNome: 'Água Mineral', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Scala Contabilidade → Adiantamento Sócio Sérgio (empresa dele, Pronampe SICREDI)
+  {
+    regex: /SCALA\s*CONTAB|SCALA\s*SERVICOS/i,
+    keywords: ['scala', 'scala contabilidade'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio Carneiro (Scala)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Econet Publicações (CNPJ 11436073000147)
+  {
+    regex: /11436073000147|ECONET/i,
+    keywords: ['econet'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.11', credito: '1.1.1.05',
+    debitoNome: 'Econet Publicacoes', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Zappy Contábil / ComHub (CNPJ 07861028000162)
+  {
+    regex: /07861028000162|ZAPPY|COMHUB/i,
+    keywords: ['zappy', 'comhub'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.09', credito: '1.1.1.05',
+    debitoNome: 'Zappy Contabil (ComHub)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // COP Sistemas (CNPJ 08326645000120)
+  {
+    regex: /08326645000120|COP\s*SISTEMA/i,
+    keywords: ['cop sistemas'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.16', credito: '1.1.1.05',
+    debitoNome: 'COP Sistemas', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // PJBank → Digital Up Acessórias (valor >= R$ 150) - 4.1.2.12.07
+  // PJBank → Tangerino ponto eletrônico (valor < R$ 150) - 4.1.2.12.15
+  // Nota: ambos pagos via PJBank (CNPJ 18191228000171), separação por valor
+  {
+    regex: /PJBANK|PJ\s*BANK|18191228000171/i,
+    keywords: ['pjbank', 'pj bank'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.07', credito: '1.1.1.05',
+    debitoNome: 'Digital Up (Acessorias) via PJBank', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Nova Visão Imports → Reforma Sede
+  {
+    regex: /NOVA\s*VIS[AÃ]O|NOVA\s*VISAO|11869122000135/i,
+    keywords: ['nova visao', 'nova visão'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.15.03', credito: '1.1.1.05',
+    debitoNome: 'Nova Visao Imports (Reforma Sede)', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // PIX Marketplace → Material de Papelaria/Escritório
+  {
+    regex: /PIX\s*MARKETPLACE/i,
+    keywords: ['pix marketplace'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.14', credito: '1.1.1.05',
+    debitoNome: 'Material de Papelaria (PIX Marketplace)', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Center Luzz → Reforma Sede (elétrica/iluminação)
+  {
+    regex: /CENTER\s*LUZZ|16366409000166/i,
+    keywords: ['center luzz'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.15.04', credito: '1.1.1.05',
+    debitoNome: 'Center Luzz (Reforma Sede)', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ SOFTWARE POR CNPJ (todos confirmados pelo PDF despesas jan/2025) ═══
+  // Thomson Reuters (Domínio Sistemas) - ERP contábil principal
+  {
+    regex: /00910509001305|THOMSON\s*REUTERS/i,
+    keywords: ['thomson reuters', 'dominio sistemas'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.01', credito: '1.1.1.05',
+    debitoNome: 'Dominio Sistemas (Thomson Reuters)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Clicksign - Assinatura digital
+  {
+    regex: /12499520000170|CLICKSIGN/i,
+    keywords: ['clicksign'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.13', credito: '1.1.1.05',
+    debitoNome: 'Clicksign', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Sittax - Sistema fiscal
+  {
+    regex: /37411535000165|SITTAX/i,
+    keywords: ['sittax'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.14', credito: '1.1.1.05',
+    debitoNome: 'Sittax', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Contus Tecnologia
+  {
+    regex: /42711893000123|CONTUS\s*TECNOLOGIA/i,
+    keywords: ['contus'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.05', credito: '1.1.1.05',
+    debitoNome: 'Contus Tecnologia', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Dataunique Tech
+  {
+    regex: /42977999000173|DATAUNIQUE/i,
+    keywords: ['dataunique'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.02', credito: '1.1.1.05',
+    debitoNome: 'Dataunique Tech', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // CR Sistema (Sistema SAAM - CNPJ 14153062000148)
+  {
+    regex: /14153062000148|CR\s*SISTEMA/i,
+    keywords: ['cr sistema', 'saam'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.03', credito: '1.1.1.05',
+    debitoNome: 'Sistema SAAM - CR Sistema', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // NB Technology (Sistema SAAM - CNPJ 43961100000197)
+  {
+    regex: /43961100000197|NB\s*TECHNOLOGY/i,
+    keywords: ['nb technology'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.04', credito: '1.1.1.05',
+    debitoNome: 'Sistema SAAM - NB Technology', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Autmais Soluções
+  {
+    regex: /50812771000151|AUTMAIS/i,
+    keywords: ['autmais'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.10', credito: '1.1.1.05',
+    debitoNome: 'Autmais Solucoes', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Oneflow
+  {
+    regex: /34813747000180|ONEFLOW/i,
+    keywords: ['oneflow'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.12', credito: '1.1.1.05',
+    debitoNome: 'Oneflow', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Objetiva Edições
+  {
+    regex: /26659060000104|OBJETIVA\s*EDIC/i,
+    keywords: ['objetiva'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.12.06', credito: '1.1.1.05',
+    debitoNome: 'Objetiva Edicoes', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ INTERNET POR CNPJ ═══
+  // Algar Telecom
+  {
+    regex: /71208516000174|ALGAR\s*TE/i,
+    keywords: ['algar', 'algarte'], tipo: 'SAIDA', categoria: 'UTILIDADES',
+    debito: '4.1.2.03', credito: '1.1.1.05',
+    debitoNome: 'Telefone/Internet - Algar', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Veri Soluções Tecnológicas (aplicativo de análise, NÃO telefone)
+  {
+    regex: /28408293000160|VERI\s*SOLUC/i,
+    keywords: ['veri solucoes'], tipo: 'SAIDA', categoria: 'SOFTWARE',
+    debito: '4.1.2.12.08', credito: '1.1.1.05',
+    debitoNome: 'Veri Solucoes Tecnologicas', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ MANUTENÇÃO POR CNPJ ═══
+  // AXE Manutenção e Modernização de Elevadores (CNPJ 32738375000140)
+  {
+    regex: /32738375000140|AXE\s*MANUTENCAO/i,
+    keywords: ['axe', 'elevador'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.15.01', credito: '1.1.1.05',
+    debitoNome: 'AXE Manutencao Elevadores', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // ADV System Elevadores
+  {
+    regex: /07296500000161|ADV\s*SYSTEM/i,
+    keywords: ['adv system', 'elevador'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.15.02', credito: '1.1.1.05',
+    debitoNome: 'ADV System Elevadores', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Frio Máximo Ar Condicionado (CNPJ 07943949000174)
+  {
+    regex: /07943949000174|FRIO\s*MAX/i,
+    keywords: ['frio maximo', 'ar condicionado'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.15.05', credito: '1.1.1.05',
+    debitoNome: 'Frio Maximo Ar Condicionado', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ MATERIAL DE LIMPEZA POR CNPJ ═══
+  // L Argent / Elite Forte
+  {
+    regex: /36859577000109|L\s*ARGENT|ELITE\s*FORTE/i,
+    keywords: ['l argent', 'elite forte', 'limpeza'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.2.08', credito: '1.1.1.05',
+    debitoNome: 'Material de Limpeza - Elite Forte', creditoNome: 'Banco Sicredi',
+    confianca: 0.95, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ RECRUTAMENTO ═══
+  // Catho Online
+  {
+    regex: /03753088000100|CATHO/i,
+    keywords: ['catho'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.4.15', credito: '1.1.1.05',
+    debitoNome: 'Recrutamento RH - Catho', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Analítica RH / Leo Junio Gomes Silva (CNPJ 40244053000172) - Recrutamento e RH
+  {
+    regex: /40244053000172|ANALITICA\s*RH|LEO\s*JUNIO/i,
+    keywords: ['analitica rh', 'leo junio'], tipo: 'SAIDA', categoria: 'DESPESAS',
+    debito: '4.1.4.15', credito: '1.1.1.05',
+    debitoNome: 'Recrutamento RH - Analítica RH', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
+  // ═══ VALE TRANSPORTE ═══
+  // Redemob (Sit Pass Goiânia)
+  {
+    regex: /10636142000101|REDEMOB|SIT\s*PASS/i,
+    keywords: ['redemob', 'sit pass'], tipo: 'SAIDA', categoria: 'BENEFICIOS',
+    debito: '4.2.1.04', credito: '1.1.1.05',
+    debitoNome: 'Vale Transporte - Sit Pass', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_TRABALHISTA'
+  },
+
+  // ═══ ADIANTAMENTO SÓCIO POR CNPJ ═══
+  // Fatura Cartão de Crédito (Sérgio Carneiro)
+  {
+    regex: /DEB\.CTA\.FATURA|FATURA\s*CARTAO|DEB\s*CTA\s*FATURA/i,
+    keywords: ['fatura', 'cartao'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio (Fatura Cartão)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // CASAG (Plano Saúde Família Sérgio)
+  {
+    regex: /01418847000153|CAIXA\s*DE\s*ASSIST|CASAG/i,
+    keywords: ['casag', 'caixa assistencia'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio (CASAG Plano Saúde Família)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Mundi Consciente (Condomínio Apto Sérgio)
+  {
+    regex: /24989276000102|MUNDI\s*CONSCIENTE/i,
+    keywords: ['mundi consciente'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio (Condomínio Apto)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Faculdade de Medicina (Sérgio Augusto filho)
+  {
+    regex: /44422513000166|FACULDADE\s*DE\s*MEDICINA/i,
+    keywords: ['faculdade medicina', 'itumbiara'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.05', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio Augusto (Faculdade)', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ═══ IMPOSTOS E TAXAS POR CNPJ ═══
+  // DETRAN / IPVA → Adiant. Sérgio Carneiro (Ampla NÃO tem veículos - todo IPVA é pessoal do sócio)
+  {
+    regex: /02872448000120|DEPARTAMENTO\s*ESTADUAL.*TRANSITO|IPVA|DETRAN/i,
+    keywords: ['detran', 'ipva'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiant. Sérgio Carneiro (IPVA/DETRAN pessoal)', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Condomínio Galeria Nacional → Adiantamento Sérgio (imóvel pessoal, NÃO sede empresa)
+  {
+    regex: /36852259000108|CONDOMINIO\s*DA\s*GALERIA/i,
+    keywords: ['galeria nacional'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  // Franca Locações (CNPJ 10798029000114) → Adiantamento Sérgio (locação pessoal)
+  {
+    regex: /10798029000114|FRANCA\s*LOCAC/i,
+    keywords: ['franca locações', 'franca locac'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+
   // ========== SERVIÇOS PÚBLICOS (Auto-classificar) ==========
   {
     regex: /ENEL|CELG|EQUATORIAL|CPFL|CEMIG|COPEL|ENERGIA|ELETRIC|LUZ/i,
     keywords: ['enel', 'celg', 'equatorial', 'energia', 'luz', 'eletrica'],
     tipo: 'SAIDA',
     categoria: 'UTILIDADES',
-    debito: '4.1.1.02',
+    debito: '4.1.2.02',
     credito: '1.1.1.05',
     debitoNome: 'Energia Elétrica',
     creditoNome: 'Banco Sicredi',
@@ -271,25 +906,33 @@ export const PADROES_OFX: PadraoOFX[] = [
     autoClassificar: true,
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
+  // SANEAGO (CNPJ 01616929000102) → Adiantamento Sérgio (água pessoal, NÃO empresa)
   {
-    regex: /SANEAGO|SABESP|COPASA|CAGECE|AGUA\s*E\s*ESGOTO|AGUA/i,
-    keywords: ['saneago', 'sabesp', 'agua', 'esgoto'],
+    regex: /SANEAGO|01616929000102/i,
+    keywords: ['saneago'], tipo: 'SAIDA', categoria: 'ADIANTAMENTO',
+    debito: '1.1.3.04.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Carneiro', creditoNome: 'Banco Sicredi',
+    confianca: 0.99, autoClassificar: true, agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
+  },
+  {
+    regex: /SABESP|COPASA|CAGECE|AGUA\s*E\s*ESGOTO/i,
+    keywords: ['sabesp', 'agua', 'esgoto'],
     tipo: 'SAIDA',
     categoria: 'UTILIDADES',
-    debito: '4.1.1.03',
+    debito: '4.1.2.02',
     credito: '1.1.1.05',
-    debitoNome: 'Água',
+    debitoNome: 'Energia Elétrica',
     creditoNome: 'Banco Sicredi',
-    confianca: 0.95,
-    autoClassificar: true,
+    confianca: 0.90,
+    autoClassificar: false,
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
   {
-    regex: /VIVO|TIM|CLARO|OI\s|TELEFONICA|INTERNET|TELECOM/i,
-    keywords: ['vivo', 'tim', 'claro', 'oi', 'telefone', 'internet'],
+    regex: /VIVO|TIMCEL|TIM\b|CLARO|OI\s|TELEFONICA|INTERNET|TELECOM/i,
+    keywords: ['vivo', 'timcel', 'claro', 'telefone', 'internet'],
     tipo: 'SAIDA',
     categoria: 'UTILIDADES',
-    debito: '4.1.1.04',
+    debito: '4.1.2.03',
     credito: '1.1.1.05',
     debitoNome: 'Telefone e Internet',
     creditoNome: 'Banco Sicredi',
@@ -297,14 +940,14 @@ export const PADROES_OFX: PadraoOFX[] = [
     autoClassificar: true,
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
-  
+
   // ========== ALUGUEL ==========
   {
-    regex: /ALUGUEL|LOCACAO|CONDOMINIO/i,
-    keywords: ['aluguel', 'locacao', 'condominio', 'locatario'],
+    regex: /ALUGUEL|LOCACAO/i,
+    keywords: ['aluguel', 'locacao', 'locatario'],
     tipo: 'SAIDA',
     categoria: 'DESPESAS',
-    debito: '4.1.1.01',
+    debito: '4.1.2.01',
     credito: '1.1.1.05',
     debitoNome: 'Aluguel',
     creditoNome: 'Banco Sicredi',
@@ -312,16 +955,16 @@ export const PADROES_OFX: PadraoOFX[] = [
     autoClassificar: false,
     agenteResponsavel: 'AGENTE_ADMINISTRATIVO'
   },
-  
-  // ========== SOFTWARE E SISTEMAS ==========
+
+  // ========== SOFTWARE E SISTEMAS (genérico → 4.1.2.12.99 Outros) ==========
   {
     regex: /DOMINIO|FORTES|QUESTOR|CONTMATIC|TOTVS|SANKHYA|ALTERDATA|PROSOFT/i,
     keywords: ['dominio', 'fortes', 'questor', 'contmatic', 'sistema', 'software'],
     tipo: 'SAIDA',
     categoria: 'DESPESAS',
-    debito: '4.1.1.06',
+    debito: '4.1.2.12.99',
     credito: '1.1.1.05',
-    debitoNome: 'Software e Sistemas',
+    debitoNome: 'Outros Software e Sistemas',
     creditoNome: 'Banco Sicredi',
     confianca: 0.92,
     autoClassificar: false,
@@ -332,9 +975,9 @@ export const PADROES_OFX: PadraoOFX[] = [
     keywords: ['google', 'microsoft', 'amazon', 'aws', 'cloud', 'assinatura'],
     tipo: 'SAIDA',
     categoria: 'DESPESAS',
-    debito: '4.1.1.06',
+    debito: '4.1.2.12.99',
     credito: '1.1.1.05',
-    debitoNome: 'Software e Sistemas',
+    debitoNome: 'Outros Software e Sistemas',
     creditoNome: 'Banco Sicredi',
     confianca: 0.88,
     autoClassificar: false,
@@ -373,7 +1016,73 @@ export const PADROES_OFX: PadraoOFX[] = [
     agenteResponsavel: 'AGENTE_FINANCEIRO'
   },
 
-  // ========== RECEBIMENTOS PIX (Auto-classificar) ==========
+  // ========== PIX CLIENTES ESPECÍFICOS (ANTES do genérico) ==========
+  // Pessoa física → Empresa vinculada (identificação por CPF/CNPJ)
+  {
+    regex: /83438718120.*PAULA\s*MILHOMEM|PAULA\s*MILHOMEM/i,
+    keywords: ['paula milhomem'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0291',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Restaurante Iuvaci (Paula Milhomem - filha)',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /31092004149.*JULIANA\s*PERILLO|JULIANA\s*PERILLO/i,
+    keywords: ['juliana perillo'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0102',
+    debitoNome: 'Banco Sicredi', creditoNome: 'JPL Agropecuária (Juliana Perillo - esposa Edson Sá)',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /03892392161.*ENZO.*DONADI|ENZO.*AQUINO.*DONADI/i,
+    keywords: ['enzo donadi'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0005',
+    debitoNome: 'Banco Sicredi', creditoNome: 'ECD Construtora (Enzo Donadi - proprietário)',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /59153970187.*IVAIR\s*GONCALVES|IVAIR\s*GONCALVES/i,
+    keywords: ['ivair goncalves'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0316',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Mineração Serrana (Ivair Gonçalves - proprietário)',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /31458451000109.*ACTION|ACTION\s*SOLUCOES/i,
+    keywords: ['action solucoes'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0334',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Action Soluções Industriais',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /24799541000190.*EMILIA|EMILIA\s*GONCALVES/i,
+    keywords: ['emilia goncalves'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0437',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Emília Gonçalves Basílio',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /51859330000178.*CANAL\s*PET|CANAL\s*PET\s*DISTRIB/i,
+    keywords: ['canal pet'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0037',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Canal Pet Distribuidora',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /28792279000102.*A\.?I\s*EMPREEND|A\.?I\s*EMPREENDIMENTOS/i,
+    keywords: ['a.i empreendimentos'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0153',
+    debitoNome: 'Banco Sicredi', creditoNome: 'A.I Empreendimentos',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  {
+    regex: /07119310000179.*MATA\s*PRAGAS|MATA\s*PRAGAS/i,
+    keywords: ['mata pragas'], tipo: 'ENTRADA', categoria: 'RECEITAS',
+    debito: '1.1.1.05', credito: '1.1.2.01.0266',
+    debitoNome: 'Banco Sicredi', creditoNome: 'Mata Pragas Controle de Pragas',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+
+  // ========== RECEBIMENTOS PIX GENÉRICO (fallback) ==========
   // Padrão SICOOB: "RECEBIMENTO PIX-PIX_CRED" = PIX recebido de cliente
   {
     regex: /RECEBIMENTO\s*PIX|PIX[_\s]*CRED|CRED[_\s]*PIX/i,
@@ -446,16 +1155,40 @@ export const PADROES_OFX: PadraoOFX[] = [
     agenteResponsavel: 'AGENTE_FINANCEIRO'
   },
 
-  // ========== FAMÍLIA LEÃO (Adiantamentos a Sócios) ==========
-  // DEVE VIR ANTES do PIX genérico para CPF
+  // ========== FAMÍLIA LEÃO (Adiantamentos individuais) ==========
+  // Victor Hugo → conta específica (NÃO é contratado Ampla)
   {
-    regex: /SERGIO\s*(AUGUSTO|CARNEIRO|LEAO)|CARLA.*LEAO|VICTOR\s*HUGO|NAYARA/i,
-    keywords: ['sergio', 'carla', 'victor', 'nayara', 'leao'],
+    regex: /VICTOR\s*HUGO/i,
+    keywords: ['victor hugo'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.02.01', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Victor Hugo', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Nayara → conta específica
+  {
+    regex: /NAYARA/i,
+    keywords: ['nayara'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.04', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Nayara', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Sérgio Augusto (filho) → conta específica
+  {
+    regex: /SERGIO\s*AUGUSTO/i,
+    keywords: ['sergio augusto'], tipo: 'SAIDA', categoria: 'ADIANTAMENTOS',
+    debito: '1.1.3.04.05', credito: '1.1.1.05',
+    debitoNome: 'Adiantamento Sérgio Augusto', creditoNome: 'Banco Sicredi',
+    confianca: 0.98, autoClassificar: true, agenteResponsavel: 'AGENTE_FINANCEIRO'
+  },
+  // Sérgio Carneiro / Carla Leão → adiant. sócio principal
+  {
+    regex: /SERGIO\s*(CARNEIRO|LEAO)|CARLA.*LEAO/i,
+    keywords: ['sergio carneiro', 'carla leao'],
     tipo: 'SAIDA',
     categoria: 'ADIANTAMENTOS',
-    debito: '1.1.3.01',
+    debito: '1.1.3.04.01',
     credito: '1.1.1.05',
-    debitoNome: 'Adiantamento a Sócios',
+    debitoNome: 'Adiantamento Sérgio Carneiro',
     creditoNome: 'Banco Sicredi',
     confianca: 0.96,
     autoClassificar: true,
