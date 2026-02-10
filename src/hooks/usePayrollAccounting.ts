@@ -51,7 +51,36 @@ interface LancamentoFolha {
   }[];
 }
 
+// Funcionários pessoais do proprietário - débito vai para ADIANTAMENTO, não despesa
+const FAMILIA_PROPRIETARIO_FOLHA = [
+  { regex: /SERGIO\s*AUGUSTO/i, contaCodigo: '1.1.3.04.05', contaId: '143a5ffc-0b6b-4ee6-b09d-8f077bccd658' },
+  { regex: /RAIMUNDO\s*PEREIRA/i, contaCodigo: '1.1.3.04.01', contaId: 'b2845989-75af-4ee6-b3fb-473fb58e90a2' },
+  { regex: /KENIO\s*MARTINS/i, contaCodigo: '1.1.3.04.01', contaId: 'b2845989-75af-4ee6-b3fb-473fb58e90a2' },
+  { regex: /FABIANA\s*MARIA/i, contaCodigo: '1.1.3.04.04', contaId: 'e796f6f4-c491-4e38-807f-0a5a5d837b84' },
+  { regex: /CLAUDIA\s*BARBOSA/i, contaCodigo: '1.1.3.04.04', contaId: 'e796f6f4-c491-4e38-807f-0a5a5d837b84' },
+];
+
+function isFamiliaProprietario(nome: string): { contaCodigo: string; contaId: string } | null {
+  for (const f of FAMILIA_PROPRIETARIO_FOLHA) {
+    if (f.regex.test(nome)) return { contaCodigo: f.contaCodigo, contaId: f.contaId };
+  }
+  return null;
+}
+
 export function usePayrollAccounting() {
+  /**
+   * Resolve account code to UUID by querying chart_of_accounts
+   */
+  const resolveAccountId = async (code: string): Promise<string | null> => {
+    const { data } = await supabase
+      .from('chart_of_accounts')
+      .select('id')
+      .eq('code', code)
+      .eq('is_active', true)
+      .maybeSingle();
+    return data?.id || null;
+  };
+
   /**
    * Registra provisão de folha de pagamento com lançamentos contábeis por departamento
    *
@@ -75,9 +104,22 @@ export function usePayrollAccounting() {
         const totalIRRF = folha.funcionarios.reduce((sum, f) => sum + f.irrfRetido, 0);
         const totalLiquido = folha.funcionarios.reduce((sum, f) => sum + f.salarioLiquido, 0);
 
-        // Agrupar por departamento para débito
-        const porDepartamento: Record<string, { bruto: number; funcionarios: string[] }> = {};
+        // Separar funcionários pessoais (família proprietário) dos CLT empresa
+        const familiaItems: { nome: string; bruto: number; contaId: string }[] = [];
+        const empresaFuncionarios: FolhaDetalhe[] = [];
+
         folha.funcionarios.forEach(f => {
+          const familia = isFamiliaProprietario(f.employeeName);
+          if (familia) {
+            familiaItems.push({ nome: f.employeeName, bruto: f.salarioBruto, contaId: familia.contaId });
+          } else {
+            empresaFuncionarios.push(f);
+          }
+        });
+
+        // Agrupar CLT empresa por departamento para débito
+        const porDepartamento: Record<string, { bruto: number; funcionarios: string[] }> = {};
+        empresaFuncionarios.forEach(f => {
           const dept = f.department || 'Geral';
           if (!porDepartamento[dept]) {
             porDepartamento[dept] = { bruto: 0, funcionarios: [] };
@@ -120,18 +162,21 @@ export function usePayrollAccounting() {
         const { data: contasDespesa } = await supabase
           .from('chart_of_accounts')
           .select('id, code, name')
-          .eq('account_type', 'Expense')
-          .eq('active', true);
+          .eq('account_type', 'DESPESA')
+          .eq('is_active', true);
 
         // Criar entrada contábil principal
+        // NOTA: reference_id é UUID - NÃO usar para código de rastreamento (que é text)
+        // O código de rastreamento já está no campo description entre colchetes
         const { data: entry, error: entryError } = await supabase
           .from('accounting_entries')
           .insert([
             {
               entry_date: folha.dataFolha,
               description: `Provisão Folha de Pagamento ${String(folha.mes).padStart(2, '0')}/${folha.ano} [${rastreamento.codigoRastreamento}]`,
+              entry_type: 'payroll',
               reference_type: 'payroll',
-              reference_id: rastreamento.referenceId,
+              source_type: 'payroll',
             }
           ])
           .select()
@@ -162,62 +207,66 @@ export function usePayrollAccounting() {
             );
           }
 
+          // Resolve account_id: use found account or fallback to 4.1.1.01
+          const deptAccountId = contaDept?.id || await resolveAccountId('4.1.1.01');
+
           linhas.push({
             entry_id: entry.id,
-            account_id: contaDept?.id || null,
-            account_code: contaDept?.code || '4.1.1.01',
-            account_name: contaDept?.name || `Despesas com Salários - ${dept}`,
-            account_type: 'Expense',
+            account_id: deptAccountId,
             debit: dados.bruto,
             credit: 0,
-            description: `Salários ${dept} - ${dados.funcionarios.length} func. [${rastreamento.codigoRastreamento}]`
           });
+        }
+
+        // DÉBITOS - Funcionários pessoais (família) → Adiantamento a Sócios (NÃO despesa)
+        for (const fam of familiaItems) {
+          if (fam.bruto > 0) {
+            linhas.push({
+              entry_id: entry.id,
+              account_id: fam.contaId,
+              debit: fam.bruto,
+              credit: 0,
+            });
+          }
         }
 
         // CRÉDITOS - Passivo (Salários a Pagar)
         if (totalLiquido > 0) {
+          const salariosPagarId = await resolveAccountId('2.1.2.01');
           linhas.push({
             entry_id: entry.id,
-            account_code: '2.1.2.01',
-            account_name: 'Salários e Ordenados a Pagar',
-            account_type: 'Liability',
+            account_id: salariosPagarId,
             debit: 0,
             credit: totalLiquido,
-            description: `Salários a pagar - ${folha.funcionarios.length} funcionários`
           });
         }
 
         // CRÉDITOS - INSS a Recolher
         if (totalINSS > 0) {
+          const inssRecolherId = await resolveAccountId('2.1.2.02');
           linhas.push({
             entry_id: entry.id,
-            account_code: '2.1.2.02',
-            account_name: 'INSS a Recolher',
-            account_type: 'Liability',
+            account_id: inssRecolherId,
             debit: 0,
             credit: totalINSS,
-            description: `INSS descontado [${rastreamento.codigoRastreamento}]`
           });
         }
 
         // CRÉDITOS - IRRF a Recolher
         if (totalIRRF > 0) {
+          const irrfRecolherId = await resolveAccountId('2.1.2.03');
           linhas.push({
             entry_id: entry.id,
-            account_code: '2.1.2.03',
-            account_name: 'IRRF a Recolher',
-            account_type: 'Liability',
+            account_id: irrfRecolherId,
             debit: 0,
             credit: totalIRRF,
-            description: `IRRF descontado [${rastreamento.codigoRastreamento}]`
           });
         }
 
-        // Inserir linhas contábeis (accounting_entry_items não tem coluna description)
-        const linhasSemDesc = linhas.map(({ description, ...rest }: any) => rest);
+        // Inserir linhas contábeis
         const { error: linhasError } = await supabase
           .from('accounting_entry_items')
-          .insert(linhasSemDesc);
+          .insert(linhas);
 
         if (linhasError) {
           // Reverter entrada se linhas falharem
@@ -281,33 +330,26 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
         }
 
-        // Linhas do lançamento
+        // Linhas do lançamento - resolve account codes to UUIDs
+        const salariosPagarId = await resolveAccountId('2.1.2.01');
         const linhas = [
           {
             entry_id: entry.id,
-            account_code: '2.1.2.01',
-            account_name: 'Salários e Ordenados a Pagar',
-            account_type: 'Liability',
+            account_id: salariosPagarId,
             debit: params.totalPago,
             credit: 0,
-            description: 'Pagamento de salários'
           },
           {
             entry_id: entry.id,
             account_id: params.bankAccountId,
-            account_code: '1.1.1.01', // Banco (exemplo)
-            account_name: 'Banco',
-            account_type: 'Asset',
             debit: 0,
             credit: params.totalPago,
-            description: 'Saída de caixa - Salários'
           }
         ];
 
-        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
           .from('accounting_entry_items')
-          .insert(linhasSemDescFolha);
+          .insert(linhas);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);
@@ -357,32 +399,26 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
         }
 
+        // Resolve account codes to UUIDs
+        const inssRecolherId = await resolveAccountId('2.1.2.02');
         const linhas = [
           {
             entry_id: entry.id,
-            account_code: '2.1.2.02',
-            account_name: 'INSS a Recolher',
-            account_type: 'Liability',
+            account_id: inssRecolherId,
             debit: params.totalINSS,
             credit: 0,
-            description: 'Recolhimento de INSS'
           },
           {
             entry_id: entry.id,
             account_id: params.bankAccountId,
-            account_code: '1.1.1.01',
-            account_name: 'Banco',
-            account_type: 'Asset',
             debit: 0,
             credit: params.totalINSS,
-            description: 'Saída de caixa - INSS'
           }
         ];
 
-        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
           .from('accounting_entry_items')
-          .insert(linhasSemDescFolha);
+          .insert(linhas);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);
@@ -432,32 +468,26 @@ export function usePayrollAccounting() {
           return { success: false, error: `Erro ao criar entrada: ${entryError?.message}` };
         }
 
+        // Resolve account codes to UUIDs
+        const irrfRecolherId = await resolveAccountId('2.1.2.03');
         const linhas = [
           {
             entry_id: entry.id,
-            account_code: '2.1.2.03',
-            account_name: 'IRRF a Recolher',
-            account_type: 'Liability',
+            account_id: irrfRecolherId,
             debit: params.totalIRRF,
             credit: 0,
-            description: 'Recolhimento de IRRF'
           },
           {
             entry_id: entry.id,
             account_id: params.bankAccountId,
-            account_code: '1.1.1.01',
-            account_name: 'Banco',
-            account_type: 'Asset',
             debit: 0,
             credit: params.totalIRRF,
-            description: 'Saída de caixa - IRRF'
           }
         ];
 
-        const linhasSemDescFolha = linhas.map(({ description, ...rest }: any) => rest);
         const { error: linhasError } = await supabase
           .from('accounting_entry_items')
-          .insert(linhasSemDescFolha);
+          .insert(linhas);
 
         if (linhasError) {
           await supabase.from('accounting_entries').delete().eq('id', entry.id);

@@ -50,10 +50,12 @@ async function obterProximoSequencial(
   ano: number,
   mes: number
 ): Promise<number> {
+  // Buscar por description (reference_id é UUID, não suporta texto)
+  const pattern = `[${tipo}_${ano}${String(mes).padStart(2, '0')}_%`;
   const { data, error } = await supabase
     .from('accounting_entries')
-    .select('*')
-    .ilike('reference_id', `${tipo}_${ano}${String(mes).padStart(2, '0')}_%`)
+    .select('description')
+    .like('description', `%[${tipo}_${ano}${String(mes).padStart(2, '0')}_%]%`)
     .order('created_at', { ascending: false })
     .limit(1);
 
@@ -61,12 +63,12 @@ async function obterProximoSequencial(
     return 1;
   }
 
-  // Extrair número sequencial do reference_id anterior
-  const lastRef = data[0].reference_id;
-  const parts = lastRef.split('_');
-  const lastSeq = parseInt(parts[2], 10);
-  
-  return lastSeq + 1;
+  // Extrair número sequencial do código no description: [FOLD_202602_001_HASH]
+  const desc = data[0].description || '';
+  const match = desc.match(new RegExp(`\\[${tipo}_\\d{6}_(\\d{3})_[A-F0-9]+\\]`));
+  if (!match) return 1;
+
+  return parseInt(match[1], 10) + 1;
 }
 
 /**
@@ -141,11 +143,11 @@ export async function validarDuplicata(
   codigoRastreamento: string,
   referenceId: string
 ): Promise<{ isDuplicata: boolean; entryId?: string; message?: string }> {
-  // 1. Buscar por código de rastreamento
+  // Buscar por código de rastreamento na description (reference_id é UUID, não texto)
   const { data: byCode } = await supabase
     .from('accounting_entries')
     .select('id, description, entry_date')
-    .eq('reference_id', codigoRastreamento)
+    .like('description', `%[${codigoRastreamento}]%`)
     .limit(1);
 
   if (byCode && byCode.length > 0) {
@@ -153,21 +155,6 @@ export async function validarDuplicata(
       isDuplicata: true,
       entryId: byCode[0].id,
       message: `Lançamento duplicado detectado! Código: ${codigoRastreamento}. Entry ID: ${byCode[0].id}. Data: ${byCode[0].entry_date}`
-    };
-  }
-
-  // 2. Buscar por referência
-  const { data: byRef } = await supabase
-    .from('accounting_entries')
-    .select('id, description, entry_date')
-    .eq('reference_id', referenceId)
-    .limit(1);
-
-  if (byRef && byRef.length > 0) {
-    return {
-      isDuplicata: true,
-      entryId: byRef[0].id,
-      message: `Referência duplicada detectada! Reference ID: ${referenceId}. Entry ID: ${byRef[0].id}. Data: ${byRef[0].entry_date}`
     };
   }
 
