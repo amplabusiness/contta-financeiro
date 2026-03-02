@@ -257,9 +257,11 @@ export default function CoraIntegration() {
               <CardContent>
                 <div className="space-y-2 text-sm">
                   {[
-                    { key: "CORA_CLIENT_ID", desc: "Client ID da API Cora (Configurações → API no app Cora)" },
-                    { key: "CORA_CLIENT_SECRET", desc: "Client Secret da API Cora" },
-                    { key: "CORA_API_URL", desc: "URL da API (padrão: https://api.cora.com.br)" },
+                    { key: "CORA_CLIENT_ID", desc: "Client ID (ex: int-xxx) — Conta > Integrações via APIs no app Cora" },
+                    { key: "CORA_CERT_PEM_B64", desc: "certificate.pem em base64 (gerado em 'Gerar nova credencial' no app Cora)" },
+                    { key: "CORA_PRIVATE_KEY_B64", desc: "private-key.key em base64 (gerado junto com o certificado)" },
+                    { key: "CORA_TOKEN_URL", desc: "Stage: https://matls-clients.api.stage.cora.com.br/token | Prod: padrão" },
+                    { key: "CORA_API_URL", desc: "Stage: https://api.stage.cora.com.br | Prod: https://api.cora.com.br (padrão)" },
                   ].map(v => (
                     <div key={v.key} className="flex items-start gap-2 p-2 border rounded bg-muted/30">
                       <code className="text-xs font-mono bg-muted px-1 py-0.5 rounded shrink-0">{v.key}</code>
@@ -267,11 +269,21 @@ export default function CoraIntegration() {
                     </div>
                   ))}
                 </div>
-                <Alert className="mt-3 border-yellow-200 bg-yellow-50">
+                <Alert className="mt-3 border-blue-200 bg-blue-50">
+                  <Info className="w-4 h-4 text-blue-500" />
+                  <AlertDescription className="text-blue-800 text-xs space-y-1">
+                    <p><strong>Como gerar o certificado:</strong></p>
+                    <p>1. No app Cora: <em>Conta → Integrações via APIs → Gerar nova credencial</em></p>
+                    <p>2. Baixe <code>certificate.pem</code> e <code>private-key.key</code></p>
+                    <p>3. Converta para base64: <code>base64 -w 0 certificate.pem</code></p>
+                    <p>4. Cole o resultado no Secret do Supabase</p>
+                  </AlertDescription>
+                </Alert>
+                <Alert className="mt-2 border-yellow-200 bg-yellow-50">
                   <AlertTriangle className="w-4 h-4 text-yellow-600" />
                   <AlertDescription className="text-yellow-800 text-xs">
-                    Obtenha as credenciais em <strong>app.cora.com.br → Configurações → Integrações → API</strong>.
-                    Nunca coloque as credenciais no código ou .env commitado.
+                    A autenticação Cora usa <strong>mTLS</strong> (certificado digital), não client_secret.
+                    O certificado tem validade de 1 ano.
                   </AlertDescription>
                 </Alert>
               </CardContent>
