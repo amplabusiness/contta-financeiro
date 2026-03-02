@@ -64,6 +64,22 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
+      - name: Reparar histórico de migrations (sincronizar com remoto)
+        run: |
+          supabase migration repair --status applied \
+            00000000000000 \
+            20260126000000 20260126100000 20260126200000 20260126300000 20260126310000 \
+            20260126400000 20260126500000 \
+            20260127170000 \
+            20260131000000 \
+            20260202000000 20260202100000 20260202200000 20260202300000 20260202400000 \
+            20260302100000 20260302100001 20260302100002 20260302100003 \
+            20260302180841 20260302181238 20260302181658 20260302181741 \
+            20260302185443 20260302185653 20260302192703 20260302200808 20260302205405 \
+          || true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Aplicar migrations
         run: supabase db push
         env:
@@ -96,13 +112,19 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Deploy para Vercel
-        uses: amondnet/vercel-action@v25
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          node-version: '20'
+
+      - name: Instalar Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy para Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
   # =====================================================
   # 4. NOTIFICAÇÃO DE CONCLUSÃO
