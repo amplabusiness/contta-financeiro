@@ -58,6 +58,7 @@ import {
   Lock,
   Code2,
   Clock,
+  CreditCard,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
@@ -126,6 +127,8 @@ export function AppSidebar() {
       label: "Principal",
       items: [
         { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+        { title: "Agenda Financeira", url: "/agenda", icon: Calendar },
+        { title: "Parcelamentos", url: "/parcelamentos", icon: CreditCard },
         { title: "Executivo", url: "/executive-dashboard", icon: PieChart },
         { title: "Fluxo de Caixa", url: "/cash-flow", icon: TrendingUp },
         { title: "Extrato Financeiro", url: "/client-ledger", icon: Receipt },
@@ -140,6 +143,7 @@ export function AppSidebar() {
         { title: "Contas Bancárias", url: "/bank-accounts", icon: Building2 },
         { title: "Importar Extrato", url: "/bank-import", icon: Upload },
         { title: "Aprovações", url: "/pending-reconciliations", icon: AlertTriangle },
+        { title: "Cora Bank", url: "/cora-integration", icon: CreditCard },
       ],
     },
     {

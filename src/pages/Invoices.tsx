@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/data/expensesData";
 import { AIInvoiceClassifier } from "@/components/ai/AIInvoiceClassifier";
 import { AICollectionAgent } from "@/components/ai/AICollectionAgent";
+import { CoraChargeManager } from "@/components/CoraChargeManager";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useClient } from "@/contexts/ClientContext";
@@ -696,6 +697,9 @@ const Invoices = () => {
                                 </Button>
                               }
                             />
+                          )}
+                          {invoice.status === "pending" && (
+                            <CoraChargeManager invoice={invoice} />
                           )}
                         </div>
                       </TableCell>

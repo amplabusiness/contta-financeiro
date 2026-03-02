@@ -32,6 +32,12 @@ serve(async (req) => {
       case 'create_pix':
         result = await createPixCharge(data)
         break
+      case 'send_payment':
+        result = await sendPayment(data)
+        break
+      case 'list_payments':
+        result = await listPayments(data)
+        break
       default:
         throw new Error('Invalid action')
     }
@@ -270,6 +276,87 @@ async function getStatement(startDate: string, endDate: string) {
     })
 
   return { imported: transactions.length }
+}
+
+/**
+ * Send outbound PIX payment (pagamento de fornecedores/prestadores)
+ * Used for paying MEI/PJ vendors on day 10 of each month
+ */
+async function sendPayment(paymentData: {
+  amount: number
+  pix_key: string
+  pix_key_type: 'cpf' | 'cnpj' | 'email' | 'phone' | 'evp'
+  description: string
+  beneficiary_name: string
+  scheduled_date?: string
+}) {
+  const token = await getAccessToken()
+
+  const response = await fetch(`${CORA_API_BASE}/pix/payments`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      amount: Math.round(paymentData.amount * 100), // em centavos
+      key: paymentData.pix_key,
+      key_type: paymentData.pix_key_type,
+      description: paymentData.description,
+      ...(paymentData.scheduled_date && { scheduled_date: paymentData.scheduled_date })
+    })
+  })
+
+  if (!response.ok) {
+    const errBody = await response.text()
+    throw new Error(`Falha ao enviar PIX para ${paymentData.beneficiary_name}: ${errBody}`)
+  }
+
+  const result = await response.json()
+
+  // Save in bank_transactions as outbound payment
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
+  await supabase.from('bank_transactions').insert({
+    bank_reference: result.id || `cora-pix-out-${Date.now()}`,
+    amount: -paymentData.amount,
+    description: `PIX OUT - ${paymentData.beneficiary_name} - ${paymentData.description}`,
+    transaction_type: 'debit',
+    transaction_date: (paymentData.scheduled_date || new Date().toISOString()).split('T')[0],
+    imported_from: 'cora',
+    matched: false,
+    metadata: { ...result, pix_key: paymentData.pix_key, beneficiary: paymentData.beneficiary_name }
+  })
+
+  return {
+    payment_id: result.id,
+    status: result.status,
+    beneficiary: paymentData.beneficiary_name,
+    amount: paymentData.amount,
+    scheduled_date: paymentData.scheduled_date
+  }
+}
+
+/**
+ * List recent outbound payments from Cora
+ */
+async function listPayments(data: { start_date?: string; end_date?: string }) {
+  const token = await getAccessToken()
+  const params = new URLSearchParams()
+  if (data.start_date) params.set('start_date', data.start_date)
+  if (data.end_date)   params.set('end_date', data.end_date)
+
+  const response = await fetch(`${CORA_API_BASE}/pix/payments?${params}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+
+  if (!response.ok) {
+    throw new Error('Falha ao consultar pagamentos')
+  }
+
+  return await response.json()
 }
 
 /**

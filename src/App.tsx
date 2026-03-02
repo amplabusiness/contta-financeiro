@@ -147,10 +147,15 @@ import { SubscriptionGuard } from "./components/SubscriptionGuard";
 import EducatorPage from "./pages/EducatorPage";
 import DataLakePage from "./pages/DataLakePage";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
+import Agenda from "./pages/Agenda";
+import Parcelamentos from "./pages/Parcelamentos";
+import CoraIntegration from "./pages/CoraIntegration";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
   { path: "/accounts-payable", element: <AccountsPayable /> },
+  { path: "/agenda", element: <Agenda /> },
+  { path: "/parcelamentos", element: <Parcelamentos /> },
   { path: "/ai-accountant", element: <AIAccountant /> },
   { path: "/ai-agents", element: <AIAgents /> },
   { path: "/ai-educator", element: <EducatorPage /> },
@@ -296,6 +301,8 @@ const App = () => (
             <Route path="/ai-agents" element={<AIAgents />} />
             <Route path="/ai-educator" element={<EducatorPage />} />
             <Route path="/data-lake" element={<DataLakePage />} />
+            <Route path="/agenda" element={<Agenda />} />
+            <Route path="/parcelamentos" element={<Parcelamentos />} />
             <Route path="/cost-center-analysis" element={<CostCenterAnalysis />} />
             <Route path="/cost-center-assets" element={<CostCenterAssets />} />
             <Route path="/cost-center-audit" element={<CostCenterAudit />} />
@@ -338,6 +345,7 @@ const App = () => (
             <Route path="/bank-import" element={<BankImport />} />
             <Route path="/import-cnab" element={<ImportCNAB />} />
             <Route path="/pending-reconciliations" element={<PendingReconciliations />} />
+            <Route path="/cora-integration" element={<CoraIntegration />} />
             <Route path="/accounts-payable" element={<AccountsPayable />} />
             <Route path="/import-expenses-spreadsheet" element={<ImportExpensesSpreadsheet />} />
             <Route path="/cash-flow" element={<CashFlow />} />
