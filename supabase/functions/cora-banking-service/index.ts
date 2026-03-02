@@ -100,6 +100,15 @@ serve(async (req) => {
       case 'test_connection':
         result = await testConnection()
         break
+      case 'list_charges':
+        result = await listCharges(data)
+        break
+      case 'get_charge':
+        result = await getCharge(data.charge_id)
+        break
+      case 'cancel_charge':
+        result = await cancelCharge(data.charge_id)
+        break
       default:
         throw new Error('Invalid action')
     }
@@ -478,6 +487,58 @@ async function listPayments(data: { start_date?: string; end_date?: string }) {
   }
 
   return await response.json()
+}
+
+/**
+ * List charges (boletos emitidos)
+ * GET /v2/invoices/?page=0&size=50&status=OPEN
+ */
+async function listCharges(data: { page?: number; size?: number; status?: string }) {
+  const params = new URLSearchParams()
+  params.set('page', String(data.page ?? 0))
+  params.set('size', String(data.size ?? 50))
+  if (data.status) params.set('status', data.status)
+
+  const response = await coraFetch(`/v2/invoices/?${params}`)
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Falha ao listar cobranças: ${err}`)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Get charge details
+ * GET /v2/invoices/{id}
+ */
+async function getCharge(chargeId: string) {
+  const response = await coraFetch(`/v2/invoices/${chargeId}`)
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Falha ao consultar cobrança ${chargeId}: ${err}`)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Cancel a charge
+ * DELETE /v2/invoices/{id}
+ */
+async function cancelCharge(chargeId: string) {
+  const response = await coraFetch(`/v2/invoices/${chargeId}`, {
+    method: 'DELETE'
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Falha ao cancelar cobrança ${chargeId}: ${err}`)
+  }
+
+  return { cancelled: true, charge_id: chargeId }
 }
 
 /**
