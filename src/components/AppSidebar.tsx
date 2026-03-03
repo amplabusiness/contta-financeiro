@@ -58,7 +58,6 @@ import {
   Lock,
   Code2,
   Clock,
-  CreditCard,
 } from "lucide-react";
 import { useClient } from "@/contexts/ClientContext";
 import {
