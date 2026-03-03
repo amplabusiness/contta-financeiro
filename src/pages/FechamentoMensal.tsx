@@ -202,16 +202,30 @@ export default function FechamentoMensal() {
         .gte("entry_date", monthStart)
         .lte("entry_date", monthEnd);
 
-      // E2: Conciliação
+      // E2: Conciliação + Saldo bancário
       const { data: txMonth } = await supabase
         .from("bank_transactions")
-        .select("id, matched, amount, description")
+        .select("id, matched, amount, description, transaction_date")
         .gte("transaction_date", monthStart)
         .lte("transaction_date", monthEnd);
 
       const totalTx = txMonth?.length || 0;
       const conciliadasTx = txMonth?.filter((t) => t.matched).length || 0;
       const pendentesTx = totalTx - conciliadasTx;
+
+      // Verificação: saldo nunca pode ser negativo (Ampla não tem conta garantida)
+      // Calcular saldo acumulado dia a dia para detectar qualquer ponto negativo
+      const txOrdenadas = [...(txMonth || [])].sort(
+        (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+      );
+      let saldoAcumulado = 0;
+      let saldoNegativoDetectado = false;
+      let saldoMinimo = 0;
+      for (const tx of txOrdenadas) {
+        saldoAcumulado += Number(tx.amount) || 0;
+        if (saldoAcumulado < saldoMinimo) saldoMinimo = saldoAcumulado;
+        if (saldoAcumulado < 0) saldoNegativoDetectado = true;
+      }
 
       // E3: Honorários gerados
       const { count: invoiceCount } = await supabase
@@ -242,11 +256,17 @@ export default function FechamentoMensal() {
           id: 2,
           etapa: "Etapa 2",
           titulo: "Conciliação Bancária",
-          descricao: "Todas as transações bancárias importadas e conciliadas",
+          descricao: "Todas as transações importadas e conciliadas. A Ampla não tem conta garantida — saldo NUNCA pode ser negativo.",
           icon: <Banknote className="h-5 w-5" />,
-          status: month.isClosed ? "done" : pendentesTx === 0 && totalTx > 0 ? "done" : pendentesTx > 0 ? "blocked" : "pending",
-          detail: `${conciliadasTx}/${totalTx} conciliadas`,
-          count: pendentesTx,
+          status: month.isClosed ? "done"
+            : saldoNegativoDetectado ? "blocked"   // saldo negativo = erro crítico
+            : pendentesTx > 0 ? "blocked"
+            : totalTx > 0 ? "done"
+            : "pending",
+          detail: saldoNegativoDetectado
+            ? `⚠️ Saldo negativo detectado (mínimo: R$ ${saldoMinimo.toFixed(2)}) — verificar lançamentos`
+            : `${conciliadasTx}/${totalTx} conciliadas`,
+          count: saldoNegativoDetectado ? 1 : pendentesTx,
           route: "/super-conciliation",
         },
         {
