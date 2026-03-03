@@ -214,6 +214,7 @@ export function AppSidebar() {
         { title: "NFS-e", url: "/nfse", icon: FileText },
         { title: "Estoque e Compras", url: "/inventory", icon: Package },
         { title: "Folha de Pagamento", url: "/payroll", icon: Banknote },
+        { title: "Importar Holerite", url: "/importar-holerite", icon: Upload },
         { title: "Comissões Agentes", url: "/agent-commissions", icon: Users },
         { title: "Incentivos e PLR", url: "/incentives", icon: Gift },
         { title: "Consultoria Trabalhista", url: "/labor-advisory", icon: Gavel },

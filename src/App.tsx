@@ -151,6 +151,7 @@ import Agenda from "./pages/Agenda";
 import Parcelamentos from "./pages/Parcelamentos";
 import CoraIntegration from "./pages/CoraIntegration";
 import FechamentoMensal from "./pages/FechamentoMensal";
+import ImportarHolerite from "./pages/ImportarHolerite";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -386,6 +387,7 @@ const App = () => (
             <Route path="/nfse" element={<NFSe />} />
             <Route path="/monthly-closing" element={<MonthlyClosing />} />
             <Route path="/fechamento-mensal" element={<FechamentoMensal />} />
+            <Route path="/importar-holerite" element={<ImportarHolerite />} />
             <Route path="/opening-balance-reconciliation" element={<OpeningBalanceReconciliation />} />
             <Route path="/cash-flow-statement" element={<CashFlowStatement />} />
             <Route path="/period-closing" element={<PeriodClosing />} />
