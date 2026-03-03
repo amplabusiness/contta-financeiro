@@ -85,13 +85,13 @@ export function ClosingFlowWidget() {
         // Fetch pending bank transactions per month
         const { data: txData } = await supabase
           .from("bank_transactions")
-          .select("date, reconciled")
+          .select("transaction_date, matched")
           .eq("tenant_id", TENANT_ID)
-          .eq("reconciled", false);
+          .eq("matched", false);
 
         const pendingByMonth: Record<string, number> = {};
-        (txData || []).forEach((tx: { date: string }) => {
-          const d = new Date(tx.date);
+        (txData || []).forEach((tx: { transaction_date: string }) => {
+          const d = new Date(tx.transaction_date);
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           pendingByMonth[key] = (pendingByMonth[key] || 0) + 1;
         });
