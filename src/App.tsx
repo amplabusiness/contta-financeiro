@@ -150,6 +150,7 @@ import ComplianceDashboard from "./pages/ComplianceDashboard";
 import Agenda from "./pages/Agenda";
 import Parcelamentos from "./pages/Parcelamentos";
 import CoraIntegration from "./pages/CoraIntegration";
+import FechamentoMensal from "./pages/FechamentoMensal";
 
 const appRoutes = [
   { path: "/", element: <Navigate to="/auth" replace /> },
@@ -384,6 +385,7 @@ const App = () => (
             <Route path="/automation-reports" element={<AutomationReports />} />
             <Route path="/nfse" element={<NFSe />} />
             <Route path="/monthly-closing" element={<MonthlyClosing />} />
+            <Route path="/fechamento-mensal" element={<FechamentoMensal />} />
             <Route path="/opening-balance-reconciliation" element={<OpeningBalanceReconciliation />} />
             <Route path="/cash-flow-statement" element={<CashFlowStatement />} />
             <Route path="/period-closing" element={<PeriodClosing />} />

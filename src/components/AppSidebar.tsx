@@ -132,7 +132,7 @@ export function AppSidebar() {
         { title: "Executivo", url: "/executive-dashboard", icon: PieChart },
         { title: "Fluxo de Caixa", url: "/cash-flow", icon: TrendingUp },
         { title: "Extrato Financeiro", url: "/client-ledger", icon: Receipt },
-        { title: "Fechamento de Mês", url: "/monthly-closing", icon: Lock },
+        { title: "Fluxo de Fechamento", url: "/fechamento-mensal", icon: Lock },
         ...(selectedClientId ? [{ title: selectedClientName || "Cliente", url: "/client-dashboard", icon: UserSquare2 }] : []),
       ],
     },

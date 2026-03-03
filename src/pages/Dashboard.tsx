@@ -19,12 +19,13 @@ import { cn } from "@/lib/utils";
 import { getDashboardBalances, getAdiantamentosSocios, getExpenses } from "@/lib/accountMapping";
 // Novos componentes do Dashboard Executivo
 import { 
-  ExecutiveHealthCards, 
-  DrCiceroInsightPanel, 
-  ActionRequiredPanel, 
+  ExecutiveHealthCards,
+  DrCiceroInsightPanel,
+  ActionRequiredPanel,
   PriorityClientsList,
   CashVsAccountingPanel,
-  CashFlowWidget 
+  CashFlowWidget,
+  ClosingFlowWidget,
 } from "@/components/dashboard";
 
 // Interface para títulos problemáticos (cobrança)
@@ -911,6 +912,9 @@ const Dashboard = () => {
           clients={clientesPrioritarios}
           onViewClient={handleViewClient}
         />
+
+        {/* ========== BLOCO 5: FECHAMENTO MENSAL (PIPELINE AI-FIRST) ========== */}
+        <ClosingFlowWidget />
 
         {/* ========== FLUXO DE CAIXA ========== */}
         <CashFlowWidget />
